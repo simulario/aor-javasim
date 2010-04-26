@@ -1,0 +1,360 @@
+<?xml version="1.0" encoding="utf-8"?>
+<xs:schema
+  xmlns:allex="http://aor-simulation.org/expression-language/ALLEX"
+	xmlns:xs="http://www.w3.org/2001/XMLSchema"
+	xmlns:dc="http://purl.org/dc/terms/"
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	targetNamespace="http://aor-simulation.org/expression-language/ALLEX"
+	attributeFormDefault="unqualified"
+	elementFormDefault="qualified"
+	version="1.0">
+	
+	<xs:annotation>
+		<xs:documentation xml:lang="en">
+			<dc:title>
+				Boolean Operations
+			</dc:title>
+			<dc:creator>
+				Thomas Grundmann
+			</dc:creator>
+			<dc:created>
+				2009-03-01
+			</dc:created>
+			<dc:description>
+				This schema defines the boolean operations which are supported
+				in ALLEX. It provides basic logic and comparisation operations
+				and an element for boolean literals. It also defines the
+				boolean constants TRUE and FALSE.
+			</dc:description>
+			<dc:description>
+				../Diagrams/Boolean_Operations.svg
+			</dc:description>
+			<dc:requires>
+				Terms_and_Datatypes.xsd
+			</dc:requires>
+			<dc:license>
+				This program is free software; you can redistribute it and/or
+				modify it under the terms of the GNU General Public License as
+				published by the Free Software Foundation; either version 3 of
+				the License, or (at your option) any later version. This
+				program is distributed in the hope that it will be useful, but
+				WITHOUT ANY WARRANTY; without even the implied warranty of
+				MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+				GNU General Public License for more details.
+			</dc:license>
+			<dc:license>
+				http://www.gnu.org/licenses/gpl.html
+			</dc:license>
+		</xs:documentation>
+	</xs:annotation>
+	
+	<xs:include schemaLocation="Terms_and_Datatypes.xsd"/>
+		
+	<!--#######################-->
+	<!--## Boolean Constants ##-->
+	<!--#######################-->
+	
+	<xs:complexType name="BooleanConstant.type">
+		<xs:annotation>
+			<xs:documentation xml:lang="en">
+				<dc:description>
+					This type represents a boolean constant. All boolean
+					constants are using this type.
+				</dc:description>
+			</xs:documentation>
+		</xs:annotation>
+		<xs:complexContent>
+			<xs:restriction base="allex:BooleanTerm.type"/>
+		</xs:complexContent>
+	</xs:complexType>
+	
+	<xs:element name="TRUE" substitutionGroup="allex:BooleanTerm" type="allex:BooleanConstant.type">
+		<xs:annotation>
+			<xs:documentation xml:lang="en">
+				<dc:description>
+					This element represents the constant value TRUE.
+				</dc:description>
+			</xs:documentation>
+		</xs:annotation>
+	</xs:element>
+	
+	<xs:element name="FALSE" substitutionGroup="allex:BooleanTerm" type="allex:BooleanConstant.type">
+		<xs:annotation>
+			<xs:documentation xml:lang="en">
+				<dc:description>
+					This element represents the constant value FALSE.
+				</dc:description>
+			</xs:documentation>
+		</xs:annotation>
+	</xs:element>
+	
+	<!--#####################-->
+	<!--## Boolean Literal ##-->
+	<!--#####################-->
+	
+	<xs:element name="Boolean" substitutionGroup="allex:BooleanTerm">
+		<xs:annotation>
+			<xs:documentation xml:lang="en">
+				<dc:description>
+					This element represents a boolean literal. Its value
+					attribute corresponds to the Boolean.datatype definition.
+				</dc:description>
+			</xs:documentation>
+		</xs:annotation>
+		<xs:complexType>
+			<xs:complexContent>
+				<xs:extension base="allex:BooleanTerm.type">
+					<xs:attribute name="value" type="allex:Boolean.datatype" use="required"/>
+				</xs:extension>
+			</xs:complexContent>
+		</xs:complexType>
+	</xs:element>
+	
+	<!--######################-->
+	<!--## Boolean Operator ##-->
+	<!--######################-->
+		
+	<xs:complexType name="BooleanOperator.type" abstract="true">
+		<xs:annotation>
+			<xs:documentation xml:lang="en">
+				<dc:descripton>
+					This type represents a boolean operator. All other
+					boolean operators are derived from this one.
+				</dc:descripton>
+			</xs:documentation>
+		</xs:annotation>
+		<xs:complexContent>
+			<xs:restriction base="allex:BooleanTerm.type"/>
+		</xs:complexContent>
+	</xs:complexType>
+	
+	<!--#####################-->
+	<!--## Logic Operators ##-->
+	<!--#####################-->
+	
+	<xs:complexType name="LogicOperator.type" abstract="true">
+		<xs:annotation>
+			<xs:documentation xml:lang="en">
+				<dc:descripton>
+					This type represents a logic operator. All other logic
+					operators are derived from this one.
+				</dc:descripton>
+			</xs:documentation>
+		</xs:annotation>
+		<xs:complexContent>
+			<xs:restriction base="allex:BooleanOperator.type"/>
+		</xs:complexContent>
+	</xs:complexType>
+
+	<xs:complexType name="Logic_1_1_Operator.type">
+		<xs:annotation>
+			<xs:documentation xml:lang="en">
+				<dc:descripton>
+					This type defines a logic operator which takes exactly one
+					argument. The argument has to be a boolean term.
+				</dc:descripton>
+			</xs:documentation>
+		</xs:annotation>
+		<xs:complexContent>
+			<xs:extension base="allex:LogicOperator.type">
+				<xs:sequence>
+					<xs:element ref="allex:BooleanTerm"/>
+				</xs:sequence>
+			</xs:extension>
+		</xs:complexContent>
+	</xs:complexType>
+
+	<xs:complexType name="Logic_2_2_Operator.type">
+		<xs:annotation>
+			<xs:documentation xml:lang="en">
+				<dc:descripton>
+					This type defines a logic operator which takes exactly two
+					arguments. Both arguments have to be boolean terms.
+				</dc:descripton>
+			</xs:documentation>
+		</xs:annotation>
+		<xs:complexContent>
+			<xs:extension base="allex:LogicOperator.type">
+				<xs:sequence>
+					<xs:element ref="allex:BooleanTerm" minOccurs="2" maxOccurs="2"/>
+				</xs:sequence>
+			</xs:extension>
+		</xs:complexContent>
+	</xs:complexType>
+	
+	<xs:complexType name="Logic_2_n_Operator.type">
+		<xs:annotation>
+			<xs:documentation xml:lang="en">
+				<dc:descripton>
+					This type defines a logic operator which takes at least two
+					arguments. All arguments have to be boolean terms.
+				</dc:descripton>
+			</xs:documentation>
+		</xs:annotation>
+		<xs:complexContent>
+			<xs:extension base="allex:LogicOperator.type">
+				<xs:sequence>
+					<xs:element ref="allex:BooleanTerm" minOccurs="2" maxOccurs="unbounded"/>
+				</xs:sequence>
+			</xs:extension>
+		</xs:complexContent>
+	</xs:complexType>
+	
+	<!--######################-->
+	<!--## Logic Operations ##-->
+	<!--######################-->
+	
+	<xs:element name="And" substitutionGroup="allex:BooleanTerm" type="allex:Logic_2_n_Operator.type">
+		<xs:annotation>
+			<xs:documentation xml:lang="en">
+				<dc:descripton>
+					This operations represents the logic and (conjunction).
+				</dc:descripton>
+			</xs:documentation>
+		</xs:annotation>
+	</xs:element>
+
+	<xs:element name="Or" substitutionGroup="allex:BooleanTerm" type="allex:Logic_2_n_Operator.type">
+		<xs:annotation>
+			<xs:documentation xml:lang="en">
+				<dc:descripton>
+					This operation represents the logic or (disjunction).
+				</dc:descripton>
+			</xs:documentation>
+		</xs:annotation>
+	</xs:element>
+		
+	<xs:element name="Not" substitutionGroup="allex:BooleanTerm" type="allex:Logic_1_1_Operator.type">
+		<xs:annotation>
+			<xs:documentation xml:lang="en">
+				<dc:descripton>
+					This operation represents the logic not (negation).
+				</dc:descripton>
+			</xs:documentation>
+		</xs:annotation>
+	</xs:element>
+	
+	<!--#############################-->
+	<!--## Comparisation Operators ##-->
+	<!--#############################-->
+		
+	<xs:complexType name="ComparisationOperator.type" abstract="true">
+		<xs:annotation>
+			<xs:documentation xml:lang="en">
+				<dc:descripton>
+					This type represents a comparisation operator. All other
+					comparisation operators are derived from this one.
+				</dc:descripton>
+			</xs:documentation>
+		</xs:annotation>
+		<xs:complexContent>
+			<xs:restriction base="allex:BooleanOperator.type"/>
+		</xs:complexContent>
+	</xs:complexType>
+	
+	<xs:complexType name="Comparisation_2_2_Operator.type">
+		<xs:annotation>
+			<xs:documentation xml:lang="en">
+				<dc:descripton>
+					This type defines a comparisation operator which takes
+					exactly two arguments. Both arguments have to be either
+					boolean terms or numeric terms.
+				</dc:descripton>
+			</xs:documentation>
+		</xs:annotation>
+		<xs:complexContent>
+			<xs:extension base="allex:ComparisationOperator.type">
+				<xs:choice>
+					<xs:element ref="allex:BooleanTerm" minOccurs="2" maxOccurs="2"/>
+					<xs:element ref="allex:NumericTerm" minOccurs="2" maxOccurs="2"/>
+				</xs:choice>
+			</xs:extension>
+		</xs:complexContent>
+	</xs:complexType>
+	
+	<xs:complexType name="NumericComparisation_2_2_Operator.type">
+		<xs:annotation>
+			<xs:documentation xml:lang="en">
+				<dc:descripton>
+					This type defines a comparisation operator that takes
+					exactly two numeric terms as arguments.
+				</dc:descripton>
+			</xs:documentation>
+		</xs:annotation>
+		<xs:complexContent>
+			<xs:extension base="allex:ComparisationOperator.type">
+				<xs:choice>
+					<xs:element ref="allex:NumericTerm" minOccurs="2" maxOccurs="2"/>
+				</xs:choice>
+			</xs:extension>
+		</xs:complexContent>
+	</xs:complexType>
+
+	<!--##############################-->
+	<!--## Comparisation Operations ##-->
+	<!--##############################-->
+	
+	<xs:element name="Equal" substitutionGroup="allex:BooleanTerm" type="allex:Comparisation_2_2_Operator.type">
+		<xs:annotation>
+			<xs:documentation xml:lang="en">
+				<dc:descripton>
+					This operation verfies wether its arguments are equal or not.
+				</dc:descripton>
+			</xs:documentation>
+		</xs:annotation>
+	</xs:element>
+
+	<xs:element name="NotEqual" substitutionGroup="allex:BooleanTerm" type="allex:Comparisation_2_2_Operator.type">
+		<xs:annotation>
+			<xs:documentation xml:lang="en">
+				<dc:descripton>
+					This operation is the inverse operation to Equal.
+				</dc:descripton>
+			</xs:documentation>
+		</xs:annotation>
+	</xs:element>
+	
+	<xs:element name="Greater" substitutionGroup="allex:BooleanTerm" type="allex:NumericComparisation_2_2_Operator.type">
+		<xs:annotation>
+			<xs:documentation xml:lang="en">
+				<dc:descripton>
+					This operation checks if the first numeric term is greater
+					then the second one.
+				</dc:descripton>
+			</xs:documentation>
+		</xs:annotation>
+	</xs:element>
+
+	<xs:element name="GreaterEqual" substitutionGroup="allex:BooleanTerm" type="allex:NumericComparisation_2_2_Operator.type">
+		<xs:annotation>
+			<xs:documentation xml:lang="en">
+				<dc:descripton>
+					This operation checks if the first numeric term is greater
+					then or equal to the second one.
+				</dc:descripton>
+			</xs:documentation>
+		</xs:annotation>
+	</xs:element>
+	
+	<xs:element name="Less" substitutionGroup="allex:BooleanTerm" type="allex:NumericComparisation_2_2_Operator.type">
+		<xs:annotation>
+			<xs:documentation xml:lang="en">
+				<dc:descripton>
+					This operation checks if the first numeric term is less
+					then the second one.
+				</dc:descripton>
+			</xs:documentation>
+		</xs:annotation>
+	</xs:element>
+	
+	<xs:element name="LessEqual" substitutionGroup="allex:BooleanTerm" type="allex:NumericComparisation_2_2_Operator.type">
+		<xs:annotation>
+			<xs:documentation xml:lang="en">
+				<dc:descripton>
+					This operation checks if the first numeric term is less
+					then or equal to the second one.
+				</dc:descripton>
+			</xs:documentation>
+		</xs:annotation>
+	</xs:element>
+</xs:schema>

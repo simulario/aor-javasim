@@ -1,0 +1,195 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<xs:schema
+	xmlns:ers="http://aor-simulation.org"
+	xmlns:aors="http://aor-simulation.org"	
+	xmlns:xs="http://www.w3.org/2001/XMLSchema"
+	targetNamespace="http://aor-simulation.org"
+	elementFormDefault="qualified"
+	attributeFormDefault="unqualified">
+	<!-- =================================================================== -->	
+	<xs:include schemaLocation="ersl/EntityTypes.xsd"/>
+	<xs:include schemaLocation="AgentRules.xsd"/>
+	<!-- =================================================================== -->
+	<!-- *** AgentType *** -->
+	<!-- =================================================================== -->
+	<xs:element name="AgentType" type="aors:AgentType.type" substitutionGroup="ers:ObjectType">
+		<xs:key name="AgentType-PropertyKey">
+			<xs:selector xpath="aors:Attribute | aors:ReferenceProperty"/>
+			<xs:field xpath="@name"/>
+		</xs:key>
+	</xs:element>
+	<xs:complexType name="AgentType.type">
+		<xs:complexContent>
+			<xs:extension base="ers:ObjectType.type">
+				<xs:sequence>
+					<xs:group ref="aors:AgentType.elements"/>
+					<xs:element ref="aors:CommunicationRule" minOccurs="0" maxOccurs="unbounded"/>
+				</xs:sequence>
+				<xs:attributeGroup ref="aors:AgentType.attributes"/>
+			</xs:extension>
+		</xs:complexContent>
+	</xs:complexType>
+	<xs:attributeGroup name="AgentType.attributes">
+		<xs:attribute name="memorySize" type="xs:integer" use="optional" default="0"/>
+		<xs:attribute name="beliefRepresentationStyle" use="optional" default="designTimeVocabulary">
+			<xs:simpleType>
+				<xs:restriction base="xs:string">
+					<xs:enumeration value="designTimeVocabulary"/>
+					<xs:enumeration value="runTimeVocabulary"/>
+				</xs:restriction>
+			</xs:simpleType>
+		</xs:attribute>
+	</xs:attributeGroup>
+	<xs:group name="AgentType.elements">
+		<xs:sequence>
+			<xs:element ref="aors:SelfBeliefProperty" minOccurs="0" maxOccurs="unbounded"/>
+			<xs:element ref="aors:BeliefEntityType" minOccurs="0" maxOccurs="unbounded"/>
+			<xs:element name="SubjectiveFunction" type="ers:Function.type" minOccurs="0" maxOccurs="unbounded"/>
+			<xs:element ref="aors:TimeEventType" minOccurs="0" maxOccurs="unbounded"/>
+		</xs:sequence>
+	</xs:group>
+	<!-- =================================================================== -->
+	<!-- *** PhysicalAgentType *** -->
+	<!-- =================================================================== -->
+	<xs:element name="PhysicalAgentType" substitutionGroup="ers:PhysicalObjectType">
+		<xs:complexType>
+			<xs:complexContent>
+				<xs:extension base="ers:PhysicalObjectType.type">
+					<xs:sequence>
+						<xs:group ref="aors:AgentType.elements"/>
+						<xs:element ref="aors:ActualPerceptionEventType" minOccurs="0" maxOccurs="unbounded"/>
+					  <xs:element ref="aors:ActionRule" minOccurs="0" maxOccurs="unbounded"/>
+					  <xs:element ref="aors:ActualPerceptionRule" minOccurs="0" maxOccurs="unbounded"/>
+						<xs:element ref="aors:ReactionRule" minOccurs="0" maxOccurs="unbounded"/>
+					</xs:sequence>
+					<xs:attribute name="autoPerception" type="xs:boolean" use="optional" default="false"/>
+					<xs:attributeGroup ref="aors:AgentType.attributes"/>
+				</xs:extension>
+			</xs:complexContent>
+		</xs:complexType>
+	  <xs:unique name="UniqueActionRule">
+	    <xs:selector xpath="aors:ActionRule"/>
+	    <xs:field xpath="@actionEventType"/>
+	  </xs:unique>
+		<xs:key name="PhysicalAgentType-PropertyKey">
+			<xs:selector xpath="aors:Attribute | aors:ReferenceProperty"/>
+			<xs:field xpath="@name"/>
+		</xs:key>
+		<xs:key name="ActualPerceptionEventTypeKey">
+			<xs:selector xpath="aors:ActualPerceptionEventType"/>
+			<xs:field xpath="@name"/>
+		</xs:key>
+		<xs:keyref name="ActualPerceptionEventTypeReference" refer="aors:ActualPerceptionEventTypeKey">
+			<xs:selector xpath="aors:ActualPerceptionRule/aors:CREATE-EVT"/>
+			<xs:field xpath="@actualPercEvtType"/>
+		</xs:keyref>	  
+		<!--xs:keyref name="MessageTypeReference" refer="aors:ActualPerceptionEventTypeKey">
+			<xs:selector xpath="aors:ActualPerceptionRule/aors:CREATE-EVT"/>
+			<xs:field xpath="@messageType"/>
+		</xs:keyref-->
+	</xs:element>
+	<!-- =================================================================== -->
+	<!-- *** SelfBeliefProperty *** -->
+	<!-- =================================================================== -->
+	<xs:element name="SelfBeliefProperty" type="ers:Property.type" abstract="true"/>
+	<xs:element name="SelfBeliefAttribute" type="ers:Attribute.type" substitutionGroup="aors:SelfBeliefProperty"/>
+	<xs:element name="SelfBeliefReferenceProperty" type="ers:ReferenceProperty.type" substitutionGroup="aors:SelfBeliefProperty"/>
+	<!-- =================================================================== -->
+	<!-- *** SubjectiveFunction *** -->
+	<!-- =================================================================== -->
+	<xs:element name="SubjectiveFunction" type="ers:Function.type"/>
+	<!-- =================================================================== -->
+	<!-- *** BeliefEntityType *** -->
+	<!-- =================================================================== -->
+	<xs:element name="BeliefEntityType" type="aors:BeliefEntityType.type"/>
+	<xs:complexType name="BeliefEntityType.type">
+		<xs:sequence>
+			<xs:element ref="aors:BeliefProperty" minOccurs="0" maxOccurs="unbounded"/>
+		</xs:sequence>
+		<xs:attribute name="name" type="ers:CanonicalName" use="required"/>
+	  <xs:attribute name="superType" type="ers:CanonicalName" use="optional"/>
+	</xs:complexType>
+	<!-- =================================================================== -->
+	<!-- *** BeliefProperty ** -->
+	<!-- =================================================================== -->
+	<xs:element name="BeliefProperty" type="ers:Property.type" abstract="true"/>
+	<xs:element name="BeliefAttribute" type="ers:Attribute.type" substitutionGroup="aors:BeliefProperty"/>
+	<xs:element name="BeliefReferenceProperty" type="ers:ReferenceProperty.type" substitutionGroup="aors:BeliefProperty"/>
+	<!-- =================================================================== -->
+	<!-- *** MessageType *** -->
+	<!-- =================================================================== -->
+	<xs:element name="MessageType" type="aors:MessageType.type" substitutionGroup="ers:EntityType">
+		<xs:key name="MessageType-PropertyKey">
+			<xs:selector xpath="aors:Attribute | aors:ReferenceProperty"/>
+			<xs:field xpath="@name"/>
+		</xs:key>
+	</xs:element>
+	<xs:complexType name="MessageType.type">
+		<xs:complexContent>
+			<xs:extension base="ers:EntityType.type"/>
+		</xs:complexContent>
+	</xs:complexType>
+	<!-- =================================================================== -->
+	<!-- *** Environment Event Types *** -->
+	<!-- =================================================================== -->
+	<!-- *** PerceptionEventType *** -->
+	<xs:element name="PerceptionEventType" type="aors:PerceptionEventType.type" substitutionGroup="ers:CausedEventType">
+		<xs:key name="PerceptionEventType-PropertyKey">
+			<xs:selector xpath="aors:Attribute | aors:ReferenceProperty"/>
+			<xs:field xpath="@name"/>
+		</xs:key>
+	</xs:element>
+	<xs:complexType name="PerceptionEventType.type">
+		<xs:complexContent>
+			<xs:extension base="ers:CausedEventType.type"/>
+		</xs:complexContent>
+	</xs:complexType>
+	<!-- *** ActionEventType *** -->
+	<xs:element name="ActionEventType" type="aors:ActionEventType.type" substitutionGroup="ers:EnvironmentEventType">
+		<xs:key name="ActionEventType-PropertyKey">
+			<xs:selector xpath="aors:Attribute | aors:ReferenceProperty"/>
+			<xs:field xpath="@name"/>
+		</xs:key>
+	</xs:element>
+	<xs:complexType name="ActionEventType.type">
+		<xs:complexContent>
+			<xs:extension base="ers:EnvironmentEventType.type"/>
+		</xs:complexContent>
+	</xs:complexType>
+	<!-- =================================================================== -->
+	<!-- *** Internal Event Types *** -->
+	<!-- =================================================================== -->
+	<xs:element name="InternalEventType" type="aors:InternalEventType.type" abstract="true" substitutionGroup="ers:EventType"/>
+	<xs:complexType name="InternalEventType.type">
+		<xs:complexContent>
+			<xs:extension base="ers:EventType.type"/>
+		</xs:complexContent>
+	</xs:complexType>
+	<!-- *** ActualPerceptionEventType *** -->
+	<xs:element name="ActualPerceptionEventType" type="aors:ActualPerceptionEventType.type" substitutionGroup="aors:InternalEventType"/>
+	<xs:complexType name="ActualPerceptionEventType.type">
+		<xs:complexContent>
+			<xs:extension base="aors:InternalEventType.type"/>
+		</xs:complexContent>
+	</xs:complexType>
+	<!-- *** TimeEventType *** -->
+	<xs:element name="TimeEventType" type="aors:TimeEventType.type" substitutionGroup="aors:InternalEventType"/>
+	<xs:complexType name="TimeEventType.type">
+		<xs:complexContent>
+			<xs:extension base="aors:InternalEventType.type"/>
+		</xs:complexContent>
+	</xs:complexType>
+	<!-- *** PeriodicTimeEventType *** -->
+	<xs:element name="PeriodicTimeEventType" type="aors:PeriodicTimeEventType.type" substitutionGroup="aors:TimeEventType"/>
+	<xs:complexType name="PeriodicTimeEventType.type">
+		<xs:complexContent>
+			<xs:extension base="aors:TimeEventType.type">
+				<xs:sequence>
+					<xs:element ref="ers:Periodicity" minOccurs="0"/>
+					<xs:element ref="ers:StopCondition" minOccurs="0" maxOccurs="unbounded"/>
+				</xs:sequence>
+				<xs:attribute name="periodicity" type="xs:positiveInteger" use="optional"/>
+			</xs:extension>
+		</xs:complexContent>
+	</xs:complexType>
+</xs:schema>

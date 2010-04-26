@@ -1,0 +1,780 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<xs:schema
+	xmlns:xs="http://www.w3.org/2001/XMLSchema"
+	xmlns:dc="http://purl.org/dc/terms/"
+	xmlns:allex="http://aor-simulation.org/expression-language/ALLEX"
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	targetNamespace="http://aor-simulation.org/expression-language/ALLEX"
+	elementFormDefault="qualified"
+	attributeFormDefault="unqualified"
+	version="1.0">
+	
+	<xs:annotation>
+		<xs:documentation xml:lang="en">
+			<dc:title>
+				Numeric Operations
+			</dc:title>
+			<dc:creator>
+				Thomas Grundmann
+			</dc:creator>
+			<dc:created>
+				2009-03-01
+			</dc:created>
+			<dc:description>
+				This schema defines the numeric operations which are supported
+				in ALLEX. Among others it provides basic arithmetic operations.
+				It also supports trigonometric and hyperbolic operations as
+				well as logarithmic and exponential ones. Additionally it
+				provides elements for floating point and integer literals and
+				defines the floating point constants E and PI.
+			</dc:description>
+			<dc:description>
+				../Diagrams/Numeric_Operations.svg
+			</dc:description>
+			<dc:requires>
+				Terms_and_Datatypes.xsd
+			</dc:requires>
+			<dc:license>
+				This program is free software; you can redistribute it and/or
+				modify it under the terms of the GNU General Public License as
+				published by the Free Software Foundation; either version 3 of
+				the License, or (at your option) any later version. This
+				program is distributed in the hope that it will be useful, but
+				WITHOUT ANY WARRANTY; without even the implied warranty of
+				MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+				GNU General Public License for more details.
+			</dc:license>
+			<dc:license>
+				http://www.gnu.org/licenses/gpl.html
+			</dc:license>
+		</xs:documentation>
+	</xs:annotation>
+	
+	<xs:include schemaLocation="Terms_and_Datatypes.xsd"/>
+	
+	<!--#######################-->
+	<!--## Integer Constants ##-->
+	<!--#######################-->
+	
+	<xs:complexType name="IntegerConstant.type">
+		<xs:annotation>
+			<xs:documentation xml:lang="en">
+				<dc:description>
+					This type represents an integer constant. All integer
+					constants using this type.
+				</dc:description>
+			</xs:documentation>
+		</xs:annotation>	
+		<xs:complexContent>
+			<xs:restriction base="allex:IntegerTerm.type"/>
+		</xs:complexContent>
+	</xs:complexType>
+	
+	<!--#####################-->
+	<!--## Integer Literal ##-->
+	<!--#####################-->
+
+	<xs:element name="Integer" substitutionGroup="allex:IntegerTerm">
+		<xs:annotation>
+			<xs:documentation xml:lang="en">
+				<dc:description>
+					This element represents an integer literal. Its value
+					attribute corresponds to the Integer.datatype definition.
+				</dc:description>
+			</xs:documentation>
+		</xs:annotation>		
+		<xs:complexType>
+			<xs:complexContent>
+				<xs:extension base="allex:IntegerTerm.type">
+					<xs:attribute name="value" type="allex:Integer.datatype" use="required"/>
+				</xs:extension>
+			</xs:complexContent>
+		</xs:complexType>
+	</xs:element>
+	
+	<!--#######################-->
+	<!--## Integer Operators ##-->
+	<!--#######################-->
+	
+	<xs:complexType name="IntegerOperator.type" abstract="true">
+		<xs:annotation>
+			<xs:documentation xml:lang="en">
+				<dc:description>
+					This type represents an integer operator. All other integer
+					operators are derived from this one.
+				</dc:description>
+			</xs:documentation>
+		</xs:annotation>
+		<xs:complexContent>
+			<xs:restriction base="allex:IntegerTerm.type"/>
+		</xs:complexContent>
+	</xs:complexType>
+		
+	<xs:complexType name="Integer_1_1_Operator.type">
+		<xs:annotation>
+			<xs:documentation xml:lang="en">
+				<dc:descripton>
+					This type defines an integer operator which takes exactly
+					one argument. The argument has to be an integer term.
+				</dc:descripton>
+			</xs:documentation>
+		</xs:annotation>
+		<xs:complexContent>
+			<xs:extension base="allex:IntegerOperator.type">
+				<xs:sequence>
+					<xs:element ref="allex:IntegerTerm"/>
+				</xs:sequence>
+			</xs:extension>
+		</xs:complexContent>
+	</xs:complexType>	
+
+	<xs:complexType name="Integer_2_2_Operator.type">
+		<xs:annotation>
+			<xs:documentation xml:lang="en">
+				<dc:descripton>
+					This type defines an integer operator which takes exactly
+					two arguments. Both arguments have to be integer terms.
+				</dc:descripton>
+			</xs:documentation>
+		</xs:annotation>
+		<xs:complexContent>
+			<xs:extension base="allex:IntegerOperator.type">
+				<xs:sequence>
+					<xs:element ref="allex:IntegerTerm" minOccurs="2" maxOccurs="2"/>
+				</xs:sequence>
+			</xs:extension>
+		</xs:complexContent>
+	</xs:complexType>
+	
+	<xs:complexType name="Integer_2_n_Operator.type">
+		<xs:annotation>
+			<xs:documentation xml:lang="en">
+				<dc:descripton>
+					This type defines an integer operator which takes at least
+					two arguments. All arguments have to be integer terms.
+				</dc:descripton>
+			</xs:documentation>
+		</xs:annotation>
+		<xs:complexContent>
+			<xs:extension base="allex:IntegerOperator.type">				
+				<xs:sequence>
+					<xs:element ref="allex:IntegerTerm" minOccurs="2" maxOccurs="unbounded"/>
+				</xs:sequence>
+			</xs:extension>
+		</xs:complexContent>
+	</xs:complexType>
+	
+	<!--############################-->
+	<!--## Integer Cast Operation ##-->
+	<!--############################-->
+	
+	<xs:element name="IntegerCast" substitutionGroup="allex:IntegerTerm">
+		<xs:annotation>
+			<xs:documentation xml:lang="en">
+				<dc:description>
+					This operation casts a numeric value into an integer value.
+					If the numeric value is an integer value, it is return.
+					If the numeric value is a floating point value the decimal
+					places will be truncated.
+				</dc:description>
+			</xs:documentation>
+		</xs:annotation>
+		<xs:complexType>
+			<xs:complexContent>
+				<xs:extension base="allex:IntegerOperator.type">
+					<xs:sequence>
+						<xs:element ref="allex:NumericTerm"/>
+					</xs:sequence>
+				</xs:extension>
+			</xs:complexContent>
+		</xs:complexType>
+	</xs:element>
+	
+	<!--##############################-->
+	<!--## Floating Point Constants ##-->
+	<!--##############################-->
+
+	<xs:complexType name="FloatConstant.type">
+		<xs:annotation>
+			<xs:documentation xml:lang="en">
+				<dc:description>
+					This type represents a floating point constant. All
+					floating point constants using this type.
+				</dc:description>
+			</xs:documentation>
+		</xs:annotation>	
+		<xs:complexContent>
+			<xs:restriction base="allex:FloatTerm.type"/>
+		</xs:complexContent>
+	</xs:complexType>
+	
+	<xs:element name="E" substitutionGroup="allex:FloatTerm" type="allex:FloatConstant.type">
+		<xs:annotation>
+			<xs:documentation xml:lang="en">
+				<dc:description>
+					This element represents the Euler's constant.
+				</dc:description>
+			</xs:documentation>
+		</xs:annotation>
+	</xs:element>
+
+	<xs:element name="PI" substitutionGroup="allex:FloatTerm" type="allex:FloatConstant.type">
+		<xs:annotation>
+			<xs:documentation xml:lang="en">
+				<dc:description>
+					This element represents the number PI.
+				</dc:description>
+			</xs:documentation>
+		</xs:annotation>		
+	</xs:element>
+
+	<!--############################-->
+	<!--## Floating Point Literal ##-->
+	<!--############################-->
+
+	<xs:element name="Float" substitutionGroup="allex:FloatTerm">
+		<xs:annotation>
+			<xs:documentation xml:lang="en">
+				<dc:description>
+					This element represents a floating point literal. Its value
+					attribute corresponds to the Float.datatype definition.
+				</dc:description>
+			</xs:documentation>
+		</xs:annotation>		
+		<xs:complexType>
+			<xs:complexContent>
+				<xs:extension base="allex:FloatTerm.type">
+					<xs:attribute name="value" type="allex:Float.datatype" use="required"/>
+				</xs:extension>
+			</xs:complexContent>
+		</xs:complexType>
+	</xs:element>
+
+	<!--##############################-->
+	<!--## Floating Point Operators ##-->
+	<!--##############################-->
+
+	<xs:complexType name="FloatOperator.type" abstract="true">
+		<xs:annotation>
+			<xs:documentation xml:lang="en">
+				<dc:description>
+					This type represents a floating point operator.	All other
+					floating point operators are derived from this one.
+				</dc:description>
+			</xs:documentation>
+		</xs:annotation>
+		<xs:complexContent>
+			<xs:restriction base="allex:FloatTerm.type"/>
+		</xs:complexContent>
+	</xs:complexType>
+		
+	<xs:complexType name="Float_1_1_Operator.type">
+		<xs:annotation>
+			<xs:documentation xml:lang="en">
+				<dc:descripton>
+					This type defines a floating point operator which takes
+					exactly one argument. The argument has to be a floating
+					point term.
+				</dc:descripton>
+			</xs:documentation>
+		</xs:annotation>
+		<xs:complexContent>
+			<xs:extension base="allex:FloatOperator.type">
+				<xs:sequence>
+					<xs:element ref="allex:FloatTerm"/>
+				</xs:sequence>
+			</xs:extension>
+		</xs:complexContent>
+	</xs:complexType>	
+
+	<xs:complexType name="Float_2_2_Operator.type">
+		<xs:annotation>
+			<xs:documentation xml:lang="en">
+				<dc:descripton>
+					This type defines a floating point operator which takes
+					exactly two arguments. Both arguments have to be floating
+					point terms.
+				</dc:descripton>
+			</xs:documentation>
+		</xs:annotation>
+		<xs:complexContent>
+			<xs:extension base="allex:FloatOperator.type">
+				<xs:sequence>
+					<xs:element ref="allex:FloatTerm" minOccurs="2" maxOccurs="2"/>
+				</xs:sequence>
+			</xs:extension>
+		</xs:complexContent>
+	</xs:complexType>
+	
+	<xs:complexType name="Float_2_n_Operator.type">
+		<xs:annotation>
+			<xs:documentation xml:lang="en">
+				<dc:descripton>
+					This type defines a floating point operator which takes at
+					least two arguments. All arguments have to be floating
+					point terms.
+				</dc:descripton>
+			</xs:documentation>
+		</xs:annotation>
+		<xs:complexContent>
+			<xs:extension base="allex:FloatOperator.type">				
+				<xs:sequence>
+					<xs:element ref="allex:FloatTerm" minOccurs="2" maxOccurs="unbounded"/>
+				</xs:sequence>
+			</xs:extension>
+		</xs:complexContent>
+	</xs:complexType>
+		
+	<!--#######################-->
+	<!--## Numeric Operators ##-->
+	<!--#######################-->
+
+	<xs:complexType name="NumericOperator.type" abstract="true">
+		<xs:annotation>
+			<xs:documentation xml:lang="en">
+				<dc:description>
+					This type represents a numeric operator. All other numeric
+					operators are derived from this one.
+				</dc:description>
+			</xs:documentation>
+		</xs:annotation>
+		<xs:complexContent>
+			<xs:restriction base="allex:NumericTerm.type"/>
+		</xs:complexContent>
+	</xs:complexType>
+	
+	<xs:complexType name="Numeric_0_0_Operator.type">
+		<xs:annotation>
+			<xs:documentation xml:lang="en">
+				<dc:descripton>
+					This type defines a numeric operator which does not take
+					any arguments.
+				</dc:descripton>			
+			</xs:documentation>
+		</xs:annotation>
+		<xs:complexContent>
+			<xs:restriction base="allex:NumericOperator.type"/>
+		</xs:complexContent>
+	</xs:complexType>
+	
+	<xs:complexType name="Numeric_1_1_Operator.type">
+		<xs:annotation>
+			<xs:documentation xml:lang="en">
+				<dc:descripton>
+					This type defines a numeric operator which takes exactly
+					one argument. The argument has to be a numeric term.
+				</dc:descripton>
+			</xs:documentation>
+		</xs:annotation>
+		<xs:complexContent>
+			<xs:extension base="allex:NumericOperator.type">
+				<xs:sequence>
+					<xs:element ref="allex:NumericTerm"/>
+				</xs:sequence>
+			</xs:extension>
+		</xs:complexContent>
+	</xs:complexType>	
+
+	<xs:complexType name="Numeric_2_2_Operator.type">
+		<xs:annotation>
+			<xs:documentation xml:lang="en">
+				<dc:descripton>
+					This type defines a numeric operator which takes exactly
+					two arguments. Both arguments have to be numeric terms.
+				</dc:descripton>
+			</xs:documentation>
+		</xs:annotation>
+		<xs:complexContent>
+			<xs:extension base="allex:NumericOperator.type">
+				<xs:sequence>
+					<xs:element ref="allex:NumericTerm" minOccurs="2" maxOccurs="2"/>
+				</xs:sequence>
+			</xs:extension>
+		</xs:complexContent>
+	</xs:complexType>
+	
+	<xs:complexType name="Numeric_2_n_Operator.type">
+		<xs:annotation>
+			<xs:documentation xml:lang="en">
+				<dc:descripton>
+					This type defines a numeric operator which takes at least
+					two arguments. All arguments have to be numeric terms.
+				</dc:descripton>
+			</xs:documentation>
+		</xs:annotation>
+		<xs:complexContent>
+			<xs:extension base="allex:NumericOperator.type">				
+				<xs:sequence>
+					<xs:element ref="allex:NumericTerm" minOccurs="2" maxOccurs="unbounded"/>
+				</xs:sequence>
+			</xs:extension>
+		</xs:complexContent>
+	</xs:complexType>
+
+	<!--#################################-->
+	<!--## Basic Arithmetic Operations ##-->
+	<!--#################################-->
+	
+	<xs:element name="Add" substitutionGroup="allex:NumericTerm" type="allex:Numeric_2_n_Operator.type">
+		<xs:annotation>
+			<xs:documentation xml:lang="en">
+				<dc:descripton>
+					This operations represents the summation of two or more
+					numbers.
+				</dc:descripton>
+			</xs:documentation>
+		</xs:annotation>	
+	</xs:element>
+	
+	<xs:element name="Sub" substitutionGroup="allex:NumericTerm" type="allex:Numeric_2_n_Operator.type">
+		<xs:annotation>
+			<xs:documentation xml:lang="en">
+				<dc:descripton>
+					This operations represents the subtraction of two or more
+					numbers.
+				</dc:descripton>
+			</xs:documentation>
+		</xs:annotation>	
+	</xs:element>
+	
+	<xs:element name="Mul" substitutionGroup="allex:NumericTerm" type="allex:Numeric_2_n_Operator.type">
+		<xs:annotation>
+			<xs:documentation xml:lang="en">
+				<dc:descripton>
+					This operations represents the multiplication of two or
+					more numbers.
+				</dc:descripton>
+			</xs:documentation>
+		</xs:annotation>	
+	</xs:element>
+	
+	<xs:element name="Div" substitutionGroup="allex:NumericTerm" type="allex:Numeric_2_n_Operator.type">
+		<xs:annotation>
+			<xs:documentation xml:lang="en">
+				<dc:descripton>
+					This operations represents the division of two or more
+					numbers. If the arguments are integer number an integer
+					divison is performed. Otherwise a floating point division
+					will be used.
+				</dc:descripton>
+			</xs:documentation>
+		</xs:annotation>	
+	</xs:element>
+
+	<xs:element name="Mod" substitutionGroup="allex:NumericTerm" type="allex:Numeric_2_2_Operator.type">
+		<xs:annotation>
+			<xs:documentation xml:lang="en">
+				<dc:descripton>
+					This operations computes the remainder operation on two
+					arguments.
+				</dc:descripton>
+			</xs:documentation>
+		</xs:annotation>
+	</xs:element>
+	
+	<!--#############################################-->
+	<!--## Trigonometric and Hyperbolic Operations ##-->
+	<!--#############################################-->
+
+	<xs:element name="Cos" substitutionGroup="allex:NumericTerm" type="allex:Numeric_1_1_Operator.type">
+		<xs:annotation>
+			<xs:documentation xml:lang="en">
+				<dc:descripton>
+					This operations returns the trigonometric cosine of an
+					angle.
+				</dc:descripton>
+			</xs:documentation>
+		</xs:annotation>
+	</xs:element>
+	
+	<xs:element name="Cosh" substitutionGroup="allex:NumericTerm" type="allex:Numeric_1_1_Operator.type">
+		<xs:annotation>
+			<xs:documentation xml:lang="en">
+				<dc:descripton>
+					This operations returns the hyperbolic cosine of a value.
+				</dc:descripton>
+			</xs:documentation>
+		</xs:annotation>
+	</xs:element>
+
+	<xs:element name="ACos" substitutionGroup="allex:NumericTerm" type="allex:Numeric_1_1_Operator.type">
+		<xs:annotation>
+			<xs:documentation xml:lang="en">
+				<dc:descripton>
+					This operations returns the arc cosine of a value.
+				</dc:descripton>
+			</xs:documentation>
+		</xs:annotation>
+	</xs:element>
+	
+	<xs:element name="Sin" substitutionGroup="allex:NumericTerm" type="allex:Numeric_1_1_Operator.type">
+		<xs:annotation>
+			<xs:documentation xml:lang="en">
+				<dc:descripton>
+					This operations returns the sine of an angle.
+				</dc:descripton>
+			</xs:documentation>
+		</xs:annotation>
+	</xs:element>
+	
+	<xs:element name="Sinh" substitutionGroup="allex:NumericTerm" type="allex:Numeric_1_1_Operator.type">
+		<xs:annotation>
+			<xs:documentation xml:lang="en">
+				<dc:descripton>
+					This operations returns the hyperbolic sine of a value.
+				</dc:descripton>
+			</xs:documentation>
+		</xs:annotation>
+	</xs:element>
+	
+	<xs:element name="ASin" substitutionGroup="allex:NumericTerm" type="allex:Numeric_1_1_Operator.type">
+		<xs:annotation>
+			<xs:documentation xml:lang="en">
+				<dc:descripton>
+					This operations returns the arc sine of a value.
+				</dc:descripton>
+			</xs:documentation>
+		</xs:annotation>
+	</xs:element>
+	
+	<xs:element name="Tan" substitutionGroup="allex:NumericTerm" type="allex:Numeric_1_1_Operator.type">
+		<xs:annotation>
+			<xs:documentation xml:lang="en">
+				<dc:descripton>
+					This operations returns the tangent of an angle.
+				</dc:descripton>
+			</xs:documentation>
+		</xs:annotation>
+	</xs:element>
+	
+	<xs:element name="Tanh" substitutionGroup="allex:NumericTerm" type="allex:Numeric_1_1_Operator.type">
+		<xs:annotation>
+			<xs:documentation xml:lang="en">
+				<dc:descripton>
+					This operations returns the hyperbolic tangent of a value.
+				</dc:descripton>
+			</xs:documentation>
+		</xs:annotation>
+	</xs:element>
+	
+	<xs:element name="ATan" substitutionGroup="allex:NumericTerm" type="allex:Numeric_1_1_Operator.type">
+		<xs:annotation>
+			<xs:documentation xml:lang="en">
+				<dc:descripton>
+					This operations returns the arc tangent of a value.
+				</dc:descripton>
+			</xs:documentation>
+		</xs:annotation>
+	</xs:element>
+	
+	<!--############################################-->
+	<!--## Exponential and Logarithmic Operations ##-->
+	<!--############################################-->
+
+	<xs:element name="Pow" substitutionGroup="allex:NumericTerm" type="allex:Numeric_2_2_Operator.type">
+		<xs:annotation>
+			<xs:documentation xml:lang="en">
+				<dc:descripton>
+					This operations returns the 2nd argument to the power of
+					the 1st argument.
+				</dc:descripton>
+			</xs:documentation>
+		</xs:annotation>
+	</xs:element>
+	
+	<xs:element name="Square" substitutionGroup="allex:NumericTerm" type="allex:Numeric_1_1_Operator.type">
+		<xs:annotation>
+			<xs:documentation xml:lang="en">
+				<dc:descripton>
+					This operations returns the square of the argument.
+				</dc:descripton>
+			</xs:documentation>
+		</xs:annotation>
+	</xs:element>	
+	
+	<xs:element name="Sqrt" substitutionGroup="allex:NumericTerm" type="allex:Numeric_1_1_Operator.type">
+		<xs:annotation>
+			<xs:documentation xml:lang="en">
+				<dc:descripton>
+					This operations returns the square root of the argument.
+				</dc:descripton>
+			</xs:documentation>
+		</xs:annotation>
+	</xs:element>	
+	
+	<xs:element name="Cube" substitutionGroup="allex:NumericTerm" type="allex:Numeric_1_1_Operator.type">
+		<xs:annotation>
+			<xs:documentation xml:lang="en">
+				<dc:descripton>
+					This operations returns the cube of the argument.
+				</dc:descripton>
+			</xs:documentation>
+		</xs:annotation>
+	</xs:element>	
+	
+	<xs:element name="Cbrt" substitutionGroup="allex:NumericTerm" type="allex:Numeric_1_1_Operator.type">
+		<xs:annotation>
+			<xs:documentation xml:lang="en">
+				<dc:descripton>
+					This operations returns the cube root of the argument.
+				</dc:descripton>
+			</xs:documentation>
+		</xs:annotation>
+	</xs:element>
+
+	<xs:element name="Exp" substitutionGroup="allex:NumericTerm" type="allex:Numeric_1_1_Operator.type">
+		<xs:annotation>
+			<xs:documentation xml:lang="en">
+				<dc:descripton>
+					This operations returns the Euler's number raised to the
+					power of the argument.
+				</dc:descripton>
+			</xs:documentation>
+		</xs:annotation>
+	</xs:element>
+
+	<xs:element name="Log" substitutionGroup="allex:NumericTerm" type="allex:Numeric_2_2_Operator.type">
+		<xs:annotation>
+			<xs:documentation xml:lang="en">
+				<dc:descripton>
+					This operations returns the logarithm of the 2nd argument
+					with the 1st argument as base.
+				</dc:descripton>
+			</xs:documentation>
+		</xs:annotation>
+	</xs:element>
+	
+	<xs:element name="Lb" substitutionGroup="allex:NumericTerm" type="allex:Numeric_1_1_Operator.type">
+		<xs:annotation>
+			<xs:documentation xml:lang="en">
+				<dc:descripton>
+					This operation return the binary logarithm of the argument.
+				</dc:descripton>
+			</xs:documentation>
+		</xs:annotation>
+	</xs:element>
+	
+	<xs:element name="Lg" substitutionGroup="allex:NumericTerm" type="allex:Numeric_1_1_Operator.type">
+		<xs:annotation>
+			<xs:documentation xml:lang="en">
+				<dc:descripton>
+					This operations returns the common (decimal) logarihm of
+					the argument.
+				</dc:descripton>
+			</xs:documentation>
+		</xs:annotation>
+	</xs:element>
+	
+	<xs:element name="Ln" substitutionGroup="allex:NumericTerm" type="allex:Numeric_1_1_Operator.type">
+		<xs:annotation>
+			<xs:documentation xml:lang="en">
+				<dc:descripton>
+					This operations returns the natural logarithm of the
+					argument.
+				</dc:descripton>
+			</xs:documentation>
+		</xs:annotation>
+	</xs:element>
+
+	<!--#########################-->
+	<!--## Rounding Operations ##-->
+	<!--#########################-->
+
+	<xs:element name="Ceil"  substitutionGroup="allex:NumericTerm" type="allex:Numeric_1_1_Operator.type">
+		<xs:annotation>
+			<xs:documentation xml:lang="en">
+				<dc:descripton>
+					Returns the smallest integer value that is greater than or
+					equal to the argument.
+				</dc:descripton>
+			</xs:documentation>
+		</xs:annotation>
+	</xs:element>
+
+	<xs:element name="Floor" substitutionGroup="allex:NumericTerm" type="allex:Numeric_1_1_Operator.type">
+		<xs:annotation>
+			<xs:documentation xml:lang="en">
+				<dc:descripton>
+					Returns the largest integer value that is less than or
+					equal to the argument.
+				</dc:descripton>
+			</xs:documentation>
+		</xs:annotation>
+	</xs:element>
+
+	<xs:element name="Round" substitutionGroup="allex:NumericTerm" type="allex:Numeric_1_1_Operator.type">
+		<xs:annotation>
+			<xs:documentation xml:lang="en">
+				<dc:descripton>
+					Returns the closest integer value to the argument.
+				</dc:descripton>
+			</xs:documentation>
+		</xs:annotation>
+	</xs:element>
+
+	<!--##############################-->
+	<!--## Miscellaneous Operations ##-->
+	<!--##############################-->
+	
+	<xs:element name="Abs" substitutionGroup="allex:NumericTerm" type="allex:Numeric_1_1_Operator.type">
+		<xs:annotation>
+			<xs:documentation xml:lang="en">
+				<dc:descripton>
+					Returns the absolut value of the argument.
+				</dc:descripton>
+			</xs:documentation>
+		</xs:annotation>
+	</xs:element>
+
+	<xs:element name="Min" substitutionGroup="allex:NumericTerm" type="allex:Numeric_2_n_Operator.type">
+		<xs:annotation>
+			<xs:documentation xml:lang="en">
+				<dc:descripton>
+					Returns the smallest value of the given arguments.
+				</dc:descripton>
+			</xs:documentation>
+		</xs:annotation>
+	</xs:element>
+
+	<xs:element name="Max" substitutionGroup="allex:NumericTerm" type="allex:Numeric_2_n_Operator.type">
+		<xs:annotation>
+			<xs:documentation xml:lang="en">
+				<dc:descripton>
+					Returns the largest value of the given arguments.
+				</dc:descripton>
+			</xs:documentation>
+		</xs:annotation>
+	</xs:element>
+
+	<xs:element name="Sig" substitutionGroup="allex:NumericTerm" type="allex:Numeric_1_1_Operator.type">
+		<xs:annotation>
+			<xs:documentation xml:lang="en">
+				<dc:descripton>
+					Returns the signum function of the argument.
+				</dc:descripton>
+			</xs:documentation>
+		</xs:annotation>
+	</xs:element>
+
+	<xs:element name="Rad" substitutionGroup="allex:NumericTerm" type="allex:Numeric_1_1_Operator.type">
+		<xs:annotation>
+			<xs:documentation xml:lang="en">
+				<dc:descripton>
+					Converts an angle measured in degrees to an approximately
+					equivalent angle measured in radians.
+				</dc:descripton>
+			</xs:documentation>
+		</xs:annotation>
+	</xs:element>
+
+	<xs:element name="Deg" substitutionGroup="allex:NumericTerm" type="allex:Numeric_1_1_Operator.type">
+		<xs:annotation>
+			<xs:documentation xml:lang="en">
+				<dc:descripton>
+					Converts an angle measured in radians to an approximately
+					equivalent angle measured in degrees.
+				</dc:descripton>
+			</xs:documentation>
+		</xs:annotation>
+	</xs:element>
+</xs:schema>
