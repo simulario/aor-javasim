@@ -1,0 +1,882 @@
+package aors.controller;
+
+import java.io.BufferedReader;
+import java.io.Console;
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.FileNotFoundException;
+import java.io.FileOutputStream;
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.InputStreamReader;
+import java.io.StringReader;
+import java.net.URL;
+import java.net.URLClassLoader;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.InvalidPropertiesFormatException;
+import java.util.Properties;
+import java.util.jar.JarEntry;
+import java.util.jar.JarFile;
+
+import javax.swing.JOptionPane;
+import javax.swing.JScrollPane;
+import javax.xml.XMLConstants;
+import javax.xml.transform.Source;
+import javax.xml.transform.stream.StreamSource;
+import javax.xml.validation.Schema;
+import javax.xml.validation.SchemaFactory;
+import javax.xml.validation.Validator;
+
+import org.xml.sax.SAXException;
+
+import aors.codegen.XSLT2Processor;
+import aors.data.DataBus;
+import aors.data.DataBusInterface;
+import aors.module.Constants;
+import aors.module.GUIModule;
+import aors.module.InitialState;
+import aors.module.Module;
+import aors.util.jar.JarUtil;
+
+/**
+ * This class represents the manager of the simulation.
+ * 
+ * SimulationManager
+ * 
+ * @author Marco Pehla, Mircea Diaconescu
+ * @since 31.07.2008
+ * @version $Revision: 2.0 $
+ */
+public class SimulationManager {
+
+  // the XSLT processor object
+  private XSLT2Processor xslt2Processor;
+
+  // the map with XSLT parameters
+  private HashMap<String, String> xsltParameter;
+
+  // Simulationdescription
+  private SimulationDescription simulationDescription;
+
+  // the current project assigned to the simulation manager
+  private static Project project;
+
+  // the list with all current loaded modules
+  private ArrayList<Module> modules;
+
+  // the user directory
+  private final String APP_ROOT_DIRECTORY = System.getProperty("user.dir");
+
+  // the projects directory
+  public final static String PROJECT_DIRECTORY = "projects";
+
+  // the AORSL directory
+  private final String aorslDirectory = "ext" + File.separator + "aorsl";
+
+  // the AORSK schema name
+  private String AORSL_SCHEMA_NAME;
+
+  // the current (used as defautl) schema name
+  private final String CURRENT_AORSL_SCHEMA_NAME = "AORSL-0-8-3.xsd";
+
+  // teh project properties object
+  private Properties properties;
+
+  // the project property file
+  private final String propertyFileName = "properties.xml";
+
+  // the property that defines the logger file name
+  private final String propertyLoggerFileName = "logger file name";
+  private final String propertyLoggerPath = "logger path";
+  private final String propertyAutoMultithreading = "auto multithreading";
+
+  public static final String propertyLogger = "logger";
+
+  // used by the AOR-WebSim Controller component - need to be public and static,
+  public static final String PROPERTY_XML_SCHEMA_FILE_NAME = "XML Schema file name";
+
+  // property values (default values)
+  private String loggerFileName = "output.xml";
+  private String loggerPath = ".";
+  private boolean autoMultithreading = false;
+  private DataBus dataBus;
+
+  // the project directory
+  private File projectDirectory;
+
+  // the file that represents the main XSLT file for code generation
+  private File xsltFile;
+
+  /**
+   * Create a new simulation manager.
+   */
+  public SimulationManager() {
+    // create the data bus that will be the data bus of all components/listeners
+    this.dataBus = new DataBus();
+
+    this.simulationDescription = new SimulationDescription();
+
+    // load properties from simulation project property file
+    this.loadProperties();
+
+    // initialize the logger
+    this.initLogger();
+
+    // initialize the modules/plugins
+    this.initModules();
+
+    // create the XSLT procesor ibject
+    this.xslt2Processor = new XSLT2Processor();
+
+    // the mapt with XSLT parameters
+    this.xsltParameter = new HashMap<String, String>();
+
+    // path to the XSLT main transformation file
+    this.xsltFile = new File(APP_ROOT_DIRECTORY + File.separator + "ext"
+        + File.separator + "javagen" + File.separator + "aorsml2java.xsl");
+
+    // set the project directory
+    this.projectDirectory = new File(APP_ROOT_DIRECTORY + File.separator
+        + PROJECT_DIRECTORY);
+
+    // create the project directory in the current path if not exists already
+    if (!this.projectDirectory.exists()) {
+      this.projectDirectory.mkdir();
+    }
+  }
+
+  /**
+   * Initialize the modules found in the modules directory as jar files.
+   */
+  private void initModules() {
+    // create reference file to modules directory
+    File modulesDir = new File(Constants.modulesDirectory);
+
+    // get all files from the modules directory
+    File[] moduleJars = modulesDir.listFiles();
+
+    // access the general modules property file
+    Properties generalproperties = new Properties();
+    InputStream input;
+    try {
+      input = new FileInputStream(new File(Constants.modulesDirectory
+          + File.separator + "properties.xml"));
+      generalproperties.loadFromXML(input);
+    } catch (FileNotFoundException e) {
+      e.printStackTrace();
+    } catch (InvalidPropertiesFormatException e) {
+      e.printStackTrace();
+    } catch (IOException e) {
+      e.printStackTrace();
+    }
+
+    // directory not there, then is no module, so just ignore
+    if (moduleJars == null) {
+      // nothing to do further...
+      return;
+    }
+
+    // create the empty modules list
+    this.modules = new ArrayList<Module>();
+
+    System.out.println("********** Manager: Load modules **********");
+
+    // load GUI component of the module
+    for (int i = 0; i < moduleJars.length; i++) {
+
+      // only jar files are considered, ignore all others possible files
+      if (!moduleJars[i].getName().endsWith(".jar")) {
+        continue;
+      }
+
+      try {
+        // new jar file...so, new module
+        JarFile jarFile = new JarFile(moduleJars[i]);
+
+        // access the properties file from inside this jar
+        JarEntry jarEntry = jarFile.getJarEntry("properties.xml");
+
+        // no property file...then we can't continue loading this module.
+        if (jarEntry == null) {
+          System.out
+              .println("The module: "
+                  + moduleJars[i].getName()
+                  + " does not contains a property.xml file! This module can't be loaded! \n");
+
+          // go to the next jar file (new module) if there is one
+          continue;
+        }
+
+        // access the properties file of the module
+        Properties properties = new Properties();
+        InputStream inputStream = jarFile.getInputStream(jarEntry);
+        properties.loadFromXML(inputStream);
+
+        System.out.println(" - NAME: "
+            + properties.getProperty(Module.PROP_NAME));
+
+        // check if the OS version is specified, otherwise is loaded by default
+        if (properties.getProperty(Module.PROP_MODULE_OS_VERSION) != null) {
+          String propVal = properties
+              .getProperty(Module.PROP_MODULE_OS_VERSION).trim().toLowerCase();
+
+          // the OS specified in prop file match the PC OS
+          if ((JarUtil.isWindows() && propVal
+              .equals(Module.PROP_MODULE_OS_VERSION_VALUE_WINDOWS))
+              || (JarUtil.isUnix() && propVal
+                  .equals(Module.PROP_MODULE_OS_VERSION_VALUE_LINUX))
+              || (JarUtil.isMac() && propVal
+                  .equals(Module.PROP_MODULE_OS_VERSION_VALUE_MAC))) {
+            System.out.println(" - OS Version: " + propVal);
+          }
+          // wrong OS...skip loading
+          else {
+            System.out
+                .println(" - OS Version: not match! Skip loading of this module! \n");
+            continue;
+          }
+        } else {
+          System.out.println(" - OS Version: ALL");
+        }
+
+        // check if the OS bits version is specified
+        if (properties.getProperty(Module.PROP_MODULE_OS_BITS_VERSION) != null) {
+          String propValue = properties.getProperty(
+              Module.PROP_MODULE_OS_BITS_VERSION).trim();
+          boolean is64BitsOs = System.getProperty("os.arch").indexOf("64") != -1;
+
+          // the OS Bits version match the version from property file
+          if ((propValue.equals("32") && !is64BitsOs)
+              || (propValue.equals("64") && is64BitsOs)) {
+            System.out.println(" - OS Bits Version: "
+                + properties.getProperty(Module.PROP_MODULE_OS_BITS_VERSION));
+          }
+          // OS Bits version does not match the version from property file.
+          else {
+            System.out
+                .println(" - OS Bits Version: not match! Skip loading of this module! \n");
+            continue;
+          }
+        } else {
+          System.out.println(" - OS Bits Version: ALL");
+        }
+
+        // check if we have a GUI component for this module
+        if (properties.getProperty(GUIModule.PROP_GUI_MODULE_CLASS) != null) {
+          System.out.println(" - HAS GUI: YES");
+        } else {
+          System.out.println(" - HAS GUI: NO");
+        }
+
+        // check if we have the base component for this module
+        if (properties.getProperty(Module.PROP_BASE_MODULE_CLASS) != null) {
+          System.out.println(" - HAS BASE: YES");
+        } else {
+          System.out
+              .println(" - HAS BASE: NO... Failed to load this module. \n");
+
+          // go to the next module if there is any
+          continue;
+        }
+
+        // define this Jar file as usable - See JarUtil for more details...
+        JarUtil.loadJar(new URL("file:///" + moduleJars[i].getPath()));
+
+        try {
+          // load the base logic module
+          Class<? extends Object> moduleClass = Class.forName(properties
+              .getProperty(Module.PROP_BASE_MODULE_CLASS));
+
+          // get the tab instance
+          Module module = ((Module) moduleClass.newInstance());
+
+          // initially the position is undefined
+          int pos = -1;
+
+          // try to get the tab position for this module, if there is defined a
+          // position in the general modules property file...
+          if (generalproperties.getProperty(moduleJars[i].getName()) != null) {
+            pos = Integer.parseInt(generalproperties.getProperty(moduleJars[i]
+                .getName()));
+          }
+
+          // add the new module to list
+          if (pos >= 0 && this.modules.size() >= pos) {
+            this.modules.add(pos - 1, module);
+            System.out.println(" - Priority: " + pos);
+          }
+          // no order found for this module, so it is added at end
+          else {
+            System.out
+                .println(" - Priority: "
+                    + (generalproperties.getProperty(moduleJars[i].getName()) == null ? "NONE"
+                        : generalproperties
+                            .getProperty(moduleJars[i].getName())));
+
+            this.modules.add(module);
+          }
+
+          // module is a listener for simulation step events
+          this.dataBus.addSimulationStepEventListener(module);
+
+          // module is a listener for simulation events
+          this.dataBus.addSimulationEventListener(module);
+
+          // the module is a listener for destroy object/agent event
+          this.dataBus.addDestroyObjektEventListener(module);
+
+          // the module is a listener for object/agent creation events
+          this.dataBus.addObjektInitEventListener(module);
+
+          // get the module tab title from the property file
+          if (module.getGUIComponent() != null
+              && properties.getProperty(GUIModule.PROP_GUI_TITLE) != null) {
+
+            ((JScrollPane) module.getGUIComponent()).setName(properties
+                .getProperty(GUIModule.PROP_GUI_TITLE));
+          }
+
+          System.out.println("\n");
+
+        } catch (ClassNotFoundException ex) {
+          ex.printStackTrace();
+          continue;
+        } catch (IllegalAccessException ex) {
+          ex.printStackTrace();
+          continue;
+        } catch (InstantiationException ex) {
+          ex.printStackTrace();
+          continue;
+        }
+
+      } catch (IOException ioex) {
+        ioex.printStackTrace();
+      }
+    }
+
+    System.out.println("**********************************");
+
+    // order modules by priorities set in /modules/properties.xml file
+  }
+
+  /**
+   * Gets the "global" data bus object
+   * 
+   * @return the "global" data bus object
+   */
+  public DataBusInterface getDataBus() {
+    return this.dataBus;
+  }
+
+  /**
+   * Initialize the logger
+   */
+  private void initLogger() {
+
+    String value;
+    int loggerType = DataBus.LoggerType.DEFAULT_LOGGER;
+    value = this.getProperties().getProperty(propertyLogger);
+    if (value != null) {
+      try {
+        loggerType = Integer.valueOf(value);
+      } catch (NumberFormatException nfe) {
+        this.getProperties().put(propertyLogger, String.valueOf(loggerType));
+      }
+    } else {
+      this.getProperties().put(propertyLogger, String.valueOf(loggerType));
+    }
+
+    try {
+      dataBus.initLogger(loggerType);
+    } catch (Exception e) {
+      // Fall-Back to EmptyLogger
+      e.printStackTrace();
+      System.err.println("Use DefaultLogger");
+      try {
+        dataBus.initLogger(DataBus.LoggerType.DEFAULT_LOGGER);
+      } catch (Exception e1) {
+        e1.printStackTrace();
+      }
+    }
+    dataBus.getLogger().setFileName(this.loggerFileName);
+    dataBus.getLogger().setPath(this.loggerPath);
+
+    value = this.properties.getProperty(propertyLoggerFileName);
+    if (value != null) {
+      if (!value.equals("")) {
+        this.loggerFileName = value;
+        dataBus.getLogger().setFileName(this.loggerFileName);
+
+      }
+    }
+
+    value = this.properties.getProperty(propertyLoggerPath);
+    if (value != null) {
+      if (!value.equals("")) {
+        this.loggerPath = value;
+        dataBus.getLogger().setPath(this.loggerPath);
+      }
+
+    }
+  }
+
+  /**
+   * Load the properties from the project property file
+   */
+  private void loadProperties() {
+    this.properties = new Properties();
+
+    try {
+      this.properties.loadFromXML(new FileInputStream(this.propertyFileName));
+    } catch (IOException ioe) {
+      System.err.println("Can not load the file " + this.propertyFileName
+          + ". Using the default values.");
+    }
+
+    // load logger path plus file name
+    String value;
+
+    value = this.properties.getProperty(propertyAutoMultithreading);
+    if (value != null) {
+      if (value.equals("true")) {
+        this.autoMultithreading = true;
+      }
+    }
+
+    // load the properties regarding the XML Schema validation
+    Properties aorslProperties = new Properties();
+
+    try {
+      aorslProperties.loadFromXML(new FileInputStream(this.aorslDirectory
+          + File.separator + this.propertyFileName));
+    } catch (IOException ioe) {
+      System.err.println("Can not load the file " + this.propertyFileName
+          + ". Using the default value: " + CURRENT_AORSL_SCHEMA_NAME + " .");
+      this.AORSL_SCHEMA_NAME = CURRENT_AORSL_SCHEMA_NAME;
+    }
+    // get the property setting
+    this.AORSL_SCHEMA_NAME = aorslProperties
+        .getProperty(PROPERTY_XML_SCHEMA_FILE_NAME);
+
+    // just in case somebody forgot to define a file name
+    if (this.AORSL_SCHEMA_NAME == null || this.AORSL_SCHEMA_NAME.equals("")) {
+      this.AORSL_SCHEMA_NAME = CURRENT_AORSL_SCHEMA_NAME;
+      System.err.println("File \"" + this.aorslDirectory + "/"
+          + this.propertyFileName
+          + "\" contains no XML Schema file name for AORSL. "
+          + " Using the default value: " + CURRENT_AORSL_SCHEMA_NAME + " .");
+    }
+
+  }
+
+  /**
+   * Save the properties to the project property file
+   */
+  public void saveProperties() {
+
+    // put on the simulator's properties
+    // notice that an GUI may added already different properties as well!
+    this.properties.put(this.propertyLoggerFileName, this.loggerFileName);
+    this.properties.put(this.propertyLoggerPath, this.loggerPath);
+    this.properties.put(this.propertyAutoMultithreading, String
+        .valueOf(autoMultithreading));
+
+    // store properties in the properies XML file
+    try {
+      this.properties.storeToXML(new FileOutputStream(new File(
+          this.propertyFileName)),
+          "This is the property file for the AOR simulator.", "UTF-8");
+    } catch (IOException ioe) {
+      ioe.printStackTrace();
+    }
+
+  }
+
+  /**
+   * Gets the properties of the project
+   * 
+   * @return the project properties object.
+   */
+  public Properties getProperties() {
+    return properties;
+  }
+
+  /**
+   * Create a new project based on a given simulation description expressed as
+   * string (XML in a string format)
+   * 
+   * @param simulationDescription
+   *          the string representation of the simulation description
+   */
+  public void newProject() {
+    // clear old project
+    project = null;
+
+    project = new Project();
+    project.setAutoMultithreading(this.autoMultithreading);
+    project.setDataBus(dataBus);
+  }
+
+  /**
+   * Load the project from a given path
+   * 
+   * @param projectPath
+   *          the path of the project to load
+   * @return true if successful false otherwise
+   */
+  public boolean loadProject(String projectPath) {
+    boolean status = false;
+
+    // new project instance
+    project = new Project();
+
+    // set whether to use MT on Multi-Core CPU's
+    project.setAutoMultithreading(this.autoMultithreading);
+    project.setDataBus(dataBus);
+
+    // load the project for the given path
+    status = project.load(projectPath);
+
+    // return the projects load status
+    return status;
+  }
+
+  /**
+   * Gets the actual project object
+   * 
+   * @return the current project object
+   */
+  public Project getProject() {
+    return project;
+  }
+
+  /**
+   * Clear the actual project and call garbage collector for clearing
+   * unnecessarily occupied memory.
+   */
+  public void clearProject() {
+    SimulationManager.project = null;
+
+    // force garbage collector to free any remaining garbages...
+    System.gc();
+  }
+
+  /**
+   * Load the content of a given XML file
+   * 
+   * @param file
+   *          the XML file (normally a XML simulation description file)
+   * @return the content, as string, of the given file
+   */
+  public String readXMLFile(File file) {
+    try {
+      
+      InputStreamReader streamReader = new InputStreamReader(
+          new FileInputStream(file),"UTF8");
+      
+      BufferedReader fileReader = new BufferedReader(streamReader);
+
+      String line = "";
+      String result = "";
+
+      while ((line = fileReader.readLine()) != null) {
+        result += line + "\n";
+      }
+
+      fileReader.close();
+      
+      // return the content of the string writer
+      return result;
+
+    } catch (IOException e) {
+      e.printStackTrace();
+    }
+
+    // necessary, since return values are always required
+    return "";
+  }
+
+  public String readTextFileFromJar(String filePath, String fileName) {
+    ClassLoader cl = this.getClass().getClassLoader();
+    String result = "";
+    if (cl != null) {
+      InputStream inputStream = cl.getResourceAsStream(filePath + '/'
+          + fileName);
+      if (inputStream == null)
+        return "No Resource: " + filePath + '/' + fileName;
+      BufferedReader bufferedReader = new BufferedReader(new InputStreamReader(
+          inputStream));
+      String line = "";
+      try {
+        while (null != (line = bufferedReader.readLine())) {
+          result += line;
+        }
+      } catch (IOException e) {
+        e.printStackTrace();
+      } finally {
+        try {
+          if (inputStream != null)
+            inputStream.close();
+          if (bufferedReader != null)
+            bufferedReader.close();
+        } catch (IOException ioe) {
+          ioe.printStackTrace();
+        }
+      }
+
+      URL url = cl.getResource("com/sun/tools/javac/Main.class");
+      if (url != null)
+        result = url.getPath();
+      return System.getProperty("java.class.path");
+    }
+    return result;
+  }
+
+  /**
+   * Validate the simulation description XML file against the AORS XML schema
+   * 
+   * @return true if valid, false otherwise
+   */
+  public boolean validateSimulation() {
+    boolean result = false;
+
+    String xml = this.getProject().getSimulationDescription();
+
+    try {
+      // lookup a factory for the W3C XML Schema language
+      SchemaFactory factory = SchemaFactory
+          .newInstance(XMLConstants.W3C_XML_SCHEMA_NS_URI);
+
+      // get the XML Schema
+      File schemaLocation = new File(System.getProperty("user.dir")
+          + File.separator + "ext" + File.separator + "aorsl" + File.separator
+          + AORSL_SCHEMA_NAME);
+
+      // create a new Schema instance
+      Schema schema = factory.newSchema(schemaLocation);
+
+      // get a validator from the schema.
+      Validator validator = schema.newValidator();
+
+      // parse the document you want to check.
+      Source source = new StreamSource(new StringReader(xml));
+
+      // validate it
+      validator.validate(source);
+
+      // indicate when valid
+      result = true;
+
+    } catch (SAXException e) {
+      // indicate when invalid
+      System.err.println("The simulation is not valid because:");
+      System.err.println(e.getMessage());
+
+      result = false;
+    } catch (IOException e) {
+      e.printStackTrace();
+    }
+
+    return result;
+  }
+
+  /**
+   * Generate the source code starting from XML description file and using XSLT
+   * transformation.
+   * 
+   * @return true if generation was performed with success, false otherwise
+   * 
+   */
+  public boolean generate() {
+    boolean result = false;
+
+    // out = switch generation to memory on, java = switch write to disk on
+    this.xsltParameter.put("output.fileExtension", "java");
+
+    this.xsltParameter.put("sim.package.root", "file:///"
+        + project.getDirectory() + File.separator + project.getName()
+        + File.separator + Project.SRC_FOLDER_NAME);
+
+    // set the package name, we use ALWAYS the same
+    this.xsltParameter.put("sim.package", "");
+
+    if (!this.getProject().isGenerated()) {
+
+      // transform the simulation description -> generate Java code
+      this.xslt2Processor.transformFromURL(this.getProject()
+          .getSimulationDescription(), this.xsltFile.toURI(),
+          this.xsltParameter);
+
+      // test if the Java code generation succeed
+      if (this.xslt2Processor.getMessages().isEmpty()) {
+        result = true;
+        this.getProject().setGenerated(true);
+      } else {
+        for (String message : this.xslt2Processor.getMessages()) {
+          System.err.println(message);
+        }
+        result = false;
+      }
+    } else {
+      // project is already generated
+      result = true;
+    }
+
+    return result;
+  }
+
+  /**
+   * 
+   * Gets the state of automatic multi-threading state
+   * 
+   * @return true if auto-multi-threading is active, false otherwise
+   */
+  public boolean isAutoMultithreading() {
+    return autoMultithreading;
+  }
+
+  /**
+   * Activate/disable the automatic multi-threading
+   * 
+   * @param autoMultithreading
+   *          the multi-threading state to set.
+   */
+  public void setAutoMultithreading(boolean autoMultithreading) {
+    this.autoMultithreading = autoMultithreading;
+    if (project != null) {
+      project.setAutoMultithreading(this.autoMultithreading);
+    }
+  }
+
+  /**
+   * Change the logger to another type
+   * 
+   * @param loggerType
+   *          the new logger type.
+   */
+  public void setLoggerByDialogSelection(int loggerType) {
+
+    // save the new logger type in the project property file
+    this.properties.put(propertyLogger, String.valueOf(loggerType));
+
+    // initialize the logger
+    this.initLogger();
+  }
+
+  /**
+   * Return the state of the project, meaning that there is a project that was
+   * already generated and compiled
+   * 
+   * @return true if project is ready, false otherwise
+   */
+  public static boolean isProjectReady() {
+    if (project == null) {
+      return false;
+    } else {
+      return (project.isGenerated() && project.isCompiled());
+    }
+  }
+
+  /**
+   * Gets the URLClassLoader object of the project. Required by modules to load
+   * different classes when needed.
+   * 
+   * @return the project URLCLassLoader object
+   */
+  public static URLClassLoader getProjectUrlClassLoader() {
+    /**
+     * The URL class loader requires that the project is instantiated, this
+     * meaning that the simulation needs to be instantiated too. The
+     * instantiation does not happens if it is already done this being checked
+     * inside the instanciateSimulation() method.
+     */
+    if (isProjectReady()) {
+      project.instantiateSimulation();
+    }
+
+    // get the class loader of this project
+    return project.getUrlClassLoader();
+  }
+
+  /**
+   * Gets the existing modules.
+   * 
+   * @return the existing modules
+   */
+  public ArrayList<Module> getModules() {
+    return modules;
+  }
+
+  /**
+   * This method is called whenever the DOM is changed and need
+   * re-initialization of initial state object.
+   * 
+   * @param simulationScenarioXML
+   *          the XML simulation description as string representation
+   */
+  public void initializeDom(String simulationScenarioXML) {
+    // no data bus, this has to be a mistake...
+    if (this.dataBus == null) {
+      System.out.println("Warning: DataBus is null!");
+      return;
+    }
+
+    if (simulationScenarioXML == null || simulationScenarioXML.equals("")) {
+      System.out
+          .println("Warning: try to set an empty simulation description!");
+      return;
+    }
+
+    this.simulationDescription.setDom(simulationScenarioXML);
+    this.dataBus.notifyDomOnlyInitialization(simulationDescription);
+
+    // no abstract simulator yet...
+    if (this.getProject().getSimulation() == null) {
+      return;
+    }
+
+    InitialState initialState = this.getProject().getSimulation()
+        .getInitialState();
+    // set the simulation description in initial state object
+    initialState.setSimulationDescription(simulationDescription);
+  }
+
+  /**
+   * Used with test purposes. Please don't delete this method.
+   * 
+   * @param args
+   */
+  public static void main(String[] args) {
+    Console console = System.console();
+
+    String messageNoConsole = "You are starting the console version of the AOR Simulator \n"
+        + "without an associated console. Please re-run the application \n"
+        + "from your console with:\n"
+        + "\n"
+        + "     java -jar AOR-Simulator_console.jar [options]\n" + "\n";
+
+    // if the application is running without console, e.g. double click on the
+    // JAR file
+    if (console == null) {
+      JOptionPane.showMessageDialog(null, messageNoConsole, "Error",
+          JOptionPane.ERROR_MESSAGE);
+    } else {
+
+    }
+
+    // test for the number of arguments
+    if (args.length < 1) {
+      System.out.println();
+      System.out.println("Usage: ");
+      System.out
+          .println("  java -jar AOR_Simulator_console.jar [simulation description]");
+      System.out.println();
+      System.out.println("Example:");
+      System.out.println("  java -jar AOR_Simulator_noGUI.jar mysim.xml");
+    } else {
+      System.out.println("more than zero arguments ");
+
+    }
+  }
+}
