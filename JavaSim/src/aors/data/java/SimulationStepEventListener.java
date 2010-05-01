@@ -7,7 +7,7 @@ import java.util.EventListener;
 
 /**
  * @author Jens Werner, Mircea Diaconescu
- * @version $Revision: 1.1 $
+ * @version $Revision$
  */
 public interface SimulationStepEventListener extends EventListener {
 

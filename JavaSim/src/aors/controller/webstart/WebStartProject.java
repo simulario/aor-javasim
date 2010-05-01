@@ -23,7 +23,7 @@ import aors.data.DataBus;
  * 
  * @author Jens Werner
  * @since 08.02.2010
- * @version $Revision: 1.0 $
+ * @version $Revision$
  */
 public class WebStartProject implements ProjectInterface {
 

@@ -2,12 +2,12 @@
 <!--
         This transformation creates the main class for simulation based on a given aorsml file.
 
-        $Rev: 4848 $
-        $Date: 2010-04-22 15:35:41 +0200 (Thu, 22 Apr 2010) $
+        $Rev$
+        $Date$
 
         @author:   Jens Werner (jens.werner@tu-cottbus.de)
         @license:  GNU General Public License version 2 or higher
-        @last changed by $Author: jewerner $
+        @last changed by $Author$
 -->
 <xsl:stylesheet version="2.0" xmlns:aorsml="http://aor-simulation.org" xmlns:fn="http://www.w3.org/2005/xpath-functions"
   xmlns:java="http://www.sun.com/java" xmlns:xs="http://www.w3.org/2001/XMLSchema" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"

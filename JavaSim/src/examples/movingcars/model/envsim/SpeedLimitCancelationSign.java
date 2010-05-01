@@ -10,7 +10,7 @@ import aors.model.envsim.PhysicalObject;
  * 
  * @author Jens Werner
  * @since June 10, 2008
- * @version $Revision: 1.0 $
+ * @version $Revision$
  * 
  */
 public class SpeedLimitCancelationSign extends PhysicalObject {

@@ -31,7 +31,7 @@ package examples.carsandtrucks.model.agtsim;
  * 
  * @author
  * @since July 10, 2008
- * @version $Revision: 1.0 $
+ * @version $Revision$
  */
 public class CarAgentSubject extends VehicleAgentSubject {
 

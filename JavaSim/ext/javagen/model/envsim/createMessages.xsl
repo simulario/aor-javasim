@@ -3,12 +3,12 @@
 <!--
 	This transformation creates classes for messages based on a given aorsml file.
 	
-	$Rev: 3406 $
-	$Date: 2009-09-10 19:09:40 +0200 (Thu, 10 Sep 2009) $
+	$Rev$
+	$Date$
 	
 	@author:   Jens Werner (jens.werner@tu-cottbus.de)
 	@license:  GNU General Public License version 2 or higher
-	@last changed by $Author: dimircea $
+	@last changed by $Author$
 -->
 
 <xsl:stylesheet version="2.0" xmlns:aorsml="http://aor-simulation.org"

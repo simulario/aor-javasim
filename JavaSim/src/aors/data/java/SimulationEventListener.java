@@ -36,7 +36,7 @@ import aors.module.InitialState;
  * 
  * @author Mircea Diaconescu
  * @since October 26, 2009
- * @version $Revision: 1.1 $
+ * @version $Revision$
  */
 public interface SimulationEventListener extends EventListener {
   /**

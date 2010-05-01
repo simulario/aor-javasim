@@ -15,7 +15,7 @@ import javax.swing.SwingUtilities;
  * 
  * @author Marco Pehla
  * @since 25.08.2008
- * @version $Revision: 1.0 $
+ * @version $Revision$
  */
 public class GuiExecutor extends AbstractExecutorService {
 

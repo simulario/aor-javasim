@@ -52,7 +52,7 @@ import examples.movingcars.model.envsim.StartSpeedLimitEnvRule;
  * 
  * @author Emilian Pascalau, Adrian Giurca
  * @since May 25, 2008
- * @version $Revision: 1.0 $
+ * @version $Revision$
  */
 public class Simulator extends AbstractSimulator {
 

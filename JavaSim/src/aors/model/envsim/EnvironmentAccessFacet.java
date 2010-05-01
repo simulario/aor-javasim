@@ -40,7 +40,7 @@ import aors.util.collection.AORCollection;
  * 
  * @author Jens Werner
  * @since 09.11.2009
- * @version $Revision: 1.0 $
+ * @version $Revision$
  */
 public interface EnvironmentAccessFacet {
 

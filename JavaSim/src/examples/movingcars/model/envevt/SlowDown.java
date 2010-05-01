@@ -34,7 +34,7 @@ import aors.model.envsim.PhysicalAgentObject;
  * 
  * @author Emilian Pascalau, Adrian Giurca
  * @since June 2, 2008
- * @version $Revision: 1.0 $
+ * @version $Revision$
  */
 public class SlowDown extends ActionEvent {
 

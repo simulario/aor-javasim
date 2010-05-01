@@ -17,7 +17,7 @@ import javax.swing.text.StyleConstants;
  * 
  * @author Andreas Post, Marco Pehla, Jens Werner
  * @since 11.09.2008
- * @version $Revision: 1.0 $
+ * @version $Revision$
  */
 public class OutputStreamTextPane extends OutputStream {
 

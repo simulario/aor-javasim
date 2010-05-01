@@ -33,7 +33,7 @@ import aors.gui.helper.MD5Generator;
  * 
  * @author Marco Pehla, Mircea Diaconescu
  * @since 12.08.2008
- * @version $Revision: 2.0 $
+ * @version $Revision$
  */
 public class Project implements ProjectInterface {
 

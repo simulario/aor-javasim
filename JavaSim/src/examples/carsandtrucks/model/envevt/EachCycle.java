@@ -34,7 +34,7 @@ import examples.carsandtrucks.controller.SimulationParameters;
  * 
  * @author
  * @since July 13, 2008
- * @version $Revision: 1.0 $
+ * @version $Revision$
  */
 public class EachCycle extends ExogenousEvent {
 

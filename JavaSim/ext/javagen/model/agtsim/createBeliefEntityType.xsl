@@ -3,12 +3,12 @@
 <!--
       This transformation creates classes for BeliefEntityTypes based on a given aorsml file.
 
-      $Rev: 1688 $
-      $Date: 2009-07-03 17:36:59 +0200 (Fri, 03 Jul 2009) $
+      $Rev$
+      $Date$
 
       @author:   Jens Werner (jens.werner@tu-cottbus.de)
       @license:  GNU General Public License version 2 or higher
-      @last changed by $Author: dimircea $
+      @last changed by $Author$
 -->
 
 <xsl:transform version="2.0" xmlns:aorsml="http://aor-simulation.org" xmlns:fn="http://www.w3.org/2005/xpath-functions"

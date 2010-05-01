@@ -41,7 +41,7 @@ import aors.util.JsonData;
  * 
  * @author Emilian Pascalau, Adrian Giurca
  * @since May 26, 2008
- * @version $Revision: 1.0 $
+ * @version $Revision$
  */
 public interface AgentSimulatorListener extends EventListener {
 

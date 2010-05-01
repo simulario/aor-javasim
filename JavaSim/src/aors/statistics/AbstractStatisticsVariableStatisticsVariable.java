@@ -33,7 +33,7 @@ package aors.statistics;
  * 
  * @author Jens Werner
  * @since 11.12.2009
- * @version $Revision: 1.0 $
+ * @version $Revision$
  */
 public abstract class AbstractStatisticsVariableStatisticsVariable extends
     AbstractStatisticsVariable {

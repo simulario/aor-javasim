@@ -60,7 +60,7 @@ import aors.util.collection.AORCollection;
  * @author Emilian Pascalau, Adrian Giurca, Marco Pehla, Jens Werner, Mircea
  *         Diaconescu
  * @since May 25, 2008
- * @version $Revision: 1.1 $
+ * @version $Revision$
  */
 public class EnvironmentSimulator implements EnvironmentAccessFacet {
 

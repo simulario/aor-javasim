@@ -56,7 +56,7 @@ import aors.statistics.AbstractObjectPropertyStatisticVariable.ObjektIdPropertyD
  * 
  * @author Mircea Diaconescu
  * @since July 26, 2009
- * @version $Revision: 1.0 $
+ * @version $Revision$
  */
 public class InitialState {
 

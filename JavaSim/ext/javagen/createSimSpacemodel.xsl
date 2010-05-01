@@ -3,11 +3,11 @@
 <!--
 	This transformation creates a class with SpaceModelInformations.
 
-        $Rev: 4600 $
-        $Date: 2010-03-17 23:56:28 +0100 (Wed, 17 Mar 2010) $
+        $Rev$
+        $Date$
 
         @author:   Jens Werner (jens.werner@tu-cottbus.de)
-        @last changed by $Author: dimircea $
+        @last changed by $Author$
 -->
 
 <xsl:stylesheet version="2.0" xmlns:aorsml="http://aor-simulation.org" xmlns:fn="http://www.w3.org/2005/xpath-functions"

@@ -1,12 +1,12 @@
 <!--
     This transformation creates PhysicalObjects  based on a given aorsml file.
     
-    $Rev: 2835 $
-    $Date: 2009-05-26 13:41:28 +0200 (Tue, 26 May 2009) $
+    $Rev$
+    $Date$
     
     @author:   Jens Werner (jens.werner@tu-cottbus.de)
     @license:  GNU General Public License version 2 or higher
-    @last changed by $Author: jewerner $
+    @last changed by $Author$
 -->
 
 <xsl:transform version="2.0" xmlns:aorsml="http://aor-simulation.org" xmlns:fn="http://www.w3.org/2005/xpath-functions"

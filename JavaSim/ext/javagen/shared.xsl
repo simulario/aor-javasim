@@ -4,11 +4,11 @@
     
         This transformation contain some usefull shared templates.
         
-        $Rev: 4871 $
-        $Date: 2010-04-23 15:36:12 +0200 (Fri, 23 Apr 2010) $
+        $Rev$
+        $Date$
 
         @author:   Jens Werner (jens.werner@tu-cottbus.de)
-        @last changed by $Author: jewerner $
+        @last changed by $Author$
 -->
 
 <xsl:stylesheet version="2.0" xmlns:aorsl="http://aor-simulation.org" xmlns:aorsml="http://aor-simulation.org"

@@ -33,7 +33,7 @@ package aors.model.intevt;
  * 
  * @author Emilian Pascalau, Adrian Giurca
  * @since May 25, 2008
- * @version $Revision: 1.0 $
+ * @version $Revision$
  */
 public abstract class TimeEvent extends InternalEvent {
 

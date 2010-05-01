@@ -39,7 +39,7 @@ import aors.model.envsim.Objekt;
  * 
  * @author Jens Werner
  * @since 10.12.2009
- * @version $Revision: 1.0 $
+ * @version $Revision$
  */
 public abstract class AbstractObjectPropertyStatisticVariable extends
     AbstractStatisticsVariable {
@@ -105,7 +105,7 @@ public abstract class AbstractObjectPropertyStatisticVariable extends
    * 
    * @author Jens Werner
    * @since 12.11.2009
-   * @version $Revision: 1.0 $
+   * @version $Revision$
    */
   public abstract class AbstractPropertyIterator implements Iterator<Double> {
 
@@ -154,7 +154,7 @@ public abstract class AbstractObjectPropertyStatisticVariable extends
    * 
    * @author Jens Werner
    * @since 04.02.2010
-   * @version $Revision: 1.0 $
+   * @version $Revision$
    */
   public class ObjektIdPropertyData {
 

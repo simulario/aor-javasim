@@ -3,12 +3,12 @@
 <!--
 	This transformation creates a class with ModelInformations.
 
-        $Rev: 3239 $
-        $Date: 2009-08-04 16:18:16 +0200 (Tue, 04 Aug 2009) $
+        $Rev$
+        $Date$
 
         @author:   Jens Werner (jens.werner@tu-cottbus.de)
         @license:  GNU General Public License version 2 or higher
-        @last changed by $Author: cnoack $
+        @last changed by $Author$
 -->
 
 <xsl:transform version="2.0" xmlns:aorsml="http://aor-simulation.org" xmlns:fn="http://www.w3.org/2005/xpath-functions"

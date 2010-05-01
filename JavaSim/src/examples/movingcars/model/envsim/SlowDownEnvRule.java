@@ -41,7 +41,7 @@ import examples.movingcars.model.envevt.SlowDown;
  * 
  * @author Jens Werner
  * @since 04.06.2008
- * @version $Revision: 1.0 $
+ * @version $Revision$
  */
 public class SlowDownEnvRule extends EnvironmentRule {
 

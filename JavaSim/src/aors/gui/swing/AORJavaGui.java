@@ -77,7 +77,7 @@ import aors.module.evt.ModuleEventSpeedUpSimulation;
  * 
  * @author Marco Pehla, Jens Werner
  * @since 18.07.2008
- * @version $Revision: 1.0 $
+ * @version $Revision$
  */
 public class AORJavaGui extends JFrame implements ActionListener,
     ChangeListener, SimulationEventListener, ObjektInitEventListener,

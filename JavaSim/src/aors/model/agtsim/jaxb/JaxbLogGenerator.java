@@ -51,7 +51,7 @@ import aors.model.intevt.InternalEvent;
  * 
  * @author Jens Werner
  * @since 24.11.2009
- * @version $Revision: 1.0 $
+ * @version $Revision$
  */
 public class JaxbLogGenerator {
 

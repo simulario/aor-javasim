@@ -2,12 +2,12 @@
 <!--
   This transformation creates classes for ComplexDataType - Enumeration based on a given aorsml file.
   
-  $Rev: 2546 $
-  $Date: 2009-04-07 16:28:35 +0200 (Tue, 07 Apr 2009) $
+  $Rev$
+  $Date$
   
   @author:   Jens Werner (jens.werner@tu-cottbus.de)
   @license:  GNU General Public License version 2 or higher
-  @last changed by $Author: thg $
+  @last changed by $Author$
 -->
 
 <xsl:stylesheet version="2.0" xmlns:aorsml="http://aor-simulation.org" xmlns:fn="http://www.w3.org/2005/xpath-functions"

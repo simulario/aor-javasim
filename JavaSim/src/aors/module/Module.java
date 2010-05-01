@@ -34,7 +34,7 @@ import aors.data.java.SimulationStepEventListener;
  * 
  * @author Mircea Diaconescu
  * @since July 20, 2009
- * @version $Revision: 1.1 $
+ * @version $Revision$
  */
 
 public interface Module extends SimulationStepEventListener,

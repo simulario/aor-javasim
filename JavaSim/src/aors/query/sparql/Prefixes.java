@@ -33,7 +33,7 @@ package aors.query.sparql;
  * 
  * @author Mircea Diaconescu
  * @since November 28, 2008
- * @version $Revision: 1.0 $
+ * @version $Revision$
  */
 public interface Prefixes {
   /** Default namespace **/

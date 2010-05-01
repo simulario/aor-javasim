@@ -52,7 +52,7 @@ import aors.util.jar.JarUtil;
  * 
  * @author Andreas Freier (business.af@web.de), Mircea Diaconescu
  * @date March 9, 2009
- * @version $Revision: 1.1 $
+ * @version $Revision$
  */
 public class SoundController extends Thread implements Module {
 

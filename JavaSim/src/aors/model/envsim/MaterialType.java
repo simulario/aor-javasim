@@ -5,7 +5,7 @@ package aors.model.envsim;
  * 
  * @author Jens Werner
  * @since 07.01.2010
- * @version $Revision: 1.0 $
+ * @version $Revision$
  */
 public enum MaterialType {
 

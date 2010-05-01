@@ -29,7 +29,7 @@ package aors.module.sound;
  * 
  * @author Mircea Diaconescu
  * @date November 21, 2009
- * @version $Revision: 1.0 $
+ * @version $Revision$
  */
 public interface Sound extends Runnable {
   /**

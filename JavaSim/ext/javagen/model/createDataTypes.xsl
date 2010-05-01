@@ -2,12 +2,12 @@
 <!--
   This transformation creates DataTypes based on a given aorsml file.
   
-  $Rev: 3350 $
-  $Date: 2009-08-25 15:39:49 +0200 (Tue, 25 Aug 2009) $
+  $Rev$
+  $Date$
   
   @author:   Jens Werner (jens.werner@tu-cottbus.de)
   @license:  GNU General Public License version 2 or higher
-  @last changed by $Author: jewerner $
+  @last changed by $Author$
 -->
 
 <xsl:stylesheet version="2.0" xmlns:aorsml="http://aor-simulation.org" xmlns:fn="http://www.w3.org/2005/xpath-functions"

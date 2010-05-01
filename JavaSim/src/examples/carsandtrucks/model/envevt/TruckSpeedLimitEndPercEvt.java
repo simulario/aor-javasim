@@ -33,7 +33,7 @@ import aors.model.envevt.PerceptionEvent;
  * 
  * @author
  * @since July 13, 2008
- * @version $Revision: 1.0 $
+ * @version $Revision$
  */
 public class TruckSpeedLimitEndPercEvt extends PerceptionEvent {
   public TruckSpeedLimitEndPercEvt() {

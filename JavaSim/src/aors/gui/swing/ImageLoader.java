@@ -12,7 +12,7 @@ import java.security.PrivilegedAction;
  * 
  * @author Marco Pehla
  * @since 19.07.2008
- * @version $Revision: 1.0 $
+ * @version $Revision$
  */
 public class ImageLoader {
 

@@ -37,7 +37,7 @@ import java.util.Formatter;
  * 
  * @author Jens Werner
  * @since 19.01.2010
- * @version $Revision: 1.0 $
+ * @version $Revision$
  */
 public class MD5Generator {
 

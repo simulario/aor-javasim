@@ -39,7 +39,7 @@ import examples.carsandtrucks.model.envevt.SlowDown;
  * 
  * @author
  * @since July 13, 2008
- * @version $Revision: 1.0 $
+ * @version $Revision$
  */
 public class CarSlowDownEnvRule extends EnvironmentRule {
 

@@ -15,7 +15,7 @@ import aors.model.envsim.Objekt;
  * 
  * @author Marco Pehla
  * @since 07.08.2008
- * @version $Revision: 1.0 $
+ * @version $Revision$
  */
 public class InheritedProperty {
 

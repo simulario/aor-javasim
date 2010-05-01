@@ -45,7 +45,7 @@ import aors.query.sparql.QueryEngine;
  * 
  * @author Mircea Diaconescu
  * @since July 06, 2009
- * @version $Revision: 1.0 $
+ * @version $Revision$
  */
 public class ERDFBeliefEntityManagerImpl implements ERDFBeliefEntityManager {
   /** the Base URI of the RDF model **/

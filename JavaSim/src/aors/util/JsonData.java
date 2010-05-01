@@ -10,7 +10,7 @@ import org.json.simple.JSONValue;
  * 
  * @author Christian Noack
  * @since 07.04.2009
- * @version $Revision: 1.0 $
+ * @version $Revision$
  */
 public class JsonData {
 

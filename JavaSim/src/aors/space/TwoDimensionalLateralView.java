@@ -33,7 +33,7 @@ package aors.space;
  * 
  * @author Jens Werner
  * @since 26.01.2010
- * @version $Revision: 1.0 $
+ * @version $Revision$
  */
 public class TwoDimensionalLateralView extends TwoDimensional {
 

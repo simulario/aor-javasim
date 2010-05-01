@@ -35,7 +35,7 @@ import aors.model.envsim.AgentObject;
  * 
  * @author Jens Werner
  * @since 04.05.2009
- * @version $Revision: 1.0 $
+ * @version $Revision$
  */
 public class ActivityStartEvent extends EnvironmentEvent {
 

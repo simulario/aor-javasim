@@ -18,7 +18,7 @@ import javax.swing.KeyStroke;
  * 
  * @author Marco Pehla
  * @since 19.07.2008
- * @version $Revision: 1.0 $
+ * @version $Revision$
  */
 public class Menu extends JMenuBar {
 
@@ -283,7 +283,7 @@ public class Menu extends JMenuBar {
    * 
    * @author Marco Pehla
    * @since 19.07.2008
-   * @version $Revision: 1.0 $
+   * @version $Revision$
    */
   public class Item {
 

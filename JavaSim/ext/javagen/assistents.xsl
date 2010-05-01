@@ -3,11 +3,11 @@
 <!--
         This transformation contain some usefull templates.
         
-        $Rev: 4658 $
-        $Date: 2010-03-23 12:00:34 +0100 (Tue, 23 Mar 2010) $
+        $Rev$
+        $Date$
 
         @author:   Jens Werner (jens.werner@tu-cottbus.de)
-        @last changed by $Author: jewerner $
+        @last changed by $Author$
 -->
 
 <xsl:stylesheet version="2.0" xmlns:aorsl="http://aor-simulation.org" xmlns:aorsml="http://aor-simulation.org"
