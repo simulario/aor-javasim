@@ -6,8 +6,8 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+import aors.controller.InitialState;
 import aors.data.java.SimulationStepEvent;
-import aors.module.InitialState;
 import aors.module.statistics.gui.ComponentTranslator;
 import aors.statistics.AbstractStatisticsVariable.AggregFunEnumLit;
 import aors.statistics.AbstractStatisticsVariable.StatVarDataSourceEnumLit;

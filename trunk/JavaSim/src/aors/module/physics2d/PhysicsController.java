@@ -13,6 +13,7 @@ import org.w3c.dom.NodeList;
 
 import aors.GeneralSpaceModel;
 import aors.GeneralSpaceModel.SpaceType;
+import aors.controller.InitialState;
 import aors.controller.SimulationDescription;
 import aors.data.java.ObjektDestroyEvent;
 import aors.data.java.ObjektInitEvent;
@@ -23,7 +24,6 @@ import aors.model.envevt.EnvironmentEvent;
 import aors.model.envsim.Objekt;
 import aors.model.envsim.PhysicalAgentObject;
 import aors.model.envsim.PhysicalObject;
-import aors.module.InitialState;
 import aors.module.Module;
 import aors.util.XMLLoader;
 import aors.util.jar.JarUtil;

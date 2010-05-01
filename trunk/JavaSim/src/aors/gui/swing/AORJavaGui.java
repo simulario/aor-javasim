@@ -48,6 +48,7 @@ import javax.tools.JavaFileObject;
 import javax.tools.ToolProvider;
 
 import aors.controller.AbstractSimulator;
+import aors.controller.InitialState;
 import aors.controller.Project;
 import aors.controller.SimulationDescription;
 import aors.controller.SimulationManager;
@@ -64,7 +65,6 @@ import aors.gui.helper.FileMonitor;
 import aors.model.envevt.EnvironmentEvent;
 import aors.model.envsim.AgentObject;
 import aors.model.envsim.Objekt;
-import aors.module.InitialState;
 import aors.module.Module;
 import aors.module.evt.ModuleEvent;
 import aors.module.evt.ModuleEventListener;

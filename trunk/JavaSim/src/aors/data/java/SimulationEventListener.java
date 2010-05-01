@@ -25,9 +25,9 @@ package aors.data.java;
 import java.io.File;
 import java.util.EventListener;
 
+import aors.controller.InitialState;
 import aors.controller.SimulationDescription;
 import aors.model.envevt.EnvironmentEvent;
-import aors.module.InitialState;
 
 /**
  * SimulationEventListener - This interface has to be implemented by any part

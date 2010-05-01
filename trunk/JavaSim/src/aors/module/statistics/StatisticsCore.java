@@ -12,6 +12,7 @@ import java.util.Map;
 import javax.swing.JFileChooser;
 import javax.swing.JOptionPane;
 
+import aors.controller.InitialState;
 import aors.controller.Project;
 import aors.controller.SimulationDescription;
 import aors.data.java.ObjektDestroyEvent;
@@ -19,7 +20,6 @@ import aors.data.java.ObjektInitEvent;
 import aors.data.java.SimulationEvent;
 import aors.data.java.SimulationStepEvent;
 import aors.model.envevt.EnvironmentEvent;
-import aors.module.InitialState;
 import aors.module.Module;
 import aors.module.statistics.gui.ComponentTranslator;
 import aors.module.statistics.gui.StatisticsGui;

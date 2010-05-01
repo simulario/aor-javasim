@@ -7,6 +7,7 @@ import java.util.Map;
 import org.w3c.dom.Node;
 
 import aors.GeneralSpaceModel;
+import aors.controller.InitialState;
 import aors.controller.SimulationDescription;
 import aors.data.DataBus;
 import aors.data.java.ObjektDestroyEvent;
@@ -14,7 +15,6 @@ import aors.data.java.ObjektInitEvent;
 import aors.data.java.SimulationEvent;
 import aors.data.java.SimulationStepEvent;
 import aors.model.envevt.EnvironmentEvent;
-import aors.module.InitialState;
 import aors.module.Module;
 import aors.module.evt.ModuleEvent;
 import aors.module.visopengl.engine.Engine;

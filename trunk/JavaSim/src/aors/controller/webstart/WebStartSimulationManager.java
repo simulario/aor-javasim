@@ -12,11 +12,11 @@ import java.util.Properties;
 
 import javax.swing.JScrollPane;
 
+import aors.controller.InitialState;
 import aors.controller.SimulationDescription;
 import aors.data.DataBus;
 import aors.data.DataBusInterface;
 import aors.module.GUIModule;
-import aors.module.InitialState;
 import aors.module.Module;
 
 /**
