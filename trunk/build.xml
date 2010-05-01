@@ -30,7 +30,7 @@
 * @since September 10, 2008
 * @version: 1.1
 * @rev: $Rev: 4784 $
-* @lastChanged: $Date: 2010-04-16 00:09:41 +0200 (Fri, 16 Apr 2010) $
+* @lastChanged: $Date: 2010-04-16 00:09:41 +0200 (Fri, 16 Apr 2010) $ by $Author: jewerner $
 -->
 <project name="AOR Simulator v2" default="build" basedir=".">
   <description> This ANT file builds an executeable JAR archive from the actual AOR Simulator source codes. </description>
@@ -40,27 +40,35 @@
   
   <property name="JavaSim.dir" value="JavaSim"/>
   <property name="AORSL.dir" value="AORSL"/>
-  <property name="CodeGen.dir" value="CodeGen"/>
 
   <property name="jar.filename.gui" value="AOR-Simulator.jar"/>
   <property name="jar.filename.console" value="AOR-Simulator_console.jar"/>
-  <property name="ear.filename.jsf" value="AOR-WebSimulator.ear"/>
-  <property name="jar.filename.xslt2processor_ejb3" value="050XSLT2Processor.jar"/>
-  <property name="jar.filename.xslt2processor_interface" value="XSLT2ProcessorRemoteInterface.jar"/>
-  <property name="dist.dir" value="dist"/>
+  <!--property name="ear.filename.jsf" value="AOR-WebSimulator.ear"/-->
+  <!--property name="jar.filename.xslt2processor_ejb3" value="050XSLT2Processor.jar"/-->
+  <!--property name="jar.filename.xslt2processor_interface" value="XSLT2ProcessorRemoteInterface.jar"/-->
+  <property name="dist.dir" value="distribution"/>
+  <property name="dist.javagen.dir" value="${dist.dir}/ext/javagen"/>
+  <property name="dist.schema.dir" value="${dist.dir}/ext/aorsl"/>
+  <property name="dist.documents.dir" value="${dist.dir}/ext/documents"/>
+  <property name="dist.media.dir" value="${dist.dir}/media"/>
+  <property name="dist.modules.dir" value="${dist.dir}/modules"/>
+  <property name="dist.lib.dir" value="${dist.dir}/lib"/>
+  <property name="dist.thirdparty-licenses.dir" value="${dist.dir}/thirdparty-licenses"/>
+
   <property name="webstart.dir" value="webstart"/>
   <property name="src.dir" value="${JavaSim.dir}/src"/>
   <property name="class.dir" value="ant_bin"/>
-  <property name="${JavaSim.dir}lib.dir" value="lib"/>
+  <property name="lib.dir" value="${JavaSim.dir}/lib"/>
   <property name="ext.dir" value="${JavaSim.dir}/ext"/>
   <property name="modules.dir" value="${JavaSim.dir}/modules"/>
   <property name="media.dir" value="${JavaSim.dir}/media"/>
+
   <property name="core.dir" value="${src.dir}/aors"/>
   <!--property name="mpj.home" value="/home/tecgen/mpj"/-->
   <!--property name="ejb3.dir" value="${class.dir}/ejb"/-->
   <!--property name="ejb-jar.xml" value="${ext.dir}/ejb3/AOR-Simulator/ejb-jar.xml"/-->
-  <property name="schema.dir" value="${AORSL.dir}/aorsl"/>
-  <property name="javagen.dir" value="${CodeGen.dir}"/>
+  <property name="schema.dir" value="${AORSL.dir}"/>
+  <property name="javagen.dir" value="${ext.dir}/javagen"/>
   <property name="documents.dir" value="${ext.dir}/documents"/>
   <property name="thirdparty-licenses.dir" value="${JavaSim.dir}/thirdparty-licenses"/>
   <property name="manifest.gui" value="${ext.dir}/manifest/gui/MANIFEST.MF"/>
@@ -118,7 +126,7 @@
     <mkdir dir="${dist.dir}"/>
 
     <!-- copy the XSLT's for the Java code generation -->
-    <copy todir="${dist.dir}/${javagen.dir}" overwrite="true">
+    <copy todir="${dist.javagen.dir}" overwrite="true">
       <fileset dir="${javagen.dir}" excludes=".svn, *.xpr, *.bak, *.xsd">
         <exclude name="/ProgrammingLanguages/**"/>
         <exclude name="/Test/**"/>
@@ -127,24 +135,24 @@
     </copy>
 
     <!-- copy the XML Schema for the validation of the simulation description-->
-    <copy todir="${dist.dir}/${schema.dir}" overwrite="true">
+    <copy todir="${dist.schema.dir}" overwrite="true">
       <fileset dir="${schema.dir}" excludes=".svn, *.vsd"/>
     </copy>
 
     <!-- copy the document e.g. HTML files for the GUI -->
-    <copy todir="${dist.dir}/${documents.dir}" overwrite="true">
+    <copy todir="${dist.documents.dir}" overwrite="true">
       <fileset dir="${documents.dir}" excludes=".svn readme.htm"/>
     </copy>
 
     <!-- copy the ext media data -->
-    <mkdir dir="${dist.dir}/${media.dir}"/>
-    <copy todir="${dist.dir}/${media.dir}" overwrite="true">
+    <mkdir dir="${dist.media.dir}"/>
+    <copy todir="${dist.media.dir}" overwrite="true">
       <fileset dir="${media.dir}" excludes=".svn"/>
     </copy>
 
     <!-- copy the modules -->
-    <mkdir dir="${dist.dir}/${modules.dir}"/>
-    <copy todir="${dist.dir}/${modules.dir}" overwrite="true">
+    <mkdir dir="${dist.modules.dir}"/>
+    <copy todir="${dist.modules.dir}" overwrite="true">
       <fileset dir="${modules.dir}" includes="*.jar *.xml"/>
     </copy>
 
@@ -152,7 +160,7 @@
     <copy todir="${dist.dir}" overwrite="true" file="${documents.dir}/readme.htm"/>
 
     <!-- copy the libraries -->
-    <copy todir="${dist.dir}/${lib.dir}" overwrite="true">
+    <copy todir="${dist.lib.dir}" overwrite="true">
       <fileset dir="${lib.dir}"
         includes="AORS-Log-API.jar bounce.jar icons.jar json_simple-1.1.jar saxon9he.jar BrowserLauncher2-1_3.jar json_simple-1.1.jar concurrent.jar colt.jar"
       />
@@ -164,7 +172,7 @@
 
 
     <!-- copy the thirdparty-licenses -->
-    <copy todir="${dist.dir}/${thirdparty-licenses.dir}" overwrite="true">
+    <copy todir="${dist.thirdparty-licenses.dir}" overwrite="true">
       <fileset dir="${thirdparty-licenses.dir}" includes="*.txt"/>
     </copy>
     <copy todir="${dist.dir}" overwrite="true" file="${ext.dir}/manifest/AOR-Simulator.exe"/>
@@ -177,7 +185,7 @@
     description="Build the environment that are necessary for the execution of the application, which means to copy all libraries and external files like XSLTs to the dist folder.">
 
     <!-- copy the libraries needed for SPARQL -->
-    <copy todir="${dist.dir}/${lib.dir}" overwrite="true">
+    <copy todir="${dist.lib.dir}" overwrite="true">
       <fileset dir="${lib.dir}" includes="commons-logging-1.1.jar icu4j_3_4.jar iri.jar xercesImpl.jar jena.jar arq.jar arq-extra.jar"/>
     </copy>
 
@@ -201,13 +209,13 @@
       <fileset dir="${class.dir}"/>
     </delete>
 
-    <!-- save the existing projects in a temp-dir -->
+    <!-- save the existing projects in a temp-dir 
     <move todir="${dist.dir}/${projects.dir}-temp" failonerror="false">
       <fileset dir="${dist.dir}/${projects.dir}"/>
-    </move>
+    </move-->>
 
 
-    <!-- copy the recommended projects-->
+    <!-- copy the recommended projects
     <copy todir="${dist.dir}/${projects.dir}" overwrite="true">
       <fileset dir="${projects.dir}" includes="${project.list}">
         <filename name="*/*/*.xml"/>
@@ -221,20 +229,20 @@
       <fileset dir="${projects.dir}" includes="${project.list}">
         <filename name="*/*/project.xs"/>
       </fileset>
-    </copy>
+    </copy-->>
 
     <zip destfile="./${dist-zip.file}" update="true">
       <zipfileset dir="${dist.dir}" prefix="${dist-zip.name}" excludes="${projects.dir}-temp/**, properties.xml"/>
     </zip>
 
-    <delete includeemptydirs="true" failonerror="false">
+    <!--delete includeemptydirs="true" failonerror="false">
       <fileset dir="${dist.dir}/${projects.dir}"/>
-    </delete>
+    </delete-->
 
-    <!-- move the saved existing projects back to the projects-folder-->
+    <!-- move the saved existing projects back to the projects-folder
     <move todir="${dist.dir}/${projects.dir}" failonerror="false">
       <fileset dir="${dist.dir}/${projects.dir}-temp"/>
-    </move>
+    </move>-->
   </target>
 
   <target name="build-zip-with-compiler" depends="message_zip, clean, exec_env, compile"
@@ -247,13 +255,13 @@
       <fileset dir="${class.dir}"/>
     </delete>
 
-    <!-- save the existing projects in a temp-dir -->
+    <!-- save the existing projects in a temp-dir 
     <move todir="${dist.dir}/${projects.dir}-temp" failonerror="false">
       <fileset dir="${dist.dir}/${projects.dir}"/>
-    </move>
+    </move>-->
 
 
-    <!-- copy the recommended projects-->
+    <!-- copy the recommended projects
     <copy todir="${dist.dir}/${projects.dir}" overwrite="true">
       <fileset dir="${projects.dir}" includes="${project.list}">
         <filename name="*/*/*.xml"/>
@@ -267,10 +275,10 @@
       <fileset dir="${projects.dir}" includes="${project.list}">
         <filename name="*/*/project.xs"/>
       </fileset>
-    </copy>
+    </copy>-->
 
     <!-- copy the libraries -->
-    <copy todir="${dist.dir}/${lib.dir}" overwrite="true">
+    <copy todir="${dist.lib.dir}" overwrite="true">
       <fileset dir="${ext.dir}/manifest/gui_with_compiler" includes="tools.jar"/>
     </copy>
 
@@ -284,10 +292,10 @@
       <fileset dir="${dist.dir}/${projects.dir}"/>
     </delete>
 
-    <!-- move the saved existing projects back to the projects-folder-->
+    <!-- move the saved existing projects back to the projects-folder
     <move todir="${dist.dir}/${projects.dir}" failonerror="false">
       <fileset dir="${dist.dir}/${projects.dir}-temp"/>
-    </move>
+    </move>-->
   </target>
 
   <target name="message_zip" description="Some communication for zip-creation">
