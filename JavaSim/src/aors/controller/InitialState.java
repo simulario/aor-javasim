@@ -357,12 +357,7 @@ public class InitialState {
 	 *            the new aorObjectsById value.
 	 */
 	protected void setAorObjectsById(Map<Long, Objekt> aorObjectsById) {
-		if (this.aorObjectsById != null) {
-			System.out
-					.println("IntitialState.setAorObjectsById():  Warning! try to set already set field 'aorObjectsById' !");
-		} else {
 			this.aorObjectsById = aorObjectsById;
-		}
 	}
 
 	/**
@@ -375,12 +370,7 @@ public class InitialState {
 	 */
 	protected void setAorObjectsByType(
 			Map<String, List<Objekt>> aorObjectsByType) {
-		if (this.aorObjectsByType != null) {
-			System.out
-					.println("IntitialState.setAorObjectsByType():  Warning! try to set already set field 'aorObjectsByType' !");
-		} else {
 			this.aorObjectsByType = aorObjectsByType;
-		}
 	}
 
 	/**
@@ -392,11 +382,6 @@ public class InitialState {
 	 *            the new spaceModel value.
 	 */
 	protected void setSpaceModel(GeneralSpaceModel spaceModel) {
-		if (this.spaceModel != null) {
-			System.out
-					.println("IntitialState.setSpaceModel():  Warning! try to set already set field 'spaceModel' !");
-		} else {
 			this.spaceModel = spaceModel;
-		}
 	}
 }
