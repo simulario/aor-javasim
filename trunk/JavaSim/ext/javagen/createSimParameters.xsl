@@ -3,12 +3,12 @@
 <!--
 	This transformation create a class with Parameters based on a given aorsml file.
 
-        $Rev: 3809 $
-        $Date: 2009-11-27 20:00:19 +0100 (Fri, 27 Nov 2009) $
+        $Rev$
+        $Date$
 
         @author:   Jens Werner (jens.werner@tu-cottbus.de)
         @license:  GNU General Public License version 2 or higher
-        @last changed by $Author: jewerner $
+        @last changed by $Author$
 -->
 
 <xsl:stylesheet version="2.0" xmlns:aorsml="http://aor-simulation.org"

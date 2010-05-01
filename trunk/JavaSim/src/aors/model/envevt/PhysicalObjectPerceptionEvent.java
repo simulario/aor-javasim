@@ -28,7 +28,7 @@ import aors.model.envsim.Physical;
  * 
  * @author Gerd Wagner, Jens Werner
  * @since 31 Juli 2008
- * @version $Revision: 1.0 $
+ * @version $Revision$
  */
 public class PhysicalObjectPerceptionEvent extends PerceptionEvent {
 

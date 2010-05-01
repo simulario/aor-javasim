@@ -33,7 +33,7 @@ package aors.model.intevt;
  * 
  * @author Emilian Pascalau, Adrian Giurca, Jens Werner
  * @since May 25, 2008
- * @version $Revision: 1.0 $
+ * @version $Revision$
  */
 public class ReminderEvent extends TimeEvent {
 

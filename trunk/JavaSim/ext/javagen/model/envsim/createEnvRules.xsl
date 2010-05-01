@@ -3,11 +3,11 @@
 <!--
         This transformation creates classes for environment rules based on a given aorsml file.
 
-        $Rev: 4849 $
-        $Date: 2010-04-22 16:38:10 +0200 (Thu, 22 Apr 2010) $
+        $Rev$
+        $Date$
 
         @author:   Jens Werner (jens.werner@tu-cottbus.de)
-        @last changed by $Author: jewerner $
+        @last changed by $Author$
 -->
 
 <xsl:stylesheet version="2.0" xmlns:aorsml="http://aor-simulation.org" xmlns:fn="http://www.w3.org/2005/xpath-functions"

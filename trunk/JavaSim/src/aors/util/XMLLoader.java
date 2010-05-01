@@ -17,7 +17,7 @@ import org.xml.sax.SAXException;
  * 
  * @author Andreas Freier (business.af@web.de), Mircea Diaconescu
  * @date February 7, 2009
- * @version $Revision: 1.1 $
+ * @version $Revision$
  */
 public class XMLLoader {
 

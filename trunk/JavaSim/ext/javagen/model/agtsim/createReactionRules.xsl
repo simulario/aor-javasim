@@ -3,12 +3,12 @@
 <!--
 	This transformation creates classes for agent rules based on a given aorsml file.
 
-      $Rev: 4875 $
-      $Date: 2010-04-24 11:14:57 +0200 (Sat, 24 Apr 2010) $
+      $Rev$
+      $Date$
 
       @author:   Jens Werner (jens.werner@tu-cottbus.de)
       @license:  GNU General Public License version 2 or higher
-      @last changed by $Author: jewerner $
+      @last changed by $Author$
 -->
 
 <xsl:stylesheet version="2.0" xmlns:aorsml="http://aor-simulation.org" xmlns:fn="http://www.w3.org/2005/xpath-functions"

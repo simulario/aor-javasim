@@ -37,7 +37,7 @@ import aors.model.Message;
  * 
  * @author Ion-Mircea Diaconescu
  * @since March 23, 2009
- * @version $Revision: 1.0 $
+ * @version $Revision$
  */
 public class Ask extends Message {
 

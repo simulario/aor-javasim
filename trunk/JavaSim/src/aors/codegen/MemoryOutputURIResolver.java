@@ -24,7 +24,7 @@ import net.sf.saxon.OutputURIResolver;
  * 
  * @author Marco Pehla
  * @since 19.03.2008
- * @version $Revision: 1.0 $
+ * @version $Revision$
  */
 public class MemoryOutputURIResolver implements OutputURIResolver {
 

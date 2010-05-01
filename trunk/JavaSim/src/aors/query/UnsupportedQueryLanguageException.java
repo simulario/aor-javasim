@@ -34,7 +34,7 @@ package aors.query;
  * 
  * @author Mircea Diaconescu
  * @since December 5, 2008
- * @version $Revision: 1.0 $
+ * @version $Revision$
  */
 public class UnsupportedQueryLanguageException extends Exception {
   public static final long serialVersionUID = 875469;

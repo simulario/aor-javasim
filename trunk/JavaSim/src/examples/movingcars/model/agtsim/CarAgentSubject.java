@@ -50,7 +50,7 @@ import examples.movingcars.model.envevt.SpeedUp;
  * 
  * @author Emilian Pascalau, Adrian Giurca
  * @since May 26, 2008
- * @version $Revision: 1.0 $
+ * @version $Revision$
  */
 public class CarAgentSubject extends AgentSubject {
 

@@ -39,7 +39,7 @@ import aors.controller.Project;
  * 
  * @author Andreas Freier (business.af@web.de), Mircea Diaconescu
  * @date February 9, 2009
- * @version $Revision: 1.1 $
+ * @version $Revision$
  */
 public class SoundMP3 implements Sound {
   private AudioInputStream din;

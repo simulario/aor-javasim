@@ -46,7 +46,7 @@ import examples.carsandtrucks.model.envevt.SpeedUp;
  * 
  * @author
  * @since July 10, 2008
- * @version $Revision: 1.0 $
+ * @version $Revision$
  */
 public class VehicleAgentSubject extends AgentSubject {
 

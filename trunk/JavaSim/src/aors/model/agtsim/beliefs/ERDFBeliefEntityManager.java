@@ -36,7 +36,7 @@ import aors.model.Entity;
  * 
  * @author Mircea Diaconescu
  * @since June 28, 2009
- * @version $Revision: 1.0 $
+ * @version $Revision$
  */
 public interface ERDFBeliefEntityManager {
 

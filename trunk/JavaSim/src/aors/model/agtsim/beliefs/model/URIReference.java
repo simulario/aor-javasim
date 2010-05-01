@@ -31,7 +31,7 @@ import java.net.URI;
  * 
  * @author Mircea Diaconescu
  * @since September 29, 2009
- * @version $Revision: 1.0 $
+ * @version $Revision$
  */
 
 public class URIReference implements Value {

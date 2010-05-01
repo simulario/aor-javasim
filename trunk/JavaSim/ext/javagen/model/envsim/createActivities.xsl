@@ -3,12 +3,12 @@
 <!--
   This transformation creates classes for activities based on a given aorsml file.
   
-  $Rev: 4604 $
-  $Date: 2010-03-18 09:59:29 +0100 (Thu, 18 Mar 2010) $
+  $Rev$
+  $Date$
   
   @author:   Jens Werner (jens.werner@tu-cottbus.de)
   @license:
-  @last changed by $Author: jewerner $
+  @last changed by $Author$
 -->
 
 <xsl:stylesheet version="2.0" xmlns:aorsml="http://aor-simulation.org" xmlns:fn="http://www.w3.org/2005/xpath-functions"

@@ -15,7 +15,7 @@ import aors.controller.Project;
  * 
  * @author Marco Pehla
  * @since 21.08.2008
- * @version $Revision: 1.0 $
+ * @version $Revision$
  */
 public class ProjectFileView extends FileView {
 

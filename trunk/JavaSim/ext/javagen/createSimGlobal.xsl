@@ -3,12 +3,12 @@
 <!--
 	This transformation creates a class with global (static) variables and functions.
 
-        $Rev: 4870 $
-        $Date: 2010-04-23 14:27:26 +0200 (Fri, 23 Apr 2010) $
+        $Rev$
+        $Date$
 
         @author:   Jens Werner (jens.werner@tu-cottbus.de)
         @license:  GNU General Public License version 2 or higher
-        @last changed by $Author: jewerner $
+        @last changed by $Author$
 -->
 
 <xsl:stylesheet version="2.0" xmlns:aorsml="http://aor-simulation.org" xmlns:fn="http://www.w3.org/2005/xpath-functions"

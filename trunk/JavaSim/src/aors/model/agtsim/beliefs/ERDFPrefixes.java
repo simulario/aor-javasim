@@ -29,7 +29,7 @@ package aors.model.agtsim.beliefs;
  * 
  * @author Mircea Diaconescu
  * @since September 04, 2009
- * @version $Revision: 1.0 $
+ * @version $Revision$
  */
 public interface ERDFPrefixes {
 

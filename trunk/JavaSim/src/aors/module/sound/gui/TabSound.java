@@ -56,7 +56,7 @@ import aors.module.sound.SoundController;
  * 
  * @author Mircea Diaconescu
  * @date November 1, 2009
- * @version $Revision: 1.0 $
+ * @version $Revision$
  */
 
 public class TabSound extends JScrollPane implements GUIModule {
@@ -253,7 +253,7 @@ public class TabSound extends JScrollPane implements GUIModule {
    * 
    * @author Mircea Diaconescu
    * @date November 1, 2009
-   * @version $Revision: 1.0 $
+   * @version $Revision$
    */
   private class CheckBoxCellRenderer extends JCheckBox implements
       TableCellRenderer {
@@ -293,7 +293,7 @@ public class TabSound extends JScrollPane implements GUIModule {
    * 
    * @author Mircea Diaconescu
    * @date November 1, 2009
-   * @version $Revision: 1.0 $
+   * @version $Revision$
    */
   private class CheckBoxCellEditor extends AbstractCellEditor implements
       TableCellEditor {

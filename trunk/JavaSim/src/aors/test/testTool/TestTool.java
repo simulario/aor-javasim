@@ -31,7 +31,7 @@ import aors.test.testTool.manager.TestManager;
  * 
  * @author Mircea Diaconescu
  * @since July 10, 2009
- * @version $Revision: 1.0 $
+ * @version $Revision$
  */
 public class TestTool {
 

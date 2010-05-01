@@ -33,7 +33,7 @@ import aors.model.envsim.PhysicalAgentObject;
  * 
  * @author
  * @since July 10, 2008
- * @version $Revision: 1.0 $
+ * @version $Revision$
  */
 public abstract class VehicleAgentObject extends PhysicalAgentObject {
 

@@ -10,7 +10,7 @@ import aors.model.envevt.activity.Activity;
  * 
  * @author Jens Werner
  * @since 06 April 2009
- * @version $Revision: 1.0 $
+ * @version $Revision$
  */
 public class ActivityEndEvent extends CausedEvent {
 

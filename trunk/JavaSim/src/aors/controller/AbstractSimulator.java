@@ -77,7 +77,7 @@ import aors.util.JsonData;
  * 
  * @author Emilian Pascalau, Adrian Giurca, Jens Werner, Marco Pehla
  * @since May 23, 2008
- * @version $Revision: 1.0 $
+ * @version $Revision$
  */
 public abstract class AbstractSimulator implements AgentSimulatorListener {
 

@@ -60,7 +60,7 @@ import aors.util.JsonData;
  * @author Emilian Pascalau, Adrian Giurca, Jens Werner, Volkmar Kantor,
  *         Christian Noack
  * @since May 25, 2008
- * @version $Revision: 1.0 $
+ * @version $Revision$
  */
 public class DefaultAgentSimulator implements AgentSimulator,
     AgentSimulatorFacade {

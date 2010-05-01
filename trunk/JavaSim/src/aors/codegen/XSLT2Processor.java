@@ -28,7 +28,7 @@ import net.sf.saxon.trans.XPathException;
  * 
  * @author Marco Pehla
  * @since 30.07.2008
- * @version $Revision: 1.0 $
+ * @version $Revision$
  */
 public class XSLT2Processor {
 

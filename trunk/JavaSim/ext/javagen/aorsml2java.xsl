@@ -2,12 +2,12 @@
 <!--
         This transformation creates java code for the aorsml simulator v2
 
-        $Rev: 4634 $
-        $Date: 2010-03-22 11:21:58 +0100 (Mon, 22 Mar 2010) $
+        $Rev$
+        $Date$
 
         @author:   Jens Werner (jens.werner@tu-cottbus.de)
         @license:  GNU General Public License version 2 or higher
-        @last changed by $Author: jewerner $
+        @last changed by $Author$
 -->
 
 <xsl:stylesheet version="2.0" xmlns:aorsml="http://aor-simulation.org" xmlns:fn="http://www.w3.org/2005/xpath-functions"

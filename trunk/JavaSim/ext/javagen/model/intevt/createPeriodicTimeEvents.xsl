@@ -3,11 +3,11 @@
 <!--
 	This transformation creates classes for periodic time events based on a given aorsml file.
 
-        $Rev: 4131 $
-        $Date: 2010-01-26 14:42:17 +0100 (Tue, 26 Jan 2010) $
+        $Rev$
+        $Date$
 
         @author:   Jens Werner (jens.werner@tu-cottbus.de)
-        @last changed by $Author: jewerner $
+        @last changed by $Author$
 -->
 
 <xsl:transform version="2.0" xmlns:aorsml="http://aor-simulation.org" xmlns:fn="http://www.w3.org/2005/xpath-functions"

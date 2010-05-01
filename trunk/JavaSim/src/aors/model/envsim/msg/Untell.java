@@ -39,7 +39,7 @@ import aors.model.Message;
  * 
  * @author Ion-Mircea Diaconescu
  * @since June 05, 2009
- * @version $Revision: 1.0 $
+ * @version $Revision$
  */
 public class Untell extends Message {
   /**

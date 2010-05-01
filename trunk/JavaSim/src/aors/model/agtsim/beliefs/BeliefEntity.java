@@ -37,7 +37,7 @@ import aors.model.Entity;
  * 
  * @author Mircea Diaconescu
  * @since July 09, 2009
- * @version $Revision: 1.0 $
+ * @version $Revision$
  */
 public class BeliefEntity extends Entity {
 

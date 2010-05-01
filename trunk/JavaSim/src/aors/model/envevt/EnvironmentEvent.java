@@ -35,7 +35,7 @@ import aors.model.AtomicEvent;
  * 
  * @author Emilian Pascalau, Adrian Giurca, Jens Werner
  * @since May 25, 2008
- * @version $Revision: 1.0 $
+ * @version $Revision$
  */
 public abstract class EnvironmentEvent extends AtomicEvent {
 

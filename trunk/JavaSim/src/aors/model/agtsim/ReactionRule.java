@@ -42,7 +42,7 @@ import aors.model.intevt.InternalEvent;
  * 
  * @author
  * @since May 23, 2008
- * @version $Revision: 1.0 $
+ * @version $Revision$
  */
 public abstract class ReactionRule extends Rule {
 

@@ -19,7 +19,7 @@ import aors.gui.swing.ImageLoader;
  * 
  * @author Jens Werner
  * @since 14.02.2010
- * @version $Revision: 1.0 $
+ * @version $Revision$
  */
 public class WebStartMenu extends JMenuBar {
 
@@ -192,7 +192,7 @@ public class WebStartMenu extends JMenuBar {
    * 
    * @author Marco Pehla
    * @since 19.07.2008
-   * @version $Revision: 1.0 $
+   * @version $Revision$
    */
   public class Item {
 

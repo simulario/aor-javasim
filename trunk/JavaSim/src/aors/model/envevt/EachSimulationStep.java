@@ -33,7 +33,7 @@ package aors.model.envevt;
  * 
  * @author Jens Werner
  * @since 07.11.2009
- * @version $Revision: 1.0 $
+ * @version $Revision$
  */
 public class EachSimulationStep extends ExogenousEvent {
 

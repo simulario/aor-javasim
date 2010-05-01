@@ -41,7 +41,7 @@ import examples.movingcars.model.envevt.SpeedUp;
  * 
  * @author Jens Werner
  * @since 05.06.2008
- * @version $Revision: 1.0 $
+ * @version $Revision$
  */
 public class SpeedUpEnvRule extends EnvironmentRule {
 

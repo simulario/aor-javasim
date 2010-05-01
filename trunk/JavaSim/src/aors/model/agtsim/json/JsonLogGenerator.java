@@ -23,7 +23,7 @@ import aors.util.JsonData;
  * 
  * @author Christian Noack
  * @since 07.04.2009
- * @version $Revision: 1.0 $
+ * @version $Revision$
  */
 public class JsonLogGenerator {
 

@@ -39,7 +39,7 @@ import aors.model.envsim.PhysicalAgentObject;
  * 
  * @author Ion-Mircea Diaconescu
  * @since March 26, 2009
- * @version $Revision: 1.0 $
+ * @version $Revision$
  */
 
 public class TrustfulAndSincere extends PhysicalAgentObject {

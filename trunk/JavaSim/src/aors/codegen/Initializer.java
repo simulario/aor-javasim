@@ -40,7 +40,7 @@ import aors.model.envsim.PhysicalObject;
 /**
  * @author Jens Werner
  * @since April 17, 2009
- * @version $Revision: 1.0 $
+ * @version $Revision$
  * 
  */
 public class Initializer implements InitializerKonstants {

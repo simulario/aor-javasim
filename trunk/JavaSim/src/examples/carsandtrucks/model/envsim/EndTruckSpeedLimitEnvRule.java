@@ -42,7 +42,7 @@ import examples.carsandtrucks.model.envevt.TruckSpeedLimitEndPercEvt;
  * 
  * @author
  * @since July 13, 2008
- * @version $Revision: 1.0 $
+ * @version $Revision$
  */
 public class EndTruckSpeedLimitEnvRule extends EnvironmentRule {
   private EachCycle eachCycle;

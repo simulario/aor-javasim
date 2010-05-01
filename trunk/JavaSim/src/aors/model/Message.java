@@ -35,7 +35,7 @@ import java.util.UUID;
  * 
  * @author Emilian Pascalau, Adrian Giurca
  * @since May 23, 2008
- * @version $Revision: 1.0 $
+ * @version $Revision$
  */
 public abstract class Message extends Entity {
   /**

@@ -2,12 +2,12 @@
 <!--
   This transformation creates classes for agentsubjects based on a given aorsml file.
   
-  $Rev: 4835 $
-  $Date: 2010-04-21 16:42:43 +0200 (Wed, 21 Apr 2010) $
+  $Rev$
+  $Date$
   
   @author:   Jens Werner (jens.werner@tu-cottbus.de)
   @license:  GNU General Public License version 2 or higher
-  @last changed by $Author: jewerner $
+  @last changed by $Author$
 -->
 
 <xsl:stylesheet version="2.0" xmlns:aorsml="http://aor-simulation.org"

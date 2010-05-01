@@ -28,7 +28,7 @@ package aors.module.sound;
  * 
  * @author Andreas Freier (business.af@web.de), Mircea Diaconescu
  * @date April 02, 2009
- * @version $Revision: 1.1 $
+ * @version $Revision$
  */
 public class MIDIMap {
 

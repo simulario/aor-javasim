@@ -43,7 +43,7 @@ import aors.model.agtsim.AgentSubject;
  * 
  * @author Marco Pehla
  * @since June 4, 2008
- * @version $Revision: 1.0 $
+ * @version $Revision$
  */
 public class AgentSubjectCreationEvent extends EnvironmentEvent {
 

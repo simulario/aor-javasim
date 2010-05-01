@@ -55,7 +55,7 @@ import com.hp.hpl.jena.vocabulary.RDF;
  * 
  * @author Mircea Diaconescu
  * @since November 28, 2008
- * @version $Revision: 1.0 $
+ * @version $Revision$
  */
 public class QueryEngine {
   /** the name of the engine **/

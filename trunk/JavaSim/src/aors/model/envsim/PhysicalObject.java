@@ -39,7 +39,7 @@ import aors.util.Vector;
  * 
  * @author Emilian Pascalau, Adrian Giurca
  * @since May 23, 2008
- * @version $Revision: 1.0 $
+ * @version $Revision$
  */
 // @NotThreadSafe
 public class PhysicalObject extends Objekt implements Physical {

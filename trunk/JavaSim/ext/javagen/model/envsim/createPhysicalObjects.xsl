@@ -2,11 +2,11 @@
 <!--
 	This transformation creates classes for objects based on a given aorsml file.
 
-        $Rev: 4557 $
-        $Date: 2010-03-15 17:29:02 +0100 (Mon, 15 Mar 2010) $
+        $Rev$
+        $Date$
 
         @author:   Jens Werner (jens.werner@tu-cottbus.de)
-        @last changed by $Author: jewerner $
+        @last changed by $Author$
 -->
 
 <xsl:stylesheet version="2.0" xmlns:aorsml="http://aor-simulation.org" xmlns:fn="http://www.w3.org/2005/xpath-functions"

@@ -38,7 +38,7 @@ import aors.model.Message;
  * 
  * @author Emilian Pascalau, Adrian Giurca
  * @since May 25, 2008
- * @version $Revision: 1.0 $
+ * @version $Revision$
  */
 public class InMessageEvent extends PerceptionEvent {
 

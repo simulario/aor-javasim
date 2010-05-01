@@ -34,7 +34,7 @@ import java.io.OutputStream;
  * 
  * @author Mircea Diaconescu
  * @since February 18, 2010
- * @version $Revision: 1.0 $
+ * @version $Revision$
  */
 
 public class CloneObjectUtil {
