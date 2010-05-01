@@ -29,13 +29,13 @@ import javax.swing.table.DefaultTableModel;
 import org.w3c.dom.Document;
 import org.w3c.dom.Node;
 
+import aors.controller.InitialState;
 import aors.controller.SimulationDescription;
 import aors.data.java.ObjektDestroyEvent;
 import aors.data.java.ObjektInitEvent;
 import aors.data.java.SimulationEvent;
 import aors.data.java.SimulationStepEvent;
 import aors.model.envevt.EnvironmentEvent;
-import aors.module.InitialState;
 import aors.module.Module;
 import aors.module.initialState.gui.InitialStateUITab;
 

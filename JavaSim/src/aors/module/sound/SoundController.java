@@ -34,6 +34,7 @@ import org.w3c.dom.NamedNodeMap;
 import org.w3c.dom.Node;
 import org.w3c.dom.NodeList;
 
+import aors.controller.InitialState;
 import aors.controller.SimulationDescription;
 import aors.data.java.ObjektDestroyEvent;
 import aors.data.java.ObjektInitEvent;
@@ -42,7 +43,6 @@ import aors.data.java.SimulationStepEvent;
 import aors.model.envevt.EnvironmentEvent;
 import aors.model.envevt.InMessageEvent;
 import aors.model.envevt.OutMessageEvent;
-import aors.module.InitialState;
 import aors.module.Module;
 import aors.module.sound.gui.TabSound;
 import aors.util.jar.JarUtil;

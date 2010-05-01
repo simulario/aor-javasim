@@ -35,7 +35,6 @@ import aors.data.DataBus;
 import aors.data.DataBusInterface;
 import aors.module.Constants;
 import aors.module.GUIModule;
-import aors.module.InitialState;
 import aors.module.Module;
 import aors.util.jar.JarUtil;
 

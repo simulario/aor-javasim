@@ -33,6 +33,7 @@ import javax.swing.border.SoftBevelBorder;
 import javax.swing.event.ChangeEvent;
 import javax.swing.event.ChangeListener;
 
+import aors.controller.InitialState;
 import aors.controller.SimulationDescription;
 import aors.controller.webstart.WebStartSimulationManager;
 import aors.data.DataBus;
@@ -49,7 +50,6 @@ import aors.gui.swing.OutputStreamTextPane;
 import aors.gui.swing.TabSimDescription;
 import aors.gui.swing.ToolBarSimulation;
 import aors.model.envevt.EnvironmentEvent;
-import aors.module.InitialState;
 import aors.module.Module;
 import aors.module.evt.ModuleEvent;
 import aors.module.evt.ModuleEventListener;

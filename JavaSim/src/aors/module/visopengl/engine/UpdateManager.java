@@ -13,6 +13,7 @@ import javax.xml.bind.JAXBElement;
 import org.w3c.dom.Node;
 
 import aors.GeneralSpaceModel.SpaceType;
+import aors.controller.InitialState;
 import aors.logger.model.AgtType;
 import aors.logger.model.EnvSimInputEventType;
 import aors.logger.model.EnvironmentSimulatorStep;
@@ -32,7 +33,6 @@ import aors.model.envsim.Objekt;
 import aors.model.envsim.Physical;
 import aors.model.envsim.PhysicalAgentObject;
 import aors.model.envsim.PhysicalObject;
-import aors.module.InitialState;
 import aors.module.visopengl.shape.DisplayInfo;
 import aors.module.visopengl.shape.Shape2D;
 import aors.module.visopengl.shape.View;
