@@ -250,7 +250,7 @@
           <xsl:with-param name="value">
             <xsl:choose>
               <xsl:when test="fn:exists(aorsml:StopCondition[@language = $output.language])">
-                <xsl:value-of select="aorsml:StopCondition"/>
+                <xsl:value-of select="aorsml:StopCondition[@language = $output.language]"/>
               </xsl:when>
               <xsl:otherwise>
                 <xsl:value-of select="'false'"/>
