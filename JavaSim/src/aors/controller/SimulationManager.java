@@ -15,6 +15,7 @@ import java.net.URLClassLoader;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.InvalidPropertiesFormatException;
+import java.util.List;
 import java.util.Properties;
 import java.util.jar.JarEntry;
 import java.util.jar.JarFile;
@@ -43,7 +44,7 @@ import aors.util.jar.JarUtil;
  * 
  * SimulationManager
  * 
- * @author Marco Pehla, Mircea Diaconescu
+ * @author Marco Pehla, Mircea Diaconescu, Jens Werner
  * @since 31.07.2008
  * @version $Revision$
  */
@@ -62,7 +63,7 @@ public class SimulationManager {
   private static Project project;
 
   // the list with all current loaded modules
-  private ArrayList<Module> modules;
+  private List<Module> modules;
 
   // the user directory
   private final String APP_ROOT_DIRECTORY = System.getProperty("user.dir");
@@ -71,24 +72,27 @@ public class SimulationManager {
   public final static String PROJECT_DIRECTORY = "projects";
 
   // the AORSL directory
-  private final String aorslDirectory = "ext" + File.separator + "aorsl";
+  private String aorslDirectory;
 
   // the AORSK schema name
-  private String AORSL_SCHEMA_NAME;
+  private String AORSLSchemaName;
 
   // the current (used as defautl) schema name
   private final String CURRENT_AORSL_SCHEMA_NAME = "AORSL-0-8-3.xsd";
 
-  // teh project properties object
+  // the project properties object
   private Properties properties;
 
   // the project property file
-  private final String propertyFileName = "properties.xml";
+  private final String PROPERTY_FILE_NAME = "properties.xml";
 
+  // property keys
   // the property that defines the logger file name
   private final String propertyLoggerFileName = "logger file name";
   private final String propertyLoggerPath = "logger path";
   private final String propertyAutoMultithreading = "auto multithreading";
+  private final String propertyXMLSchemaFileName = "XML-Schema file name";
+  private final String propertyXMLSchemaFilePath = "XML-Schema file path";
 
   public static final String propertyLogger = "logger";
 
@@ -427,46 +431,43 @@ public class SimulationManager {
     this.properties = new Properties();
 
     try {
-      this.properties.loadFromXML(new FileInputStream(this.propertyFileName));
+      this.properties.loadFromXML(new FileInputStream(this.PROPERTY_FILE_NAME));
+      this.setProperties();
+      
     } catch (IOException ioe) {
-      System.err.println("Can not load the file " + this.propertyFileName
+      System.err.println("Can not load the file " + this.PROPERTY_FILE_NAME
           + ". Using the default values.");
+      this.setDefaultProperties();
     }
 
-    // load logger path plus file name
-    String value;
+  }
 
-    value = this.properties.getProperty(propertyAutoMultithreading);
+  private void setDefaultProperties() {
+    this.aorslDirectory = "ext" + File.separator + "aorsl";
+    this.AORSLSchemaName = CURRENT_AORSL_SCHEMA_NAME;
+  }
+  
+  private void setProperties() {
+    
+    String value = this.properties.getProperty(propertyAutoMultithreading);
+    if (value != null && value.equals("true")) {
+      this.autoMultithreading = true;
+    }
+    
+    value = this.properties.getProperty(propertyXMLSchemaFileName);
     if (value != null) {
-      if (value.equals("true")) {
-        this.autoMultithreading = true;
-      }
+      this.AORSLSchemaName = value;
+    } else {
+      this.AORSLSchemaName = CURRENT_AORSL_SCHEMA_NAME;
     }
-
-    // load the properties regarding the XML Schema validation
-    Properties aorslProperties = new Properties();
-
-    try {
-      aorslProperties.loadFromXML(new FileInputStream(this.aorslDirectory
-          + File.separator + this.propertyFileName));
-    } catch (IOException ioe) {
-      System.err.println("Can not load the file " + this.propertyFileName
-          + ". Using the default value: " + CURRENT_AORSL_SCHEMA_NAME + " .");
-      this.AORSL_SCHEMA_NAME = CURRENT_AORSL_SCHEMA_NAME;
+    
+    value = this.properties.getProperty(propertyXMLSchemaFilePath);
+    if (value != null) {
+      this.aorslDirectory = value;
+    } else {
+      this.aorslDirectory = "ext" + File.separator + "aorsl";
     }
-    // get the property setting
-    this.AORSL_SCHEMA_NAME = aorslProperties
-        .getProperty(PROPERTY_XML_SCHEMA_FILE_NAME);
-
-    // just in case somebody forgot to define a file name
-    if (this.AORSL_SCHEMA_NAME == null || this.AORSL_SCHEMA_NAME.equals("")) {
-      this.AORSL_SCHEMA_NAME = CURRENT_AORSL_SCHEMA_NAME;
-      System.err.println("File \"" + this.aorslDirectory + "/"
-          + this.propertyFileName
-          + "\" contains no XML Schema file name for AORSL. "
-          + " Using the default value: " + CURRENT_AORSL_SCHEMA_NAME + " .");
-    }
-
+    
   }
 
   /**
@@ -480,11 +481,13 @@ public class SimulationManager {
     this.properties.put(this.propertyLoggerPath, this.loggerPath);
     this.properties.put(this.propertyAutoMultithreading, String
         .valueOf(autoMultithreading));
+    this.properties.put(this.propertyXMLSchemaFileName, this.AORSLSchemaName);
+    this.properties.put(this.propertyXMLSchemaFilePath, this.aorslDirectory);
 
     // store properties in the properies XML file
     try {
       this.properties.storeToXML(new FileOutputStream(new File(
-          this.propertyFileName)),
+          this.PROPERTY_FILE_NAME)),
           "This is the property file for the AOR simulator.", "UTF-8");
     } catch (IOException ioe) {
       ioe.printStackTrace();
@@ -570,10 +573,10 @@ public class SimulationManager {
    */
   public String readXMLFile(File file) {
     try {
-      
+
       InputStreamReader streamReader = new InputStreamReader(
-          new FileInputStream(file),"UTF8");
-      
+          new FileInputStream(file), "UTF8");
+
       BufferedReader fileReader = new BufferedReader(streamReader);
 
       String line = "";
@@ -584,7 +587,7 @@ public class SimulationManager {
       }
 
       fileReader.close();
-      
+
       // return the content of the string writer
       return result;
 
@@ -649,8 +652,7 @@ public class SimulationManager {
 
       // get the XML Schema
       File schemaLocation = new File(System.getProperty("user.dir")
-          + File.separator + "ext" + File.separator + "aorsl" + File.separator
-          + AORSL_SCHEMA_NAME);
+          + File.separator + this.aorslDirectory + File.separator + this.AORSLSchemaName);
 
       // create a new Schema instance
       Schema schema = factory.newSchema(schemaLocation);
@@ -803,8 +805,8 @@ public class SimulationManager {
    * 
    * @return the existing modules
    */
-  public ArrayList<Module> getModules() {
-    return modules;
+  public List<Module> getModules() {
+    return this.modules;
   }
 
   /**
