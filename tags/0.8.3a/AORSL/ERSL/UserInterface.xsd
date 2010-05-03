@@ -1,0 +1,264 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<xs:schema xmlns:ers="http://aor-simulation.org" xmlns:xs="http://www.w3.org/2001/XMLSchema"
+	xmlns:h="http://www.w3.org/1999/xhtml" targetNamespace="http://aor-simulation.org"
+	elementFormDefault="qualified" attributeFormDefault="unqualified">
+	<xs:include schemaLocation="Views.xsd"/>
+	<!-- =================================================================== -->
+	<xs:element name="UserInterface" type="ers:UserInterface.type"/>
+	<!-- =================================================================== -->
+	<xs:complexType name="UserInterface.type">
+		<xs:sequence>
+			<xs:element ref="ers:InitialStateUI" minOccurs="0"/>
+			<xs:element ref="ers:StatisticsUI" minOccurs="0"/>
+			<xs:element ref="ers:AnimationUI" minOccurs="0"/>
+		</xs:sequence>
+	</xs:complexType>
+	<!-- =================================================================== -->
+	<xs:element name="StatisticsUI">
+	<!-- =================================================================== -->
+		<xs:complexType>
+			<xs:sequence>
+				<!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~-->
+				<xs:element name="StatisticsVariableUI" minOccurs="0" maxOccurs="unbounded">
+				<!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~-->
+					<xs:complexType>
+						<xs:sequence>
+							<xs:element ref="ers:Label"/>
+							<xs:element ref="ers:Hint"/>
+							<xs:element name="Format" minOccurs="0">
+								<xs:complexType>
+									<xs:group ref="ers:Units.elemGrp"/>
+									<xs:attribute name="decimalPlaces" type="xs:nonNegativeInteger" use="required"/>
+								</xs:complexType>
+							</xs:element>
+						</xs:sequence>
+						<xs:attribute name="variable" type="ers:CanonicalName" use="required"/>
+						<xs:attribute name="comparisonGroup" type="ers:CanonicalName" use="optional">
+							<xs:annotation>
+								<xs:documentation>Allows to assign a user-defined comparison group name to a variable, such that all variables with this comparison group name will be charted in a single comparison chart.</xs:documentation>
+							</xs:annotation>
+						</xs:attribute>
+						<xs:attribute name="showChart" type="xs:boolean" use="optional">
+							<xs:annotation>
+								<xs:documentation>Allows to specify that the variable's time series should be shown in a chart. It makes only sense for variables that have distinct values at different simulations steps such that their temporal variation is of interest. </xs:documentation>
+							</xs:annotation>
+						</xs:attribute>
+					</xs:complexType>
+				</xs:element>
+				<!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~-->
+				<xs:element name="FrequencyDistributionChart" minOccurs="0" maxOccurs="unbounded">
+					<!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~-->
+					<xs:annotation>
+						<xs:documentation>Shows the relative frequencies of object property values for the population/extension of an object type at the end of a simulation run. For a property of type Float, value intervals have to be defined with the help of the intervalSize attribute.</xs:documentation>
+					</xs:annotation>
+					<xs:complexType>
+						<xs:attribute name="objectPropertyStatisticsVariable" type="ers:CanonicalName" use="required">
+							<xs:annotation><xs:documentation>Refers to a statistics variable that is bound to an object property as its <h:code>Source</h:code>. </xs:documentation></xs:annotation>
+						</xs:attribute>
+						<xs:attribute name="minValue" type="xs:double" use="optional"/>
+						<xs:attribute name="maxValue" type="xs:double" use="optional"/>
+						<xs:attribute name="intervalSize" type="xs:double" use="optional">
+							<xs:annotation>
+								<xs:documentation>The <h:code>intervalSize</h:code> attribute allows to define a sequence of intervals based on <h:code>minValue</h:code> and <h:code>maxValue</h:code>. E.g., the attribute settings minValue="10" intervalSize="2" maxValue="16" defines the 3 intervals (10,12], (12,14] and (14,16]. </xs:documentation>
+							</xs:annotation>
+						</xs:attribute>
+						<xs:attribute name="chartType" use="optional">
+							<xs:simpleType>
+								<xs:restriction base="xs:string">
+									<xs:enumeration value="BAR"/>
+									<xs:enumeration value="PIE"/>
+									<xs:enumeration value="PIE3D"/>
+									<xs:enumeration value="AREA"/>
+									<xs:enumeration value="LINE"/>
+									<xs:enumeration value="STEP"/>
+									<xs:enumeration value="STEP_AREA"/>
+								</xs:restriction>
+							</xs:simpleType>							
+						</xs:attribute>
+					</xs:complexType>
+				</xs:element>
+			</xs:sequence>
+		</xs:complexType>
+	</xs:element>
+	<xs:group name="Units.elemGrp">
+		<xs:choice>
+			<xs:element name="Currency" type="ers:CurrencySymbol"/>
+			<xs:element name="Length" type="ers:LengthUnit"/>
+			<xs:element name="Weight" type="ers:WeightUnit"/>
+			<xs:element name="Time" type="ers:TimeUnit"/>
+			<xs:element name="Area" type="ers:AreaUnit"/>
+			<xs:element name="Volume" type="ers:VolumeUnit"/>
+			<xs:element name="Math" type="ers:MathUnit"/>
+			<xs:element name="Physics" type="ers:PhysicalUnit"/>
+		</xs:choice>
+	</xs:group>
+	<!-- =================================================================== -->
+	<xs:element name="InitialStateUI">
+		<!-- =================================================================== -->
+		<xs:complexType>
+			<xs:sequence>
+				<xs:element ref="ers:GlobalVariableUI" minOccurs="0" maxOccurs="unbounded"/>
+				<xs:element ref="ers:EventUI" minOccurs="0" maxOccurs="unbounded"/>
+				<xs:element ref="ers:ObjectUI" minOccurs="0" maxOccurs="unbounded"/>
+				<xs:element ref="ers:AgentUI" minOccurs="0" maxOccurs="unbounded"/>
+			</xs:sequence>
+		</xs:complexType>
+	</xs:element>
+	<!-- =================================================================== -->
+	<xs:element name="AnimationUI">
+		<!-- =================================================================== -->
+		<xs:complexType>
+			<xs:sequence>
+				<xs:element name="DisplayDescription" type="ers:AnyXHTML.type" minOccurs="0"/>
+				<!-- <xs:element ref="ers:Scales" minOccurs="0"/> -->
+				<xs:element name="Views">
+					<xs:complexType>
+						<xs:sequence>
+							<xs:element ref="ers:SpaceView"  minOccurs="0"/>
+							<xs:element ref="ers:ObjectView" minOccurs="0" maxOccurs="unbounded"/>
+							<xs:element ref="ers:PhysicalObjectView" minOccurs="0" maxOccurs="unbounded"/>
+							<xs:element ref="ers:EventAppearance" minOccurs="0" maxOccurs="unbounded"/>
+						</xs:sequence>
+					</xs:complexType>
+				</xs:element>
+			</xs:sequence>
+			<xs:attribute name="introSoundFile" type="xs:anyURI" use="optional">
+				<xs:annotation><xs:documentation>The source file can be mp3 or midi. It is identified by its extension (.mp3 or .mid). The file is searched first in the project folder under "media/sounds". If the file is not found then it is searched in the global media/sounds folder. If still not found, then no sound is played. Note that the path is relative to the media/sounds folder (of the project or the global one). </xs:documentation></xs:annotation>
+			</xs:attribute>
+		</xs:complexType>
+	</xs:element>
+	<!-- =================================================================== -->
+	<xs:element name="EventUI">
+		<!-- =================================================================== -->
+		<xs:complexType>
+			<xs:sequence>
+				<xs:element ref="ers:PropertyUI" maxOccurs="unbounded"/>
+			</xs:sequence>
+			<xs:attribute name="eventType" type="ers:CanonicalName"/>
+			<xs:attributeGroup ref="ers:EntityUI.attributes"/>
+		</xs:complexType>
+	</xs:element>
+	<!-- =================================================================== -->
+	<xs:attributeGroup name="EntityUI.attributes">
+		<!-- =================================================================== -->
+		<xs:attribute name="nmrOfInstances" use="optional">
+			<xs:simpleType>
+				<xs:restriction base="xs:integer">
+					<xs:minInclusive value="1"/>
+					<xs:maxInclusive value="7"/>
+				</xs:restriction>
+			</xs:simpleType>
+		</xs:attribute>
+	</xs:attributeGroup>
+	<!-- =================================================================== -->
+	<xs:element name="ObjectUI">
+		<!-- =================================================================== -->
+		<xs:complexType>
+			<xs:sequence>
+				<xs:element ref="ers:PropertyUI" maxOccurs="unbounded"/>
+			</xs:sequence>
+			<xs:attribute name="objectType" type="ers:CanonicalName"/>
+			<xs:attributeGroup ref="ers:EntityUI.attributes"/>
+		</xs:complexType>
+	</xs:element>
+	<!-- =================================================================== -->
+	<xs:element name="AgentUI">
+		<!-- =================================================================== -->
+		<xs:complexType>
+			<xs:sequence>
+				<xs:element ref="ers:PropertyUI" minOccurs="0" maxOccurs="unbounded"/>
+				<xs:element ref="ers:SelfBeliefPropertyUI" minOccurs="0" maxOccurs="unbounded"/>
+				<xs:element ref="ers:BeliefEntityUI" minOccurs="0" maxOccurs="unbounded"/>
+			</xs:sequence>
+			<xs:attribute name="agentType" type="ers:CanonicalName"/>
+			<xs:attributeGroup ref="ers:EntityUI.attributes"/>
+		</xs:complexType>
+	</xs:element>
+	<!-- =================================================================== -->
+	<xs:element name="PropertyUI" type="ers:PropertyUI.type"/>
+	<xs:element name="SelfBeliefPropertyUI" type="ers:PropertyUI.type"/>
+	<xs:element name="BeliefPropertyUI" type="ers:PropertyUI.type"/>
+	<!-- =================================================================== -->
+	<xs:complexType name="PropertyUI.type">
+		<xs:sequence>
+			<xs:element ref="ers:Label"/>
+			<xs:element ref="ers:Hint"/>
+			<xs:element ref="ers:Unit" minOccurs="0"/>
+		</xs:sequence>
+		<xs:attribute name="property" type="ers:CanonicalName" use="required"/>
+		<xs:attributeGroup ref="ers:inputFieldLength.attrGrp"/>
+	</xs:complexType>
+	<!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->
+	<xs:attributeGroup name="inputFieldLength.attrGrp">
+	<!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->
+		<xs:attribute name="inputFieldLength" use="optional">
+			<xs:annotation><xs:documentation>The length of the property input field in cm. </xs:documentation></xs:annotation>
+			<xs:simpleType>
+				<xs:restriction base="xs:float">
+					<xs:minExclusive value="0.0"/>
+				</xs:restriction>
+			</xs:simpleType>
+		</xs:attribute>
+	</xs:attributeGroup>
+	<!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->
+	<xs:element name="Unit">
+	<!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->
+		<xs:complexType>
+			<xs:group ref="ers:Units.elemGrp"/>
+		</xs:complexType>
+	</xs:element>
+	<!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->
+	<xs:element name="Label">
+		<!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->
+		<xs:complexType>
+			<xs:sequence>
+				<xs:element ref="ers:Text" maxOccurs="unbounded"/>
+			</xs:sequence>
+		</xs:complexType>
+	</xs:element>
+	<!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->
+	<xs:element name="Hint">
+		<!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->
+		<xs:complexType>
+			<xs:sequence>
+				<xs:element ref="ers:Text" maxOccurs="unbounded"/>
+			</xs:sequence>
+		</xs:complexType>
+	</xs:element>
+	<!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->
+	<xs:element name="FlyOver">
+		<!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->
+		<xs:complexType>
+			<xs:sequence>
+				<xs:element ref="ers:Text" maxOccurs="unbounded"/>
+			</xs:sequence>
+		</xs:complexType>
+	</xs:element>
+	<!-- =================================================================== -->
+	<xs:element name="GlobalVariableUI">
+		<!-- =================================================================== -->
+		<xs:complexType>
+			<xs:sequence>
+				<xs:sequence>
+					<xs:element ref="ers:Label"/>
+					<xs:element ref="ers:Hint"/>
+					<xs:element ref="ers:Unit" minOccurs="0"/>
+				</xs:sequence>
+			</xs:sequence>
+			<xs:attribute name="variable" type="ers:CanonicalName" use="required"/>
+			<xs:attributeGroup ref="ers:inputFieldLength.attrGrp"/>
+		</xs:complexType>
+	</xs:element>
+	<!-- =================================================================== -->
+	<xs:element name="BeliefEntityUI">
+	<!-- =================================================================== -->
+		<xs:complexType>
+			<xs:sequence>
+				<xs:element ref="ers:BeliefPropertyUI" maxOccurs="unbounded"/>
+			</xs:sequence>
+			<xs:attribute name="beliefEntityType" type="ers:CanonicalName"/>
+			<xs:attributeGroup ref="ers:EntityUI.attributes"/>
+		</xs:complexType>
+	</xs:element>
+
+</xs:schema>

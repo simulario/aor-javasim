@@ -1,0 +1,144 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<xs:schema
+	xmlns:ers="http://aor-simulation.org"
+	xmlns:aors="http://aor-simulation.org"
+	xmlns:xs="http://www.w3.org/2001/XMLSchema"
+	targetNamespace="http://aor-simulation.org"
+	elementFormDefault="qualified"
+	attributeFormDefault="unqualified">
+	<!-- =================================================================== -->
+	<xs:include schemaLocation="ersl/Entities.xsd"/>
+	<!-- =================================================================== -->
+	<!-- *** Agent  *** -->
+	<!-- =================================================================== -->
+	<xs:element name="Agent" type="aors:Agent.type" substitutionGroup="ers:Object"/>
+	<xs:complexType name="Agent.type">
+		<xs:complexContent>
+			<xs:extension base="ers:Object.type">
+				<xs:group ref="aors:Agent.elements"/>
+			</xs:extension>
+		</xs:complexContent>
+	</xs:complexType>
+	<xs:group name="Agent.elements">
+		<xs:sequence>
+			<xs:element ref="aors:SelfBeliefSlot" minOccurs="0" maxOccurs="unbounded"/>
+			<xs:element ref="aors:BeliefEntity" minOccurs="0" maxOccurs="unbounded"/>
+			<xs:element ref="aors:TimeEvent" minOccurs="0" maxOccurs="unbounded"/>
+		</xs:sequence>
+	</xs:group>
+	<xs:element name="SelfBeliefSlot" type="ers:Slot.type"/>
+	<!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->
+	<!-- *** BeliefEntity  *** -->
+	<!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->
+	<xs:element name="BeliefEntity" type="aors:BeliefEntity.type"/>
+	<xs:complexType name="BeliefEntity.type">
+		<xs:sequence>
+			<xs:element name="IdRef" type="ers:OpaqueExpression" minOccurs="0" maxOccurs="unbounded"/>
+			<xs:element ref="aors:BeliefSlot" minOccurs="0" maxOccurs="unbounded"/>
+		</xs:sequence>
+		<xs:attribute name="type" type="ers:CanonicalName" use="required"/>
+		<xs:attribute name="idRef" type="xs:long" use="optional"/>
+		<xs:attribute name="name" type="xs:NCName" use="optional"/>
+	</xs:complexType>
+	<xs:element name="BeliefSlot" type="ers:Slot.type"/>
+	<!-- =================================================================== -->
+	<!-- *** PhysicalAgent  *** -->
+	<!-- =================================================================== -->
+	<xs:element name="PhysicalAgent" type="aors:PhysicalAgent.type" substitutionGroup="ers:PhysicalObject"/>
+	<xs:complexType name="PhysicalAgent.type">
+		<xs:complexContent>
+			<xs:extension base="ers:PhysicalObject.type">
+				<xs:group ref="aors:Agent.elements"/>
+				<xs:attribute name="perceptionRadius" type="xs:double" use="optional" default="100"/>
+			</xs:extension>
+		</xs:complexContent>
+	</xs:complexType>
+	<!-- =================================================================== -->
+	<!-- *** InternalEvent  *** -->
+	<!-- =================================================================== -->
+	<xs:element name="InternalEvent" type="aors:InternalEvent.type" abstract="true" substitutionGroup="ers:AtomicEvent"/>
+	<xs:complexType name="InternalEvent.type">
+		<xs:complexContent>
+			<xs:extension base="ers:AtomicEvent.type"/>
+		</xs:complexContent>
+	</xs:complexType>
+	<!-- =================================================================== -->
+	<!-- *** TimeEvents  *** -->
+	<!-- =================================================================== -->
+	<xs:element name="TimeEvent" type="aors:TimeEvent.type" abstract="true" substitutionGroup="aors:InternalEvent"/>
+	<xs:complexType name="TimeEvent.type">
+		<xs:complexContent>
+			<xs:extension base="aors:InternalEvent.type"/>
+		</xs:complexContent>
+	</xs:complexType>
+	<xs:element name="PeriodicTimeEvent" type="aors:PeriodicTimeEvent.type" substitutionGroup="aors:TimeEvent"/>
+	<xs:complexType name="PeriodicTimeEvent.type">
+		<xs:complexContent>
+			<xs:extension base="aors:TimeEvent.type"/>
+		</xs:complexContent>
+	</xs:complexType>
+	<xs:element name="ReminderEvent" type="aors:ReminderEvent.type" substitutionGroup="aors:TimeEvent"/>
+	<xs:complexType name="ReminderEvent.type">
+		<xs:complexContent>
+			<xs:extension base="aors:TimeEvent.type">
+				<xs:attribute name="reminderMsg" type="xs:string" use="required"/>
+			</xs:extension>
+		</xs:complexContent>
+	</xs:complexType>
+	<!-- =================================================================== -->
+	<!-- *** ActualPerceptionEvent  *** -->
+	<!-- =================================================================== -->
+	<xs:element name="ActualPerceptionEvent" type="aors:ActualPerceptionEvent.type" substitutionGroup="aors:InternalEvent"/>
+	<xs:complexType name="ActualPerceptionEvent.type">
+		<xs:complexContent>
+			<xs:extension base="aors:InternalEvent.type"/>
+		</xs:complexContent>
+	</xs:complexType>
+	<!-- =================================================================== -->
+	<xs:element name="ActualInMessageEvent" type="aors:ActualInMessageEvent.type" substitutionGroup="aors:ActualPerceptionEvent"/>
+	<!-- =================================================================== -->
+	<xs:complexType name="ActualInMessageEvent.type">
+		<xs:complexContent>
+			<xs:extension base="aors:ActualPerceptionEvent.type">
+				<xs:attribute name="sender" type="xs:string" use="required"/>
+				<xs:attribute name="message" type="xs:string" use="required"/>
+			</xs:extension>
+		</xs:complexContent>
+	</xs:complexType>
+	<!-- =================================================================== -->
+	<!-- *** Message  *** -->
+	<!-- =================================================================== -->
+	<xs:element name="Message" type="aors:Message.type" substitutionGroup="ers:Entity"/>
+	<xs:complexType name="Message.type">
+		<xs:complexContent>
+			<xs:extension base="ers:Entity.type"/>
+		</xs:complexContent>
+	</xs:complexType>
+	<!-- =================================================================== -->
+	<!-- ***  Agents *** -->
+	<!-- =================================================================== -->
+	<xs:element name="Agents" substitutionGroup="ers:Objects">
+		<xs:complexType>
+			<xs:complexContent>
+				<xs:extension base="ers:ObjectSet.type">
+					<xs:sequence>
+						<xs:group ref="aors:Agent.elements"/>
+					</xs:sequence>
+				</xs:extension>
+			</xs:complexContent>
+		</xs:complexType>
+	</xs:element>
+	<!-- ***  Physical Agents  *** -->
+	<xs:element name="PhysicalAgents" substitutionGroup="ers:PhysicalObjects">
+		<xs:complexType>
+			<xs:complexContent>
+				<xs:extension base="ers:PhysicalObjectSet.type">
+					<xs:sequence>
+						<xs:group ref="aors:Agent.elements"/>
+					</xs:sequence>
+					<xs:attribute name="perceptionRadius" type="xs:double" use="optional" default="100"/>
+				</xs:extension>
+			</xs:complexContent>
+		</xs:complexType>
+	</xs:element>
+</xs:schema>

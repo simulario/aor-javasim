@@ -1,0 +1,488 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<xs:schema
+  xmlns:allex="http://aor-simulation.org/expression-language/ALLEX"
+	xmlns:xs="http://www.w3.org/2001/XMLSchema"
+	xmlns:dc="http://purl.org/dc/terms/"	
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	targetNamespace="http://aor-simulation.org/expression-language/ALLEX"
+	xsi:schemaLocation="http://purl.org/dc/terms/ http://dublincore.org/schemas/xmls/qdc/dcterms.xsd"
+	elementFormDefault="qualified"
+	attributeFormDefault="unqualified"
+	version="1.0">
+	
+	<xs:annotation>
+		<xs:documentation xml:lang="en">
+			<dc:title>
+				ALLEX: String Operations
+			</dc:title>
+			<dc:creator>
+				Thomas Grundmann
+			</dc:creator>
+			<dc:created>
+				2009-03-01
+			</dc:created>
+			<dc:description>
+				This schema defines the string related operations which are
+				supported in ALLEX. It provides basic string operations as well
+				as an element for string literals and a constant representing
+				an empty string.
+			</dc:description>
+			<dc:description>
+				../Diagrams/String_Operations.svg
+			</dc:description>
+			<dc:requires>
+				Terms_and_Datatypes.xsd
+			</dc:requires>
+			<dc:requires>
+				Boolean_Operations.xsd
+			</dc:requires>
+			<dc:requires>
+				Numeric_Operations.xsd
+			</dc:requires>
+			<dc:license>
+				This program is free software; you can redistribute it and/or
+				modify it under the terms of the GNU General Public License as
+				published by the Free Software Foundation; either version 3 of
+				the License, or (at your option) any later version. This
+				program is distributed in the hope that it will be useful, but
+				WITHOUT ANY WARRANTY; without even the implied warranty of
+				MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+				GNU General Public License for more details.
+			</dc:license>
+			<dc:license>
+				http://www.gnu.org/licenses/gpl.html
+			</dc:license>
+		</xs:documentation>
+	</xs:annotation>
+	
+	<xs:include schemaLocation="Terms_and_Datatypes.xsd"/>
+	<xs:include schemaLocation="Boolean_Operations.xsd"/>
+	<xs:include schemaLocation="Numeric_Operations.xsd"/>
+		
+	<!--######################-->
+	<!--## String Constants ##-->
+	<!--######################-->
+	
+	<xs:complexType name="StringConstant.type">
+		<xs:annotation>
+			<xs:documentation xml:lang="en">
+				<dc:description>
+					This type represents a string constant. All string
+					constants using this type.
+				</dc:description>
+			</xs:documentation>
+		</xs:annotation>	
+		<xs:complexContent>
+			<xs:restriction base="allex:StringTerm.type"/>
+		</xs:complexContent>
+	</xs:complexType>
+	
+	<xs:element name="EMPTY" substitutionGroup="allex:StringTerm" type="allex:StringConstant.type">
+		<xs:annotation>
+			<xs:documentation xml:lang="en">
+				<dc:description>
+					This element represents an empty String.
+				</dc:description>
+			</xs:documentation>
+		</xs:annotation>
+	</xs:element>
+	
+	<!--####################-->
+	<!--## String Literal ##-->
+	<!--####################-->
+
+	<xs:element name="String" substitutionGroup="allex:StringTerm">
+		<xs:annotation>
+			<xs:documentation xml:lang="en">
+				<dc:description>
+					This element represents a string literal. Its value
+					attribute corresponds to the String.datatype definition.
+				</dc:description>
+			</xs:documentation>
+		</xs:annotation>		
+		<xs:complexType>
+			<xs:complexContent>
+				<xs:extension base="allex:StringTerm.type">
+					<xs:attribute name="value" type="allex:String.datatype" use="required"/>
+				</xs:extension>
+			</xs:complexContent>
+		</xs:complexType>
+	</xs:element>
+
+	<!--######################-->
+	<!--## String Operators ##-->
+	<!--######################-->
+	
+	<xs:complexType name="StringOperator.type" abstract="true">
+		<xs:annotation>
+			<xs:documentation xml:lang="en">
+				<dc:description>
+					This type represents a string operator.	All other string
+					operators are derived from this one.
+				</dc:description>
+			</xs:documentation>
+		</xs:annotation>
+		<xs:complexContent>
+			<xs:restriction base="allex:StringTerm.type"/>
+		</xs:complexContent>
+	</xs:complexType>
+		
+	<xs:complexType name="String_1_1_Operator.type">
+		<xs:annotation>
+			<xs:documentation xml:lang="en">
+				<dc:descripton>
+					This type defines a string operator which takes exactly one
+					argument. The argument has to be a string term.
+				</dc:descripton>
+			</xs:documentation>
+		</xs:annotation>
+		<xs:complexContent>
+			<xs:extension base="allex:StringOperator.type">
+				<xs:sequence>
+					<xs:element ref="allex:StringTerm"/>
+				</xs:sequence>
+			</xs:extension>
+		</xs:complexContent>
+	</xs:complexType>	
+
+	<xs:complexType name="String_2_2_Operator.type">
+		<xs:annotation>
+			<xs:documentation xml:lang="en">
+				<dc:descripton>
+					This type defines a string operator which takes exactly two
+					arguments. Both arguments have to be string terms.
+				</dc:descripton>
+			</xs:documentation>
+		</xs:annotation>
+		<xs:complexContent>
+			<xs:extension base="allex:StringOperator.type">
+				<xs:sequence>
+					<xs:element ref="allex:StringTerm" minOccurs="2" maxOccurs="2"/>
+				</xs:sequence>
+			</xs:extension>
+		</xs:complexContent>
+	</xs:complexType>
+
+	<xs:complexType name="String_3_3_Operator.type">
+		<xs:annotation>
+			<xs:documentation xml:lang="en">
+				<dc:descripton>
+					This type defines a string operator which takes exactly
+					three arguments. All arguments have to be string terms.
+				</dc:descripton>
+			</xs:documentation>
+		</xs:annotation>
+		<xs:complexContent>
+			<xs:extension base="allex:StringOperator.type">
+				<xs:sequence>
+					<xs:element ref="allex:StringTerm" minOccurs="3" maxOccurs="3"/>
+				</xs:sequence>
+			</xs:extension>
+		</xs:complexContent>
+	</xs:complexType>
+	
+	<xs:complexType name="String_2_n_Operator.type">
+		<xs:annotation>
+			<xs:documentation xml:lang="en">
+				<dc:descripton>
+					This type defines a string operator which takes at least
+					two arguments. All arguments have to be string terms.
+				</dc:descripton>
+			</xs:documentation>
+		</xs:annotation>
+		<xs:complexContent>
+			<xs:extension base="allex:StringOperator.type">
+				<xs:sequence>
+					<xs:element ref="allex:StringTerm" minOccurs="2" maxOccurs="unbounded"/>
+				</xs:sequence>
+			</xs:extension>
+		</xs:complexContent>
+	</xs:complexType>
+	
+	<!--#######################-->
+	<!--## String Operations ##-->
+	<!--#######################-->
+	
+	<xs:element name="Concat" substitutionGroup="allex:StringTerm" type="allex:String_2_n_Operator.type">
+		<xs:annotation>
+			<xs:documentation xml:lang="en">
+				<dc:descripton>
+					This operation concatenates two or more strings.
+				</dc:descripton>
+			</xs:documentation>
+		</xs:annotation>	
+	</xs:element>
+	
+	<xs:element name="Replace" substitutionGroup="allex:StringTerm" type="allex:String_3_3_Operator.type">
+		<xs:annotation>
+			<xs:documentation xml:lang="en">
+				<dc:descripton>
+					All 1st argument's substrings, that are equal to the 2nd
+					argument, will be replaced by the 3rd argument.
+				</dc:descripton>
+			</xs:documentation>
+		</xs:annotation>	
+	</xs:element>
+
+	<xs:element name="ToLowerCase" substitutionGroup="allex:StringTerm" type="allex:String_1_1_Operator.type">
+		<xs:annotation>
+			<xs:documentation xml:lang="en">
+				<dc:descripton>
+					This operation converts the string's characters to lower
+					case.
+				</dc:descripton>
+			</xs:documentation>
+		</xs:annotation>	
+	</xs:element>
+	
+	<xs:element name="ToUpperCase" substitutionGroup="allex:StringTerm" type="allex:String_1_1_Operator.type">
+		<xs:annotation>
+			<xs:documentation xml:lang="en">
+				<dc:descripton>
+					This operation converts the string's characters to upper
+					case.				
+				</dc:descripton>
+			</xs:documentation>
+		</xs:annotation>	
+	</xs:element>
+	
+	<xs:element name="Trim" substitutionGroup="allex:StringTerm" type="allex:String_1_1_Operator.type">
+		<xs:annotation>
+			<xs:documentation xml:lang="en">
+				<dc:description>
+					This operation removes all spaces from the beginnen and the
+					end of the given string. If the string contains only spaces
+					the empty string is returned.
+				</dc:description>
+			</xs:documentation>
+		</xs:annotation>
+	</xs:element>
+	
+	<!--##############################-->
+	<!--## Boolean String Operators ##-->
+	<!--##############################-->
+	
+	<xs:complexType name="StringBooleanOperator.type" abstract="true">
+		<xs:annotation>
+			<xs:documentation xml:lang="en">
+				<dc:description>
+					This type represents a string operator which returns a
+					boolean value. All other boolean string operators are
+					derived from this one.
+				</dc:description>
+			</xs:documentation>
+		</xs:annotation>
+		<xs:complexContent>
+			<xs:restriction base="allex:BooleanOperator.type"/>
+		</xs:complexContent>
+	</xs:complexType>
+	
+	<xs:complexType name="StringBoolean_2_2_Operator.type">
+		<xs:annotation>
+			<xs:documentation xml:lang="en">
+				<dc:description>
+					This type defines a boolean string operator which takes
+					exactly two arguments.
+				</dc:description>
+			</xs:documentation>
+		</xs:annotation>
+		<xs:complexContent>
+			<xs:extension base="allex:StringBooleanOperator.type">
+				<xs:sequence>
+					<xs:element ref="allex:StringTerm" minOccurs="2" maxOccurs="2"/>
+				</xs:sequence>
+			</xs:extension>
+		</xs:complexContent>
+	</xs:complexType>
+	
+	<!--###############################-->
+	<!--## Boolean String Operations ##-->
+	<!--###############################-->
+	
+	<xs:element name="Contains" substitutionGroup="allex:BooleanTerm" type="allex:StringBoolean_2_2_Operator.type">
+		<xs:annotation>
+			<xs:documentation xml:lang="en">
+				<dc:description>
+					This operation returns true if and only if the 1st string
+					contains the 2nd one.
+				</dc:description>
+			</xs:documentation>
+		</xs:annotation>
+	</xs:element>
+	
+	<xs:element name="StartsWith" substitutionGroup="allex:BooleanTerm" type="allex:StringBoolean_2_2_Operator.type">
+		<xs:annotation>
+			<xs:documentation xml:lang="en">
+				<dc:description>
+					This operation returns true if and only if the 2nd string
+					is a prefix of the 1st one.
+				</dc:description>
+			</xs:documentation>
+		</xs:annotation>
+	</xs:element>
+	
+	<xs:element name="EndsWith" substitutionGroup="allex:BooleanTerm" type="allex:StringBoolean_2_2_Operator.type">
+		<xs:annotation>
+			<xs:documentation xml:lang="en">
+				<dc:description>
+					This operation returns true if and only if the 2nd string
+					is a suffix of the 1st one.
+				</dc:description>
+			</xs:documentation>
+		</xs:annotation>
+	</xs:element>
+	
+	<!--##############################-->
+	<!--## Integer String Operators ##-->
+	<!--##############################-->
+	
+	<xs:complexType name="StringIntegerOperator.type" abstract="true">
+		<xs:annotation>
+			<xs:documentation xml:lang="en">
+				<dc:description>
+					This element represents a string operator which returns an
+					integer value. All other integer string operators are
+					derived from this one.
+				</dc:description>
+			</xs:documentation>
+		</xs:annotation>
+		<xs:complexContent>
+			<xs:extension base="allex:IntegerOperator.type"/>
+		</xs:complexContent>
+	</xs:complexType>
+	
+	<xs:complexType name="StringInteger_1_1_Operator.type">
+		<xs:annotation>
+			<xs:documentation xml:lang="en">
+				<dc:description>
+					This type defines an integer string operator that takes
+					exactly one string as argument.
+				</dc:description>
+			</xs:documentation>
+		</xs:annotation>
+		<xs:complexContent>
+			<xs:extension base="allex:StringIntegerOperator.type">
+				<xs:sequence>
+					<xs:element ref="allex:StringTerm"/>
+				</xs:sequence>
+			</xs:extension>
+		</xs:complexContent>
+	</xs:complexType>
+
+	<xs:complexType name="StringInteger_2_2_Operator.type">
+		<xs:annotation>
+			<xs:documentation xml:lang="en">
+				<dc:description>
+					This type defines an integer string operator that takes
+					exactly two string as argument.
+				</dc:description>
+			</xs:documentation>
+		</xs:annotation>
+		<xs:complexContent>
+			<xs:extension base="allex:StringIntegerOperator.type">
+				<xs:sequence>
+					<xs:element ref="allex:StringTerm" minOccurs="2" maxOccurs="2"/>
+				</xs:sequence>
+			</xs:extension>
+		</xs:complexContent>
+	</xs:complexType>
+	
+	<!--###############################-->
+	<!--## Integer String Operations ##-->
+	<!--###############################-->
+	
+	<xs:element name="Length" substitutionGroup="allex:IntegerTerm" type="allex:StringInteger_1_1_Operator.type">
+		<xs:annotation>
+			<xs:documentation xml:lang="en">
+				<dc:description>
+					This operation returns the length of the given string.
+				</dc:description>
+			</xs:documentation>
+		</xs:annotation>
+	</xs:element>
+	
+	<xs:element name="IndexOf" substitutionGroup="allex:IntegerTerm" type="allex:StringInteger_2_2_Operator.type">
+		<xs:annotation>
+			<xs:documentation xml:lang="en">
+				<dc:description>
+					This operation returns the first index of the 1st
+					argument's substring that is equal to the 2nd one. If the
+					2nd string is a prefix of the 1st one, the returned value
+					is 0.
+				</dc:description>
+			</xs:documentation>
+		</xs:annotation>
+	</xs:element>
+	
+	<xs:element name="LastIndexOf" substitutionGroup="allex:IntegerTerm" type="allex:StringInteger_2_2_Operator.type">
+		<xs:annotation>
+			<xs:documentation xml:lang="en">
+				<dc:description>
+					This operation returns the last index of the 1st argument's
+					substring that is equal to the 2nd one.	If the 2nd string
+					equals to the 1st ones last character, the returned value
+					is equals to the 1st argument's length - 1.
+				</dc:description>
+			</xs:documentation>
+		</xs:annotation>
+	</xs:element>
+	
+	<xs:element name="Compare" substitutionGroup="allex:IntegerTerm" type="allex:StringInteger_2_2_Operator.type">
+		<xs:annotation>
+			<xs:documentation xml:lang="en">
+				<dc:description>
+					This operation compares two strings lexicographically. It
+					returns a negative integer if the 1st string
+					lexicographically precedes the 2nd string. It returns a
+					positive integer if the 1st string lexicographically
+					follows the 2nd string. It returns 0 if both strings are
+					equal.
+				</dc:description>
+			</xs:documentation>
+		</xs:annotation>
+	</xs:element>
+
+	<xs:element name="CompareIgnoreCase" substitutionGroup="allex:IntegerTerm" type="allex:StringInteger_2_2_Operator.type">
+		<xs:annotation>
+			<xs:documentation xml:lang="en">
+				<dc:description>
+					This operation compares two strings lexicographically,
+					ignoring case differences. It returns a negative integer if
+					the 1st string lexicographically precedes the 2nd string.
+					It returns a positive integer if the 1st string
+					lexicographically follows the 2nd string. It returns 0 if
+					both strings are equal.
+				</dc:description>
+			</xs:documentation>
+		</xs:annotation>
+	</xs:element>
+
+	<!--#############################-->
+	<!--## Mixed String Operations ##-->
+	<!--#############################-->
+	
+	<xs:element name="Substring" substitutionGroup="allex:StringTerm">
+		<xs:annotation>
+			<xs:documentation xml:lang="en">
+				<dc:description>
+					This operation return returns a substring of the 1st
+					argument. The substring is identified by the 2nd argument
+					as the position of its first character and by the 3rd
+					argument as the position of its last character.	If the 3rd
+					argument ist greater then the 2nd or one index outranges
+					the strings length the emtpy string is returned.
+				</dc:description>
+			</xs:documentation>
+		</xs:annotation>
+		<xs:complexType>
+			<xs:complexContent>
+				<xs:extension base="allex:StringOperator.type">
+					<xs:sequence>
+						<xs:element ref="allex:StringTerm"/>
+						<xs:element ref="allex:IntegerTerm" minOccurs="2" maxOccurs="2"/>
+					</xs:sequence>
+				</xs:extension>
+			</xs:complexContent>
+		</xs:complexType>
+	</xs:element>	
+</xs:schema>
