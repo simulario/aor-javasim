@@ -28,7 +28,6 @@
  **************************************************************************************************************/
 package aors.model.agtsim;
 
-import aors.model.AtomicEvent;
 import aors.model.Message;
 import aors.model.Rule;
 import aors.model.intevt.InternalEvent;
