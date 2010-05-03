@@ -316,6 +316,9 @@ public class InitialState {
 	 *            initial state object
 	 */
 	protected void initStatisticVarsMap(GeneralStatistics generalStatistics) {
+		if(this.statisticVariables == null) {
+			this.statisticVariables = new HashMap<String, AbstractStatisticsVariable>();
+		}
 		Field[] declaredFields = generalStatistics.getClass()
 				.getDeclaredFields();
 		for (Field f : declaredFields) {
