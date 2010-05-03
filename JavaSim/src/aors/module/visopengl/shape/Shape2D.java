@@ -228,7 +228,8 @@ public abstract class Shape2D implements Cloneable {
       // Texture coordinates
       double s = 0, t = 0;
 
-      // Loop over all vertices to find the appropriate texture coordinates
+      // Loop over all vertices to find the appropriate texture
+      // coordinates
       for (double[] vertex : contour) {
         s = tc.left() + (width - (xMax - vertex[0])) / width;
         t = tc.bottom() - (height - (yMax - vertex[1])) / height;
@@ -253,13 +254,17 @@ public abstract class Shape2D implements Cloneable {
           continue;
         }
 
+        if (obj.getClass().equals(Object.class)) {
+          System.out
+              .println("Visualization Warning: Object with ID " + obj.getId()
+                  + " has no getter method for property: " + propName);
+          return;
+        }
+
         // get the property value calling the getter via reflection
         Method getter = this.locateMethodInClasses(obj.getClass(), propertyMap
             .getPropertyName());
         if (getter == null) {
-          System.out
-              .println("Visualization Warning: Object with ID " + obj.getId()
-                  + " has no getter method for property: " + propName);
           continue;
         }
 
