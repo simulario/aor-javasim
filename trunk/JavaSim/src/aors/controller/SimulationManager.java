@@ -47,6 +47,9 @@ import aors.util.jar.JarUtil;
  * @author Marco Pehla, Mircea Diaconescu, Jens Werner
  * @since 31.07.2008
  * @version $Revision$
+ * 
+ * last change by $Author$ at $Date$
+ * 
  */
 public class SimulationManager {
 
