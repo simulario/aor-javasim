@@ -31,8 +31,6 @@ package aors.model.agtsim;
 import java.util.ArrayList;
 import java.util.List;
 
-import aors.model.AtomicEvent;
-import aors.model.Message;
 import aors.model.Rule;
 import aors.model.envevt.ActionEvent;
 import aors.model.intevt.InternalEvent;
