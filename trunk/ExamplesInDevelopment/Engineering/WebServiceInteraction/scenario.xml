@@ -23,15 +23,29 @@
 		</documentation>
 
 		<Statistics>
-			<Variable name="numberOfCustomers" dataType="Integer" />
-			<!-- count requests -->
-			<Variable name="countCustomers" dataType="Integer">
-				<Source aggregationFunction="max">
-					<ObjectProperty property="countRequests" objectType="TravelInfoService" objectIdRef="1"/>
+			<!-- count all customers -->
+			<Variable name="countCustomers" dataType="Integer"/>
+			<!-- count all (complete) request -->
+			<Variable name="countCustomerRequests" dataType="Integer" />
+			<!-- durchschnittliche Anzahl Anfragen pro Kunde -->
+			<Variable name="averageRequestsForCustomer" dataType="Float">
+				<Source computeOnlyAtEnd="true" aggregationFunction="avg">
+					<ValueExpr language="Java">
+						<![CDATA[(float)(SimStatistics.countCustomerRequests.getValue() / SimStatistics.countCustomers.getValue())]]>
+					</ValueExpr>
 				</Source>
 			</Variable>
-			<!-- not implemented -->
-			<Variable name="averageTime" dataType="Integer" />
+			
+			<!-- durchschnittliche Zeit für die bearbeitung eines Requests -->
+			<Variable name="cumulativeDurationTime" dataType="Integer" />
+			<Variable name="durationTime" dataType="Float" />
+			
+			<!-- for test -->
+			<Variable name="test" dataType="Integer">
+				<Source>
+					<ObjectProperty property="countCustomers" objectType="TravelInfoService" objectIdRef="1"/>
+				</Source>
+			</Variable>
 		</Statistics>
 		
 		<DataTypes>
@@ -88,6 +102,26 @@
 							((CustomerRecord)getCustomerRecordFromListWithId(custId)).setRestaurantInfo(data);
 						}
 						
+						// return search data as string
+						public String getSearchDataForId(int custId) {
+							java.util.Iterator it = customers.iterator();
+							CustomerRecord cust = new CustomerRecord();
+							String value;
+							
+							while (it.hasNext()) {
+								cust = (CustomerRecord)it.next();
+								if (cust.getCustId() == custId) {
+									value = "TravelInfo: " + cust.getTravelInfo() +
+											" - MapInfo: " + cust.getMapInfo() +
+											" - WeatherInfo: " + cust.getWeatherInfo() +
+											" - RestaurantInfo: " + cust.getRestaurantInfo();
+									return value;
+								}
+							}
+							return null;
+						
+						}
+						
 						// delete customer with id from CustomerRecordList
 						public int deleteCustomerRecordFromList(int custId) {
 							java.util.Iterator it = customers.iterator();
@@ -103,18 +137,13 @@
 							}
 							return customers.size();
 						}
-						
-						// test-function
-						public int getListSize() {
-							return customers.size();
-						}
 					]]>
 				</ClassDef>
 			</ComplexDataType>
 		</DataTypes>
 		
 		<Globals>
-			<!-- Test - nur für Testzwecke -->
+			<!-- Hilfsfunktion -->
 			<GlobalFunction name="getRandomZipCode" resultType="String">
 				<Parameter name="length" type="Integer"/>
 				<Body language="Java"><![CDATA[
@@ -126,8 +155,6 @@
 		     ]]></Body>
 			</GlobalFunction>		
 		</Globals>
-		
-
 
 		<EntityTypes>
 
@@ -200,8 +227,11 @@
 				<Attribute type="Integer" name="numberOfRequests"/>
 				<Attribute type="String" name="searchData"/>
 				<Attribute type="String" name="zipCode"/>
+				<Attribute type="Integer" name="startTime"/>
+				<!-- Todo: kann eventuell gelöscht werden -->
+				<Attribute type="Integer" name="duration"/>
 								
-				<!-- =================================================== -->
+				<!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->
 				<Function name="getRandomZipCode" resultType="String">
 					<Parameter name="length" type="Integer"/>
 					<Body language="Java">
@@ -215,7 +245,7 @@
 					</Body>
 				</Function>
 
-				<!-- =================================================== -->
+				<!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->
 				<PeriodicTimeEventType name="TriggerTravelInfoRequest">
 					<Periodicity>
 						<DiscreteRandomVariable>
@@ -225,14 +255,21 @@
 					</Periodicity>
 				</PeriodicTimeEventType>
 				
-				<!-- =================================================== -->
+				<!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->
 				<CommunicationRule name="RequestTravelInfo_Rule" agentVariable="cust">
 					<documentation>
 						<description>Anfrage der Kunden an das TravelInfoSystem</description>
 					</documentation>
 
-					<WHEN eventType="TriggerTravelInfoRequest"/>
+					<WHEN eventType="TriggerTravelInfoRequest" eventVariable="evt"/>
 					<DO>
+						<UPDATE-AGT>
+							<Slot property="startTime">
+								<ValueExpr language="Java">
+									<![CDATA[(int)evt.getOccurrenceTime()]]>
+								</ValueExpr>
+							</Slot>
+						</UPDATE-AGT>
 						<SCHEDULE-EVT>
 							<OutMessageEventExpr messageType="GetTravelInfo" receiverIdRefs="1">
 
@@ -262,15 +299,14 @@
 
 			<!-- =================================================== -->
 			<AgentType name="TravelInfoService">
-			<!-- =================================================== -->
+				<!-- =================================================== -->
 				<ComplexDataProperty name="customerList" type="CustomerRecordList"/>
 				<Attribute type="Integer" name="listLength"/>
-				<!-- for statistics -->
-				<Attribute type="Integer" name="countRequests"/>
+				<Attribute type="Integer" name="countCustomers"/>
 			
 				<!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->
 				<CommunicationRule name="GetTravelInfo_Rule" agentVariable="tis">
-				<!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->
+					<!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->
 					<documentation>
 						<description>
 							* Anfrage vom Kunden (Customer erhalten)
@@ -285,11 +321,6 @@
 							<Slot property="listLength">
 								<ValueExpr language="Java">
 									<![CDATA[tis.getCustomerList().addCustomerRecordToList((int)evt.getSenderIdRef(), mes.getTravelInfo())]]>
-								</ValueExpr>
-							</Slot>
-							<Slot property="countRequests">
-								<ValueExpr language="Java">
-									<![CDATA[tis.getCountRequests()+1]]>
 								</ValueExpr>
 							</Slot>
 <!-- 
@@ -335,7 +366,7 @@
 					</DO>
 				</CommunicationRule>
 				
-				<!-- =================================================== -->
+				<!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->
 				<CommunicationRule name="GetMapInfoResponse_Rule" agentVariable="tis">
 					<documentation>
 						<description>...</description>
@@ -356,7 +387,7 @@
 					</DO>
 				</CommunicationRule>
 				
-				<!-- =================================================== -->
+				<!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->
 				<CommunicationRule name="GetWeatherInfoResponse_Rule" agentVariable="tis">
 					<documentation>
 						<description>
@@ -427,7 +458,7 @@
 					
 				</CommunicationRule>
 
-				<!-- =================================================== -->
+				<!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->
 				<CommunicationRule name="GetOpenAirRestaurantInfoResponse_Rule" agentVariable="tis">
 					<documentation>
 						<description>...</description>
@@ -452,14 +483,7 @@
 								<Slot property="travelInfoData">
 									<ValueExpr language="Java">
 										<![CDATA[
-											"TravelInfo: " +
-											tis.getCustomerList().getCustomerRecordFromListWithId((int)mes.getCustId()).getTravelInfo() +
-											" - MapInfo: " + 
-											tis.getCustomerList().getCustomerRecordFromListWithId((int)mes.getCustId()).getMapInfo() + 
-											" - WeatherInfo: " + 
-											tis.getCustomerList().getCustomerRecordFromListWithId((int)mes.getCustId()).getWeatherInfo() + 
-											" - RestaurantInfo: " + 
-											tis.getCustomerList().getCustomerRecordFromListWithId((int)mes.getCustId()).getRestaurantInfo()
+											tis.getCustomerList().getSearchDataForId((int)mes.getCustId())
 										]]>
 									</ValueExpr>
 								</Slot>
@@ -473,7 +497,7 @@
 					</DO>
 				</CommunicationRule>
 
-				<!-- =================================================== -->
+				<!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->
 				<CommunicationRule name="GetFastFoodRestaurantInfoResponse_Rule" agentVariable="tis">
 					<documentation>
 						<description>...</description>
@@ -498,14 +522,7 @@
 								<Slot property="travelInfoData">
 									<ValueExpr language="Java">
 										<![CDATA[
-											"TravelInfo: " +
-											tis.getCustomerList().getCustomerRecordFromListWithId((int)mes.getCustId()).getTravelInfo() +
-											" - MapInfo: " + 
-											tis.getCustomerList().getCustomerRecordFromListWithId((int)mes.getCustId()).getMapInfo() + 
-											" - WeatherInfo: " + 
-											tis.getCustomerList().getCustomerRecordFromListWithId((int)mes.getCustId()).getWeatherInfo() + 
-											" - RestaurantInfo: " + 
-											tis.getCustomerList().getCustomerRecordFromListWithId((int)mes.getCustId()).getRestaurantInfo()
+											tis.getCustomerList().getSearchDataForId((int)mes.getCustId())
 										]]>
 									</ValueExpr>
 								</Slot>
@@ -524,8 +541,12 @@
 			<!-- =================================================== -->
 			<AgentType name="MapInfoService">
 				<!-- =================================================== -->
+				<Attribute type="Integer" name="minProcessingTime"/>
+				<Attribute type="Integer" name="maxProcessingTime"/>
 
+				<!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->
 				<Function name="getMapMessage" resultType="String">
+					<!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->
 					<documentation>
 						<description>
 							Hilfsfunktion: ermittelt Map-Daten
@@ -543,13 +564,13 @@
 					</Body>
 				</Function>
 				
-				<!-- =================================================== -->
+				<!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->
 				<CommunicationRule name="GetMapInfo_Rule">
 					<documentation>
 						<description>
 							* erhält eine Anfrage vom TravelInfoService mit der PLZ als Parameter
 							* erstellt Daten zu dem Ort 
-							* sendet Antwort an TravelInfoService zurück
+							* sendet Antwort an TravelInfoService zurück (Zufallsgenerator ermittelt Verzögerung der Antwort)
 						</description>
 					</documentation>
 					
@@ -558,6 +579,24 @@
 							<SCHEDULE-EVT>
 								<!-- Message/Antwort an TravelInfoService -->
 								<OutMessageEventExpr messageType="GetMapInfoResponse" receiverIdRefs="1">
+									<!-- Delay für Antwortnachricht -->
+									<Delay>
+										<DiscreteRandomVariable>
+											<UniformInt>
+												<LowerBoundExpr language="Java">
+													<![CDATA[(int)getMinProcessingTime()]]>
+												</LowerBoundExpr>
+												<UpperBoundExpr language="Java">
+													<![CDATA[(int)getMaxProcessingTime()]]>
+												</UpperBoundExpr>
+											</UniformInt>
+										</DiscreteRandomVariable>
+<!-- 										
+										<ValueExpr language="Java">
+											<![CDATA[Random.uniformInt((int)getMinProcessingTime(),(int)getMaxProcessingTime())]]>
+										</ValueExpr>
+-->										
+									</Delay>
 									<Slot property="mapInfoData">
 										<ValueExpr language="Java">getMapMessage(7)</ValueExpr>
 									</Slot>
@@ -567,7 +606,6 @@
 										</ValueExpr>
 									</Slot>
 								</OutMessageEventExpr>
-								
 							</SCHEDULE-EVT>
 						</DO>
 				</CommunicationRule>
@@ -575,8 +613,11 @@
 			
 			<!-- =================================================== -->
 			<AgentType name="WeatherInfoService">
-				
 				<!-- =================================================== -->
+				<Attribute type="Integer" name="minProcessingTime"/>
+				<Attribute type="Integer" name="maxProcessingTime"/>
+				
+				<!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->
 				<Function name="getWeatherMessage" resultType="String">
 					<documentation>
 						<description>
@@ -597,13 +638,13 @@
 					</Body>
 				</Function>
 				
-				<!-- =================================================== -->
+				<!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->
 				<CommunicationRule name="GetWeatherInfo_Rule">
 					<documentation>
 						<description>
 							* erhält eine Anfrage vom TravelInfoService mit der PLZ als Parameter
 							* erstellt Wetterdaten zu dem Ort 
-							* sendet Antwort an TravelInfoService zurück
+							* sendet Antwort an TravelInfoService zurück (Zufallsgenerator ermittelt Verzögerung der Antwort)
 						</description>
 					</documentation>
 					
@@ -612,6 +653,18 @@
 						<SCHEDULE-EVT>
 							<!-- Message/Antwort an TravelInfoService -->
 							<OutMessageEventExpr messageType="GetWeatherInfoResponse" receiverIdRefs="1">
+								<Delay>
+									<DiscreteRandomVariable>
+										<UniformInt>
+											<LowerBoundExpr language="Java">
+												<![CDATA[(int)getMinProcessingTime()]]>
+											</LowerBoundExpr>
+											<UpperBoundExpr language="Java">
+												<![CDATA[(int)getMaxProcessingTime()]]>
+											</UpperBoundExpr>
+										</UniformInt>
+									</DiscreteRandomVariable>
+								</Delay>
 								<Slot property="weatherInfoData">
 									<ValueExpr language="Java">getWeatherMessage()</ValueExpr>
 								</Slot>
@@ -630,7 +683,11 @@
 			
 			<!-- =================================================== -->
 			<AgentType name="RestaurantInfoService">
-			<!-- =================================================== -->
+				<!-- =================================================== -->
+				<Attribute type="Integer" name="minProcessingTime"/>
+				<Attribute type="Integer" name="maxProcessingTime"/>
+				
+				<!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->
 				<Function name="getRestaurantMessage" resultType="String">
 					<documentation>
 						<description>							
@@ -651,13 +708,13 @@
 					</Body>
 				</Function>
 
-				<!-- =================================================== -->
+				<!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->
 				<CommunicationRule name="GetOpenAirRestaurantInfo_Rule">
 					<documentation>
 						<description>
 							* erhält eine Anfrage vom TravelInfoService mit der PLZ als Parameter
 							* erstellt Öffnungszeiten für das OpenAir-Restaurant an dem Ort 
-							* sendet Antwort an TravelInfoService zurück
+							* sendet Antwort an TravelInfoService zurück (Zufallsgenerator ermittelt Verzögerung der Antwort)
 						</description>
 					</documentation>
 					
@@ -666,6 +723,18 @@
 						<SCHEDULE-EVT>
 							<!-- Message/Antwort an TravelInfoService -->
 							<OutMessageEventExpr messageType="GetOpenAirRestaurantInfoResponse" receiverIdRefs="1">
+								<Delay>
+									<DiscreteRandomVariable>
+										<UniformInt>
+											<LowerBoundExpr language="Java">
+												<![CDATA[(int)getMinProcessingTime()]]>
+											</LowerBoundExpr>
+											<UpperBoundExpr language="Java">
+												<![CDATA[(int)getMaxProcessingTime()]]>
+											</UpperBoundExpr>
+										</UniformInt>
+									</DiscreteRandomVariable>
+								</Delay>
 								<Slot property="openAirRestaurantInfoData">
 									<ValueExpr language="Java">
 										getRestaurantMessage()
@@ -682,13 +751,13 @@
 					</DO>
 				</CommunicationRule>
 
-				<!-- =================================================== -->
+				<!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->
 				<CommunicationRule name="GetFastFoodRestaurantInfo_Rule">
 					<documentation>
 						<description>
 							* erhält eine Anfrage vom TravelInfoService mit der PLZ als Parameter
 							* erstellt Öffnungszeiten für das FastFood-Restaurant an dem Ort 
-							* sendet Antwort an TravelInfoService zurück
+							* sendet Antwort an TravelInfoService zurück (Zufallsgenerator ermittelt Verzögerung der Antwort)
 						</description>
 					</documentation>
 					
@@ -697,6 +766,18 @@
 						<SCHEDULE-EVT>
 							<!-- Message/Antwort an TravelInfoService -->
 							<OutMessageEventExpr messageType="GetFastFoodRestaurantInfoResponse" receiverIdRefs="1">
+								<Delay>
+									<DiscreteRandomVariable>
+										<UniformInt>
+											<LowerBoundExpr language="Java">
+												<![CDATA[(int)getMinProcessingTime()]]>
+											</LowerBoundExpr>
+											<UpperBoundExpr language="Java">
+												<![CDATA[(int)getMaxProcessingTime()]]>
+											</UpperBoundExpr>
+										</UniformInt>
+									</DiscreteRandomVariable>
+								</Delay>
 								<Slot property="fastFoodRestaurantInfoData">
 									<ValueExpr language="Java">
 										getRestaurantMessage()
@@ -718,7 +799,7 @@
 		<EnvironmentRules>
 			<!-- ======================================================= -->
 			<EnvironmentRule name="EndTravelInfoService_Rule">
-			<!-- ======================================================= -->
+				<!-- ======================================================== -->
 				<documentation>
 					<description>...</description>
 				</documentation>
@@ -739,7 +820,13 @@
 									<![CDATA[cust.getNumberOfRequests()+1]]>
 								</ValueExpr>
 							</Slot>
+							<Slot property="duration">
+								<ValueExpr language="Java">
+									<![CDATA[evt.getOccurrenceTime() - cust.getStartTime()]]>
+								</ValueExpr>
+							</Slot>
 						</UpdateObject>
+						
 						<UpdateObject objectVariable="tis">
 							<Slot property="listLength">
 								<ValueExpr language="Java">
@@ -748,7 +835,51 @@
 									]]>
 								</ValueExpr>
 							</Slot>
+							<Slot property="countCustomers">
+								<ValueExpr language="Java">
+									<![CDATA[
+										(cust.getNumberOfRequests() > 1) ? (tis.getCountCustomers()) : (tis.getCountCustomers()+1)
+									]]>
+								</ValueExpr>
+							</Slot>
 						</UpdateObject>
+
+						<UpdateStatisticsVariable variable="countCustomers">
+							<ValueExpr language="Java">
+								<![CDATA[
+									(cust.getNumberOfRequests() > 1) ? (SimStatistics.countCustomers.getValue()) : (SimStatistics.countCustomers.getValue()+1) 
+								]]>
+							</ValueExpr>
+						</UpdateStatisticsVariable>
+
+						<UpdateStatisticsVariable variable="countCustomerRequests">
+							<ValueExpr language="Java">
+								<![CDATA[SimStatistics.countCustomerRequests.getValue() + 1]]>
+							</ValueExpr>
+						</UpdateStatisticsVariable>
+						
+						<UpdateStatisticsVariable variable="averageRequestsForCustomer">
+							<ValueExpr language="Java">
+								<![CDATA[
+									(float)SimStatistics.countCustomerRequests.getValue() / SimStatistics.countCustomers.getValue()
+								]]>
+							</ValueExpr>
+						</UpdateStatisticsVariable>
+						
+						<UpdateStatisticsVariable variable="cumulativeDurationTime">
+							<ValueExpr language="Java">
+								<![CDATA[SimStatistics.cumulativeDurationTime.getValue() +evt.getOccurrenceTime() - cust.getStartTime()]]>
+							</ValueExpr>
+						</UpdateStatisticsVariable>
+						
+						<UpdateStatisticsVariable variable="durationTime">
+							<ValueExpr language="Java">
+								<![CDATA[
+									(float)SimStatistics.cumulativeDurationTime.getValue() / SimStatistics.countCustomerRequests.getValue()
+								]]>
+							</ValueExpr>
+						</UpdateStatisticsVariable>
+						
 					</UPDATE-ENV>
 				</DO>
 			</EnvironmentRule>
@@ -756,16 +887,30 @@
 		</EnvironmentRules>
 	</SimulationModel>
 	
+	<!-- =================================================== -->
 	<InitialState>
-		<Agent type="TravelInfoService" name="TravelIS" id="1">
-			<Slot property="test" value="-1"></Slot>
+	<!-- =================================================== -->
+		<!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->
+		<Agent type="TravelInfoService" name="TravelIS" id="1" />
+				
+		<!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->
+		<Agent type="MapInfoService" name="MapIS" id="2" >
+			<Slot property="minProcessingTime" value="1" />
+			<Slot property="maxProcessingTime" value="1" />
+		</Agent>
+		<!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->
+		<Agent type="WeatherInfoService" name="WeatherIS" id="3">
+			<Slot property="minProcessingTime" value="1" />
+			<Slot property="maxProcessingTime" value="3" />
 		</Agent>		
-		<Agent type="MapInfoService" name="MapIS" id="2"/>
-		<Agent type="WeatherInfoService" name="WeatherIS" id="3"/>		
-		<Agent type="RestaurantInfoService" name="RestaurantIS" id="4"/>
+		<!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->
+		<Agent type="RestaurantInfoService" name="RestaurantIS" id="4">
+			<Slot property="minProcessingTime" value="1" />
+			<Slot property="maxProcessingTime" value="3" />
+		</Agent>
 		
 		<!-- =================================================== -->
-		<Agents type="Customer" rangeStartID="1001" rangeEndID="1100">
+		<Agents type="Customer" rangeStartID="1001" rangeEndID="1101">
 		<!-- =================================================== -->
 			<Slot property="zipCode">
 				<ValueExpr language="Java">Global.getRandomZipCode(5)</ValueExpr>
@@ -776,55 +921,128 @@
 
 	<!-- =================================================== -->
 	<UserInterface>
-	<!-- =================================================== -->
+		<!-- =================================================== -->
 		<StatisticsUI>
-			<StatisticsVariableUI variable="numberOfCustomers">
-				<Label>
-					<Text xml:lang="en">Number of customers</Text>
-					<Text xml:lang="de">Anzahl Kunden</Text>
-				</Label>
-				<Hint>
-					<Text xml:lang="en">How many customers have use the service?</Text>
-					<Text xml:lang="de">Wieviele Kunden haben den Service nutzen können?</Text>
-				</Hint>
-			</StatisticsVariableUI>
+			<!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->
 			<StatisticsVariableUI variable="countCustomers">
 				<Label>
-					<Text xml:lang="en">Test: Anzahl Anfragen</Text>
-					<Text xml:lang="de">Test: Anzahl Anfragen</Text>
+					<Text xml:lang="en">(im Test) Anzahl Kunden (Alternative 1)</Text>
+					<Text xml:lang="de">(im Test) Anzahl Kunden (Alternative 1)</Text>
 				</Label>
 				<Hint>
-					<Text xml:lang="en">Test: Anfragen an den TravelInfoService</Text>
-					<Text xml:lang="de">Test: Anfragen an den TravelInfoService</Text>
+					<Text xml:lang="en">(im Test) Kunden die den TravelInfoService nutzen</Text>
+					<Text xml:lang="de">(im Test) Kunden die den TravelInfoService nutzen</Text>
 				</Hint>
 			</StatisticsVariableUI>
-			<StatisticsVariableUI variable="averageTime">
+
+			<!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->
+			<StatisticsVariableUI variable="test">
 				<Label>
-					<Text xml:lang="en">Test: durchschnittliche Laufzeit</Text>
-					<Text xml:lang="de">Test: durchschnittliche Laufzeit</Text>
+					<Text xml:lang="en">(im Test) Anzahl Kunden über TIS-Attribut (Alternative 2)</Text>
+					<Text xml:lang="de">(im Test) Anzahl Kunden über TIS-Attribut (Alternative 2)</Text>
+				</Label>
+				<Hint>
+					<Text xml:lang="en">(im Test) Kunden die den TravelInfoService nutzen</Text>
+					<Text xml:lang="de">(im Test) Kunden die den TravelInfoService nutzen</Text>
+				</Hint>
+			</StatisticsVariableUI>
+
+			<!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->
+			<StatisticsVariableUI variable="countCustomerRequests">
+				<Label>
+					<Text xml:lang="en">(im Test) Summe (komplette/abgearbeitete) Anfragen der Kunden</Text>
+					<Text xml:lang="de">(im Test) Summe (komplette/abgearbeitete) Anfragen der Kunden</Text>
+				</Label>
+				<Hint>
+					<Text xml:lang="en">(im Test) Alle Anfragen der Kunden an den TravelInfoService</Text>
+					<Text xml:lang="de">(im Test) Alle Anfragen der Kunden an den TravelInfoService</Text>
+				</Hint>
+			</StatisticsVariableUI>			
+
+			<!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->
+			<StatisticsVariableUI variable="averageRequestsForCustomer">
+				<Label>
+					<Text xml:lang="en">(im Test) Durchschnittliche Anzahl an Anfragen pro Kunde an den Service</Text>
+					<Text xml:lang="de">(im Test) Durchschnittliche Anzahl an Anfragen pro Kunde an den Service</Text>
+				</Label>
+				<Hint>
+					<Text xml:lang="en">(im Test) Durchschnittliche Anzahl an Anfragen pro Kunde an den Service</Text>
+					<Text xml:lang="de">(im Test) Durchschnittliche Anzahl an Anfragen pro Kunde an den Service</Text>
+				</Hint>
+			</StatisticsVariableUI>
+
+			<!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->
+			<StatisticsVariableUI variable="cumulativeDurationTime">
+				<Label>
+					<Text xml:lang="en">(nur zum Test hier) Summe Laufzeiten der Anfragen</Text>
+					<Text xml:lang="de">(nur zum Test hier) Summe Laufzeiten der Anfragen</Text>
 				</Label>
 				<Hint>
 					<Text xml:lang="en">Test: durchschnittliche Laufzeit</Text>
 					<Text xml:lang="de">Test: durchschnittliche Laufzeit</Text>
 				</Hint>
 			</StatisticsVariableUI>
+			
+			<!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->
+			<StatisticsVariableUI variable="durationTime">
+				<Label>
+					<Text xml:lang="en">(im Test) Test: durchschnittliche Laufzeit der Anfragen (in Simulationsschritten)</Text>
+					<Text xml:lang="de">(im Test) Test: durchschnittliche Laufzeit der Anfragen (in Simulationsschritten)</Text>
+				</Label>
+				<Hint>
+					<Text xml:lang="en">Test: durchschnittliche Laufzeit (in Simulationsschritten)</Text>
+					<Text xml:lang="de">Test: durchschnittliche Laufzeit (in Simulationsschritten)</Text>
+				</Hint>
+			</StatisticsVariableUI>			
+			
+
 		</StatisticsUI>
+		<!-- =================================================== -->
 		<AnimationUI>
 			<Views>
+				<!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->
 				<SpaceView>
 					<TwoDimensionalSpaceView2D backgroundColor="darkgrey"/>
 				</SpaceView>
+
+				<!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->
+				<ObjectView objectIdRef="1" displayName="true">
+					<Shape2D x="100px" y="350px">
+						<Rectangle width="75" height="400" fill="lightgrey" stroke="black" strokeWidth="2"/>
+					</Shape2D>
+					<DisplayInfo property="countCustomers" content="customers (total)" />
+					
+					<EmbeddedView offsetX="0px" offsetY="-200px" label="customers currently use the Service">
+						<Shape2D>
+							<Rectangle positioning="LeftBottom" fill="blue" width="25" stroke="black" strokeWidth="2">
+								<ShapePropertyMap shapeProperty="height" property="listLength" mapType="polynomial" a0="1" a1="3"/>
+							</Rectangle>
+						</Shape2D>
+					</EmbeddedView>
+				</ObjectView>
+
+				<!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->
+				<!-- funktioniert nicht?!
 				<ObjectView objectType="TravelInfoService" objectIdRef="1">
-					<!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->
-					<Shape2D x="300px" y="200px">
+					<Shape2D x="100px" y="500px">
+						<Square width="20" fill="yellow" stroke="black" strokeWidth="1" />
+					</Shape2D>
+					<DisplayInfo property="test" content="customers (all)"/>
+				</ObjectView>
+				-->
+				 
+				<!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->
+				<!--
+				<ObjectView objectType="TravelInfoService" objectIdRef="1">
+					<Shape2D x="400px" y="200px">
 						<Rectangle positioning="LeftCenter" fill="blue" height="25" width="1" stroke="black" strokeWidth="2">
 							<ShapePropertyMap shapeProperty="width" property="listLength" mapType="polynomial" a1="3"/>
 						</Rectangle>
 					</Shape2D>
-					<DisplayInfo content="customers (TravelInfoService)" property="listLength"/>
+					<DisplayInfo content="customers currently use the TravelInfoService" property="listLength"/>
 				</ObjectView>
+				-->
 			</Views>
 		</AnimationUI>
-		
 	</UserInterface>
 </SimulationScenario>
