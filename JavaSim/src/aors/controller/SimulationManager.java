@@ -78,8 +78,8 @@ public class SimulationManager {
   private String AORSLDirectory;
   private String AORSLSchemaName;
 
-  private String xsltDirectory;
-  private String xsltName;
+  private String codeGenXsltDirectory;
+  private String codeGenXsltName;
 
   // the current (used as defautl) schema name
   private final String CURRENT_AORSL_SCHEMA_NAME = "AORSL-0-8-3.xsd";
@@ -441,15 +441,15 @@ public class SimulationManager {
   }
 
   /*
-   * this values are used when no prperty file exists
+   * this values are used when no property file exists
    */
   private void setDefaultProperties() {
     this.AORSLDirectory = "ext" + File.separator + "aorsl";
     this.AORSLSchemaName = CURRENT_AORSL_SCHEMA_NAME;
 
-    this.xsltDirectory = APP_ROOT_DIRECTORY + File.separator + "ext"
+    this.codeGenXsltDirectory = APP_ROOT_DIRECTORY + File.separator + "ext"
         + File.separator + "javagen";
-    this.xsltName = "aorsml2java.xsl";
+    this.codeGenXsltName = "aorsml2java.xsl";
   }
 
   private void setProperties() {
@@ -475,16 +475,16 @@ public class SimulationManager {
 
     value = this.properties.getProperty(propertyXSLTFileName);
     if (value != null) {
-      this.xsltName = value;
+      this.codeGenXsltName = value;
     } else {
-      this.xsltName = "aorsml2java.xsl";
+      this.codeGenXsltName = "aorsml2java.xsl";
     }
 
     value = this.properties.getProperty(propertyXSLTFilePath);
     if (value != null) {
-      this.xsltDirectory = value;
+      this.codeGenXsltDirectory = value;
     } else {
-      this.xsltDirectory = APP_ROOT_DIRECTORY + File.separator + "ext"
+      this.codeGenXsltDirectory = APP_ROOT_DIRECTORY + File.separator + "ext"
           + File.separator + "javagen";
     }
 
@@ -509,8 +509,8 @@ public class SimulationManager {
         .valueOf(autoMultithreading));
     this.properties.put(this.propertyXMLSchemaFileName, this.AORSLSchemaName);
     this.properties.put(this.propertyXMLSchemaFilePath, this.AORSLDirectory);
-    this.properties.put(this.propertyXSLTFileName, this.xsltName);
-    this.properties.put(this.propertyXSLTFilePath, this.xsltDirectory);
+    this.properties.put(this.propertyXSLTFileName, this.codeGenXsltName);
+    this.properties.put(this.propertyXSLTFilePath, this.codeGenXsltDirectory);
   }
 
   private void saveProperties() {
@@ -721,8 +721,8 @@ public class SimulationManager {
    */
   public boolean generate() {
     boolean result = false;
-    System.out.println(this.xsltDirectory + File.separator + this.xsltName);
-    File xsltFile = new File(this.xsltDirectory + File.separator + this.xsltName);
+    System.out.println(this.codeGenXsltDirectory + File.separator + this.codeGenXsltName);
+    File xsltFile = new File(this.codeGenXsltDirectory + File.separator + this.codeGenXsltName);
     if (!xsltFile.exists()) {
       System.err.println("No transformation file found!");
       return false;
