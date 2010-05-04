@@ -1,0 +1,242 @@
+<?xml version="1.0"?>
+<?xml-stylesheet type="text/xsl" href="prettyprint.xsl"?>
+
+<SimulationScenario xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+ xsi:schemaLocation="http://aor-simulation.org ../../../ext/aorsl/AORSL-0-7.xsd"
+ xmlns="http://aor-simulation.org"
+ xmlns:dc="http://purl.org/dc/elements/1.1/"
+ xmlns:aors="http://aor-simulation.org"
+ version="0.7"
+ scenarioName="Termites"
+ scenarioTitle="100 termites move around randomly in a 50x50 grid space, gathering wood chips into piles">
+	
+ <SimulationParameters simulationSteps="500" stepDuration="1" timeUnit="s" stepTimeDelay="50"/>
+
+ <SimulationModel modelName="Termites"
+    modelTitle="Termites moving around randomly in a grid space gathering wood chips into piles, Wood chip is represented as a grid cell property">
+
+    <documentation>
+      <dc:creator>Ming Ni</dc:creator>
+      <dc:created>20090622</dc:created>
+      <dc:description>
+        Termites move around randomly in a 100x100 grid space. 
+        They gather wood chips into piles. 
+        The presence of a wood chip on a cell is represented as a grid cell property "woodChipOnCell". 
+        If it bumps into a wood chip, it picks the chip up, and continues to wander randomly. 
+        When it bumps into another wood chip, it finds a nearby empty space and puts its wood chip down.
+      </dc:description>
+    </documentation>
+
+    <SpaceModel dimensions="2" geometry="Toroidal" discrete="true" xMax="100" yMax="100" gridCellMaxOccupancy="1" spatialDistanceUnit="cm">
+      <GridCellProperty name="woodChipOnCell" type="Boolean"/>
+    </SpaceModel>
+
+    <EntityTypes>
+      <ActionEventType name="Move"/>
+      <ActionEventType name="PickupWoodChip"/>
+      <ActionEventType name="PutdownWoodChip"/>
+      <PerceptionEventType name="ArrivalOnEmptyCell"/>
+      <PerceptionEventType name="ArrivalOnCellWithWoodchip"/>
+      <PhysicalObjectType name="Woodchip"/>
+      <!-- =================================================== -->
+      <PhysicalAgentType name="Termite">
+        <!-- =================================================== -->
+		<Attribute name="transportingWoodChip" type="Integer" initialValue="0"/>
+		<Attribute name="lookingForNextFreeCellToPutDownWoodChip" type="Boolean" initialValue="false"/>
+        <!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->
+		<Function name="getFreeLocation" resultType="Position">
+        <!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->
+		  <Body language="Java"><![CDATA[				
+int xMax = 40;
+int yMax = 20;
+int radius = 2;
+int newX, newY;
+int search = 0;
+int noOfCells = xMax * yMax;
+Position location = null;
+Boolean found = false;
+while (search++ <= noOfCells*noOfCells && !found) {
+	newX = Random.uniformInt( 1, xMax);
+	newY = Random.uniformInt( 1, yMax);
+	if ( !( newX == this.getX() && newY == this.getY()) && newX >= this.getX() - radius && newY >= this.getY() - radius && newX <= this.getX() + radius && newY <= this.getY() + radius ) {
+		location = new Position( newX, newY);
+		found = true;
+	}
+}
+return location;
+			]]></Body>
+		</Function>
+        <PeriodicTimeEventType name="GoOn">
+          <Periodicity language="Java">Random.uniformInt(1,3)</Periodicity>
+        </PeriodicTimeEventType>
+        <!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->
+        <ReactionRule name="GoOnRule">
+          <!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->
+          <documentation>
+            <dc:description>When receiving the periodic reminder signal to go on, the termite moves</dc:description>
+          </documentation>
+          <WHEN eventType="GoOn"/>
+          <SCHEDULE-EVT>
+            <ActionEventExpr actionEventType="Move"/>
+          </SCHEDULE-EVT>
+        </ReactionRule>
+        <!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->
+        <ReactionRule name="ArrivalOnEmptyCellRule" agentVariable="t">
+          <!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->
+          <documentation>
+            <dc:description>When the termite arrives on a new cell, it picks the chip up</dc:description>
+          </documentation>
+          <WHEN eventType="ArrivalOnEmptyCell"/>
+          <IF language="Java">t.isLookingForNextFreeCellToPutDownWoodChip</IF>
+          <SCHEDULE-EVT>
+            <ActionEventExpr actionEventType="PutdownWoodChip"/>
+          </SCHEDULE-EVT>
+        </ReactionRule>
+        <!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->
+        <ReactionRule name="ArrivalOnCellWithWoodchipRule" agentVariable="t">
+          <!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->
+          <documentation>
+            <dc:description>When the termite arrives on a cell that has a wood chip, 
+            while it is transporting a wood chip and is not yet looking for the next free cell to put it down, 
+			it changes its mode to looking for the next free cell to put down the wood chip</dc:description>
+          </documentation>
+          <WHEN eventType="ArrivalOnCellWithWoodchip"/>
+          <IF language="Java">
+          t.isTransportingWoodchip && !t.isLookingForNextFreeCellToPutDownWoodChip Simulator.spaceModel.getGridCell( (int) b.getX(), (int) b.getY()).getFoodLevel() > 0
+          </IF>
+          <SCHEDULE-EVT>
+            <ActionEventExpr actionEventType="PickupWoodChip"/>
+          </SCHEDULE-EVT>
+        </ReactionRule>
+      </PhysicalAgentType>
+    </EntityTypes>
+
+    <EnvironmentRules>
+      <!-- =================================================== -->
+      <EnvironmentRule name="MoveRule">
+        <!-- =================================================== -->
+        <documentation>
+          <dc:description>When a termite performs a move action, its position is updated by adding one of the vectors {-1,0,1} x {-1,0,1} chosen at random using the predefined SpaceModel methods newX/newY.  In addition, a perception event that it has arrived at a new cell is created for the termite.</dc:description>
+        </documentation>
+        <WHEN eventType="Move" eventVariable="e"/>
+        <FOR objectVariable="b" objectType="Termite">
+          <ObjectRef language="Java">e.getActor()</ObjectRef>
+        </FOR>
+        <UPDATE-ENV>
+          <UpdateObject objectVariable="b">
+            <Slot xsi:type="aors:OpaqueExprSlot" property="x">
+              <ValueExpr language="Java">Simulator.spaceModel.newX( b, Random.uniformInt(3)-1)</ValueExpr>
+            </Slot>
+            <Slot xsi:type="aors:OpaqueExprSlot" property="y">
+              <ValueExpr language="Java">Simulator.spaceModel.newY( b, Random.uniformInt(3)-1)</ValueExpr>
+            </Slot>
+          </UpdateObject>
+        </UPDATE-ENV>
+        <SCHEDULE-EVT>
+          <PerceptionEventExpr eventType="ArrivalOnEmptyCell">
+            <PerceiverIdRef language="Java">e.getActorIdRef()</PerceiverIdRef>
+          </PerceptionEventExpr>
+        </SCHEDULE-EVT>
+      </EnvironmentRule>
+      <!-- =================================================== -->
+      <EnvironmentRule name="PickupWoodChipRule">
+        <!-- =================================================== -->
+        <documentation>
+          <dc:description>When a termite has performed an PickupWoodChip action, it grows and the chip level of the cell is set to 0.</dc:description>
+        </documentation>
+        <WHEN eventType="PickupWoodChip" eventVariable="e"/>
+        <FOR objectVariable="b" objectType="Termite">
+          <ObjectRef language="Java">e.getActor()</ObjectRef>
+        </FOR>
+        <IF language="Java">
+          Simulator.spaceModel.getGridCell( (int) b.getX(), (int) b.getY()).getChipLevel() > 0 &amp;&amp; b.getWidth() == 0.2
+        </IF>
+        <UPDATE-ENV>
+          <UpdateObject objectVariable="b">
+            <Slot xsi:type="aors:OpaqueExprSlot" property="width">
+              <ValueExpr language="Java">
+              b.getWidth() + Simulator.spaceModel.getGridCell( (int) b.getX(), (int) b.getY()).getChipLevel() / 5.0
+              </ValueExpr>
+            </Slot>
+            <Slot xsi:type="aors:OpaqueExprSlot" property="height">
+              <ValueExpr language="Java"> b.getWidth()</ValueExpr>
+            </Slot>
+          </UpdateObject>
+          <UpdateGridCell gridCellVariable="gridCell">
+            <XCoordinate language="Java">(int) b.getX()</XCoordinate>
+            <YCoordinate language="Java">(int) b.getY()</YCoordinate>
+            <Slot xsi:type="aors:OpaqueExprSlot" property="chipLevel">
+              <ValueExpr language="Java">0.0</ValueExpr>
+            </Slot>
+          </UpdateGridCell>
+        </UPDATE-ENV>
+      </EnvironmentRule>
+      <!-- =================================================== -->
+      <EnvironmentRule name="PutdownRule">
+        <!-- =================================================== -->
+        <documentation>
+          <dc:description>When a termite has performed an PutdownWoodChip action, it decreases and the nearby chip level of the cell is set to 1.</dc:description>
+        </documentation>
+        <WHEN eventType="PutdownWoodChip" eventVariable="e"/>
+        <FOR objectVariable="b" objectType="Termite">
+          <ObjectRef language="Java">e.getActor()</ObjectRef>
+        </FOR>
+        <FOR dataVariable="newLocation" refDataType="Position">
+		      <ValueExpr language="Java">b.getFreeLocation()</ValueExpr>
+	      </FOR>
+        <IF language="Java">
+          Simulator.spaceModel.getGridCell( (int) b.getX(), (int) b.getY()).getChipLevel() > 0 &amp;&amp; newLocation != null &amp;&amp; Simulator.spaceModel.getGridCell( (int) newLocation.getX(), (int) newLocation.getY()).getChipLevel() == 0 &amp;&amp; b.getWidth() > 0.2
+        </IF>
+        <UPDATE-ENV>
+        	<UpdateObject objectVariable="b">
+			      <Slot xsi:type="aors:OpaqueExprSlot" property="x">
+				      <ValueExpr language="Java">newLocation.getX()</ValueExpr>
+			      </Slot>
+			      <Slot xsi:type="aors:OpaqueExprSlot" property="y">
+				      <ValueExpr language="Java">newLocation.getY()</ValueExpr>
+			      </Slot>
+		      </UpdateObject>
+          <UpdateObject objectVariable="b">
+            <Slot xsi:type="aors:OpaqueExprSlot" property="width">
+              <ValueExpr language="Java">
+              0.2
+              </ValueExpr>
+            </Slot>
+            <Slot xsi:type="aors:OpaqueExprSlot" property="height">
+              <ValueExpr language="Java">0.2</ValueExpr>
+            </Slot>
+          </UpdateObject>
+          <UpdateGridCell gridCellVariable="gridCell">
+            <XCoordinate language="Java">(int) newLocation.getX()</XCoordinate>
+            <YCoordinate language="Java">(int) newLocation.getY()</YCoordinate>
+            <Slot xsi:type="aors:OpaqueExprSlot" property="chipLevel">
+              <ValueExpr language="Java">1.0</ValueExpr>
+            </Slot>
+          </UpdateGridCell>
+        </UPDATE-ENV>
+      </EnvironmentRule>
+    </EnvironmentRules>
+  </SimulationModel>
+
+  <!-- =================================================== -->
+  <InitialState>
+    <!-- =================================================== -->
+    <PhysicalAgents type="Termite" rangeStartID="1" rangeEndID="100" hasRandomPosition="true">
+      <Slot xsi:type="aors:SimpleSlot" property="width" value="3"/>
+      <Slot xsi:type="aors:SimpleSlot" property="height" value="3"/>
+      <PeriodicTimeEvent occurrenceTime="1" type="GoOn"/>
+    </PhysicalAgents>
+    <PhysicalObjects type="Woodchip" rangeStartID="1001" rangeEndID="2000" hasRandomPosition="true"/>
+  </InitialState>
+
+  <!-- =================================================== -->
+  <Views>
+    <View physicalObjectType="Termite" shape2D="circle">
+  	  <ShapeSlot shapeProperty="fill" value="brown"/>
+      <VisualizationMap property="width" shapeProperty="r" caseWise="false" a0="0" a1="0.1"/>
+    </View>
+    <View physicalObjectType="Woodchip" shape2D="square">
+  	  <ShapeSlot shapeProperty="fill" value="black"/>
+    </View>
+  </Views>
+</SimulationScenario>

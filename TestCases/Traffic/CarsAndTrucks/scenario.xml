@@ -1,0 +1,358 @@
+<?xml version="1.0"?>
+<?xml-stylesheet type="text/xsl" href="prettyprint.xsl"?>
+<SimulationScenario xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+  xsi:schemaLocation="http://aor-simulation.org ../../../ext/aorsl/AORSL-0-8-3.xsd"
+  xmlns:dc="http://purl.org/dc/elements/1.1/" xmlns="http://aor-simulation.org"
+  xmlns:aors="http://aor-simulation.org" version="0.8.3"
+  scenarioName="CarsAndTrucksOnCircularTrack_2Cars_1Truck"
+  scenarioTitle="A truck and two cars moving on a circular track with one speed limit sign for all and one speed limit sign only for trucks"
+  simulationManagerDirectory="../../..">
+
+  <SimulationParameters simulationSteps="30000" stepDuration="100" timeUnit="ms" stepTimeDelay="30"/>
+
+  <SimulationModel modelName="CarsAndTrucksOnCircularTrack"
+    modelTitle="Cars and trucks moving on a circular track with uniform velocity"
+    autoKinematics="true">
+    <documentation>
+      <dc:creator>Gerd Wagner</dc:creator>
+      <dc:created>20080101</dc:created>
+      <dc:description> This simulation models cars and trucks as special types of vehicle agents
+        that move on a circular track and change their velocity in response to speed limit signs.
+      </dc:description>
+    </documentation>
+
+    <SpaceModel geometry="Toroidal" spatialDistanceUnit="m">
+      <OneDimensional xMax="20000"/>
+    </SpaceModel>
+
+
+    <EntityTypes>
+
+      <!-- Vehicle speed up event -->
+      <ActionEventType name="SpeedUp">
+        <Attribute name="velocity" type="Float"/>
+      </ActionEventType>
+
+      <!-- Vehicle slow down event -->
+      <ActionEventType name="SlowDown">
+        <Attribute name="velocity" type="Float"/>
+      </ActionEventType>
+
+      <!-- The vehicle perceive its speed -->
+      <PerceptionEventType name="UpdateVelocityBelief">
+        <Attribute name="velocity" type="Float"/>
+      </PerceptionEventType>
+
+      <PhysicalObjectType name="SpeedLimitSign">
+        <Attribute name="admMaxVelocity" type="Integer"/>
+      </PhysicalObjectType>
+
+      <PhysicalObjectType name="TruckSpeedLimitSign">
+        <Attribute name="admMaxVelocity" type="Integer"/>
+      </PhysicalObjectType>
+
+      <PhysicalObjectType name="SpeedLimitCancelationSign"/>
+
+      <!-- ========================== The vehicle agent ====================== -->
+      <PhysicalAgentType name="Vehicle" autoPerception="true">
+        <SelfBeliefAttribute name="maxVelocity" type="Float"/>
+        <SelfBeliefAttribute name="speedLimit" type="Integer"/>
+        <SelfBeliefAttribute name="myVelocity" type="Float"/>
+
+        <!-- On each step event -->
+        <PeriodicTimeEventType name="SimulationStep">
+          <Periodicity>
+            <ValueExpr language="Java">1</ValueExpr>
+          </Periodicity>
+        </PeriodicTimeEventType>
+
+        <ReactionRule name="UpdateVelocityBelief_Rule" agentVariable="vehicle">
+          <documentation>
+            <dc:description> The vehicle update its belief about its actual speed. </dc:description>
+          </documentation>
+          <WHEN eventType="UpdateVelocityBelief" eventVariable="e"/>
+          <DO>
+            <UPDATE-AGT>
+              <SelfBeliefSlot xsi:type="aors:OpaqueExprSlot" property="myVelocity">
+                <ValueExpr language="Java"> e.getVelocity() </ValueExpr>
+              </SelfBeliefSlot>
+            </UPDATE-AGT>
+          </DO>
+        </ReactionRule>
+
+
+        <ReactionRule name="SpeedLimitStart_Rule" agentVariable="vehicle">
+          <documentation>
+            <dc:description> When a vehicle perceives a speed limit sign, it decreases its velocity
+              to the admissible maximum velocity prescribed by the sign </dc:description>
+          </documentation>
+          <WHEN eventType="PhysicalObjectPerceptionEvent" physicalObjectType="SpeedLimitSign"
+            eventVariable="e"/>
+          <IF language="Java">
+            <![CDATA[
+              vehicle.getMyVelocity() > ((SpeedLimitSign) e.getPerceivedPhysicalObject()).getAdmMaxVelocity()
+            ]]>
+          </IF>
+          <THEN>
+            <UPDATE-AGT>
+              <SelfBeliefSlot xsi:type="aors:OpaqueExprSlot" property="speedLimit">
+                <ValueExpr language="Java"> ((SpeedLimitSign)
+                  e.getPerceivedPhysicalObject()).getAdmMaxVelocity() </ValueExpr>
+              </SelfBeliefSlot>
+            </UPDATE-AGT>
+            <SCHEDULE-EVT>
+              <ActionEventExpr actionEventType="SlowDown">
+                <Slot xsi:type="aors:OpaqueExprSlot" property="velocity">
+                  <ValueExpr language="Java"> ((SpeedLimitSign)
+                    e.getPerceivedPhysicalObject()).getAdmMaxVelocity() </ValueExpr>
+                </Slot>
+              </ActionEventExpr>
+            </SCHEDULE-EVT>
+          </THEN>
+        </ReactionRule>
+
+        <ReactionRule name="SpeedLimitEnd_Rule" agentVariable="vehicle">
+          <documentation>
+            <dc:description> When a vehicle perceives a speed limit cancelation sign, it increases
+              its velocity until its maximum velocity. </dc:description>
+          </documentation>
+          <WHEN eventType="PhysicalObjectPerceptionEvent"
+            physicalObjectType="SpeedLimitCancelationSign" eventVariable="e"/>
+          <IF language="Java">
+            <![CDATA[
+              vehicle.getMyVelocity() < vehicle.getMaxVelocity()
+            ]]>
+          </IF>
+          <THEN>
+            <UPDATE-AGT>
+              <SelfBeliefSlot xsi:type="aors:SimpleSlot" property="speedLimit" value="0"/>
+            </UPDATE-AGT>
+          </THEN>
+        </ReactionRule>
+
+        <ReactionRule name="SpeedUp_Rule" agentVariable="vehicle">
+          <documentation>
+            <dc:description> No speed limit in this area, so increase the speed. </dc:description>
+          </documentation>
+          <WHEN eventType="SimulationStep"/>
+          <IF language="Java">
+            <![CDATA[
+              vehicle.getSpeedLimit() < 1 && vehicle.getMyVelocity() < vehicle.getMaxVelocity()
+            ]]>
+          </IF>
+          <THEN>
+            <SCHEDULE-EVT>
+              <ActionEventExpr actionEventType="SpeedUp">
+                <Slot xsi:type="aors:SimpleSlot" property="velocity" value="1"/>
+              </ActionEventExpr>
+            </SCHEDULE-EVT>
+          </THEN>
+        </ReactionRule>
+
+      </PhysicalAgentType>
+
+      <!-- ========================== The car agent ====================== -->
+      <PhysicalAgentType name="Car" superType="Vehicle" autoPerception="true">
+        <InitialAttributeValue attribute="perceptionRadius" value="50"/>
+        <InitialAttributeValue attribute="width" value="10"/>
+      </PhysicalAgentType>
+
+      <!-- ========================= The agent Truck ======================= -->
+      <PhysicalAgentType name="Truck" superType="Vehicle" autoPerception="true">
+        <!-- =================================================================== -->
+        <InitialAttributeValue attribute="perceptionRadius" value="50"/>
+        <InitialAttributeValue attribute="width" value="20"/>
+
+        <ReactionRule name="TruckSpeedLimitStartPercEvtAgtRule" agentVariable="truck">
+          <documentation>
+            <dc:description> When a truck perceives a speed limit sign, it decreases its velocity to
+              the admissible maximum velocity prescribed by the sign. </dc:description>
+          </documentation>
+          <WHEN eventType="PhysicalObjectPerceptionEvent" physicalObjectType="TruckSpeedLimitSign"
+            eventVariable="e"/>
+          <IF language="Java">
+            <![CDATA[
+              truck.getMyVelocity() > ((TruckSpeedLimitSign) e.getPerceivedPhysicalObject()).getAdmMaxVelocity()  
+            ]]>
+          </IF>
+          <THEN>
+            <SCHEDULE-EVT>
+              <ActionEventExpr actionEventType="SlowDown">
+                <Slot xsi:type="aors:OpaqueExprSlot" property="velocity">
+                  <ValueExpr language="Java"> ((TruckSpeedLimitSign)
+                    e.getPerceivedPhysicalObject()).getAdmMaxVelocity() </ValueExpr>
+                </Slot>
+              </ActionEventExpr>
+            </SCHEDULE-EVT>
+          </THEN>
+        </ReactionRule>
+      </PhysicalAgentType>
+
+    </EntityTypes>
+
+    <!-- =================================================================== -->
+    <EnvironmentRules>
+
+      <EnvironmentRule name="SlowDownEnvRule">
+        <documentation>
+          <dc:description> When a vehicle agent has performed a SlowDown action, the environment
+            simulator adjusts its velocity accordingly. </dc:description>
+        </documentation>
+        <WHEN eventType="SlowDown" eventVariable="e"/>
+        <FOR objectType="Vehicle" objectVariable="vehicle">
+          <ObjectRef language="Java">e.getActor()</ObjectRef>
+        </FOR>
+        <DO>
+          <UPDATE-ENV>
+            <UpdateObject objectVariable="vehicle">
+              <Slot xsi:type="aors:OpaqueExprSlot" property="vx">
+                <ValueExpr language="Java">e.getVelocity()</ValueExpr>
+              </Slot>
+            </UpdateObject>
+          </UPDATE-ENV>
+          <SCHEDULE-EVT>
+            <PerceptionEventExpr eventType="UpdateVelocityBelief">
+              <PerceiverIdRef language="Java">e.getActor().getId()</PerceiverIdRef>
+              <Slot xsi:type="aors:OpaqueExprSlot" property="velocity">
+                <ValueExpr language="Java"> e.getVelocity() </ValueExpr>
+              </Slot>
+            </PerceptionEventExpr>
+          </SCHEDULE-EVT>
+        </DO>
+      </EnvironmentRule>
+
+      <EnvironmentRule name="SpeedUpEnvRule">
+        <documentation>
+          <dc:description> When a vehicle agent has performed a SpeedUp action, the environment
+            simulator adjusts its velocity accordingly. </dc:description>
+        </documentation>
+        <WHEN eventType="SpeedUp" eventVariable="e"/>
+        <FOR objectType="Vehicle" objectVariable="vehicle">
+          <ObjectRef language="Java">e.getActor()</ObjectRef>
+        </FOR>
+        <DO>
+          <UPDATE-ENV>
+            <UpdateObject objectVariable="vehicle">
+              <Slot xsi:type="aors:OpaqueExprSlot" property="vx">
+                <ValueExpr language="Java"> vehicle.getVx() + e.getVelocity() </ValueExpr>
+              </Slot>
+            </UpdateObject>
+          </UPDATE-ENV>
+          <SCHEDULE-EVT>
+            <PerceptionEventExpr eventType="UpdateVelocityBelief">
+              <PerceiverIdRef language="Java">e.getActor().getId()</PerceiverIdRef>
+              <Slot xsi:type="aors:OpaqueExprSlot" property="velocity">
+                <ValueExpr language="Java"> vehicle.getVx() + e.getVelocity() </ValueExpr>
+              </Slot>
+            </PerceptionEventExpr>
+          </SCHEDULE-EVT>
+        </DO>
+      </EnvironmentRule>
+    </EnvironmentRules>
+  </SimulationModel>
+
+  <!-- ================================================================ -->
+  <InitialState>
+    <!-- ================================================================ -->
+    <PhysicalAgent type="Car" name="Car1" id="1" x="1000" vx="0">
+      <Slot property="width" value="180"/>
+      <SelfBeliefSlot xsi:type="aors:SimpleSlot" property="maxVelocity" value="150"/>
+      <SelfBeliefSlot xsi:type="aors:SimpleSlot" property="speedLimit" value="0"/>
+      <SelfBeliefSlot xsi:type="aors:SimpleSlot" property="myVelocity" value="0"/>
+
+      <!-- a periodic time event that starts on step 1 -->
+      <PeriodicTimeEvent occurrenceTime="1" type="SimulationStep"/>
+    </PhysicalAgent>
+
+    <PhysicalAgent type="Car" name="Car2" id="2" x="500" vx="0">
+      <Slot property="width" value="180"/>
+      <SelfBeliefSlot xsi:type="aors:SimpleSlot" property="maxVelocity" value="120"/>
+      <SelfBeliefSlot xsi:type="aors:SimpleSlot" property="speedLimit" value="0"/>
+      <SelfBeliefSlot xsi:type="aors:SimpleSlot" property="myVelocity" value="0"/>
+
+      <!-- a periodic time event that starts on step 1 -->
+      <PeriodicTimeEvent occurrenceTime="1" type="SimulationStep"/>
+    </PhysicalAgent>
+
+    <PhysicalAgent type="Truck" name="Truck1" id="3" x="0" vx="0">
+      <Slot property="width" value="230"/>
+      <Slot property="height" value="230"/>
+      <SelfBeliefSlot xsi:type="aors:SimpleSlot" property="maxVelocity" value="100"/>
+      <SelfBeliefSlot xsi:type="aors:SimpleSlot" property="speedLimit" value="0"/>
+      <SelfBeliefSlot xsi:type="aors:SimpleSlot" property="myVelocity" value="0"/>
+
+      <!-- a periodic time event that starts on step 1 -->
+      <PeriodicTimeEvent occurrenceTime="1" type="SimulationStep"/>
+    </PhysicalAgent>
+
+    <PhysicalObject type="SpeedLimitSign" name="SpeedLimitSign1" id="101" x="6000">
+      <Slot xsi:type="aors:SimpleSlot" property="admMaxVelocity" value="70"/>
+      <Slot property="width" value="150"/>
+    </PhysicalObject>
+
+    <PhysicalObject type="TruckSpeedLimitSign" name="TruckSpeedLimitSign1" id="102" x="8000">
+      <Slot xsi:type="aors:SimpleSlot" property="admMaxVelocity" value="40"/>
+      <Slot property="width" value="150"/>
+    </PhysicalObject>
+
+    <PhysicalObject type="SpeedLimitCancelationSign" name="SpeedLimitCancelationSign1" id="103"
+      x="12000">
+      <Slot property="width" value="150"/>
+    </PhysicalObject>
+
+  </InitialState>
+
+  <UserInterface>
+    <AnimationUI>
+      <Views>
+        <SpaceView canvasColor="darkgrey">
+          <OneDimensionalSpaceView2D mode="circular"/>
+        </SpaceView>
+        
+        <PhysicalObjectView physicalObjectType="Car">
+          <PhysicalShape2D>
+            <Circle fill="white" stroke="grey" strokeWidth="4"/>
+          </PhysicalShape2D>
+          <DisplayInfo property="vx" content="Km/h"/>
+        </PhysicalObjectView>
+
+        <PhysicalObjectView physicalObjectType="Truck">
+          <PhysicalShape2D>
+            <Rectangle fill="grey" stroke="white" strokeWidth="6"/>
+          </PhysicalShape2D>
+          <DisplayInfo property="vx" content="Km/h"/>
+        </PhysicalObjectView>
+
+        <PhysicalObjectView physicalObjectType="SpeedLimitSign">
+          <PhysicalShape2D>
+            <Circle fill="white" stroke="red" strokeWidth="4"/>
+          </PhysicalShape2D>
+          <DisplayInfo property="admMaxVelocity"/>
+        </PhysicalObjectView>
+
+        <PhysicalObjectView physicalObjectType="TruckSpeedLimitSign">
+          <PhysicalShape2D>
+            <Circle fill="yellow" stroke="red" strokeWidth="4"/>
+          </PhysicalShape2D>
+          <DisplayInfo property="admMaxVelocity"/>
+        </PhysicalObjectView>
+
+        <PhysicalObjectView physicalObjectType="SpeedLimitCancelationSign">
+          <PhysicalShape2D>
+            <Circle fill="white" stroke="black" strokeWidth="4"/>
+          </PhysicalShape2D>
+        </PhysicalObjectView>
+
+        <EventAppearance eventType="SlowDown" duration="600">
+          <MidiSound instrumentNo="2" noteSequence="7/200 8/200 9/200"/>
+          <MidiSound instrumentNo="17" noteSequence="2/150 4/150 6/150 8/150"/>
+        </EventAppearance>
+
+        <EventAppearance eventType="SpeedUp" duration="100">
+          <MidiSound instrumentNo="6" noteSequence="7/200 8/200 9/200"/>
+          <MidiSound instrumentNo="21" noteSequence="2/150 4/150 6/150 8/150"/>
+        </EventAppearance>
+      </Views>
+    </AnimationUI>
+  </UserInterface>
+</SimulationScenario>

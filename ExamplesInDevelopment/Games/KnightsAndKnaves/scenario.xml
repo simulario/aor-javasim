@@ -1,0 +1,1120 @@
+<?xml version="1.0"?>
+<?xml-stylesheet type="text/xsl" href="prettyprint.xsl"?>
+<SimulationScenario xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+    xsi:schemaLocation="http://aor-simulation.org ../../../ext/aorsl/AORSL-0-8-3.xsd"
+    xmlns:dc="http://purl.org/dc/elements/1.1/" xmlns="http://aor-simulation.org"
+    xmlns:aors="http://aor-simulation.org" version="0.8.3" scenarioName="KnightsAndKnavesEnhanced"
+    scenarioTitle="Rescue the princess by finding the Castle and defeat the Demon."
+    simulationManagerDirectory="../../../..">
+
+    <SimulationParameters simulationSteps="10000" stepTimeDelay="100" timeUnit="ms" randomSeed="10"/>
+
+    <SimulationModel modelName="KnightsAndKnavesEnhanced"
+        modelTitle="KnightsAndKnaves"
+        baseURI="http://aors.example.net/KK#">
+
+        <documentation>
+            <dc:created>28 January 2009</dc:created>
+        	<dc:modified>20 January 2010</dc:modified>
+            <dc:description>
+                The prince wants to rescue the princess, kidnapped by the Evil Demon.
+                The prince have to find the castle, by asking Knights about the direction.
+                The prince have to collect magic objects to increase its power level to at least the same level with the Demon'S one.
+                The prince can see the castle. knight, magic object or demon only when she enters the same cell where the object/agent is located.
+                Within a step. the prince can move only to a neigbor cell (either E, S, W or N).
+            </dc:description>
+        </documentation>
+        
+        <SpaceModel geometry="Euclidean" spatialDistanceUnit="m">
+            <TwoDimensionalGrid xMax="25" yMax="25" gridCellMaxOccupancy="1" startCountingWithZero="true"/>
+        </SpaceModel>
+
+        <DataTypes>
+        	<!-- =================================================== -->
+        	<Enumeration name="DirectionType">
+        		<!-- =================================================== -->
+        		<EnumerationLiteral>NORTH</EnumerationLiteral>
+        		<EnumerationLiteral>EAST</EnumerationLiteral>
+        		<EnumerationLiteral>SOUTH</EnumerationLiteral>
+        		<EnumerationLiteral>WEST</EnumerationLiteral>
+        	</Enumeration>
+            
+        	<!-- =================================================== -->
+        	<ComplexDataType name="ObjectPosition">
+        		<!-- =================================================== -->
+        		<Attribute type="Integer" name="x"/>
+        		<Attribute type="Integer" name="y"/>
+        		<Function name="updateObjectPosition" resultType="void">
+        			<Parameter name="xPos" type="long"/>
+        			<Parameter name="yPos" type="long"/>
+        			<Body language="Java">
+        				<![CDATA[
+                         			setX(xPos);
+                        			setY(yPos);
+                       		 ]]>
+        			</Body>
+        		</Function>
+        	</ComplexDataType>
+        </DataTypes>
+
+        <EntityTypes>
+
+            <MessageType name="AskAboutCastleOrMagicObject">
+                <Attribute type="String" name="queryLanguage"/>
+                <Attribute type="String" name="queryString"/>
+            </MessageType>
+            
+            <MessageType name="ReplyAboutCastleOrMagicObject">
+                <ComplexDataProperty name="answer" type="ObjectPosition"/>
+            </MessageType>
+            
+            <MessageType name="PrinceMoved"/>
+
+        	<ActionEventType name="Move">
+        		<EnumerationProperty name="directionType" type="DirectionType"/>
+        		<Attribute type="Integer" name="x"/>
+        		<Attribute type="Integer" name="y"/>
+        	</ActionEventType>
+            
+            <ActionEventType name="AquiredMagicObject">
+                <ReferenceProperty name="magicObject" type="MagicObject"/>
+            </ActionEventType>
+            
+            <ActionEventType name="WinGame">
+                <ReferenceProperty name="demon" type="Demon"/>
+            </ActionEventType>
+            
+            <ActionEventType name="LoseGame"/>
+
+            <!-- =================================================== -->
+            <PhysicalObjectType name="Castle" idPerceivable="true"/>
+            <!-- =================================================== -->
+
+            <!-- =================================================== -->
+            <PhysicalObjectType name="MagicObject" idPerceivable="true">
+            	<!-- =================================================== -->
+                <Attribute type="Integer" name="magicPowerLevel"/>
+            </PhysicalObjectType>
+            
+            <!-- =================================================== -->
+            <PhysicalAgentType name="Demon" idPerceivable="true">
+            	<!-- =================================================== -->
+                <Attribute type="Integer" name="powerLevel"/>
+            </PhysicalAgentType>
+
+            <!-- =================================================== -->
+            <PhysicalAgentType name="Prince" autoPerception="true">
+            <!-- =================================================== -->
+            	<SelfBeliefAttribute type="Boolean" name="moved"/>
+                <SelfBeliefAttribute type="Integer" name="powerLevel"/>
+                <SelfBeliefAttribute type="Boolean" name="foundKnight"/>
+                <SelfBeliefAttribute type="Boolean" name="knownPosition"/>
+                <SelfBeliefReferenceProperty type="ObjectPosition" name="knownObjectPosition"/>
+
+                <!-- Demon belief entity type -->
+                <BeliefEntityType name="DemonBelief">
+                    <BeliefAttribute type="Integer" name="powerLevel"/>
+                </BeliefEntityType>
+
+                <!-- MagicObject belief entity type -->
+                <BeliefEntityType name="MagicObjectBelief">
+                    <BeliefAttribute name="x" type="Integer"/>
+                    <BeliefAttribute name="y" type="Integer"/>
+                </BeliefEntityType>
+
+                <!-- Cell belief type -->
+                <BeliefEntityType name="CellBelief">
+                    <BeliefAttribute type="Float" name="x"/>
+                    <BeliefAttribute type="Float" name="y"/>
+                    <BeliefAttribute type="Boolean" name="movedTo_E" initialValue="false"/>
+                    <BeliefAttribute type="Boolean" name="movedTo_W" initialValue="false"/>
+                    <BeliefAttribute type="Boolean" name="movedTo_S" initialValue="false"/>
+                    <BeliefAttribute type="Boolean" name="movedTo_N" initialValue="false"/>
+                </BeliefEntityType>
+
+                <!-- The Prince moves one random step -->
+                <SubjectiveFunction name="computeRandomMove" resultType="ObjectPosition">
+                    <Parameter name="cellId" type="Integer"/>
+                    <Body language="Java">
+                        <![CDATA[
+                            String resultDirection = "";
+                            boolean v_E = ((CellBelief)this.getBeliefEntityById(cellId)).isMovedTo_E();
+                            boolean v_W = ((CellBelief)this.getBeliefEntityById(cellId)).isMovedTo_W();
+                            boolean v_S = ((CellBelief)this.getBeliefEntityById(cellId)).isMovedTo_S();
+                            boolean v_N = ((CellBelief)this.getBeliefEntityById(cellId)).isMovedTo_N();
+
+                            // if all directions are visited, then reset visited directions
+                            // and choose a random direction to move
+                            if (v_E && v_W && v_S && v_N) {
+                                // reset all visited directions for this cell
+                                ((CellBelief)this.getBeliefEntityById(cellId)).setMovedTo_E(false);
+                                ((CellBelief)this.getBeliefEntityById(cellId)).setMovedTo_W(false);
+                                ((CellBelief)this.getBeliefEntityById(cellId)).setMovedTo_S(false);
+                                ((CellBelief)this.getBeliefEntityById(cellId)).setMovedTo_N(false);
+
+                                // choose a random direction
+                                int dir = Random.uniformInt(1,4);
+                                switch(dir) {
+                                    case 1: resultDirection="E";
+                                    ((CellBelief)this.getBeliefEntityById(cellId)).setMovedTo_E(true);
+                                    break;
+                                    case 2: resultDirection="W";
+                                    ((CellBelief)this.getBeliefEntityById(cellId)).setMovedTo_W(true);
+                                    break;
+                                    case 3: resultDirection="S";
+                                    ((CellBelief)this.getBeliefEntityById(cellId)).setMovedTo_S(true);
+                                    break;
+                                    case 4: resultDirection="N";
+                                    ((CellBelief)this.getBeliefEntityById(cellId)).setMovedTo_N(true);
+                                    break;
+                                }
+                            }
+                            //if not all directions are visited choose one to visit
+                            else {
+                                int dir = Random.uniformInt(1,4);
+                                do {
+                                    dir = Random.uniformInt(1,4);
+                                }while (!((dir==1 && !v_E) || (dir==2 && !v_W) || (dir==3 && !v_S) || (dir==4 && !v_N)));
+
+                                if(!v_E && dir==1 && resultDirection.length()<1) {
+                                    resultDirection="E";
+                                    ((CellBelief)this.getBeliefEntityById(cellId)).setMovedTo_E(true);
+                                }
+                                if(!v_W && dir==2 && resultDirection.length()<1) {
+                                    resultDirection="W";
+                                    ((CellBelief)this.getBeliefEntityById(cellId)).setMovedTo_W(true);
+                                }
+                                if(!v_S && dir==3 && resultDirection.length()<1) {
+                                    resultDirection="S";
+                                    ((CellBelief)this.getBeliefEntityById(cellId)).setMovedTo_S(true);
+                                }
+                                if(!v_N && dir==4 && resultDirection.length()<1) {
+                                    resultDirection="N";
+                                    ((CellBelief)this.getBeliefEntityById(cellId)).setMovedTo_N(true);
+                                }
+                            }
+
+                            /** Some console messages **/
+                            long pp = this.getPowerLevel();
+                            long dp = ((DemonBelief)this.getBeliefEntityById(1000)).getPowerLevel();
+
+                            System.out.println(" ==> Prince decided: I will go to " + resultDirection);
+                            if(pp<dp) {
+                                System.out.println(" ==> Prince said: Hmmm, I don't have enought power! My power is "
+                                    + pp + "HP but the Demon has "
+                                    + dp + "HP !");
+                            }
+                            else {
+                                System.out.println(" ==> Prince said: Yeah, now I have enough power, lets find the Demon! My power is "
+                                    + pp + "HP and the Demon has "
+                                    + dp + "HP !");
+                            }
+
+                            int xCurrent = (int)((PhysicalAgentObject)this.getAgentObject()).getX();
+                            int yCurrent = (int)((PhysicalAgentObject)this.getAgentObject()).getY();
+
+                            ObjectPosition pos = new ObjectPosition();
+                            pos.setX(xCurrent);
+                            pos.setY(yCurrent);
+
+                            if(resultDirection.equals("E")) {
+                                pos.setX(xCurrent + 1);
+                            }
+
+                            if(resultDirection.equals("W")) {
+                                pos.setX(xCurrent-1);
+                            }
+
+                            if(resultDirection.equals("N")) {
+                                pos.setY(yCurrent+1);
+                            }
+
+                            if(resultDirection.equals("S")) {
+                                pos.setY(yCurrent-1);
+                            }
+
+                            return pos;
+                        ]]>
+                    </Body>
+                </SubjectiveFunction>
+
+                <!-- Calculate IDs of MagicObjectBelief(S) to be ignored in search -->
+                <SubjectiveFunction name="getMagicObjectBeliefsQuery" resultType="String">
+                    <Body language="Java">
+                        <![CDATA[
+                            // default query - without filters
+                            String queryString = "SELECT ?m ?x ?y WHERE {?m rdf:type :MagicObjectBelief; :x ?x; :y ?y.";
+
+                            // filters which will apply to this query
+                            String exclude = "";
+
+                            // the base URI used for RDF
+                            String baseURI = "http://aors.example.net/KK#";
+
+                            if (!baseURI.endsWith("/") && !baseURI.endsWith("#")) {
+			                    baseURI += "#";
+		                    }
+
+                            // get all beliefs about MagicObjectBelief(S)
+                            java.util.ArrayList<Entity> entities = getBeliefEntitiesByType("MagicObjectBelief");
+
+                            // create filters if found beliefs about MagicObjectBelief
+                            if (entities.size()>0) {
+                                exclude = " FILTER(";
+
+                                for(int i=0; i<entities.size(); i++) {
+                                    Entity entity = entities.get(i);
+                                    exclude += ("?m != <" + baseURI + entity.getId() + ">");
+
+                                    if(i < entities.size()-1) {
+                                        exclude += " && ";
+                                    }
+                                }
+
+                                exclude += ") ";
+                            }
+
+                            // end the query string
+                            queryString += (exclude + "}");
+
+                            return queryString;
+                        ]]>
+                    </Body>
+                </SubjectiveFunction>
+
+                <SubjectiveFunction name="computeNextMove" resultType="String">
+                    <Parameter name="objectPosition" type="ObjectPosition"/>
+                    <Body language="Java">
+                        <![CDATA[
+                            String resultDirection = "N";
+
+                            int xCurrent = (int)((PhysicalAgentObject)this.getAgentObject()).getX();
+                            int yCurrent = (int)((PhysicalAgentObject)this.getAgentObject()).getY();
+
+                            long xD = xCurrent-objectPosition.getX();
+                            long yD = yCurrent-objectPosition.getY();
+
+                            // calculate the moving direction towards the object
+                            if(xD<0 && yD<0) {
+                                resultDirection = (Math.abs(xD)>Math.abs(yD) ? "N" : "E");
+                            }
+
+                            if(xD<0 && yD>0) {
+                                resultDirection = (Math.abs(xD)>Math.abs(yD) ? "S" : "E");
+                            }
+
+                            if(xD>0 && yD<0) {
+                                resultDirection = (Math.abs(xD)>Math.abs(yD) ? "N" : "W");
+                            }
+
+                            if(xD>0 && yD>0) {
+                                resultDirection = (Math.abs(xD)>Math.abs(yD) ? "S" : "W");
+                            }
+
+                            if(xD == 0) {
+                                resultDirection = (yD>0 ? "S" : "N");
+                            }
+
+                            if(yD == 0) {
+                                resultDirection = (xD>0 ? "W" : "E");
+                            }
+
+                            if(xD==0 && yD==0) {
+                                resultDirection = "X";
+                            }
+
+                            return resultDirection;
+                        ]]>
+                    </Body>
+                </SubjectiveFunction>
+
+                <!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->
+                <ReactionRule name="PrinceMoved_Rule" agentVariable="prince">
+                	<!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->
+                    <documentation>
+                        <dc:description>The Prince has performed the last move.</dc:description>
+                    </documentation>
+                    <WHEN  eventType="InMessageEvent" messageType="PrinceMoved"/>
+                	<DO>
+                    		<UPDATE-AGT>
+                       		 <SelfBeliefSlot property="moved" value="true"/>
+                        	 <SelfBeliefSlot property="foundKnight" value="false"/>
+                    		</UPDATE-AGT>
+                	</DO>
+                </ReactionRule>
+
+                <!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->
+                <ReactionRule name="KnightReplyAboutPosition_Rule" agentVariable="prince">
+                	<!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->
+                    <documentation>
+                        <dc:description>The asked Knight say the position of the next object</dc:description>
+                    </documentation>
+                    <WHEN  eventType="InMessageEvent" messageType="ReplyAboutCastleOrMagicObject" eventVariable="e"/>
+                    <IF language="Java">prince.getId() != e.getSenderIdRef()</IF>
+                	<THEN>
+                    		<UPDATE-AGT>
+                        		<UpdateComplexDataPropertyValue complexDataProperty="knownObjectPosition" procedure="updateObjectPosition">
+                            			<Argument>
+                                			<ValueExpr language="Java">((ReplyAboutCastleOrMagicObject)e.getMessage()).getAnswer().getX()</ValueExpr>
+                            			</Argument>
+                            			<Argument>
+                                			<ValueExpr language="Java">((ReplyAboutCastleOrMagicObject)e.getMessage()).getAnswer().getY()</ValueExpr>
+                            			</Argument>
+                        		</UpdateComplexDataPropertyValue>
+                        		<SelfBeliefSlot property="knownPosition" value="true"/>
+                    		</UPDATE-AGT>
+                	</THEN>
+                </ReactionRule>
+
+                <!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->
+                <ReactionRule name="MoveToKnownPosition_Rule" agentVariable="prince">
+                	<!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->
+                    <documentation>
+                        <dc:description>
+                            The Prince moves to the already known position of the MagicObject or castle
+                        </dc:description>
+                    </documentation>
+                    <ON-EACH-SIMULATION-STEP/>
+                    <IF language="Java">
+                        <![CDATA[  isKnownPosition() && prince.isMoved() ]]>
+                    </IF>
+                	<THEN>
+                    		<UPDATE-AGT>
+                       		 <SelfBeliefSlot property="moved" value="false"/>
+                    		</UPDATE-AGT>
+                    		<SCHEDULE-EVT>
+                        		<OutMessageEventExpr messageType="ReplyAboutCastleOrMagicObject">
+                            			<ReceiverIdRef language="Java">prince.getId()</ReceiverIdRef>
+                            			<Slot property="answer">
+                                			<ValueExpr language="Java"> prince.getKnownObjectPosition()</ValueExpr>
+                            			</Slot>
+                        		</OutMessageEventExpr>
+                    		</SCHEDULE-EVT>
+                	</THEN>
+                </ReactionRule>
+
+                <!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~-->
+                <ReactionRule name="KnightPerceptionCastle_Rule" agentVariable="prince">
+                	<!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~-->
+                    <documentation>
+                        <dc:description>The Prince sees a Knight and ask for castle direction (prince's power level is higher than demon's power level).</dc:description>
+                    </documentation>
+                    <WHEN eventType="PhysicalObjectPerceptionEvent" physicalObjectType="Knight" eventVariable="e"/>
+                    <IF language="Java">
+                        <![CDATA[
+                            prince.getPowerLevel() > ((DemonBelief)prince.getBeliefEntityById(1000)).getPowerLevel()
+                            && prince.isMoved() && !isKnownPosition()
+                        ]]>
+                    </IF>
+                	<THEN>
+                    		<UPDATE-AGT>
+                        		<SelfBeliefSlot property="foundKnight" value="true"/>
+                        		<SelfBeliefSlot property="moved" value="false"/>
+                    		</UPDATE-AGT>
+                    		<SCHEDULE-EVT>
+                        		<OutMessageEventExpr messageType="AskAboutCastleOrMagicObject">
+                            			<ReceiverIdRef language="Java">e.getPerceivedPhysicalObjectIdRef()</ReceiverIdRef>
+                            			<Slot property="queryLanguage" value="SPARQL"/>
+                            			<Slot property="queryString"
+                              			  value="SELECT ?x ?y WHERE {?c rdf:type :CastleBelief; :name 'MagicCastle'; :x ?x; :y ?y.}"/>
+                        		</OutMessageEventExpr>
+                    		</SCHEDULE-EVT>
+                	</THEN>
+                </ReactionRule>
+
+                <!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->
+                <ReactionRule name="KnightPerceptionRule_magic" agentVariable="prince">
+                	<!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->
+                    <documentation>
+                        <dc:description>The Prince sees a Knight and ask for magic object direction (prince's power level is lower than demon's power level).</dc:description>
+                    </documentation>
+                    <WHEN eventType="PhysicalObjectPerceptionEvent" physicalObjectType="Knight" eventVariable="e"/>
+                    <IF language="Java">
+                        <![CDATA[
+                            prince.getPowerLevel() <= ((DemonBelief)prince.getBeliefEntityById(1000)).getPowerLevel()
+                            && prince.isMoved() && !isKnownPosition()
+                        ]]>
+                    </IF>
+                	<THEN>
+                    		<UPDATE-AGT>
+                        		<SelfBeliefSlot property="foundKnight" value="true"/>
+                        		<SelfBeliefSlot property="moved" value="false"/>
+                    		</UPDATE-AGT>
+                    		<SCHEDULE-EVT>
+                        		<OutMessageEventExpr messageType="AskAboutCastleOrMagicObject">
+                            			<ReceiverIdRef language="Java">e.getPerceivedPhysicalObjectIdRef()</ReceiverIdRef>
+                            			<Slot property="queryLanguage" value="SPARQL"/>
+                            			<Slot property="queryString">
+                                			<ValueExpr language="Java">prince.getMagicObjectBeliefsQuery()</ValueExpr>
+                            			</Slot>
+                        		</OutMessageEventExpr>
+                    		</SCHEDULE-EVT>
+                	</THEN>
+                </ReactionRule>
+
+                <!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->
+                <ReactionRule name="MagicObjectPerceptionRule" agentVariable="prince">
+                	<!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->
+                    <documentation>
+                        <dc:description>The prince founds a magic object. Its power level is increased with the amount of magic given by this MagicObject.</dc:description>
+                    </documentation>
+                    <WHEN eventType="PhysicalObjectPerceptionEvent" physicalObjectType="MagicObject" eventVariable="e"/>
+                    <IF language="Java">
+                        <![CDATA[
+                            prince.getBeliefEntityById(e.getPerceivedPhysicalObject().getId()) == null
+                        ]]>
+                    </IF>
+                	<THEN>
+                    		<UPDATE-AGT>
+                        		<SelfBeliefSlot property="powerLevel">
+                            			<ValueExpr language="Java">
+                                			prince.getPowerLevel()+((MagicObject)e.getPerceivedPhysicalObject()).getMagicPowerLevel()
+                            			</ValueExpr>
+                        		</SelfBeliefSlot>
+                        		<SelfBeliefSlot property="knownPosition" value="false"/>
+                        		<CreateBeliefEntity >
+                            			<BeliefEntityIdRef language="Java">e.getPerceivedPhysicalObject().getId()</BeliefEntityIdRef>
+                            			<BeliefEntityType language="Java">"MagicObjectBelief"</BeliefEntityType>
+                            			<BeliefSlot property="x">
+                                			<ValueExpr language="Java">(long)e.getPerceivedPhysicalObject().getX()</ValueExpr>
+                            			</BeliefSlot>
+                            			<BeliefSlot property="y">
+                                			<ValueExpr language="Java">(long)e.getPerceivedPhysicalObject().getY()</ValueExpr>
+                            			</BeliefSlot>
+                        		</CreateBeliefEntity>
+                    		</UPDATE-AGT>
+                    		<SCHEDULE-EVT>
+                       		 <ActionEventExpr actionEventType="AquiredMagicObject">
+                            			<Slot property="magicObject">
+                                			<ValueExpr language="Java">(MagicObject)e.getPerceivedPhysicalObject()</ValueExpr>
+                            			</Slot>
+                        		</ActionEventExpr>
+                    		</SCHEDULE-EVT>
+                	</THEN>
+                </ReactionRule>
+
+                <!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->
+                <ReactionRule name="DemonPerceptionAndWin_Rule" agentVariable="prince">
+                	<!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->
+                    <documentation>
+                        <dc:description>The prince sees the demon. It has enough power to defeat it.</dc:description>
+                    </documentation>
+                    <WHEN eventType="PhysicalObjectPerceptionEvent" physicalObjectType="Demon" eventVariable="e"/>
+                    <IF language="Java">
+                        <![CDATA[
+                            prince.getPowerLevel() > ((DemonBelief)prince.getBeliefEntityById(e.getPerceivedPhysicalObjectIdRef())).getPowerLevel()
+                        ]]>
+                    </IF>
+                	<THEN>
+                    		<SCHEDULE-EVT>
+                        		<ActionEventExpr actionEventType="WinGame">
+                            			<Slot property="demon">
+                                			<ValueExpr language="Java">(Demon)e.getPerceivedPhysicalObject()</ValueExpr>
+                            			</Slot>
+                        		</ActionEventExpr>
+                    		</SCHEDULE-EVT>
+                	</THEN>
+                </ReactionRule>
+
+            	<!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->
+                <ReactionRule name="DemonPerceptionLose_Rule" agentVariable="prince">
+                	<!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->
+                    <documentation>
+                        <dc:description>The prince sees the demon. It has not enough power to defeat it.</dc:description>
+                    </documentation>
+                    <WHEN eventType="PhysicalObjectPerceptionEvent" physicalObjectType="Demon" eventVariable="e"/>
+                    <IF language="Java">
+                        <![CDATA[
+                            prince.getPowerLevel() <= ((DemonBelief)prince.getBeliefEntityById(e.getPerceivedPhysicalObjectIdRef())).getPowerLevel()
+                        ]]>
+                    </IF>
+                	<THEN>
+                    		<SCHEDULE-EVT>
+                        		<ActionEventExpr actionEventType="LoseGame"/>
+                    		</SCHEDULE-EVT>
+                	</THEN>
+                </ReactionRule>
+
+            	<!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->
+                <ReactionRule name="NoPerception_OldCell" agentVariable="prince">
+                	<!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->
+                    <documentation>
+                        <dc:description>If nothing in the current cell and the prince was here before then calculate his next move.</dc:description>
+                    </documentation>
+                		<ON-EACH-SIMULATION-STEP/>
+                    <IF language="Java">
+                        <![CDATA[  !prince.isFoundKnight() && prince.isMoved() && !isKnownPosition()
+                            && prince.getBeliefEntityById(50000
+                                + Long.parseLong(
+                                + (long)((PhysicalAgentObject)this.getAgentSubject().getAgentObject()).getX()
+                                + "" + (long)((PhysicalAgentObject)this.getAgentSubject().getAgentObject()).getY())) != null ]]>
+                    </IF>
+                	<THEN>
+                    		<UPDATE-AGT>
+                        		<SelfBeliefSlot property="moved" value="false"/>
+                    		</UPDATE-AGT>
+                    		<SCHEDULE-EVT>
+                        		<OutMessageEventExpr messageType="ReplyAboutCastleOrMagicObject">
+                            			<ReceiverIdRef language="Java">prince.getId()</ReceiverIdRef>
+                            			<Slot property="answer">
+                            				<ValueExpr language="Java"><![CDATA[ prince.computeRandomMove(50000 +
+                                    			Integer.parseInt(
+                                    			+ (int)((PhysicalAgentObject)this.getAgentSubject().getAgentObject()).getX()
+                                    			+ "" + (int)((PhysicalAgentObject)this.getAgentSubject().getAgentObject()).getY())) ]]>
+                                			</ValueExpr>
+                            			</Slot>
+                        		</OutMessageEventExpr>
+                    		</SCHEDULE-EVT>
+                	</THEN>
+                </ReactionRule>
+
+            	<!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->
+                <ReactionRule name="NoPerception_NewCell" agentVariable="prince">
+                	<!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->
+                    <documentation>
+                        <dc:description>If nothing in the current cell and the prince was not here before then calculate his next move.</dc:description>
+                    </documentation>
+                		<ON-EACH-SIMULATION-STEP/>
+                    <IF language="Java">
+                        <![CDATA[  !prince.isFoundKnight() && prince.isMoved() && !isKnownPosition()
+                            && prince.getBeliefEntityById(50000
+                                + Long.parseLong(
+                                + (long)((PhysicalAgentObject)this.getAgentSubject().getAgentObject()).getX()
+                                + "" + (long)((PhysicalAgentObject)this.getAgentSubject().getAgentObject()).getY())) == null  ]]>
+                    </IF>
+                	<THEN>
+                    		<UPDATE-AGT>
+                        		<SelfBeliefSlot property="moved" value="false"/>
+                        		<CreateBeliefEntity beliefEntityType="CellBelief">
+                        			<BeliefEntityIdRef language="Java"><![CDATA[ 50000
+                                			+ Long.parseLong(
+                                			+ (long)((PhysicalAgentObject)this.getAgentSubject().getAgentObject()).getX()
+                                			+ "" + (long)((PhysicalAgentObject)this.getAgentSubject().getAgentObject()).getY()) ]]>
+                                
+                            			</BeliefEntityIdRef>
+                            			<BeliefSlot property="x">
+                                			<ValueExpr language="Java">((PhysicalAgentObject)this.getAgentSubject().getAgentObject()).getX()</ValueExpr>
+                            			</BeliefSlot>
+                            			<BeliefSlot property="y">
+                                			<ValueExpr language="Java">((PhysicalAgentObject)this.getAgentSubject().getAgentObject()).getY()</ValueExpr>
+                            			</BeliefSlot>
+                        		</CreateBeliefEntity>
+                    		</UPDATE-AGT>
+                    		<SCHEDULE-EVT>
+                        		<OutMessageEventExpr messageType="ReplyAboutCastleOrMagicObject">
+                            			<ReceiverIdRef language="Java">prince.getId()</ReceiverIdRef>
+                            			<Slot property="answer">
+                            				<ValueExpr language="Java"><![CDATA[ prince.computeRandomMove(50000
+                                    				+ Integer.parseInt(
+                                    				+ (int)((PhysicalAgentObject)this.getAgentSubject().getAgentObject()).getX()
+                                    				+ "" + (int)((PhysicalAgentObject)this.getAgentSubject().getAgentObject()).getY()))	]]>      
+                                			</ValueExpr>
+                            			</Slot>
+                        		</OutMessageEventExpr>
+                    		</SCHEDULE-EVT>
+                	</THEN>
+                </ReactionRule>
+
+                <!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->
+                <ReactionRule name="Direction_E" agentVariable="prince">
+                	<!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->
+                    <documentation>
+                        <dc:description>The prince has to move one step to East</dc:description>
+                    </documentation>
+                    <WHEN eventType="InMessageEvent" messageType="ReplyAboutCastleOrMagicObject" eventVariable="e"/>
+                    <IF language="Java">computeNextMove(((ReplyAboutCastleOrMagicObject)e.getMessage()).getAnswer()).equals("E")</IF>
+                	<THEN>
+                		<SCHEDULE-EVT>
+                			<ActionEventExpr actionEventType="Move">
+                				<Slot property="directionType">
+                					<ValueExpr language="Java">DirectionType.EAST</ValueExpr>
+                				</Slot>
+                				<Slot property="x" value="1"/>
+                				<Slot property="y" value="0"/>
+                			</ActionEventExpr>
+                		</SCHEDULE-EVT>
+                	</THEN>
+                </ReactionRule>
+
+                <!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->
+                <ReactionRule name="Direction_W" agentVariable="prince">
+                	<!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->
+                    <documentation>
+                        <dc:description>The prince has to move one step to West</dc:description>
+                    </documentation>
+                    <WHEN eventType="InMessageEvent" messageType="ReplyAboutCastleOrMagicObject" eventVariable="e"/>
+                    <IF language="Java">computeNextMove(((ReplyAboutCastleOrMagicObject)e.getMessage()).getAnswer()).equals("W")</IF>
+                	<THEN>
+                		<SCHEDULE-EVT>
+                			<ActionEventExpr actionEventType="Move">
+                				<Slot property="directionType">
+                					<ValueExpr language="Java">DirectionType.WEST</ValueExpr>
+                				</Slot>
+                				<Slot property="x" value="-1"/>
+                				<Slot property="y" value="0"/>
+                			</ActionEventExpr>
+                		</SCHEDULE-EVT>
+                	</THEN>
+                </ReactionRule>
+
+                <!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->
+                <ReactionRule name="Direction_S" agentVariable="prince">
+                	<!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->
+                    <documentation>
+                        <dc:description>The prince has to move one step to South</dc:description>
+                    </documentation>
+                    <WHEN eventType="InMessageEvent" messageType="ReplyAboutCastleOrMagicObject" eventVariable="e"/>
+                    <IF language="Java">computeNextMove(((ReplyAboutCastleOrMagicObject)e.getMessage()).getAnswer()).equals("S")</IF>
+                	<THEN>
+                		<SCHEDULE-EVT>
+                			<ActionEventExpr actionEventType="Move">
+                				<Slot property="directionType">
+                					<ValueExpr language="Java">DirectionType.SOUTH</ValueExpr>
+                				</Slot>
+                				<Slot property="x" value="0"/>
+                				<Slot property="y" value="-1"/>
+                			</ActionEventExpr>
+                		</SCHEDULE-EVT>
+                	</THEN>
+                </ReactionRule>             
+
+                <!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->
+                <ReactionRule name="Direction_N" agentVariable="prince">
+                	<!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->
+                    <documentation>
+                        <dc:description>The prince has to move one step to North</dc:description>
+                    </documentation>
+                    <WHEN eventType="InMessageEvent" messageType="ReplyAboutCastleOrMagicObject" eventVariable="e"/>
+                    <IF language="Java">computeNextMove(((ReplyAboutCastleOrMagicObject)e.getMessage()).getAnswer()).equals("N")</IF>
+                	<THEN>
+                		<SCHEDULE-EVT>
+                			<ActionEventExpr actionEventType="Move">
+                				<Slot property="directionType">
+                					<ValueExpr language="Java">DirectionType.NORTH</ValueExpr>
+                				</Slot>
+                				<Slot property="x" value="0"/>
+                				<Slot property="y" value="1"/>
+                			</ActionEventExpr>
+                		</SCHEDULE-EVT>
+                	</THEN>
+                </ReactionRule>
+            </PhysicalAgentType>
+
+            <!-- =================================================== -->
+            <PhysicalAgentType name="Knight" idPerceivable="true">
+            	<!-- =================================================== -->
+                <!-- Castle belief entity type -->
+                <BeliefEntityType name="CastleBelief">
+                    <BeliefAttribute name="x" type="Integer"/>
+                    <BeliefAttribute name="y" type="Integer"/>
+                </BeliefEntityType>
+
+                <!-- MagicObject belief entity type -->
+                <BeliefEntityType name="MagicObjectBelief">
+                    <BeliefAttribute name="x" type="Integer"/>
+                    <BeliefAttribute name="y" type="Integer"/>
+                </BeliefEntityType>
+
+                <SubjectiveFunction name="computeAnswer" resultType="ObjectPosition">
+                    <Parameter name="requestQuery" type="String"/>
+                    <Body language="Java">
+                        <![CDATA[
+                            // execute the SPARQL query in top of beliefs
+                            java.util.List<java.util.HashMap<String, String>> results = this.executeQuery(requestQuery);
+
+                            // the final direction for moving the prince
+                            String resultDirection = null;
+
+                            int xCurrent = (int)((PhysicalAgentObject)this.getAgentObject()).getX();
+                            int yCurrent = (int)((PhysicalAgentObject)this.getAgentObject()).getY();
+
+                            int xD = 0, yD = 0;
+                            int x = 0, y = 0;
+
+                            //calculate the nearest object
+                            for(int k=0; k<results.size();k++) {
+                                int xFinal = Integer.parseInt(results.get(k).get("x"));
+                                int yFinal = Integer.parseInt(results.get(k).get("y"));
+
+                                if ((xD==0 && yD==0) || ( Math.abs(xD) + Math.abs(yD) > Math.abs(xCurrent-xFinal) + Math.abs(yCurrent-yFinal))) {
+                                    xD = xCurrent-xFinal;
+                                    yD = yCurrent-yFinal;
+                                    x = xFinal;
+                                    y = yFinal;
+                                }
+                            }
+
+                            System.out.println(" ==> Knight" + this.getId() + " said: go to (" + x + ", " + y + ")");
+
+                            ObjectPosition pos = new ObjectPosition();
+                            pos.setX(x);
+                            pos.setY(y);
+
+                            return pos;
+                        ]]>
+                    </Body>
+                </SubjectiveFunction>
+
+                <!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->
+                <ReactionRule name="AskRule" agentVariable="knight">
+                	<!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->
+                    <documentation>
+                        <dc:description> The prince ask about the castle or magic object direction </dc:description>
+                    </documentation>
+                    <WHEN eventType="InMessageEvent" messageType="AskAboutCastleOrMagicObject" eventVariable="e"/>
+                	<DO>
+                    		<SCHEDULE-EVT>
+                        		<OutMessageEventExpr messageType="ReplyAboutCastleOrMagicObject">
+                            			<ReceiverIdRef language="Java">e.getSenderIdRef()</ReceiverIdRef>
+                            			<Slot property="answer">
+                                			<ValueExpr language="Java">knight.computeAnswer(((AskAboutCastleOrMagicObject)e.getMessage()).getQueryString())</ValueExpr>
+                            			</Slot>
+                        		</OutMessageEventExpr>
+                    		</SCHEDULE-EVT>
+                	</DO>
+                </ReactionRule>
+            </PhysicalAgentType>
+        </EntityTypes>
+      
+        <EnvironmentRules>
+        	<!-- =================================================== -->
+        	<EnvironmentRule name="Move_Rule">
+        		<!-- =================================================== -->
+        		<documentation>
+        			<description>The Prince is moving one step.</description>
+        		</documentation>
+        		<WHEN eventType="Move" eventVariable="e"/>
+        		<FOR objectType="Prince" objectVariable="p">
+        			<ObjectRef language="Java">e.getActor()</ObjectRef>
+        		</FOR>
+        		<FOR dataType="Integer" dataVariable="newX">
+        			<ValueExpr language="Java">e.getX()</ValueExpr>
+        		</FOR>
+        		<FOR dataType="Integer" dataVariable="newY">
+        			<ValueExpr language="Java">e.getY()</ValueExpr>
+        		</FOR>
+        		<DO>
+        			<SCHEDULE-EVT>
+        				<InMessageEventExpr messageType="PrinceMoved" receiverIdRefs="2" senderIdRef="0"/>
+        			</SCHEDULE-EVT>
+        		</DO>
+        		<IF language="Java">e.getDirectionType() == DirectionType.EAST || e.getDirectionType() == DirectionType.WEST</IF>
+        		<THEN>
+        			<UPDATE-ENV>
+        				<UpdateObject objectVariable="p">
+        					<Slot property="x">
+        						<ValueExpr language="Java">Simulator.spaceModel.newX(p,newX)</ValueExpr>
+        					</Slot>
+        				</UpdateObject>
+        			</UPDATE-ENV>
+        		</THEN>
+        		<ELSE>
+        			<UPDATE-ENV>
+        				<UpdateObject objectVariable="p">
+        					<Slot property="y">
+        						<ValueExpr language="Java">Simulator.spaceModel.newY(p,newY)</ValueExpr>
+        					</Slot>
+        				</UpdateObject>
+        			</UPDATE-ENV>
+        		</ELSE>
+        	</EnvironmentRule>
+
+        	<!-- ========================================= -->
+              <EnvironmentRule name="AquiredMagicObjectRule">
+            	<!-- ========================================= -->
+                <documentation>
+                    <dc:description>A magic object was found. It is destroyed from the map.</dc:description>
+                </documentation>
+                <WHEN eventType="AquiredMagicObject" eventVariable="e"/>
+                <FOR objectVariable="mo" objectType="MagicObject">
+                    <ObjectRef language="Java">e.getMagicObject()</ObjectRef>
+                </FOR>
+            	<DO>
+                	<UPDATE-ENV>
+                    		<DestroyObject objectType="MagicObject" objectVariable="mo"/>
+                	</UPDATE-ENV>
+            	</DO>
+            </EnvironmentRule>
+
+        	<!-- ========================================= -->
+              <EnvironmentRule name="WinGameRule">
+            	<!-- ========================================= -->
+                <documentation>
+                    <dc:description>The prince defeat the demon.</dc:description>
+                </documentation>
+                <WHEN eventType="WinGame" eventVariable="e"/>
+                <FOR objectVariable="d" objectType="Demon">
+                    <ObjectRef language="Java">e.getDemon()</ObjectRef>
+                </FOR>
+            	<DO>
+                	<UPDATE-ENV>
+                    		<DestroyObject objectType="Demon" objectVariable="d"/>
+                	</UPDATE-ENV>
+            		<SCHEDULE-EVT>
+            			<CausedEventExpr eventType="StopSimulation"/>
+            		</SCHEDULE-EVT>
+            	</DO>
+            </EnvironmentRule>
+
+        	<!-- ========================================= -->
+                <EnvironmentRule name="LoseGameRule">
+            	<!-- ========================================= -->
+                <documentation>
+                    <dc:description>The prince dies.</dc:description>
+                </documentation>
+                <WHEN eventType="LoseGame" eventVariable="e"/>
+                <FOR objectVariable="p" objectType="Prince">
+                    <ObjectRef language="Java">e.getActor()</ObjectRef>
+                </FOR>
+                <DO>
+                	<UPDATE-ENV>
+                    		<DestroyObject objectType="Prince" objectVariable="p"/>
+                	</UPDATE-ENV>
+                	<SCHEDULE-EVT>
+                   		 <CausedEventExpr eventType="StopSimulation"/>
+                	</SCHEDULE-EVT>
+                </DO>
+            </EnvironmentRule>
+        </EnvironmentRules>
+    </SimulationModel>
+
+    <!-- ========================================= -->
+    <InitialState>
+    <!-- ======================================================== -->
+    	<PhysicalObject type="Castle" id="1" name="MagicCastle" x="12" y="12" width="1" height="1"/>
+    	<!-- ======================================================== -->
+    	
+    	<!-- ============================================================================== -->
+    	<PhysicalAgent type="Demon" id="1000" name="EvilDemon" x="12" y="12" width="1" height="1" ignorePositionConstraint="true">
+    		<!-- =========================================================================== -->
+        <Slot property="powerLevel">
+          <ValueExpr language="Java">500</ValueExpr>
+        </Slot>
+    	</PhysicalAgent>
+    	
+    	<!-- ========================================= -->
+        <PhysicalObject type="MagicObject" id="501" x="9" y="6" width="1" height="1">
+    		<!-- ========================================= -->
+        <Slot property="magicPowerLevel">
+          <ValueExpr language="Java">150</ValueExpr>
+        </Slot>
+    	</PhysicalObject>
+    	
+    	<!-- ========================================= -->
+    	<PhysicalObject type="MagicObject" id="502" x="21" y="16" width="1" height="1">
+    		<!-- ========================================= -->
+        <Slot property="magicPowerLevel">
+          <ValueExpr language="Java">150</ValueExpr>
+        </Slot>
+    	</PhysicalObject>
+    	
+    	<!-- ========================================= -->
+        <PhysicalObject type="MagicObject" id="503" x="5" y="21" width="1" height="1">
+    		<!-- ========================================= -->
+        <Slot property="magicPowerLevel">
+          <ValueExpr language="Java">150</ValueExpr>
+        </Slot>
+    	</PhysicalObject>
+    	
+    	<!-- ========================================= -->
+        <PhysicalObject type="MagicObject" id="504" x="23" y="3" width="1" height="1">
+    		<!-- ========================================= -->
+        <Slot property="magicPowerLevel">
+          <ValueExpr language="Java">150</ValueExpr>
+        </Slot>
+      </PhysicalObject>
+
+    	<!-- ===================================================================== -->
+    	<PhysicalAgent type="Prince" id="2" x="15" y="15" ignorePositionConstraint="true" width="1" height="1">
+    		<!-- ================================================================== -->
+        <SelfBeliefSlot property="powerLevel" value="100"/>
+        <SelfBeliefSlot property="foundKnight" value="false"/>
+        <SelfBeliefSlot property="moved" value="true"/>
+        <SelfBeliefSlot property="knownPosition" value="false"/>
+    		
+        <BeliefEntity type="DemonBelief" idRef="1000">
+          <BeliefSlot property="name" value="EvilDemon"/>
+          <BeliefSlot property="powerLevel" value="500"/>
+        </BeliefEntity>
+      </PhysicalAgent>
+
+    	<!-- ====================================================================== -->
+      <PhysicalAgents type="Knight" rangeStartID="81" rangeEndID="151" hasRandomPosition="true" width="1">
+      	<!-- ===================================================================== -->
+        <BeliefEntity type="CastleBelief" idRef="1">
+          <BeliefSlot property="name" value="MagicCastle"/>
+          <BeliefSlot property="x" value="12"/>
+          <BeliefSlot property="y" value="12"/>
+        </BeliefEntity>
+      	
+        <BeliefEntity type="MagicObjectBelief" idRef="501">
+          <BeliefSlot property="name" value="MagicObject_1"/>
+          <BeliefSlot property="x" value="9"/>
+          <BeliefSlot property="y" value="6"/>
+        </BeliefEntity>
+      	
+        <BeliefEntity type="MagicObjectBelief" idRef="502">
+           <BeliefSlot property="name" value="MagicObject_2"/>
+           <BeliefSlot property="x" value="21"/>
+           <BeliefSlot property="y" value="16"/>
+        </BeliefEntity>
+      	
+         <BeliefEntity type="MagicObjectBelief" idRef="503">
+           <BeliefSlot property="name" value="MagicObject_3"/>
+           <BeliefSlot property="x" value="5"/>
+           <BeliefSlot property="y" value="21"/>
+         </BeliefEntity>
+      	
+         <BeliefEntity type="MagicObjectBelief" idRef="504">
+           <BeliefSlot property="name" value="MagicObject_4"/>
+           <BeliefSlot property="x" value="23"/>
+           <BeliefSlot property="y" value="3"/>
+         </BeliefEntity>
+       </PhysicalAgents>
+    </InitialState>
+
+	<!-- =================================================================== -->
+	<UserInterface>
+	<!-- =================================================================== -->
+	   
+	    
+	    <InitialStateUI>
+			<!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->
+			<ObjectUI objectType="Castle" nmrOfInstances="1">
+			<!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->
+				<PropertyUI property="x">
+					<Label>
+						<Text xml:lang="en">Position x-coordinate</Text>
+					</Label>
+					<Hint>
+						<Text xml:lang="en">What is the x-coordinate of the castle's position?</Text>
+					</Hint>				
+				</PropertyUI>
+				<PropertyUI property="y">
+					<Label>
+						<Text xml:lang="en">Position y-coordinate</Text>
+					</Label>
+					<Hint>
+						<Text xml:lang="en">What is the y-coordinate of the castle's position?</Text>
+					</Hint>				
+				</PropertyUI>
+			</ObjectUI>
+			<!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->
+			<ObjectUI objectType="MagicObject" nmrOfInstances="4">
+			<!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->
+				<PropertyUI property="x">
+					<Label>
+						<Text xml:lang="en">Position x-coordinate</Text>
+					</Label>
+					<Hint>
+						<Text xml:lang="en">What is the x-coordinate of the castle's position?</Text>
+					</Hint>				
+				</PropertyUI>
+				<PropertyUI property="y">
+					<Label>
+						<Text xml:lang="en">Position y-coordinate</Text>
+					</Label>
+					<Hint>
+						<Text xml:lang="en">What is the y-coordinate of the castle's position?</Text>
+					</Hint>				
+				</PropertyUI>
+				<PropertyUI property="magicPowerLevel">
+					<Label>
+						<Text xml:lang="en">Level of magic power</Text>
+					</Label>
+					<Hint>
+						<Text xml:lang="en">What is the level of the magic power of the magic object?</Text>
+					</Hint>				
+				</PropertyUI>
+			</ObjectUI>
+			<!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->
+			<AgentUI agentType="Prince" nmrOfInstances="1">
+			<!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->
+				<PropertyUI property="x">
+					<Label>
+						<Text xml:lang="en">Position x-coordinate</Text>
+					</Label>
+					<Hint>
+						<Text xml:lang="en">What is the x-coordinate of the castle's position?</Text>
+					</Hint>				
+				</PropertyUI>
+				<PropertyUI property="y">
+					<Label>
+						<Text xml:lang="en">Position y-coordinate</Text>
+					</Label>
+					<Hint>
+						<Text xml:lang="en">What is the y-coordinate of the castle's position?</Text>
+					</Hint>				
+				</PropertyUI>
+				<SelfBeliefPropertyUI property="powerLevel">
+					<Label>
+						<Text xml:lang="en">Level of power</Text>
+					</Label>
+					<Hint>
+						<Text xml:lang="en">What is the level of the prince's power?</Text>
+					</Hint>				
+				</SelfBeliefPropertyUI>
+				<BeliefEntityUI beliefEntityType="DemonBelief" nmrOfInstances="1">
+					<BeliefPropertyUI property="name">
+						<Label>
+							<Text xml:lang="en">Name</Text>
+						</Label>
+						<Hint>
+							<Text xml:lang="en">What is the name of the demon?</Text>
+						</Hint>				
+					</BeliefPropertyUI>
+					<BeliefPropertyUI property="powerLevel">
+						<Label>
+							<Text xml:lang="en">Level of power</Text>
+						</Label>
+						<Hint>
+							<Text xml:lang="en">What is the level of the demon's power?</Text>
+						</Hint>				
+					</BeliefPropertyUI>
+				</BeliefEntityUI>
+			</AgentUI>
+	    </InitialStateUI>
+	    
+	    <AnimationUI introSoundFile="background_1.mid">
+	        <Views>
+	            <SpaceView canvasColor="grey">
+	                <TwoDimensionalGridSpaceView2D backgroundColor="lightgrey"/>
+	            </SpaceView>
+	            <PhysicalObjectView physicalObjectType="Castle">
+	                <PhysicalShape2D>
+	                    <Rectangle fill="blue"/>
+	                </PhysicalShape2D>
+	            </PhysicalObjectView>
+	            <PhysicalObjectView physicalObjectType="MagicObject">
+	                <PhysicalShape2D>
+	                    <Rectangle fill="yellow"/>
+	                </PhysicalShape2D>
+	            </PhysicalObjectView>
+	            <PhysicalObjectView physicalObjectType="Knight">
+	                <PhysicalShape2D>
+	                    <Circle fill="green"/>
+	                </PhysicalShape2D>
+	            </PhysicalObjectView>
+	            <PhysicalObjectView physicalObjectType="Prince">
+	                <PhysicalShape2D>
+	                    <Circle fill="red"/>
+	                </PhysicalShape2D>
+	            </PhysicalObjectView>
+	            <PhysicalObjectView physicalObjectType="Demon">
+	                <PhysicalShape2D>
+	                    <Circle fill="black"/>
+	                </PhysicalShape2D>
+	            </PhysicalObjectView>
+	            <EventAppearance eventType="AquiredMagicObject" duration="600">
+	                <MidiSound instrumentNo="10" noteSequence="96/300"/>
+	            </EventAppearance>
+	            <EventAppearance eventType="WinGame" duration="1000">
+	                <MidiSound instrumentNo="20" noteSequence="80/300"/>
+	            </EventAppearance>
+	            <EventAppearance eventType="LoseGame" duration="1000">
+	                <MidiSound instrumentNo="20" noteSequence="60/300"/>
+	            </EventAppearance>
+	        </Views>
+	    </AnimationUI>
+	</UserInterface>
+</SimulationScenario>

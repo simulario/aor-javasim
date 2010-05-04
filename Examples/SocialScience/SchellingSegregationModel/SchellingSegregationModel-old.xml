@@ -1,0 +1,192 @@
+<?xml-stylesheet type="text/xsl" href="prettyprint.xsl"?>
+<SimulationScenario version="0.8.1" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://aor-simulation.org ../../../ext/aorsl/ersl/ERSL-0-8-1.xsd" xmlns="http://aor-simulation.org" xmlns:aors="http://aor-simulation.org" xmlns:dc="http://purl.org/dc/elements/1.1/" scenarioName="SchellingSegregationModel" scenarioTitle="Schelling Segregation Model" simulationManagerDirectory="../../..">
+ <SimulationParameters simulationSteps="10" stepDuration="1" timeUnit="M" stepTimeDelay="50"/>
+ <SimulationModel modelName="SchellingSegregationModel" modelTitle="Schelling Segregation Model">
+  <documentation>
+   <dc:created>20090301</dc:created>
+   <dc:creator>Gabriel Diaconita</dc:creator>
+   <dc:creator>Gerd Wagner</dc:creator>
+   <dc:modified>20090616</dc:modified>
+   <description xmlns:h="http://www.w3.org/1999/xhtml"><h:p>Thomas C. Schelling, who is a co-recipient of the 2005 Nobel Prize in Economics, published a paper proposing a theory about the persistence of racial or ethnic segregation despite an environment of growing tolerance ("Dynamic Models of Segregation", Journal of Mathematical Sociology 1, 1971, 143-186.). He suggested that even if individuals tolerate racial diversity, if they also remain uneasy about being a minority in the locality, segregation will still be the equilibrium situation.</h:p><h:p>Schelling placed pennies and dimes on a chess board and moved them around according to various rules. He interpreted the board as a city, with each square of the board representing a house or a lot. He interpreted the pennies and dimes as residents representing any two groups in society, such as two different races of people, boys and girls, smokers and non-smokers, etc. The neighborhood of a resident occupying any location on the board consisted of the squares adjacent to this location. Thus, interior (non-edge) residents could have up to eight neighbors, non-corner edge residents could have a maximum of five neighbors, and corner edge residents could have a maximum of three neighbors. Rules could be specified that determined whether a particular resident was happy in its current location. If it was unhappy, it would try to move to another location on the board, or possibly just exit the board entirely. As can be expected, Schelling found that the board quickly evolved into a strongly segregated location pattern if the residents' &quot;happiness rules&quot; were specified so that segregation was heavily favored. Surprisingly, however, he also found that initially integrated boards tipped into full segregation even if the residents' happiness rules expressed only a mild preference for having neighbors of their own type.</h:p><h:p>This problem description has been extracted from the paper <h:a href="http://www.soc.surrey.ac.uk/staff/ngilbert/ngpub/paper148_NG.pdf">Varieties of Emergence</h:a> by Nigel Gilbert and from the page <h:a href="http://www.econ.iastate.edu/tesfatsi/abmread.htm#Modeling">On-Line Guide for Newcomers to Agent-Based Modeling in the Social Sciences</h:a> by Robert Axelrod and Leigh Tesfatsion.</h:p>
+   </description>
+  </documentation>
+  
+  <SpaceModel dimensions="2" geometry="Euclidean" discrete="true" xMax="50" yMax="50" gridCellMaxOccupancy="1">
+    <GridCellProperty name="kindOfResident" type="Integer"/>
+  </SpaceModel>
+  
+<EntityTypes>
+	<ExogenousEventType name="CheckHappiness">
+		<Periodicity language="Java">1</Periodicity>
+	</ExogenousEventType>
+	<!-- =================================================================== -->
+	<PhysicalObjectType name="Resident">
+	<!-- =================================================================== -->
+		<Attribute type="Integer" name="kind"/>
+	<!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->
+		<Function name="wouldBeHappy" resultType="Boolean">
+	<!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->
+		<documentation><dc:description>This function checks if a resident will be happy in a potential new location given by the (newX,newY) parameters. A value of 1 for the parameter radius means to check just th direct neighbours (at most 8), a value of 2 means level 2 neighbours (at most 8+16), etc.</dc:description></documentation>
+			<Parameter name="newX" type="int"/>
+			<Parameter name="newY" type="int"/>
+			<Parameter name="radius" type="int"/>
+			<Body language="Java"><![CDATA[
+int neighboursCount = 0, myKindNeighboursCount = 0, kind = -1;
+int xMax = (int) Simulator.spaceModel.getXMax();
+int yMax = (int) Simulator.spaceModel.getYMax();
+// we look for neighbours in the specified radius making sure we don't check the current location
+for (int x = newX - radius; x <= newX + radius; x++)
+	for (int y = newY - radius; y <= newY + radius; y++)
+		if (x >= 1 && x <= xMax && y >= 1 && y <= yMax 
+				&& !(x == this.getX() && y == this.getY()) && !(x == newX && y == newY)) {
+			kind = (int) Simulator.spaceModel.getGridCell(x, y).getKindOfResident();
+			if (kind != -1) neighboursCount++;
+			if (kind == (int) this.getKind()) 	myKindNeighboursCount++;
+		}
+return neighboursCount == 0 || myKindNeighboursCount >= this.intolerance() * neighboursCount; 
+			]]></Body>
+		</Function>
+	<!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->
+	<Function name="intolerance" resultType="Float">
+	<!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->
+		<Body language="Java"><![CDATA[
+float intolerance = 0.2f;
+int value = (int) this.getKind();
+switch (value) {
+	case 0: intolerance = 0.2f; break;
+	case 1: intolerance = 0.2f; break;
+	case 2: intolerance = 0.7f; break;
+	case 3: intolerance = 0.7f; break;
+	case 4: intolerance = 0.7f; break;
+}
+return intolerance;
+		]]></Body>
+    </Function>
+	<!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->
+		<Function name="getFreeLocation" resultType="Position">
+	<!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->
+			<Body language="Java"><![CDATA[
+int xMax = (int) Simulator.spaceModel.getXMax();
+int yMax = (int) Simulator.spaceModel.getYMax();					
+int tempX, tempY; 
+int content;
+int search = 0;
+int noOfCells = xMax * yMax;
+Position location = null;
+Boolean found = false;
+while (search++ <= noOfCells*noOfCells && !found) {
+	tempX = Random.uniformInt( 1, xMax);
+	tempY = Random.uniformInt( 1, yMax);
+	content = (int) Simulator.spaceModel.getGridCell( tempX, tempY).getKindOfResident(); 
+	if ( !( tempX == this.getX() && tempY == this.getY()) 
+			&& content == -1 && wouldBeHappy( tempX, tempY, 1)) {
+		location = new Position( tempX, tempY);
+		found = true;
+	}
+}
+return location;
+			]]></Body>
+		</Function>
+	</PhysicalObjectType>
+</EntityTypes>
+
+<EnvironmentRules>
+   	<!-- =================================================================== -->
+	<EnvironmentRule name="IfUnhappyAndThereIsaSuitableLocationThenMove">
+	<!-- =================================================================== -->
+	<documentation><dc:description>If a resident is not happy AND there exists a free location where she would be happy, then she moves to this location. As a consequence, the currently occupied grid cell's kindOfResident value is set to -1 for indicating that the cell is now free, and the newly occupied grid cell's kindOfResident value is set to the kind value of the resident</dc:description></documentation>
+	<WHEN eventType="CheckHappiness" eventVariable="e"/>
+	<FOR objectVariable="resident" objectType="Resident"/>
+	<FOR  dataVariable="newLocation" refDataType="Position">
+		<ValueExpr language="Java">resident.getFreeLocation()</ValueExpr>
+	</FOR>
+	<IF language="Java">
+	! resident.wouldBeHappy( (int) resident.getX(), (int) resident.getY(), 1) &amp;&amp;  newLocation != null
+	</IF>
+	<UPDATE-ENV>
+		<UpdateGridCell>
+			<XCoordinate language="Java">(int) resident.getX()</XCoordinate>
+			<YCoordinate language="Java">(int) resident.getY()</YCoordinate>
+			<Slot xsi:type="aors:OpaqueExprSlot" property="kindOfResident">
+				<ValueExpr language="Java">-1</ValueExpr>
+			</Slot>
+		</UpdateGridCell>
+		<UpdateGridCell>
+			<XCoordinate language="Java">(int) newLocation.getX()</XCoordinate>
+			<YCoordinate language="Java">(int) newLocation.getY()</YCoordinate>
+			<Slot xsi:type="aors:OpaqueExprSlot" property="kindOfResident">
+				<ValueExpr language="Java">(int) resident.getKind()</ValueExpr>
+			</Slot>
+		</UpdateGridCell>
+		<UpdateObject objectVariable="resident">
+			<Slot xsi:type="aors:OpaqueExprSlot" property="x">
+				<ValueExpr language="Java">newLocation.getX()</ValueExpr>
+			</Slot>
+			<Slot xsi:type="aors:OpaqueExprSlot" property="y">
+				<ValueExpr language="Java">newLocation.getY()</ValueExpr>
+			</Slot>
+		</UpdateObject>
+	</UPDATE-ENV>
+	</EnvironmentRule>
+	<!-- =================================================================== -->
+   <EnvironmentRule name="IfUnhappyAndThereIsNoSuitableLocationThenLeave">
+	<!-- =================================================================== -->
+	<documentation><dc:description>If a resident is not happy AND there is no free location on which she would be happy, then she leaves the grid.</dc:description></documentation>
+	<WHEN eventType="CheckHappiness" eventVariable="e"/>
+	<FOR objectVariable="resident" objectType="Resident"/>
+	<IF language="Java">
+	! resident.wouldBeHappy( (int) resident.getX(), (int) resident.getY(), 1) &amp;&amp;  resident.getFreeLocation() == null
+	</IF>
+	<UPDATE-ENV>
+		<UpdateGridCell>
+			<XCoordinate language="Java">(int) resident.getX()</XCoordinate>
+			<YCoordinate language="Java">(int) resident.getY()</YCoordinate>
+			<Slot xsi:type="aors:OpaqueExprSlot" property="kindOfResident">
+				<ValueExpr language="Java">-1</ValueExpr>
+			</Slot>
+		</UpdateGridCell>
+		<DestroyObject objectType="Resident" objectVariable="resident"/>
+	</UPDATE-ENV>
+	</EnvironmentRule>
+</EnvironmentRules>
+ </SimulationModel>
+
+<!-- =================================================================== -->
+<InitialState>
+<!-- =================================================================== -->	 
+	<ExogenousEvent type="CheckHappiness" occurrenceTime="1"/>
+  
+	<PhysicalObjects type="Resident" rangeStartID="1" rangeEndID="350" hasRandomPosition="true">
+		<Slot xsi:type="aors:OpaqueExprSlot" property="kind">
+			<ValueExpr language="Java">Random.uniformInt(0, 4)</ValueExpr>
+		</Slot>
+	</PhysicalObjects>
+  
+	<GridCells>
+		<Slot xsi:type="aors:OpaqueExprSlot" property="kindOfResident">
+			<ValueExpr language="Java">-1</ValueExpr>
+		</Slot>
+	</GridCells>
+
+	<InitializationRule name="InitRule">
+	<documentation><dc:description>Create initial values for the grid cell property kindOfResident according to the resident that is initially occupying the cell.</dc:description></documentation>
+		<FOR objectVariable="resident" objectType="Resident"/>
+		<UpdateGridCell>
+			<XCoordinate language="Java">(int) resident.getX()</XCoordinate>
+			<YCoordinate language="Java">(int) resident.getY()</YCoordinate>
+			<Slot xsi:type="aors:OpaqueExprSlot" property="kindOfResident">
+				<ValueExpr language="Java">(int) resident.getKind()</ValueExpr>
+			</Slot>
+		</UpdateGridCell>
+	</InitializationRule>
+</InitialState>
+ 
+<!-- =================================================================== -->
+<Views>
+<!-- =================================================================== -->
+	<View physicalObjectType="Resident" shape2D="square">
+		<ShapeSlot shapeProperty="width" value="10"/>
+		<VisualizationMap shapeProperty="fill" property="kind" caseWise="true" v0="black" a0="1" v1="yellow" a1="2" v2="red" a2="3" v3="blue" a3="4"/>
+	</View>
+</Views>
+</SimulationScenario>

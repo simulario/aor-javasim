@@ -1,0 +1,383 @@
+<?xml version="1.0"?>
+<?xml-stylesheet type="text/xsl" href="prettyprint.xsl"?>
+
+<SimulationScenario version="0.7" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+  xsi:schemaLocation="http://aor-simulation.org ../../../ext/aorsl/AORSL-0-7.xsd"
+  xmlns="http://aor-simulation.org" xmlns:aors="http://aor-simulation.org"
+  xmlns:dc="http://purl.org/dc/elements/1.1/" scenarioName="BeerGame_NonPhysAgents"
+  scenarioTitle="BeerGame" simulationManagerDirectory="../../..">
+
+  <SimulationParameters simulationSteps="140" stepDuration="1" timeUnit="D" stepTimeDelay="10"/>
+
+  <SimulationModel modelName="BeerGame_NonPhysAgents" modelTitle="BeerGame">
+    <documentation>
+      <dc:description>This model describes the classical MIT Beer Game. It is a management
+        simulation with a beer supply chain consisting of four nodes: the Retailer, the Wholesaler,
+        the DistributionCenter and the Brewery. Every intermediate node has one upstream node to
+        order and receive beer from and one downstream node to receive orders from and to delivery
+        beer to. An order takes 7 days and a delivery takes 14 days. At the end of a week every node
+        decides how much beer to order and calculates its costs for current stock and outstanding
+        orders.</dc:description>
+      <dc:creator>Andreas Post</dc:creator>
+      <dc:contributor>Jens Werner</dc:contributor>
+      <dc:contributor>Gerd Wagner</dc:contributor>
+      <dc:modified>20090119</dc:modified>
+    </documentation>
+
+    <EntityTypes>
+
+      <!-- a perception for the lowest node in the chain that it receives a customer order -->
+      <MessageType name="Order">
+        <Attribute name="quantity" type="Integer"/>
+      </MessageType>
+
+      <MessageType name="BeerDelivery">
+        <Attribute name="quantity" type="Integer"/>
+      </MessageType>
+
+      <!-- the lowest node in the chain has no other node to receive orders from, 
+        thus it is necessary to create some customer orders from "outside" the simulation as periodic exogenous event -->
+      <ExogenousEventType name="CustomerDemand">
+        <Periodicity language="Java">7</Periodicity>
+      </ExogenousEventType>
+
+      <!-- =================================================== -->
+      <AgentType name="SupplyChainNode">
+        <!-- =================================================== -->
+        <!--  inventory: the current beer in stock  -->
+        <SelfBeliefAttribute name="inventory" type="Integer"/>
+        <!--  currentSalesOrderQuantity: the orders received in the current cycle  -->
+        <SelfBeliefAttribute name="currentSalesOrderQuantity" type="Integer"/>
+        <!--  backorderQuantity: orders of previous cycles that aren't fulfilled yet  -->
+        <SelfBeliefAttribute name="backorderQuantity" type="Integer"/>
+        <SelfBeliefAttribute name="costs" type="Float"/>
+        <SelfBeliefAttribute name="outDelivery" type="Integer"/>
+        <!-- periodic event that one simulated week is over -->
+        <PeriodicTimeEventType name="EndOfWeek">
+          <Periodicity language="Java">7</Periodicity>
+          <StopCondition language="Java">getOccurrenceTime() &gt; 140</StopCondition>
+        </PeriodicTimeEventType>
+        <!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->
+        <CommunicationRule name="IncomingBeerDeliveryRule" agentVariable="node">
+          <!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->
+          <documentation>
+            <dc:description>When a beer delivery message comes in, the inventory is incremented by
+              the quantity of delivered beer</dc:description>
+          </documentation>
+          <WHEN eventType="InMessageEvent" messageType="BeerDelivery" eventVariable="e"/>
+          <UPDATE-AGT>
+            <SelfBeliefSlot xsi:type="aors:OpaqueExprSlot" property="inventory">
+              <ValueExpr language="Java">node.getInventory() + ((BeerDelivery)
+                e.getMessage()).getQuantity()</ValueExpr>
+            </SelfBeliefSlot>
+          </UPDATE-AGT>
+        </CommunicationRule>
+        <!--
+        <CommunicationRule name="EndCustomerIncomingOrderRule" agentVariable="node">
+          <documentation><dc:description>When the Retailer (id=1) receives an order from the end customer, its currentSalesOrderQuantity is incremented by the ordered quantity.</dc:description></documentation>
+          <WHEN eventType="InMessageEvent" messageType="CustomerOrder" eventVariable="e"/>
+          <UpdateSubjectiveStateExpr>
+            <SelfBeliefSlot xsi:type="aors:OpaqueExprSlot" property="currentSalesOrderQuantity">
+              <ValueExpr language="Java">node.getCurrentSalesOrderQuantity() + ((CustomerOrder) e.getMessage()).getQuantity()</ValueExpr>
+            </SelfBeliefSlot>
+          </UpdateSubjectiveStateExpr>
+        </CommunicationRule>
+ -->
+        <!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->
+        <CommunicationRule name="IncomingOrderRule" agentVariable="node">
+          <!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->
+          <documentation>
+            <dc:description>When an order comes in; the currentSalesOrderQuantity is incremented by
+              the ordered quantity.</dc:description>
+          </documentation>
+          <WHEN eventType="InMessageEvent" messageType="Order" eventVariable="e"/>
+          <UPDATE-AGT>
+            <SelfBeliefSlot xsi:type="aors:OpaqueExprSlot" property="currentSalesOrderQuantity">
+              <ValueExpr language="Java">node.getCurrentSalesOrderQuantity() + ((Order)
+                e.getMessage()).getQuantity()</ValueExpr>
+            </SelfBeliefSlot>
+          </UPDATE-AGT>
+        </CommunicationRule>
+        <!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->
+        <CommunicationRule name="ShippingTotalOrderQuantityRule" agentVariable="node">
+          <!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->
+          <documentation>
+            <dc:description>At the end of a week, if there is enough beer in stock for all orders,
+              then the inventory level is decremented by the total order quantity, and a
+              corresponding beer delivery message is sent to the downstream node.</dc:description>
+          </documentation>
+          <WHEN eventType="EndOfWeek"/>
+          <IF language="Java">(node.getId() &gt; 1) &amp;&amp; (node.getId() &lt; 5)
+            &amp;&amp; node.getInventory() &gt;= (node.getCurrentSalesOrderQuantity() +
+            node.getBackorderQuantity()) &amp;&amp; ((node.getCurrentSalesOrderQuantity() +
+            node.getBackorderQuantity()) &gt; 0) </IF>
+          <UPDATE-AGT>
+            <SelfBeliefSlot xsi:type="aors:OpaqueExprSlot" property="inventory">
+              <ValueExpr language="Java">node.getInventory() - (node.getCurrentSalesOrderQuantity()
+                + node.getBackorderQuantity())</ValueExpr>
+            </SelfBeliefSlot>
+            <SelfBeliefSlot xsi:type="aors:OpaqueExprSlot" property="outDelivery">
+              <ValueExpr language="Java">node.getCurrentSalesOrderQuantity() +
+                node.getBackorderQuantity()</ValueExpr>
+            </SelfBeliefSlot>
+            <SelfBeliefSlot xsi:type="aors:SimpleSlot" property="backorderQuantity" value="0"/>
+            <SelfBeliefSlot xsi:type="aors:SimpleSlot" property="currentSalesOrderQuantity"
+              value="0"/>
+          </UPDATE-AGT>
+          <SCHEDULE-EVT>
+            <OutMessageEventExpr messageType="BeerDelivery" delay="13">
+              <ReceiverIdRef language="Java">node.getId() - 1</ReceiverIdRef>
+              <Slot xsi:type="aors:OpaqueExprSlot" property="quantity">
+                <ValueExpr language="Java">node.getOutDelivery()</ValueExpr>
+              </Slot>
+            </OutMessageEventExpr>
+          </SCHEDULE-EVT>
+        </CommunicationRule>
+        <!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->
+        <CommunicationRule name="ShippingPartialOrderQuantityRule" agentVariable="node">
+          <!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->
+          <documentation>
+            <dc:description>At the end of a week, if there is not enough beer in stock for all
+              orders, then the the node will ship as much beer as in stock, the inventory level is
+              set to 0, the backorderQuantity is incremented by the shortage quantity, and a
+              corresponding beer delivery message is sent to the downstream node.</dc:description>
+          </documentation>
+          <WHEN eventType="EndOfWeek"/>
+          <IF language="Java">(node.getId() &gt; 1) &amp;&amp; (node.getId() &lt; 5)
+            &amp;&amp; node.getInventory() &lt; (node.getCurrentSalesOrderQuantity() +
+            node.getBackorderQuantity()) &amp;&amp; (node.getInventory() &gt; 0) </IF>
+          <UPDATE-AGT>
+            <SelfBeliefSlot xsi:type="aors:OpaqueExprSlot" property="backorderQuantity">
+              <ValueExpr language="Java">(node.getBackorderQuantity() +
+                node.getCurrentSalesOrderQuantity()) - node.getInventory()</ValueExpr>
+            </SelfBeliefSlot>
+            <SelfBeliefSlot xsi:type="aors:OpaqueExprSlot" property="outDelivery">
+              <ValueExpr language="Java">node.getInventory()</ValueExpr>
+            </SelfBeliefSlot>
+            <SelfBeliefSlot xsi:type="aors:SimpleSlot" property="inventory" value="0"/>
+            <SelfBeliefSlot xsi:type="aors:SimpleSlot" property="currentSalesOrderQuantity"
+              value="0"/>
+          </UPDATE-AGT>
+          <SCHEDULE-EVT>
+            <OutMessageEventExpr messageType="BeerDelivery" delay="13">
+              <ReceiverIdRef language="Java">node.getId() - 1</ReceiverIdRef>
+              <Slot xsi:type="aors:OpaqueExprSlot" property="quantity">
+                <ValueExpr language="Java">node.getOutDelivery()</ValueExpr>
+              </Slot>
+            </OutMessageEventExpr>
+          </SCHEDULE-EVT>
+        </CommunicationRule>
+        <!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->
+        <CommunicationRule name="RetailerShippingTotalOrderQuantityRule" agentVariable="node">
+          <!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->
+          <documentation>
+            <dc:description>At the end of a week, if the Retailer has enough beer in stock for all
+              orders, then its inventory level is decremented by the total order
+              quantity.</dc:description>
+          </documentation>
+          <WHEN eventType="EndOfWeek" eventVariable="eow"/>
+          <IF language="Java"> (node.getId() == 1) &amp;&amp; node.getInventory() &gt;=
+            (node.getCurrentSalesOrderQuantity() + node.getBackorderQuantity()) </IF>
+          <UPDATE-AGT>
+            <SelfBeliefSlot xsi:type="aors:OpaqueExprSlot" property="inventory">
+              <ValueExpr language="Java">node.getInventory() - (node.getCurrentSalesOrderQuantity()
+                + node.getBackorderQuantity())</ValueExpr>
+            </SelfBeliefSlot>
+            <SelfBeliefSlot xsi:type="aors:SimpleSlot" property="backorderQuantity" value="0"/>
+            <SelfBeliefSlot xsi:type="aors:SimpleSlot" property="currentSalesOrderQuantity"
+              value="0"/>
+          </UPDATE-AGT>
+        </CommunicationRule>
+        <!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->
+        <CommunicationRule name="RetailerShippingPartialOrderQuantityRule" agentVariable="node">
+          <!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->
+          <documentation>
+            <dc:description>At the end of a week, if the Retailer does not have enough beer in stock
+              for all orders, then it will ship as much beer as in stock, set its inventory level to
+              0 and increment its backorderQuantity by the shortage quantity.</dc:description>
+          </documentation>
+          <WHEN eventType="EndOfWeek"/>
+          <IF language="Java"> (node.getId() == 1) &amp;&amp; node.getInventory() &lt;
+            (node.getCurrentSalesOrderQuantity() + node.getBackorderQuantity()) </IF>
+          <UPDATE-AGT>
+            <SelfBeliefSlot xsi:type="aors:OpaqueExprSlot" property="backorderQuantity">
+              <ValueExpr language="Java">(node.getBackorderQuantity() +
+                node.getCurrentSalesOrderQuantity()) - node.getInventory()</ValueExpr>
+            </SelfBeliefSlot>
+            <SelfBeliefSlot xsi:type="aors:SimpleSlot" property="inventory" value="0"/>
+            <SelfBeliefSlot xsi:type="aors:SimpleSlot" property="currentSalesOrderQuantity"
+              value="0"/>
+          </UPDATE-AGT>
+        </CommunicationRule>
+        <!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->
+        <CommunicationRule name="RawMaterialsSupplierEndOfWeekShippingRule" agentVariable="node">
+          <!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->
+          <documentation>
+            <dc:description>At the end of a week, the RawMaterialsSupplier decrements its inventory
+              level by the total order quantity, and sends a corresponding beer delivery message to
+              its downstream node.</dc:description>
+          </documentation>
+          <WHEN eventType="EndOfWeek"/>
+          <IF language="Java"> (node.getId() == 5) &amp;&amp;
+            (node.getCurrentSalesOrderQuantity() &gt; 0) </IF>
+          <UPDATE-AGT>
+            <SelfBeliefSlot xsi:type="aors:OpaqueExprSlot" property="outDelivery">
+              <ValueExpr language="Java">node.getCurrentSalesOrderQuantity()</ValueExpr>
+            </SelfBeliefSlot>
+            <SelfBeliefSlot xsi:type="aors:SimpleSlot" property="currentSalesOrderQuantity"
+              value="0"/>
+          </UPDATE-AGT>
+          <SCHEDULE-EVT>
+            <OutMessageEventExpr messageType="BeerDelivery" delay="13">
+              <ReceiverIdRef language="Java">node.getId() - 1</ReceiverIdRef>
+              <Slot xsi:type="aors:OpaqueExprSlot" property="quantity">
+                <ValueExpr language="Java">node.getOutDelivery()</ValueExpr>
+              </Slot>
+            </OutMessageEventExpr>
+          </SCHEDULE-EVT>
+        </CommunicationRule>
+        <!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->
+        <CommunicationRule name="EndOfWeekOrderingRule" agentVariable="node">
+          <!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->
+          <documentation>
+            <dc:description> an agent rule for ordering new beer: every node from 1-4 orders a
+              random value between 1 and 10 </dc:description>
+          </documentation>
+          <WHEN eventType="EndOfWeek"/>
+          <IF language="Java"> node.getId() != 5 </IF>
+          <SCHEDULE-EVT>
+            <OutMessageEventExpr messageType="Order" delay="6">
+              <ReceiverIdRef language="Java">node.getId() + 1</ReceiverIdRef>
+              <Slot xsi:type="aors:OpaqueExprSlot" property="quantity">
+                <ValueExpr language="Java">Random.uniformInt(1, 10)</ValueExpr>
+              </Slot>
+            </OutMessageEventExpr>
+          </SCHEDULE-EVT>
+        </CommunicationRule>
+        <!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->
+        <CommunicationRule name="EndOfWeekCostCalculationRule" agentVariable="node">
+          <!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->
+          <documentation>
+            <dc:description>an agent rule for the calculation of costs: beer in stock has costs of 1
+              money unit, not fulfilled orders 2 units</dc:description>
+          </documentation>
+          <WHEN eventType="EndOfWeek"/>
+          <IF language="Java"> node.getId() != 5 </IF>
+          <UPDATE-AGT>
+            <SelfBeliefSlot xsi:type="aors:OpaqueExprSlot" property="costs">
+              <ValueExpr language="Java">node.getCosts() + (1 * node.getInventory()) + (2 *
+                node.getBackorderQuantity())</ValueExpr>
+            </SelfBeliefSlot>
+          </UPDATE-AGT>
+        </CommunicationRule>
+      </AgentType>
+    </EntityTypes>
+
+    <EnvironmentRules>
+      <!-- =================================================== -->
+      <EnvironmentRule name="EndCustomerDemandRule">
+        <!-- =================================================== -->
+        <documentation>
+          <dc:description>When an exogenous customer demand event occurs, a corresponding order
+            message event is created.</dc:description>
+        </documentation>
+        <WHEN eventType="CustomerDemand" eventVariable="customerDemand"/>
+        <SCHEDULE-EVT>
+          <InMessageEventExpr messageType="Order" receiverIdRefs="1" senderIdRef="0">
+            <Slot xsi:type="aors:OpaqueExprSlot" property="quantity">
+              <ValueExpr language="Java">Random.uniformInt(1, 10)</ValueExpr>
+            </Slot>
+          </InMessageEventExpr>
+        </SCHEDULE-EVT>
+      </EnvironmentRule>
+    </EnvironmentRules>
+  </SimulationModel>
+
+  <!-- =================================================== -->
+  <InitialState>
+    <!-- =================================================== -->
+    <Agent type="SupplyChainNode" name="Retailer" id="1">
+      <SelfBeliefSlot xsi:type="aors:SimpleSlot" property="inventory" value="10"/>
+      <PeriodicTimeEvent type="EndOfWeek" occurrenceTime="7"/>
+    </Agent>
+    <Agent type="SupplyChainNode" name="Wholesaler" id="2">
+      <SelfBeliefSlot xsi:type="aors:SimpleSlot" property="inventory" value="10"/>
+      <PeriodicTimeEvent type="EndOfWeek" occurrenceTime="7"/>
+    </Agent>
+    <Agent type="SupplyChainNode" name="DistributionCenter" id="3">
+      <SelfBeliefSlot xsi:type="aors:SimpleSlot" property="inventory" value="10"/>
+      <PeriodicTimeEvent type="EndOfWeek" occurrenceTime="7"/>
+    </Agent>
+    <Agent type="SupplyChainNode" name="Brewery" id="4">
+      <SelfBeliefSlot xsi:type="aors:SimpleSlot" property="inventory" value="10"/>
+      <PeriodicTimeEvent type="EndOfWeek" occurrenceTime="7"/>
+    </Agent>
+
+    <!-- supply chain node instance describing a helper node, 
+        this node is only necessary that the 4th node can send orders to someone -->
+    <Agent type="SupplyChainNode" name="RawMaterialsSupplier" id="5">
+      <PeriodicTimeEvent type="EndOfWeek" occurrenceTime="7"/>
+    </Agent>
+
+    <!-- instance for the exogenous customer demand event -->
+    <ExogenousEvent type="CustomerDemand" occurrenceTime="13"/>
+  </InitialState>
+<!-- =================================================================== -->
+<UserInterface>
+<!-- =================================================================== -->
+	<InitialStateUI>
+		<EventUI eventType="CustomerDemand"/>
+		<AgentUI agentType="SupplyChainNode">
+			<SelfBeliefPropertyUI property="inventory">
+				<Label>
+					<Text xml:lang="en">Inventory</Text>
+					<Text xml:lang="de">Lagerbestand</Text>
+				</Label>
+				<Hint>
+					<Text xml:lang="en">How many units of beer are there in stock?</Text>
+					<Text xml:lang="de">Wie viele Einheiten Bier sind im Lager?</Text>
+				</Hint>				
+			</SelfBeliefPropertyUI>
+		</AgentUI>
+	</InitialStateUI>
+	<AnimationUI playableAgents="Retailer Wholesaler DistributionCenter" timeoutSec="5">
+		<AgentControlUI agentType="SupplyChainNode">
+			<SelfBeliefPropertyUI property="inventory" readonly="true" userInterfaceElement="quantityBar">
+				<Label>
+					<Text xml:lang="en">Inventory</Text>
+					<Text xml:lang="de">Lagerbestand</Text>
+				</Label>
+				<Hint>
+					<Text xml:lang="en">How many units of beer are there in stock?</Text>
+					<Text xml:lang="de">Wie viele Einheiten Bier sind im Lager?</Text>
+				</Hint>				
+			</SelfBeliefPropertyUI>
+			<SelfBeliefPropertyUI property="backorderQuantity" readonly="true">
+				<Label>
+					<Text xml:lang="en">Backorder quantity</Text>
+					<Text xml:lang="de">Nachlieferungsmenge</Text>
+				</Label>
+				<Hint>
+					<Text xml:lang="en">How many units of beer have yet to be delivered?</Text>
+					<Text xml:lang="de">Wie viele Einheiten Bier sind nach zu liefern?</Text>
+				</Hint>				
+			</SelfBeliefPropertyUI>
+			<AgentRuleUI rule="EndOfWeekOrderingRule" activationType="entryform">
+				<OutMessageEventUI messageType="Order">
+					<PropertyUI property="quantity" userInterfaceElement="slider">
+						<Label>
+							<Text xml:lang="en">Order quantity</Text>
+							<Text xml:lang="de">Bestellmenge</Text>
+						</Label>
+						<Hint>
+							<Text xml:lang="en">How many units of beer shall be ordered?</Text>
+							<Text xml:lang="de">Wie viele Einheiten Bier solle bestellt werden?</Text>
+						</Hint>				
+					</PropertyUI>
+				</OutMessageEventUI>
+			</AgentRuleUI>
+		</AgentControlUI>
+	</AnimationUI>
+</UserInterface>
+  
+</SimulationScenario>
