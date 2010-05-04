@@ -91,7 +91,6 @@ public class SimulationManager {
   private final String PROPERTY_FILE_NAME = "properties.xml";
 
   // property keys
-  // the property that defines the logger file name
   private final String propertyLoggerFileName = "logger.file.name";
   private final String propertyLoggerPath = "logger.path";
   private final String propertyAutoMultithreading = "auto.multithreading";
