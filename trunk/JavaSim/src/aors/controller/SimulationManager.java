@@ -83,6 +83,7 @@ public class SimulationManager {
 
   // the current (used as defautl) schema name
   private final String CURRENT_AORSL_SCHEMA_NAME = "AORSL-0-8-3.xsd";
+  private final String DEFAULT_CODEGEN_XSLT_FILE = "aorsl2java.xsl";
 
   // the project properties object
   private Properties properties;
@@ -449,7 +450,7 @@ public class SimulationManager {
 
     this.codeGenXsltDirectory = APP_ROOT_DIRECTORY + File.separator + "ext"
         + File.separator + "javagen";
-    this.codeGenXsltName = "aorsml2java.xsl";
+    this.codeGenXsltName = DEFAULT_CODEGEN_XSLT_FILE;
   }
 
   private void setProperties() {
@@ -477,7 +478,7 @@ public class SimulationManager {
     if (value != null) {
       this.codeGenXsltName = value;
     } else {
-      this.codeGenXsltName = "aorsml2java.xsl";
+      this.codeGenXsltName = DEFAULT_CODEGEN_XSLT_FILE;
     }
 
     value = this.properties.getProperty(propertyXSLTFilePath);
