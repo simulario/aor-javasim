@@ -48,7 +48,8 @@ import aors.util.jar.JarUtil;
  * @since 31.07.2008
  * @version $Revision$
  * 
- * last change by $Author$ at $Date$
+ *          last change by $Author$ at $Date: 2010-05-03 21:29:08
+ *          +0200 (Mo, 03 Mai 2010) $
  * 
  */
 public class SimulationManager {
@@ -74,11 +75,11 @@ public class SimulationManager {
   // the projects directory
   public final static String PROJECT_DIRECTORY = "projects";
 
-  // the AORSL directory
-  private String aorslDirectory;
-
-  // the AORSK schema name
+  private String AORSLDirectory;
   private String AORSLSchemaName;
+
+  private String xsltDirectory;
+  private String xsltName;
 
   // the current (used as defautl) schema name
   private final String CURRENT_AORSL_SCHEMA_NAME = "AORSL-0-8-3.xsd";
@@ -91,11 +92,13 @@ public class SimulationManager {
 
   // property keys
   // the property that defines the logger file name
-  private final String propertyLoggerFileName = "logger file name";
-  private final String propertyLoggerPath = "logger path";
-  private final String propertyAutoMultithreading = "auto multithreading";
-  private final String propertyXMLSchemaFileName = "XML-Schema file name";
-  private final String propertyXMLSchemaFilePath = "XML-Schema file path";
+  private final String propertyLoggerFileName = "logger.file.name";
+  private final String propertyLoggerPath = "logger.path";
+  private final String propertyAutoMultithreading = "auto.multithreading";
+  private final String propertyXMLSchemaFileName = "XML-Schema.file.name";
+  private final String propertyXMLSchemaFilePath = "XML-Schema.file.path";
+  private final String propertyXSLTFileName = "CodeGen.XSLT.file.name";
+  private final String propertyXSLTFilePath = "CodeGen.XSLT.file.path";
 
   public static final String propertyLogger = "logger";
 
@@ -110,9 +113,6 @@ public class SimulationManager {
 
   // the project directory
   private File projectDirectory;
-
-  // the file that represents the main XSLT file for code generation
-  private File xsltFile;
 
   /**
    * Create a new simulation manager.
@@ -137,10 +137,6 @@ public class SimulationManager {
 
     // the mapt with XSLT parameters
     this.xsltParameter = new HashMap<String, String>();
-
-    // path to the XSLT main transformation file
-    this.xsltFile = new File(APP_ROOT_DIRECTORY + File.separator + "ext"
-        + File.separator + "javagen" + File.separator + "aorsml2java.xsl");
 
     // set the project directory
     this.projectDirectory = new File(APP_ROOT_DIRECTORY + File.separator
@@ -436,7 +432,7 @@ public class SimulationManager {
     try {
       this.properties.loadFromXML(new FileInputStream(this.PROPERTY_FILE_NAME));
       this.setProperties();
-      
+
     } catch (IOException ioe) {
       System.err.println("Can not load the file " + this.PROPERTY_FILE_NAME
           + ". Using the default values.");
@@ -445,39 +441,67 @@ public class SimulationManager {
 
   }
 
+  /*
+   * this values are used when no prperty file exists
+   */
   private void setDefaultProperties() {
-    this.aorslDirectory = "ext" + File.separator + "aorsl";
+    this.AORSLDirectory = "ext" + File.separator + "aorsl";
     this.AORSLSchemaName = CURRENT_AORSL_SCHEMA_NAME;
+
+    this.xsltDirectory = APP_ROOT_DIRECTORY + File.separator + "ext"
+        + File.separator + "javagen";
+    this.xsltName = "aorsml2java.xsl";
   }
-  
+
   private void setProperties() {
-    
+
     String value = this.properties.getProperty(propertyAutoMultithreading);
     if (value != null && value.equals("true")) {
       this.autoMultithreading = true;
     }
-    
+
     value = this.properties.getProperty(propertyXMLSchemaFileName);
     if (value != null) {
       this.AORSLSchemaName = value;
     } else {
       this.AORSLSchemaName = CURRENT_AORSL_SCHEMA_NAME;
     }
-    
+
     value = this.properties.getProperty(propertyXMLSchemaFilePath);
     if (value != null) {
-      this.aorslDirectory = value;
+      this.AORSLDirectory = value;
     } else {
-      this.aorslDirectory = "ext" + File.separator + "aorsl";
+      this.AORSLDirectory = "ext" + File.separator + "aorsl";
     }
-    
+
+    value = this.properties.getProperty(propertyXSLTFileName);
+    if (value != null) {
+      this.xsltName = value;
+    } else {
+      this.xsltName = "aorsml2java.xsl";
+    }
+
+    value = this.properties.getProperty(propertyXSLTFilePath);
+    if (value != null) {
+      this.xsltDirectory = value;
+    } else {
+      this.xsltDirectory = APP_ROOT_DIRECTORY + File.separator + "ext"
+          + File.separator + "javagen";
+    }
+
   }
 
   /**
    * Save the properties to the project property file
    */
-  public void saveProperties() {
+  public void storeProperties() {
 
+    this.setPropertiesFromSystem();
+    this.saveProperties();
+
+  }
+
+  private void setPropertiesFromSystem() {
     // put on the simulator's properties
     // notice that an GUI may added already different properties as well!
     this.properties.put(this.propertyLoggerFileName, this.loggerFileName);
@@ -485,8 +509,12 @@ public class SimulationManager {
     this.properties.put(this.propertyAutoMultithreading, String
         .valueOf(autoMultithreading));
     this.properties.put(this.propertyXMLSchemaFileName, this.AORSLSchemaName);
-    this.properties.put(this.propertyXMLSchemaFilePath, this.aorslDirectory);
+    this.properties.put(this.propertyXMLSchemaFilePath, this.AORSLDirectory);
+    this.properties.put(this.propertyXSLTFileName, this.xsltName);
+    this.properties.put(this.propertyXSLTFilePath, this.xsltDirectory);
+  }
 
+  private void saveProperties() {
     // store properties in the properies XML file
     try {
       this.properties.storeToXML(new FileOutputStream(new File(
@@ -495,7 +523,6 @@ public class SimulationManager {
     } catch (IOException ioe) {
       ioe.printStackTrace();
     }
-
   }
 
   /**
@@ -655,7 +682,8 @@ public class SimulationManager {
 
       // get the XML Schema
       File schemaLocation = new File(System.getProperty("user.dir")
-          + File.separator + this.aorslDirectory + File.separator + this.AORSLSchemaName);
+          + File.separator + this.AORSLDirectory + File.separator
+          + this.AORSLSchemaName);
 
       // create a new Schema instance
       Schema schema = factory.newSchema(schemaLocation);
@@ -694,6 +722,12 @@ public class SimulationManager {
    */
   public boolean generate() {
     boolean result = false;
+    System.out.println(this.xsltDirectory + File.separator + this.xsltName);
+    File xsltFile = new File(this.xsltDirectory + File.separator + this.xsltName);
+    if (!xsltFile.exists()) {
+      System.err.println("No transformation file found!");
+      return false;
+    }
 
     // out = switch generation to memory on, java = switch write to disk on
     this.xsltParameter.put("output.fileExtension", "java");
@@ -709,8 +743,7 @@ public class SimulationManager {
 
       // transform the simulation description -> generate Java code
       this.xslt2Processor.transformFromURL(this.getProject()
-          .getSimulationDescription(), this.xsltFile.toURI(),
-          this.xsltParameter);
+          .getSimulationDescription(), xsltFile.toURI(), this.xsltParameter);
 
       // test if the Java code generation succeed
       if (this.xslt2Processor.getMessages().isEmpty()) {
