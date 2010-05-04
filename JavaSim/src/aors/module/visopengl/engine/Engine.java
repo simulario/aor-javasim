@@ -1089,7 +1089,7 @@ public class Engine implements GLEventListener {
     double rotation = comp.getRotation(phy.getX(), phy.getY());
 
     // Add the rotation that comes from the physical itself
-    rotation += phy.getRotationAngleZ();
+    rotation += phy.getRotZ();
 
     return rotation;
   }

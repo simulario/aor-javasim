@@ -245,11 +245,11 @@ public class MemoryLogger extends Logger {
       initialisedProperties.put(Physical.PROP_Y, physicalObject.getY());
       initialisedProperties.put(Physical.PROP_Z, physicalObject.getZ());
       initialisedProperties.put(Physical.PROP_ROTATION_ANGLE_X, physicalObject
-          .getRotationAngleX());
+          .getRotX());
       initialisedProperties.put(Physical.PROP_ROTATION_ANGLE_Y, physicalObject
-          .getRotationAngleY());
+          .getRotY());
       initialisedProperties.put(Physical.PROP_ROTATION_ANGLE_Z, physicalObject
-          .getRotationAngleZ());
+          .getRotZ());
       initialisedProperties.put(Physical.PROP_VX, physicalObject.getVx());
       initialisedProperties.put(Physical.PROP_VY, physicalObject.getVy());
       initialisedProperties.put(Physical.PROP_VZ, physicalObject.getVz());

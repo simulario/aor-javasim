@@ -396,15 +396,15 @@ public abstract class Shape2D implements Cloneable {
 
         else if (propertyMap.getPropertyName().equals("rotationAngleX"))
           updateVisualProperty(propertyMap.getVisualPropertyName(), propertyMap
-              .performMapping(phy.getRotationAngleX()));
+              .performMapping(phy.getRotX()));
 
         else if (propertyMap.getPropertyName().equals("rotationAngleY"))
           updateVisualProperty(propertyMap.getVisualPropertyName(), propertyMap
-              .performMapping(phy.getRotationAngleY()));
+              .performMapping(phy.getRotY()));
 
         else if (propertyMap.getPropertyName().equals("rotationAngleZ"))
           updateVisualProperty(propertyMap.getVisualPropertyName(), propertyMap
-              .performMapping(phy.getRotationAngleZ()));
+              .performMapping(phy.getRotZ()));
 
         else if (propertyMap.getPropertyName().equals("vx"))
           updateVisualProperty(propertyMap.getVisualPropertyName(), propertyMap

@@ -69,9 +69,9 @@ public class JsonGenerator {
         ao.put(Physical.PROP_X, paObject.getX());
         ao.put(Physical.PROP_Y, paObject.getY());
         ao.put(Physical.PROP_Z, paObject.getZ());
-        ao.put(Physical.PROP_ROTATION_ANGLE_X, paObject.getRotationAngleX());
-        ao.put(Physical.PROP_ROTATION_ANGLE_Y, paObject.getRotationAngleY());
-        ao.put(Physical.PROP_ROTATION_ANGLE_Z, paObject.getRotationAngleZ());
+        ao.put(Physical.PROP_ROTATION_ANGLE_X, paObject.getRotX());
+        ao.put(Physical.PROP_ROTATION_ANGLE_Y, paObject.getRotY());
+        ao.put(Physical.PROP_ROTATION_ANGLE_Z, paObject.getRotZ());
         // ao.put("v", paObject.getV()); // computed from v-components
         ao.put(Physical.PROP_VX, paObject.getVx());
         ao.put(Physical.PROP_VY, paObject.getVy());
@@ -180,9 +180,9 @@ public class JsonGenerator {
         physO.put(Physical.PROP_X, p.getX());
         physO.put(Physical.PROP_Y, p.getY());
         physO.put(Physical.PROP_Z, p.getZ());
-        physO.put(Physical.PROP_ROTATION_ANGLE_X, p.getRotationAngleX());
-        physO.put(Physical.PROP_ROTATION_ANGLE_Y, p.getRotationAngleY());
-        physO.put(Physical.PROP_ROTATION_ANGLE_Z, p.getRotationAngleZ());
+        physO.put(Physical.PROP_ROTATION_ANGLE_X, p.getRotX());
+        physO.put(Physical.PROP_ROTATION_ANGLE_Y, p.getRotY());
+        physO.put(Physical.PROP_ROTATION_ANGLE_Z, p.getRotZ());
         physO.put(Physical.PROP_PERCEPTION_RADIUS, 0);
 
         perception.put("physicalObj", physO);

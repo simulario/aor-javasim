@@ -179,9 +179,9 @@ public class DataStatCollector implements PropertyChangeListener,
       map.put(Physical.PROP_X, pao.getX());
       map.put(Physical.PROP_Y, pao.getX());
       map.put(Physical.PROP_Z, pao.getX());
-      map.put(Physical.PROP_ROTATION_ANGLE_X, pao.getRotationAngleX());
-      map.put(Physical.PROP_ROTATION_ANGLE_Y, pao.getRotationAngleY());
-      map.put(Physical.PROP_ROTATION_ANGLE_Z, pao.getRotationAngleZ());
+      map.put(Physical.PROP_ROTATION_ANGLE_X, pao.getRotX());
+      map.put(Physical.PROP_ROTATION_ANGLE_Y, pao.getRotY());
+      map.put(Physical.PROP_ROTATION_ANGLE_Z, pao.getRotZ());
       map.put(Physical.PROP_VX, pao.getVx());
       map.put(Physical.PROP_VY, pao.getVy());
       map.put(Physical.PROP_VZ, pao.getVz());
@@ -214,9 +214,9 @@ public class DataStatCollector implements PropertyChangeListener,
       map.put(Physical.PROP_X, po.getX());
       map.put(Physical.PROP_Y, po.getX());
       map.put(Physical.PROP_Z, po.getX());
-      map.put(Physical.PROP_ROTATION_ANGLE_X, po.getRotationAngleX());
-      map.put(Physical.PROP_ROTATION_ANGLE_Y, po.getRotationAngleY());
-      map.put(Physical.PROP_ROTATION_ANGLE_Z, po.getRotationAngleZ());
+      map.put(Physical.PROP_ROTATION_ANGLE_X, po.getRotX());
+      map.put(Physical.PROP_ROTATION_ANGLE_Y, po.getRotY());
+      map.put(Physical.PROP_ROTATION_ANGLE_Z, po.getRotZ());
       map.put(Physical.PROP_VX, po.getVx());
       map.put(Physical.PROP_VY, po.getVy());
       map.put(Physical.PROP_VZ, po.getVz());

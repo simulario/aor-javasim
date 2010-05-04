@@ -1460,9 +1460,9 @@ public class SimObserver extends Logger {
     physicalObjectType.setOmegaX(aorPhysObj.getOmegaX());
     physicalObjectType.setOmegaY(aorPhysObj.getOmegaY());
     physicalObjectType.setOmegaZ(aorPhysObj.getOmegaZ());
-    physicalObjectType.setRotationAngleX(aorPhysObj.getRotationAngleX());
-    physicalObjectType.setRotationAngleY(aorPhysObj.getRotationAngleY());
-    physicalObjectType.setRotationAngleZ(aorPhysObj.getRotationAngleZ());
+    physicalObjectType.setRotationAngleX(aorPhysObj.getRotX());
+    physicalObjectType.setRotationAngleY(aorPhysObj.getRotY());
+    physicalObjectType.setRotationAngleZ(aorPhysObj.getRotZ());
 
     if (aorPhysObj.getMaterialType() != null) {
       physicalObjectType.setMaterialType(aorPhysObj.getMaterialType()
