@@ -241,13 +241,13 @@ public class Shape2DMap {
         propertyValue = String.valueOf((phy.getZ()));
 
       else if (propertyName.equals("rotationAngleX"))
-        propertyValue = String.valueOf((phy.getRotationAngleX()));
+        propertyValue = String.valueOf((phy.getRotX()));
 
       else if (propertyName.equals("rotationAngleY"))
-        propertyValue = String.valueOf((phy.getRotationAngleY()));
+        propertyValue = String.valueOf((phy.getRotY()));
 
       else if (propertyName.equals("rotationAngleZ"))
-        propertyValue = String.valueOf((phy.getRotationAngleZ()));
+        propertyValue = String.valueOf((phy.getRotZ()));
 
       else if (propertyName.equals("vx"))
         propertyValue = String.valueOf((phy.getVx()));

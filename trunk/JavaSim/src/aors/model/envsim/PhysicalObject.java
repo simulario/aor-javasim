@@ -206,12 +206,12 @@ public class PhysicalObject extends Objekt implements Physical {
   }
 
   @Override
-  public double getRotationAngleX() {
+  public double getRotX() {
     return this.rotation.getX();
   }
 
   @Override
-  public void setRotationAngleX(double rotationAngleX) {
+  public void setRotX(double rotationAngleX) {
     double tmpRotX = this.rotation.getX();
     if (tmpRotX != rotationAngleX) {
       this.rotation.setX(rotationAngleX);
@@ -222,12 +222,12 @@ public class PhysicalObject extends Objekt implements Physical {
   }
 
   @Override
-  public double getRotationAngleY() {
+  public double getRotY() {
     return this.rotation.getY();
   }
 
   @Override
-  public void setRotationAngleY(double rotationAngleY) {
+  public void setRotY(double rotationAngleY) {
     double tmpRotY = this.rotation.getY();
     if (tmpRotY != rotationAngleY) {
       this.rotation.setY(rotationAngleY);
@@ -238,12 +238,12 @@ public class PhysicalObject extends Objekt implements Physical {
   }
 
   @Override
-  public double getRotationAngleZ() {
+  public double getRotZ() {
     return this.rotation.getZ();
   }
 
   @Override
-  public void setRotationAngleZ(double rotationAngleZ) {
+  public void setRotZ(double rotationAngleZ) {
     double tmpRotZ = this.rotation.getZ();
     if (tmpRotZ != rotationAngleZ) {
       this.rotation.setZ(rotationAngleZ);
@@ -683,9 +683,9 @@ public class PhysicalObject extends Objekt implements Physical {
     result.setX(this.position.getX());
     result.setY(this.position.getY());
     result.setZ(this.position.getZ());
-    result.setRotationAngleX(this.rotation.getX());
-    result.setRotationAngleY(this.rotation.getY());
-    result.setRotationAngleZ(this.rotation.getZ());
+    result.setRotX(this.rotation.getX());
+    result.setRotY(this.rotation.getY());
+    result.setRotZ(this.rotation.getZ());
     result.setVx(this.velocity.getX());
     result.setVy(this.velocity.getY());
     result.setVz(this.velocity.getZ());

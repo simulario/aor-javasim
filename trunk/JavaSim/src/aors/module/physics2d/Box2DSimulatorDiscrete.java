@@ -339,7 +339,7 @@ public class Box2DSimulatorDiscrete extends PhysicsSimulator {
         }
 
         // orientation
-        object.setRotationAngleZ(body.getAngle());
+        object.setRotZ(body.getAngle());
 
         // velocity
         object.setVx(body.getLinearVelocity().x);
@@ -382,7 +382,7 @@ public class Box2DSimulatorDiscrete extends PhysicsSimulator {
           float x = (float) agent.getX();
           float y = (float) agent.getY();
 
-          body.setXForm(new Vec2(x, y), (float) agent.getRotationAngleZ());
+          body.setXForm(new Vec2(x, y), (float) agent.getRotZ());
           body.setLinearVelocity(new Vec2((float) agent.getVx(), (float) agent
               .getVy()));
           body.setAngularVelocity((float) agent.getOmegaZ());
@@ -513,7 +513,7 @@ public class Box2DSimulatorDiscrete extends PhysicsSimulator {
         double distance = Math.max(distX, distY);
 
         // angle
-        double orientation = perceiver.getRotationAngleZ();
+        double orientation = perceiver.getRotZ();
         double angle = Math.atan2(perceivedY - perceiver.getY(), perceivedX
             - perceiver.getX());
         angle = (angle < 0) ? angle + 2 * Math.PI : angle;
