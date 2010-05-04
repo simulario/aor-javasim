@@ -230,7 +230,7 @@ public class AORJavaGui extends JFrame implements ActionListener,
           e.getWindow().setVisible(false);
           // save all properties
           try {
-            simulationManager.saveProperties();
+            simulationManager.storeProperties();
           } finally {
             System.exit(0);
           }
@@ -1866,7 +1866,7 @@ public class AORJavaGui extends JFrame implements ActionListener,
         this.dispose();
         // save all properties
         try {
-          simulationManager.saveProperties();
+          simulationManager.storeProperties();
         } finally {
           System.exit(0);
         }
