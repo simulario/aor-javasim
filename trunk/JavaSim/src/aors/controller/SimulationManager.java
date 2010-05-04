@@ -721,8 +721,9 @@ public class SimulationManager {
    */
   public boolean generate() {
     boolean result = false;
-    System.out.println(this.codeGenXsltDirectory + File.separator + this.codeGenXsltName);
-    File xsltFile = new File(this.codeGenXsltDirectory + File.separator + this.codeGenXsltName);
+
+    File xsltFile = new File(this.codeGenXsltDirectory + File.separator
+        + this.codeGenXsltName);
     if (!xsltFile.exists()) {
       System.err.println("No transformation file found!");
       return false;
