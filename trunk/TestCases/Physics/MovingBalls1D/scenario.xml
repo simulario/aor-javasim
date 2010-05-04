@@ -1,0 +1,103 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<?xml-stylesheet type="text/xsl" href="prettyprint.xsl"?>
+<SimulationScenario version="0.8.3" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+  xsi:schemaLocation="http://aor-simulation.org ../../../ext/aorsl/ersl/ERSL-0-8-3.xsd"
+  xmlns="http://aor-simulation.org" xmlns:aors="http://aor-simulation.org"
+  xmlns:dc="http://purl.org/dc/elements/1.1/" scenarioName="TwoBallsMoving1D"
+  scenarioTitle="Two balls moving in 1-dimensional space" simulationManagerDirectory="../../..">
+
+  <SimulationParameters simulationSteps="8000" stepDuration="1" timeUnit="s" stepTimeDelay="50"/>
+
+  <SimulationModel modelName="BallsMoving1D" modelTitle="Balls moving in 1-dimensional space"
+    autoKinematics="true" autoImpulse="true" autoCollision="true">
+
+    <documentation>
+      <dc:creator>Gerd Wagner</dc:creator>
+      <dc:created>20081201</dc:created>
+      <dc:description> Two balls move in opposite direction in 1D space. </dc:description>
+    </documentation>
+
+    <SpaceModel geometry="Toroidal" spatialDistanceUnit="m">
+      <OneDimensional xMax="1000" autoCollisionDetection="true" autoCollisionHandling="true" autoKinematics="true"/>
+    </SpaceModel>
+
+    <EntityTypes>
+      <PhysicalObjectType name="Ball"/>
+    </EntityTypes>
+  </SimulationModel>
+
+  <InitialState>
+    <PhysicalObject type="Ball" name="ball1" id="1" x="100" vx="0" m="70" width="15"/>
+    <PhysicalObject type="Ball" name="ball2" id="2" x="1" vx="1" ax="0.02" m="50" width="10"/>
+  </InitialState>
+
+  <!-- ===================== Define views of the simulation ============== -->
+  <Views>
+    <!-- 
+  	<View physicalObjectIdRef="1">
+  		<DisplayInfo property="vx" content="~m/s"/>
+  		<Shape2D fill="grey" strokeWidth="4">
+  			<Circle r="30"/>
+  		</Shape2D>
+  		<Label>
+  			<Text xml:lang="en">Iron Ball</Text>
+  			<Text xml:lang="de">Eisenkugel</Text>
+  		</Label>
+  		<FlyOver>
+  			<Text xml:lang="en">This ball is made of iron</Text>
+  			<Text xml:lang="de">Diese Kugel ist aus Eisen</Text>
+  		</FlyOver>
+  	</View>
+  	<View physicalObjectIdRef="2" displayName="true">
+  		<DisplayInfo property="vx" content="~m/s"/>
+  		<Shape2D fill="blue" strokeWidth="4">
+  			<Circle r="20"/>
+  		</Shape2D>
+  		<ShapePropertyMap shapeProperty="fill" property="vx" caseWise="true" v0="red"
+  			a0="-10" v1="yellow" a1="-7" v2="green"/>
+  	</View>
+  -->
+    <View physicalObjectIdRef="1" shape2D="circle" displayName="true">
+      <DisplayInfo property="vx" content="~m/s"/>
+      <ShapeSlot shapeProperty="stroke-width" value="4"/>
+      <ShapeSlot shapeProperty="fill" value="gray"/>
+      <ShapeSlot shapeProperty="r" value="30"/>
+    </View>
+    <View physicalObjectIdRef="2" shape2D="circle" displayName="true">
+      <DisplayInfo property="vx" content="~m/s"/>
+      <ShapeSlot shapeProperty="stroke-width" value="4"/>
+      <ShapeSlot shapeProperty="fill" value="blue"/>
+      <ShapeSlot shapeProperty="r" value="20"/>
+      <VisualizationMap property="vx" shapeProperty="fill" caseWise="true" v0="red" a0="-10"
+        v1="yellow" a1="-7" v2="green"/>
+    </View>
+
+    <EventAppearance eventType="CollisionEvent" duration="500">
+      <MidiSound instrumentName="SOUND_EFFECTS_Gunshot" noteSequence="60/1000"/>
+    </EventAppearance>
+  </Views>
+
+  <UserInterface>
+    <AnimationUI>
+      <Views>
+        <PhysicalObjectView physicalObjectIdRef="1" displayName="true">
+          <PhysicalShape2D>
+            <Circle strokeWidth="4" fill="grey"/>
+          </PhysicalShape2D>
+          <DisplayInfo property="vx" content="~m/s"/>
+        </PhysicalObjectView>
+
+        <PhysicalObjectView physicalObjectIdRef="2" displayName="true">
+          <PhysicalShape2D>
+            <Circle strokeWidth="4" fill="blue">
+              <ShapePropertyMap property="vx" shapeProperty="fill" mapType="caseWise" v0="red"
+                a0="-10" v1="yellow" a1="-7" v2="green"/>
+            </Circle>
+          </PhysicalShape2D>
+          <DisplayInfo property="vx" content="~m/s"/>
+        </PhysicalObjectView>
+      </Views>
+    </AnimationUI>
+
+  </UserInterface>
+</SimulationScenario>

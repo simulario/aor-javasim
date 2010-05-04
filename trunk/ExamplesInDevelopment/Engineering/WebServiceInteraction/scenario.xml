@@ -1,0 +1,830 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<?xml-stylesheet type="text/xsl" href="prettyprint.xsl"?>
+
+<SimulationScenario version="0.8.3" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xsi:schemaLocation="http://aor-simulation.org ../../../ext/aorsl/AORSL-0-8-3.xsd"
+	xmlns="http://aor-simulation.org" xmlns:aors="http://aor-simulation.org"
+	xmlns:dc="http://purl.org/dc/elements/1.1/"
+	scenarioName="TravelInfo_AgentBasedVersion"
+	scenarioTitle="A travel information system"
+	simulationManagerDirectory="../../..">
+
+	<SimulationParameters simulationSteps="10000" stepDuration="1" timeUnit="s"/>
+	<SimulationModel modelName="TravelInfo_AgentBasedVersion" modelTitle="A travel information system, with a TravelInfo, MapInfo, Weather and RestaurantInfo">
+
+		<documentation>
+			<description>Benutzer stellt beim TravelInfoService eine Anfrage für eine Reise und der TravelInfoService sucht sämtliche Informationen zum Reiseziel, Wetter und Restaurants.</description>
+			<dc:created>20100428</dc:created>
+			<dc:modified>20100323</dc:modified>
+			<dc:creator>Christian Quinte</dc:creator>
+			<dc:contributor>Gerd Wagner</dc:contributor>
+			<dc:source>"Web Services - Vorlesung" von Prof. Gerd Wagner</dc:source>
+			<processModelDiagram>TravelInfo-BPMN.gif</processModelDiagram>
+		</documentation>
+
+		<Statistics>
+			<Variable name="numberOfCustomers" dataType="Integer" />
+			<!-- count requests -->
+			<Variable name="countCustomers" dataType="Integer">
+				<Source aggregationFunction="max">
+					<ObjectProperty property="countRequests" objectType="TravelInfoService" objectIdRef="1"/>
+				</Source>
+			</Variable>
+			<!-- not implemented -->
+			<Variable name="averageTime" dataType="Integer" />
+		</Statistics>
+		
+		<DataTypes>
+			<ComplexDataType name="CustomerRecord">
+				<Attribute type="Integer" name="custId"/>
+				<Attribute type="String" name="travelInfo"/>
+				<Attribute type="String" name="mapInfo"/>
+				<Attribute type="String" name="weatherInfo"/>
+				<Attribute type="String" name="restaurantInfo"/>
+			</ComplexDataType>
+			
+			<ComplexDataType name="CustomerRecordList">
+				<ClassDef language="Java">
+					<![CDATA[
+						private java.util.ArrayList<CustomerRecord> customers = new java.util.ArrayList<CustomerRecord>();
+
+						// add a customer to CustomerRecordList
+						public int addCustomerRecordToList(int custId, String travelInfo) {
+							CustomerRecord custRecord = new CustomerRecord();
+							custRecord.setCustId(custId);
+							custRecord.setTravelInfo(travelInfo);
+							
+							customers.add(custRecord);
+							
+							return customers.size();
+						}
+						
+						// get customer with id from CustomerRecordList
+						public CustomerRecord getCustomerRecordFromListWithId(int custId) {
+							java.util.Iterator it = customers.iterator();
+							CustomerRecord cust = new CustomerRecord();
+							
+							while (it.hasNext()) {
+								cust = (CustomerRecord)it.next();
+								if (cust.getCustId() == custId) {
+									return cust;
+								}
+							}
+							return null;
+						}
+	
+						// update value mapInfoData
+						public void updateMapInfoData(int custId, String data) {
+							((CustomerRecord)getCustomerRecordFromListWithId(custId)).setMapInfo(data);
+						}
+						
+						// update value weatherInfoData
+						public void updateWeatherInfoData(int custId, String data) {
+							((CustomerRecord)getCustomerRecordFromListWithId(custId)).setWeatherInfo(data);
+						}
+						
+						// update value restaurantInfoData
+						public void updateRestaurantInfoData(int custId, String data) {
+							((CustomerRecord)getCustomerRecordFromListWithId(custId)).setRestaurantInfo(data);
+						}
+						
+						// delete customer with id from CustomerRecordList
+						public int deleteCustomerRecordFromList(int custId) {
+							java.util.Iterator it = customers.iterator();
+							CustomerRecord cust = new CustomerRecord();
+							
+							while (it.hasNext()) {
+								cust = (CustomerRecord)it.next();
+								if (cust.getCustId() == custId) {
+									it.remove();
+									
+									return customers.size();
+								}
+							}
+							return customers.size();
+						}
+						
+						// test-function
+						public int getListSize() {
+							return customers.size();
+						}
+					]]>
+				</ClassDef>
+			</ComplexDataType>
+		</DataTypes>
+		
+		<Globals>
+			<!-- Test - nur für Testzwecke -->
+			<GlobalFunction name="getRandomZipCode" resultType="String">
+				<Parameter name="length" type="Integer"/>
+				<Body language="Java"><![CDATA[
+                  String zipCode = "";
+                  for (int i=1; i<=length; i++) { 
+                  	zipCode += String.valueOf(Random.uniformInt(1,9)); 
+                  }
+                  return (zipCode);
+		     ]]></Body>
+			</GlobalFunction>		
+		</Globals>
+		
+
+
+		<EntityTypes>
+
+			<!-- Messages für TravelInfo-WebService -->
+			<!-- =================================================== -->
+			<MessageType name="GetTravelInfo" >
+				<Attribute type="String" name="travelInfo"/>
+				<Attribute type="Integer" name="custId"/>
+			</MessageType>
+			
+			<MessageType name="GetTravelInfoResponse" >
+				<Attribute type="String" name="travelInfoData"/>
+				<Attribute type="Integer" name="custId"/>
+			</MessageType>
+			<!-- =================================================== -->
+			
+			<!-- Messages für den MapInfo-WebService -->
+			<!-- =================================================== -->
+			<MessageType name="GetMapInfo">
+				<Attribute type="String" name="mapInfo"/>
+				<Attribute type="Integer" name="custId"/>
+			</MessageType>
+			
+			<MessageType name="GetMapInfoResponse">
+				<Attribute type="String" name="mapInfoData"/>
+				<Attribute type="Integer" name="custId"/>
+			</MessageType>
+			<!-- =================================================== -->
+	
+			<!-- Messages für den WeatherInfo-WebService -->
+			<!-- =================================================== -->
+			<MessageType name="GetWeatherInfo">
+				<Attribute type="String" name="weatherInfo"/>
+				<Attribute type="Integer" name="custId"/>
+			</MessageType>
+			
+			<MessageType name="GetWeatherInfoResponse">
+				<Attribute type="String" name="weatherInfoData"/>
+				<Attribute type="String" name="zipCode"/>
+				<Attribute type="Integer" name="custId"/>
+			</MessageType>
+			<!-- =================================================== -->
+			
+			<!-- Messages für den RestaurantInfo-WebService -->
+			<!-- =================================================== -->
+			<MessageType name="GetOpenAirRestaurantInfo">
+				<Attribute type="String" name="openAirRestaurantInfo"/>
+				<Attribute type="Integer" name="custId"/>
+			</MessageType>
+			
+			<MessageType name="GetOpenAirRestaurantInfoResponse">
+				<Attribute type="String" name="openAirRestaurantInfoData"/>
+				<Attribute type="Integer" name="custId"/>
+			</MessageType>
+			
+			<MessageType name="GetFastFoodRestaurantInfo">
+				<Attribute type="String" name="fastFoodRestaurantInfo"/>
+				<Attribute type="Integer" name="custId"/>
+			</MessageType>
+			
+			<MessageType name="GetFastFoodRestaurantInfoResponse">
+				<Attribute type="String" name="fastFoodRestaurantInfoData"/>
+				<Attribute type="Integer" name="custId"/>
+			</MessageType>			
+			<!-- =================================================== -->
+
+			<!-- =================================================== -->
+			<AgentType name="Customer">
+				<!-- =================================================== -->
+				<Attribute type="Integer" name="numberOfRequests"/>
+				<Attribute type="String" name="searchData"/>
+				<Attribute type="String" name="zipCode"/>
+								
+				<!-- =================================================== -->
+				<Function name="getRandomZipCode" resultType="String">
+					<Parameter name="length" type="Integer"/>
+					<Body language="Java">
+						<![CDATA[
+                 			 String zipCode = "";
+                  				for (int i=1; i<=length; i++) { 
+                  					zipCode += String.valueOf(Random.uniformInt(1,9)); 
+                  				}
+                  				return (zipCode);
+		     			]]>
+					</Body>
+				</Function>
+
+				<!-- =================================================== -->
+				<PeriodicTimeEventType name="TriggerTravelInfoRequest">
+					<Periodicity>
+						<DiscreteRandomVariable>
+							<!-- erneuter Aufruf nach mind. x und max y Schritten -->
+							<UniformInt lowerBound="40" upperBound="50" />
+						</DiscreteRandomVariable>
+					</Periodicity>
+				</PeriodicTimeEventType>
+				
+				<!-- =================================================== -->
+				<CommunicationRule name="RequestTravelInfo_Rule" agentVariable="cust">
+					<documentation>
+						<description>Anfrage der Kunden an das TravelInfoSystem</description>
+					</documentation>
+
+					<WHEN eventType="TriggerTravelInfoRequest"/>
+					<DO>
+						<SCHEDULE-EVT>
+							<OutMessageEventExpr messageType="GetTravelInfo" receiverIdRefs="1">
+
+								<Delay>
+									<DiscreteRandomVariable>
+										<UniformInt lowerBound="1" upperBound="15" />
+									</DiscreteRandomVariable>
+								</Delay>
+								
+								<Slot property="travelInfo">
+									<ValueExpr language="Java">
+										cust.getZipCode()
+									</ValueExpr>
+								</Slot>
+								
+								<Slot property="custId">
+									<ValueExpr language="Java">
+										cust.getId()
+									</ValueExpr>
+								</Slot>
+								
+							</OutMessageEventExpr>
+						</SCHEDULE-EVT>
+					</DO>
+				</CommunicationRule>
+			</AgentType>
+
+			<!-- =================================================== -->
+			<AgentType name="TravelInfoService">
+			<!-- =================================================== -->
+				<ComplexDataProperty name="customerList" type="CustomerRecordList"/>
+				<Attribute type="Integer" name="listLength"/>
+				<!-- for statistics -->
+				<Attribute type="Integer" name="countRequests"/>
+			
+				<!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->
+				<CommunicationRule name="GetTravelInfo_Rule" agentVariable="tis">
+				<!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->
+					<documentation>
+						<description>
+							* Anfrage vom Kunden (Customer erhalten)
+							* Parameter: Postleitzahl (Dummy)
+							* -> Update TravelInfo Variablen
+							* -> Nachricht an Wetter- und MapDienst
+						</description>
+					</documentation>
+					<WHEN eventType="InMessageEvent" messageType="GetTravelInfo" messageVariable="mes" eventVariable="evt"/>
+					<DO>
+						<UPDATE-AGT>
+							<Slot property="listLength">
+								<ValueExpr language="Java">
+									<![CDATA[tis.getCustomerList().addCustomerRecordToList((int)evt.getSenderIdRef(), mes.getTravelInfo())]]>
+								</ValueExpr>
+							</Slot>
+							<Slot property="countRequests">
+								<ValueExpr language="Java">
+									<![CDATA[tis.getCountRequests()+1]]>
+								</ValueExpr>
+							</Slot>
+<!-- 
+							<UpdateComplexDataPropertyValue complexDataProperty="customerList" procedure="addCustomerRecordToList">
+								<Argument>
+									<ValueExpr language="Java">(int)evt.getSenderIdRef()</ValueExpr>
+								</Argument>
+								<Argument>
+									<ValueExpr language="Java">mes.getTravelInfo()</ValueExpr>
+								</Argument>
+							</UpdateComplexDataPropertyValue>
+-->
+						</UPDATE-AGT>
+						<SCHEDULE-EVT>
+							<!-- Message an MapInfo -->
+							<OutMessageEventExpr messageType="GetMapInfo" receiverIdRefs="2">
+								<Slot property="custId">
+									<ValueExpr language="Java">
+										evt.getSenderIdRef()
+									</ValueExpr>
+								</Slot>
+								<Slot property="mapInfo">
+									<ValueExpr language="Java">
+										mes.getTravelInfo()
+									</ValueExpr>
+								</Slot>
+							</OutMessageEventExpr>
+							
+							<!-- Message an WeatherInfo -->
+							<OutMessageEventExpr messageType="GetWeatherInfo" receiverIdRefs="3">
+								<Slot property="custId">
+									<ValueExpr language="Java">
+										evt.getSenderIdRef()
+									</ValueExpr>
+								</Slot>
+								<Slot property="weatherInfo">
+									<ValueExpr language="Java">
+										mes.getTravelInfo()
+									</ValueExpr>
+								</Slot>
+							</OutMessageEventExpr>	
+						</SCHEDULE-EVT>
+					</DO>
+				</CommunicationRule>
+				
+				<!-- =================================================== -->
+				<CommunicationRule name="GetMapInfoResponse_Rule" agentVariable="tis">
+					<documentation>
+						<description>...</description>
+					</documentation>
+					
+					<WHEN eventType="InMessageEvent" messageType="GetMapInfoResponse" messageVariable="mes" eventVariable="evt"/>
+					<DO>
+						<UPDATE-AGT>
+							<UpdateComplexDataPropertyValue complexDataProperty="customerList" procedure="updateMapInfoData">
+								<Argument>
+									<ValueExpr language="Java"><![CDATA[(int)mes.getCustId()]]></ValueExpr>
+								</Argument>
+								<Argument>
+									<ValueExpr language="Java"><![CDATA[mes.getMapInfoData()]]></ValueExpr>
+								</Argument>
+							</UpdateComplexDataPropertyValue>
+						</UPDATE-AGT>
+					</DO>
+				</CommunicationRule>
+				
+				<!-- =================================================== -->
+				<CommunicationRule name="GetWeatherInfoResponse_Rule" agentVariable="tis">
+					<documentation>
+						<description>
+							* erhält Antwort vom Wetter-Service
+							* Update der Wettervariable im Service mit den erhaltenen Daten
+							* Sendet Nachricht an RestaurantInfoService
+						</description>
+					</documentation>
+					
+					<WHEN eventType="InMessageEvent" messageType="GetWeatherInfoResponse" messageVariable="mes" eventVariable="evt"/>
+					<IF language="Java"><![CDATA[mes.getWeatherInfoData() == "sunny" ]]></IF>
+
+					<THEN>
+						<UPDATE-AGT>
+							<UpdateComplexDataPropertyValue complexDataProperty="customerList" procedure="updateWeatherInfoData">
+								<Argument>
+									<ValueExpr language="Java">(int)mes.getCustId()</ValueExpr>
+								</Argument>
+								<Argument>
+									<ValueExpr language="Java">mes.getWeatherInfoData()</ValueExpr>
+								</Argument>
+							</UpdateComplexDataPropertyValue>
+						</UPDATE-AGT>
+						<SCHEDULE-EVT>
+							<!-- Message an RestaurantInfo::OpenAirRestaurantInfo -->
+							<OutMessageEventExpr messageType="GetOpenAirRestaurantInfo" receiverIdRefs="4">
+								<Slot property="openAirRestaurantInfo">
+									<ValueExpr language="Java">
+										mes.getZipCode()
+									</ValueExpr>
+								</Slot>
+								<Slot property="custId">
+									<ValueExpr language="Java">
+										mes.getCustId()
+									</ValueExpr>
+								</Slot>
+							</OutMessageEventExpr>
+						</SCHEDULE-EVT>
+					</THEN>
+
+					<ELSE>
+						<UPDATE-AGT>
+							<UpdateComplexDataPropertyValue complexDataProperty="customerList" procedure="updateWeatherInfoData">
+								<Argument>
+									<ValueExpr language="Java">(int)mes.getCustId()</ValueExpr>
+								</Argument>
+								<Argument>
+									<ValueExpr language="Java">mes.getWeatherInfoData()</ValueExpr>
+								</Argument>
+							</UpdateComplexDataPropertyValue>
+						</UPDATE-AGT>
+						<SCHEDULE-EVT>
+							<!-- Message an RestaurantInfo::FastFoodRestaurantInfo -->
+							<OutMessageEventExpr messageType="GetFastFoodRestaurantInfo" receiverIdRefs="4">
+								<Slot property="fastFoodRestaurantInfo">
+									<ValueExpr language="Java">
+										mes.getZipCode()
+									</ValueExpr>
+								</Slot>
+								<Slot property="custId">
+									<ValueExpr language="Java">
+										mes.getCustId()
+									</ValueExpr>
+								</Slot>
+							</OutMessageEventExpr>
+						</SCHEDULE-EVT>	
+					</ELSE>
+					
+				</CommunicationRule>
+
+				<!-- =================================================== -->
+				<CommunicationRule name="GetOpenAirRestaurantInfoResponse_Rule" agentVariable="tis">
+					<documentation>
+						<description>...</description>
+					</documentation>
+					
+					<WHEN eventType="InMessageEvent" messageType="GetOpenAirRestaurantInfoResponse" messageVariable="mes" eventVariable="evt"/>
+					<DO>
+						<UPDATE-AGT>
+							<UpdateComplexDataPropertyValue complexDataProperty="customerList" procedure="updateRestaurantInfoData">
+								<Argument>
+									<ValueExpr language="Java">(int)mes.getCustId()</ValueExpr>
+								</Argument>
+								<Argument>
+									<ValueExpr language="Java">mes.getOpenAirRestaurantInfoData()</ValueExpr>
+								</Argument>
+							</UpdateComplexDataPropertyValue>
+						</UPDATE-AGT>
+						<SCHEDULE-EVT>
+							<!-- Message/Antwort an TravelInfoService -->
+							<OutMessageEventExpr messageType="GetTravelInfoResponse">
+								<ReceiverIdRef language="Java">mes.getCustId()</ReceiverIdRef>
+								<Slot property="travelInfoData">
+									<ValueExpr language="Java">
+										<![CDATA[
+											"TravelInfo: " +
+											tis.getCustomerList().getCustomerRecordFromListWithId((int)mes.getCustId()).getTravelInfo() +
+											" - MapInfo: " + 
+											tis.getCustomerList().getCustomerRecordFromListWithId((int)mes.getCustId()).getMapInfo() + 
+											" - WeatherInfo: " + 
+											tis.getCustomerList().getCustomerRecordFromListWithId((int)mes.getCustId()).getWeatherInfo() + 
+											" - RestaurantInfo: " + 
+											tis.getCustomerList().getCustomerRecordFromListWithId((int)mes.getCustId()).getRestaurantInfo()
+										]]>
+									</ValueExpr>
+								</Slot>
+								<Slot property="custId">
+									<ValueExpr language="Java">
+										mes.getCustId()
+									</ValueExpr>
+								</Slot>
+							</OutMessageEventExpr>	
+						</SCHEDULE-EVT>
+					</DO>
+				</CommunicationRule>
+
+				<!-- =================================================== -->
+				<CommunicationRule name="GetFastFoodRestaurantInfoResponse_Rule" agentVariable="tis">
+					<documentation>
+						<description>...</description>
+					</documentation>
+					
+					<WHEN eventType="InMessageEvent" messageType="GetFastFoodRestaurantInfoResponse" messageVariable="mes" eventVariable="evt"/>
+					<DO>
+						<UPDATE-AGT>
+							<UpdateComplexDataPropertyValue complexDataProperty="customerList" procedure="updateRestaurantInfoData">
+								<Argument>
+									<ValueExpr language="Java">(int)mes.getCustId()</ValueExpr>
+								</Argument>
+								<Argument>
+									<ValueExpr language="Java">mes.getFastFoodRestaurantInfoData()</ValueExpr>
+								</Argument>
+							</UpdateComplexDataPropertyValue>
+						</UPDATE-AGT>
+						<SCHEDULE-EVT>
+							<!-- Message/Antwort an TravelInfoService -->
+							<OutMessageEventExpr messageType="GetTravelInfoResponse">
+								<ReceiverIdRef language="Java">mes.getCustId()</ReceiverIdRef>
+								<Slot property="travelInfoData">
+									<ValueExpr language="Java">
+										<![CDATA[
+											"TravelInfo: " +
+											tis.getCustomerList().getCustomerRecordFromListWithId((int)mes.getCustId()).getTravelInfo() +
+											" - MapInfo: " + 
+											tis.getCustomerList().getCustomerRecordFromListWithId((int)mes.getCustId()).getMapInfo() + 
+											" - WeatherInfo: " + 
+											tis.getCustomerList().getCustomerRecordFromListWithId((int)mes.getCustId()).getWeatherInfo() + 
+											" - RestaurantInfo: " + 
+											tis.getCustomerList().getCustomerRecordFromListWithId((int)mes.getCustId()).getRestaurantInfo()
+										]]>
+									</ValueExpr>
+								</Slot>
+								<Slot property="custId">
+									<ValueExpr language="Java">
+										mes.getCustId()
+									</ValueExpr>
+								</Slot>
+							</OutMessageEventExpr>	
+						</SCHEDULE-EVT>
+					</DO>
+				</CommunicationRule>
+
+			</AgentType>
+			
+			<!-- =================================================== -->
+			<AgentType name="MapInfoService">
+				<!-- =================================================== -->
+
+				<Function name="getMapMessage" resultType="String">
+					<documentation>
+						<description>
+							Hilfsfunktion: ermittelt Map-Daten
+						</description>
+					</documentation>
+					<Parameter name="length" type="Integer"/>
+					<Body language="Java">
+						<![CDATA[ 
+			                  String zipCode = "";
+			                  for (int i=1; i<=length; i++) { 
+			                  	zipCode += String.valueOf(Random.uniformInt(1,9)); 
+			                  }
+			                  return (zipCode);
+						]]>
+					</Body>
+				</Function>
+				
+				<!-- =================================================== -->
+				<CommunicationRule name="GetMapInfo_Rule">
+					<documentation>
+						<description>
+							* erhält eine Anfrage vom TravelInfoService mit der PLZ als Parameter
+							* erstellt Daten zu dem Ort 
+							* sendet Antwort an TravelInfoService zurück
+						</description>
+					</documentation>
+					
+					<WHEN eventType="InMessageEvent" messageType="GetMapInfo" messageVariable="mes" eventVariable="evt"/>
+						<DO>
+							<SCHEDULE-EVT>
+								<!-- Message/Antwort an TravelInfoService -->
+								<OutMessageEventExpr messageType="GetMapInfoResponse" receiverIdRefs="1">
+									<Slot property="mapInfoData">
+										<ValueExpr language="Java">getMapMessage(7)</ValueExpr>
+									</Slot>
+									<Slot property="custId">
+										<ValueExpr language="Java">
+											mes.getCustId()
+										</ValueExpr>
+									</Slot>
+								</OutMessageEventExpr>
+								
+							</SCHEDULE-EVT>
+						</DO>
+				</CommunicationRule>
+			</AgentType>
+			
+			<!-- =================================================== -->
+			<AgentType name="WeatherInfoService">
+				
+				<!-- =================================================== -->
+				<Function name="getWeatherMessage" resultType="String">
+					<documentation>
+						<description>
+							Hilfsfunktion: ermittelt Wetterdaten - gibt das "aktuelle" Wetter zurück
+						</description>
+					</documentation>
+					<Body language="Java">
+						<![CDATA[ 
+							String resultInfo = "";
+							int rand = Random.uniformInt(1,2);
+							if (rand == 1) { 
+								resultInfo = "sunny";
+							} else { 
+								resultInfo = "rainy"; 
+							}
+							return resultInfo;
+						]]>
+					</Body>
+				</Function>
+				
+				<!-- =================================================== -->
+				<CommunicationRule name="GetWeatherInfo_Rule">
+					<documentation>
+						<description>
+							* erhält eine Anfrage vom TravelInfoService mit der PLZ als Parameter
+							* erstellt Wetterdaten zu dem Ort 
+							* sendet Antwort an TravelInfoService zurück
+						</description>
+					</documentation>
+					
+					<WHEN eventType="InMessageEvent" messageType="GetWeatherInfo" messageVariable="mes" eventVariable="evt"/>
+					<DO>
+						<SCHEDULE-EVT>
+							<!-- Message/Antwort an TravelInfoService -->
+							<OutMessageEventExpr messageType="GetWeatherInfoResponse" receiverIdRefs="1">
+								<Slot property="weatherInfoData">
+									<ValueExpr language="Java">getWeatherMessage()</ValueExpr>
+								</Slot>
+								<Slot property="zipCode">
+									<ValueExpr language="Java">mes.getWeatherInfo()</ValueExpr>
+								</Slot>
+								<Slot property="custId">
+									<ValueExpr language="Java">mes.getCustId()</ValueExpr>
+								</Slot>
+							</OutMessageEventExpr>
+							
+						</SCHEDULE-EVT>
+					</DO>
+				</CommunicationRule>
+			</AgentType>
+			
+			<!-- =================================================== -->
+			<AgentType name="RestaurantInfoService">
+			<!-- =================================================== -->
+				<Function name="getRestaurantMessage" resultType="String">
+					<documentation>
+						<description>							
+							Hilfsfunktion: ermittelt Öffnungszeiten (open or close)
+						</description>
+					</documentation>
+					<Body language="Java">
+						<![CDATA[ 
+							String resultInfo = "";
+							int rand = Random.uniformInt(1,2);
+							if (rand == 1) { 
+								resultInfo = "isOpen";
+							} else { 
+								resultInfo = "isClosed"; 
+							}
+							return resultInfo;
+						]]>
+					</Body>
+				</Function>
+
+				<!-- =================================================== -->
+				<CommunicationRule name="GetOpenAirRestaurantInfo_Rule">
+					<documentation>
+						<description>
+							* erhält eine Anfrage vom TravelInfoService mit der PLZ als Parameter
+							* erstellt Öffnungszeiten für das OpenAir-Restaurant an dem Ort 
+							* sendet Antwort an TravelInfoService zurück
+						</description>
+					</documentation>
+					
+					<WHEN eventType="InMessageEvent" messageType="GetOpenAirRestaurantInfo" messageVariable="mes" eventVariable="evt"/>
+					<DO>
+						<SCHEDULE-EVT>
+							<!-- Message/Antwort an TravelInfoService -->
+							<OutMessageEventExpr messageType="GetOpenAirRestaurantInfoResponse" receiverIdRefs="1">
+								<Slot property="openAirRestaurantInfoData">
+									<ValueExpr language="Java">
+										getRestaurantMessage()
+									</ValueExpr>
+								</Slot>
+								<Slot property="custId">
+									<ValueExpr language="Java">
+										mes.getCustId()
+									</ValueExpr>
+								</Slot>
+							</OutMessageEventExpr>
+							
+						</SCHEDULE-EVT>
+					</DO>
+				</CommunicationRule>
+
+				<!-- =================================================== -->
+				<CommunicationRule name="GetFastFoodRestaurantInfo_Rule">
+					<documentation>
+						<description>
+							* erhält eine Anfrage vom TravelInfoService mit der PLZ als Parameter
+							* erstellt Öffnungszeiten für das FastFood-Restaurant an dem Ort 
+							* sendet Antwort an TravelInfoService zurück
+						</description>
+					</documentation>
+					
+					<WHEN eventType="InMessageEvent" messageType="GetFastFoodRestaurantInfo" messageVariable="mes" eventVariable="evt"/>
+					<DO>
+						<SCHEDULE-EVT>
+							<!-- Message/Antwort an TravelInfoService -->
+							<OutMessageEventExpr messageType="GetFastFoodRestaurantInfoResponse" receiverIdRefs="1">
+								<Slot property="fastFoodRestaurantInfoData">
+									<ValueExpr language="Java">
+										getRestaurantMessage()
+									</ValueExpr>
+								</Slot>
+								<Slot property="custId">
+									<ValueExpr language="Java">
+										mes.getCustId()
+									</ValueExpr>
+								</Slot>
+							</OutMessageEventExpr>
+							
+						</SCHEDULE-EVT>
+					</DO>
+				</CommunicationRule>			
+			</AgentType>
+		</EntityTypes>
+		
+		<EnvironmentRules>
+			<!-- ======================================================= -->
+			<EnvironmentRule name="EndTravelInfoService_Rule">
+			<!-- ======================================================= -->
+				<documentation>
+					<description>...</description>
+				</documentation>
+				
+				<WHEN eventType="OutMessageEvent" messageType="GetTravelInfoResponse" messageVariable="mes" eventVariable="evt"/>
+				<FOR objectVariable="tis" objectType="TravelInfoService" objectIdRef="1" />
+				<FOR objectVariable="cust" objectType="Customer">
+					<ObjectIdRef language="Java" ><![CDATA[mes.getCustId()]]></ObjectIdRef>
+				</FOR>
+				<DO>
+					<UPDATE-ENV>
+						<UpdateObject objectVariable="cust">
+							<Slot property="searchData">
+								<ValueExpr language="Java"><![CDATA[mes.getTravelInfoData()]]></ValueExpr>
+							</Slot>
+							<Slot property="numberOfRequests">
+								<ValueExpr language="Java">
+									<![CDATA[cust.getNumberOfRequests()+1]]>
+								</ValueExpr>
+							</Slot>
+						</UpdateObject>
+						<UpdateObject objectVariable="tis">
+							<Slot property="listLength">
+								<ValueExpr language="Java">
+									<![CDATA[ 
+										tis.getCustomerList().deleteCustomerRecordFromList((int)mes.getCustId()) 
+									]]>
+								</ValueExpr>
+							</Slot>
+						</UpdateObject>
+					</UPDATE-ENV>
+				</DO>
+			</EnvironmentRule>
+
+		</EnvironmentRules>
+	</SimulationModel>
+	
+	<InitialState>
+		<Agent type="TravelInfoService" name="TravelIS" id="1">
+			<Slot property="test" value="-1"></Slot>
+		</Agent>		
+		<Agent type="MapInfoService" name="MapIS" id="2"/>
+		<Agent type="WeatherInfoService" name="WeatherIS" id="3"/>		
+		<Agent type="RestaurantInfoService" name="RestaurantIS" id="4"/>
+		
+		<!-- =================================================== -->
+		<Agents type="Customer" rangeStartID="1001" rangeEndID="1100">
+		<!-- =================================================== -->
+			<Slot property="zipCode">
+				<ValueExpr language="Java">Global.getRandomZipCode(5)</ValueExpr>
+			</Slot>
+			<PeriodicTimeEvent occurrenceTime="1" type="TriggerTravelInfoRequest" />
+		</Agents>
+	</InitialState>
+
+	<!-- =================================================== -->
+	<UserInterface>
+	<!-- =================================================== -->
+		<StatisticsUI>
+			<StatisticsVariableUI variable="numberOfCustomers">
+				<Label>
+					<Text xml:lang="en">Number of customers</Text>
+					<Text xml:lang="de">Anzahl Kunden</Text>
+				</Label>
+				<Hint>
+					<Text xml:lang="en">How many customers have use the service?</Text>
+					<Text xml:lang="de">Wieviele Kunden haben den Service nutzen können?</Text>
+				</Hint>
+			</StatisticsVariableUI>
+			<StatisticsVariableUI variable="countCustomers">
+				<Label>
+					<Text xml:lang="en">Test: Anzahl Anfragen</Text>
+					<Text xml:lang="de">Test: Anzahl Anfragen</Text>
+				</Label>
+				<Hint>
+					<Text xml:lang="en">Test: Anfragen an den TravelInfoService</Text>
+					<Text xml:lang="de">Test: Anfragen an den TravelInfoService</Text>
+				</Hint>
+			</StatisticsVariableUI>
+			<StatisticsVariableUI variable="averageTime">
+				<Label>
+					<Text xml:lang="en">Test: durchschnittliche Laufzeit</Text>
+					<Text xml:lang="de">Test: durchschnittliche Laufzeit</Text>
+				</Label>
+				<Hint>
+					<Text xml:lang="en">Test: durchschnittliche Laufzeit</Text>
+					<Text xml:lang="de">Test: durchschnittliche Laufzeit</Text>
+				</Hint>
+			</StatisticsVariableUI>
+		</StatisticsUI>
+		<AnimationUI>
+			<Views>
+				<SpaceView>
+					<TwoDimensionalSpaceView2D backgroundColor="darkgrey"/>
+				</SpaceView>
+				<ObjectView objectType="TravelInfoService" objectIdRef="1">
+					<!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->
+					<Shape2D x="300px" y="200px">
+						<Rectangle positioning="LeftCenter" fill="blue" height="25" width="1" stroke="black" strokeWidth="2">
+							<ShapePropertyMap shapeProperty="width" property="listLength" mapType="polynomial" a1="3"/>
+						</Rectangle>
+					</Shape2D>
+					<DisplayInfo content="customers (TravelInfoService)" property="listLength"/>
+				</ObjectView>
+			</Views>
+		</AnimationUI>
+		
+	</UserInterface>
+</SimulationScenario>

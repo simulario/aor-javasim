@@ -1,0 +1,190 @@
+<?xml version="1.0"?>
+<?xml-stylesheet type="text/xsl" href="prettyprint.xsl"?>
+
+<SimulationScenario xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+ xsi:schemaLocation="http://aor-simulation.org ../../../ext/aorsl/AORSL-0-8-3.xsd"
+ xmlns="http://aor-simulation.org"
+ xmlns:dc="http://purl.org/dc/elements/1.1/"
+ xmlns:aors="http://aor-simulation.org"
+ version="0.8.3"
+ scenarioName="CarsOnCircularTrack"
+ scenarioTitle="Four cars moving on a circular track with two speed limit signs"
+ simulationManagerDirectory="../../..">
+  <SimulationParameters simulationSteps="1000" stepDuration="1" timeUnit="s" stepTimeDelay="15"/>
+
+  <SimulationModel modelName="CarsOnCircularTrack" modelTitle="Cars moving on a circular track with uniform velocity" autoKinematics="true">  	
+    <SpaceModel geometry="Toroidal" spatialDistanceUnit="m"><OneDimensional xMax="250"/></SpaceModel>
+    <EntityTypes>
+      <ActionEventType name="SpeedUp">
+        <Attribute name="velocity" type="Float"/>
+      </ActionEventType>
+      <ActionEventType name="SlowDown">
+        <Attribute name="velocity" type="Float"/>
+      </ActionEventType>
+      <PhysicalObjectType name="SpeedLimitSign">
+        <InitialAttributeValue attribute="width" value="1.5"/>
+        <Attribute name="admMaxVelocity" type="Float"/>
+      </PhysicalObjectType>
+      <PhysicalObjectType name="SpeedLimitCancelationSign">
+        <InitialAttributeValue attribute="width" value="1.5"/>
+      </PhysicalObjectType>
+    	<!-- =========================================================== -->
+    	<PhysicalAgentType name="Car" autoPerception="true">
+    	<!-- ============================================================ -->
+    		<InitialAttributeValue attribute="perceptionRadius" value="10"/>
+        <InitialAttributeValue attribute="width" value="4"/>
+    		<InitialAttributeValue attribute="height" value="2"/>
+    		<Attribute name="maxVelocity" type="Float"/>
+    		<!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->
+    		<ReactionRule name="SpeedLimitStartPercEvtRR" agentVariable="car">
+    		<!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->
+    			<documentation><dc:description>When a car perceives a speed limit sign, it decreases its velocity to the admissible maximum velocity prescribed by the sign. </dc:description>
+          </documentation>
+          <WHEN eventType="PhysicalObjectPerceptionEvent" physicalObjectType="SpeedLimitSign" eventVariable="e"/>
+          <IF language="Java">car.getVx() &gt; ((SpeedLimitSign)e.getPerceivedPhysicalObject()).getAdmMaxVelocity()</IF>
+          <THEN>
+           <SCHEDULE-EVT>
+             <ActionEventExpr actionEventType="SlowDown">
+               <Slot xsi:type="aors:OpaqueExprSlot" property="velocity">
+                 <ValueExpr language="Java">((SpeedLimitSign) e.getPerceivedPhysicalObject()).getAdmMaxVelocity()</ValueExpr>
+               </Slot>
+             </ActionEventExpr>
+           </SCHEDULE-EVT>
+          </THEN>
+        </ReactionRule>
+    		<!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->
+    		<ReactionRule name="SpeedLimitEndPercEvtRR" agentVariable="car">
+    		<!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->
+    			<documentation>
+            <dc:description>
+              When a car perceives a speed limit cancellation sign, it increases its velocity to its maximum velocity.
+            </dc:description>
+          </documentation>
+          <WHEN eventType="PhysicalObjectPerceptionEvent" physicalObjectType="SpeedLimitCancelationSign"/>
+          <IF language="Java"><![CDATA[  car.getVx() < car.getMaxVelocity()  ]]></IF>
+          <THEN>
+           <SCHEDULE-EVT>
+             <ActionEventExpr actionEventType="SpeedUp">
+               <Slot xsi:type="aors:OpaqueExprSlot" property="velocity">
+                 <ValueExpr language="Java">car.getMaxVelocity()</ValueExpr>
+               </Slot>
+             </ActionEventExpr>
+           </SCHEDULE-EVT>
+          </THEN>
+        </ReactionRule>
+      </PhysicalAgentType>
+    </EntityTypes>
+  	<!-- =========================================================== -->
+  	<EnvironmentRules>
+  	<!-- =========================================================== -->
+  		<EnvironmentRule name="SlowDownEnvRule">
+      <!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->
+      	<documentation>
+          <dc:description>When a car agent has performed a SlowDown action, the environment simulator adjusts its velocity accordingly.</dc:description>
+        </documentation>
+        <WHEN eventType="SlowDown" eventVariable="e"/>
+        <DO>
+          <UPDATE-ENV>
+            <UpdateObject>
+              <ObjectRef  objectType="Car" language="Java">e.getActor()</ObjectRef>
+              <Slot xsi:type="aors:OpaqueExprSlot" property="vx">
+                <ValueExpr language="Java">e.getVelocity()</ValueExpr>
+              </Slot>
+            </UpdateObject>
+          </UPDATE-ENV>
+        </DO>
+      </EnvironmentRule>   
+   	<!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->
+   	<EnvironmentRule name="SpeedUpEnvRule">
+    <!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->
+      	<documentation><dc:description>When a car agent has performed a SpeedUp action, the environment simulator adjusts its velocity accordingly. </dc:description></documentation>
+        <WHEN eventType="SpeedUp" eventVariable="e"/>
+        <DO>
+         <UPDATE-ENV>
+           <UpdateObject>
+             <ObjectRef  objectType="Car" language="Java">e.getActor()</ObjectRef>
+             <Slot xsi:type="aors:OpaqueExprSlot" property="vx">
+               <ValueExpr language="Java"> ((Car) e.getActor()).getMaxVelocity() </ValueExpr>
+             </Slot>
+           </UpdateObject>
+         </UPDATE-ENV>
+        </DO>
+      </EnvironmentRule>
+    </EnvironmentRules>
+  </SimulationModel>
+	<!-- =========================================================== -->
+	<InitialState>
+	<!-- =========================================================== -->
+		<PhysicalAgent type="Car" name="Car1" id="1" vx="0.5" x="0">
+      <Slot property="maxVelocity" value="0.5"/>
+    </PhysicalAgent>
+
+		<PhysicalAgent type="Car" name="Car2" id="2" vx="0.375" x="10">
+      <Slot property="maxVelocity" value="0.375"/>
+  	</PhysicalAgent>
+		<PhysicalAgent type="Car" name="Car3" id="3" vx="0.625" x="20" shape2D="polygon" points="2.1,1 1.4,1 1.4,1.25 0.7,1.25 0.7,1 -0.7,1 -0.7,1.25 -1.4,1.25 -1.4,1 -2.1,1 -2.1,-1 -1.4,-1 -1.4,-1.25 -0.7,-1.25 -0.7,-1 0.7,-1 0.7,-1.25 1.4,-1.25 1.4,-1 2.1,-1">
+			<Slot property="maxVelocity" value="0.625"/>
+		</PhysicalAgent>
+		<PhysicalAgent type="Car" name="Car3" id="4" vx="0.75" x="30" shape2D="polygon" points="2.8,0.5 2.1,1 1.4,1 1.4,1.25 0.7,1.25 0.7,1 -0.7,1 -0.7,1.25 -1.4,1.25 -1.4,1 -2.1,1 -2.1,-1 -1.4,-1 -1.4,-1.25 -0.7,-1.25 -0.7,-1 0.7,-1 0.7,-1.25 1.4,-1.25 1.4,-1 2.1,-1 2.8,-0.5">
+			<Slot property="maxVelocity" value="0.75"/>
+		</PhysicalAgent>
+  	<PhysicalObject type="SpeedLimitSign" name="SpeedLimitSign1" id="101" shape2D="circle" x="70">
+      <Slot property="admMaxVelocity" value="0.375"/>
+    </PhysicalObject>
+  	<PhysicalObject type="SpeedLimitCancelationSign" name="SpeedLimitCancelationSign1" id="102" shape2D="circle" x="100"/>
+    <PhysicalObject type="SpeedLimitSign" name="SpeedLimitSign2" id="103" shape2D="circle" x="150">
+      <Slot property="admMaxVelocity" value="0.5"/>
+    </PhysicalObject>
+    <PhysicalObject type="SpeedLimitCancelationSign" name="SpeedLimitCancelationSign2" shape2D="circle" id="104" x="200"/>
+  </InitialState>
+  
+  <UserInterface>
+    <AnimationUI>
+      <Views>
+      	<SpaceView canvasColor="lightgrey">
+      		<OneDimensionalSpaceView2D mode="circular" trackWidth="40px" trackColor="darkgrey"/>
+      	</SpaceView>
+      	
+        <PhysicalObjectView physicalObjectType="Car" displayID="true">
+          <PhysicalShape2D>
+          	<Rectangle texture="testIconCar.png"/>
+          </PhysicalShape2D>
+        	<DisplayInfo property="vx" content="m/s"></DisplayInfo>
+        </PhysicalObjectView>
+      	
+        <PhysicalObjectView physicalObjectIdRef="3" displayID="true">
+          <PhysicalShape2D>
+            <Polygon>
+            	<ShapePropertyMap shapeProperty="fill" property="vx" mapType="caseWise" v0="green" a0="0.5" v1="yellow" a1="0.75" v2="red"/>
+            </Polygon>            
+          </PhysicalShape2D>
+        	<DisplayInfo property="vx" content="m/s"></DisplayInfo>
+        </PhysicalObjectView>
+
+      	<PhysicalObjectView physicalObjectIdRef="4" displayID="true">
+      		<PhysicalShape2D>
+      			<Polygon>
+      				<ShapePropertyMap shapeProperty="fill" property="vx" mapType="caseWise" v0="green" a0="0.5" v1="yellow" a1="0.75" v2="red"/>
+      			</Polygon>
+      		</PhysicalShape2D>
+      		<DisplayInfo property="vx" content="m/s"></DisplayInfo>
+      	</PhysicalObjectView>
+      	
+      	<PhysicalObjectView physicalObjectType="SpeedLimitSign">
+          <PhysicalShape2D>
+            <Circle fill="white" stroke="red" strokeWidth="2"/>
+          </PhysicalShape2D>
+        	<DisplayInfo property="admMaxVelocity" content="m/s"></DisplayInfo>
+        </PhysicalObjectView>
+        
+        <PhysicalObjectView physicalObjectType="SpeedLimitCancelationSign">
+          <PhysicalShape2D>
+            <Circle fill="white" stroke="black" strokeWidth="2"/>
+          </PhysicalShape2D>
+        </PhysicalObjectView>      
+      </Views>
+    </AnimationUI>
+    
+  </UserInterface>
+  
+</SimulationScenario>

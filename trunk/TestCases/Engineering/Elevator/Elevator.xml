@@ -1,0 +1,331 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<?xml-stylesheet type="text/xsl" href="prettyprint.xsl"?>
+
+<SimulationScenario xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+  xsi:schemaLocation="http://aor-simulation.org ../../../ext/aorsl/AORSL-0-8-1.xsd" xmlns:dc="http://purl.org/dc/elements/1.1/"
+  xmlns="http://aor-simulation.org" xmlns:aors="http://aor-simulation.org" version="0.8.1" scenarioName="Elevator6"
+  simulationManagerDirectory="../../..">
+  <SimulationParameters simulationSteps="5000" randomSeed="20" stepTimeDelay="10"/>
+  <SimulationModel modelName="Elevator" autoKinematics="true">
+    <SpaceModel dimensions="1" geometry="Euclidean" discrete="false" xMax="510" spatialDistanceUnit="m"/>
+    <EntityTypes>
+
+      <ActionEventType name="PositionCheck"/>
+      <ActionEventType name="Repositioning"/>
+      <ActionEventType name="OpenDoor"/>
+      <ActionEventType name="CloseDoor"/>
+      <ActionEventType name="ArriveFloor">
+        <ReferenceProperty name="arrivedFloor" type="Floor"/>
+      </ActionEventType>
+
+      <PerceptionEventType name="CallRequestPe"/>
+      <PerceptionEventType name="WrongFloorPe"/>
+      <PerceptionEventType name="RightFloorPe"/>
+      <PerceptionEventType name="OpenDoorPe"/>
+      <PerceptionEventType name="CloseDoorPe"/>
+
+      <CausedEventType name="Boarding"/>
+
+      <ExogenousEventType name="CallFromOrig">
+        <Function name="getOriginFloor" resultType="Integer">
+          <Body language="Java">return Random.uniformInt(1, 25);</Body>
+        </Function>
+        <Periodicity language="Java">Random.uniformInt(10, 30)</Periodicity>
+      </ExogenousEventType>
+
+      <PhysicalObjectType name="Floor">
+        <Attribute type="Integer" name="number"/>
+        <Function name="computeBoardingTime" resultType="Integer">
+          <Body language="Java">return Random.uniformInt(30, 100);</Body>
+        </Function>
+        <Function name="computeTransportTarget" resultType="Integer">
+          <Body language="Java">return Random.uniformInt(1, 25);</Body>
+        </Function>
+      </PhysicalObjectType>
+
+      <PhysicalAgentType name="Elevator" autoPerception="true">
+        <Attribute type="Boolean" name="callRequest" initialValue="false"/>
+        <Attribute type="Boolean" name="transportRequest" initialValue="false"/>
+        <ReferenceProperty name="currentFloor" type="Floor"/>
+        <Attribute type="Integer" name="targetFloor" initialValue="0"/>
+        <Attribute type="Boolean" name="openDoor" initialValue="false"/>
+
+        <ReactionRule name="CallRule">
+          <WHEN eventType="CallRequestPe"/>
+          <SCHEDULE-EVT>
+            <ActionEventExpr actionEventType="PositionCheck"/>
+          </SCHEDULE-EVT>
+        </ReactionRule>
+
+        <ReactionRule name="FloorRule_01">
+          <WHEN eventType="WrongFloorPe"/>
+          <SCHEDULE-EVT>
+            <ActionEventExpr actionEventType="Repositioning"/>
+          </SCHEDULE-EVT>
+        </ReactionRule>
+
+        <ReactionRule name="FloorRule_02">
+          <WHEN eventType="RightFloorPe" eventVariable="e"/>
+          <SCHEDULE-EVT>
+            <ActionEventExpr actionEventType="OpenDoor"/>
+          </SCHEDULE-EVT>
+        </ReactionRule>
+
+        <ReactionRule name="FloorRule_03">
+          <WHEN eventType="CloseDoorPe" eventVariable="e"/>
+          <SCHEDULE-EVT>
+            <ActionEventExpr actionEventType="CloseDoor"/>
+          </SCHEDULE-EVT>
+        </ReactionRule>
+
+        <ReactionRule name="FloorPerceptionRule" agentVariable="elevator">
+          <WHEN eventType="PhysicalObjectPerceptionEvent" physicalObjectType="Floor" eventVariable="e"/>
+          <IF language="Java">!elevator.isOpenDoor() &amp;&amp; (elevator.isCallRequest() || elevator.isTransportRequest())</IF>
+          <SCHEDULE-EVT>
+            <ActionEventExpr actionEventType="ArriveFloor">
+              <Slot xsi:type="aors:OpaqueExprSlot" property="arrivedFloor">
+                <ValueExpr language="Java">(Floor)e.getPerceivedPhysicalObject()</ValueExpr>
+              </Slot>
+            </ActionEventExpr>
+          </SCHEDULE-EVT>
+        </ReactionRule>
+
+      </PhysicalAgentType>
+
+
+    </EntityTypes>
+
+    <EnvironmentRules>
+
+      <EnvironmentRule name="ElevatorCallRule">
+        <documentation>
+          <dc:description>Elevatorcall from exogenous</dc:description>
+        </documentation>
+        <WHEN eventType="CallFromOrig" eventVariable="caller"/>
+        <FOR objectVariable="elevator" objectIdRef="100"/>
+      	<FOR objectVariable="x" rangeStartID="1" rangeEndID="3"/>
+      	<FOR objectVariable="y" objectType="z"/>
+        <IF language="Java">!elevator.isCallRequest() &amp;&amp; !elevator.isOpenDoor() &amp;&amp; !elevator.isTransportRequest()</IF>
+        <THEN>
+          <UPDATE-ENV>
+            <UpdateObject objectVariable="elevator">
+              <Slot xsi:type="aors:SimpleSlot" property="callRequest" value="true"/>
+              <Slot xsi:type="aors:OpaqueExprSlot" property="targetFloor">
+                <ValueExpr language="Java">caller.getOriginFloor()</ValueExpr>
+              </Slot>
+            </UpdateObject>
+          </UPDATE-ENV>
+          <SCHEDULE-EVT>
+            <PerceptionEventExpr eventType="CallRequestPe" perceiverIdRefs="100"/>
+          </SCHEDULE-EVT>
+        </THEN>
+      </EnvironmentRule>
+
+      <EnvironmentRule name="ElevatorUpdatePositionRule">
+        <WHEN eventType="ArriveFloor" physicalObjectType="Floor" eventVariable="e"/>
+        <FOR objectVariable="elevator" objectIdRef="100"/>
+        <IF language="Java">!elevator.isOpenDoor()</IF>
+        <THEN>
+          <UPDATE-ENV>
+            <UpdateObject objectVariable="elevator">
+              <Slot xsi:type="aors:OpaqueExprSlot" property="currentFloor">
+                <ValueExpr language="Java">((ArriveFloor)e).getArrivedFloor()</ValueExpr>
+              </Slot>
+            </UpdateObject>
+          </UPDATE-ENV>
+        </THEN>
+      </EnvironmentRule>
+
+      <!-- ++++++++++   PositionCheck  ++++++++++ -->
+      <EnvironmentRule name="ElevatorCheckHaltPositionRule">
+        <documentation>
+          <dc:description>If the elevator is in the targetFloor</dc:description>
+        </documentation>
+        <WHEN eventType="PositionCheck"/>
+        <FOR objectVariable="elevator" objectIdRef="100"/>
+        <IF language="Java">elevator.getCurrentFloor().getNumber() == elevator.getTargetFloor()</IF>
+        <THEN>
+          <SCHEDULE-EVT>
+            <PerceptionEventExpr eventType="RightFloorPe" perceiverIdRefs="100"/>
+          </SCHEDULE-EVT>
+        </THEN>
+        <ELSE>
+          <SCHEDULE-EVT>
+            <PerceptionEventExpr eventType="WrongFloorPe" perceiverIdRefs="100"/>
+          </SCHEDULE-EVT>
+        </ELSE>
+      </EnvironmentRule>
+
+      <EnvironmentRule name="ElevatorCheckPositionRule">
+        <documentation>
+          <dc:description>If the elevator is moving and the target floor is arrived</dc:description>
+        </documentation>
+        <WHEN eventType="ArriveFloor" physicalObjectType="Floor" eventVariable="e"/>
+        <FOR objectVariable="elevator" objectIdRef="100"/>
+        <IF language="Java">!elevator.isOpenDoor() &amp;&amp; elevator.getTargetFloor() == ((ArriveFloor)e).getArrivedFloor().getNumber()</IF>
+        <THEN>
+          <UPDATE-ENV>
+            <UpdateObject objectVariable="elevator">
+              <Slot xsi:type="aors:SimpleSlot" property="vx" value="0"/>
+            </UpdateObject>
+          </UPDATE-ENV>
+          <SCHEDULE-EVT>
+            <PerceptionEventExpr eventType="RightFloorPe" perceiverIdRefs="100"/>
+          </SCHEDULE-EVT>
+        </THEN>
+      </EnvironmentRule>
+      <!-- ________________________________________ -->
+
+      <!-- ++++++++++ Boarding ++++++++++ -->
+      <!-- OpenDoor and set BoardingDelay -->
+      <EnvironmentRule name="BoardingStartRule">
+        <WHEN eventType="OpenDoor"/>
+        <FOR objectVariable="elevator" objectIdRef="100"/>
+        <IF language="Java">!elevator.isOpenDoor()</IF>
+        <THEN>
+          <UPDATE-ENV>
+            <UpdateObject objectVariable="elevator">
+              <Slot xsi:type="aors:SimpleSlot" property="openDoor" value="true"/>
+            </UpdateObject>
+          </UPDATE-ENV>
+          <SCHEDULE-EVT>
+            <CausedEventExpr eventType="Boarding">
+              <Delay language="Java">elevator.getCurrentFloor().computeBoardingTime()</Delay>
+            </CausedEventExpr>
+          </SCHEDULE-EVT>
+        </THEN>
+      </EnvironmentRule>
+
+      <!-- if its an callRequest -->
+      <EnvironmentRule name="BoardingEndRule_01">
+        <WHEN eventType="Boarding"/>
+        <FOR objectVariable="elevator" objectIdRef="100"/>
+        <IF language="Java">elevator.isCallRequest()</IF>
+        <THEN>
+          <UPDATE-ENV>
+            <UpdateObject objectVariable="elevator">
+              <Slot xsi:type="aors:SimpleSlot" property="callRequest" value="false"/>
+            </UpdateObject>
+          </UPDATE-ENV>
+          <SCHEDULE-EVT>
+            <PerceptionEventExpr eventType="CloseDoorPe" perceiverIdRefs="100"/>
+          </SCHEDULE-EVT>
+        </THEN>
+      </EnvironmentRule>
+
+      <!-- if its an transportRequest -->
+      <EnvironmentRule name="BoardingEndRule_02">
+        <WHEN eventType="Boarding"/>
+        <FOR objectVariable="elevator" objectIdRef="100"/>
+        <IF language="Java">elevator.isTransportRequest()</IF>
+        <THEN>
+          <UPDATE-ENV>
+            <UpdateObject objectVariable="elevator">
+              <Slot xsi:type="aors:SimpleSlot" property="transportRequest" value="false"/>
+            </UpdateObject>
+          </UPDATE-ENV>
+          <SCHEDULE-EVT>
+            <PerceptionEventExpr eventType="CloseDoorPe" perceiverIdRefs="100"/>
+          </SCHEDULE-EVT>
+        </THEN>
+      </EnvironmentRule>
+
+      <!-- closedoor if its an transportRequest -->
+      <EnvironmentRule name="CloseDoorRule_01">
+        <WHEN eventType="CloseDoor"/>
+        <FOR objectVariable="elevator" objectIdRef="100"/>
+        <IF language="Java">!elevator.isCallRequest()</IF>
+        <THEN>
+          <UPDATE-ENV>
+            <UpdateObject objectVariable="elevator">
+              <Slot xsi:type="aors:SimpleSlot" property="openDoor" value="false"/>
+              <Slot xsi:type="aors:SimpleSlot" property="transportRequest" value="true"/>
+              <Slot xsi:type="aors:OpaqueExprSlot" property="targetFloor">
+                <ValueExpr language="Java">elevator.getCurrentFloor().computeTransportTarget()</ValueExpr>
+              </Slot>
+            </UpdateObject>
+          </UPDATE-ENV>
+          <SCHEDULE-EVT>
+            <PerceptionEventExpr eventType="CallRequestPe" perceiverIdRefs="100"/>
+          </SCHEDULE-EVT>
+        </THEN>
+      </EnvironmentRule>
+
+      <EnvironmentRule name="CloseDoorRule_02">
+        <WHEN eventType="CloseDoor"/>
+        <FOR objectVariable="elevator" objectIdRef="100"/>
+        <IF language="Java">!elevator.isTransportRequest() &amp;&amp; !elevator.isCallRequest()</IF>
+        <THEN>
+          <UPDATE-ENV>
+            <UpdateObject objectVariable="elevator">
+              <Slot xsi:type="aors:SimpleSlot" property="openDoor" value="false"/>
+            </UpdateObject>
+          </UPDATE-ENV>
+        </THEN>
+      </EnvironmentRule>
+
+
+      <!-- ++++++++++   Repositioning  ++++++++++ -->
+      <EnvironmentRule name="MoveRule">
+        <WHEN eventType="Repositioning"/>
+        <FOR objectVariable="elevator" objectIdRef="100"/>
+        <IF language="Java">elevator.getCurrentFloor().getNumber() &gt; elevator.getTargetFloor()</IF>
+        <THEN>
+          <UPDATE-ENV>
+            <UpdateObject objectVariable="elevator">
+              <Slot xsi:type="aors:SimpleSlot" property="vx" value="-1"/>
+            </UpdateObject>
+          </UPDATE-ENV>
+        </THEN>
+        <ELSE>
+          <UPDATE-ENV>
+            <UpdateObject objectVariable="elevator">
+              <Slot xsi:type="aors:SimpleSlot" property="vx" value="1"/>
+            </UpdateObject>
+          </UPDATE-ENV>
+        </ELSE>
+      </EnvironmentRule>
+      <!--     <EnvironmentRule name="MoveRule_02">
+        <WHEN eventType="Repositioning"/>
+        <FOR objectVariable="elevator" objectIdRef="100"/>
+        <IF language="Java">elevator.getCurrentFloor().getNumber() &lt; elevator.getTargetFloor()</IF>
+
+      </EnvironmentRule> -->
+      <!-- ________________________________________ -->
+
+    </EnvironmentRules>
+  </SimulationModel>
+
+  <InitialState>
+    <PhysicalObjects type="Floor" rangeStartID="1" rangeEndID="25" creationLoopVar="i">
+      <Slot xsi:type="aors:OpaqueExprSlot" property="number">
+        <ValueExpr language="Java">i</ValueExpr>
+      </Slot>
+      <Slot xsi:type="aors:OpaqueExprSlot" property="x">
+        <ValueExpr language="Java">i * 20</ValueExpr>
+      </Slot>
+    </PhysicalObjects>
+
+    <PhysicalAgent type="Elevator" id="100" x="20" perceptionRadius="1"/>
+    <!-- we need this little delay (occurrenceTime="2") to set the currentFloor -->
+    <ExogenousEvent occurrenceTime="2" type="CallFromOrig"/>
+
+
+  </InitialState>
+  <Views>
+    <SpaceView>
+      <OneDimensional mode="vertical"/>
+    </SpaceView>
+    <View physicalObjectStartID="100" physicalObjectEndID="100" shape2D="rectangle">
+      <ShapeSlot shapeProperty="fill" value="yellow"/>
+      <ShapeSlot shapeProperty="width" value="20"/>
+      <ShapeSlot shapeProperty="height" value="20"/>
+    </View>
+
+    <View physicalObjectStartID="1" physicalObjectEndID="25" shape2D="circle">
+      <ShapeSlot shapeProperty="fill" value="red"/>
+      <ShapeSlot shapeProperty="r" value="10"/>
+    </View>
+  </Views>
+
+</SimulationScenario>

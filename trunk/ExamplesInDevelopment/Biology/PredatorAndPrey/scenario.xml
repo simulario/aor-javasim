@@ -1,0 +1,609 @@
+<?xml version="1.0"?>
+<?xml-stylesheet type="text/xsl" href="prettyprint.xsl"?>
+
+<SimulationScenario xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xsi:schemaLocation="http://aor-simulation.org ../../../ext/aorsl/AORSL-0-8-3.xsd"
+	xmlns="http://aor-simulation.org" xmlns:dc="http://purl.org/dc/elements/1.1/"
+	xmlns:aors="http://aor-simulation.org" version="0.8.3" scenarioName="PredatorAndPrey"
+	scenarioTitle="predator and prey ecosystem simulation"
+	simulationManagerDirectory="../../..">
+
+	<SimulationParameters simulationSteps="3650" stepDuration="1" timeUnit="D" stepTimeDelay="0"/>
+	<SimulationModel xml:id="SimMod" modelName="PredatorAndPrey"
+		modelTitle="Predator and prey ecosystem simulation">
+		<documentation>
+			<dc:creator>Gerd Wagner</dc:creator>
+			<dc:created>20100222</dc:created>
+			<dc:source>Original version by Roland Kölbel, 20090627.</dc:source>
+			<dc:description>This model simulates a predator and prey ecosystem. Predators eat prey, which eat grass. Grass grows at some reproduction rate. </dc:description>
+		</documentation>
+		
+		<SpaceModel spatialDistanceUnit="m" geometry="Toroidal">
+			<TwoDimensionalGrid xMax="30" yMax="30" gridCellMaxOccupancy="1">
+				<GridCellProperty type="Integer" name="grassLevel"/>
+			</TwoDimensionalGrid>
+		</SpaceModel>
+
+		<Statistics>
+			<Variable name="predatorPopulationSize" dataType="Integer">
+				<Source><ObjectTypeExtensionSize objectType="Predator"/></Source>
+			</Variable>
+			<Variable name="preyPopulationSize" dataType="Integer">
+				<Source><ObjectTypeExtensionSize objectType="Prey"/></Source>
+			</Variable>
+			<Variable name="preyEnergy" dataType="Integer">
+				<Source aggregationFunction="avg"><ObjectProperty property="energy" objectType="Prey"/></Source>
+			</Variable>
+			<Variable name="predatorAge" dataType="Integer">
+				<Source><ObjectProperty property="age" objectType="Predator"/></Source>
+			</Variable>
+			<Variable name="preyAge" dataType="Integer">
+				<Source><ObjectProperty property="age" objectType="Prey"/></Source>
+			</Variable>
+			<Variable name="predatorSex" dataType="Integer">
+				<Source><ObjectProperty property="sex" objectType="Predator"/></Source>
+			</Variable>
+			<Variable name="preySex" dataType="Integer">
+				<Source><ObjectProperty property="sex" objectType="Prey"/></Source>
+			</Variable>
+
+			<Variable name="killedPrey" dataType="Integer"/>
+			<Variable name="bornPrey" dataType="Integer"/>
+			<Variable name="bornPredators" dataType="Integer"/>
+		</Statistics>
+
+		<DataTypes>
+			<Enumeration name="Direction4">
+				<EnumerationLiteral>N</EnumerationLiteral>
+				<EnumerationLiteral>E</EnumerationLiteral>
+				<EnumerationLiteral>S</EnumerationLiteral>
+				<EnumerationLiteral>W</EnumerationLiteral>
+			</Enumeration>
+		</DataTypes>
+
+		<EntityTypes>
+			<PerceptionEventType name="GrassAvailableOnCell"/>
+			<ActionEventType name="Move">
+				<EnumerationProperty name="direction" type="Direction4"/>
+			</ActionEventType>
+			<ActionEventType name="ProducePreyOffspring">
+				<ReferenceProperty name="mother" type="Prey"/>
+				<ReferenceProperty name="father" type="Prey"/>
+			</ActionEventType>
+			<ActionEventType name="ProducePredatorOffspring">
+				<ReferenceProperty name="mother" type="Predator"/>
+				<ReferenceProperty name="father" type="Predator"/>
+			</ActionEventType>
+			<ActionEventType name="EatGrass"/>
+			<ActionEventType name="KillPrey">
+				<ReferenceProperty name="prey" type="Prey"/>
+			</ActionEventType>
+
+			<!-- =================================================================== -->
+			<PhysicalAgentType name="Animal" idPerceivable="true">
+			<!-- =================================================================== -->
+				<Attribute name="energy" type="Integer"/>
+				<Attribute name="age" type="Integer" minValue="0"/>
+				<Attribute name="maxAge" type="Integer"/>
+				<Attribute name="sex" type="Integer" minValue="1" maxValue="2"/>
+				<Function name="randomDirection" resultType="Direction4">
+					<Body language="Java"><![CDATA[
+		Direction4 dir = Direction4.N;
+		switch ( Random.uniformInt(1,4)) {
+	  	case 1: dir = Direction4.N; break;
+  		case 2: dir = Direction4.E; break;
+  		case 3: dir = Direction4.S; break;
+  		case 4: dir = Direction4.W; break;
+		}
+		return dir;
+					]]></Body>
+				</Function>
+				<!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~-->
+				<ReactionRule name="MoveRule" agentVariable="a">
+					<!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~-->
+					<documentation>
+						<dc:description>Move randomly either N, E, S or W.</dc:description>
+					</documentation>
+					<ON-EACH-SIMULATION-STEP/>
+					<DO>
+						<SCHEDULE-EVT>
+							<ActionEventExpr actionEventType="Move">
+								<Slot property="direction">
+									<ValueExpr language="Java"> a.randomDirection() </ValueExpr>
+								</Slot>
+							</ActionEventExpr>
+						</SCHEDULE-EVT>
+					</DO>
+				</ReactionRule>
+			</PhysicalAgentType>
+			<!-- =================================================================== -->
+			<PhysicalAgentType name="Prey" superType="Animal" autoPerception="true">
+				<!-- =================================================================== -->
+				<!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~-->
+				<ReactionRule name="PerceivePreyRule" agentVariable="prey">
+					<!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~-->
+					<documentation><dc:description> If a prey perceives another prey, and one of them is female and the other one male, a new prey is to be created.	</dc:description></documentation>
+					<WHEN eventType="PhysicalObjectPerceptionEvent" physicalObjectType="Prey" eventVariable="event"/>
+					<IF language="Java"><![CDATA[ 
+          prey.getSex() != ((Prey)event.getPerceivedPhysicalObject()).getSex()
+          && prey.getAge() > 50 && ((Prey)event.getPerceivedPhysicalObject()).getAge() > 50
+          ]]></IF>
+					<THEN>
+						<SCHEDULE-EVT>
+							<ActionEventExpr actionEventType="ProducePreyOffspring">
+								<Slot property="father">
+									<ValueExpr language="Java"><![CDATA[ 
+									(prey.getSex() == 2) ? ((Prey)prey.getAgentObject()) : ((Prey)event.getPerceivedPhysicalObject()) 
+								]]></ValueExpr>
+								</Slot>
+								<Slot property="mother">
+									<ValueExpr language="Java"><![CDATA[ 
+									(prey.getSex() == 1) ? ((Prey)prey.getAgentObject()) : ((Prey)event.getPerceivedPhysicalObject()) 
+								]]></ValueExpr>
+								</Slot>
+							</ActionEventExpr>
+						</SCHEDULE-EVT>
+					</THEN>
+				</ReactionRule>
+				<!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~-->
+				<ReactionRule name="GrassAvailableOnCellRule" agentVariable="s">
+					<!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~-->
+					<documentation>
+						<dc:description> If the prey enters a new cell which contains grass and the
+							prey is not full it consumes one grass point and gains therefore 1 energy
+							point. </dc:description>
+					</documentation>
+					<WHEN eventType="GrassAvailableOnCell"/>
+					<IF language="Java"><![CDATA[ s.getEnergy() <= 100 ]]></IF>
+					<THEN>
+						<UPDATE-AGT>
+							<Slot property="energy">
+								<ValueExpr language="Java"><![CDATA[ s.getEnergy() + 1 ]]></ValueExpr>
+							</Slot>
+						</UPDATE-AGT>
+						<SCHEDULE-EVT>
+							<ActionEventExpr actionEventType="EatGrass"/>
+						</SCHEDULE-EVT>
+					</THEN>
+				</ReactionRule>
+			</PhysicalAgentType>
+			<!-- =================================================================== -->
+			<PhysicalAgentType name="Predator" superType="Animal" autoPerception="true">
+				<!-- =================================================================== -->
+				<!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~-->
+				<ReactionRule name="PerceivePredatorRule" agentVariable="predator">
+					<!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~-->
+					<documentation><dc:description> If a predator perceives another predator, and one of them is female and the other one male, and both are older than 50, a predator offspring is created. </dc:description></documentation>
+					<WHEN eventType="PhysicalObjectPerceptionEvent" physicalObjectType="Predator" eventVariable="event"/>
+				  <IF language="Java"><![CDATA[ Random.uniformBoolean() &&
+          predator.getSex() != ((Predator)event.getPerceivedPhysicalObject()).getSex()
+          && predator.getAge() > 50 && ((Predator)event.getPerceivedPhysicalObject()).getAge() > 50
+          ]]></IF>
+					<THEN>
+						<SCHEDULE-EVT>
+							<ActionEventExpr actionEventType="ProducePredatorOffspring">
+								<Slot property="father">
+									<ValueExpr language="Java"><![CDATA[ 
+									(predator.getSex() == 2) ? ((Predator)predator.getAgentObject()) : ((Predator)event.getPerceivedPhysicalObject()) 
+								]]></ValueExpr>
+								</Slot>
+								<Slot property="mother">
+									<ValueExpr language="Java"><![CDATA[ 
+									(predator.getSex() == 1) ? ((Predator)predator.getAgentObject()) : ((Predator)event.getPerceivedPhysicalObject()) 
+								]]></ValueExpr>
+								</Slot>
+							</ActionEventExpr>
+						</SCHEDULE-EVT>
+					</THEN>
+				</ReactionRule>
+				<!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~-->
+				<ReactionRule name="PerceivePreyRule" agentVariable="predator">
+				<!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~-->
+					<documentation>
+						<dc:description> When a hungry predator perceives a prey, it kills and eats it.  </dc:description>
+					</documentation>
+					<WHEN eventType="PhysicalObjectPerceptionEvent" physicalObjectType="Prey" eventVariable="event"/>
+					<IF language="Java"><![CDATA[ predator.getEnergy() <= 10 ]]></IF>
+					<THEN>
+						<SCHEDULE-EVT>
+							<ActionEventExpr actionEventType="KillPrey">
+								<Slot property="prey">
+									<ValueExpr language="Java"> ((Prey)event.getPerceivedPhysicalObject()) </ValueExpr>
+								</Slot>
+							</ActionEventExpr>
+						</SCHEDULE-EVT>
+					</THEN>
+				</ReactionRule>
+			</PhysicalAgentType>
+		</EntityTypes>
+
+		<EnvironmentRules>
+			<!-- =================================================================== -->
+			<EnvironmentRule name="IncrementGrassLevelRule">
+			<!-- =================================================================== -->
+				<documentation>
+					<dc:description> On each simulation step the grass level on each cell is incremented. </dc:description>
+				</documentation>
+				<ON-EACH-SIMULATION-STEP/>
+				<DO>
+					<UPDATE-ENV>
+						<UpdateGridCells gridCellVariable="c">
+							<Slot property="grassLevel">
+								<ValueExpr language="Java"> c.getGrassLevel() + 1 </ValueExpr>
+							</Slot>
+						</UpdateGridCells>
+					</UPDATE-ENV>
+				</DO>
+			</EnvironmentRule>
+			<!-- =================================================================== -->
+			<EnvironmentRule name="AgingAndDieingRule">
+			<!-- =================================================================== -->
+				<documentation>
+					<dc:description> On each simulation step, if an animal has reached its maximum age or if it has not enough energy, it dies. Otherwise, it gets older and looses some energy. </dc:description>
+				</documentation>
+				<ON-EACH-SIMULATION-STEP/>
+				<FOR objectVariable="a" objectType="Animal"/>
+				<IF language="Java"><![CDATA[ 
+						a.getAge() > a.getMaxAge() || a.getEnergy() <= 1 
+					]]></IF>
+				<THEN>
+					<UPDATE-ENV>
+						<DestroyObject objectVariable="a"/>
+					</UPDATE-ENV>
+				</THEN>
+				<ELSE>
+					<UPDATE-ENV>
+						<UpdateObject objectVariable="a">
+							<Slot property="energy">
+								<ValueExpr language="Java"><![CDATA[ a.getEnergy() - 1 ]]></ValueExpr>
+							</Slot>
+							<Slot property="age">
+								<ValueExpr language="Java"><![CDATA[ a.getAge() + 1 ]]></ValueExpr>
+							</Slot>
+						</UpdateObject>
+					</UPDATE-ENV>
+				</ELSE>
+			</EnvironmentRule>
+			<!-- =================================================================== -->
+			<EnvironmentRule name="EatGrassRule">
+			<!-- =================================================================== -->
+				<documentation>
+					<dc:description> If a prey eats grass, the grass gets degraded. </dc:description>
+				</documentation>
+				<WHEN eventType="EatGrass" eventVariable="e"/>
+				<FOR objectVariable="a" objectType="Animal">
+					<ObjectRef language="Java"> e.getActor() </ObjectRef>
+				</FOR>
+				<DO>
+					<UPDATE-ENV>
+						<UpdateGridCell gridCellVariable="g">
+							<XCoordinate language="Java"> (int) a.getX() </XCoordinate>
+							<YCoordinate language="Java"> (int) a.getY() </YCoordinate>
+							<Slot property="grassLevel">
+								<ValueExpr language="Java"> Math.max( g.getGrassLevel()-20, 0) </ValueExpr>
+							</Slot>
+						</UpdateGridCell>
+						<UpdateObject objectVariable="a">
+							<Slot property="energy">
+								<ValueExpr language="Java"> a.getEnergy() + 1 </ValueExpr>
+							</Slot>
+						</UpdateObject>
+					</UPDATE-ENV>
+				</DO>
+			</EnvironmentRule>
+			<!-- =================================================================== -->
+			<EnvironmentRule name="MoveRule">
+			<!-- =================================================================== -->
+				<documentation>
+					<dc:description> If the animal is a prey and the new cell contains grass, a 
+						grass perception event is scheduled. </dc:description>
+				</documentation>
+				<WHEN eventType="Move" eventVariable="e"/>
+				<FOR objectVariable="a" objectType="Animal">
+					<ObjectRef language="Java"> e.getActor() </ObjectRef>
+				</FOR>
+				<DO>
+					<UPDATE-ENV>
+						<UpdateObject objectVariable="a">
+							<Slot property="x">
+								<ValueExpr language="Java"><![CDATA[ 
+								Simulator.spaceModel.newX( a, 
+									e.getDirection().equals( Direction4.E) ? 1 : 
+										e.getDirection().equals( Direction4.W) ? -1 : 0 ) 
+							]]></ValueExpr>
+							</Slot>
+							<Slot property="y">
+								<ValueExpr language="Java"><![CDATA[ 
+								Simulator.spaceModel.newY( a, 
+									e.getDirection().equals( Direction4.N) ? 1 : 
+										e.getDirection().equals( Direction4.S) ? -1 : 0 ) 
+							]]></ValueExpr>
+							</Slot>
+						</UpdateObject>
+					</UPDATE-ENV>
+					<SCHEDULE-EVT> 
+						<PerceptionEventExpr eventType="GrassAvailableOnCell">
+							<Condition language="Java"><![CDATA[ 
+            a.getType().equals("Prey") &&  
+            Simulator.spaceModel.getGridCell((int) a.getX(), (int) a.getY()).getGrassLevel() >= 1 
+            ]]></Condition>
+							<PerceiverIdRef language="Java"><![CDATA[ a.getId() ]]></PerceiverIdRef>
+						</PerceptionEventExpr>
+					</SCHEDULE-EVT>
+				</DO>
+			</EnvironmentRule>
+			<!-- =================================================================== -->
+			<EnvironmentRule name="ProducePreyOffspringRule">
+			<!-- =================================================================== -->
+				<documentation>
+					<dc:description> A new prey is produced if both parents are older than 50. This is necessary to prevent child abuse. </dc:description>
+				</documentation>
+				<WHEN eventType="ProducePreyOffspring" eventVariable="e"/>
+				<FOR objectVariable="p" objectType="Prey">
+					<ObjectRef language="Java"> e.getActor() </ObjectRef>
+				</FOR>
+				<DO>
+					<UPDATE-ENV>
+						<Create>
+							<PhysicalAgent type="Prey">
+								<Slot property="x"><ValueExpr language="Java"> p.getX() </ValueExpr></Slot>
+								<Slot property="y"><ValueExpr language="Java"> p.getY() </ValueExpr></Slot>
+								<Slot property="sex">
+									<RandomVariable><UniformInt lowerBound="1" upperBound="2"/></RandomVariable>
+								</Slot>
+								<Slot property="maxAge">
+									<RandomVariable><UniformInt lowerBound="700" upperBound="750"/></RandomVariable>
+								</Slot>
+								<Slot property="energy">
+									<ValueExpr language="Java">
+										(e.getMother().getEnergy() / 2) > 20 ? 20 : (e.getMother().getEnergy() / 2) 
+									</ValueExpr>
+								</Slot>
+								<Slot property="age" value="0"/>
+							</PhysicalAgent>
+						</Create>
+						<UpdateStatisticsVariable variable="bornPrey">
+							<ValueExpr language="Java">SimStatistics.bornPrey.getValue() + 1 </ValueExpr>
+						</UpdateStatisticsVariable>
+					</UPDATE-ENV>
+				</DO>
+			</EnvironmentRule>
+			<!-- =================================================================== -->
+			<EnvironmentRule name="ProducePredatorOffspringRule">
+			<!-- =================================================================== -->
+				<documentation>
+					<dc:description> A predator offspring is produced if both parents are older than 50. This
+						is necessary to prevent child abuse. </dc:description>
+				</documentation>
+				<WHEN eventType="ProducePredatorOffspring" eventVariable="e"/>
+				<FOR objectVariable="p" objectType="Predator">
+					<ObjectRef language="Java"><![CDATA[ e.getActor() ]]></ObjectRef>
+				</FOR>
+				<IF language="Java"><![CDATA[ 
+					true 
+					]]></IF>
+				<THEN>
+					<UPDATE-ENV>
+						<Create>
+							<PhysicalAgent type="Predator">
+								<Slot property="x"><ValueExpr language="Java"> p.getX() </ValueExpr></Slot>
+								<Slot property="y"><ValueExpr language="Java"> p.getY() </ValueExpr></Slot>
+								<Slot property="sex">
+									<RandomVariable><UniformInt lowerBound="1" upperBound="2"/></RandomVariable>
+								</Slot>
+								<Slot property="energy">
+									<ValueExpr language="Java"><![CDATA[ 
+									(e.getMother().getEnergy() / 2) > 20 ? 20 : (e.getMother().getEnergy() / 2) 
+								]]></ValueExpr>
+								</Slot>
+								<Slot property="maxAge">
+									<RandomVariable><UniformInt lowerBound="3000" upperBound="5000"/></RandomVariable>
+								</Slot>
+								<Slot property="age" value="0"/>
+							</PhysicalAgent>
+						</Create>
+						<UpdateStatisticsVariable variable="bornPredators">
+							<ValueExpr language="Java"><![CDATA[ SimStatistics.bornPredators.getValue() + 1 ]]></ValueExpr>
+						</UpdateStatisticsVariable>
+					</UPDATE-ENV>
+				</THEN>
+			</EnvironmentRule>
+			<!-- =================================================================== -->
+			<EnvironmentRule name="KillPreyRule">
+				<!-- =================================================================== -->
+				<documentation>
+					<dc:description> When a predator kills a prey, the prey is destroyed. </dc:description>
+				</documentation>
+				<WHEN eventType="KillPrey" eventVariable="e"/>
+				<FOR objectVariable="predator" objectType="Predator">
+					<ObjectRef language="Java"> e.getActor() </ObjectRef>
+				</FOR>
+				<FOR objectVariable="prey" objectType="Prey">
+					<ObjectRef language="Java"> e.getPrey() </ObjectRef>
+				</FOR>
+				<DO>
+					<UPDATE-ENV>
+						<DestroyObject objectVariable="prey"/>
+						<UpdateObject objectVariable="predator">
+							<Slot property="energy"><ValueExpr language="Java"> predator.getEnergy() + 20 </ValueExpr></Slot>
+						</UpdateObject>
+						<UpdateStatisticsVariable variable="killedPrey">
+							<ValueExpr language="Java"><![CDATA[ SimStatistics.killedPrey.getValue() + 1 ]]></ValueExpr>
+						</UpdateStatisticsVariable>
+					</UPDATE-ENV>
+				</DO>
+			</EnvironmentRule>
+		</EnvironmentRules>
+	</SimulationModel>
+	<!-- =================================================================== -->
+	<InitialState>
+	<!-- =================================================================== -->
+		<PhysicalAgents type="Prey" rangeStartID="1" rangeEndID="300" hasRandomPosition="true" perceptionRadius="0">
+		<!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~-->
+			<Slot property="sex">
+				<RandomVariable><UniformInt lowerBound="1" upperBound="2"/></RandomVariable>
+			</Slot>
+			<Slot property="age">
+				<RandomVariable><UniformInt lowerBound="1" upperBound="500"/></RandomVariable>
+			</Slot>
+			<Slot property="maxAge"> <!-- 2 years = 2*365 = 730 D -->
+				<RandomVariable><UniformInt lowerBound="600" upperBound="850"/></RandomVariable>
+			</Slot>
+			<Slot property="energy">
+				<RandomVariable><UniformInt lowerBound="10" upperBound="20"/></RandomVariable>
+			</Slot>
+		</PhysicalAgents>
+		<!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~-->
+		<PhysicalAgents type="Predator" rangeStartID="1000" rangeEndID="1010" hasRandomPosition="true" perceptionRadius="2">
+			<!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~-->
+			<Slot property="sex">
+				<RandomVariable><UniformInt lowerBound="1" upperBound="2"/></RandomVariable>
+			</Slot>
+			<Slot property="age">
+				<RandomVariable><UniformInt lowerBound="1" upperBound="1000"/></RandomVariable>
+			</Slot>
+			<Slot property="maxAge"> <!-- 4 years = 4*365 = 1460 D -->
+				<RandomVariable><UniformInt lowerBound="1300" upperBound="1600"/></RandomVariable>
+			</Slot>
+			<Slot property="energy">
+				<RandomVariable><UniformInt lowerBound="20" upperBound="40"/></RandomVariable>
+			</Slot>
+		</PhysicalAgents>
+		<!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~-->
+		<GridCells>
+		<!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~-->
+			<Slot property="grassLevel" value="2"/>
+		</GridCells>
+	</InitialState>
+
+	<!-- =================================================================== -->
+	<UserInterface>
+	<!-- =================================================================== -->
+		<StatisticsUI>
+			<StatisticsVariableUI variable="preyPopulationSize" comparisonGroup="popSize">
+				<Label>
+					<Text xml:lang="en">Sheep population size</Text>
+					<Text xml:lang="de">Schafspopulationsgröße</Text>
+					<Text xml:lang="fr">Taille de la population de moutons</Text>
+					<Text xml:lang="es">El tamaño de la población del oveja</Text>
+					<Text xml:lang="ro">Dimensiunea populatiei de oi</Text>
+				</Label>
+				<Hint>
+					<Text xml:lang="en">How many sheeps are there?</Text>
+					<Text xml:lang="de">Wie viele Schafe gibt es?</Text>
+					<Text xml:lang="fr">Combien de moutons y a-t-il dans la bergerie?</Text>
+					<Text xml:lang="es">Cuántas ovejas hay en el aprisco?</Text>
+					<Text xml:lang="ro">Cate oi sunt in stana?</Text>
+				</Hint>
+			</StatisticsVariableUI>
+			<StatisticsVariableUI variable="predatorPopulationSize" comparisonGroup="popSize">
+				<Label>
+					<Text xml:lang="en">Wolve population size</Text>
+					<Text xml:lang="de">Wolfspopulationsgröße</Text>
+					<Text xml:lang="fr">Taille de la population de moutons</Text>
+					<Text xml:lang="es">El tamaño de la población del lobo</Text>
+					<Text xml:lang="ro">Dimensiunea populatiei de lupi</Text>
+				</Label>
+				<Hint>
+					<Text xml:lang="en">How many wolves are there?</Text>
+					<Text xml:lang="de">Wie viele Wölfe gibt es?</Text>
+					<Text xml:lang="fr">Combien de loups y a-t-il?</Text>
+					<Text xml:lang="es">Cuántos lobos hay?</Text>
+					<Text xml:lang="ro">Cati lupi sunt?</Text>
+				</Hint>
+			</StatisticsVariableUI>
+			<StatisticsVariableUI variable="preyEnergy" showChart="true">
+				<Label>
+					<Text xml:lang="en">Average energy of sheeps</Text>
+					<Text xml:lang="de">Durchschnittliche Energie der Schafe</Text>
+					<Text xml:lang="fr">L'énergie moyenne de proie</Text>
+					<Text xml:lang="es">Energía media de las presas</Text>
+					<Text xml:lang="ro">Energia medie a prazii</Text>
+				</Label>
+				<Hint>
+					<Text xml:lang="en">What is the average energy of sheeps?</Text>
+					<Text xml:lang="de">Was ist die durchschnittliche Energie der Schafe?</Text>
+					<Text xml:lang="fr">Quelle est l'énergie moyenne de proie?</Text>
+					<Text xml:lang="es">Qual es la energía media de las presas?</Text>
+					<Text xml:lang="ro">Care este energia medie a prazii?</Text>
+				</Hint>
+			</StatisticsVariableUI>
+			<StatisticsVariableUI variable="bornPrey">
+				<Label>
+					<Text xml:lang="en">Number of newly born sheeps</Text>
+					<Text xml:lang="de">Anzahl der neu geboren Schafe</Text>
+					<Text xml:lang="fr">Nombre de moutons nouveau-né</Text>
+					<Text xml:lang="es">Número de ovejas recién nacido</Text>
+					<Text xml:lang="ro">Numarul mieilor din turma</Text>
+				</Label>
+				<Hint>
+					<Text xml:lang="en">How many sheeps have been newly born?</Text>
+					<Text xml:lang="de">Wie viele Schafe wurden neu geboren?</Text>
+					<Text xml:lang="fr">Combien de moutons ont été nouvellement créées?</Text>
+					<Text xml:lang="es">Cuántas ovejas sean de nueva creación?</Text>
+					<Text xml:lang="ro">Cati miei s-au nascut?</Text>
+				</Hint>
+			</StatisticsVariableUI>
+			<StatisticsVariableUI variable="killedPrey">
+				<Label>
+					<Text xml:lang="en">Number of killed sheeps</Text>
+					<Text xml:lang="de">Anzahl der Schafe von Wölfen getötet</Text>
+					<Text xml:lang="fr">Nombre de moutons tués</Text>
+					<Text xml:lang="es">Número de ovejas muertas</Text>
+					<Text xml:lang="ro">Numarul oilor omorate de lupi</Text>
+				</Label>
+				<Hint>
+					<Text xml:lang="en">How many sheeps have been killed by wolves?</Text>
+					<Text xml:lang="de">Wie viele Schafe von Wölfen getötet wurden?</Text>
+					<Text xml:lang="fr">Combien de moutons ont été tués par les loups?</Text>
+					<Text xml:lang="es">Cuántas ovejas se comieron los lobos?</Text>
+					<Text xml:lang="ro">Cate oi au fost ucise de lupi?</Text>
+				</Hint>
+			</StatisticsVariableUI>
+			<StatisticsVariableUI variable="diedPrey">
+				<Label>
+					<Text xml:lang="en">Number of died sheeps</Text>
+					<Text xml:lang="de">Anzahl der getöteten Schafe</Text>
+					<Text xml:lang="fr">Nombre de moutons tués</Text>
+					<Text xml:lang="es">Número de ovejas muertas</Text>
+					<Text xml:lang="ro">Numarul oilor moarte</Text>
+				</Label>
+				<Hint>
+					<Text xml:lang="en">How many sheeps have died?</Text>
+					<Text xml:lang="de">Wie viele Schafe gestorben sind?</Text>
+					<Text xml:lang="fr">Combien de moutons sont morts?</Text>
+					<Text xml:lang="es">Cuántas ovejas están muertas?</Text>
+					<Text xml:lang="ro">Cate oi au murit in total?</Text>
+				</Hint>
+			</StatisticsVariableUI>
+			<FrequencyDistributionChart objectPropertyStatisticsVariable="predatorAge" minValue="0" intervalSize="400" maxValue="1600" chartType="BAR"/>
+			<FrequencyDistributionChart objectPropertyStatisticsVariable="preyAge" minValue="0" intervalSize="200" maxValue="850" chartType="BAR"/>
+			<FrequencyDistributionChart objectPropertyStatisticsVariable="predatorSex" chartType="PIE"/>
+			<FrequencyDistributionChart objectPropertyStatisticsVariable="preySex" chartType="PIE"/>
+		</StatisticsUI>
+		
+		<AnimationUI>
+			<Views>
+				<SpaceView canvasColor="grey">
+					<TwoDimensionalGridSpaceView2D>
+						<GridCellPropertyVisualizationMap cellViewProperty="fill" property="grassLevel" mapType="caseWise"
+							v0="216 167 99" a0="1" v1="170 198 99" a1="2" v2="147 198 44"
+							a2="3" v3="103 198 44" a3="4" v4="0 169 44"/>
+					</TwoDimensionalGridSpaceView2D>
+				</SpaceView>
+				
+				<PhysicalObjectView physicalObjectType="Prey">
+					<PhysicalShape2D>
+						<Rectangle fill="white"/>
+					</PhysicalShape2D>
+				</PhysicalObjectView>
+				
+				<PhysicalObjectView physicalObjectType="Predator">
+					<PhysicalShape2D>
+						<Rectangle fill="black"/>
+					</PhysicalShape2D>
+				</PhysicalObjectView>
+			</Views>
+		</AnimationUI>
+	</UserInterface>
+</SimulationScenario>
