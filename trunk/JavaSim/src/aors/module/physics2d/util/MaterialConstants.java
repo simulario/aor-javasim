@@ -58,10 +58,10 @@ public class MaterialConstants {
 
     switch (materialType) {
     case Aluminium:
-      return 1.2;
+      return 1.0;
 
     case Iron:
-      return 1;
+      return 0.8;
 
     case Rubber:
       return 5;
