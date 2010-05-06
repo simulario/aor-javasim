@@ -55,10 +55,14 @@
                 <Attribute name="velocity" type="Float"/>
             </PerceptionEventType>
             
+            <PerceptionEventType name="UpdateFuelBelief">
+                <Attribute name="amount" type="Float"/>
+            </PerceptionEventType>
+            
             <PhysicalObjectType name="Checkpoint" idPerceivable="true"/>
             
             <PhysicalAgentType name="Plane" autoPerception="true">
-                <Attribute name="myFuel" type="Float"/>
+                <SelfBeliefAttribute name="myFuel" type="Float"/>
                 <SelfBeliefAttribute name="myVelocity" type="Float"/>
                 <SelfBeliefAttribute name="maxVelocity" type="Float"/>
                 <SelfBeliefAttribute name="speedLimit" type="Integer"/>
@@ -142,6 +146,17 @@
                     </THEN>
                 </ReactionRule>
                 
+                <ReactionRule name="UpdateFuelBelief_Rule" agentVariable="plane">
+                    <WHEN eventType="UpdateFuelBelief" eventVariable="e"/>
+                    <DO>
+                        <UPDATE-AGT>
+                            <SelfBeliefSlot property="myFuel">
+                                <ValueExpr language="Java">plane.getMyFuel() - e.getAmount()</ValueExpr>
+                            </SelfBeliefSlot>
+                        </UPDATE-AGT>
+                    </DO>
+                </ReactionRule>
+                
                 <ReactionRule name="UpdateVelocityBelief_Rule" agentVariable="plane">
                     <WHEN eventType="UpdateVelocityBelief" eventVariable="e"/>
                     <DO>
@@ -186,7 +201,7 @@
             <PhysicalAgentType name="Fuelmeter">
                 <Attribute type="Float" name="fuel"/>
                 
-                <ReactionRule name="FuelDwn_Rule" agentVariable="fuelmeter">
+                <ReactionRule name="FuelDown_Rule" agentVariable="fuelmeter">
                     <ON-EACH-SIMULATION-STEP/>
                     <IF language="Java">
                         <![CDATA[
@@ -259,13 +274,14 @@
                 <WHEN eventType="FuelDown" eventVariable="e"/>
                 <FOR objectIdRef="1" objectType="Plane" objectVariable="plane"/>
                 <DO>
-                    <UPDATE-ENV>
-                        <UpdateObject objectVariable="plane">
-                            <Slot property="myFuel">
-                                <ValueExpr language="Java">plane.getMyFuel() - e.getAmount()</ValueExpr>
-                            </Slot>
-                        </UpdateObject>
-                    </UPDATE-ENV>
+                    <SCHEDULE-EVT>
+                        <PerceptionEventExpr eventType="UpdateFuelBelief">
+                            <PerceiverIdRef language="Java">e.getActor().getId()</PerceiverIdRef>
+                            <Slot property="amount">
+                                <ValueExpr language="Java">e.getAmount()</ValueExpr>
+                            </Slot>                           
+                        </PerceptionEventExpr>
+                    </SCHEDULE-EVT>
                 </DO>
             </EnvironmentRule>
             
@@ -345,7 +361,7 @@
     <InitialState>        
         <!-- Initialize plane -->
         <PhysicalAgent type="Plane" id="1" x="1700" y="1500" width="360" height="370">
-            <Slot property="myFuel" value="4000"/>
+            <SelfBeliefSlot property="myFuel" value="4000"/>
             <SelfBeliefSlot property="maxVelocity" value="200"/>
             <SelfBeliefSlot property="speedLimit" value="250"/>
             <SelfBeliefSlot property="myVelocity" value="0"/>
