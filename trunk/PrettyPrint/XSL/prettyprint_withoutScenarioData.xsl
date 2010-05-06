@@ -84,7 +84,7 @@
 						<xsl:text>../</xsl:text>
 					</xsl:otherwise>
 				</xsl:choose>
-				<xsl:text>ext/prettyPrint/css/prettyprint.css</xsl:text>
+				<xsl:text>PrettyPrint/css/prettyprint.css</xsl:text>
 			</xsl:attribute>
 		</link>
 	</xsl:template>
