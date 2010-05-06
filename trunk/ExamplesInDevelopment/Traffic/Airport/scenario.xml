@@ -9,7 +9,7 @@
     version="0.8.3"
     scenarioName="AirportSimulator">
     
-    <SimulationParameters simulationSteps="10000" stepDuration="100" timeUnit="ms" stepTimeDelay="25"/>
+    <SimulationParameters simulationSteps="3800" stepDuration="100" timeUnit="ms" stepTimeDelay="25"/>
     
     <SimulationModel modelName="Airport" autoKinematics="true">
         <documentation>
@@ -43,6 +43,8 @@
                 <Attribute name="velocity" type="Float"/>
             </ActionEventType>
             
+            <ActionEventType name="Landing"/>
+            
             <!-- Direction change event -->
             <ActionEventType name="ChangeDirection">
                 <Attribute name="vx" type="Float"/>
@@ -62,6 +64,7 @@
             <PhysicalObjectType name="Checkpoint" idPerceivable="true"/>
             
             <PhysicalAgentType name="Plane" autoPerception="true">
+                <SelfBeliefAttribute type="Boolean" name="halt"/>
                 <SelfBeliefAttribute name="myFuel" type="Float"/>
                 <SelfBeliefAttribute name="myVelocity" type="Float"/>
                 <SelfBeliefAttribute name="maxVelocity" type="Float"/>
@@ -76,7 +79,7 @@
                     <IF language="Java">
                         <![CDATA[
                             plane.getMyVelocity() < plane.getMaxVelocity() &&
-                            plane.getMyVelocity() < plane.getMaxVelocity()
+                            plane.getMyVelocity() < plane.getSpeedLimit()
                         ]]>
                     </IF>
                     <THEN>
@@ -142,6 +145,50 @@
                                 <Slot property="vy" value="0"/>
                                 <Slot property="rotZ" value="0"/>
                             </ActionEventExpr>
+                            
+                            <ActionEventExpr actionEventType="Landing"/>
+                        </SCHEDULE-EVT>
+                    </THEN>
+                </ReactionRule>
+                
+                <ReactionRule name="SpeedLimit_Rule" agentVariable="plane">
+                    <WHEN eventType="PhysicalObjectPerceptionEvent" physicalObjectType="Checkpoint" eventVariable="e"/>
+                    <IF language="Java">
+                        <![CDATA[
+                            e.getPerceivedPhysicalObjectIdRef() == 106
+                        ]]>
+                    </IF>
+                    <THEN>
+                        <UPDATE-AGT>
+                            <SelfBeliefSlot property="speedLimit" value="0"/>
+                            <SelfBeliefSlot property="halt" value="true"/>
+                        </UPDATE-AGT>
+                        
+                        <SCHEDULE-EVT>
+                            <ActionEventExpr actionEventType="ChangeDirection">
+                                <Slot property="vx">
+                                    <ValueExpr language="Java">plane.getMyVelocity()</ValueExpr>
+                                </Slot>
+                                <Slot property="vy" value="0"/>
+                                <Slot property="rotZ" value="0"/>
+                            </ActionEventExpr>
+                        </SCHEDULE-EVT>
+                    </THEN>
+                </ReactionRule>
+                
+                <ReactionRule name="SlowDown_Rule" agentVariable="plane">
+                    <ON-EACH-SIMULATION-STEP/>
+                    <IF language="Java">
+                        <![CDATA[
+                           plane.isHalt() == true &&
+                           plane.getMyVelocity() > plane.getSpeedLimit()
+                        ]]>
+                    </IF>
+                    <THEN>
+                        <SCHEDULE-EVT>
+                            <ActionEventExpr actionEventType="SlowDown">
+                                <Slot property="velocity" value="0.65"/>
+                            </ActionEventExpr>
                         </SCHEDULE-EVT>
                     </THEN>
                 </ReactionRule>
@@ -171,6 +218,7 @@
             
             <PhysicalAgentType name="Altimeter">
                 <Attribute type="Float" name="altitude"/>
+                <Attribute type="Boolean" name="goDown"/>
                 
                 <!-- On each step -->
                 <PeriodicTimeEventType name="AltitudeStep" periodicity="1"/>
@@ -179,6 +227,7 @@
                     <WHEN eventType="AltitudeStep"/>
                     <IF language="Java">
                         <![CDATA[
+                            !altimeter.isGoDown() &&
                             altimeter.getAltitude() <= 1998                      
                         ]]>
                     </IF>
@@ -192,6 +241,29 @@
                         <SCHEDULE-EVT>
                             <ActionEventExpr actionEventType="ChangeHeight">
                                 <Slot property="height" value="1"/>
+                            </ActionEventExpr>
+                        </SCHEDULE-EVT>
+                    </THEN>
+                </ReactionRule>
+                
+                <ReactionRule name="ChangeAltitude1_Rule" agentVariable="altimeter">
+                    <ON-EACH-SIMULATION-STEP/>
+                    <IF language="Java">
+                        <![CDATA[
+                            altimeter.isGoDown() &&
+                            altimeter.getAltitude() > 0                      
+                        ]]>
+                    </IF>
+                    <THEN>
+                        <UPDATE-AGT>
+                            <Slot property="altitude">
+                                <ValueExpr language="Java">altimeter.getAltitude()-10</ValueExpr>
+                            </Slot>
+                        </UPDATE-AGT>
+                        
+                        <SCHEDULE-EVT>
+                            <ActionEventExpr actionEventType="ChangeHeight">
+                                <Slot property="height" value="-5"/>
                             </ActionEventExpr>
                         </SCHEDULE-EVT>
                     </THEN>
@@ -244,6 +316,41 @@
         </EntityTypes>
         
         <EnvironmentRules>
+            <EnvironmentRule name="Landing_Rule">
+                <WHEN eventType="Landing"/>
+                <FOR  objectIdRef="2" objectType="Altimeter" objectVariable="altimeter"/>
+                <DO>
+                    <UPDATE-ENV>
+                        <UpdateObject objectVariable="altimeter">
+                            <Slot property="goDown" value="true"/>
+                        </UpdateObject>
+                    </UPDATE-ENV>
+                </DO>
+            </EnvironmentRule>
+            
+            <EnvironmentRule name="SlowDown_EnvRule">
+                <WHEN eventType="SlowDown" eventVariable="e"/>
+                <FOR  objectIdRef="1" objectType="Plane" objectVariable="plane"/>
+                <DO>
+                    <UPDATE-ENV>
+                        <UpdateObject objectVariable="plane">
+                            <Slot property="vx">
+                                <ValueExpr language="Java">plane.getVx() - e.getVelocity()</ValueExpr>
+                            </Slot>
+                        </UpdateObject>
+                    </UPDATE-ENV>
+                    
+                    <SCHEDULE-EVT>
+                        <PerceptionEventExpr eventType="UpdateVelocityBelief">
+                            <PerceiverIdRef language="Java">e.getActor().getId()</PerceiverIdRef>
+                            <Slot property="velocity">
+                                <ValueExpr language="Java">-e.getVelocity()</ValueExpr>
+                            </Slot>
+                        </PerceptionEventExpr>
+                    </SCHEDULE-EVT>  
+                </DO>
+            </EnvironmentRule>
+            
             <EnvironmentRule name="KeepFuelmeterInPlace_EnvRule">
                 <ON-EACH-SIMULATION-STEP/>
                 <FOR  objectIdRef="3" objectType="Fuelmeter" objectVariable="fuelmeter"/>
@@ -276,9 +383,9 @@
                 <DO>
                     <SCHEDULE-EVT>
                         <PerceptionEventExpr eventType="UpdateFuelBelief">
-                            <PerceiverIdRef language="Java">e.getActor().getId()</PerceiverIdRef>
+                            <PerceiverIdRef language="Java">1</PerceiverIdRef>
                             <Slot property="amount">
-                                <ValueExpr language="Java">e.getAmount()</ValueExpr>
+                                <ValueExpr language="Java">1</ValueExpr>
                             </Slot>                           
                         </PerceptionEventExpr>
                     </SCHEDULE-EVT>
@@ -365,6 +472,7 @@
             <SelfBeliefSlot property="maxVelocity" value="200"/>
             <SelfBeliefSlot property="speedLimit" value="250"/>
             <SelfBeliefSlot property="myVelocity" value="0"/>
+            <SelfBeliefSlot property="halt" value="true"/>
             <PeriodicTimeEvent occurrenceTime="1" type="SimulationStep"/>
         </PhysicalAgent>
         
@@ -381,6 +489,7 @@
         <PhysicalObject type="Checkpoint" id="103" x="500" y="500" width="50" height="50"/>
         <PhysicalObject type="Checkpoint" id="104" x="5500" y="500" width="50" height="50"/>
         <PhysicalObject type="Checkpoint" id="105" x="500" y="1500" width="50" height="50"/>
+        <PhysicalObject type="Checkpoint" id="106" x="1000" y="1500" width="50" height="50"/>
         
         <PhysicalAgent type="Altimeter" id="2" x="5850" y="50" width="100" height="10" vx="0" vy="0">
             <Slot property="altidute" value="0"/>
@@ -419,7 +528,7 @@
                 
                 <PhysicalObjectView physicalObjectType="Checkpoint">
                     <PhysicalShape2D>
-                        <Rectangle fillOpacity="0.5"/>
+                        <Rectangle fillOpacity="0.00001"/>
                     </PhysicalShape2D>
                 </PhysicalObjectView>
                 
