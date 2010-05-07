@@ -2,14 +2,14 @@
 <?xml-stylesheet type="text/xsl" href="prettyprint.xsl"?>
 
 <SimulationScenario xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
- xsi:schemaLocation="http://aor-simulation.org ../../../ext/aorsl/AORSL-0-8-3.xsd"
+ xsi:schemaLocation="http://aor-simulation.org ../../AORSL/AORSL_0-8-4.xsd"
  xmlns="http://aor-simulation.org"
  xmlns:dc="http://purl.org/dc/elements/1.1/"
  xmlns:aors="http://aor-simulation.org"
- version="0.8.3"
+ version="0.8.4"
+ simulationManagerDirectory="../.."
  scenarioName="MovingCarsSecondLane"
- scenarioTitle="10 cars with different velocities outrunning each other on the 2nd lane."
- simulationManagerDirectory="../../..">
+ scenarioTitle="10 cars with different velocities outrunning each other on the 2nd lane.">
   <SimulationParameters simulationSteps="2000" stepDuration="100" timeUnit="ms" stepTimeDelay="15" />
   <SimulationModel modelName="MovingCarsSecondLane" modelTitle="Ten cars on a track with two lanes" autoKinematics="true" autoCollision="true">
     <documentation>
@@ -17,7 +17,9 @@
       <dc:created>20081103</dc:created>
       <dc:description>This example models cars outrunning each other on a circular track with two lanes. A car will outrun another one if it is moving faster and is getting too close. When two cars collide with each other, both of them will be destroyed.</dc:description>
     </documentation>
-    <SpaceModel dimensions="1+1" geometry="Toroidal" discrete="false" xMax="2000" yMax="2" spatialDistanceUnit="m" />
+    <SpaceModel geometry="Toroidal" spatialDistanceUnit="m" >
+    	<OneDimensional multiplicity="2" xMax="2000"/>
+    </SpaceModel>
     
     <EntityTypes>
        
@@ -72,15 +74,17 @@
           	&& evt.getPerceivedPhysicalObject().getY() == car.getMyLane()
        		&& evt.getPerceptionAngle() == 0.0 
           	&& evt.getDistance() < 50
-          ]]></IF>
-          <UPDATE-AGT>
-            <SelfBeliefSlot property="carToOutrun">
-              <ValueExpr language="Java">evt.getPerceivedPhysicalObjectIdRef()</ValueExpr>
-            </SelfBeliefSlot>
-          </UPDATE-AGT>
-          <SCHEDULE-EVT>
-            <ActionEventExpr actionEventType="SwitchToLeftLane"/>
-          </SCHEDULE-EVT>
+          	]]></IF>
+       		<THEN>
+       			<UPDATE-AGT>
+       				<SelfBeliefSlot property="carToOutrun">
+       					<ValueExpr language="Java">evt.getPerceivedPhysicalObjectIdRef()</ValueExpr>
+       				</SelfBeliefSlot>
+       			</UPDATE-AGT>
+       			<SCHEDULE-EVT>
+       				<ActionEventExpr actionEventType="SwitchToLeftLane"/>
+       			</SCHEDULE-EVT>
+       		</THEN>
         </ReactionRule>
        	<!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->
         <ReactionRule name="GetBackToRightLaneRule" agentVariable="car">
@@ -95,9 +99,11 @@
           && evt.getDistance() > 50
           && evt.getPerceptionAngle() > 160.0
           ]]></IF>
-          <SCHEDULE-EVT>
-            <ActionEventExpr actionEventType="SwitchToRightLane"/>
-          </SCHEDULE-EVT>
+        	<THEN>          
+        		<SCHEDULE-EVT>
+        			<ActionEventExpr actionEventType="SwitchToRightLane"/>
+        		</SCHEDULE-EVT>
+        	</THEN>
         </ReactionRule>
        </PhysicalAgentType>
     </EntityTypes>
@@ -107,36 +113,42 @@
       <EnvironmentRule name="SwitchToRightLaneEnvRule">
       <!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->
         <WHEN eventType="SwitchToRightLane" eventVariable="e"/>
-        <UPDATE-ENV>
-          <UpdateObject>
-            <ObjectRef objectType="Car" language="Java">e.getActor()</ObjectRef>
-            <Slot property="y" value="0"/>
-          </UpdateObject>
-        </UPDATE-ENV>
+      	<DO>
+      		<UPDATE-ENV>
+      			<UpdateObject>
+      				<ObjectRef objectType="Car" language="Java">e.getActor()</ObjectRef>
+      				<Slot property="y" value="0"/>
+      			</UpdateObject>
+      		</UPDATE-ENV>
+      	</DO>
       </EnvironmentRule>
       <!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->
       <EnvironmentRule name="SwitchToLeftLaneEnvRule">
       <!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->
       	<WHEN eventType="SwitchToLeftLane" eventVariable="e"/>
-        <UPDATE-ENV>
-          <UpdateObject>
-            <ObjectRef objectType="Car" language="Java">e.getActor()</ObjectRef>
-            <Slot property="y" value="1"/>
-          </UpdateObject>
-        </UPDATE-ENV>
+        <DO>
+        	<UPDATE-ENV>
+	          <UpdateObject>
+	            <ObjectRef objectType="Car" language="Java">e.getActor()</ObjectRef>
+	            <Slot property="y" value="1"/>
+	          </UpdateObject>
+        	</UPDATE-ENV>
+        </DO>
       </EnvironmentRule>
       <!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->
       <EnvironmentRule name="CollidingCarsEnvRule">
       <!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->
         <WHEN eventType="CollisionEvent" eventVariable="evt"/>
-       	<UPDATE-ENV>
-       	  <DestroyObject objectType="Car">
-       	    <ObjectRef language="Java">evt.getPhysicalObject1()</ObjectRef>
-       	  </DestroyObject>
-       	  <DestroyObject objectType="Car">
-       	    <ObjectRef language="Java">evt.getPhysicalObject2()</ObjectRef>
-       	  </DestroyObject>
-       	</UPDATE-ENV>
+      	<DO>
+	       	<UPDATE-ENV>
+	       	  <DestroyObject objectType="Car">
+	       	    <ObjectRef language="Java">evt.getPhysicalObject1()</ObjectRef>
+	       	  </DestroyObject>
+	       	  <DestroyObject objectType="Car">
+	       	    <ObjectRef language="Java">evt.getPhysicalObject2()</ObjectRef>
+	       	  </DestroyObject>
+	       	</UPDATE-ENV>
+      	</DO>
       </EnvironmentRule>
     </EnvironmentRules>
   </SimulationModel>
@@ -156,15 +168,19 @@
   </InitialState>
   
 <!-- =================================================================== -->
-<!--UserInterface-->
+<UserInterface>
 <!-- =================================================================== -->
-	<!--AnimationUI playableAgents="UserCar" timeoutSec="5">
-    <PhysicalObjectView physicalObjectType="Car" shape2D="rectangle">
-      <ShapeSlot shapeProperty="fill" value="blue"/>
-    </PhysicalObjectView>
+	<AnimationUI playableAgents="UserCar" timeoutSec="5">
+		<Views>
+			<PhysicalObjectView physicalObjectType="Car">
+				<PhysicalShape2D>
+					<Rectangle fill="blue"/>
+				</PhysicalShape2D>
+			</PhysicalObjectView>
+		</Views>
 		<AgentControlUI agent="UserCar" agentType="Car">
-			<AgentRuleUI rule="SlowerCarAheadOnRightLaneRule" activationType="suspend"/>
-			<AgentRuleUI rule="GetBackToRightLaneRule" activationType="suspend"/>
+			<AgentRuleUI rule="SlowerCarAheadOnRightLaneRule" activationMode="suspend"/>
+			<AgentRuleUI rule="GetBackToRightLaneRule" activationMode="suspend"/>
 			<UserInterfaceEventListener>
 			  <WHEN>
 			    <KeyActivate key="arrow-right"/>
@@ -179,5 +195,5 @@
 			</UserInterfaceEventListener>
 		</AgentControlUI>
 	</AnimationUI>
-</UserInterface-->
+</UserInterface>
 </SimulationScenario>
