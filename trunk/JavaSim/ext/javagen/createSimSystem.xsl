@@ -2251,7 +2251,7 @@
                   <xsl:with-param name="spaceModelVar" select="$spaceModelVar"/>
                 </xsl:apply-templates>
 
-                <!-- add the propertyChangelistener  -->
+                <!-- add the propertyChangelistener  
                 <xsl:if test="$observeGridCells">
                   <xsl:call-template name="java:callMethod">
                     <xsl:with-param name="indent" select="$indent + 3"/>
@@ -2263,7 +2263,7 @@
                       </xsl:call-template>
                     </xsl:with-param>
                   </xsl:call-template>
-                </xsl:if>
+                  </xsl:if>-->
 
               </xsl:with-param>
               <xsl:with-param name="elseContent">
