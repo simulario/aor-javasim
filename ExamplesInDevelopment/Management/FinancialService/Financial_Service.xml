@@ -1,0 +1,351 @@
+<?xml-stylesheet type="text/xsl" href="prettyprint.xsl"?>
+
+<SimulationScenario version="0.8.3" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+    xsi:schemaLocation="http://aor-simulation.org ../../../ext/aorsl/AORSL-0-8-3.xsd"
+    xmlns="http://aor-simulation.org" xmlns:aors="http://aor-simulation.org"
+    xmlns:dc="http://purl.org/dc/elements/1.1/" scenarioName="FinancialService"
+    scenarioTitle="Financial Service"
+    simulationManagerDirectory="../../..">
+
+    <SimulationParameters simulationSteps="1098" timeUnit="D" stepTimeDelay="0"/>
+    <SimulationModel modelName="FinancialService" baseURI="http://aors.example.net/SB#">
+        <documentation>
+            <dc:creator>Mircea Diaconescu</dc:creator>
+            <dc:creator>Oana Nicolae</dc:creator>
+            <dc:description> Founding a company by accepting external investors. </dc:description>
+        </documentation>
+
+        <Statistics>
+            <Variable name="initial_company_capital" dataType="Float" displayName="Initial company capital" initialValue="0.0"/>
+            <Variable name="company_capital" dataType="Float" displayName="Final Company capital" initialValue="0.0"/>
+            <Variable name="company_profit" dataType="Float" displayName="Total Company profit" initialValue="0.0"/>
+            <Variable name="employee_investment" dataType="Float" displayName="Total amount of employees investment" initialValue="0.0"/>
+        </Statistics>
+
+        <EntityTypes>
+
+            <MessageType name="Invest">
+                <Attribute type="Float" name="amount"/>
+            </MessageType>
+            
+            <MessageType name="PaySalary">
+                <Attribute type="Float" name="amount"/>
+            </MessageType>
+            
+            <MessageType name="GetSalary">
+                <Attribute type="Float" name="amount"/>
+            </MessageType>
+
+            <MessageType name="DistributedProfit">
+                <Attribute type="Float" name="amount"/>
+            </MessageType>
+            
+            <MessageType name="AnnualProfit">
+                <Attribute type="Float" name="amount"/>
+            </MessageType>
+
+            <ExogenousEventType name="OpenCompany" periodicity="1" />
+
+            <ExogenousEventType name="EndOfMonth" periodicity="30" />
+            <!-- Defining an appropriate function which returns the number of days for each month -->
+                
+            <ExogenousEventType name="EndOfYear" periodicity="365" />
+            <!-- Defining an appropriate function which returns the number of days for years (bisect or not) -->
+            
+
+            <!-- The company that will be founded and managed. -->
+            <PhysicalAgentType name="Company">               
+                
+                <Attribute type="Float" name="capital"/>
+                <Attribute type="Float" name="profit"/>
+                
+                <PeriodicTimeEventType name="EndOfYear" periodicity="365" />
+                
+                <!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->
+                <ReactionRule name="Invest_Rule" agentVariable="agt">
+                    <!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->
+                    <WHEN eventType="InMessageEvent" messageType="Invest" messageVariable="mess"/>
+                     <DO>
+                     	<UPDATE-AGT>
+                     		<Slot property="capital" xsi:type="aors:OpaqueExprSlot">
+                     			<ValueExpr language="Java">
+                     				agt.getCapital() + ((Invest)mess).getAmount()
+                     			</ValueExpr>
+                     		</Slot>
+                     	</UPDATE-AGT>
+                     </DO>
+                </ReactionRule>
+                
+                <!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->
+                <ReactionRule name="AnnualProfit_Rule" agentVariable="agt">
+                    <!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->
+                    <WHEN eventType="InMessageEvent" messageType="AnnualProfit"  messageVariable="mess"/>
+                    <DO>
+                    	<UPDATE-AGT>
+                    		<Slot property="profit" xsi:type="aors:OpaqueExprSlot">
+                    			<ValueExpr language="Java">
+                    				((AnnualProfit)mess).getAmount()
+                    			</ValueExpr>
+                    		</Slot>
+                    		<Slot property="capital" xsi:type="aors:OpaqueExprSlot">
+                    			<ValueExpr language="Java">
+                    				agt.getCapital() + agt.getProfit()
+                    			</ValueExpr>
+                    		</Slot>
+                    	</UPDATE-AGT>
+                    </DO>
+                </ReactionRule>
+                
+                <!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->
+                <ReactionRule name="PaySalary_Rule" agentVariable="agt">
+                    <!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->
+                    <WHEN eventType="InMessageEvent" messageType="PaySalary" messageVariable="mess"/>
+                    <DO>
+                    	<UPDATE-AGT>
+                    		<Slot property="capital" xsi:type="aors:OpaqueExprSlot">
+                    			<ValueExpr language="Java">
+                    				agt.getCapital() - ((PaySalary)mess).getAmount()
+                    			</ValueExpr>
+                    		</Slot>
+                    	</UPDATE-AGT>
+                    </DO>
+                </ReactionRule>
+            </PhysicalAgentType>
+
+            <!-- This represents the generic investor. It is extended by specific investor types -->
+            <PhysicalAgentType name="Investor">
+
+                <Attribute type="Float" name="capital"/>
+                <Attribute type="Float" name="investTotalAmount"/>
+                <Attribute type="Float" name="investAmount"/>
+
+                <Function name="InvestAmount" resultType="Integer">
+                    <!-- two dice: sum of values * 150 Euro -->
+                    <Body language="Java">
+                        <![CDATA[
+           					int r = Random.uniformInt(2, 12);
+           					if (r < 3)  return 300;            // with probability  0.028
+           					if (r < 4)  return 450;            // with probability  0.056
+           					if (r < 5)  return 600;            // with probability  0.083
+           					if (r < 6)  return 550;            // with probability  0.111
+           					if (r < 7)  return 700;            // with probability  0.139
+           					if (r < 8)  return 850;            // with probability  0.166
+           					if (r < 9)  return 1000;           // with probability  0.139
+           					if (r < 10) return 1150;          // with probability  0.111
+           					if (r < 11) return 1300;          // with probability  0.083
+           					if (r < 12) return 1450;          // with probability  0.056
+           					            return 1600;          // with probability  0.028
+					   ]]>
+                    </Body>
+                </Function>
+
+                <!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->
+                <ReactionRule name="DistributedProfit_Rule" agentVariable="agt">
+                    <!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->
+                    <WHEN eventType="InMessageEvent" messageType="DistributedProfit" eventVariable="evt" messageVariable="mess"/>
+                    <UPDATE-AGT>
+                        <Slot property="capital" xsi:type="aors:OpaqueExprSlot">
+                            <ValueExpr language="Java">
+                                agt.getCapital() + mess.getAmount()
+                            </ValueExpr>
+                        </Slot>
+                    </UPDATE-AGT>
+                </ReactionRule>
+
+            </PhysicalAgentType>
+
+            <!-- This is the employee investor. It invests monthly from its salary. -->
+
+            <PhysicalAgentType name="Employee" superType="Investor">
+                <Attribute type="Float" name="salary"/>
+                <Attribute type="Float" name="investSalaryPercent"/>
+                
+                <ReactionRule name="GetSalary_Rule" agentVariable="agt">
+                    <WHEN eventType="InMessageEvent" messageType="GetSalary" messageVariable="mess"/>
+                    <UPDATE-AGT>
+                        <Slot xsi:type="aors:OpaqueExprSlot" property="capital">
+                            <ValueExpr language="Java">
+                                agt.getCapital() + mess.getAmount() - agt.getInvestSalaryPercent() * agt.getSalary() / 100.0f
+                            </ValueExpr>
+                        </Slot>
+                    </UPDATE-AGT>
+                </ReactionRule>
+                
+            </PhysicalAgentType>
+            
+        </EntityTypes>
+
+        <EnvironmentRules>
+            <!-- =================================================== -->
+            <EnvironmentRule name="OpenCompany_StartInvestment_Rule">
+                <!-- =================================================== -->
+                <WHEN eventType="OpenCompany"/>
+                <FOR objectVariable="investor" objectType="Investor"/>
+                <DO>
+                	<UPDATE-ENV>
+                		<UpdateObject objectVariable="investor">
+                			<Slot property="investAmount" xsi:type="aors:OpaqueExprSlot">
+                				<ValueExpr language="Java">investor.InvestAmount()</ValueExpr>
+                			</Slot>
+                		</UpdateObject>
+                		<UpdateStatisticsVariable variable="initial_company_capital">
+                			<ValueExpr language="Java">
+                				SimStatistics.initial_company_capital.getValue() + investor.getInvestAmount()
+                			</ValueExpr>
+                		</UpdateStatisticsVariable>
+                	</UPDATE-ENV>
+                	<SCHEDULE-EVT>
+                		<InMessageEventExpr messageType="Invest" receiverIdRefs="10000">
+                			<SenderIdRef language="Java">investor.getId()</SenderIdRef>
+                			<Slot property="amount" xsi:type="aors:OpaqueExprSlot">
+                				<ValueExpr language="Java">investor.getInvestAmount()</ValueExpr>
+                			</Slot>
+                		</InMessageEventExpr>
+                	</SCHEDULE-EVT>
+                </DO>
+            </EnvironmentRule>
+
+            <!-- =================================================== -->
+            <EnvironmentRule name="EndOfMonth_Rule">
+                <!-- =================================================== -->
+                <documentation>
+                    <dc:description> One each month the company pays the salaries and the employees
+                        get their salaries. </dc:description>
+                </documentation>
+                <WHEN eventType="EndOfMonth"/>
+                <FOR objectType="Company" objectVariable="company"/>
+                <FOR objectType="Employee" objectVariable="employee"/>
+                <FOR dataVariable="investment" dataType="Float">
+                    <ValueExpr language="Java">
+                        employee.getInvestSalaryPercent() * employee.getSalary() / 100.0f
+                    </ValueExpr>
+                </FOR>
+               <DO>
+               	<UPDATE-ENV>
+               		<UpdateStatisticsVariable variable="employee_investment">
+               			<ValueExpr language="Java">
+               				SimStatistics.employee_investment.getValue() + investment
+               			</ValueExpr>
+               		</UpdateStatisticsVariable>
+               	</UPDATE-ENV>
+               	<SCHEDULE-EVT>
+               		<InMessageEventExpr messageType="PaySalary">
+               			<SenderIdRef language="Java">employee.getId()</SenderIdRef>
+               			<ReceiverIdRef language="Java">company.getId()</ReceiverIdRef>
+               			<Slot property="amount" xsi:type="aors:OpaqueExprSlot">
+               				<ValueExpr language="Java">employee.getSalary()</ValueExpr>
+               			</Slot>
+               		</InMessageEventExpr>
+               		<InMessageEventExpr messageType="GetSalary">
+               			<SenderIdRef language="Java">company.getId()</SenderIdRef>
+               			<ReceiverIdRef language="Java">employee.getId()</ReceiverIdRef>
+               			<Slot property="amount" xsi:type="aors:OpaqueExprSlot">
+               				<ValueExpr language="Java">employee.getSalary()</ValueExpr>
+               			</Slot>
+               		</InMessageEventExpr>
+               		<InMessageEventExpr messageType="Invest">
+               			<SenderIdRef language="Java">employee.getId()</SenderIdRef>
+               			<ReceiverIdRef language="Java">company.getId()</ReceiverIdRef>
+               			<Slot property="amount" xsi:type="aors:OpaqueExprSlot">
+               				<ValueExpr language="Java">investment</ValueExpr>
+               			</Slot>
+               		</InMessageEventExpr>
+               	</SCHEDULE-EVT>
+               </DO>
+            </EnvironmentRule>
+
+            <!-- =================================================== -->
+            <EnvironmentRule name="EndOfYear_Employee_Rule">
+                <!-- =================================================== -->
+                <documentation>
+                    <dc:description> 
+                        This rule computes and distributes the profit at the end of each year for the employees. 
+                    </dc:description>
+                </documentation>
+                <WHEN eventType="EndOfYear"/>
+                <FOR objectVariable="company" objectType="Company"/>
+                <FOR objectVariable="employee" objectType="Employee"/>
+                <DO>
+                	<UPDATE-ENV>
+                		<UpdateStatisticsVariable variable="company_profit">
+                			<ValueExpr language="Java">
+                				SimStatistics.company_profit.getValue() + employee.getInvestSalaryPercent() * employee.getSalary() * 800000 * 12 / company.getCapital() * 100.0f 
+                			</ValueExpr>
+                		</UpdateStatisticsVariable>
+                		<UpdateStatisticsVariable variable="company_capital">
+                			<ValueExpr language="Java">
+                				SimStatistics.company_capital.getValue() + company.getCapital()
+                			</ValueExpr>
+                		</UpdateStatisticsVariable>
+                	</UPDATE-ENV>
+                	<SCHEDULE-EVT>
+                		<InMessageEventExpr messageType="DistributedProfit" senderIdRef="10000">
+                			<ReceiverIdRef language="Java">employee.getId()</ReceiverIdRef>
+                			<Slot property="amount" xsi:type="aors:OpaqueExprSlot">
+                				<ValueExpr language="Java"> 
+                					employee.getInvestSalaryPercent() * employee.getSalary() * 800000 * 12 / company.getCapital() * 100.0f 
+                				</ValueExpr>
+                			</Slot>
+                		</InMessageEventExpr>                    
+                	</SCHEDULE-EVT>
+                </DO>
+            </EnvironmentRule>
+            
+            <!-- =================================================== -->
+            <EnvironmentRule name="EndOfYear_Investor_Rule">
+                <!-- =================================================== -->
+                <documentation>
+                   <dc:description> 
+                       This rule computes and distributes the profit at the end of each year for the investors. 
+                   </dc:description>
+                </documentation>
+                <WHEN eventType="EndOfYear" eventVariable="evt"/>
+                <FOR objectVariable="company" objectType="Company"/>
+                <FOR objectVariable="investor" objectType="Investor"/>
+                <DO>
+                	<SCHEDULE-EVT>
+                		<InMessageEventExpr messageType="DistributedProfit" senderIdRef="10000">
+                			<ReceiverIdRef language="Java">investor.getId()</ReceiverIdRef>
+                			<Slot property="amount" xsi:type="aors:OpaqueExprSlot">
+                				<ValueExpr language="Java">
+                					investor.getInvestAmount() * company.getProfit()/ company.getCapital()
+                				</ValueExpr>
+                			</Slot>
+                		</InMessageEventExpr>
+                	</SCHEDULE-EVT>
+                </DO>
+            </EnvironmentRule>
+
+        </EnvironmentRules>
+    </SimulationModel>
+
+    <InitialState>
+        <!-- The company -->
+        <PhysicalAgent type="Company" id="10000">
+            <Slot property="capital" value="0"/>
+            <Slot property="profit" value="0"/>
+        </PhysicalAgent>
+        <!-- 100 initial investors -->
+        <PhysicalAgents type="Investor" rangeStartID="1" rangeEndID="1100">
+            <Slot property="capital" value="0"/>
+            <Slot property="investTotalAmount" value="0"/>
+            <Slot property="investAmount" value="0"/>
+        </PhysicalAgents>
+        <!-- 50 employee -->
+        <PhysicalAgents type="Employee" rangeStartID="1101" rangeEndID="1151">
+            <Slot property="capital" value="0"/>
+            <Slot property="investAmount" value="0"/>
+            <Slot property="salary">
+                <ValueExpr language="Java">Random.uniformInt(500,700)</ValueExpr>
+            </Slot>
+            <Slot property="investSalaryPercent">
+                <ValueExpr language="Java">Random.uniformInt(10,15)</ValueExpr>
+            </Slot>
+        </PhysicalAgents>
+
+        <ExogenousEvent occurrenceTime="1" type="OpenCompany"/>
+        <ExogenousEvent occurrenceTime="30" type="EndOfMonth"/>
+        <ExogenousEvent occurrenceTime="368" type="EndOfYear"/>
+
+    </InitialState>
+</SimulationScenario>
