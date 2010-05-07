@@ -366,7 +366,7 @@
 
   </xsl:template>
 
-  <xsl:template match="aorsml:PeriodicTimeEventType" mode="createPhysicalAgentSubjects.constructor.helper.createPeriodicTimeEventType">
+  <!--xsl:template match="aorsml:PeriodicTimeEventType" mode="createPhysicalAgentSubjects.constructor.helper.createPeriodicTimeEventType">
     <xsl:param name="indent" required="yes" as="xs:integer"/>
 
     <xsl:call-template name="java:newLine"/>
@@ -402,7 +402,7 @@
       </xsl:with-param>
     </xsl:call-template>
 
-  </xsl:template>
+  </xsl:template-->
 
   <!-- getters and setters for pi-agent -->
   <xsl:template match="aorsml:PhysicalAgentType" mode="createPhysicalAgentSubjects.pi-agents.getters">
