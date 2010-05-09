@@ -45,6 +45,7 @@ import java.util.concurrent.CopyOnWriteArrayList;
 import aors.logger.model.AgentSimulatorStep;
 import aors.model.AtomicEvent;
 import aors.model.Entity;
+import aors.model.Rollbackable;
 import aors.model.agtsim.beliefs.ERDFBeliefEntityManager;
 import aors.model.agtsim.beliefs.ERDFBeliefEntityManagerImpl;
 import aors.model.agtsim.jaxb.JaxbLogGenerator;
@@ -66,7 +67,7 @@ import aors.util.JsonData;
  * @since May 25, 2008
  * @version $Revision$
  */
-public abstract class AgentSubject extends Entity {
+public abstract class AgentSubject extends Entity implements Rollbackable {
 
   protected final PropertyChangeSupport propertyChangeSupport = new PropertyChangeSupport(
       this);
@@ -1417,4 +1418,19 @@ public abstract class AgentSubject extends Entity {
     // TODO Is there something to do here?
   } // notifyRemoval
 
+	@Override
+	public void activateMonitoring() {
+    //System.out.println("Monitoring activated for " + this.getName());
+	}
+
+  @Override
+	public void acceptChanges() {
+    //System.out.println("Changes accepted for " + this.getName());
+	}
+
+
+	@Override
+	public void rejectChanges() {
+    //System.out.println("Changes rejected for " + this.getName());
+	}
 }
