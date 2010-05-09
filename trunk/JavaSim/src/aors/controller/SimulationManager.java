@@ -82,7 +82,7 @@ public class SimulationManager {
   private String codeGenXsltName;
 
   // the current (used as defautl) schema name
-  private final String CURRENT_AORSL_SCHEMA_NAME = "AORSL-0-8-3.xsd";
+  private final String CURRENT_AORSL_SCHEMA_NAME = "AORSL-0-8-4.xsd";
   private final String DEFAULT_CODEGEN_XSLT_FILE = "aorsl2java.xsl";
 
   // the project properties object
