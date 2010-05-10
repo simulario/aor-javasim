@@ -1,0 +1,458 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<xs:schema
+	xmlns:ers="http://aor-simulation.org"
+	xmlns:xi="http://www.w3.org/2001/XInclude"
+	xmlns:xs="http://www.w3.org/2001/XMLSchema"
+	xmlns:dc="http://purl.org/dc/elements/1.1/"
+	xmlns:h="http://www.w3.org/1999/xhtml"
+	targetNamespace="http://aor-simulation.org"
+	elementFormDefault="qualified"
+	attributeFormDefault="unqualified">
+	<!-- =================================================================== -->
+	<xs:import namespace="http://www.w3.org/XML/1998/namespace" schemaLocation="xml.xsd"/> 
+	<!-- =================================================================== -->
+	<xs:import namespace="http://www.w3.org/2001/XInclude" schemaLocation="xinclude.xsd"/> 
+	<!-- =================================================================== -->
+	<xs:import namespace="http://purl.org/dc/elements/1.1/" schemaLocation="dc.xsd"/>
+	<!-- =================================================================== -->
+	<xs:element name="documentation">
+	<!-- =================================================================== -->
+		<xs:complexType>
+			<xs:choice minOccurs="0" maxOccurs="unbounded">
+				<xs:element ref="dc:subject" minOccurs="0" maxOccurs="unbounded"/>
+				<xs:element ref="dc:creator" minOccurs="0" maxOccurs="unbounded"/>
+				<xs:element ref="dc:contributor" minOccurs="0" maxOccurs="unbounded"/>
+				<xs:element ref="dc:description" minOccurs="0" maxOccurs="unbounded"/>
+				<xs:element name="description" minOccurs="0" maxOccurs="unbounded">
+					<xs:complexType mixed="true">
+						<xs:sequence>
+							<xs:any namespace="http://www.w3.org/1999/xhtml" processContents="skip" minOccurs="0" maxOccurs="unbounded"/>
+						</xs:sequence>
+					</xs:complexType>
+				</xs:element>
+				<xs:element ref="dc:source" minOccurs="0" maxOccurs="unbounded">
+					<xs:annotation>
+						<xs:documentation>A related resource from which the described resource is derived.</xs:documentation>
+					</xs:annotation>
+				</xs:element>
+				<xs:element ref="dc:created" minOccurs="0"/>
+				<xs:element ref="dc:available" minOccurs="0"/>
+				<xs:element ref="dc:modified" minOccurs="0" maxOccurs="unbounded"/>
+				<xs:element ref="dc:license" minOccurs="0"/>
+				<xs:element name="informationModelDiagram" type="xs:anyURI" minOccurs="0"/>
+				<xs:element name="processModelDiagram" type="xs:anyURI" minOccurs="0"/>
+			</xs:choice>
+			<xs:attribute ref="xml:lang" use="optional" default="en"/>
+		</xs:complexType>
+	</xs:element>
+	<!-- =================================================================== -->
+	<xs:group name="include">
+	<!-- =================================================================== -->
+		<xs:sequence>
+			<xs:element ref="xi:include"/>
+		</xs:sequence>
+	</xs:group>
+	<!-- =================================================================== -->
+	<xs:attributeGroup name="include">
+	<!-- =================================================================== -->
+		<xs:attribute ref="xml:id" use="optional"/>
+		<xs:attribute ref="xml:base" use="optional"/>
+	</xs:attributeGroup>
+	<!-- =================================================================== -->
+	<!-- *** Property *** -->
+	<!-- =================================================================== -->
+	<xs:element name="Property" type="ers:Property.type" abstract="true"/>
+	<xs:complexType name="Property.type">
+		<xs:attribute name="name" type="ers:CanonicalName" use="required"/>
+		<xs:attribute name="type" type="ers:CanonicalName" use="required"/>
+		<xs:attribute name="upperMultiplicity" type="ers:UpperMultiplicity" use="optional" default="1"/>
+		<xs:attribute name="lowerMultiplicity" type="xs:nonNegativeInteger" use="optional" default="1"/>
+		<xs:attribute name="isStatic" type="xs:boolean" use="optional" default="false"/>
+		<xs:attribute name="isEmergent" type="xs:boolean" use="optional" default="false"/>
+	</xs:complexType>
+	<!-- =================================================================== -->
+	<!-- *** Attribute ** -->
+	<!-- =================================================================== -->
+	<xs:element name="Attribute" type="ers:Attribute.type" substitutionGroup="ers:Property"/>
+	<xs:complexType name="Attribute.type">
+		<xs:complexContent>
+			<xs:extension base="ers:Attribute0.type">
+				<xs:attribute name="initialValue" type="xs:string" use="optional"/>
+				<xs:attribute name="minValue" type="xs:double" use="optional"/>
+				<xs:attribute name="maxValue" type="xs:double" use="optional"/>
+			</xs:extension>
+		</xs:complexContent>
+	</xs:complexType>
+	<xs:complexType name="Attribute0.type">
+		<xs:complexContent>
+			<xs:restriction base="ers:Property.type">
+				<xs:attribute name="type" type="ers:PrimitiveDataType" use="required"/>
+			</xs:restriction>
+		</xs:complexContent>
+	</xs:complexType>
+	<xs:simpleType name="PrimitiveDataType">
+		<xs:restriction base="ers:CanonicalName">
+			<xs:enumeration value="String"/>
+			<xs:enumeration value="Integer"/>
+			<xs:enumeration value="Float"/>
+			<xs:enumeration value="Boolean"/>
+			<xs:enumeration value="Date"/>
+			<xs:enumeration value="Time"/>
+			<xs:enumeration value="DateTime"/>
+			<xs:enumeration value="Duration"/>
+		</xs:restriction>
+	</xs:simpleType>
+	<!-- =================================================================== -->
+	<!-- *** ReferenceProperty ***  -->
+	<!-- =================================================================== -->
+	<xs:element name="ReferenceProperty" type="ers:ReferenceProperty.type" substitutionGroup="ers:Property"/>
+	<xs:complexType name="ReferenceProperty.type">
+		<xs:complexContent>
+			<xs:extension base="ers:Property.type"/>
+		</xs:complexContent>
+	</xs:complexType>
+	<!-- =================================================================== -->
+	<!-- *** ComplexDataProperty *** -->
+	<!-- =================================================================== -->
+	<xs:element name="ComplexDataProperty" type="ers:ReferenceProperty.type" substitutionGroup="ers:Property"/>
+	<!-- =================================================================== -->
+	<!-- *** EnumerationProperty *** -->
+	<!-- =================================================================== -->
+	<xs:element name="EnumerationProperty" type="ers:EnumerationProperty.type" substitutionGroup="ers:Property"/>
+	<xs:complexType name="EnumerationProperty.type">
+		<xs:complexContent>
+			<xs:extension base="ers:Property.type">
+				<xs:attribute name="initialValue" type="xs:string" use="optional"/>
+			</xs:extension>
+		</xs:complexContent>
+	</xs:complexType>
+	<!-- =================================================================== -->
+	<xs:element name="Parameter" type="ers:Parameter.type"/>
+	<!-- =================================================================== -->	
+	<xs:complexType name="Parameter.type">
+		<xs:attribute name="name" type="ers:CanonicalName" use="required"/>
+		<xs:attribute name="type" type="ers:JavaTypeName" use="required"/>
+	</xs:complexType>
+	<!-- =================================================================== -->
+	<xs:complexType name="OpaqueExpression">
+	<!-- =================================================================== -->
+		<xs:simpleContent>
+			<xs:extension base="xs:string">
+				<xs:attribute name="language" use="required">
+					<xs:simpleType>
+						<xs:restriction base="xs:string">
+							<xs:enumeration value="Java"/>
+							<xs:enumeration value="JavaScript"/>
+							<xs:enumeration value="PHP"/>
+						</xs:restriction>
+					</xs:simpleType>
+				</xs:attribute>
+			</xs:extension>
+		</xs:simpleContent>
+	</xs:complexType>
+	<!-- =================================================================== -->
+	<xs:element name="Slot" type="ers:Slot.type"/>
+	<!-- =================================================================== -->
+	<xs:complexType name="Slot.type">
+		<xs:choice>
+			<xs:element ref="ers:RandomVariable" minOccurs="0"/>
+			<xs:element ref="ers:ValueExpr" minOccurs="0" maxOccurs="unbounded"/>
+		</xs:choice>
+		<xs:attribute name="property" type="ers:PathName" use="required"/>
+		<xs:attribute name="value" type="xs:string" use="optional"/>
+	</xs:complexType>
+	<xs:complexType name="SimpleSlot">
+		<xs:complexContent>
+			<xs:restriction base="ers:Slot.type">
+				<xs:attribute name="property" type="ers:PathName" use="required"/>
+				<xs:attribute name="value" type="xs:string" use="required"/>
+			</xs:restriction>
+		</xs:complexContent>
+	</xs:complexType>
+	<xs:complexType name="OpaqueExprSlot">
+		<xs:complexContent>
+			<xs:restriction base="ers:Slot.type">
+				<xs:choice>
+					<xs:element ref="ers:RandomVariable" minOccurs="0"/>
+					<xs:element ref="ers:ValueExpr" minOccurs="0" maxOccurs="unbounded"/>
+				</xs:choice>
+				<xs:attribute name="property" type="ers:PathName" use="required"/>
+			</xs:restriction>
+		</xs:complexContent>
+	</xs:complexType>
+	<!-- =================================================================== -->
+	<xs:element name="Code" type="ers:OpaqueExpression"/>
+	<!-- =================================================================== -->
+	<xs:element name="Text">
+	<!-- =================================================================== -->
+		<xs:complexType>
+			<xs:simpleContent>
+				<xs:extension base="xs:string">
+					<xs:attribute ref="xml:lang" use="optional" default="en"/>
+				</xs:extension>
+			</xs:simpleContent>
+		</xs:complexType>		
+	</xs:element>
+	<!-- =================================================================== -->
+	<xs:element name="SelectionCondition" type="ers:OpaqueExpression"/>
+	<!-- =================================================================== -->
+	<xs:element name="ValueExpr" type="ers:OpaqueExpression"/>
+	<!-- =================================================================== -->
+	<xs:complexType name="ValueExpr.type">
+		<xs:simpleContent>
+			<xs:extension base="ers:OpaqueExpression">
+			<!--
+				<xs:attribute name="objectVariable" type="ers:CanonicalName" use="optional"/>
+				<xs:attribute name="objectIdRef" type="xs:long" use="optional"/>
+				<xs:attribute name="objectName" type="xs:NCName" use="optional"/>
+			-->
+			</xs:extension>
+		</xs:simpleContent>
+	</xs:complexType>
+	<!-- ======================================================= -->
+	<xs:element name="Enumeration" type="ers:Enumeration.type"/>
+	<!-- ======================================================= -->
+	<xs:complexType name="Enumeration.type">
+		<xs:sequence>
+			<xs:element ref="ers:EnumerationLiteral" minOccurs="0" maxOccurs="unbounded"/>
+		</xs:sequence>
+		<xs:attribute name="name" type="ers:CanonicalName" use="required"/>
+	</xs:complexType>
+	<xs:element name="EnumerationLiteral" type="ers:JavaConstantName"/>
+	<!-- =================================================================== -->
+	<xs:element name="Function" type="ers:Function.type"/>
+	<!-- =================================================================== -->
+	<xs:complexType name="Function.type">
+		<xs:sequence>
+			<xs:element ref="ers:documentation" minOccurs="0"/>
+			<xs:element ref="ers:Parameter" minOccurs="0" maxOccurs="unbounded"/>
+			<xs:element name="Body" type="ers:OpaqueExpression" maxOccurs="unbounded"/>
+		</xs:sequence>
+		<xs:attribute name="name" type="ers:CanonicalName" use="required"/>
+		<xs:attribute name="resultType" type="ers:JavaTypeName" use="required"/>
+		<xs:attribute name="isStatic" type="xs:boolean" use="optional" default="false"/>
+	</xs:complexType>
+	<!-- =================================================================== -->
+	<xs:complexType name="RandomVariable-OR-ValueExpr">
+	<!-- =================================================================== -->
+		<xs:choice>
+			<xs:element ref="ers:RandomVariable" minOccurs="0"/>
+			<xs:element ref="ers:ValueExpr" minOccurs="0" maxOccurs="unbounded"/>
+		</xs:choice>
+	</xs:complexType>
+	<xs:element name="RandomVariable" type="ers:RandomVariable.type"/>
+	<!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->
+	<xs:complexType name="RandomVariable.type">
+	<!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->
+		<xs:choice>
+			<xs:element name="Uniform" type="ers:Uniform.type"/>
+			<xs:element name="Normal" type="ers:Normal.type"/>
+			<xs:element name="Binomial" type="ers:Binomial.type"/>
+			<xs:element name="NegBinomial" type="ers:NegBinomial.type"/>
+			<xs:element name="Poisson" type="ers:Poisson.type"/>
+			<xs:element name="Exponential" type="ers:Exponential.type"/>
+			<xs:element name="Student_T" type="ers:Student_T.type"/>
+			<xs:element name="Logarithmic" type="ers:Logarithmic.type"/>
+			<xs:element name="ChiSquare" type="ers:ChiSquare.type"/>
+		</xs:choice>
+	</xs:complexType>
+	<!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->
+	<xs:complexType name="Uniform.type">
+	<!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->
+		<xs:annotation>
+			<xs:documentation>
+				<h:p>Propability distribution where each possible value has the same proability. See also
+					<h:a href="http://en.wikipedia.org/wiki/Uniform_distribution_%28discrete%29">Wikipedia article</h:a>.</h:p>
+			</xs:documentation>
+		</xs:annotation>
+		<xs:sequence>
+			<xs:element name="LowerBoundExpr" type="ers:OpaqueExpression" minOccurs="0" maxOccurs="unbounded"/>
+			<xs:element name="UpperBoundExpr" type="ers:OpaqueExpression" minOccurs="0" maxOccurs="unbounded"/>
+		</xs:sequence>
+		<xs:attribute name="lowerBound" type="xs:integer" use="optional">
+			<xs:annotation><xs:documentation>The lowest possible value.</xs:documentation></xs:annotation>
+		</xs:attribute>
+		<xs:attribute name="upperBound" type="xs:integer" use="optional">
+			<xs:annotation><xs:documentation>The highest possible value.</xs:documentation></xs:annotation>
+		</xs:attribute>
+	</xs:complexType>
+	<!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->
+	<xs:complexType name="Normal.type">
+	<!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->
+		<xs:annotation>
+			<xs:documentation>
+				<h:p>Continuous propability distribution where the data clusters around a mean. See also
+					<h:a href="http://en.wikipedia.org/wiki/Normal_distribution">Wikipedia article</h:a>.</h:p>
+			</xs:documentation>
+		</xs:annotation>
+		<xs:sequence>
+			<xs:element name="MeanExpr" type="ers:OpaqueExpression" minOccurs="0" maxOccurs="unbounded"/>
+			<xs:element name="StandardDeviationExpr" type="ers:OpaqueExpression" minOccurs="0" maxOccurs="unbounded"/>
+		</xs:sequence>
+		<xs:attribute name="mean" type="xs:double" use="optional">
+			<xs:annotation><xs:documentation>Also called "expected value".</xs:documentation></xs:annotation>
+		</xs:attribute>
+		<xs:attribute name="standardDeviation" type="xs:double" use="optional">
+			<xs:annotation><xs:documentation>Also called "expected value".</xs:documentation></xs:annotation>
+		</xs:attribute>
+	</xs:complexType>	
+	<!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->
+	<xs:complexType name="Binomial.type">
+		<!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->
+		<xs:annotation>
+			<xs:documentation>
+				<h:p>Discrete propability distribution of the number of successes in a sequence of n independent yes/no experiments, each of which yields success with probability p. See also <h:a href="http://en.wikipedia.org/wiki/Binomial_distribution">Wikipedia article</h:a>.</h:p>
+			</xs:documentation>
+		</xs:annotation>
+		<xs:sequence>
+			<xs:element name="N-Expr" type="ers:OpaqueExpression" minOccurs="0" maxOccurs="unbounded"/>
+			<xs:element name="P-Expr" type="ers:OpaqueExpression" minOccurs="0" maxOccurs="unbounded"/>
+		</xs:sequence>
+		<xs:attribute name="n" type="xs:positiveInteger" use="optional">
+			<xs:annotation><xs:documentation>Number of independent yes/no experiments.</xs:documentation></xs:annotation>
+		</xs:attribute>
+		<xs:attribute name="p" type="ers:Probability" use="optional">
+			<xs:annotation><xs:documentation>Success probability.</xs:documentation></xs:annotation>
+		</xs:attribute>
+	</xs:complexType>	
+	<!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->
+	<xs:complexType name="NegBinomial.type">
+	<!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->
+		<xs:annotation>
+			<xs:documentation>
+				<h:p>Discrete propability distribution of the number of failures before the r'th succes in a sequence of independent yes/no experiments, each of which yields success with probability p. See also the <h:a href="http://en.wikipedia.org/wiki/Negative_binomial_distribution">Wikipedia article</h:a>.
+				</h:p>
+			</xs:documentation>
+		</xs:annotation>
+		<xs:sequence>
+			<xs:element name="R-Expr" type="ers:OpaqueExpression" minOccurs="0" maxOccurs="unbounded"/>
+			<xs:element name="P-Expr" type="ers:OpaqueExpression" minOccurs="0" maxOccurs="unbounded"/>
+		</xs:sequence>
+		<xs:attribute name="r" type="xs:positiveInteger" use="optional">
+			<xs:annotation><xs:documentation>Number of successes.</xs:documentation></xs:annotation>
+		</xs:attribute>
+		<xs:attribute name="p" type="ers:Probability" use="optional">
+			<xs:annotation><xs:documentation>Success probability.</xs:documentation></xs:annotation>
+		</xs:attribute>
+	</xs:complexType>
+	<!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->
+	<xs:complexType name="Poisson.type">
+		<!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->
+		<xs:annotation>
+			<xs:documentation>
+				<h:p>Discrete propability distribution of a number of events occurring in a fixed period of time if these events occur with a known average rate lambda. See also the <h:a href="http://en.wikipedia.org/wiki/Poisson_distribution">Wikipedia article</h:a>.</h:p>
+			</xs:documentation>
+		</xs:annotation>
+		<xs:sequence>
+			<xs:element name="LambdaExpr" type="ers:OpaqueExpression" minOccurs="0" maxOccurs="unbounded"/>
+		</xs:sequence>
+		<xs:attribute name="lambda" type="ers:PositiveDouble" use="optional">
+			<xs:annotation><xs:documentation><h:p>Average rate of event occurrences in the given interval.</h:p> </xs:documentation></xs:annotation>
+		</xs:attribute>
+	</xs:complexType>
+	<!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->
+	<xs:complexType name="Exponential.type">
+	<!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->
+		<xs:annotation>
+			<xs:documentation>
+				<h:p>Contniuous propability distribution of the times between events in a Poisson process, i.e. a process in which events occur continuously and independently at a constant average rate. See also <h:a href="http://en.wikipedia.org/wiki/Exponential_distribution">Wikipedia article</h:a>.</h:p>
+			</xs:documentation>
+		</xs:annotation>
+		<xs:sequence>
+			<xs:element name="LambdaExpr" type="ers:OpaqueExpression" minOccurs="0" maxOccurs="unbounded"/>
+		</xs:sequence>
+		<xs:attribute name="lambda" type="ers:PositiveDouble" use="optional">
+			<xs:annotation><xs:documentation><h:p>Average rate of event occurrences in the given interval. </h:p></xs:documentation></xs:annotation>
+		</xs:attribute>
+	</xs:complexType>
+	<!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->
+	<xs:complexType name="Student_T.type">
+	<!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->
+		<xs:annotation>
+			<xs:documentation>
+				<h:p>Continuous propability distribution that arises in the problem of estimating the mean of a normally distributed population when the sample size is small. See also <h:a href="http://en.wikipedia.org/wiki/Student%27s_t-distribution">Wikipedia article</h:a>.</h:p>
+			</xs:documentation>
+		</xs:annotation>
+		<xs:sequence>
+			<xs:element name="DegreesOfFreedomExpr" type="ers:OpaqueExpression" minOccurs="0" maxOccurs="unbounded"/>
+		</xs:sequence>
+		<xs:attribute name="degreesOfFreedom" type="xs:positiveInteger" use="optional"/>
+	</xs:complexType>
+	<!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->
+	<xs:complexType name="Logarithmic.type">
+		<!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->
+		<xs:annotation>
+			<xs:documentation>
+				<h:p>Discrete propability distribution. See also <h:a href="http://en.wikipedia.org/wiki/Logarithmic_distribution">Wikipedia article</h:a>.</h:p>
+			</xs:documentation>
+		</xs:annotation>
+		<xs:sequence>
+			<xs:element name="P-Expr" type="ers:OpaqueExpression" minOccurs="0" maxOccurs="unbounded"/>
+		</xs:sequence>
+		<xs:attribute name="p" type="ers:Probability" use="optional">
+		</xs:attribute>
+	</xs:complexType>
+	<!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->
+	<xs:complexType name="ChiSquare.type">
+		<!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->
+		<xs:annotation>
+			<xs:documentation>
+				<h:p>Propability distribution that calculates the sum of the squares of a set of statistically independent standard normal random variables. See also <h:a href="http://en.wikipedia.org/wiki/Chi-square_distribution">Wikipedia article</h:a>.</h:p>
+			</xs:documentation>
+		</xs:annotation>
+		<xs:sequence>
+			<xs:element name="DegreesOfFreedomExpr" type="ers:OpaqueExpression" minOccurs="0" maxOccurs="unbounded"/>
+		</xs:sequence>
+		<xs:attribute name="degreesOfFreedom" type="xs:positiveInteger" use="optional"/>
+	</xs:complexType>
+	<!-- =================================================================== -->
+	<!-- *** Special Data Types  *** -->
+	<!-- =================================================================== -->
+	<xs:simpleType name="Probability">
+		<xs:restriction base="xs:double">
+			<xs:minExclusive value="0.0"/>
+			<xs:maxExclusive value="1.0"/>
+		</xs:restriction>
+	</xs:simpleType>
+	<xs:simpleType name="PositiveDouble">
+		<xs:restriction base="xs:double">
+			<xs:minExclusive value="0"/>
+		</xs:restriction>
+	</xs:simpleType>
+	<xs:simpleType name="ListOfLong">
+		<xs:list itemType="xs:long"/>
+	</xs:simpleType>
+	<xs:simpleType name="UpperMultiplicity">
+		<xs:restriction base="xs:string">
+			<xs:pattern value="unbounded|([0-9])*"/>
+		</xs:restriction>
+	</xs:simpleType>
+	<xs:simpleType name="Offset">
+		<xs:restriction base="xs:string">
+			<xs:pattern value="\-?(([0-9])*px|[1-9]?[0-9]%)"/>
+		</xs:restriction>
+	</xs:simpleType>
+	<xs:simpleType name="CanonicalName">
+		<xs:restriction base="xs:string">
+			<xs:pattern value="([A-Z]|[a-z]|_)([A-Z]|[a-z]|_|[0-9])*"/>
+		</xs:restriction>
+	</xs:simpleType>
+	<xs:simpleType name="PathName">
+		<xs:restriction base="xs:string">
+			<xs:pattern value="([A-Z]|[a-z]|_)([A-Z]|[a-z]|_|[0-9]|.)*"/>
+		</xs:restriction>
+	</xs:simpleType>
+	<xs:simpleType name="JavaTypeName">
+		<xs:restriction base="xs:string">
+			<xs:pattern value="([A-Z]|[a-z]|_)([A-Z]|[a-z]|_|[0-9]|.)*"/>
+		</xs:restriction>
+	</xs:simpleType>
+	<xs:simpleType name="ListOfCanonicalName">
+		<xs:list itemType="ers:CanonicalName"/>
+	</xs:simpleType>
+	<xs:simpleType name="JavaConstantName">
+		<xs:restriction base="xs:string">
+			<xs:pattern value="([A-Z])([A-Z]|_|[0-9])*"/>
+		</xs:restriction>
+	</xs:simpleType>
+</xs:schema>
