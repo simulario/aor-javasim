@@ -1,0 +1,144 @@
+<?xml version="1.0" standalone="yes"?>
+<!--
+@author: Marco Pehla, mpehla@informatik.tu-cottbus.de, http://www.informatik.tu-cottbus.de/~mpehla/
+@date: 20-05-2008
+ -->
+<project name="AOR-Logger-API" default="java6" basedir=".">
+  <property file="build.properties"/>
+  <description> This ANT file builds the API for the AOR Logger XML output. </description>
+
+  <property name="version" value="0-6"/>
+  <property name="name.xmlschemafile" value="AORS-Log-${version}.xsd"/>
+  <property name="name.jarfile" value="AORS-Log-API.jar"/>
+  <property name="name.zipfile" value="AORS-Log-${version}-API.zip"/>
+  <property name="java5" value="java_1.5"/>
+  <property name="java6" value="java_1.6"/>
+  <property name="prj.dir" location="."/>
+  <property name="prj.libdir" value="${prj.dir}/libs"/>
+
+
+  <path id="classpath">
+    <pathelement path="src"/>
+    <pathelement path="bin"/>
+
+    <pathelement location="${prj.libdir}/activation.jar"/>
+    <pathelement location="${prj.libdir}/jaxb-api.jar"/>
+    <pathelement location="${prj.libdir}/jaxb1-impl.jar"/>
+    <pathelement location="${prj.libdir}/jaxb-impl.jar"/>
+    <pathelement location="${prj.libdir}/jaxb-xjc.jar"/>
+    <pathelement location="${prj.libdir}/jsr173_1.0_api.jar"/>
+
+  </path>
+
+  <taskdef name="xjc" classname="com.sun.tools.xjc.XJCTask">
+    <classpath refid="classpath"/>
+  </taskdef>
+
+  <target name="build" description="generate Java files from the schema">
+    <echo message="generate Java source files from XML schema.:"/>
+    <mkdir dir="src"/>
+
+    <!--xjc schema="aorout.xsd" binding="r2mlbindings.jxb" destdir="src"-->
+    <xjc schema="${name.xmlschemafile}" binding="aorbindings.jxb" destdir="src">
+      <produces dir="src" includes="**/*.java"/>
+      <arg value="-npa"/>
+    </xjc>
+    <!-- copying static source files to source code path: 
+		<copy todir="./src/de/tu_cottbus/r2ml/">
+			<fileset dir="./static"/>
+		</copy>
+		-->
+  </target>
+
+  <target name="compile_java5" description="Compiling the java source files." depends="build">
+    <echo>using JAVA_HOME = ${java.home}</echo>
+    <delete file="${name.zipfile}"/>
+    <echo message="Compiling the java source files.:"/>
+    <mkdir dir="bin"/>
+    <javac destdir="bin" debug="on" source="1.5" target="1.5">
+      <src path="src"/>
+      <classpath refid="classpath"/>
+    </javac>
+  </target>
+
+  <target name="compile_java6" description="Compiling the java source files." depends="build">
+    <echo>using JAVA_HOME = ${java.home}</echo>
+    <delete file="${name.zipfile}"/>
+    <echo message="Compiling the java source files.:"/>
+    <mkdir dir="bin"/>
+    <javac destdir="bin" debug="on" source="1.6" target="1.6">
+      <src path="src"/>
+      <classpath refid="classpath"/>
+    </javac>
+  </target>
+
+  <target name="documentation">
+    <mkdir dir="doc"/>
+    <javadoc sourcepath="src" destdir="doc" windowtitle="AOR Logger API v${version} documentation " useexternalfile="yes" verbose="off">
+      <fileset dir="." includes="src/**/*.java" excludes="**/impl/**/*.java"/>
+      <classpath refid="classpath"/>
+    </javadoc>
+  </target>
+
+  <target name="jar" description="Building the jar file">
+    <jar jarfile="${name.jarfile}" basedir="bin" includes="**/**/*.class"/>
+  </target>
+
+
+  <!--
+  <target name="distr" description="creates an archive containing the source code, jar file, examples and documentation">
+		<zip destfile="r2mlapi_${version}.zip">
+			<fileset dir="." includes="R2ML/r2ml.xsd"/>
+            <fileset dir="." includes="R2ML/modules/actions.xsd"/>
+            <fileset dir="." includes="R2ML/modules/annotations.xsd"/>
+            <fileset dir="." includes="R2ML/modules/attributes.xsd"/>
+            <fileset dir="." includes="R2ML/modules/events.xsd"/>
+            <fileset dir="." includes="R2ML/modules/formulas.xsd"/>
+            <fileset dir="." includes="R2ML/modules/roles.xsd"/>
+            <fileset dir="." includes="R2ML/modules/terms.xsd"/>
+            <fileset dir="." includes="R2ML/Vocabulary/r2mlv.xsd"/>
+            <fileset dir="." includes="R2ML/Vocabulary/r2mlv-basic.xsd"/>
+            <fileset dir="." includes="R2ML/Vocabulary/r2mlv-functional.xsd"/>
+            <fileset dir="." includes="R2ML/Vocabulary/r2mlv-relational.xsd"/>
+            
+            
+			<fileset dir="." includes="r2ml.jar"/>
+			<fileset dir="." includes="bin/**/*" />
+			<fileset dir="." includes="src/**/*" />
+			<fileset dir="." includes="doc/**/*" />
+      <fileset dir="." includes="libs/**/*" />
+			<fileset dir="." includes="examples/**/build.xml" />
+			<fileset dir="." includes="examples/**/readme.txt" />
+			<fileset dir="." includes="examples/**/src/RuleCreation.java" />
+			
+		</zip>
+    </target>
+    
+	
+    <target name="java5" description="Serializing the build, compile, jar creation, documentation creation and compressing tasks" 
+    depends="clean,build,compile_java5,jar,documentation,distr">
+		<move file="r2mlapi_${r2ml.version}.zip" tofile="r2mlapi_${r2ml.version}_(${java5}).zip"/>
+		
+	</target>
+	-->
+
+  <target name="java6" description="Serializing the build, compile, jar creation, documentation creation and compressing tasks"
+    depends="clean,build,compile_java6,jar,documentation">
+    <!--<move file="r2mlapi_${r2ml.version}.zip" tofile="r2mlapi_${r2ml.version}_(${java6}).zip"/>-->
+  </target>
+
+  <target name="clean" description="Deletes all the generated artifacts.">
+    <delete dir="bin"/>
+    <echo message="Deleting files from doc and src folder:"/>
+    <echo message="(The hidden SVN files are still there!)"/>
+    <delete>
+      <fileset dir="." includes="src/**/*" excludes="src/**/*.svn"/>
+      <fileset dir="." includes="doc/**/*" excludes="doc/**/*.svn"/>
+    </delete>
+    <delete file="${name.jarfile}"/>
+    <delete file="${name.zipfile}"/>
+
+
+  </target>
+
+</project>
