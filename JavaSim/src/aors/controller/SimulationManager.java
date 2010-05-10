@@ -675,18 +675,15 @@ public class SimulationManager {
 
     String xml = this.getProject().getSimulationDescription();
 
+    File schemaFile = this.getXMLSchema();
+
     try {
       // lookup a factory for the W3C XML Schema language
       SchemaFactory factory = SchemaFactory
           .newInstance(XMLConstants.W3C_XML_SCHEMA_NS_URI);
 
-      // get the XML Schema
-      File schemaLocation = new File(System.getProperty("user.dir")
-          + File.separator + this.AORSLDirectory + File.separator
-          + this.AORSLSchemaName);
-
       // create a new Schema instance
-      Schema schema = factory.newSchema(schemaLocation);
+      Schema schema = factory.newSchema(schemaFile);
 
       // get a validator from the schema.
       Validator validator = schema.newValidator();
@@ -711,6 +708,24 @@ public class SimulationManager {
     }
 
     return result;
+  }
+  
+  private File getXMLSchema() {
+    
+    File schemaLocation = new File(System.getProperty("user.dir")
+        + File.separator + this.AORSLDirectory + File.separator
+        + this.AORSLSchemaName);
+
+    if (!schemaLocation.exists()) {
+      System.err.println("The XML-Schema [" + this.AORSLSchemaName
+          + "] was not found. Try with [" + this.CURRENT_AORSL_SCHEMA_NAME
+          + "].");
+      this.AORSLSchemaName = this.CURRENT_AORSL_SCHEMA_NAME;
+      schemaLocation = new File(System.getProperty("user.dir") + File.separator
+          + this.AORSLDirectory + File.separator + this.AORSLSchemaName);
+    }
+    
+    return schemaLocation;
   }
 
   /**
