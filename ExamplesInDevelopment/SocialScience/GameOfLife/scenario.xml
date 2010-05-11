@@ -1,0 +1,313 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<?xml-stylesheet type="text/xsl" href="prettyprint.xsl"?>
+<SimulationScenario 
+    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+    xsi:schemaLocation="http://aor-simulation.org ../../../AORSL/AORSL_0-8-4.xsd"
+    xmlns="http://aor-simulation.org"
+    xmlns:aors="http://aor-simulation.org"
+    xmlns:dc="http://purl.org/dc/elements/1.1/"
+    version="0.8.4"
+    scenarioName="GameOfLife">
+    
+    <SimulationParameters simulationSteps="10000" stepDuration="100" timeUnit="ms" stepTimeDelay="100"/>
+    
+    <SimulationModel modelName="Board" autoKinematics="true">
+        <documentation>
+            <dc:creator>Sebastian Mucha</dc:creator>
+            <dc:created>May 11th, 2010</dc:created>
+            <dc:description>
+                This simulation models the classical Game of Life introduced by John Horton Conway.
+            </dc:description>
+        </documentation>
+        
+        <SpaceModel geometry="Euclidean">
+            <TwoDimensionalGrid xMax="50" yMax="50">
+                <!-- Number of active neighbors of a cell -->
+                <GridCellProperty type="Integer" name="activeNeighbors"/>
+                
+                <!-- Cell status -->
+                <GridCellProperty type="Integer" name="status"/>
+                
+                <!-- Temporary cell status -->
+                <GridCellProperty type="Integer" name="tmpStatus"/>
+                
+                <!-- Determines the status of a cell specified by its coordinates -->
+                <GridCellFunction name="checkCellStatus" resultType="Integer">
+                    <Parameter name="x" type="int"/>
+                    <Parameter name="y" type="int"/>
+                    
+                    <Body language="Java">
+                        <![CDATA[                    
+                            return Simulator.spaceModel.getGridCell(x,y).getStatus();
+                        ]]>
+                    </Body>
+                </GridCellFunction>
+                
+                <!-- Determines the number of active neighbors in a cells direct neighborhood -->
+                <GridCellFunction name="checkNeighborhood" resultType="Integer">
+                    <Body language="Java">
+                        <![CDATA[                    
+                            int x = (int) this.getPosX();
+                            int y = (int) this.getPosY();
+                            int xMax = (int) Simulator.spaceModel.getXMax();
+                            int yMax = (int) Simulator.spaceModel.getYMax();
+                            int activeNeighbors = 0;
+
+                            if (x > 1 && x < xMax) {
+                                // Cell is not on any border
+                                if (y > 1 && y < yMax) {
+                                    activeNeighbors += this.checkCellStatus(x-1, y+1);
+                                    activeNeighbors += this.checkCellStatus(x, y+1);
+                                    activeNeighbors += this.checkCellStatus(x+1, y+1);
+                                    activeNeighbors += this.checkCellStatus(x+1, y);
+                                    activeNeighbors += this.checkCellStatus(x+1, y-1);
+                                    activeNeighbors += this.checkCellStatus(x, y-1);
+                                    activeNeighbors += this.checkCellStatus(x-1, y-1);
+                                    activeNeighbors += this.checkCellStatus(x-1, y);
+                                    
+                                    return activeNeighbors;
+                                }
+                                
+                                // Cell is on the top border
+                                else if (y == yMax) {
+                                    activeNeighbors += this.checkCellStatus(x+1, y);
+                                    activeNeighbors += this.checkCellStatus(x+1, y-1);
+                                    activeNeighbors += this.checkCellStatus(x, y-1);
+                                    activeNeighbors += this.checkCellStatus(x-1, y-1);
+                                    activeNeighbors += this.checkCellStatus(x-1, y);
+                                    
+                                    return activeNeighbors;
+                                }
+                                
+                                // Cell is on the bottom border
+                                else if (y == 1) {
+                                    activeNeighbors += this.checkCellStatus(x-1, y+1);
+                                    activeNeighbors += this.checkCellStatus(x, y+1);
+                                    activeNeighbors += this.checkCellStatus(x+1, y+1);
+                                    activeNeighbors += this.checkCellStatus(x+1, y);
+                                    activeNeighbors += this.checkCellStatus(x-1, y);
+                                    
+                                    return activeNeighbors;
+                                }
+                                
+                                else {
+                                    return activeNeighbors;
+                                }
+                            }
+                            
+                            else {
+                                // Cell is on the top left corner
+                                if (x == 1 && y == yMax) {
+                                    activeNeighbors += this.checkCellStatus(x+1, y);
+                                    activeNeighbors += this.checkCellStatus(x+1, y-1);
+                                    activeNeighbors += this.checkCellStatus(x, y-1);
+                                    
+                                    return activeNeighbors;
+                                }
+                                
+                                // Cell is on the top right corner
+                                else if (x == xMax && y == yMax) {
+                                    activeNeighbors += this.checkCellStatus(x, y-1);
+                                    activeNeighbors += this.checkCellStatus(x-1, y-1);
+                                    activeNeighbors += this.checkCellStatus(x-1, y);
+                                    
+                                    return activeNeighbors;
+                                }
+                                
+                                // Cell is on the bottom right corner
+                                else if (x == xMax && y == 1) {
+                                    activeNeighbors += this.checkCellStatus(x-1, y+1);
+                                    activeNeighbors += this.checkCellStatus(x, y+1);
+                                    activeNeighbors += this.checkCellStatus(x-1, y);
+                                    
+                                    return activeNeighbors;
+                                }
+                                
+                                // Cell is on the bottom left corner
+                                else if (x == 1 && y == 1) {
+                                    activeNeighbors += this.checkCellStatus(x, y+1);
+                                    activeNeighbors += this.checkCellStatus(x+1, y+1);
+                                    activeNeighbors += this.checkCellStatus(x+1, y);
+                                    
+                                    return activeNeighbors;
+                                }
+                                
+                                // Cell is on the left border
+                                else if (x == 1) {
+                                    activeNeighbors += this.checkCellStatus(x, y+1);
+                                    activeNeighbors += this.checkCellStatus(x+1, y+1);
+                                    activeNeighbors += this.checkCellStatus(x+1, y);
+                                    activeNeighbors += this.checkCellStatus(x+1, y-1);
+                                    activeNeighbors += this.checkCellStatus(x, y-1);
+                                    
+                                    return activeNeighbors;
+                                }
+                                
+                                // Cell is on the right border
+                                else if (x == xMax) {
+                                    activeNeighbors += this.checkCellStatus(x-1, y+1);
+                                    activeNeighbors += this.checkCellStatus(x, y+1);
+                                    activeNeighbors += this.checkCellStatus(x, y-1);
+                                    activeNeighbors += this.checkCellStatus(x-1, y-1);
+                                    activeNeighbors += this.checkCellStatus(x-1, y);
+                                    
+                                    return activeNeighbors;
+                                }
+                                
+                                else {
+                                    return activeNeighbors;
+                                }
+                            }
+                        ]]>
+                    </Body>
+                </GridCellFunction>
+                
+                <!-- Determines the new status of a cell with respect to its active neighbors -->
+                <GridCellFunction name="determineNewCellStatus" resultType="Integer">
+                    <Body language="Java">
+                        <![CDATA[                    
+                            if (this.getStatus() == 0 && this.getActiveNeighbors() == 3)
+                                return 1;
+                            else if (this.getStatus() == 1 && this.getActiveNeighbors() < 2)
+                                return 0;
+                            else if (this.getStatus() == 1 && (this.getActiveNeighbors() == 2 || this.getActiveNeighbors() == 3))
+                                return 1;
+                            else if (this.getStatus() == 1 && this.getActiveNeighbors() > 3)
+                                return 0;
+                            else
+                                return 0;
+                        ]]>
+                    </Body>
+                </GridCellFunction>
+                
+            </TwoDimensionalGrid>
+        </SpaceModel>
+        
+        <EnvironmentRules>
+            <EnvironmentRule name="ComputeNextGeneration_EnvRule">
+                <ON-EACH-SIMULATION-STEP/>
+                <DO>
+                    <UPDATE-ENV>
+                        <UpdateGridCells gridCellVariable="gc">
+                            <Code language="Java">
+                                <![CDATA[                    
+                                    gc.setActiveNeighbors(gc.checkNeighborhood());
+                                    gc.setTmpStatus(gc.determineNewCellStatus());
+                                ]]>
+                            </Code>
+                        </UpdateGridCells>
+                        
+                        <UpdateGridCells gridCellVariable="cell">
+                            <Code language="Java">
+                                <![CDATA[                    
+                                    cell.setStatus(cell.getTmpStatus());
+                                ]]>
+                            </Code>
+                        </UpdateGridCells>
+                    </UPDATE-ENV>
+                </DO>
+            </EnvironmentRule>
+        </EnvironmentRules>
+        
+    </SimulationModel>
+    
+    <InitialState>        
+        <GridCells>
+            <!-- Glidergun -->
+            <GridCellSet startX="1" endX="50" startY="1" endY="50">
+                <Slot property="status" value="0"/>
+            </GridCellSet>
+            
+            <GridCellSet startX="2" endX="3" startY="44" endY="45">
+                <Slot property="status" value="1"/>
+            </GridCellSet>
+            
+            <GridCellSet startX="12" endX="12" startY="43" endY="45">
+                <Slot property="status" value="1"/>
+            </GridCellSet>
+            
+            <GridCell x="13" y="46">
+                <Slot property="status" value="1"/>
+            </GridCell>
+            
+            <GridCell x="13" y="42">
+                <Slot property="status" value="1"/>
+            </GridCell>
+            
+            <GridCellSet startX="14" endX="15" startY="47" endY="47">
+                <Slot property="status" value="1"/>
+            </GridCellSet>
+            
+            <GridCellSet startX="14" endX="15" startY="41" endY="41">
+                <Slot property="status" value="1"/>
+            </GridCellSet>
+            
+            <GridCell x="16" y="44">
+                <Slot property="status" value="1"/>
+            </GridCell>
+            
+            <GridCell x="17" y="46">
+                <Slot property="status" value="1"/>
+            </GridCell>
+            
+            <GridCell x="17" y="42">
+                <Slot property="status" value="1"/>
+            </GridCell>
+            
+            <GridCellSet startX="18" endX="18" startY="43" endY="45">
+                <Slot property="status" value="1"/>
+            </GridCellSet>
+            
+            <GridCell x="19" y="44">
+                <Slot property="status" value="1"/>
+            </GridCell>
+            
+            <GridCellSet startX="22" endX="23" startY="45" endY="47">
+                <Slot property="status" value="1"/>
+            </GridCellSet>
+            
+            <GridCell x="24" y="44">
+                <Slot property="status" value="1"/>
+            </GridCell>
+            
+            <GridCell x="24" y="48">
+                <Slot property="status" value="1"/>
+            </GridCell>
+            
+            <GridCellSet startX="26" endX="26" startY="48" endY="49">
+                <Slot property="status" value="1"/>
+            </GridCellSet>
+            
+            <GridCellSet startX="26" endX="26" startY="43" endY="44">
+                <Slot property="status" value="1"/>
+            </GridCellSet>
+            
+            <GridCellSet startX="36" endX="37" startY="46" endY="47">
+                <Slot property="status" value="1"/>
+            </GridCellSet>
+            
+            <!-- Randomly initialized board -->
+            <!--
+            <GridCellSet startX="1" endX="50" startY="1" endY="50">
+                <Slot property="status">
+                    <RandomVariable>
+                        <UniformInt lowerBound="0" upperBound="1"/>
+                    </RandomVariable>
+                </Slot>
+            </GridCellSet>
+            -->
+        </GridCells>   
+    </InitialState>
+    
+    <UserInterface>
+        <AnimationUI>
+            <Views>
+                <SpaceView canvasColor="darkgrey">
+                    <TwoDimensionalGridSpaceView2D stroke="black" strokeWidth="1px">
+                        <GridCellPropertyVisualizationMap cellViewProperty="fill" property="status" mapType="equalityCaseWise" a0="0" v0="white" a1="1" v1="red"/>
+                    </TwoDimensionalGridSpaceView2D>
+                </SpaceView>
+            </Views>
+        </AnimationUI>       
+    </UserInterface>
+</SimulationScenario>
