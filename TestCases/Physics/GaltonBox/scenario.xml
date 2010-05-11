@@ -1,0 +1,291 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<?xml-stylesheet type="text/xsl" href="prettyprint.xsl"?>
+<SimulationScenario scenarioName="GaltonBox"
+	scenarioTitle="GaltonBox" simulationManagerDirectory="../../.."
+	version="0.8.4" xsi:schemaLocation="http://aor-simulation.org ../../../ext/aorsl/AORSL_0-8-4.xsd"
+	xmlns="http://aor-simulation.org" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xmlns:xs="http://www.w3.org/2001/XMLSchema" xmlns:xi="http://www.w3.org/2001/XInclude"
+	xmlns:h="http://www.w3.org/1999/xhtml" xmlns:dc="http://purl.org/dc/elements/1.1/">
+	<SimulationParameters simulationSteps="10000"
+		stepDuration="100" stepTimeDelay="10" timeUnit="ms"></SimulationParameters>
+
+	<SimulationModel modelName="Test2D" modelTitle="GaltonBox">
+		<documentation>
+			<dc:creator>Holger Wuerke</dc:creator>
+			<dc:description>Simulation of a Galton Box to demonstrate
+				the normal distribution.</dc:description>
+		</documentation>
+
+		<SpaceModel geometry="Euclidean" spatialDistanceUnit="m">
+			<TwoDimensional xMax="300" yMax="200" autoKinematics="true"
+				autoCollisionHandling="true" autoCollisionDetection="true" />
+		</SpaceModel>
+
+		<Globals>
+			<GlobalVariable name="HPinGap" dataType="Float" />
+			<GlobalVariable name="VPinGap" dataType="Float" />
+			<GlobalVariable name="BarHeight" dataType="Float" />
+			<GlobalVariable name="BarStartX" dataType="Float" />
+			<GlobalVariable name="PinsPerRow" dataType="Float" />
+		</Globals>
+
+		<EntityTypes>
+
+			<ExogenousEventType name="NewBall">
+				<Periodicity>
+					<ValueExpr language="Java">40</ValueExpr>
+				</Periodicity>
+			</ExogenousEventType>
+
+			<PhysicalObjectType name="Ground">
+				<InitialAttributeValue attribute="width"
+					value="300" />
+				<InitialAttributeValue attribute="height"
+					value="5" />
+				<InitialAttributeValue attribute="shape2D"
+					value="rectangle" />
+				<InitialAttributeValue attribute="m" value="1000" />
+			</PhysicalObjectType>
+
+			<PhysicalObjectType name="Wall">
+				<InitialAttributeValue attribute="width"
+					value="5" />
+				<InitialAttributeValue attribute="height"
+					value="200" />
+				<InitialAttributeValue attribute="shape2D"
+					value="rectangle" />
+				<InitialAttributeValue attribute="m" value="1000" />
+			</PhysicalObjectType>
+
+			<PhysicalObjectType name="Ball">
+				<InitialAttributeValue attribute="width"
+					value="4" />
+				<InitialAttributeValue attribute="height"
+					value="4" />
+				<InitialAttributeValue attribute="shape2D"
+					value="circle" />
+				<InitialAttributeValue attribute="m" value="1" />
+			</PhysicalObjectType>
+
+			<PhysicalAgentType name="Pin">
+				<InitialAttributeValue attribute="width"
+					value="0.5" />
+				<InitialAttributeValue attribute="height"
+					value="0.5" />
+				<InitialAttributeValue attribute="shape2D"
+					value="circle" />
+				<InitialAttributeValue attribute="m" value="100" />
+				<Attribute name="initX" type="Float" />
+				<Attribute name="initY" type="Float" />
+
+				<ReactionRule name="KeepPinPositionRule">
+					<ON-EACH-SIMULATION-STEP />
+					<DO>
+						<UPDATE-AGT>
+			<Slot property="x">
+				<ValueExpr language="Java">(getId() % Global.getPinsPerRow()) * Global.getHPinGap() + ((int) (getId() / Global.getPinsPerRow()) % 2) * Global.getHPinGap()/2
+				</ValueExpr>
+			</Slot>
+			<Slot property="y">
+				<ValueExpr language="Java">Global.getBarHeight() + ((int)(getId() / Global.getPinsPerRow()) + 1) * Global.getVPinGap()
+				</ValueExpr>
+			</Slot>
+							<Slot property="vx" value="0" />
+							<Slot property="vy" value="0" />
+							<Slot property="rotZ" value="0" />
+							<Slot property="omegaZ" value="0" />
+						</UPDATE-AGT>
+					</DO>
+				</ReactionRule>
+			</PhysicalAgentType>
+
+			<PhysicalAgentType name="Bar">
+				<InitialAttributeValue attribute="width"
+					value="0.5" />
+				<InitialAttributeValue attribute="height"
+					value="Global.getBarHeight()" />
+
+				<InitialAttributeValue attribute="shape2D"
+					value="rectangle" />
+				<InitialAttributeValue attribute="m" value="1000" />
+				<Attribute name="initX" type="Float" />
+				<Attribute name="initY" type="Float" />
+
+				<ReactionRule name="KeepBarPositionRule">
+					<ON-EACH-SIMULATION-STEP />
+					<DO>
+						<UPDATE-AGT>
+							<Slot property="x">
+								<ValueExpr language="Java">Global.getBarStartX()
+									+ (getId() - 500) * Global.getHPinGap()
+								</ValueExpr>
+							</Slot>
+							<Slot property="y">
+								<ValueExpr language="Java">Global.getBarHeight()/2</ValueExpr>
+							</Slot>
+							<Slot property="vx" value="0" />
+							<Slot property="vy" value="0" />
+							<Slot property="rotZ" value="0" />
+							<Slot property="omegaZ" value="0" />
+						</UPDATE-AGT>
+					</DO>
+				</ReactionRule>
+			</PhysicalAgentType>
+
+			<PhysicalAgentType name="StartBar">
+				<InitialAttributeValue attribute="width"
+					value="50" />
+				<InitialAttributeValue attribute="height"
+					value="1" />
+				<InitialAttributeValue attribute="shape2D"
+					value="rectangle" />
+				<InitialAttributeValue attribute="m" value="1000" />
+				<Attribute name="initX" type="Float" />
+				<Attribute name="initY" type="Float" />
+				<Attribute name="initRotZ" type="Float" />
+
+				<ReactionRule name="KeepStartBarPositionRule">
+					<ON-EACH-SIMULATION-STEP />
+					<DO>
+						<UPDATE-AGT>
+							<Slot property="x">
+								<ValueExpr language="Java">getInitX()</ValueExpr>
+							</Slot>
+							<Slot property="y">
+								<ValueExpr language="Java">getInitY()</ValueExpr>
+							</Slot>
+							<Slot property="rotZ">
+								<ValueExpr language="Java">getInitRotZ()
+								</ValueExpr>
+							</Slot>
+							<Slot property="vx" value="0" />
+							<Slot property="vy" value="0" />
+							<Slot property="omegaZ" value="0" />
+						</UPDATE-AGT>
+					</DO>
+				</ReactionRule>
+
+			</PhysicalAgentType>
+
+		</EntityTypes>
+
+		<EnvironmentRules>
+			<EnvironmentRule name="NewBall_Rule">
+				<documentation>
+					<dc:description>A new ball is created.</dc:description>
+				</documentation>
+				<WHEN eventType="NewBall" eventVariable="event" />
+				<DO>
+					<UPDATE-ENV>
+						<Create>
+							<PhysicalObject type="Ball" y="185" ay="-9.81">
+								<Slot property="x">
+									<ValueExpr language="Java">Random.uniformInt(120,180)
+									</ValueExpr>
+								</Slot>
+							</PhysicalObject>
+						</Create>
+					</UPDATE-ENV>
+				</DO>
+			</EnvironmentRule>
+		</EnvironmentRules>
+
+	</SimulationModel>
+
+	<InitialState>
+		<GlobalVariable name="HPinGap" value="10" />
+		<GlobalVariable name="VPinGap" value="8" />
+		<GlobalVariable name="BarHeight" value="70" />
+		<GlobalVariable name="BarStartX" value="10" />
+		<GlobalVariable name="PinsPerRow" value="30" />
+
+
+		<PhysicalAgents type="Bar" rangeStartID="500"
+			rangeEndID="528">
+			<Slot property="x">
+				<ValueExpr language="Java">Global.getBarStartX()
+					+ (bar.getId() - 500) * Global.getHPinGap()
+				</ValueExpr>
+			</Slot>
+			<Slot property="y">
+				<ValueExpr language="Java">Global.getBarHeight()/2
+				</ValueExpr>
+			</Slot>
+		</PhysicalAgents>
+
+		<PhysicalAgents type="Pin" rangeStartID="1"
+			rangeEndID="299">
+			<Slot property="x">
+				<ValueExpr language="Java">(pin.getId() % Global.getPinsPerRow()) * Global.getHPinGap() + ((int) (pin.getId() / Global.getPinsPerRow()) % 2) * Global.getHPinGap()/2
+				</ValueExpr>
+			</Slot>
+			<Slot property="y">
+				<ValueExpr language="Java">Global.getBarHeight() + ((int)(pin.getId() / Global.getPinsPerRow()) + 1) * Global.getVPinGap()
+				</ValueExpr>
+			</Slot>
+		</PhysicalAgents>
+
+
+		<PhysicalAgent id="900" type="StartBar" x="125" y="170"
+			rotZ="-30">
+			<Slot property="initX" value="125" />
+			<Slot property="initY" value="170" />
+			<Slot property="initRotZ" value="-30" />
+		</PhysicalAgent>
+
+		<PhysicalAgent id="901" type="StartBar" x="175" y="170"
+			rotZ="30">
+			<Slot property="initX" value="175" />
+			<Slot property="initY" value="170" />
+			<Slot property="initRotZ" value="30" />
+		</PhysicalAgent>
+
+		<PhysicalObject id="1000" type="Ground" x="150" y="0" />
+		<PhysicalObject id="1001" type="Wall" x="0" y="100" />
+		<PhysicalObject id="1002" type="Wall" x="300" y="100" />
+
+		<ExogenousEvent type="NewBall" occurrenceTime="100" />
+	</InitialState>
+
+	<UserInterface>
+		<AnimationUI>
+			<Views>
+				<SpaceView>
+					<TwoDimensionalSpaceView2D
+						backgroundColor="grey" />
+				</SpaceView>
+				<PhysicalObjectView physicalObjectType="Ball">
+					<PhysicalShape2D>
+						<Circle fill="red" />
+					</PhysicalShape2D>
+				</PhysicalObjectView>
+				<PhysicalObjectView physicalObjectType="Pin">
+					<PhysicalShape2D>
+						<Circle fill="blue" />
+					</PhysicalShape2D>
+				</PhysicalObjectView>
+				<PhysicalObjectView physicalObjectType="Bar">
+					<PhysicalShape2D>
+						<Rectangle fill="blue" />
+					</PhysicalShape2D>
+				</PhysicalObjectView>
+				<PhysicalObjectView physicalObjectType="StartBar">
+					<PhysicalShape2D>
+						<Rectangle fill="blue" />
+					</PhysicalShape2D>
+				</PhysicalObjectView>
+				<PhysicalObjectView physicalObjectType="Ground">
+					<PhysicalShape2D>
+						<Rectangle fill="blue" />
+					</PhysicalShape2D>
+				</PhysicalObjectView>
+				<PhysicalObjectView physicalObjectType="Wall">
+					<PhysicalShape2D>
+						<Rectangle fill="blue" />
+					</PhysicalShape2D>
+				</PhysicalObjectView>
+			</Views>
+		</AnimationUI>
+	</UserInterface>
+
+</SimulationScenario>
