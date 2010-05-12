@@ -427,7 +427,6 @@
   <xs:complexType name="ActionRule.type">
     <xs:sequence>
       <xs:element ref="ers:documentation" minOccurs="0"/>
-      <!--xs:element name="FOR" type="aors:DataVariable-OR-BeliefEntityVariable-Declaration.type" minOccurs="0" maxOccurs="unbounded"/-->
       <xs:element name="DO" type="aors:ActionRuleDO.type" minOccurs="0"/>
       <xs:sequence minOccurs="0">
         <xs:element ref="ers:IF" maxOccurs="unbounded"/>
@@ -442,13 +441,83 @@
     <xs:attribute name="actionEventType" type="ers:CanonicalName" use="required"/>
     <xs:attribute name="agentVariable" type="ers:CanonicalName" use="optional"/>
     <xs:attribute name="eventVariable" type="ers:CanonicalName" use="optional"/>
+    <xs:attribute name="messageVariable" type="aors:CanonicalName" use="optional"/>
+  </xs:complexType>
+  <xs:complexType name="ActionRuleActionEvent.type">
+    <xs:complexContent>
+      <xs:restriction base="aors:ActionRule.type">
+        <xs:sequence>
+          <xs:element ref="ers:documentation" minOccurs="0"/>
+          <xs:element name="DO" type="aors:ActionRuleDO.type" minOccurs="0"/>
+          <xs:sequence minOccurs="0">
+            <xs:element ref="ers:IF" maxOccurs="unbounded"/>
+            <xs:element name="THEN" type="aors:ActionRuleActionEventDO.type"/>
+            <xs:sequence minOccurs="0" maxOccurs="unbounded">
+              <xs:element ref="ers:ELSE-IF" maxOccurs="unbounded"/>
+              <xs:element name="THEN" type="aors:ActionRuleActionEventDO.type"/>
+            </xs:sequence>
+            <xs:element name="ELSE" type="aors:ActionRuleActionEventDO.type" minOccurs="0"/>
+          </xs:sequence>
+        </xs:sequence>
+        <xs:attribute name="actionEventType" type="ers:CanonicalName" use="required"/>
+        <xs:attribute name="agentVariable" type="ers:CanonicalName" use="optional"/>
+        <xs:attribute name="eventVariable" type="ers:CanonicalName" use="optional"/>
+        <xs:attribute name="messageVariable" type="aors:CanonicalName" use="prohibited"/>
+      </xs:restriction>
+    </xs:complexContent>  
+  </xs:complexType>
+  <xs:complexType name="ActionRuleOutMessageEvent.type">
+    <xs:complexContent>
+      <xs:restriction base="aors:ActionRule.type">
+        <xs:sequence>
+          <xs:element ref="ers:documentation" minOccurs="0"/>
+          <xs:element name="DO" type="aors:ActionRuleDO.type" minOccurs="0"/>
+          <xs:sequence minOccurs="0">
+            <xs:element ref="ers:IF" maxOccurs="unbounded"/>
+            <xs:element name="THEN" type="aors:ActionRuleOutMessageEventDO.type"/>
+            <xs:sequence minOccurs="0" maxOccurs="unbounded">
+              <xs:element ref="ers:ELSE-IF" maxOccurs="unbounded"/>
+              <xs:element name="THEN" type="aors:ActionRuleOutMessageEventDO.type"/>
+            </xs:sequence>
+            <xs:element name="ELSE" type="aors:ActionRuleOutMessageEventDO.type" minOccurs="0"/>
+          </xs:sequence>
+        </xs:sequence>
+        <xs:attribute name="actionEventType" type="ers:CanonicalName" fixed="OutMessageEvent" use="required"/>
+        <xs:attribute name="agentVariable" type="ers:CanonicalName" use="optional"/>
+        <xs:attribute name="eventVariable" type="ers:CanonicalName" use="optional"/>
+        <xs:attribute name="messageVariable" type="aors:CanonicalName" use="optional"/>
+      </xs:restriction>
+    </xs:complexContent>  
   </xs:complexType>
   <!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->
   <xs:complexType name="ActionRuleDO.type">
-    <xs:sequence>
-      <xs:element ref="aors:UPDATE-EVT" minOccurs="0"/>
-      <xs:element ref="aors:UPDATE-AGT" minOccurs="0"/>
-    </xs:sequence>
+    <xs:choice minOccurs="0" maxOccurs="unbounded">
+      <xs:element ref="aors:UPDATE-AGT"/>
+      <xs:element ref="aors:UPDATE-EVT"/>
+      <xs:element ref="aors:UPDATE-MSG"/>
+    </xs:choice>
+  </xs:complexType>
+  <xs:complexType name="ActionRuleActionEventDO.type">
+    <xs:complexContent>
+      <xs:restriction base="aors:ActionRuleDO.type">
+        <xs:choice minOccurs="0" maxOccurs="unbounded">
+          <xs:element ref="aors:UPDATE-AGT"/>
+          <xs:element ref="aors:UPDATE-EVT"/>
+          <xs:element ref="aors:UPDATE-MSG" minOccurs="0" maxOccurs="0"/>
+        </xs:choice>
+      </xs:restriction>
+    </xs:complexContent>
+  </xs:complexType>
+  <xs:complexType name="ActionRuleOutMessageEventDO.type">
+    <xs:complexContent>
+      <xs:restriction base="aors:ActionRuleDO.type">
+        <xs:choice minOccurs="0" maxOccurs="unbounded">
+          <xs:element ref="aors:UPDATE-AGT"/>
+          <xs:element ref="aors:UPDATE-EVT"/>
+          <xs:element ref="aors:UPDATE-MSG"/>
+        </xs:choice>
+      </xs:restriction>
+    </xs:complexContent>    
   </xs:complexType>
   <!-- ==================================================================== -->
   <xs:element name="UPDATE-EVT" type="aors:UPDATE-EVT.type"/>
@@ -457,5 +526,13 @@
     <xs:sequence>
       <xs:element ref="aors:Slot" minOccurs="1" maxOccurs="unbounded"/>
     </xs:sequence>
-  </xs:complexType>      
+  </xs:complexType>
+  <!-- ==================================================================== -->
+  <xs:element name="UPDATE-MSG" type="aors:UPDATE-MSG.type"/>
+  <!-- ==================================================================== -->
+  <xs:complexType name="UPDATE-MSG.type">
+    <xs:sequence>
+      <xs:element ref="aors:Slot" minOccurs="1" maxOccurs="unbounded"/>
+    </xs:sequence>
+  </xs:complexType>
 </xs:schema>
