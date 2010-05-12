@@ -9,7 +9,9 @@ import javax.swing.table.TableCellEditor;
 
 class JSliderTableEditor extends AbstractCellEditor implements TableCellEditor {
 
-  protected JSlider slider = null;
+ 
+	private static final long serialVersionUID = -6172697509994071914L;
+    protected JSlider slider = null;
 
   public JSliderTableEditor(int min, int max) {
     slider = new JSlider(min, max);
