@@ -14,22 +14,16 @@ import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Iterator;
 import java.util.Vector;
-
 import javax.swing.JButton;
 import javax.swing.JDialog;
 import javax.swing.JLabel;
 import javax.swing.JOptionPane;
 import javax.swing.JPanel;
-import javax.swing.JScrollPane;
 import javax.swing.JTable;
 import javax.swing.JTextField;
 import javax.swing.SwingUtilities;
 import javax.swing.table.DefaultTableModel;
-
 import org.w3c.dom.Document;
-import org.w3c.dom.Node;
-
-import aors.controller.InitialState;
 import aors.controller.SimulationDescription;
 import aors.data.java.ObjektDestroyEvent;
 import aors.data.java.ObjektInitEvent;
@@ -37,12 +31,15 @@ import aors.data.java.SimulationEvent;
 import aors.data.java.SimulationStepEvent;
 import aors.model.envevt.EnvironmentEvent;
 import aors.module.Module;
+import aors.controller.InitialState;
 import aors.module.initialState.gui.InitialStateUITab;
+import aors.module.initialState.gui.RanVarPropertyContainer;
+import aors.module.initialState.gui.ValueExprPropertyContainer;
 
 public class InitialStateUIController implements Module, ActionListener {
 
   public InitialStateUIController() {
-    System.out.println("Here is InitialStateUIController constructor!");
+    
     this.tabScroll = new InitialStateUITab(this);
 
   }
@@ -52,15 +49,16 @@ public class InitialStateUIController implements Module, ActionListener {
   }
 
   public InitialStateUIController(JTable table, DefaultTableModel model,
-      String type, Node node, HashMap<String, Vector<String>> userInterfaceMap) {
+	      String type, Vector<JButton> buttonContainer, String objectType) {
 
-    this.type = type;
-    this.table = table;
-    this.model = model;
-    this.node = node;
-    this.userInterfaceMap = userInterfaceMap;
+	    this.type = type;
+	    this.table = table;
+	    this.model = model;
+	    this.buttonContainer = buttonContainer;
+	    this.objectType = objectType;
 
-  }
+	  }
+
 
   public void simulationDomOnlyInitialization(
       SimulationDescription simulationDescription) {
@@ -134,171 +132,293 @@ public class InitialStateUIController implements Module, ActionListener {
 
   }
 
-  /*
-   * @Override public void objektDestroyEvent(ObjektDestroyEvent
-   * objektDestroyEvent) { // TODO Auto-generated method stub
-   * 
-   * }
-   * 
-   * 
-   * @Override public void objektInitEvent(ObjektInitEvent objInitEvent) { //
-   * TODO Auto-generated method stub
-   * 
-   * }
-   */
+ 
 
   public void actionPerformed(ActionEvent e) {
 
-    JButton selectButton = (JButton) e.getSource();
+	    JButton selectButton = (JButton) e.getSource();
+	    if (selectButton == buttonContainer.get(0)) {
+	      copyRow();
+	    } else if (selectButton == buttonContainer.get(1)) {
+	      delRow();
+	    } else if (selectButton == buttonContainer.get(2)) {
+	      createNewRow( selectButton);
+	    } else if (selectButton == buttonContainer.get(3)) {
+	      createEditRow(selectButton);
+	    }
+	  }
 
-    if (selectButton.getText().equalsIgnoreCase("Copy")) {
-      copyRow(table, model);
-    } else if (selectButton.getText().equalsIgnoreCase("Del")) {
-      delRow(table, model);
-    } else if (selectButton.getText().equalsIgnoreCase("New")) {
-      createNewRow(table, model, selectButton);
-    } else if (selectButton.getText().equalsIgnoreCase("Edit")) {
-      createEditRow(table, model, selectButton);
-    }
-  }
+  @SuppressWarnings("unchecked")
+  public void copyRow() {
 
-  public void copyRow(JTable table, DefaultTableModel model) {
+	    Vector<Vector<Object>> tempData = (Vector<Vector<Object>>) model
+	        .getDataVector();
+	    int cRow = processCRow(table.getSelectedRow(), tempData);
 
-    int cRow = table.getSelectedRow();
-    Vector<String> header = new Vector<String>();
-    Vector<Vector<String>> tempData = (Vector<Vector<String>>) model
-        .getDataVector();
+	    if (!(tempData.isEmpty())) {
 
-    if (cRow < 0) {
-      cRow = 0;
-    }
+	      Vector<Object> tempRow = tempData.elementAt(cRow);
+	      tempRow = (Vector<Object>) tempRow.clone();
+	      model.insertRow(cRow + 1, tempRow);
 
-    if (cRow > tempData.size()) {
-      cRow = tempData.size();
-    }
+	      HashSet<String> tempLanSet = tabScroll.getLanType().get(type);
+	      String tempKey = null;
+	      tempKey = typeTransfer(objectType, type);
 
-    if (!(tempData.isEmpty())) {
+	      processCopyAndDelete(tabScroll.getRanTypePropertyMap(), tempKey,
+	          tempLanSet, "copy", cRow, tabScroll.getRanVarPropertyContainerMap(),
+	          null);
 
-      Vector<String> tempRow = tempData.elementAt(cRow);
-      tempRow = (Vector<String>) tempRow.clone();
-      model.insertRow(cRow + 1, tempRow);
+	      processCopyAndDelete(tabScroll.getValueExprTypePropertyMap(), tempKey,
+	          tempLanSet, "copy", cRow, null, tabScroll
+	              .getValueExprPropertyContainerMap());
 
-    }
-  }
+	    }
+	  }
 
-  public void delRow(JTable table, DefaultTableModel model) {
+  @SuppressWarnings("unchecked")
+  public void delRow() {
 
-    int cRow = table.getSelectedRow();
-    Vector<Vector<String>> tempData = (Vector<Vector<String>>) model
-        .getDataVector();
-    boolean flag;
-    if (cRow < 0 || cRow > tempData.size()) {
-      flag = false;
-    } else {
-      flag = true;
-    }
+	    int cRow = table.getSelectedRow();
 
-    if (flag & (tempData.size() > 1)) {
+	    Vector<Vector<Object>> tempData = (Vector<Vector<Object>>) model.getDataVector();
+	    boolean flag;
 
-      model.removeRow(cRow);
-    }
+	    if (cRow < 0 || cRow > tempData.size()) {
+	      flag = false;
+	    } else {
+	      flag = true;
+	    }
 
-  }
+	    if (flag & (tempData.size() > 1)) {
 
-  public void createNewRow(JTable table, DefaultTableModel model, JButton button) {
+	      HashSet<String> tempLanSet = tabScroll.getLanType().get(type);
+	      String tempKey = typeTransfer(objectType, type);
 
-    HashMap<String, HashSet<Integer>> constrainMap = new HashMap<String, HashSet<Integer>>();
-    HashSet<Integer> booleanPosition = new HashSet<Integer>();
-    HashSet<Integer> integerPosition = new HashSet<Integer>();
+	      processCopyAndDelete(tabScroll.getRanTypePropertyMap(), tempKey,
+	          tempLanSet, "delete", cRow,
+	          tabScroll.getRanVarPropertyContainerMap(), null);
 
-    int cRow = table.getSelectedRow();
-    Vector<Vector> tempData = (Vector<Vector>) model.getDataVector();
+	      processCopyAndDelete(tabScroll.getValueExprTypePropertyMap(), tempKey,
+	          tempLanSet, "delete", cRow, null, tabScroll
+	              .getValueExprPropertyContainerMap());
 
-    Vector tempRow;
-    if (cRow < 0) {
-      cRow = 0;
-    }
+	      model.removeRow(cRow);
+	    }
 
-    if (cRow > tempData.size()) {
-      cRow = tempData.size();
-    }
+	  }
+  
+  
+  public void processCopyAndDelete(HashMap<String, HashSet<String>> tempMap,
+	      String tempKey, HashSet<String> tempLanSet, String action, int cRow,
+	      HashMap<String, Vector<RanVarPropertyContainer>> rContainerMap,
+	      HashMap<String, Vector<ValueExprPropertyContainer>> vContainerMap) {
 
-    if (!(tempData.isEmpty())) {
+	    String tempLabel = null;
 
-      tempRow = tempData.elementAt(cRow);
-      tempRow = (Vector) tempRow.clone();
+	    if (tempMap.containsKey(tempKey)) {
 
-      for (int i = 0; i < tempRow.size(); i++) {
+	      HashSet<String> tempPropertySet = tempMap.get(tempKey);
 
-        if ((tempRow.get(i).getClass().getName()).equals("java.lang.Boolean")) {
+	      for (int j = 0; j < model.getColumnCount(); j++) {
 
-          booleanPosition.add(i);
+	        String colHeadValue = (String) table.getColumnModel().getColumn(j)
+	            .getHeaderValue();
 
-        } else if ((tempRow.get(i).getClass().getName())
-            .equals("java.lang.Integer")) {
+	        for (Iterator<String> it = tempPropertySet.iterator(); it.hasNext();) {
 
-          integerPosition.add(i);
-        }
+	          String tempProperty = it.next();
 
-        tempRow.set(i, "");
-      }
+	          for (Iterator<String> lans = tempLanSet.iterator(); lans.hasNext();) {
 
-      constrainMap.put("boolean", booleanPosition);
-      constrainMap.put("integer", integerPosition);
+	            String tempLan = lans.next();
+	            tempLabel = tempProperty + type + tempLan;
 
-      Frame frame = (Frame) SwingUtilities.getRoot(button);
-      JDialog editJDialog = new EditJDialog(frame, true, table, tempRow,
-          tempData, model, cRow, button, constrainMap, tabScroll, type);
-      editJDialog.pack();
-      editJDialog.setVisible(true);
-    }
+	            if (tabScroll.getLabelMap().get(tempLabel).equals(colHeadValue)) {
 
-  }
+	              if (action.equals("copy")) {
 
-  public void createEditRow(JTable table, DefaultTableModel model,
-      JButton button) {
-    HashMap<String, HashSet<Integer>> constrainMap = new HashMap<String, HashSet<Integer>>();
-    HashSet<Integer> booleanPosition = new HashSet<Integer>();
-    HashSet<Integer> integerPosition = new HashSet<Integer>();
+	                if (rContainerMap != null) {
 
-    int cRow = table.getSelectedRow();
-    Vector<Vector> tempData = (Vector<Vector>) model.getDataVector();
-    if (cRow < 0) {
-      cRow = 0;
-    }
-    if (cRow > tempData.size()) {
-      cRow = tempData.size();
-    }
-    Vector tempRow = tempData.elementAt(cRow);
+	                  Vector<RanVarPropertyContainer> tempContainers = rContainerMap
+	                      .get(tempProperty + tempKey);
+	                  RanVarPropertyContainer tempContainer = tempContainers
+	                      .get(cRow);
+	                  tempContainers.add(cRow, tempContainer);
+	                  rContainerMap.put(tempProperty + tempKey, tempContainers);
 
-    for (int i = 0; i < tempRow.size(); i++) {
-      if ((tempRow.get(i).getClass().getName()).equals("java.lang.Boolean")) {
-        booleanPosition.add(i);
-      } else if ((tempRow.get(i).getClass().getName())
-          .equals("java.lang.Integer")) {
-        integerPosition.add(i);
-      }
-      tempRow.set(i, String.valueOf(tempRow.get(i)));
-    }
+	                } else if (vContainerMap != null) {
 
-    constrainMap.put("boolean", booleanPosition);
-    constrainMap.put("integer", integerPosition);
-    Frame frame = (Frame) SwingUtilities.getRoot(button);
-    JDialog editJDialog = new EditJDialog(frame, true, table, tempRow,
-        tempData, model, cRow, button, constrainMap, tabScroll, type);
-    editJDialog.pack();
-    editJDialog.setVisible(true);
-  }
+	                  Vector<ValueExprPropertyContainer> tempContainers = vContainerMap
+	                      .get(tempProperty + tempKey);
+	                  ValueExprPropertyContainer tempContainer = tempContainers
+	                      .get(cRow);
+	                  tempContainers.add(cRow, tempContainer);
+	                  vContainerMap.put(tempProperty + tempKey, tempContainers);
 
-  private Node node;
+	                }
+
+	              } else if (action.equals("delete")) {
+
+	                if (rContainerMap != null) {
+
+	                  Vector<RanVarPropertyContainer> tempContainers = rContainerMap
+	                      .get(tempProperty + tempKey);
+	                  tempContainers.remove(cRow);
+	                  rContainerMap.put(tempProperty + tempKey, tempContainers);
+
+	                } else if (vContainerMap != null) {
+
+	                  Vector<ValueExprPropertyContainer> tempContainers = vContainerMap
+	                      .get(tempProperty + tempKey);
+	                  tempContainers.remove(cRow);
+	                  vContainerMap.put(tempProperty + tempKey, tempContainers);
+
+	                }
+	              }
+	            }
+	          }
+	        }
+	      }
+	    }
+	  }
+  
+     public void createNewRow(JButton button) {
+
+	    processCreateAndEditor(true, button);
+
+	  }
+
+	  
+	  public void createEditRow(JButton button) {
+	    
+	    processCreateAndEditor(false, button);
+
+	  }
+
+	  @SuppressWarnings("unchecked")
+	public void processCreateAndEditor(boolean create, JButton button){
+		     
+		     HashMap<String,HashSet<Integer>> constrainMap = new HashMap<String,HashSet<Integer>>();
+		     HashSet<Integer> booleanPosition = new HashSet<Integer>();
+		     HashSet<Integer> integerPosition = new HashSet<Integer>();
+		     
+		     
+		     
+		     Vector<Vector<Object>> tempData = (Vector<Vector<Object>>) model.getDataVector();
+		     int cRow = processCRow(table.getSelectedRow(),tempData);
+		     
+		     Vector<Object> tempRow = null;
+		     
+		     
+		     if(create){
+		       
+		       tempRow = tempData.elementAt(cRow);
+		       tempRow = (Vector<Object>)tempRow.clone();
+		       
+		     }else{
+		       
+		       tempRow = tempData.elementAt(cRow);
+		     
+		     }
+		     for (int i = 0; i < tempRow.size(); i++) {
+		           
+		      if(tempRow.get(i)!= null){ 
+		        
+		         if((tempRow.get(i).getClass().getName()).equals("java.lang.Boolean")){
+		           
+		           booleanPosition.add(i);
+		           
+		         }else if((tempRow.get(i).getClass().getName()).equals("java.lang.Integer")){
+		           
+		           integerPosition.add(i);   
+		         }
+		         
+		           if(create){
+		             
+		             tempRow.set(i, "");
+		             
+		           }else{
+		         
+		             tempRow.set(i, String.valueOf(tempRow.get(i)));
+		          
+		           }
+		           
+		      }else{
+		              
+		             tempRow.set(i, "");
+		      }
+		          
+		      }
+		      
+		     constrainMap.put("boolean", booleanPosition);
+		     constrainMap.put("integer", integerPosition);
+		     Frame frame = (Frame)SwingUtilities.getRoot(button);
+		     
+		     JDialog editJDialog  = null;
+		     
+		     if(create){
+		        
+		       editJDialog = new EditJDialog(frame, true, table, tempRow,
+		                                           tempData, model, cRow,constrainMap,
+		                                           tabScroll,type,objectType,true);
+		     }else{
+		       
+		       editJDialog = new EditJDialog(frame, true, table, tempRow,
+		                                            tempData, model, cRow,constrainMap,
+		                                            tabScroll,type,objectType,false);
+		     }
+		     
+		     editJDialog.pack();
+		     editJDialog.setVisible(true);
+		     
+		     
+		   }
+		   
+		  public String typeTransfer(String objectType, String type) {
+
+		    String returnType = null;
+
+		    if (objectType != null) {
+
+		      returnType = objectType + type;
+
+		    } else {
+
+		      returnType = type;
+
+		    }
+
+		    return returnType;
+
+		  }
+		  
+		  
+		  public int processCRow(int row, Vector<Vector<Object>> tempData) {
+
+		    if (row < 0) {
+		      row = 0;
+		    }
+
+		    if (row > tempData.size()) {
+		      row = tempData.size();
+		    }
+
+		    return row;
+
+		  }
+  
+
+  
   private Document dom;
   private JTable table;
   private DefaultTableModel model;
   private File scenario;
   private String type;
-  private HashMap<String, Vector<String>> userInterfaceMap;
   private SimulationDescription sd;
   private static InitialStateUITab tabScroll;
+  private String objectType;
+  private Vector<JButton> buttonContainer;
 
   @Override
   public void objektDestroyEvent(ObjektDestroyEvent objektDestroyEvent) {
@@ -316,283 +436,406 @@ public class InitialStateUIController implements Module, ActionListener {
 
 class EditJDialog extends JDialog {
 
-  private static final long serialVersionUID = 1L;
-
-  public EditJDialog(Frame owner, boolean modal, JTable table,
-      Vector<String> row, Vector<Vector> rowData, DefaultTableModel model,
-      int cRow, JButton button, HashMap<String, HashSet<Integer>> constrainMap,
-      InitialStateUITab initialStateUITab, String type) {
-
-    super(owner, modal);
-    JDialog.setDefaultLookAndFeelDecorated(true);
-    if (owner != null) {
-      Dimension parentSize = owner.getSize();
-      Point p = owner.getLocation();
-      setLocation(p.x + parentSize.width / 4, p.y + parentSize.height / 4);
-    }
-
-    this.type = type;
-    this.table = table;
-    this.row = row;
-    this.model = model;
-    this.cRow = cRow;
-    this.rowData = rowData;
-    this.button = button;
-    this.constrainMap = constrainMap;
-    this.initialStateUITab = initialStateUITab;
-    System.out.println("The initialStateUITab:=> " + this.initialStateUITab);
-    JScrollPane editPane = new JScrollPane();
-    editPane.getViewport().add(createContentPanel());
-    add(editPane, BorderLayout.CENTER);
-    add(createButtonPanel(), BorderLayout.SOUTH);
-
-  }
-
-  public JPanel createContentPanel() {
-
-    final JPanel contentPanel = new JPanel();
-    contentPanel.setLayout(new GridLayout(row.size(), 2, 10, 0));
-    label = new JLabel[row.size()];
-    field = new JTextField[row.size()];
-
-    for (int i = 0; i < row.size(); i++) {
-      String columnName = (String) table.getColumnModel().getColumn(i)
-          .getHeaderValue(); // table.getModel().getColumnName(i);
-      label[i] = new JLabel(columnName);
-      field[i] = new JTextField(row.get(i));
-      contentPanel.add(label[i]);
-      contentPanel.add(field[i]);
-
-    }
-
-    return contentPanel;
-
-  }
-
-  JPanel createButtonPanel() {
-
-    JPanel buttonPanel = new JPanel();
-    buttonPanel.setLayout(new FlowLayout(FlowLayout.RIGHT));
-    JButton ok = new JButton("OK");
-    ActionListener okListener = new ActionListener() {
-      public void actionPerformed(ActionEvent e) {
-
-        Vector insertEditRow = new Vector();
-
-        for (int i = 0; i < field.length; i++) {
-
-          if ((field[i].getText().equals("")) || (field[i].getText() == null)) {
-
-            // System.out.println("field "+i+" is blank!");
-            JOptionPane.showMessageDialog(null,
-                "Please fill in the field with the content,now it is empty!");
-            field[i].setText("!empty!");
-            return;
-          } else if (constrainMap.get("boolean").contains(i)) {
-
-            booleanPosition = constrainMap.get("boolean");
-            for (Iterator<Integer> it = booleanPosition.iterator(); it
-                .hasNext();) {
-              int position = it.next();
-
-              if (position == i) {
-
-                if ((!field[i].getText().equals("true"))
-                    & (!field[i].getText().equals("false"))) {
-                  JOptionPane.showMessageDialog(null,
-                      "The content of the field " + label[i].getText()
-                          + " is only true or false");
-                  return;
-                } else {
-
-                  insertEditRow.addElement(Boolean.valueOf(field[i].getText()));
-                }
-              }
-            }
-
-          } else if (constrainMap.get("integer").contains(i)) {
+	  private static final long serialVersionUID = 1L;
 
-            integerPosition = constrainMap.get("integer");
-            for (Iterator<Integer> it = integerPosition.iterator(); it
-                .hasNext();) {
-              int position = it.next();
+	  public EditJDialog(Frame owner, boolean modal, JTable table,
+	      Vector<Object> row, Vector<Vector<Object>> rowData,
+	      DefaultTableModel model, int cRow,
+	      HashMap<String, HashSet<Integer>> constrainMap,
+	      InitialStateUITab initialStateUITab, String type, String objectType,
+	      boolean createNew) {
 
-              if (position == i) {
+	    super(owner, modal);
+	    JDialog.setDefaultLookAndFeelDecorated(true);
+	    if (owner != null) {
+	      Dimension parentSize = owner.getSize();
+	      Point p = owner.getLocation();
+	      setLocation(p.x + parentSize.width / 4, p.y + parentSize.height / 4);
+	    }
 
-                HashSet<String> tempPropertySet = initialStateUITab
-                    .getConstrainMap().get(type);
+	    this.owner = owner;
+	    this.type = type;
+	    this.table = table;
+	    this.row = row;
+	    this.model = model;
+	    this.cRow = cRow;
+	    this.rowData = rowData;
+	    this.constrainMap = constrainMap;
+	    this.initialStateUITab = initialStateUITab;
+	    this.objectType = objectType;
+	    this.createNew = createNew;
 
-                for (Iterator<String> propertys = tempPropertySet.iterator(); propertys
-                    .hasNext();) {
+	    add(createContentPanel(), BorderLayout.CENTER);
+	    add(createButtonPanel(), BorderLayout.SOUTH);
 
-                  String property = propertys.next();
-                  String propertyType = property + type;
+	  }
 
-                  HashSet<String> tempLanSet = initialStateUITab.getLanType()
-                      .get(type);
-                  for (Iterator<String> lans = tempLanSet.iterator(); lans
-                      .hasNext();) {
+	  public JPanel createContentPanel() {
 
-                    String lan = lans.next();
-                    String labelKey = propertyType + lan;
+	    ranTypePropertyMap = initialStateUITab.getRanTypePropertyMap();
+	    valueExprPropertyMap = initialStateUITab.getValueExprTypePropertyMap();
+	    lanTypeMap = initialStateUITab.getLanType();
+	    labelMap = initialStateUITab.getLabelMap();
+	    HashSet<String> tempLanSet = lanTypeMap.get(type);
+	    String tempLabel = null;
 
-                    if (initialStateUITab.getLabelMap().get(labelKey).equals(
-                        label[i].getText())) {
+	    final JPanel contentPanel = new JPanel();
+	    contentPanel.setLayout(new GridLayout(0, 2, 10, 0));
+	    label = new JLabel[row.size()];
+	    field = new Object[row.size()];
 
-                      Vector<Integer> tempValueRange = initialStateUITab
-                          .getConstrainNameMapRange().get(property);
-                      int minValue = tempValueRange.get(0);
-                      int maxValue = tempValueRange.get(1);
+	    if (!ranTypePropertyMap.containsKey(type)
+	        & !valueExprPropertyMap.containsKey(type)) {
 
-                      int currentValue = Integer.valueOf(field[i].getText());
+	      for (int i = 0; i < row.size(); i++) {
 
-                      if ((currentValue > maxValue)
-                          || (currentValue < minValue)) {
+	        String columnName = (String) table.getColumnModel().getColumn(i).getHeaderValue(); 
+	        label[i] = new JLabel(columnName);
+	        field[i] = new JTextField((String) row.get(i));
+	        contentPanel.add(label[i]);
+	        contentPanel.add((JTextField) field[i]);
 
-                        JOptionPane.showMessageDialog(null,
-                            "The content of the field " + label[i].getText()
-                                + " must be in the range" + "(" + minValue
-                                + "," + maxValue + ")");
-                        return;
-                      } else {
+	      }
+	    } else {
 
-                        insertEditRow.addElement(Integer.valueOf(field[i]
-                            .getText()));
-                      }
-                    }
-                  }
-                }
-              }
-            }
-          } else {
+	      out: for (int i = 0; i < row.size(); i++) {
 
-            boolean enumProperty = false;
-            String property = "";
-            tempStop: {
+	        String columnName = (String) table.getColumnModel().getColumn(i)
+	            .getHeaderValue();
+	        label[i] = new JLabel(columnName);
+	        contentPanel.add(label[i]);
+	        // System.out.println("The columnName: => " + columnName);
 
-              for (Iterator<String> it = initialStateUITab.getEnumMap()
-                  .keySet().iterator(); it.hasNext();) {
+	        if (ranTypePropertyMap.containsKey(type)) {
 
-                property = it.next();
-                String propertyType = property + type;
+	          HashSet<String> tempPropertySet = ranTypePropertyMap.get(type);
 
-                HashSet<String> tempLanSet = initialStateUITab.getLanType()
-                    .get(type);
-                for (Iterator<String> lans = tempLanSet.iterator(); lans
-                    .hasNext();) {
+	          for (Iterator<String> it = tempPropertySet.iterator(); it.hasNext();) {
 
-                  String lan = lans.next();
-                  String labelKey = propertyType + lan;
+	            final String tempProperty = it.next();
 
-                  Collection<String> labels = initialStateUITab.getLabelMap()
-                      .values();
+	            for (Iterator<String> lans = tempLanSet.iterator(); lans.hasNext();) {
 
-                  if (labels.contains(initialStateUITab.getLabelMap().get(
-                      labelKey))) {
+	              String tempLan = lans.next();
+	              tempLabel = tempProperty + type + tempLan;
 
-                    if (initialStateUITab.getLabelMap().get(labelKey).equals(
-                        label[i].getText())) {
+	              if (labelMap.get(tempLabel).equals(columnName)) {
 
-                      enumProperty = true;
-                      break tempStop;
-                    }
-                  }
-                }
-              }
+	                field[i] = new JButton("RandomVariable");
+	                contentPanel.add((JButton) field[i]);
 
-            }
+	                final EditRandomVariableDialog sbd = new EditRandomVariableDialog(
+	                    owner, "Edit RandomVariable Dialog", true, cRow, type,
+	                    tempProperty, initialStateUITab, createNew, objectType);
 
-            if (!enumProperty) {
+	                ((JButton) field[i]).addActionListener(new ActionListener() {
+	                  public void actionPerformed(ActionEvent ae) {
 
-              insertEditRow.addElement(field[i].getText());
+	                     sbd.setVisible(true);
 
-            } else {
+	                  }
 
-              HashSet<String> tempEnumContent = initialStateUITab.getEnumMap()
-                  .get(property);
+	                });
 
-              for (String s : tempEnumContent) {
-                // System.out.println("The individual content in Enum:===> " +
-                // s);
-              }
+	                continue out;
+	              }
+	            }
+	          }
+	        }
+	        if (valueExprPropertyMap.containsKey(type)) {
 
-              if (tempEnumContent.contains(field[i].getText().trim())) {
+	          HashSet<String> tempPropertySet = valueExprPropertyMap.get(type);
 
-                insertEditRow.addElement(field[i].getText());
+	          for (Iterator<String> it = tempPropertySet.iterator(); it.hasNext();) {
 
-              } else {
+	            final String tempProperty = it.next();
 
-                JOptionPane.showMessageDialog(null, "The content of the field "
-                    + label[i].getText() + " must be in the enum range");
-                return;
+	            for (Iterator<String> lans = tempLanSet.iterator(); lans.hasNext();) {
 
-              }
+	              String tempLan = lans.next();
+	              tempLabel = tempProperty + type + tempLan;
 
-            }
+	              if (labelMap.get(tempLabel).equals(columnName)) {
 
-          }
-        }
-        if (cRow < 0) {
-          cRow = 0;
-        }
-        if (cRow > rowData.size()) {
-          cRow = rowData.size();
-        }
+	                field[i] = new JButton("ValueExpr");
+	                contentPanel.add((JButton) field[i]);
+	                final EditValueExprDialog ved = new EditValueExprDialog(owner,
+	                    "Edit ValueExpr Dialog", true, cRow, type, tempProperty,
+	                    initialStateUITab, createNew, objectType);
 
-        if (button.getText().equals("Edit")) {
-          model.insertRow(cRow, insertEditRow);
+	                ((JButton) field[i]).addActionListener(new ActionListener() {
+	                  public void actionPerformed(ActionEvent ae) {
 
-          boolean flag;
-          if (cRow < 0 || cRow > rowData.size()) {
-            flag = false;
-          } else {
-            flag = true;
-          }
+	                    ved.setVisible(true);
 
-          if (flag) {
-            model.removeRow(cRow + 1);
-          }
-        }
+	                  }
 
-        if (button.getText().equals("New")) {
-          model.insertRow(cRow + 1, insertEditRow);
-        }
+	                });
 
-        setVisible(false);
-        dispose();
+	                continue out;
 
-      }
-    };
-    ok.addActionListener(okListener);
+	              }
 
-    JButton cancel = new JButton("CANCEL");
-    ActionListener cancelListener = new ActionListener() {
-      public void actionPerformed(ActionEvent e) {
-        setVisible(false);
-        dispose();
-      }
-    };
-    cancel.addActionListener(cancelListener);
+	            }
 
-    buttonPanel.add(ok);
-    buttonPanel.add(cancel);
+	          }
+	        }
 
-    return buttonPanel;
+	        field[i] = new JTextField((String) row.get(i));
+	        contentPanel.add((JTextField) field[i]);
 
-  }
+	      }
 
-  private JTable table;
-  private Vector<String> row;
-  private Vector<Vector> rowData;
-  private JLabel[] label;
-  private JTextField[] field;
-  private DefaultTableModel model;
-  private int cRow;
-  private String type;
-  private JButton button;
-  private HashMap<String, HashSet<Integer>> constrainMap;
-  private HashSet<Integer> booleanPosition;
-  private HashSet<Integer> integerPosition;
-  private InitialStateUITab initialStateUITab;
+	    }
 
-}
+	    return contentPanel;
+
+	  }
+
+	  JPanel createButtonPanel() {
+
+	    JPanel buttonPanel = new JPanel();
+	    buttonPanel.setLayout(new FlowLayout(FlowLayout.RIGHT));
+	    JButton ok = new JButton("OK");
+	    ActionListener okListener = new ActionListener() {
+	      public void actionPerformed(ActionEvent e) {
+
+	        Vector<Object> insertEditRow = new Vector<Object>();
+
+	        for (int i = 0; i < field.length; i++) {
+
+	          if (!(field[i].getClass().getName()).equals("javax.swing.JButton")) {
+
+	            if (((JTextField) field[i]).getText().equals("")
+	                || ((JTextField) field[i]).getText() == null) {
+
+	              
+	              JOptionPane.showMessageDialog(null,
+	                  "Please fill in the field with the content,now it is empty!");
+	              
+	              ((JTextField) field[i]).setText("!empty!");
+	              
+	              return;
+	            } else if (constrainMap.get("boolean").contains(i)) {
+
+	              booleanPosition = constrainMap.get("boolean");
+	              for (Iterator<Integer> it = booleanPosition.iterator(); it
+	                  .hasNext();) {
+
+	                int position = it.next();
+
+	                if (position == i) {
+	                  
+	                  if (!((JTextField) field[i]).getText().equals("true")
+	                      & (!((JTextField) field[i]).getText().equals("false"))) {
+
+	                    JOptionPane.showMessageDialog(null,
+	                        "The content of the field " + label[i].getText()
+	                            + " is only true or false");
+	                    return;
+	                  } else {
+	                    
+	                    insertEditRow.addElement(Boolean
+	                        .valueOf(((JTextField) field[i]).getText()));
+	                  }
+	                }
+	              }
+
+	            } else if (constrainMap.get("integer").contains(i)) {
+	              
+	              integerPosition = constrainMap.get("integer");
+	              for (Iterator<Integer> it = integerPosition.iterator(); it
+	                  .hasNext();) {
+	                int position = it.next();
+
+	                if (position == i) {
+	                  
+	                  HashSet<String> tempPropertySet = initialStateUITab
+	                      .getConstrainMap().get(type);
+
+	                  for (Iterator<String> propertys = tempPropertySet.iterator(); propertys
+	                      .hasNext();) {
+
+	                    String property = propertys.next();
+	                    String propertyType = property + type;
+
+	                    HashSet<String> tempLanSet = initialStateUITab.getLanType()
+	                        .get(type);
+	                    for (Iterator<String> lans = tempLanSet.iterator(); lans
+	                        .hasNext();) {
+
+	                      String lan = lans.next();
+	                      String labelKey = propertyType + lan;
+	                      
+	                      if (initialStateUITab.getLabelMap().get(labelKey).equals(
+	                          label[i].getText())) {
+
+	                        Vector<Integer> tempValueRange = initialStateUITab
+	                            .getConstrainNameMapRange().get(property);
+	                        int minValue = tempValueRange.get(0);
+	                        int maxValue = tempValueRange.get(1);
+
+	                        
+
+	                        int currentValue = Integer
+	                            .valueOf(((JTextField) field[i]).getText());
+	                        
+	                        if ((currentValue > maxValue)
+	                            || (currentValue < minValue)) {
+
+	                          JOptionPane.showMessageDialog(null,
+	                              "The content of the field " + label[i].getText()
+	                                  + " must be in the range" + "(" + minValue
+	                                  + "," + maxValue + ")");
+	                          return;
+	                        } else {
+	                          
+	                          insertEditRow.addElement(Integer
+	                              .valueOf(((JTextField) field[i]).getText()));
+	                        }
+	                      }
+	                    }
+	                  }
+	                }
+	              }
+	            } else {
+
+	              boolean enumProperty = false;
+	              String property = "";
+	              tempStop: {
+	               
+	                for (Iterator<String> it = initialStateUITab.getEnumMap()
+	                    .keySet().iterator(); it.hasNext();) {
+
+	                  property = it.next();
+	                  String propertyType = property + type;
+	                  HashSet<String> tempLanSet = initialStateUITab.getLanType().get(type);
+	                  for (Iterator<String> lans = tempLanSet.iterator(); lans
+	                      .hasNext();) {
+
+	                    String lan = lans.next();
+	                    String labelKey = propertyType + lan;
+
+	                    Collection<String> labels = initialStateUITab.getLabelMap()
+	                        .values();
+
+	                    if (labels.contains(initialStateUITab.getLabelMap().get(
+	                        labelKey))) {
+
+	                      if (initialStateUITab.getLabelMap().get(labelKey).equals(
+	                          label[i].getText())) {
+
+	                        enumProperty = true;
+	                        break tempStop;
+	                      }
+	                    }
+	                  }
+	                }
+	              }
+
+	              if (!enumProperty) {
+
+	               
+	                insertEditRow.addElement(((JTextField) field[i]).getText());
+
+	              } else {
+
+	                HashSet<String> tempEnumContent = initialStateUITab
+	                    .getEnumMap().get(property);
+
+	                
+
+	                if (tempEnumContent.contains(((JTextField) field[i]).getText()
+	                    .trim())) {
+
+	                  insertEditRow.addElement(((JTextField) field[i]).getText());
+
+	                } else {
+
+	                  JOptionPane.showMessageDialog(null,
+	                      "The content of the field " + label[i].getText()
+	                          + " must be in the enum range");
+	                  return;
+
+	                }
+
+	              }
+
+	            }
+
+	          } else {
+
+	            insertEditRow.addElement(((JButton) field[i]).getText());
+
+	          }
+	        }
+	        if (cRow < 0) {
+	          cRow = 0;
+	        }
+	        if (cRow > rowData.size()) {
+	          cRow = rowData.size();
+	        }
+
+	        if (!createNew) {
+	          model.insertRow(cRow, insertEditRow);
+
+	          boolean flag;
+	          if (cRow < 0 || cRow > rowData.size()) {
+	            flag = false;
+	          } else {
+	            flag = true;
+	          }
+
+	          if (flag) {
+	            model.removeRow(cRow + 1);
+	          }
+	        }
+
+	        if (createNew) {
+	          model.insertRow(cRow + 1, insertEditRow);
+	        }
+
+	        setVisible(false);
+	        dispose();
+
+	      }
+	    };
+	    ok.addActionListener(okListener);
+
+	    JButton cancel = new JButton("CANCEL");
+	    ActionListener cancelListener = new ActionListener() {
+	      public void actionPerformed(ActionEvent e) {
+	        setVisible(false);
+	        dispose();
+	      }
+	    };
+	    cancel.addActionListener(cancelListener);
+
+	    buttonPanel.add(ok);
+	    buttonPanel.add(cancel);
+
+	    return buttonPanel;
+
+	  }
+
+	  private JTable table;
+	  private Vector<Object> row;
+	  private Vector<Vector<Object>> rowData;
+	  private JLabel[] label;
+	  private Object[] field;
+	  private DefaultTableModel model;
+	  private int cRow;
+	  private String type;
+	  private HashMap<String, HashSet<Integer>> constrainMap;
+	  private HashSet<Integer> booleanPosition;
+	  private HashSet<Integer> integerPosition;
+	  private InitialStateUITab initialStateUITab;
+	  private String objectType;
+	  private boolean createNew;
+	  private HashMap<String, HashSet<String>> ranTypePropertyMap;
+	  private HashMap<String, HashSet<String>> valueExprPropertyMap;
+	  private HashMap<String, HashSet<String>> lanTypeMap;
+	  private HashMap<String, String> labelMap;
+	  private Frame owner;
+
+	}
