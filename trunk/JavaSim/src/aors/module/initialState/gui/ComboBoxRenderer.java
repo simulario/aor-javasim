@@ -8,7 +8,10 @@ import javax.swing.table.TableCellRenderer;
 
 public class ComboBoxRenderer extends JComboBox implements TableCellRenderer {
 
-  public ComboBoxRenderer(String[] items) {
+  
+	private static final long serialVersionUID = -3591615661408706646L;
+
+   public ComboBoxRenderer(String[] items) {
     super(items);
   }
 
