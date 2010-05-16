@@ -1,211 +1,227 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <?xml-stylesheet type="text/xsl" href="ersl/refman/refman.xsl"?>
-<xs:schema
-		xmlns:ers="http://aor-simulation.org"
-		xmlns:aors="http://aor-simulation.org"
-		xmlns:dc="http://purl.org/dc/elements/1.1/"
-		xmlns:h="http://www.w3.org/1999/xhtml"
-		xmlns:xs="http://www.w3.org/2001/XMLSchema"
-		targetNamespace="http://aor-simulation.org"
-		elementFormDefault="qualified" attributeFormDefault="unqualified">
-	<xs:annotation><xs:documentation><dc:title>AORSL 0.8.4</dc:title></xs:documentation></xs:annotation>
-	<xs:annotation id="preface">
-		<xs:documentation xml:lang="en">
-			<h:img style="float:right" href="AORS-UpperLevelCategories.gif" alt="AORS-UpperLevelCategories"/>
-			<h:p>Created on 20100506, Copyright 2010 Gerd Wagner, some rights reserved (<h:a href="http://creativecommons.org/licenses/by-sa/3.0/" rel="nofollow">Creative Commons 3.0 BY-SA</h:a>). With contributions by Mircea Diaconescu, Daniel Draeger, Thomas Grundmann and Jens Werner. See also the <h:a href="http://AOR-Simulation.org">project website</h:a>.</h:p>
-			<h:p>The main element of an AORSL file is <h:strong><h:code>SimulationScenario</h:code></h:strong>, which essentially consists of a <h:code>SimulationModel</h:code>, an <h:code>InitialState</h:code>, and a <h:code>UserInterface</h:code> element.</h:p>
-		</xs:documentation>
-	</xs:annotation>
-	<!-- Open issues
+<xs:schema xmlns:ers="http://aor-simulation.org" xmlns:aors="http://aor-simulation.org" xmlns:dc="http://purl.org/dc/elements/1.1/"
+  xmlns:h="http://www.w3.org/1999/xhtml" xmlns:xs="http://www.w3.org/2001/XMLSchema" targetNamespace="http://aor-simulation.org" elementFormDefault="qualified"
+  attributeFormDefault="unqualified">
+  <xs:annotation>
+    <xs:documentation>
+      <dc:title>AORSL 0.8.4</dc:title>
+    </xs:documentation>
+  </xs:annotation>
+  <xs:annotation id="preface">
+    <xs:documentation xml:lang="en">
+      <h:img style="float:right" href="AORS-UpperLevelCategories.gif" alt="AORS-UpperLevelCategories"/>
+      <h:p>Created on 20100506, Copyright 2010 Gerd Wagner, some rights reserved (<h:a href="http://creativecommons.org/licenses/by-sa/3.0/" rel="nofollow"
+          >Creative Commons 3.0 BY-SA</h:a>). With contributions by Mircea Diaconescu, Daniel Draeger, Thomas Grundmann and Jens Werner. See also the <h:a
+          href="http://AOR-Simulation.org">project website</h:a>.</h:p>
+      <h:p>The main element of an AORSL file is <h:strong>
+          <h:code>SimulationScenario</h:code>
+        </h:strong>, which essentially consists of a <h:code>SimulationModel</h:code>, an <h:code>InitialState</h:code>, and a <h:code>UserInterface</h:code> element.</h:p>
+    </xs:documentation>
+  </xs:annotation>
+  <!-- Open issues
 		- Allow InitialAttributeValue also for SelfBeliefAttributes
-	-->	
-	<!-- =================================================================== -->
-	<xs:include schemaLocation="ERSL/SimulationScenario.xsd"/>
+	-->
+  <!-- =================================================================== -->
+  <xs:include schemaLocation="ERSL/SimulationScenario.xsd"/>
   <xs:include schemaLocation="ERSL/SimulationModel.xsd"/>
-	<xs:include schemaLocation="ActivityTypes.xsd"/>	
+  <xs:include schemaLocation="ActivityTypes.xsd"/>
   <xs:include schemaLocation="ERSL/UserInterface.xsd"/>
-	<!-- =================================================================== -->
-	<!-- *** Root element *** -->
-	<!-- *** SimulationScenario *** -->
-	<!-- =================================================================== -->
-	<xs:element name="SimulationScenario" type="aors:SimulationScenario.type">
-		<xs:annotation>
-			<xs:documentation>
-				<h:p>Consists essentially of a <h:code>SimulationModel</h:code>, an <h:code>InitialState</h:code>, and a <h:code>UserInterface</h:code> (including a statistics user interface and an animation user interface).</h:p>
-			</xs:documentation>
-		</xs:annotation>
-	</xs:element>
-	<xs:complexType name="SimulationScenario.type">
-		<xs:sequence>
-			<xs:element ref="aors:documentation" minOccurs="0"/>
-			<xs:element ref="aors:SimulationParameters"/>
-			<xs:choice>
-				<xs:group ref="aors:include"/>
-				<xs:element ref="aors:SimulationModel"/>
-			</xs:choice>
-			<xs:element ref="aors:InitialState"/>
-			<xs:element ref="aors:UserInterface" minOccurs="0"/>
-		</xs:sequence>
-		<xs:attributeGroup ref="aors:SimulationScenario.attributes"/>
-	</xs:complexType>
-	<!-- =================================================================== -->
-	<!-- *** SimulationModel *** -->
-	<!-- =================================================================== -->
-	<xs:element name="SimulationModel">
-		<xs:complexType>
-			<xs:sequence>
-				<xs:element ref="ers:documentation" minOccurs="0"/>
-				<xs:element ref="ers:SimulationParameterDeclaration" minOccurs="0" maxOccurs="unbounded"/>
-				<xs:element ref="ers:SpaceModel" minOccurs="0"/>
-				<xs:element ref="ers:Statistics" minOccurs="0"/>
-				<xs:element ref="ers:DataTypes" minOccurs="0"/>
-				<xs:element ref="ers:Globals" minOccurs="0"/>
-				<xs:element ref="ers:EntityTypes" minOccurs="0"/>
-				<xs:element ref="ers:EnvironmentRules" minOccurs="0"/>
-				<xs:element ref="ers:Collections" minOccurs="0"/>
-			</xs:sequence>
-			<xs:attributeGroup ref="ers:SimulationModel.attributes"/>
-		</xs:complexType>		
-		<!-- =================================================================== -->
-		<!-- KEY and KEYREF constraints  -->
-		<!-- =================================================================== -->
-		<xs:key name="ExternalEntityTypeKey">
-			<xs:selector xpath="ers:EntityTypes/ers:ObjectType | ers:EntityTypes/ers:PhysicalObjectType | ers:EntityTypes/ers:PhysicalAgentType | ers:EntityTypes/ers:MessageType | ers:EntityTypes/ers:CausedEventType | ers:EntityTypes/ers:PerceptionEventType | ers:EntityTypes/ers:ActionEventType | ers:EntityTypes/ers:ExogenousEventType"/>
-			<xs:field xpath="@name"/>
-		</xs:key>
-		<!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->
-		<xs:key name="ObjectTypeKey">
-			<xs:selector xpath="ers:EntityTypes/ers:ObjectType | ers:EntityTypes/ers:AgentType | ers:EntityTypes/ers:PhysicalObjectType | ers:EntityTypes/ers:PhysicalAgentType"/>
-			<xs:field xpath="@name"/>
-		</xs:key>
-		<xs:keyref name="ObjectTypeReference" refer="ers:ObjectTypeKey">
-<!--
+  <!-- =================================================================== -->
+  <!-- *** Root element *** -->
+  <!-- *** SimulationScenario *** -->
+  <!-- =================================================================== -->
+  <xs:element name="SimulationScenario" type="aors:SimulationScenario.type">
+    <xs:annotation>
+      <xs:documentation>
+        <h:p>Consists essentially of a <h:code>SimulationModel</h:code>, an <h:code>InitialState</h:code>, and a <h:code>UserInterface</h:code> (including a statistics user interface and an animation user interface).</h:p>
+      </xs:documentation>
+    </xs:annotation>
+  </xs:element>
+  <xs:complexType name="SimulationScenario.type">
+    <xs:sequence>
+      <xs:element ref="aors:documentation" minOccurs="0"/>
+      <xs:element ref="aors:SimulationParameters"/>
+      <xs:choice>
+        <xs:group ref="aors:include"/>
+        <xs:element ref="aors:SimulationModel"/>
+      </xs:choice>
+      <xs:element ref="aors:InitialState"/>
+      <xs:element ref="aors:UserInterface" minOccurs="0"/>
+    </xs:sequence>
+    <xs:attributeGroup ref="aors:SimulationScenario.attributes"/>
+  </xs:complexType>
+  <!-- =================================================================== -->
+  <!-- *** SimulationModel *** -->
+  <!-- =================================================================== -->
+  <xs:element name="SimulationModel">
+    <xs:complexType>
+      <xs:sequence>
+        <xs:element ref="ers:documentation" minOccurs="0"/>
+        <xs:element ref="ers:SimulationParameterDeclaration" minOccurs="0" maxOccurs="unbounded"/>
+        <xs:element ref="ers:SpaceModel" minOccurs="0"/>
+        <xs:element ref="ers:Statistics" minOccurs="0"/>
+        <xs:element ref="ers:DataTypes" minOccurs="0"/>
+        <xs:element ref="ers:Globals" minOccurs="0"/>
+        <xs:element ref="ers:EntityTypes" minOccurs="0"/>
+        <xs:element ref="ers:EnvironmentRules" minOccurs="0"/>
+        <xs:element ref="ers:Collections" minOccurs="0"/>
+      </xs:sequence>
+      <xs:attributeGroup ref="ers:SimulationModel.attributes"/>
+    </xs:complexType>
+    <!-- =================================================================== -->
+    <!-- KEY and KEYREF constraints  -->
+    <!-- =================================================================== -->
+    <xs:key name="ExternalEntityTypeKey">
+      <xs:selector
+        xpath="ers:EntityTypes/ers:ObjectType | ers:EntityTypes/ers:PhysicalObjectType | ers:EntityTypes/ers:PhysicalAgentType | ers:EntityTypes/ers:MessageType | ers:EntityTypes/ers:CausedEventType | ers:EntityTypes/ers:PerceptionEventType | ers:EntityTypes/ers:ActionEventType | ers:EntityTypes/ers:ExogenousEventType"/>
+      <xs:field xpath="@name"/>
+    </xs:key>
+    <!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->
+    <xs:key name="ObjectTypeKey">
+      <xs:selector
+        xpath="ers:EntityTypes/ers:ObjectType | ers:EntityTypes/ers:AgentType | ers:EntityTypes/ers:PhysicalObjectType | ers:EntityTypes/ers:PhysicalAgentType"/>
+      <xs:field xpath="@name"/>
+    </xs:key>
+    <xs:keyref name="ObjectTypeReference" refer="ers:ObjectTypeKey">
+      <!--
 			<xs:selector xpath="ers:EnvironmentRules/ers:EnvironmentRule/ers:VariableDeclaration[@objectType != 'Collection'] | ers:EnvironmentRules/ers:EnvironmentRule/ers:UPDATE-ENV/ers:UpdateObjects"/>
 -->
-			<xs:selector xpath="ers:EnvironmentRules/ers:EnvironmentRule/ers:UPDATE-ENV/ers:UpdateObjects"/>
-			<xs:field xpath="@objectType"/>
-		</xs:keyref>
-		<!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->
-		<xs:key name="ReferenceTypeKey">
-			<xs:selector xpath="ers:EntityTypes/ers:ObjectType | ers:EntityTypes/ers:AgentType | ers:EntityTypes/ers:MessageType | ers:EntityTypes/ers:PhysicalObjectType | ers:EntityTypes/ers:PhysicalAgentType"/>
-			<xs:field xpath="@name"/>
-		</xs:key>
-		<xs:keyref name="ReferenceProperty-TypeReference" refer="ers:ReferenceTypeKey">
-			<xs:selector xpath="ers:EntityTypes/ers:*/ers:ReferenceProperty"/>
-			<xs:field xpath="@type"/>
-		</xs:keyref>
-<!--
+      <xs:selector xpath="ers:EnvironmentRules/ers:EnvironmentRule/ers:UPDATE-ENV/ers:UpdateObjects"/>
+      <xs:field xpath="@objectType"/>
+    </xs:keyref>
+    <!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->
+    <xs:key name="ReferenceTypeKey">
+      <xs:selector
+        xpath="ers:EntityTypes/ers:ObjectType | ers:EntityTypes/ers:AgentType | ers:EntityTypes/ers:MessageType | ers:EntityTypes/ers:PhysicalObjectType | ers:EntityTypes/ers:PhysicalAgentType"/>
+      <xs:field xpath="@name"/>
+    </xs:key>
+    <xs:keyref name="ReferenceProperty-TypeReference" refer="ers:ReferenceTypeKey">
+      <xs:selector xpath="ers:EntityTypes/ers:*/ers:ReferenceProperty"/>
+      <xs:field xpath="@type"/>
+    </xs:keyref>
+    <!--
 		The following keyref cannot be used as there are predfined superclass types (such as the agent type for sincere and trustful communication)
 		<xs:keyref name="ObjectType-SuperTypeReference" refer="ers:ObjectTypeKey">
 			<xs:selector xpath="ers:EntityTypes/ers:ObjectType | ers:EntityTypes/ers:PhysicalObjectType | ers:EntityTypes/ers:PhysicalAgentType"/>
 			<xs:field xpath="@superType"/>
 		</xs:keyref>
 -->
-		<!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->
-		<xs:key name="EnvironmentEventTypeKey">
-			<xs:selector xpath="ers:EntityTypes/ers:ExogenousEventType | ers:EntityTypes/ers:CausedEventType | ers:EntityTypes/ers:PerceptionEventType | ers:EntityTypes/ers:ActionEventType"/>
-			<xs:field xpath="@name"/>
-		</xs:key>
-<!--
+    <!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->
+    <xs:key name="EnvironmentEventTypeKey">
+      <xs:selector
+        xpath="ers:EntityTypes/ers:ExogenousEventType | ers:EntityTypes/ers:CausedEventType | ers:EntityTypes/ers:PerceptionEventType | ers:EntityTypes/ers:ActionEventType"/>
+      <xs:field xpath="@name"/>
+    </xs:key>
+    <!--
 		The following keyref cannot be used as there are predfined event types such as OutMessageEvent
 		<xs:keyref name="EnvironmentEventTypeReference" refer="ers:EnvironmentEventTypeKey">
 			<xs:selector xpath="ers:EnvironmentRules/ers:EnvironmentRule/ers:TriggeringAtomicEventExpr"/>
 			<xs:field xpath="@eventType"/>
 		</xs:keyref>
 -->
-		<!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->
-		<xs:key name="CausedEventTypeKey">
-			<xs:selector xpath="ers:EntityTypes/ers:CausedEventType"/>
-			<xs:field xpath="@name"/>
-		</xs:key>
-<!--
+    <!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->
+    <xs:key name="CausedEventTypeKey">
+      <xs:selector xpath="ers:EntityTypes/ers:CausedEventType"/>
+      <xs:field xpath="@name"/>
+    </xs:key>
+    <!--
 		The following keyref cannot be used as there are predfined event types such as StopSimulation
 		<xs:keyref name="CausedEventTypeReference" refer="ers:CausedEventTypeKey">
 			<xs:selector xpath="ers:EnvironmentRules/ers:EnvironmentRule/ers:ResultingEventExpr/ers:CausedEventExpr"/>
 			<xs:field xpath="@eventType"/>
 		</xs:keyref>
 -->
-		<!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->
-		<xs:key name="PerceptionEventTypeKey">
-			<xs:selector xpath="ers:EntityTypes/ers:PerceptionEventType"/>
-			<xs:field xpath="@name"/>
-		</xs:key>
-		<xs:keyref name="ResultingPerceptionEventExpr-PerceptionEventTypeReference" refer="ers:PerceptionEventTypeKey">
-			<xs:selector xpath="ers:EnvironmentRules/ers:EnvironmentRule/ers:SCHEDULE-EVT/ers:PerceptionEventExpr | ers:EnvironmentRules/ers:EnvironmentRule/ers:DO/ers:SCHEDULE-EVT/ers:PerceptionEventExpr | ers:EnvironmentRules/ers:EnvironmentRule/ers:THEN/ers:SCHEDULE-EVT/ers:PerceptionEventExpr | ers:EnvironmentRules/ers:EnvironmentRule/ers:ELSE/ers:SCHEDULE-EVT/ers:PerceptionEventExpr"/>
-			<xs:field xpath="@eventType"/>
-		</xs:keyref>
-		<xs:keyref name="TriggeringPerceptionEventExpr-PerceptionEventTypeReference" refer="ers:PerceptionEventTypeKey">
-			<xs:selector xpath="ers:EntityTypes/ers:PhysicalAgentType/ers:ActualPerceptionRule/ers:WHEN"/>
-			<xs:field xpath="@perceptionEventType"/>
-		</xs:keyref>
-		<!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->
-		<xs:key name="ActionEventTypeKey">
-			<xs:selector xpath="ers:EntityTypes/ers:ActionEventType"/>
-			<xs:field xpath="@name"/>
-		</xs:key>
-		<xs:keyref name="EntityTypesActionEventTypeReference" refer="ers:ActionEventTypeKey">
-			<xs:selector xpath="ers:EntityTypes/ers:PhysicalAgentType/ers:AgentRule/ers:SCHEDULE-EVT/ers:ActionEventExpr"/>
-			<xs:field xpath="@actionEventType"/>
-		</xs:keyref>
-	  <!--xs:keyref name="ActionRuleActionEventTypeReference" refer="ers:ActionEventTypeKey">
-	    <xs:selector xpath="ers:EntityTypes/ers:PhysicalAgentType/ers:ActionRule"/>
-	    <xs:field xpath="@actionEventType"/>
-	  </xs:keyref-->  
-	  <!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->
-		<xs:key name="MessageTypeKey">
-			<xs:selector xpath="ers:EntityTypes/ers:MessageType"/>
-			<xs:field xpath="@name"/>
-		</xs:key>
-		<xs:keyref name="EnvironmentRule-MessageTypeReference" refer="ers:MessageTypeKey">
-			<xs:selector xpath="ers:EnvironmentRules/ers:EnvironmentRule/ers:WHEN | ers:EnvironmentRules/ers:EnvironmentRule/ers:SCHEDULE-EVT/ers:InMessageEventExpr | ers:EnvironmentRules/ers:EnvironmentRule/ers:DO/ers:SCHEDULE-EVT/ers:InMessageEventExpr | ers:EnvironmentRules/ers:EnvironmentRule/ers:THEN/ers:SCHEDULE-EVT/ers:InMessageEventExpr | ers:EnvironmentRules/ers:EnvironmentRule/ers:ELSE/ers:SCHEDULE-EVT/ers:InMessageEventExpr"/>
-			<xs:field xpath="@messageType"/>
-		</xs:keyref>
-		<xs:keyref name="AgentRule-MessageTypeReference" refer="ers:MessageTypeKey">
-			<xs:selector xpath="ers:EntityTypes/ers:PhysicalAgentType/ers:AgentRule/ers:WHEN |  ers:EntityTypes/ers:PhysicalAgentType/ers:AgentRule/ers:SCHEDULE-EVT/ers:OutMessageEventExpr"/>
-			<xs:field xpath="@messageType"/>
-		</xs:keyref>
-	</xs:element>
-	<!-- =================================================================== -->
-	<!-- *** The EntityTypes container *** -->
-	<!-- =================================================================== -->
-	<xs:element name="EntityTypes">
-		<xs:complexType>
-			<xs:sequence>
-				<xs:element ref="aors:MessageType" minOccurs="0" maxOccurs="unbounded"/>
-				<xs:element ref="ers:EnvironmentEventType" minOccurs="0" maxOccurs="unbounded"/>
-				<xs:element ref="aors:ActivityType" minOccurs="0" maxOccurs="unbounded"/>
-				<xs:element ref="ers:ObjectType" minOccurs="0" maxOccurs="unbounded"/>
-			</xs:sequence>
+    <!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->
+    <xs:key name="PerceptionEventTypeKey">
+      <xs:selector xpath="ers:EntityTypes/ers:PerceptionEventType"/>
+      <xs:field xpath="@name"/>
+    </xs:key>
+    <xs:keyref name="ResultingPerceptionEventExpr-PerceptionEventTypeReference" refer="ers:PerceptionEventTypeKey">
+      <xs:selector
+        xpath="ers:EnvironmentRules/ers:EnvironmentRule/ers:SCHEDULE-EVT/ers:PerceptionEventExpr | ers:EnvironmentRules/ers:EnvironmentRule/ers:DO/ers:SCHEDULE-EVT/ers:PerceptionEventExpr | ers:EnvironmentRules/ers:EnvironmentRule/ers:THEN/ers:SCHEDULE-EVT/ers:PerceptionEventExpr | ers:EnvironmentRules/ers:EnvironmentRule/ers:ELSE/ers:SCHEDULE-EVT/ers:PerceptionEventExpr"/>
+      <xs:field xpath="@eventType"/>
+    </xs:keyref>
+    <xs:keyref name="TriggeringPerceptionEventExpr-PerceptionEventTypeReference" refer="ers:PerceptionEventTypeKey">
+      <xs:selector xpath="ers:EntityTypes/ers:PhysicalAgentType/ers:ActualPerceptionRule/ers:WHEN"/>
+      <xs:field xpath="@perceptionEventType"/>
+    </xs:keyref>
+    <!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->
+    <xs:key name="ActionEventTypeKey">
+      <xs:selector xpath="ers:EntityTypes/ers:ActionEventType"/>
+      <xs:field xpath="@name"/>
+    </xs:key>
+    <xs:keyref name="EntityTypesActionEventTypeReference" refer="ers:ActionEventTypeKey">
+      <xs:selector xpath="ers:EntityTypes/ers:PhysicalAgentType/ers:AgentRule/ers:SCHEDULE-EVT/ers:ActionEventExpr"/>
+      <xs:field xpath="@actionEventType"/>
+    </xs:keyref>
+    <xs:keyref name="ActionRuleActionEventTypeReference" refer="ers:ActionEventTypeKey">
+      <xs:selector xpath="ers:EntityTypes/ers:PhysicalAgentType/ers:ActionRule"/>
+      <xs:field xpath="@actionEventType"/>
+    </xs:keyref>
+    <!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->
+    <xs:key name="MessageTypeKey">
+      <xs:selector xpath="ers:EntityTypes/ers:MessageType"/>
+      <xs:field xpath="@name"/>
+    </xs:key>
+    <xs:keyref name="EnvironmentRule-MessageTypeReference" refer="ers:MessageTypeKey">
+      <xs:selector
+        xpath="ers:EnvironmentRules/ers:EnvironmentRule/ers:WHEN | ers:EnvironmentRules/ers:EnvironmentRule/ers:SCHEDULE-EVT/ers:InMessageEventExpr | ers:EnvironmentRules/ers:EnvironmentRule/ers:DO/ers:SCHEDULE-EVT/ers:InMessageEventExpr | ers:EnvironmentRules/ers:EnvironmentRule/ers:THEN/ers:SCHEDULE-EVT/ers:InMessageEventExpr | ers:EnvironmentRules/ers:EnvironmentRule/ers:ELSE/ers:SCHEDULE-EVT/ers:InMessageEventExpr"/>
+      <xs:field xpath="@messageType"/>
+    </xs:keyref>
+    <xs:keyref name="AgentRule-MessageTypeReference" refer="ers:MessageTypeKey">
+      <xs:selector
+        xpath="ers:EntityTypes/ers:PhysicalAgentType/ers:AgentRule/ers:WHEN |  ers:EntityTypes/ers:PhysicalAgentType/ers:AgentRule/ers:SCHEDULE-EVT/ers:OutMessageEventExpr"/>
+      <xs:field xpath="@messageType"/>
+    </xs:keyref>
+    <xs:keyref name="OutMessageRuleMessageTypeReference" refer="aors:MessageTypeKey">
+      <xs:selector xpath="ers:EntityTypes/ers:AgentType/ers:OutMessageRule | ers:EntityTypes/ers:PhysicalAgentType/ers:OutMessageRule"/>
+      <xs:field xpath="@messageType"/>
+    </xs:keyref>
+
+  </xs:element>
+  <!-- =================================================================== -->
+  <!-- *** The EntityTypes container *** -->
+  <!-- =================================================================== -->
+  <xs:element name="EntityTypes">
+    <xs:complexType>
+      <xs:sequence>
+        <xs:element ref="aors:MessageType" minOccurs="0" maxOccurs="unbounded"/>
+        <xs:element ref="ers:EnvironmentEventType" minOccurs="0" maxOccurs="unbounded"/>
+        <xs:element ref="aors:ActivityType" minOccurs="0" maxOccurs="unbounded"/>
+        <xs:element ref="ers:ObjectType" minOccurs="0" maxOccurs="unbounded"/>
+      </xs:sequence>
       <!-- checks if for each aors:ActionRule that does not refer to an OutMessageEvent an ActionEventType exists whose name equals to the refered action event type -->
-		  <!--xs:assert test="if(exists(.//aors:ActionRule/@actionEventType != 'OutMessageEvent')) then count(.//aors:ActionRule[@actionEventType != 'OutMessageEvent']) = count(.//aors:ActionRule[@actionEventType = ancestor-or-self::aors:EntityTypes/aors:ActionEventType/@name]) else true()"/-->
-		</xs:complexType>
-	</xs:element>
-	<!-- =================================================================== -->
-	<!-- *** The Collections container *** -->
-	<!-- =================================================================== -->
-	<xs:element name="Collections">
-		<xs:complexType>
-			<xs:sequence>
-				<xs:element ref="ers:Collection" maxOccurs="unbounded"/>
-			</xs:sequence>
-		</xs:complexType>
-	</xs:element>
-	<!-- =================================================================== -->
-	<!-- *** InitialState *** -->
-	<!-- =================================================================== -->
-	<xs:element name="InitialState">
-		<xs:complexType>
-			<xs:sequence>
-				<xs:choice minOccurs="0" maxOccurs="unbounded">
-					<xs:element name="GlobalVariable" type="ers:UpdateGlobalVariable.type" minOccurs="0" maxOccurs="unbounded"/>
-					<xs:element ref="ers:Object" minOccurs="0" maxOccurs="unbounded"/>
-					<xs:element ref="ers:ExogenousEvent" minOccurs="0" maxOccurs="unbounded"/>
-					<xs:element ref="ers:CausedEvent" minOccurs="0" maxOccurs="unbounded"/>
-					<xs:element ref="ers:Objects" minOccurs="0" maxOccurs="unbounded"/>
-					<xs:element ref="ers:GridCells" minOccurs="0"/>
-				</xs:choice>
-				<xs:element ref="ers:InitializationRule" minOccurs="0" maxOccurs="unbounded"/>
-			</xs:sequence>
-		</xs:complexType>
-	</xs:element>  
+      <!-- no longer needed but remains as an example for using assertions -->
+      <!--xs:assert test="if(exists(.//aors:ActionRule/@actionEventType != 'OutMessageEvent')) then count(.//aors:ActionRule[@actionEventType != 'OutMessageEvent']) = count(.//aors:ActionRule[@actionEventType = ancestor-or-self::aors:EntityTypes/aors:ActionEventType/@name]) else true()"/-->
+    </xs:complexType>
+  </xs:element>
+  <!-- =================================================================== -->
+  <!-- *** The Collections container *** -->
+  <!-- =================================================================== -->
+  <xs:element name="Collections">
+    <xs:complexType>
+      <xs:sequence>
+        <xs:element ref="ers:Collection" maxOccurs="unbounded"/>
+      </xs:sequence>
+    </xs:complexType>
+  </xs:element>
+  <!-- =================================================================== -->
+  <!-- *** InitialState *** -->
+  <!-- =================================================================== -->
+  <xs:element name="InitialState">
+    <xs:complexType>
+      <xs:sequence>
+        <xs:choice minOccurs="0" maxOccurs="unbounded">
+          <xs:element name="GlobalVariable" type="ers:UpdateGlobalVariable.type" minOccurs="0" maxOccurs="unbounded"/>
+          <xs:element ref="ers:Object" minOccurs="0" maxOccurs="unbounded"/>
+          <xs:element ref="ers:ExogenousEvent" minOccurs="0" maxOccurs="unbounded"/>
+          <xs:element ref="ers:CausedEvent" minOccurs="0" maxOccurs="unbounded"/>
+          <xs:element ref="ers:Objects" minOccurs="0" maxOccurs="unbounded"/>
+          <xs:element ref="ers:GridCells" minOccurs="0"/>
+        </xs:choice>
+        <xs:element ref="ers:InitializationRule" minOccurs="0" maxOccurs="unbounded"/>
+      </xs:sequence>
+    </xs:complexType>
+  </xs:element>
 </xs:schema>
