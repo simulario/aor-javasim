@@ -223,6 +223,9 @@
 
 	<xsl:template match="aors:GlobalVariable" mode="property">
 		<li>
+		  <xsl:attribute name="id">
+		    <xsl:call-template name="getId"/>
+		  </xsl:attribute>
 			<xsl:value-of select="@name"/>
 			<xsl:text> : </xsl:text>
 			<xsl:call-template name="getOptionalValue">

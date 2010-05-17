@@ -20,7 +20,9 @@
 	<xsl:key name="DataTypes" match="//aors:DataTypes//aors:*" use="@name"/>
 	<xsl:key name="Collections" match="//aors:Collections//aors:*" use="@name"/>
 	<xsl:key name="Types" match="//aors:EntityTypes//aors:*|//aors:DataTypes//aors:*|//aors:Collections//aors:*" use="@name"/>
-
+  <xsl:key name="StatisticsVariables" match="//aors:Statistics/aors:Variable" use="@name"/>
+  <xsl:key name="GlobalVariables" match="//aors:Globals/aors:GlobalVariable" use="@name"/>
+  
 	<!--##############-->
 	<!--### Macros ###-->
 	<!--##############-->

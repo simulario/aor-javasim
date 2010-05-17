@@ -125,7 +125,7 @@
 			<xsl:apply-templates select="aors:Collections" mode="navigation"/>
 			<xsl:apply-templates select="aors:Globals" mode="navigation"/>
 			<xsl:apply-templates select="aors:EntityTypes" mode="navigation"/>
-			<xsl:variable name="agentRules" select="aors:EntityTypes/aors:*/aors:ActualPerceptionRule|aors:EntityTypes/aors:*/aors:AgentRule|aors:EntityTypes/aors:*/aors:CommunicationRule"/>
+			<xsl:variable name="agentRules" select="aors:EntityTypes/aors:*/aors:ActualPerceptionRule|aors:EntityTypes/aors:*/aors:ReactionRule|aors:EntityTypes/aors:*/aors:CommunicationRule"/>
 			<xsl:apply-templates select="$agentRules[1]" mode="navigation">
 				<xsl:with-param name="content" select="$agentRules"/>
 			</xsl:apply-templates>
@@ -153,7 +153,7 @@
 		<xsl:apply-templates select="aors:Collections" mode="chapter"/>
 		<xsl:apply-templates select="aors:Globals" mode="chapter"/>
 		<xsl:apply-templates select="aors:EntityTypes" mode="chapter"/>
-		<xsl:variable name="agentRules" select="aors:EntityTypes/aors:*/aors:ActualPerceptionRule|aors:EntityTypes/aors:*/aors:AgentRule|aors:EntityTypes/aors:*/aors:CommunicationRule"/>
+		<xsl:variable name="agentRules" select="aors:EntityTypes/aors:*/aors:ActualPerceptionRule|aors:EntityTypes/aors:*/aors:ReactionRule|aors:EntityTypes/aors:*/aors:CommunicationRule"/>
 		<xsl:apply-templates select="$agentRules[1]" mode="chapter">
 			<xsl:with-param name="content" select="$agentRules"/>
 		</xsl:apply-templates>
