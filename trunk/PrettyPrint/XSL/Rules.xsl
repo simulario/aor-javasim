@@ -238,7 +238,7 @@
 		</li>
 	</xsl:template>
 
-	<xsl:template match="aors:CommunicationRule/aors:FOR|aors:AgentRule/aors:FOR" mode="for">
+	<xsl:template match="aors:CommunicationRule/aors:FOR|aors:ReactionRule/aors:FOR" mode="for">
 		<li>
 			<xsl:call-template name="getOptionalValue">
 				<xsl:with-param name="node">
