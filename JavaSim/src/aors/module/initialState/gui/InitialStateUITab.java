@@ -140,6 +140,10 @@ public class InitialStateUITab extends JScrollPane implements GUIModule {
 
     /* contain all types that will be shown using Field style */
     fieldStyleSet = new HashSet<String>();
+    
+    propertyLengthMap = new HashMap<String,Double>();
+    
+    fieldLengthTypeSet = new HashSet<String>();
 
     /* map between a type with its contentPanel using field style */
     contentPanelTypeMap = new HashMap<String, JPanel>();
@@ -408,7 +412,7 @@ public class InitialStateUITab extends JScrollPane implements GUIModule {
 
     Iterator<String> it = nodeNameSet.iterator();
     while (it.hasNext()) {
-      String content = (String) it.next();
+      String content = it.next();
       NodeList isSubNodes = sd.getNodeList(INITIALSTATEUI + "/" + PX + content);
       createInitialStateUITableHeader(isSubNodes);
     }
@@ -457,6 +461,8 @@ public class InitialStateUITab extends JScrollPane implements GUIModule {
 
             String inputFieldLength = sd.getNodeContent("@inputFieldLength",
                 propertyUIs.item(k));
+            
+            System.out.println("type: " + type + " |propertyType: " + propertyType + " |inputFieldLength : " + inputFieldLength);
             processInputFieldLength(type, propertyType, inputFieldLength);
 
             NodeList labelnodes = sd.getNodeList(LT, propertyUIs.item(k));
@@ -660,7 +666,7 @@ public class InitialStateUITab extends JScrollPane implements GUIModule {
 
         for (int i = 0; i < table.getColumnCount(); i++) {
 
-          String tempTableHeader = (String) table.getModel().getColumnName(i);
+          String tempTableHeader = table.getModel().getColumnName(i);
 
           if (labelMap.get(tempLabel).equals(tempTableHeader)
               & (tempKey.contains(type))) {
@@ -701,14 +707,14 @@ public class InitialStateUITab extends JScrollPane implements GUIModule {
 
       for (int j = 0; j < model.getColumnCount(); j++) {
 
-        String colHeadValue = (String) model.getColumnName(j);
+        String colHeadValue = model.getColumnName(j);
 
         if (selfPropertyMap.keySet().contains(type)) {
 
           Vector<String> tempContent = userInterfaceMap.get(type);
           for (Iterator<String> it = tempContent.iterator(); it.hasNext();) {
 
-            String tempString = (String) it.next();
+            String tempString = it.next();
             String label = labelMap.get(tempString);
             if (label.equals(colHeadValue)) {
 
@@ -837,7 +843,7 @@ public class InitialStateUITab extends JScrollPane implements GUIModule {
           String value = children.item(i).getFirstChild().getNodeValue();
           Iterator<String> it = tempContent.iterator();
           while (it.hasNext()) {
-            String tempString = (String) it.next();
+            String tempString = it.next();
             if (tempString.endsWith("en")) {
               if ((tempString.substring(0,
                   (tempString.length() - type.length() - 2)))
@@ -929,7 +935,7 @@ public class InitialStateUITab extends JScrollPane implements GUIModule {
           String value = children.item(i).getFirstChild().getNodeValue();
           Iterator<String> it = tempContent.iterator();
           while (it.hasNext()) {
-            String tempString = (String) it.next();
+            String tempString = it.next();
             if (tempString.endsWith("en")) {
               if ((tempString.substring(0,
                   (tempString.length() - type.length() - 2)))
@@ -1077,7 +1083,7 @@ public class InitialStateUITab extends JScrollPane implements GUIModule {
       tempFields.add(value);
       Iterator<String> it = tempContent.iterator();
       while (it.hasNext()) {
-        String tempString = (String) it.next();
+        String tempString = it.next();
         if (tempString.endsWith("en")) {
           if ((tempString.substring(0,
               (tempString.length() - type.length() - 2))).equals(name)) {
@@ -1338,7 +1344,7 @@ public class InitialStateUITab extends JScrollPane implements GUIModule {
     Vector<String> tempVector = new Vector<String>();
     Iterator<String> it = tempSet.iterator();
     while (it.hasNext()) {
-      String temp = (String) it.next();
+      String temp = it.next();
       tempVector.addElement(temp);
     }
 
@@ -1400,7 +1406,7 @@ public class InitialStateUITab extends JScrollPane implements GUIModule {
 
     Iterator<String> it = tempContent.iterator();
     while (it.hasNext()) {
-      String tempString = (String) it.next();
+      String tempString = it.next();
       if (tempString.endsWith("en")) {
 
         String label = labelMap.get(tempString);
@@ -1474,7 +1480,7 @@ public class InitialStateUITab extends JScrollPane implements GUIModule {
         Iterator<String> it = tempContent.iterator();
         while (it.hasNext()) {
 
-          String tempString = (String) it.next();
+          String tempString = it.next();
           if (tempString.endsWith("en")) {
 
             if ((!(attribute.getName()).equals("type") & (tempString.substring(
@@ -1544,7 +1550,7 @@ public class InitialStateUITab extends JScrollPane implements GUIModule {
         Iterator<String> it = tempContent.iterator();
         while (it.hasNext()) {
 
-          String tempString = (String) it.next();
+          String tempString = it.next();
           if (tempString.endsWith("en")) {
 
             if ((!(attribute.getName()).equals("type") & (tempString.substring(
@@ -1748,7 +1754,7 @@ public class InitialStateUITab extends JScrollPane implements GUIModule {
                 }
               } else {
 
-                NodeList nodes = (NodeList) sd.getNodeList("*[@type='" + type
+                NodeList nodes = sd.getNodeList("*[@type='" + type
                     + "']", InitialState);
                 Vector<FieldsEdit> fieldsContainer = fieldsTypeMap.get(type);
 
@@ -2001,7 +2007,7 @@ public class InitialStateUITab extends JScrollPane implements GUIModule {
     Iterator<String> it = tempContent.iterator();
     while (it.hasNext()) {
 
-      String tempString = (String) it.next();
+      String tempString = it.next();
       String label = labelMap.get(tempString);
       if (label.equals(tableHeadElement)) {
         String tempPropertyName = tempString.substring(0, (tempString.length()
@@ -2247,7 +2253,7 @@ public class InitialStateUITab extends JScrollPane implements GUIModule {
       String tempType = it.next();
       if (typeUITableHead.contains(tempType)) {
         // System.out.println("the next type is: ===> " + tempType);
-        NodeList eventNodes = (NodeList) sd.getNodeList("*[@type='" + tempType
+        NodeList eventNodes = sd.getNodeList("*[@type='" + tempType
             + "']", node);
         String objectEventType = type + tempType;
 
@@ -2490,7 +2496,7 @@ public class InitialStateUITab extends JScrollPane implements GUIModule {
     Iterator<String> it = tempContent.iterator();
     while (it.hasNext()) {
 
-      String tempString = (String) it.next();
+      String tempString = it.next();
       if (tempString.endsWith("en")) {
 
         if ((tempString.substring(0, (tempString.length() - type.length() - 2)))
@@ -2557,7 +2563,7 @@ public class InitialStateUITab extends JScrollPane implements GUIModule {
             Vector<String> header = new Vector<String>();
 
             for (int j = 0; j < model.getColumnCount(); j++) {
-              String colHeadValue = (String) model.getColumnName(j);
+              String colHeadValue = model.getColumnName(j);
               header.addElement(colHeadValue);
             }
 
@@ -2731,7 +2737,7 @@ public class InitialStateUITab extends JScrollPane implements GUIModule {
 
     Iterator<String> it = tempContent.iterator();
     while (it.hasNext()) {
-      String tempString = (String) it.next();
+      String tempString = it.next();
       if (tempString.endsWith("en")) {
         if ((tempString.substring(0, (tempString.length() - type.length() - 2)))
             .equals(property)) {
