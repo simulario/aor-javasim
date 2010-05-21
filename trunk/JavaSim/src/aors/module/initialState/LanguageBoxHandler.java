@@ -78,7 +78,7 @@ public class LanguageBoxHandler implements ActionListener {
 
         Iterator<String> it = tempPropertyVector.iterator();
         while (it.hasNext()) {
-          String tempLabel = (String) it.next();
+          String tempLabel = it.next();
           String tempTableHeadName = labelMap.get(tempLabel);
 
           if (tempTableHeadName.equals(tableHeadName)) {
