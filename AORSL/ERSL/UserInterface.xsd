@@ -325,44 +325,133 @@
 		<xs:complexType>
 			<xs:sequence>
 				<xs:element name="WHEN">
-					<xs:annotation><xs:documentation>User interface events are defined in the DOM3-Spezifikation [http://www.w3.org/TR/DOM-Level-3-Events] </xs:documentation></xs:annotation>
-					<xs:complexType>
-						<xs:choice>
-							<xs:element name="KeyboardEvent">
-								<xs:complexType>
-									<xs:attribute name="keyIdentifier" type="ers:KeyIdentifiers.type" use="required"/>
-									<xs:attribute name="shiftKey" type="xs:boolean" use="optional"/>
-									<xs:attribute name="ctrlKey" type="xs:boolean" use="optional"/>
-<!--									
-									<xs:attribute name="altKey" type="xs:boolean" use="optional">
-										<xs:annotation><xs:documentation>On Macintosh systems this key modifier corresponds to the Option key modifier. </xs:documentation></xs:annotation>
-									</xs:attribute>
--->									
-								</xs:complexType>
-							</xs:element>
-							<xs:element name="MouseEvent">
-								<xs:complexType>
-									<xs:attribute name="targetType" type="ers:CanonicalName" use="optional"/>
-									<xs:attribute name="targetIdRef" type="xs:long" use="optional"/>
-									<xs:attribute name="mouseEventType" type="ers:MouseEvent.type" use="required"/>
-									<xs:attribute name="eventVariable" type="ers:CanonicalName" use="optional"/>
-								</xs:complexType>
-							</xs:element>
-						</xs:choice>
-					</xs:complexType>
+				  <xs:complexType>
+				    <xs:complexContent>
+				      <xs:restriction base="ers:UserInterfaceEventListenerTriggeringEvent.type">
+				        <xs:choice maxOccurs="1">
+				          <xs:element ref="ers:KeyboardEvent"/>
+				          <xs:element ref="ers:MouseEvent"/>
+				        </xs:choice>
+				      </xs:restriction>
+				    </xs:complexContent>
+				  </xs:complexType>
 				</xs:element>
-				<xs:element name="DO">
-					<xs:complexType>
-						<xs:sequence>
-							<xs:element ref="ers:Slot" minOccurs="0" maxOccurs="unbounded"/>
-						</xs:sequence>
-						<xs:attribute name="actionType" type="ers:CanonicalName" use="required"/>
-					</xs:complexType>
-				</xs:element>
+				<xs:element name="DO" type="ers:UserInterfaceEventListenerResultingEvent.type"/>
 			</xs:sequence>
 		</xs:complexType>
 	</xs:element>
-	<xs:simpleType name="MouseEvent.type">
+  
+  <xs:complexType name="UserInterfaceEventListenerTriggeringEvent.type">
+    <xs:annotation>
+      <xs:documentation>
+        User interface events are defined in the DOM3-Spezifikation [http://www.w3.org/TR/DOM-Level-3-Events]
+      </xs:documentation>
+    </xs:annotation>
+    <xs:choice maxOccurs="unbounded">
+      <xs:element ref="ers:KeyboardEvent"/>
+      <xs:element ref="ers:MouseEvent"/>
+    </xs:choice>
+  </xs:complexType>
+  
+  <xs:element name="KeyboardEvent">
+    <xs:complexType>
+      <xs:attribute name="keyIdentifier" type="ers:KeyIdentifiers.type" use="required"/>
+      <xs:attribute name="shiftKey" type="xs:boolean" use="optional"/>
+      <xs:attribute name="ctrlKey" type="xs:boolean" use="optional"/>
+      <!--									
+        <xs:attribute name="altKey" type="xs:boolean" use="optional">
+        <xs:annotation><xs:documentation>On Macintosh systems this key modifier corresponds to the Option key modifier. </xs:documentation></xs:annotation>
+        </xs:attribute>
+      -->									
+    </xs:complexType>
+  </xs:element>
+  
+  <xs:simpleType name="KeyIdentifiers.type">
+    <xs:annotation><xs:documentation>See http://www.w3.org/TR/2009/WD-DOM-Level-3-Events-20090908/#keyset-keyidentifiers </xs:documentation></xs:annotation>
+    <xs:restriction base="xs:string">
+      <xs:enumeration value="Down"/>
+      <xs:enumeration value="Left"/>
+      <xs:enumeration value="Right"/>
+      <xs:enumeration value="Up"/>
+      <xs:enumeration value="Enter">
+        <xs:annotation><xs:documentation>This key identifier shall be also used for the Return (Macintosh numpad) key. </xs:documentation></xs:annotation>
+      </xs:enumeration>
+      <xs:enumeration value="F1"/>
+      <xs:enumeration value="F2"/>
+      <xs:enumeration value="F3"/>
+      <xs:enumeration value="F4"/>
+      <xs:enumeration value="F5"/>
+      <xs:enumeration value="F6"/>
+      <xs:enumeration value="F7"/>
+      <xs:enumeration value="F8"/>
+      <xs:enumeration value="F9"/>
+      <xs:enumeration value="F10"/>
+      <xs:enumeration value="F11"/>
+      <xs:enumeration value="F12"/>
+      <xs:enumeration value="Insert"/>
+      <xs:enumeration value="Del">
+        <xs:annotation><xs:documentation>This key identifier shall be also used for the key labeled 'delete' MacOS keyboards when modified by the 'Fn' key.</xs:documentation></xs:annotation>
+      </xs:enumeration>
+      <xs:enumeration value="Backspace">
+        <xs:annotation><xs:documentation>This key identifier shall be also used for the key labeled 'delete' MacOS keyboards when not modified by the 'Fn' key.</xs:documentation></xs:annotation>
+      </xs:enumeration>
+      <xs:enumeration value="PageDown"/>
+      <xs:enumeration value="PageUp"/>
+      <xs:enumeration value="Tab"/>
+      <xs:enumeration value="Esc"/>
+      <xs:enumeration value="Spacebar"/>
+      <xs:enumeration value="#"/>
+      <xs:enumeration value="+"/>
+      <xs:enumeration value="-"/>
+      <xs:enumeration value="1"/>
+      <xs:enumeration value="2"/>
+      <xs:enumeration value="3"/>
+      <xs:enumeration value="4"/>
+      <xs:enumeration value="5"/>
+      <xs:enumeration value="6"/>
+      <xs:enumeration value="7"/>
+      <xs:enumeration value="8"/>
+      <xs:enumeration value="9"/>
+      <xs:enumeration value="0"/>
+      <xs:enumeration value="A"/>
+      <xs:enumeration value="B"/>
+      <xs:enumeration value="C"/>
+      <xs:enumeration value="D"/>
+      <xs:enumeration value="E"/>
+      <xs:enumeration value="F"/>
+      <xs:enumeration value="G"/>
+      <xs:enumeration value="H"/>
+      <xs:enumeration value="I"/>
+      <xs:enumeration value="J"/>
+      <xs:enumeration value="K"/>
+      <xs:enumeration value="L"/>
+      <xs:enumeration value="M"/>
+      <xs:enumeration value="N"/>
+      <xs:enumeration value="O"/>
+      <xs:enumeration value="P"/>
+      <xs:enumeration value="Q"/>
+      <xs:enumeration value="R"/>
+      <xs:enumeration value="S"/>
+      <xs:enumeration value="T"/>
+      <xs:enumeration value="U"/>
+      <xs:enumeration value="V"/>
+      <xs:enumeration value="W"/>
+      <xs:enumeration value="X"/>
+      <xs:enumeration value="Y"/>
+      <xs:enumeration value="Z"/>
+    </xs:restriction>
+  </xs:simpleType>
+  
+  <xs:element name="MouseEvent">
+   <xs:complexType>
+     <xs:attribute name="targetType" type="ers:CanonicalName" use="optional"/>
+     <xs:attribute name="targetIdRef" type="xs:long" use="optional"/>
+     <xs:attribute name="mouseEventType" type="ers:MouseEvent.type" use="required"/>
+     <xs:attribute name="eventVariable" type="ers:CanonicalName" use="optional"/>
+   </xs:complexType>
+ </xs:element>
+	
+  <xs:simpleType name="MouseEvent.type">
 		<xs:annotation><xs:documentation>See http://www.w3.org/TR/2009/WD-DOM-Level-3-Events-20090908/#events-mouseevents </xs:documentation></xs:annotation>
 		<xs:restriction base="xs:string">
 			<xs:enumeration value="click"/>
@@ -371,79 +460,11 @@
 			<xs:enumeration value="mouseup"/>
 		</xs:restriction>
 	</xs:simpleType>
-	<xs:simpleType name="KeyIdentifiers.type">
-		<xs:annotation><xs:documentation>See http://www.w3.org/TR/2009/WD-DOM-Level-3-Events-20090908/#keyset-keyidentifiers </xs:documentation></xs:annotation>
-		<xs:restriction base="xs:string">
-			<xs:enumeration value="Down"/>
-			<xs:enumeration value="Left"/>
-			<xs:enumeration value="Right"/>
-			<xs:enumeration value="Up"/>
-			<xs:enumeration value="Enter">
-				<xs:annotation><xs:documentation>This key identifier shall be also used for the Return (Macintosh numpad) key. </xs:documentation></xs:annotation>
-			</xs:enumeration>
-			<xs:enumeration value="F1"/>
-			<xs:enumeration value="F2"/>
-			<xs:enumeration value="F3"/>
-			<xs:enumeration value="F4"/>
-			<xs:enumeration value="F5"/>
-			<xs:enumeration value="F6"/>
-			<xs:enumeration value="F7"/>
-			<xs:enumeration value="F8"/>
-			<xs:enumeration value="F9"/>
-			<xs:enumeration value="F10"/>
-			<xs:enumeration value="F11"/>
-			<xs:enumeration value="F12"/>
-			<xs:enumeration value="Insert"/>
-			<xs:enumeration value="Del">
-				<xs:annotation><xs:documentation>This key identifier shall be also used for the key labeled 'delete' MacOS keyboards when modified by the 'Fn' key.</xs:documentation></xs:annotation>
-			</xs:enumeration>
-			<xs:enumeration value="Backspace">
-				<xs:annotation><xs:documentation>This key identifier shall be also used for the key labeled 'delete' MacOS keyboards when not modified by the 'Fn' key.</xs:documentation></xs:annotation>
-			</xs:enumeration>
-			<xs:enumeration value="PageDown"/>
-			<xs:enumeration value="PageUp"/>
-			<xs:enumeration value="Tab"/>
-			<xs:enumeration value="Esc"/>
-			<xs:enumeration value="Spacebar"/>
-			<xs:enumeration value="#"/>
-			<xs:enumeration value="+"/>
-			<xs:enumeration value="-"/>
-			<xs:enumeration value="1"/>
-			<xs:enumeration value="2"/>
-			<xs:enumeration value="3"/>
-			<xs:enumeration value="4"/>
-			<xs:enumeration value="5"/>
-			<xs:enumeration value="6"/>
-			<xs:enumeration value="7"/>
-			<xs:enumeration value="8"/>
-			<xs:enumeration value="9"/>
-			<xs:enumeration value="0"/>
-			<xs:enumeration value="A"/>
-			<xs:enumeration value="B"/>
-			<xs:enumeration value="C"/>
-			<xs:enumeration value="D"/>
-			<xs:enumeration value="E"/>
-			<xs:enumeration value="F"/>
-			<xs:enumeration value="G"/>
-			<xs:enumeration value="H"/>
-			<xs:enumeration value="I"/>
-			<xs:enumeration value="J"/>
-			<xs:enumeration value="K"/>
-			<xs:enumeration value="L"/>
-			<xs:enumeration value="M"/>
-			<xs:enumeration value="N"/>
-			<xs:enumeration value="O"/>
-			<xs:enumeration value="P"/>
-			<xs:enumeration value="Q"/>
-			<xs:enumeration value="R"/>
-			<xs:enumeration value="S"/>
-			<xs:enumeration value="T"/>
-			<xs:enumeration value="U"/>
-			<xs:enumeration value="V"/>
-			<xs:enumeration value="W"/>
-			<xs:enumeration value="X"/>
-			<xs:enumeration value="Y"/>
-			<xs:enumeration value="Z"/>
-		</xs:restriction>
-	</xs:simpleType>
+
+  <xs:complexType name="UserInterfaceEventListenerResultingEvent.type">
+    <xs:sequence>
+      <xs:element ref="ers:Slot" minOccurs="0" maxOccurs="unbounded"/>
+    </xs:sequence>
+    <xs:attribute name="actionType" type="ers:CanonicalName" use="required"/>
+  </xs:complexType>
 </xs:schema>
