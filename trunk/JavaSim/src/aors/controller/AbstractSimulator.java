@@ -101,7 +101,7 @@ public abstract class AbstractSimulator implements AgentSimulatorListener {
 	/**
 	 * The space model for this simulation
 	 */
-	private GeneralSpaceModel spaceModel = null;
+	private GeneralSpaceModel generalSpaceModel = null;
 
 	/**
 	 * The initialState object used everywhere in the AORS core inside AORSim.
@@ -316,8 +316,8 @@ public abstract class AbstractSimulator implements AgentSimulatorListener {
 		}
 
 		// initialize the space model
-		if (this.spaceModel != null) {
-			this.initialState.setSpaceModel(this.spaceModel);
+		if (this.generalSpaceModel != null) {
+			this.initialState.setSpaceModel(this.generalSpaceModel);
 		}
 	}
 
@@ -386,7 +386,7 @@ public abstract class AbstractSimulator implements AgentSimulatorListener {
 						.getModelParamMap());
 
 		// 03 call in created simulator
-		this.spaceModel = this.createSpaceModel();
+		this.generalSpaceModel = this.createSpaceModel();
 
 		// 04 call in created simulator
 		this.createInitialEvents();
