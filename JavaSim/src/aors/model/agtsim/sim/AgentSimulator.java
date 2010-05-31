@@ -151,4 +151,26 @@ public interface AgentSimulator extends Runnable, PropertyChangeListener {
    */
   public void setCorrespondingAgentObject(AgentObject agentObject);
 
+	/**
+	 * Checks if the agent, that belongs to this simulator, can be controlled by
+	 * an user.
+	 * @return <code>true</code> if the agent can be controlled, otherwise
+	 * <code>false</code>
+	 */
+	public boolean agentIsControllable();
+
+	/**
+	 * Checks if the agent, that belongs to this simulator is controlled by an
+	 * user.
+	 * @return <code>true</code> if the agent is controlled, otherwise
+	 * <code>false</code>
+	 */
+	public boolean agentIsControlled();
+
+	/**
+	 * Sets the agents control state. If an agent is controlled is determined by
+	 * the agent's subject.
+	 */
+	public void setAgentIsControlled();
+
 }

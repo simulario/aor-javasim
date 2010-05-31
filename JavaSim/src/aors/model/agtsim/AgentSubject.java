@@ -50,6 +50,9 @@ import aors.model.agtsim.beliefs.ERDFBeliefEntityManager;
 import aors.model.agtsim.beliefs.ERDFBeliefEntityManagerImpl;
 import aors.model.agtsim.jaxb.JaxbLogGenerator;
 import aors.model.agtsim.json.JsonLogGenerator;
+import aors.model.agtsim.AgentSubject.AgentController;
+import aors.model.agtsim.proxy.AgentSimulatorFacade;
+import aors.model.agtsim.sim.AgentSimulator;
 import aors.model.envevt.ActionEvent;
 import aors.model.envevt.InMessageEvent;
 import aors.model.envevt.PerceptionEvent;
@@ -140,6 +143,10 @@ public abstract class AgentSubject extends Entity implements Rollbackable {
    */
   private List<ActionEvent> resultingActionEvents;
 
+	private AgentController controller;
+
+	private AgentSimulator simulator;
+
   /**
    * 
    * Comments: Create a new {@code AgentSubject}. This constructor is to be
@@ -155,9 +162,10 @@ public abstract class AgentSubject extends Entity implements Rollbackable {
    */
   public AgentSubject(long id, String name) {
     super(id, name);
-    if (name == "") {
+    if ("".equals(name)) {
       this.setName(getClass().getSimpleName() + "_" + id);
     }
+		this.controller = null;
   }
 
   /**
@@ -168,9 +176,10 @@ public abstract class AgentSubject extends Entity implements Rollbackable {
    */
   public AgentSubject(long id) {
     super(id);
-    if (getName().equals("")) {
+    if ("".equals(getName())) {
       this.setName(getClass().getSimpleName() + "_" + id);
     }
+		this.controller = null;
   }
 
   public boolean isLogGenerationEnabled() {
@@ -1060,6 +1069,9 @@ public abstract class AgentSubject extends Entity implements Rollbackable {
    *          New perception events
    */
   public void setNewEvents(List<PerceptionEvent> perceptionEvents) {
+		if(this.controller != null) {
+			this.controller.setNewEvents(perceptionEvents);
+		}
     this.perceptionEvents = perceptionEvents;
   } // setNewEvents
 
@@ -1322,8 +1334,9 @@ public abstract class AgentSubject extends Entity implements Rollbackable {
           // if the produced list contains any elements the content
           // will be added to the list of events that will
           // be sent to SimulationEngine
-          this.resultingActionEvents.addAll(agentRuleResult);
-        }
+
+		      this.resultingActionEvents.addAll(agentRuleResult);
+	      }
       }
 
       // set the next occurrencetime for PeriodicTimeEvent
@@ -1346,53 +1359,59 @@ public abstract class AgentSubject extends Entity implements Rollbackable {
    */
   public List<ActionEvent> executeRule(ReactionRule rule) {
 
-    // execute the rule - conditions are checked inside the rule
-    rule.execute();
+    List<ActionEvent> actions = new ArrayList<ActionEvent>();
 
-    // extract resulting internal events
-    List<? extends InternalEvent> resultingInternalEvents;
-    resultingInternalEvents = rule.getResultingInternalEvents();
+		// executes the rule if and only if the rule is not suspended
+		if(this.controller == null || !this.controller.ruleIsSuspended(rule)) {
 
-    this.newInternalEvents.addAll(resultingInternalEvents);
+			// execute the rule - conditions are checked inside the rule
+	    rule.execute();
 
-    /**
-     * clear the internal events list for this rule already stored in the
-     * internalEvents.
-     * 
-     * If not cleared, on the next step, we will have also internal events from
-     * the previous step
-     */
-    rule.resultingInternalEvents.clear();
+			// extract resulting internal events
+			List<? extends InternalEvent> resultingInternalEvents;
+			resultingInternalEvents = rule.getResultingInternalEvents();
 
-    /**
-     * the use of generic type <?> in ReactionRule class as return type for
-     * resultingActionEvents implies a cast here. this is to achieve the
-     * non-physical agents feature the cast rises warning s for unchecked cast,
-     * and for this reason the block has been surrounded by try catch block in
-     * case of exception an empty list is returned.
-     */
-    try {
-      List<ActionEvent> actions = new ArrayList<ActionEvent>();
-      actions.addAll((List<? extends ActionEvent>) rule
-          .getResultingActionEvents());
-      /**
-       * clear the action events list for this rule already returned.
-       * 
-       * If not cleared, on the next step, we will have also action events from
-       * the previous step
-       */
-      rule.resultingActionEvents.clear();
+			this.newInternalEvents.addAll(resultingInternalEvents);
 
-      // return actions for this rules
-      return actions;
-    } catch (ClassCastException e) {
-      e.printStackTrace();
-      return new ArrayList<ActionEvent>();
-    } catch (Exception e) {
-      e.printStackTrace();
-      return new ArrayList<ActionEvent>();
-    }
-  }
+			/**
+			 * clear the internal events list for this rule already stored in the
+			 * internalEvents.
+			 *
+			 * If not cleared, on the next step, we will have also internal events from
+			 * the previous step
+			 */
+			rule.resultingInternalEvents.clear();
+
+			/**
+			 * the use of generic type <?> in ReactionRule class as return type for
+			 * resultingActionEvents implies a cast here. this is to achieve the
+			 * non-physical agents feature the cast rises warning s for unchecked cast,
+			 * and for this reason the block has been surrounded by try catch block in
+			 * case of exception an empty list is returned.
+			 */
+			try {
+				actions.addAll((List<? extends ActionEvent>) rule
+						.getResultingActionEvents());
+				/**
+				 * clear the action events list for this rule already returned.
+				 *
+				 * If not cleared, on the next step, we will have also action events from
+				 * the previous step
+				 */
+				rule.resultingActionEvents.clear();
+
+			} catch (ClassCastException e) {
+				e.printStackTrace();
+				return new ArrayList<ActionEvent>();
+			} catch (Exception e) {
+				e.printStackTrace();
+				return new ArrayList<ActionEvent>();
+			}
+		}
+
+		// return actions for this rules
+		return actions;
+	}
 
   /**
    * Return Json encoded data about what the agent has done in the last step.
@@ -1432,5 +1451,67 @@ public abstract class AgentSubject extends Entity implements Rollbackable {
 	@Override
 	public void rejectChanges() {
     //System.out.println("Changes rejected for " + this.getName());
+	}
+
+	public void setAgentSimulator(AgentSimulator simulator) {
+		this.simulator = simulator;
+	}
+
+	public AgentController getAgentController() {
+		return this.controller;
+	}
+
+	protected void setController(AgentController controller) {
+		this.controller = controller;
+	}
+
+	public Map<String, Object> getBeliefProperties() {
+		return new HashMap<String, Object>();
+	}
+
+	public boolean isControllable() {
+		return this.controller != null;
+	}
+
+	public boolean isControlled() {
+		return this.isControllable() && this.controller.agentIsControlled();
+	}
+
+
+
+	public abstract static class AgentController {
+
+		private AgentSubject agentSubject;
+		protected boolean agentIsControlled;
+
+		protected AgentController(AgentSubject agentSubject) {
+			this.agentSubject = agentSubject;
+			this.agentIsControlled = false;
+		}
+
+		public void setAgentIsControlled(boolean controlled) {
+			this.agentIsControlled = controlled;
+			if(this.agentSubject.simulator != null) {
+				this.agentSubject.simulator.setAgentIsControlled();
+			}
+		}
+
+		public boolean agentIsControlled() {
+			return this.agentIsControlled;
+		}
+
+		protected long getCurrentSimulationStep() {
+			return this.agentSubject.currentSimulationStep;
+		}
+
+		public abstract void setNewEvents(List<PerceptionEvent> perceptionEvents);
+
+		protected void processInternalEvent(InternalEvent internalEvent) {
+			this.agentSubject.processInternalEvent(internalEvent);
+		}
+
+		public abstract boolean ruleIsSuspended(ReactionRule reactionRule);
+
+		public abstract void performUserActions();
 	}
 }
