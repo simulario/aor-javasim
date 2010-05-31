@@ -103,11 +103,17 @@ public abstract class ReactionRule extends Rule {
    * 
    * @return list of internal events after the rule processing
    */
-  protected abstract List<? extends InternalEvent> doResultingInternalEvents();
+  protected List<? extends InternalEvent> doResultingInternalEvents() {
+		return new ArrayList<InternalEvent>();
+	}
 
-  protected abstract List<? extends InternalEvent> thenResultingInternalEvents();
+  protected List<? extends InternalEvent> thenResultingInternalEvents() {
+		return new ArrayList<InternalEvent>();
+	}
 
-  protected abstract List<? extends InternalEvent> elseResultingInternalEvents();
+  protected List<? extends InternalEvent> elseResultingInternalEvents() {
+		return new ArrayList<InternalEvent>();
+	}
 
   /**
    * 
@@ -121,11 +127,17 @@ public abstract class ReactionRule extends Rule {
    * 
    * @return list of ActionEvents after processing the rule
    */
-  protected abstract List<? extends ActionEvent> doResultingActionEvents();
+  protected List<? extends ActionEvent> doResultingActionEvents() {
+		return new ArrayList<ActionEvent>();
+	};
 
-  protected abstract List<? extends ActionEvent> thenResultingActionEvents();
+  protected List<? extends ActionEvent> thenResultingActionEvents() {
+		return new ArrayList<ActionEvent>();
+	};
 
-  protected abstract List<? extends ActionEvent> elseResultingActionEvents();
+  protected List<? extends ActionEvent> elseResultingActionEvents() {
+		return new ArrayList<ActionEvent>();
+	};
 
   /**
    * 
