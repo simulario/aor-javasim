@@ -11,4 +11,7 @@ public final class AORSBoolean extends AORSDatatype<Boolean> {
     return new AORSBoolean(this.getValue());
   }
 
+	public static AORSBoolean valueOf(String string) {
+		return new AORSBoolean(Boolean.valueOf(string));
+	}
 }

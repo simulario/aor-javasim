@@ -10,4 +10,8 @@ public final class AORSInteger extends AORSDatatype<Long> {
   public AORSInteger clone() {
     return new AORSInteger(this.getValue());
   }
+
+	public static AORSInteger valueOf(String string) {
+		return new AORSInteger(Long.valueOf(string));
+	}
 }
