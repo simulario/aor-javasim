@@ -62,6 +62,8 @@ import aors.model.envsim.EnvironmentSimulator;
 import aors.physim.PhysicsSimulator;
 import aors.statistics.GeneralStatistics;
 import aors.util.JsonData;
+import java.util.HashSet;
+import java.util.Set;
 
 /**
  * AbstractSimulator
@@ -274,6 +276,8 @@ public abstract class AbstractSimulator implements AgentSimulatorListener {
 	 * Size of thread pool for agent execution
 	 */
 	private int threadPoolSize = 0;
+	
+	private Set<AgentSimulator> controlledAgentSimulators;
 
 	/**
 	 * Constructor
@@ -333,7 +337,8 @@ public abstract class AbstractSimulator implements AgentSimulatorListener {
 		}
 
 		this.agentSimulators = new ArrayList<AgentSimulator>();
-
+		this.controlledAgentSimulators = new HashSet<AgentSimulator>();
+		
 		this.environmentEvents = new ArrayList<EnvironmentEvent>();
 		this.agentSimulators.clear();
 
@@ -536,6 +541,18 @@ public abstract class AbstractSimulator implements AgentSimulatorListener {
 	private void calculateNumberOfExternalAgents() {
 		externalCount = 0;
 		for (AgentSimulator agentSimulator : agentSimulators) {
+
+			if(agentSimulator.agentIsControllable()) {
+				/*
+				 * if an agent is controllable, always run in multithreading
+				 * mode to support CyclicBarrier and AgentSimulator
+				 * synchronization
+				 */
+				this.multithreading = true;
+				// set the timeOut for this external agent simulator
+//				agentSimulator.setAgentTimeout(this.agentTimeout);
+			}
+
 			if (agentSimulator.isAgentSubjectProxySet()) {
 
 				/*
@@ -767,7 +784,8 @@ public abstract class AbstractSimulator implements AgentSimulatorListener {
 			agentSimulator.setNewEvents(currentSimulationStep,
 					eventsForAgentSubject);
 
-			if (agentSimulator.isAgentSubjectProxySet()) {
+			if (agentSimulator.isAgentSubjectProxySet() ||
+				agentSimulator.agentIsControlled()) {
 				// external agent is started in its own thread
 				Thread t = new AgentWorker(agentSimulator);
 				t.setName(agentSimulator.getAgentName());
@@ -854,7 +872,7 @@ public abstract class AbstractSimulator implements AgentSimulatorListener {
 					.objektInitEvent(new ObjektInitEvent(agentSubject));
 
 			AgentSimulator agentSim = new DefaultAgentSimulator(agentSubject,
-					this, this.dataBus);
+					this, this.dataBus, this);
 			agentSim.setCorrespondingAgentObject(this.envSim
 					.getAgentObjectById(agentSubject.getId()));
 
@@ -928,8 +946,9 @@ public abstract class AbstractSimulator implements AgentSimulatorListener {
 			EnvironmentEvent environmentEvent = eventIterator.next();
 
 			this.computeNewExogenousEventEvent(environmentEvent);
-			if (this.isEventProcessed(environmentEvent))
+			if (this.isEventProcessed(environmentEvent)) {
 				eventIterator.remove();
+			}
 		}
 	}
 
@@ -952,7 +971,7 @@ public abstract class AbstractSimulator implements AgentSimulatorListener {
 	}
 
 	private boolean isEventProcessed(EnvironmentEvent environmentEvent) {
-		if (environmentEvent.getOccurrenceTime() <= this.currentSimulationStep) {
+	if (environmentEvent.getOccurrenceTime() <= this.currentSimulationStep) {
 			return true;
 		}
 		return false;
@@ -1219,4 +1238,22 @@ public abstract class AbstractSimulator implements AgentSimulatorListener {
 		return initialState;
 	}
 
+	private void markAsControlled(AgentSimulator agentSimulator) {
+		this.controlledAgentSimulators.add(agentSimulator);
+		this.externalCount++;
+	}
+
+	private void markAsNotControlled(AgentSimulator agentSimulator) {
+		if(this.controlledAgentSimulators.remove(agentSimulator)) {
+			this.externalCount--;
+		}
+	}
+
+	public void setAgentIsControlled(AgentSimulator agentSimulator) {
+		if(agentSimulator.agentIsControlled()) {
+			this.markAsControlled(agentSimulator);
+		} else {
+			this.markAsNotControlled(agentSimulator);
+		}
+	}
 }
