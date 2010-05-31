@@ -15,7 +15,7 @@
 		<documentation>
 			<description>Benutzer stellt beim TravelInfoService eine Anfrage für eine Reise und der TravelInfoService sucht sämtliche Informationen zum Reiseziel, Wetter und Restaurants.</description>
 			<dc:created>20100428</dc:created>
-			<dc:modified>20100323</dc:modified>
+			<dc:modified>20100531</dc:modified>
 			<dc:creator>Christian Quinte</dc:creator>
 			<dc:contributor>Gerd Wagner</dc:contributor>
 			<dc:source>"Web Services - Vorlesung" von Prof. Gerd Wagner</dc:source>
@@ -28,13 +28,7 @@
 			<!-- count all (complete) request -->
 			<Variable name="countCustomerRequests" dataType="Integer" />
 			<!-- durchschnittliche Anzahl Anfragen pro Kunde -->
-			<Variable name="averageRequestsForCustomer" dataType="Float">
-				<Source computeOnlyAtEnd="true" aggregationFunction="avg">
-					<ValueExpr language="Java">
-						<![CDATA[(float)(SimStatistics.countCustomerRequests.getValue() / SimStatistics.countCustomers.getValue())]]>
-					</ValueExpr>
-				</Source>
-			</Variable>
+			<Variable name="averageRequestsForCustomer" dataType="Float"/>
 			
 			<!-- durchschnittliche Zeit für die bearbeitung eines Requests -->
 			<Variable name="cumulativeDurationTime" dataType="Integer" />
@@ -46,6 +40,12 @@
 					<ObjectProperty property="countCustomers" objectType="TravelInfoService" objectIdRef="1"/>
 				</Source>
 			</Variable>
+			<Variable name="cancel" dataType="Integer">
+				<Source>
+					<ObjectProperty property="countCanceledReservations" objectType="RestaurantInfoService" objectIdRef="4"/>
+				</Source>
+			</Variable>
+			<Variable name="percentage" dataType="Float" />
 		</Statistics>
 		
 		<DataTypes>
@@ -162,11 +162,6 @@
 				<Attribute type="String" name="travelInfoResponseData"/>
 				<Attribute type="Integer" name="custId"/>
 			</MessageType>
-			
-			<MessageType name="SetStatisticsData">
-				<Attribute type="String" name="gender"/>
-				<Attribute type="Integer" name="age"/>
-			</MessageType>
 			<!-- =================================================== -->
 			
 			<!-- Messages für den WeatherInfo-WebService -->
@@ -203,6 +198,15 @@
 				<Attribute type="String" name="fastFoodRestaurantInfoResponseData"/>
 				<Attribute type="Integer" name="custId"/>
 			</MessageType>			
+			
+			<MessageType name="CancelReservation">
+				<Attribute type="Integer" name="custId"/>
+			</MessageType>
+			
+			<!-- =================================================== -->
+			<CausedEventType name="CustomerCancelReservation">
+				<Attribute type="Integer" name="custId"/>
+			</CausedEventType>
 			<!-- =================================================== -->
 
 			<!-- =================================================== -->
@@ -288,40 +292,6 @@
 				<Attribute type="Integer" name="listLength"/>
 				<Attribute type="Integer" name="countCustomers"/>
 			
-				<!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->
-				<Function name="getGenderData" resultType="String">
-					<documentation>
-						<description>
-							Hilfsfunktion: ermittelt Geschlecht des anfragenden Customers
-						</description>
-					</documentation>
-					<Body language="Java">
-						<![CDATA[ 
-							int rand = Random.uniformInt(1,2);
-							if (rand == 1) { 
-								return "male";
-							} else { 
-								return "female"; 
-							}
-						]]>
-					</Body>
-				</Function>
-				
-				<!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->
-				<Function name="getAgeData" resultType="Integer">
-					<documentation>
-						<description>
-							Hilfsfunktion: ermittelt Alter des anfragenden Customers
-						</description>
-					</documentation>
-					<Body language="Java">
-						<![CDATA[ 
-							int rand = Random.uniformInt(16,80);
-							return rand;
-						]]>
-					</Body>
-				</Function>
-			
 				<!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->
 				<CommunicationRule name="GetTravelInfo_Rule" agentVariable="tis">
 					<!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->
@@ -343,18 +313,6 @@
 							</Slot>
 						</UPDATE-AGT>
 						<SCHEDULE-EVT>
-							<OutMessageEventExpr messageType="SetStatisticsData" receiverIdRefs="1">
-								<Slot property="gender">
-									<ValueExpr language="Java">
-										<![CDATA[getGenderData()]]>
-									</ValueExpr>
-								</Slot>
-								<Slot property="age">
-									<ValueExpr language="Java">
-										<![CDATA[getAgeData()]]>
-									</ValueExpr>
-								</Slot>
-							</OutMessageEventExpr>
 							<OutMessageEventExpr messageType="GetWeatherInfo" receiverIdRefs="3">
 								<Slot property="custId">
 									<ValueExpr language="Java">
@@ -371,19 +329,6 @@
 					</DO>
 				</CommunicationRule>
 
-				<!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->
-				<CommunicationRule name="SetStatisticsData_Rule" agentVariable="tis">
-					<documentation>
-						<description>...</description>
-					</documentation>
-					
-					<WHEN eventType="InMessageEvent" messageType="SetStatisticsData"/>
-					<DO>
-						
-					</DO>
-
-				</CommunicationRule>
-		
 				<!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->
 				<CommunicationRule name="GetWeatherInfoResponse_Rule" agentVariable="tis">
 					<documentation>
@@ -538,7 +483,6 @@
 						</SCHEDULE-EVT>
 					</DO>
 				</CommunicationRule>
-
 			</AgentType>
 			
 			<!-- =================================================== -->
@@ -613,6 +557,7 @@
 				<!-- =================================================== -->
 				<Attribute type="Integer" name="minProcessingTime"/>
 				<Attribute type="Integer" name="maxProcessingTime"/>
+				<Attribute type="Integer" name="countCanceledReservations"/>
 				
 				<!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->
 				<Function name="getOpenAirRestaurantMessage" resultType="String">
@@ -739,19 +684,39 @@
 						</SCHEDULE-EVT>
 					</DO>
 				</CommunicationRule>			
+				
+				<!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->
+				<CommunicationRule name="CancelReservation_Rule" agentVariable="ris">
+					<documentation>
+						<description>...</description>
+					</documentation>
+					
+					<WHEN eventType="InMessageEvent" messageType="CancelReservation" eventVariable="evt" messageVariable="mes"/>
+					<DO>
+						<UPDATE-AGT>
+							<Slot property="countCanceledReservations">
+								<ValueExpr language="Java">
+									ris.getCountCanceledReservations() + 1
+								</ValueExpr>
+							</Slot>
+						</UPDATE-AGT>
+					</DO>
+				</CommunicationRule>
 			</AgentType>
 		</EntityTypes>
 		
 		<EnvironmentRules>
-			<!-- ======================================================= -->
+			
+			<!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->
 			<EnvironmentRule name="EndTravelInfoService_Rule">
-				<!-- ======================================================== -->
+				<!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->
 				<documentation>
 					<description>...</description>
 				</documentation>
 				
 				<WHEN eventType="OutMessageEvent" messageType="GetTravelInfoResponse" messageVariable="mes" eventVariable="evt"/>
 				<FOR objectVariable="tis" objectType="TravelInfoService" objectIdRef="1" />
+				<FOR objectVariable="ris" objectType="RestaurantInfoService" objectIdRef="4" />
 				<FOR objectVariable="cust" objectType="Customer">
 					<ObjectIdRef language="Java" ><![CDATA[mes.getCustId()]]></ObjectIdRef>
 				</FOR>
@@ -814,7 +779,7 @@
 						
 						<UpdateStatisticsVariable variable="cumulativeDurationTime">
 							<ValueExpr language="Java">
-								<![CDATA[SimStatistics.cumulativeDurationTime.getValue() +evt.getOccurrenceTime() - cust.getStartTime()]]>
+								<![CDATA[SimStatistics.cumulativeDurationTime.getValue() + (evt.getOccurrenceTime() - cust.getStartTime())]]>
 							</ValueExpr>
 						</UpdateStatisticsVariable>
 						
@@ -825,8 +790,53 @@
 								]]>
 							</ValueExpr>
 						</UpdateStatisticsVariable>
+						<UpdateStatisticsVariable variable="percentage">
+							<ValueExpr language="Java">
+								<![CDATA[
+									(float)SimStatistics.cancel.getValue() * 100 / SimStatistics.countCustomerRequests.getValue()
+								]]>
+							</ValueExpr>
+						</UpdateStatisticsVariable>
 						
 					</UPDATE-ENV>
+					<SCHEDULE-EVT>
+						<CausedEventExpr eventType="CustomerCancelReservation">
+							<Condition language="Java">
+								<![CDATA[ Random.uniformInt(1,10) == 5 ]]>
+							</Condition>
+							<Slot property="custId">
+								<ValueExpr language="Java">
+									mes.getCustId()
+								</ValueExpr>
+							</Slot>
+						</CausedEventExpr>
+					</SCHEDULE-EVT>
+				</DO>
+			</EnvironmentRule>
+
+			<!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->
+			<EnvironmentRule name="CustomerCancelReservation_Rule">
+				<!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->
+				<documentation>
+					<description>...</description>
+				</documentation>
+				
+				<WHEN eventType="CustomerCancelReservation" eventVariable="evt"/>
+				<FOR objectVariable="tis" objectType="TravelInfoService" objectIdRef="1" />
+				<DO>
+					<SCHEDULE-EVT>
+						<InMessageEventExpr messageType="CancelReservation" delay="3">
+							<SenderIdRef language="Java">
+								(int)evt.getCustId()
+							</SenderIdRef>
+							<ReceiverIdRef language="Java">4</ReceiverIdRef>
+							<Slot property="custId">
+								<ValueExpr language="Java">
+									(int)evt.getCustId()
+								</ValueExpr>
+							</Slot>
+						</InMessageEventExpr>
+					</SCHEDULE-EVT>
 				</DO>
 			</EnvironmentRule>
 
@@ -867,12 +877,12 @@
 			<!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->
 			<StatisticsVariableUI variable="countCustomers">
 				<Label>
-					<Text xml:lang="en">[ok] Anzahl Kunden</Text>
-					<Text xml:lang="de">[ok] Anzahl Kunden</Text>
+					<Text xml:lang="en">[ok] Number of Customers</Text>
+					<Text xml:lang="de">[ok] Anzahl der Kunden</Text>
 				</Label>
 				<Hint>
-					<Text xml:lang="en">[ok] Kunden die den TravelInfoService nutzen</Text>
-					<Text xml:lang="de">[ok] Kunden die den TravelInfoService nutzen</Text>
+					<Text xml:lang="en">[ok] Number of Customers use the Service</Text>
+					<Text xml:lang="de">[ok] Anzahl der Kunden die den TravelInfoService nutzen</Text>
 				</Hint>
 			</StatisticsVariableUI>
 
@@ -891,11 +901,11 @@
 			<!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->
 			<StatisticsVariableUI variable="countCustomerRequests">
 				<Label>
-					<Text xml:lang="en">[ok] Summe (komplette/abgearbeitete) Anfragen der Kunden</Text>
-					<Text xml:lang="de">[ok] Summe (komplette/abgearbeitete) Anfragen der Kunden</Text>
+					<Text xml:lang="en">[ok] Sum of the (customer-) requests to the Service</Text>
+					<Text xml:lang="de">[ok] Summe der (Kunden-) Anfragen an den Service</Text>
 				</Label>
 				<Hint>
-					<Text xml:lang="en">[ok] Alle Anfragen der Kunden an den TravelInfoService</Text>
+					<Text xml:lang="en">[ok] Sum of the (customer-) requests to the Service</Text>
 					<Text xml:lang="de">[ok] Alle Anfragen der Kunden an den TravelInfoService</Text>
 				</Hint>
 			</StatisticsVariableUI>			
@@ -903,26 +913,15 @@
 			<!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->
 			<StatisticsVariableUI variable="averageRequestsForCustomer">
 				<Label>
-					<Text xml:lang="en">(im Test) Durchschnittliche Anzahl an Anfragen pro Kunde an den Service</Text>
-					<Text xml:lang="de">(im Test) Durchschnittliche Anzahl an Anfragen pro Kunde an den Service</Text>
+					<Text xml:lang="en">[ok] Average number of requests per customer to the service</Text>
+					<Text xml:lang="de">[ok] Durchschnittliche Anzahl an Anfragen pro Kunde an den Service</Text>
 				</Label>
 				<Hint>
-					<Text xml:lang="en">(im Test) Durchschnittliche Anzahl an Anfragen pro Kunde an den Service</Text>
-					<Text xml:lang="de">(im Test) Durchschnittliche Anzahl an Anfragen pro Kunde an den Service</Text>
+					<Text xml:lang="en">[ok] Average number of requests per client to the service</Text>
+					<Text xml:lang="de">[ok] Durchschnittliche Anzahl an Anfragen pro Kunde an den Service</Text>
 				</Hint>
 			</StatisticsVariableUI>
 
-			<!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->
-			<StatisticsVariableUI variable="cumulativeDurationTime">
-				<Label>
-					<Text xml:lang="en">(nur zum Test hier) Summe Laufzeiten der Anfragen</Text>
-					<Text xml:lang="de">(nur zum Test hier) Summe Laufzeiten der Anfragen</Text>
-				</Label>
-				<Hint>
-					<Text xml:lang="en">Test: durchschnittliche Laufzeit</Text>
-					<Text xml:lang="de">Test: durchschnittliche Laufzeit</Text>
-				</Hint>
-			</StatisticsVariableUI>
 			
 			<!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->
 			<StatisticsVariableUI variable="durationTime">
@@ -935,8 +934,34 @@
 					<Text xml:lang="de">Test: durchschnittliche Laufzeit (in Simulationsschritten)</Text>
 				</Hint>
 			</StatisticsVariableUI>			
-			
 
+			<!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->
+			<StatisticsVariableUI variable="cancel">
+				<Label>
+					<Text xml:lang="en">(im Test) Sum of canceled reservations</Text>
+					<Text xml:lang="de">(im Test) Anzahl der Restaurantreservierungen die storniert wurden</Text>
+				</Label>
+				<Hint>
+					<Text xml:lang="en">Test: Sum of canceled reservations</Text>
+					<Text xml:lang="de">Test: Anzahl der Restaurantreservierungen die storniert wurden</Text>
+				</Hint>
+			</StatisticsVariableUI>
+			
+			<StatisticsVariableUI variable="percentage">
+				<Label>
+					<Text xml:lang="en">(im Test) prozentualer Anteil stornierter Anfragen</Text>
+					<Text xml:lang="de">(im Test) prozentualer Anteil stornierter Anfragen</Text>
+				</Label>
+				<Hint>
+					<Text xml:lang="en">Test: prozentualer Anteil stornierter Anfragen</Text>
+					<Text xml:lang="de">Test: prozentualer Anteil stornierter Anfragen</Text>
+				</Hint>
+				<Format decimalPlaces="2">
+					<Math>%</Math>
+				</Format>
+			</StatisticsVariableUI>
+			
+			
 		</StatisticsUI>
 		<!-- =================================================== -->
 		<AnimationUI>
