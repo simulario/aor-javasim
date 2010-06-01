@@ -50,8 +50,6 @@ import aors.model.agtsim.beliefs.ERDFBeliefEntityManager;
 import aors.model.agtsim.beliefs.ERDFBeliefEntityManagerImpl;
 import aors.model.agtsim.jaxb.JaxbLogGenerator;
 import aors.model.agtsim.json.JsonLogGenerator;
-import aors.model.agtsim.AgentSubject.AgentController;
-import aors.model.agtsim.proxy.AgentSimulatorFacade;
 import aors.model.agtsim.sim.AgentSimulator;
 import aors.model.envevt.ActionEvent;
 import aors.model.envevt.InMessageEvent;
@@ -143,9 +141,9 @@ public abstract class AgentSubject extends Entity implements Rollbackable {
    */
   private List<ActionEvent> resultingActionEvents;
 
-	private AgentController controller;
+  private AgentController controller;
 
-	private AgentSimulator simulator;
+  private AgentSimulator simulator;
 
   /**
    * 
@@ -165,7 +163,7 @@ public abstract class AgentSubject extends Entity implements Rollbackable {
     if ("".equals(name)) {
       this.setName(getClass().getSimpleName() + "_" + id);
     }
-		this.controller = null;
+    this.controller = null;
   }
 
   /**
@@ -179,7 +177,7 @@ public abstract class AgentSubject extends Entity implements Rollbackable {
     if ("".equals(getName())) {
       this.setName(getClass().getSimpleName() + "_" + id);
     }
-		this.controller = null;
+    this.controller = null;
   }
 
   public boolean isLogGenerationEnabled() {
@@ -1069,9 +1067,9 @@ public abstract class AgentSubject extends Entity implements Rollbackable {
    *          New perception events
    */
   public void setNewEvents(List<PerceptionEvent> perceptionEvents) {
-		if(this.controller != null) {
-			this.controller.setNewEvents(perceptionEvents);
-		}
+    if (this.controller != null) {
+      this.controller.setNewEvents(perceptionEvents);
+    }
     this.perceptionEvents = perceptionEvents;
   } // setNewEvents
 
@@ -1335,8 +1333,8 @@ public abstract class AgentSubject extends Entity implements Rollbackable {
           // will be added to the list of events that will
           // be sent to SimulationEngine
 
-		      this.resultingActionEvents.addAll(agentRuleResult);
-	      }
+          this.resultingActionEvents.addAll(agentRuleResult);
+        }
       }
 
       // set the next occurrencetime for PeriodicTimeEvent
@@ -1361,57 +1359,57 @@ public abstract class AgentSubject extends Entity implements Rollbackable {
 
     List<ActionEvent> actions = new ArrayList<ActionEvent>();
 
-		// executes the rule if and only if the rule is not suspended
-		if(this.controller == null || !this.controller.ruleIsSuspended(rule)) {
+    // executes the rule if and only if the rule is not suspended
+    if (this.controller == null || !this.controller.ruleIsSuspended(rule)) {
 
-			// execute the rule - conditions are checked inside the rule
-	    rule.execute();
+      // execute the rule - conditions are checked inside the rule
+      rule.execute();
 
-			// extract resulting internal events
-			List<? extends InternalEvent> resultingInternalEvents;
-			resultingInternalEvents = rule.getResultingInternalEvents();
+      // extract resulting internal events
+      List<? extends InternalEvent> resultingInternalEvents;
+      resultingInternalEvents = rule.getResultingInternalEvents();
 
-			this.newInternalEvents.addAll(resultingInternalEvents);
+      this.newInternalEvents.addAll(resultingInternalEvents);
 
-			/**
-			 * clear the internal events list for this rule already stored in the
-			 * internalEvents.
-			 *
-			 * If not cleared, on the next step, we will have also internal events from
-			 * the previous step
-			 */
-			rule.resultingInternalEvents.clear();
+      /**
+       * clear the internal events list for this rule already stored in the
+       * internalEvents.
+       * 
+       * If not cleared, on the next step, we will have also internal events
+       * from the previous step
+       */
+      rule.resultingInternalEvents.clear();
 
-			/**
-			 * the use of generic type <?> in ReactionRule class as return type for
-			 * resultingActionEvents implies a cast here. this is to achieve the
-			 * non-physical agents feature the cast rises warning s for unchecked cast,
-			 * and for this reason the block has been surrounded by try catch block in
-			 * case of exception an empty list is returned.
-			 */
-			try {
-				actions.addAll((List<? extends ActionEvent>) rule
-						.getResultingActionEvents());
-				/**
-				 * clear the action events list for this rule already returned.
-				 *
-				 * If not cleared, on the next step, we will have also action events from
-				 * the previous step
-				 */
-				rule.resultingActionEvents.clear();
+      /**
+       * the use of generic type <?> in ReactionRule class as return type for
+       * resultingActionEvents implies a cast here. this is to achieve the
+       * non-physical agents feature the cast rises warning s for unchecked
+       * cast, and for this reason the block has been surrounded by try catch
+       * block in case of exception an empty list is returned.
+       */
+      try {
+        actions.addAll((List<? extends ActionEvent>) rule
+            .getResultingActionEvents());
+        /**
+         * clear the action events list for this rule already returned.
+         * 
+         * If not cleared, on the next step, we will have also action events
+         * from the previous step
+         */
+        rule.resultingActionEvents.clear();
 
-			} catch (ClassCastException e) {
-				e.printStackTrace();
-				return new ArrayList<ActionEvent>();
-			} catch (Exception e) {
-				e.printStackTrace();
-				return new ArrayList<ActionEvent>();
-			}
-		}
+      } catch (ClassCastException e) {
+        e.printStackTrace();
+        return new ArrayList<ActionEvent>();
+      } catch (Exception e) {
+        e.printStackTrace();
+        return new ArrayList<ActionEvent>();
+      }
+    }
 
-		// return actions for this rules
-		return actions;
-	}
+    // return actions for this rules
+    return actions;
+  }
 
   /**
    * Return Json encoded data about what the agent has done in the last step.
@@ -1437,81 +1435,78 @@ public abstract class AgentSubject extends Entity implements Rollbackable {
     // TODO Is there something to do here?
   } // notifyRemoval
 
-	@Override
-	public void activateMonitoring() {
-    //System.out.println("Monitoring activated for " + this.getName());
-	}
+  @Override
+  public void activateMonitoring() {
+    // System.out.println("Monitoring activated for " + this.getName());
+  }
 
   @Override
-	public void acceptChanges() {
-    //System.out.println("Changes accepted for " + this.getName());
-	}
+  public void acceptChanges() {
+    // System.out.println("Changes accepted for " + this.getName());
+  }
 
+  @Override
+  public void rejectChanges() {
+    // System.out.println("Changes rejected for " + this.getName());
+  }
 
-	@Override
-	public void rejectChanges() {
-    //System.out.println("Changes rejected for " + this.getName());
-	}
+  public void setAgentSimulator(AgentSimulator simulator) {
+    this.simulator = simulator;
+  }
 
-	public void setAgentSimulator(AgentSimulator simulator) {
-		this.simulator = simulator;
-	}
+  public AgentController getAgentController() {
+    return this.controller;
+  }
 
-	public AgentController getAgentController() {
-		return this.controller;
-	}
+  protected void setController(AgentController controller) {
+    this.controller = controller;
+  }
 
-	protected void setController(AgentController controller) {
-		this.controller = controller;
-	}
+  public Map<String, Object> getBeliefProperties() {
+    return new HashMap<String, Object>();
+  }
 
-	public Map<String, Object> getBeliefProperties() {
-		return new HashMap<String, Object>();
-	}
+  public boolean isControllable() {
+    return this.controller != null;
+  }
 
-	public boolean isControllable() {
-		return this.controller != null;
-	}
+  public boolean isControlled() {
+    return this.isControllable() && this.controller.agentIsControlled();
+  }
 
-	public boolean isControlled() {
-		return this.isControllable() && this.controller.agentIsControlled();
-	}
+  public abstract static class AgentController {
 
+    private AgentSubject agentSubject;
+    protected boolean agentIsControlled;
 
+    protected AgentController(AgentSubject agentSubject) {
+      this.agentSubject = agentSubject;
+      this.agentIsControlled = false;
+    }
 
-	public abstract static class AgentController {
+    public void setAgentIsControlled(boolean controlled) {
+      this.agentIsControlled = controlled;
+      if (this.agentSubject.simulator != null) {
+        this.agentSubject.simulator.setAgentIsControlled();
+      }
+    }
 
-		private AgentSubject agentSubject;
-		protected boolean agentIsControlled;
+    public boolean agentIsControlled() {
+      return this.agentIsControlled;
+    }
 
-		protected AgentController(AgentSubject agentSubject) {
-			this.agentSubject = agentSubject;
-			this.agentIsControlled = false;
-		}
+    protected long getCurrentSimulationStep() {
+      return this.agentSubject.currentSimulationStep;
+    }
 
-		public void setAgentIsControlled(boolean controlled) {
-			this.agentIsControlled = controlled;
-			if(this.agentSubject.simulator != null) {
-				this.agentSubject.simulator.setAgentIsControlled();
-			}
-		}
+    public abstract void setNewEvents(List<PerceptionEvent> perceptionEvents);
 
-		public boolean agentIsControlled() {
-			return this.agentIsControlled;
-		}
+    protected void processInternalEvent(InternalEvent internalEvent) {
+      this.agentSubject.processInternalEvent(internalEvent);
+    }
 
-		protected long getCurrentSimulationStep() {
-			return this.agentSubject.currentSimulationStep;
-		}
+    public abstract boolean ruleIsSuspended(ReactionRule reactionRule);
 
-		public abstract void setNewEvents(List<PerceptionEvent> perceptionEvents);
-
-		protected void processInternalEvent(InternalEvent internalEvent) {
-			this.agentSubject.processInternalEvent(internalEvent);
-		}
-
-		public abstract boolean ruleIsSuspended(ReactionRule reactionRule);
-
-		public abstract void performUserActions();
-	}
+    public abstract void performUserActions();
+  }
 }
