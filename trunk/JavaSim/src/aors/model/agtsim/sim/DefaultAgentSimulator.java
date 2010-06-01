@@ -335,7 +335,7 @@ public class DefaultAgentSimulator implements AgentSimulator,
 		return res;
 	} // getSubjectProperties
 
-	@SuppressWarnings({"unchecked", "rawtypes"})
+	@SuppressWarnings("unchecked")
 	private Map<String, Map<String, String>> getFields(Class<? extends AgentSubject> c) {
 		Map<String, Map<String, String>> res = new HashMap<String, Map<String, String>>();
 
