@@ -328,7 +328,7 @@ double[] price = {8.90, 9.80, 8.50, 7.20};
 				<Function name="getMessagePart" resultType="String">
 					<!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->
 					<documentation>
-						<description> The function deals with retrieving the needed information from a string that comprises three distinct information (orderNo, pizzaType and customer ID) separated by the "and" string. It is needed bc. the ReminderEvent has only one string field to keep the information. From this field we need to extract the needed parts. </description>
+						<description> The function deals with retrieving the needed information from a string that comprises four distinct information (orderNo, hamburgerType, hamburgerQuantity and customer ID) separated by the "and" string. It is needed bc. the ReminderEvent has only one string field to keep the information. From this field we need to extract the needed parts. </description>
 					</documentation>
 					<Parameter name="messageInfo" type="String"/>
 					<Parameter name="argumentIndex" type="Integer"/>
@@ -380,7 +380,7 @@ int k = substrstr.indexOf("and");
 				<CommunicationRule name="KitchenReminder_Rule" agentVariable="k">
 					<!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->
 					<documentation>
-						<description> Once the reminder event is triggered, the Kitchen service notifies the PW agent by sending an appropriate message OrderPrepared containing the orderNo, pizzaType and custID information.</description>
+						<description> Once the reminder event is triggered, the Kitchen service notifies the PW agent by sending an appropriate message OrderPrepared containing the orderNo, hamburgerType, hamburgerQuantity and custID information.</description>
 					</documentation>
 					<WHEN eventType="ReminderEvent" eventVariable="evt"/>
 					<DO>
@@ -599,7 +599,6 @@ return Random.uniformInt(0,3);
 return Random.uniformInt(1,4);
 		      		]]></Body>
 				</SubjectiveFunction>
-				<PeriodicTimeEventType name="expirePatience" />
 				<!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->
 				<CommunicationRule name="OrderSolicitation_Rule" agentVariable="cust">
 					<!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->
@@ -701,13 +700,13 @@ return t.getQuantityPerIngredient() * (t.getHamburgerPrice() + t.getSpecialSouce
 				<FOR objectVariable="q1" objectType="Queue" objectIdRef="6"/>
 				<IF language="Java"><![CDATA[
 mbq.size() >= mb.getMaxMenuBoardQL()
-        ]]></IF>
+               ]]></IF>
 				<THEN>
 					<UPDATE-ENV>
 						<UpdateStatisticsVariable variable="numberOfLostCustomers">
 							<ValueExpr language="Java"><![CDATA[
 SimStatistics.numberOfLostCustomers.getValue() + 1
-						]]></ValueExpr>
+						    ]]></ValueExpr>
 						</UpdateStatisticsVariable>
 						<UpdateObject objectVariable="q1">
 							<Slot property="lengthOfQueue">
@@ -723,7 +722,7 @@ SimStatistics.numberOfLostCustomers.getValue() + 1
 								<Slot property="arrivalTime">
 									<ValueExpr language="Java"><![CDATA[
 evt.getOccurrenceTime()										
-										]]></ValueExpr>
+									]]></ValueExpr>
 								</Slot>
 								<Slot property="patience">
 									<ValueExpr language="Java"><![CDATA[
@@ -1251,7 +1250,7 @@ SimStatistics.revenue.getValue() + (float)pw.hamburgerPrice(hamburgerType)
 						<InMessageEventExpr messageType="AskOrderNo" senderIdRef="2">
 							<Condition language="Java"><![CDATA[
 pwq.size() > 0  && (( Customer)pwq.getItem()).getId() == custID && (( Customer)pwq.getItem()).isWaitingForOrderToArrive()
-              ]]></Condition>
+                           ]]></Condition>
 							<ReceiverIdRef language="Java">custID</ReceiverIdRef>
 						</InMessageEventExpr>
 						<InMessageEventExpr messageType="AnticipatedOrder" receiverIdRefs="2" senderIdRef="1">
@@ -1292,7 +1291,7 @@ mes.getCustID()
 						<UpdateStatisticsVariable variable="revenue">
 							<ValueExpr language="Java"><![CDATA[
 SimStatistics.revenue.getValue() - t.getInvoice(t)								
-								]]></ValueExpr>
+						   ]]></ValueExpr>
 						</UpdateStatisticsVariable>	
 					</UPDATE-ENV>
 					<SCHEDULE-EVT>
@@ -1489,7 +1488,7 @@ SimStatistics.lostRevenue.getValue() + (float)pw.burgPrice(0) * pw.getHamburgerO
 				<documentation>
 					<description></description>
 				</documentation>
-				<WHEN eventType="StartKitchenService"/>
+				<WHEN eventType="StartKitchenService" eventVariable="evt"/>
 				<FOR objectVariable="k" objectType="Kitchen" />
 				<FOR objectVariable="o" objectType="Order">
 					<ObjectRef language="Java">evt.getOrder()</ObjectRef>
