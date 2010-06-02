@@ -532,6 +532,9 @@ if ( requestedType == 3){
 mes.getOrderNo() == ((Order)order).getOrderNo()                         
                      ]]></IF>
 					<THEN>
+						<UPDATE-AGT>
+							<DestroyBeliefEntity beliefEntityVariable="order" />
+						</UPDATE-AGT>
 						<SCHEDULE-EVT>
 							<OutMessageEventExpr messageType="OrderArrived">
 								<ReceiverIdRef language="Java">evt.getSenderIdRef()</ReceiverIdRef>
@@ -577,7 +580,7 @@ Integer.parseInt(evt.getReminderMsg())
 					<!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->
 					<Body language="Java"><![CDATA[
 return Random.uniformInt(10,20);						
-						]]></Body>
+					]]></Body>
 				</Function>			
 				<!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->
 				<SubjectiveFunction name="randomHamburgerType" resultType="Integer">
@@ -615,12 +618,12 @@ return Random.uniformInt(1,4);
 								<Slot property="hamburgerType">
 									<ValueExpr language="Java"><![CDATA[
 cust.randomHamburgerType()
-										]]></ValueExpr>
+									]]></ValueExpr>
 								</Slot>
 								<Slot property="hamburgerQuantity">
 									<ValueExpr language="Java"><![CDATA[
 cust.randomHamburgerQuantity()
-										]]></ValueExpr>
+									]]></ValueExpr>
 								</Slot>
 							</OutMessageEventExpr>
 						</SCHEDULE-EVT>
@@ -1395,18 +1398,18 @@ SimStatistics.lostRevenue.getValue() + (float)pw.burgPrice(0) * pw.getHamburgerO
 				<DO>
 					<UPDATE-ENV>
 						<Create>
-							<Object type="Hamburger" addToCollection="PWTray"/>
-							<Object type="Hamburger" addToCollection="PWTray"/>
-							<Object type="Hamburger" addToCollection="PWTray"/>
-							<Object type="Cheeseburger" addToCollection="PWTray"/>
-							<Object type="Cheeseburger" addToCollection="PWTray"/>
-							<Object type="Cheeseburger" addToCollection="PWTray"/>
-							<Object type="Salad" addToCollection="PWTray"/>
-							<Object type="Salad" addToCollection="PWTray"/>
-							<Object type="Salad" addToCollection="PWTray"/>
-							<Object type="SuperHamburger" addToCollection="PWTray"/>
-							<Object type="SuperHamburger" addToCollection="PWTray"/>
-							<Object type="SuperHamburger" addToCollection="PWTray"/>
+							<Object type="Hamburger" addToCollection="PWTray" objectVariable="pwt"/>
+							<Object type="Hamburger" addToCollection="PWTray" objectVariable="pwt"/>
+							<Object type="Hamburger" addToCollection="PWTray" objectVariable="pwt"/>
+							<Object type="Cheeseburger" addToCollection="PWTray" objectVariable="pwt"/>
+							<Object type="Cheeseburger" addToCollection="PWTray" objectVariable="pwt"/>
+							<Object type="Cheeseburger" addToCollection="PWTray" objectVariable="pwt"/>
+							<Object type="Salad" addToCollection="PWTray" objectVariable="pwt"/>
+							<Object type="Salad" addToCollection="PWTray" objectVariable="pwt"/>
+							<Object type="Salad" addToCollection="PWTray" objectVariable="pwt"/>
+							<Object type="SuperHamburger" addToCollection="PWTray" objectVariable="pwt"/>
+							<Object type="SuperHamburger" addToCollection="PWTray" objectVariable="pwt"/>
+							<Object type="SuperHamburger" addToCollection="PWTray" objectVariable="pwt"/>
 						</Create>
 						<UpdateObject objectVariable="pw">
 							<Slot property="hamburgerOnTheTray" value="3" />
@@ -1450,7 +1453,7 @@ SimStatistics.lostRevenue.getValue() + (float)pw.burgPrice(0) * pw.getHamburgerO
 					<description></description>
 				</documentation>
 				<WHEN eventType="OutMessageEvent" messageType="ProductionOrder" messageVariable="mes" />
-				<FOR objectVariable="kq" objectType="Collection" objectName="KitchenQueue" objectIdRef="9" />
+				<FOR objectVariable="kq" objectType="Collection" objectName="KitchenQueue" objectIdRef="8" />
 				<DO>
 					<UPDATE-ENV>
 						<Create>
@@ -1527,11 +1530,11 @@ SimStatistics.lostRevenue.getValue() + (float)pw.burgPrice(0) * pw.getHamburgerO
 					<description></description>
 				</documentation>
 				<WHEN eventType="OutMessageEvent" messageType="OrderPrepared" messageVariable="mes"/>
-				<FOR objectVariable="kq" objectType="Collection" objectIdRef="9" objectName="KitchenQueue" />
+				<FOR objectVariable="kq" objectType="Collection" objectIdRef="8" objectName="KitchenQueue" />
 				<FOR objectVariable="k" objectType="Kitchen" />
 				<DO>
 					<UPDATE-ENV>
-						<RemoveObjectFromCollection collectionName="KitchenQueue" />
+						<RemoveObjectFromCollection collectionID="9" collectionObjectVariable="kq"/>
 					</UPDATE-ENV>
 					<SCHEDULE-EVT>
 						<CausedEventExpr eventType="KitchenCreatesCustomerOrder">
