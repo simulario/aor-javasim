@@ -1,9 +1,8 @@
 package aors.module.agentControl.gui.views;
 
-import aors.model.agtsim.AgentSubject;
 import aors.module.agentControl.AgentController;
 import aors.module.agentControl.gui.interaction.EventMediator;
-import aors.module.agentControl.gui.interaction.InteractiveComponent.Pair;
+import aors.model.agtsim.proxy.agentcontrol.Pair;
 import aors.module.agentControl.gui.interaction.Sender;
 import aors.module.agentControl.gui.renderer.AORSPanel;
 import aors.module.agentControl.gui.renderer.AORSReplacedElementFactory;
@@ -15,9 +14,9 @@ public class ControlView extends InteractiveView<AORSPanel> {
 
   private static final long serialVersionUID = 1L;
 	
-	private AgentController<? extends AgentSubject> agentController;
+	private AgentController agentController;
 
-  public ControlView(AgentController<? extends AgentSubject> agentController,
+  public ControlView(AgentController agentController,
 		String projectPath) {
 		super(new AORSPanel());
 

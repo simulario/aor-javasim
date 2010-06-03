@@ -1,5 +1,6 @@
 package aors.module.agentControl.gui.views;
 
+import aors.model.agtsim.proxy.agentcontrol.Pair;
 import aors.module.agentControl.gui.interaction.EventMediator;
 import aors.module.agentControl.gui.interaction.InteractiveComponent;
 import aors.module.agentControl.gui.interaction.Sender;

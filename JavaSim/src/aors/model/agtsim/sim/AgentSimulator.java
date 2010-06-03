@@ -31,7 +31,7 @@ package aors.model.agtsim.sim;
 import java.beans.PropertyChangeListener;
 import java.util.List;
 
-import aors.model.agtsim.proxy.AgentSubjectProxy;
+import aors.model.agtsim.proxy.agentcontrol_old.AgentSubjectProxy;
 import aors.model.envevt.PerceptionEvent;
 import aors.model.envsim.AgentObject;
 

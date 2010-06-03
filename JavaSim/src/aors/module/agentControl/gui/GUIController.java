@@ -1,6 +1,6 @@
 package aors.module.agentControl.gui;
 
-import aors.model.agtsim.AgentSubject;
+import aors.model.agtsim.proxy.agentcontrol.CoreAgentController;
 import aors.module.GUIModule;
 import aors.module.Module;
 import aors.module.agentControl.AgentController;
@@ -49,7 +49,7 @@ public class GUIController extends JScrollPane implements GUIModule {
 	/**
 	 * The agent controller for the controlled agent.
 	 */
-	private AgentController<? extends AgentSubject> controlledAgentController;
+	private AgentController controlledAgentController;
 
 	/*******************************************************/
 	/*** Constructor and methods inherite from GUIModule ***/
@@ -134,7 +134,7 @@ public class GUIController extends JScrollPane implements GUIModule {
 
 		// creates the new selection view
 		if(this.moduleController != null) {
-			Map<Long, AgentController<? extends AgentSubject>> agentControllers =
+			Map<Long, CoreAgentController> agentControllers =
 				moduleController.getAgentControllers();
 			if(agentControllers != null && !agentControllers.isEmpty()) {
 				this.selectionView = new SelectionView(this, agentControllers);
@@ -158,7 +158,7 @@ public class GUIController extends JScrollPane implements GUIModule {
 	}
 
 	/**
-	 * Creates an new control view for the controlled agent if there was none. If
+	 * Creates an new control view for the controlled agent if there is none. If
 	 * there is already a control view, this one will be shown. If there is no
 	 * control view available the current view remains unchanged. If the current
 	 * view is null the default view will be set.
@@ -212,11 +212,10 @@ public class GUIController extends JScrollPane implements GUIModule {
 	 */
 	public void setControlledAgentController(long id) {
 		if(this.moduleController != null) {
-			Map<Long, AgentController<? extends AgentSubject>> agentControllers =
-				this.moduleController.getAgentControllers();
+			Map<Long, CoreAgentController> agentControllers =	this.moduleController.
+				getAgentControllers();
 			if(agentControllers != null) {
-				this.controlledAgentController = agentControllers.get(id);
-				this.controlledAgentController.setAgentIsControlled(true);
+				this.controlledAgentController = new AgentController(agentControllers.get(id));
 				this.showControlView();
 			}
 		}

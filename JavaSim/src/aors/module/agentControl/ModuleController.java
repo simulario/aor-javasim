@@ -6,7 +6,9 @@ import aors.data.java.ObjektDestroyEvent;
 import aors.data.java.ObjektInitEvent;
 import aors.data.java.SimulationEvent;
 import aors.data.java.SimulationStepEvent;
-import aors.model.agtsim.AgentSubject;
+import aors.model.agtsim.proxy.agentcontrol.AgentControlBroker;
+import aors.model.agtsim.proxy.agentcontrol.AgentControlListener;
+import aors.model.agtsim.proxy.agentcontrol.CoreAgentController;
 import aors.model.envevt.EnvironmentEvent;
 import aors.module.Module;
 import aors.module.agentControl.gui.GUIController;
@@ -20,13 +22,7 @@ import java.util.Map;
  * initialization.
  * @author Thomas Grundmann
  */
-public class ModuleController implements Module {
-
-	/**
-	 * Reference to the current instance of this controller. For each running
-	 * AOR simulator there is at most one instance of this class.
-	 */
-	private static ModuleController instance = null;
+public class ModuleController implements Module, AgentControlListener {
 
 	/**
 	 * Reference to the project directory.
@@ -50,8 +46,7 @@ public class ModuleController implements Module {
 	 * This map stores all agent controllers, that were initialized during the
 	 * current simulation.
 	 */
-	private Map<Boolean, Map<Long, AgentController<? extends AgentSubject>>>
-		agentControllers;
+	private Map<Boolean, Map<Long, CoreAgentController>> agentControllers;
 
 
 	/*****************************************************************/
@@ -61,15 +56,15 @@ public class ModuleController implements Module {
 	/**
 	 * Instantiates the class.
 	 */
-	public ModuleController() {		
-		ModuleController.instance = this;
-
+	public ModuleController() {
 		this.projectDirectory = null;
 		this.gui = new GUIController(this);
 		
 		this.initIdentifier = true;
-		this.agentControllers = new HashMap<Boolean, Map<Long, AgentController
-			<? extends AgentSubject>>>();
+		this.agentControllers = new HashMap<Boolean, Map<Long,
+			CoreAgentController>>();
+
+		AgentControlBroker.getInstance().addAgentControlListener(this);
 	}
 
 	/**
@@ -81,15 +76,6 @@ public class ModuleController implements Module {
 	public ModuleController(Module vizualisationModule) {
 		this();
 	}
-
-	/**
-	 * Returns the current instance of the module controller.
-	 * @return the module controller
-	 */
-	public static ModuleController getInstance() {
-		return ModuleController.instance;
-	}
-
 
 	/**********************************/
 	/*** methods related to the gui ***/
@@ -197,34 +183,21 @@ public class ModuleController implements Module {
 	 * Registers an agent controller with this class.
 	 * @param agentController
 	 */
-	public void registerAgentController(AgentController<? extends AgentSubject>
-		agentController) {
+	@Override
+	public void agentControllerInitialized(CoreAgentController agentController) {
 		if(!this.agentControllers.containsKey(initIdentifier)) {
 			this.agentControllers.put(initIdentifier,
-				new HashMap<Long, AgentController<? extends AgentSubject>>());
+				new HashMap<Long, CoreAgentController>());
 		}
 		this.agentControllers.get(initIdentifier).put(agentController.getAgentId(),
 			agentController);
 	}
 
 	/**
-	 * Unregisters an agent controller from this class.
-	 * @param agentController
-	 */
-	public void unregisterAgentController(AgentController<? extends AgentSubject>
-		agentController) {
-		if(this.agentControllers.containsKey(initIdentifier)) {
-			this.agentControllers.get(initIdentifier).remove(agentController.
-				getAgentId());
-		}
-	}
-
-	/**
 	 * Return all registered agent controllers identified by their agent's id.
 	 * @return the map of agent controllers
 	 */
-	public Map<Long, AgentController<? extends AgentSubject>>
-		getAgentControllers() {
+	public Map<Long, CoreAgentController>	getAgentControllers() {
 		return this.agentControllers.get(initIdentifier);
 	}
 
