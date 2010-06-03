@@ -1020,7 +1020,7 @@
     <xsl:param name="varName" as="xs:string" required="yes"/>
     <xsl:param name="type" as="xs:string" required="yes"/>
 
-    <xsl:variable name="collectionNode" select="//aorsml:Collections/aorsml:Collection[@itemType = $type and @name = current()][1]"/>
+    <xsl:variable name="collectionNode" select="//aorsml:Collections/aorsml:Collection[@name = current()][1]"/>
 
     <xsl:choose>
       <xsl:when test="fn:exists($collectionNode)">
@@ -1039,16 +1039,17 @@
       </xsl:when>
       <xsl:otherwise>
         <xsl:message>
-          <xsl:text>ERROR. No itemType [</xsl:text>
-          <xsl:value-of select="$type"/>
-          <xsl:text>] found for addToCollection in </xsl:text>
-          <xsl:text> InitialState.</xsl:text>
+          <xsl:text>[ERROR] Collection [</xsl:text>
+          <xsl:value-of select="."/>
+          <xsl:text>] not found for @addToCollection in Object [</xsl:text>
+          <xsl:value-of select="../@type"/>
+          <xsl:text>].</xsl:text>
         </xsl:message>
       </xsl:otherwise>
     </xsl:choose>
 
   </xsl:template>
-
+  
   <!-- create an PhysicalAgentSubject with all selbeliefattributes in the constructor -->
   <xsl:template match="aorsml:PhysicalAgent | aorsml:PhysicalAgents | aorsml:Agent | aorsml:Agents" mode="shared.helper.initAgentSubject">
     <xsl:param name="indent" required="yes"/>
