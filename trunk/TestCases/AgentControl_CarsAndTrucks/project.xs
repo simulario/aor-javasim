@@ -7,7 +7,7 @@
    <entry key="simDescFileName">scenario.xml</entry>
    <entry key="sources compiled">true</entry>
    <entry key="name">CarsAndTrucks_simplified_with_ActionRules.xml</entry>
-   <entry key="log file">log_2010_06_03__12_44_32.xml</entry>
+   <entry key="log file">log_2010_06_03__19_26_56.xml</entry>
    <entry key="sources generated">true</entry>
    <entry key="simDescFilePath">D:\Projekte\AORS\TestCases\Scenarios\CarsAndTrucks_simplified_with_ActionRules.xml</entry>
    <entry key="multi-threading">false</entry>
