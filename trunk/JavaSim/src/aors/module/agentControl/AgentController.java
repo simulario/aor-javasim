@@ -1,89 +1,75 @@
 package aors.module.agentControl;
 
-import aors.model.agtsim.AgentSubject;
-import aors.model.agtsim.ReactionRule;
+import aors.model.agtsim.proxy.agentcontrol.CoreAgentController;
+import aors.model.agtsim.proxy.agentcontrol.ModuleAgentController;
 import aors.model.envevt.PerceptionEvent;
-import aors.model.intevt.InternalEvent;
 import aors.module.agentControl.gui.views.ControlView;
-import aors.module.agentControl.gui.interaction.InteractiveComponent.Pair;
+import aors.model.agtsim.proxy.agentcontrol.Pair;
 import aors.module.agentControl.gui.interaction.Sender;
 import java.beans.PropertyChangeEvent;
 import java.beans.PropertyChangeListener;
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
-public abstract class AgentController<T extends AgentSubject>
-	extends aors.model.agtsim.AgentSubject.AgentController
-	implements PropertyChangeListener {
+/**
+ * This class represents the module part of the agent controller. It is
+ * responsible for the communcation with the view.
+ * @author Thomas Grundmann
+ */
+public class AgentController implements PropertyChangeListener,
+	ModuleAgentController {
 
-	private static ModuleController moduleController;
-	protected T agentSubject;
-	private List<Sender.ValueMap> userInteractionEvents;
-	
-	private Set<Pair<String, String>> keyEvents;
-	private Map<String, Set<Pair<String, String>>> mouseEvents;
-	
-	protected Set<String> suspendedRules;
+
+	private CoreAgentController coreAgentController;
 
 	private ControlView controlView;
 
-	public AgentController(T agentSubject) {
-		super(agentSubject);
-		this.agentSubject = agentSubject;
+	private List<Sender.ValueMap> userInteractionEvents;
+	
 
-		moduleController = ModuleController.getInstance();
-		moduleController.registerAgentController(this);
+	/*******************/
+	/*** constructor ***/
+	/*******************/
 
-		this.userInteractionEvents = new ArrayList<Sender.ValueMap>();
-		this.keyEvents = new HashSet<Pair<String, String>>();
-		this.mouseEvents = new HashMap<String, Set<Pair<String, String>>>();
+	public AgentController(CoreAgentController coreAgentController) {
 
-		this.suspendedRules = new HashSet<String>();
+		this.coreAgentController = coreAgentController;
+		this.coreAgentController.setModuleAgentController(this);
+		this.coreAgentController.setAgentIsControlled(true);
 
 		this.controlView = null;
+
+		this.userInteractionEvents = new ArrayList<Sender.ValueMap>();
 	}
 
 	public void setControlView(ControlView controlView) {
 		this.controlView = controlView;
 	}
 
-	public void updateView() {
-		Map<String, Object> properties = this.agentSubject.getBeliefProperties();
-		if(properties != null && this.controlView != null) {
-			for(String property : properties.keySet()) {
+	public Set<Pair<String, String>> getKeyEvents() {
+		return this.coreAgentController.getKeyEvents();
+	}
+
+	public Map<String, Set<Pair<String, String>>> getMouseEvents() {
+		return this.coreAgentController.getMouseEvents();
+	}
+
+	public String getAgentType() {
+		return this.coreAgentController.getAgentType();
+	}
+
+	public void updateView(Map<String, Object> beliefProperties) {
+		if(beliefProperties != null && this.controlView != null) {
+			for(String property : beliefProperties.keySet()) {
 				this.controlView.propertyChange(new PropertyChangeEvent(this,
-					property, null, properties.get(property)));
+					property, null, beliefProperties.get(property)));
 			}
 		}
 	}
 
-	@Override
-	public void performUserActions() {
-		List<Sender.ValueMap> oldInteractionEvents = this.userInteractionEvents;
-		this.userInteractionEvents = new ArrayList<Sender.ValueMap>();
-		for(Sender.ValueMap eventData : oldInteractionEvents) {
-			String eventName = eventData.get(Sender.SEND_PROPERTY_NAME);
-			this.processInternalEvent(this.createEvent(
-				this.getCurrentSimulationStep(), eventName, eventData));
-		}
-	}
-
-	@Override
-	public void setNewEvents(List<PerceptionEvent> perceptionEvents) {
-//		for(PerceptionEvent event : perceptionEvents) {
-//			System.out.println(event);
-//		}
-	}
-
-
-	public void addUserInteractionEvent(Sender.ValueMap values) {
-		this.userInteractionEvents.add(values);
-	}
-	
 	@Override
 	public void propertyChange(PropertyChangeEvent evt) {
 		if(evt != null && Sender.SEND_PROPERTY_NAME.equals(evt.getPropertyName()) &&
@@ -92,52 +78,24 @@ public abstract class AgentController<T extends AgentSubject>
 		}
 	}
 
-	public abstract InternalEvent createEvent(long occurrenceTime,
-		String eventName, Map<String, String> eventData);
-
-	protected void addKeyEvent(String keyName, String action) {
-		this.keyEvents.add(new Pair<String, String>(keyName, action));
-	}
-
-	protected void addMouseEvent(String sender, String eventType, String action) {
-		if(!this.mouseEvents.containsKey(sender)) {
-			this.mouseEvents.put(sender, new HashSet<Pair<String, String>>());
-		}
-		this.mouseEvents.get(sender).add(new Pair<String, String>(eventType, action));
+	public void addUserInteractionEvent(Sender.ValueMap values) {
+		this.userInteractionEvents.add(values);
 	}
 
 	@Override
-	public boolean ruleIsSuspended(ReactionRule reactionRule) {
-		return this.agentIsControlled &&
-			this.suspendedRules.contains(reactionRule.getName());
-	}
-	
-	public Long getAgentId() {
-		if(this.agentSubject != null) {
-			return this.agentSubject.getId();
+	public void performUserActions() {
+		List<Sender.ValueMap> oldInteractionEvents = this.userInteractionEvents;
+		this.userInteractionEvents = new ArrayList<Sender.ValueMap>();
+		for(Map<String, String> eventData : oldInteractionEvents) {
+			String eventName = eventData.get(Sender.SEND_PROPERTY_NAME);
+			this.coreAgentController.processInternalEvent(eventName, eventData);
 		}
-		return null;
-	}
-	
-	public String getAgentType() {
-		if(this.agentSubject != null) {
-			return this.agentSubject.getType();
-		}
-		return null;
-	}
-	
-	public String getAgentName() {
-		if(this.agentSubject != null) {
-			return this.agentSubject.getName();
-		}
-		return null;
 	}
 
-	public Set<Pair<String, String>> getKeyEvents() {
-		return this.keyEvents;
-	}
-
-	public Map<String, Set<Pair<String, String>>> getMouseEvents() {
-		return this.mouseEvents;
+	@Override
+	public void setNewPerceptionEvents(List<PerceptionEvent> perceptionEvents) {
+//		for(PerceptionEvent event : perceptionEvents) {
+//			System.out.println(event);
+//		}
 	}
 }

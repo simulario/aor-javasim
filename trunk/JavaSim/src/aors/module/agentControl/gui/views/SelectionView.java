@@ -1,10 +1,9 @@
 package aors.module.agentControl.gui.views;
 
-import aors.model.agtsim.AgentSubject;
-import aors.module.agentControl.AgentController;
+import aors.model.agtsim.proxy.agentcontrol.CoreAgentController;
 import aors.module.agentControl.gui.GUIController;
 import aors.module.agentControl.gui.interaction.EventMediator;
-import aors.module.agentControl.gui.interaction.InteractiveComponent.Pair;
+import aors.model.agtsim.proxy.agentcontrol.Pair;
 import aors.module.agentControl.gui.renderer.AORSPanel;
 import aors.module.agentControl.gui.renderer.AORSReplacedElementFactory;
 import java.beans.PropertyChangeEvent;
@@ -22,8 +21,8 @@ public class SelectionView extends InteractiveView<AORSPanel> {
 
 	private GUIController guiController;
 
-	public SelectionView(GUIController guiController,
-		Map<Long, AgentController<? extends AgentSubject>> agentControllers) {
+	public SelectionView(GUIController guiController, Map<Long,
+		CoreAgentController> agentControllers) {
 		super(new AORSPanel());
 		this.guiController = guiController;
 
@@ -36,7 +35,7 @@ public class SelectionView extends InteractiveView<AORSPanel> {
 		createContent(agentControllers);
 	}
 
-	private void createContent(Map<Long, AgentController<? extends AgentSubject>>
+	private void createContent(Map<Long, CoreAgentController>
 		controllableAgents) {
 
 		//body that contains the content
@@ -95,9 +94,9 @@ public class SelectionView extends InteractiveView<AORSPanel> {
 			"padding: 2px; " +
 			"border: 1px solid black; ");
 
-		AgentController<? extends AgentSubject> agentController;
+		CoreAgentController coreAgentController;
 		for(long agentId : controllableAgents.keySet()) {
-			agentController = controllableAgents.get(agentId);
+			coreAgentController = controllableAgents.get(agentId);
 
 			Element dataRow = new Element("tr");
 			Attribute style = dataStyle;
@@ -110,12 +109,12 @@ public class SelectionView extends InteractiveView<AORSPanel> {
 
 			dataRow.addContent(new Element("td").addContent(radioButton).
 				setAttribute((Attribute)style.clone()));
-			dataRow.addContent(new Element("td").addContent(agentController.getAgentName()).
+			dataRow.addContent(new Element("td").addContent(coreAgentController.getAgentName()).
 				setAttribute((Attribute)style.clone()));
 			dataRow.addContent(new Element("td").addContent(
 				String.valueOf(agentId)).setAttribute((Attribute)style.clone()));
 			dataRow.addContent(new Element("td").addContent(
-				agentController.getAgentType()).setAttribute((Attribute)style.clone()));
+				coreAgentController.getAgentType()).setAttribute((Attribute)style.clone()));
 
 			table.addContent(dataRow);
 		}
