@@ -1,6 +1,6 @@
 package aors.module.agentControl.gui.renderer.formFields;
 
-import aors.module.agentControl.gui.EventMediator;
+import aors.module.agentControl.gui.interaction.EventMediator;
 import aors.module.agentControl.gui.renderer.AORSForm;
 import java.awt.FontMetrics;
 import java.awt.Insets;
@@ -77,7 +77,6 @@ class TextField extends InputField<JTextField> implements
     return textfield;
   }
 
-//  @Override
   protected void applyComponentStyle(JTextField component) {
     super.applyComponentStyle(component);
 

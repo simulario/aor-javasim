@@ -1,6 +1,6 @@
 package aors.module.agentControl.gui.renderer.formFields;
 
-import aors.module.agentControl.gui.EventMediator;
+import aors.module.agentControl.gui.interaction.EventMediator;
 import aors.module.agentControl.gui.renderer.AORSForm;
 import java.awt.Dimension;
 import java.awt.FontMetrics;
