@@ -1,6 +1,6 @@
 package aors.module.agentControl.gui.renderer.formFields;
 
-import aors.module.agentControl.gui.EventMediator;
+import aors.module.agentControl.gui.interaction.EventMediator;
 import aors.module.agentControl.gui.renderer.AORSForm;
 import javax.swing.JButton;
 import javax.swing.JComponent;
@@ -39,17 +39,6 @@ class ButtonField extends AbstractButtonField<JButton> {
 	@Override
 	protected void registerWithMediator() {
 		mediator.addSender(this.getAttribute("name"), this);
-//		if(mediator.addSender(this.getAttribute("name"), this)) {
-//			this.getComponent().addActionListener(new ActionListener() {
-//
-//				@Override
-//				public void actionPerformed(ActionEvent e) {
-//					mediator.propertyChange(new PropertyChangeEvent(ButtonField.this,
-//						Sender.SEND_PROPERTY_NAME, null,
-//						ButtonField.this.getAttribute("name")));
-//				}
-//			});
-//		}
 	}
 
 	@Override

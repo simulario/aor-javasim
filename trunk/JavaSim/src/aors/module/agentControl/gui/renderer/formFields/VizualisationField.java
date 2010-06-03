@@ -1,9 +1,7 @@
 package aors.module.agentControl.gui.renderer.formFields;
 
-import aors.module.agentControl.gui.EventMediator;
+import aors.module.agentControl.gui.interaction.EventMediator;
 import aors.module.agentControl.gui.renderer.AORSForm;
-import java.beans.PropertyChangeEvent;
-import java.beans.PropertyChangeListener;
 import javax.swing.JComponent;
 import javax.swing.JLabel;
 import javax.swing.JPanel;

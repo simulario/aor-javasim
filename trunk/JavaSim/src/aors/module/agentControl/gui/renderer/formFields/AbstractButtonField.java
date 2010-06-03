@@ -1,6 +1,6 @@
 package aors.module.agentControl.gui.renderer.formFields;
 
-import aors.module.agentControl.gui.EventMediator;
+import aors.module.agentControl.gui.interaction.EventMediator;
 import aors.module.agentControl.gui.renderer.AORSForm;
 import java.awt.Color;
 import java.awt.Insets;
@@ -26,7 +26,6 @@ abstract class AbstractButtonField<T extends JButton> extends InputField<T> {
 		super(e, form, context, box, mediator);
 	}
 
-//	@Override
 	protected void applyComponentStyle(T button) {
 		super.applyComponentStyle(button);
 

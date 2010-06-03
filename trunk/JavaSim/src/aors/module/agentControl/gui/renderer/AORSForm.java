@@ -1,6 +1,6 @@
 package aors.module.agentControl.gui.renderer;
 
-import aors.module.agentControl.gui.EventMediator;
+import aors.module.agentControl.gui.interaction.EventMediator;
 import aors.module.agentControl.gui.renderer.formFields.AORSFormFieldFactory;
 import java.util.Enumeration;
 import java.util.HashMap;

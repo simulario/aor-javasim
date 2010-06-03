@@ -1,6 +1,6 @@
 package aors.module.agentControl.gui.renderer;
 
-import aors.module.agentControl.gui.EventMediator;
+import aors.module.agentControl.gui.interaction.EventMediator;
 import java.awt.Container;
 import javax.swing.JComponent;
 import org.w3c.dom.Element;
@@ -10,7 +10,6 @@ import org.xhtmlrenderer.layout.LayoutContext;
 import org.xhtmlrenderer.render.BlockBox;
 import org.xhtmlrenderer.simple.extend.DefaultFormSubmissionListener;
 import org.xhtmlrenderer.simple.extend.FormSubmissionListener;
-//import org.xhtmlrenderer.simple.extend.XhtmlForm;
 import org.xhtmlrenderer.simple.extend.form.FormField;
 import org.xhtmlrenderer.swing.EmptyReplacedElement;
 import org.xhtmlrenderer.swing.ImageResourceLoader;
@@ -47,7 +46,6 @@ public class AORSReplacedElementFactory extends SwingReplacedElementFactory {
   public ReplacedElement createReplacedElement(LayoutContext context,
     BlockBox box, UserAgentCallback uac, int cssWidth, int cssHeight) {
     Element e = box.getElement();
-//		JComponent cc = null;
 
     if (e == null) {
       return null;
@@ -66,7 +64,6 @@ public class AORSReplacedElementFactory extends SwingReplacedElementFactory {
 			if (form == null) {
         //here we introduce our form implementation
         form = new AORSForm(uac, parentForm, formSubmissionListener, mediator);
-//				form = new XhtmlForm(uac, parentForm, formSubmissionListener);
         addForm(parentForm, form);
       }
       FormField formField = form.addComponent(e, context, box);
