@@ -2,70 +2,62 @@ package aors.module.agentControl.gui.views;
 
 import aors.model.agtsim.AgentSubject;
 import aors.module.agentControl.AgentController;
-import aors.module.agentControl.InteractiveComponent;
-import aors.module.agentControl.gui.GUIManager;
+import aors.module.agentControl.gui.interaction.EventMediator;
+import aors.module.agentControl.gui.interaction.InteractiveComponent.Pair;
+import aors.module.agentControl.gui.interaction.Sender;
 import aors.module.agentControl.gui.renderer.AORSPanel;
 import aors.module.agentControl.gui.renderer.AORSReplacedElementFactory;
-import java.awt.event.KeyListener;
-import java.awt.event.MouseListener;
+import java.beans.PropertyChangeEvent;
 import java.io.File;
-import javax.swing.JComponent;
+import java.util.Set;
 
-public class ControlView implements View, InteractiveComponent {
+public class ControlView extends InteractiveView<AORSPanel> {
 
   private static final long serialVersionUID = 1L;
+	
+	private AgentController<? extends AgentSubject> agentController;
 
-	private AORSPanel guiComponent;
+  public ControlView(AgentController<? extends AgentSubject> agentController,
+		String projectPath) {
+		super(new AORSPanel());
 
-  public ControlView(GUIManager gui, AgentController<? extends AgentSubject>
-		controllableAgent) {		
+		this.eventMediator = new EventMediator(this);
+		this.agentController = agentController;
+		this.agentController.setControlView(this);
+
+		this.addKeyListeners(this.agentController.getKeyEvents());
+
 		String sep = File.separator;
-		String type = controllableAgent.getSubject().getType();
+		String type = this.agentController.getAgentType();
 		if(type.endsWith("AgentSubject")) {
 			type = type.substring(0, type.lastIndexOf("AgentSubject"));
 		}
-		String projectPath = gui.getProjectPath();
-		if(projectPath == null) {
-			projectPath = ".";
-		}
-		String guiPath = gui.getProjectPath() + sep + "src" + sep + "interaction" +
+		String guiPath = projectPath + sep + "src" + sep + "interaction" +
 			sep + "agentcontrol" + sep + type + ".gui";
 
-		this.guiComponent = new AORSPanel();
-		controllableAgent.setKeyListeners(this);
-		this.guiComponent.getSharedContext().setReplacedElementFactory(
-			new AORSReplacedElementFactory(controllableAgent.getMediator()));
-		this.guiComponent.setDocument(new File(guiPath).toURI().toString());
-	}
-
-
-	@Override
-	public JComponent getGUIComponent() {
-		return this.guiComponent;
-	}
-
-		@Override
-	public void addMouseListener(MouseListener mouseListener) {
-		this.guiComponent.addMouseListener(mouseListener);
+		this.getGUIComponent().getSharedContext().setReplacedElementFactory(
+			new AORSReplacedElementFactory(this.eventMediator));
+		this.getGUIComponent().setDocument(new File(guiPath).toURI().toString());
 	}
 
 	@Override
-	public void addKeyListener(KeyListener keyListener) {
-		this.guiComponent.addKeyListener(keyListener);
+	protected Set<Pair<String, String>> getMouseEvents(String senderName) {
+		return this.agentController.getMouseEvents().get(senderName);
 	}
 
 	@Override
-	public boolean isFocusable() {
-		return this.guiComponent.isFocusable();
-	}
+	public void propertyChange(PropertyChangeEvent evt) {
 
-	@Override
-	public void setFocusable(boolean focusable) {
-		this.guiComponent.setFocusable(focusable);
-	}
+		// data from gui components to controller
+		if(evt != null && Sender.SEND_PROPERTY_NAME.equals(evt.getPropertyName()) &&
+			evt.getNewValue() instanceof Sender.ValueMap) {
+			this.agentController.addUserInteractionEvent((Sender.ValueMap)evt.getNewValue());
+			return;
+		}
 
-	@Override
-	public boolean requestFocusInWindow() {
-		return this.guiComponent.requestFocusInWindow();
+		// data from controller to gui components
+		if(evt != null && evt.getSource().equals(this.agentController)) {
+			this.eventMediator.propertyChange(evt);
+		}
 	}
 }
