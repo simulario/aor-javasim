@@ -2100,7 +2100,7 @@
     </xsl:variable>
     <xsl:variable name="classNameObj" select="jw:upperWord(@type)"/>
     <xsl:variable name="creationLoopVar"
-      select="if (fn:exists(@creationLoopVar) and @creationLoopVar != '') then @creationLoopVar else 'creationLoopVar'"/>
+      select="if (fn:exists(@creationLoopVar) and @creationLoopVar != '') then @creationLoopVar else jw:createInternalVarName('creationLoopVar')"/>
 
     <xsl:variable name="endId">
       <xsl:apply-templates select="." mode="assistents.getEndID"/>
@@ -2132,6 +2132,7 @@
       <xsl:with-param name="increment" select="1"/>
       <xsl:with-param name="content">
 
+        <!-- calls direct the object creation without the detour via shared.helper.initAORObjectsSet -->
         <xsl:apply-templates select="." mode="shared.helper.initAORObjects">
           <xsl:with-param name="indent" select="$indent + 1"/>
           <xsl:with-param name="className" select="$classNameObj"/>
@@ -3396,7 +3397,9 @@
 
   <!-- set a variablename for a created AOR-Objekt; if @objectVariable is exists then use this from classvariable; otherwise use a 
     lowerCaseStarted @type -->
-  <xsl:template match="aorsml:Object | aorsml:Agent | aorsml:PhysicalObject | aorsml:PhysicalAgent"
+  <xsl:template
+    match="aorsml:Object | aorsml:Objects | aorsml:Agent | aorsml:Agents | aorsml:PhysicalObject | aorsml:PhysicalObjects |
+    aorsml:PhysicalAgent | aorsml:PhysicalAgents"
     mode="createEnvironmentRules.helper.method.createObjekt.varName">
 
     <xsl:choose>
