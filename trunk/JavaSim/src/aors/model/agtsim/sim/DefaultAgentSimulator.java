@@ -142,7 +142,6 @@ public class DefaultAgentSimulator implements AgentSimulator,
    * @param listener
    *          a listener to send ActionEvents to
    * @param pcl
-   * @param oiel
 	 * @param abstractSimulator
    */
   public DefaultAgentSimulator(AgentSubject agentSubject,
@@ -463,6 +462,8 @@ public class DefaultAgentSimulator implements AgentSimulator,
         this.agentSubject.setCurrentSimulationStep(this.currentSimulationStep);
         this.agentSubject.run();
 				if(this.agentIsControlled()) {
+					this.agentSubject.getAgentController().updateView();
+
 					// wait for ActionEvents response from AgentController
 					synchronized (this) {
 						try {
@@ -471,6 +472,7 @@ public class DefaultAgentSimulator implements AgentSimulator,
 								wait(this.stepEndTime - System.currentTimeMillis());
 							}
 						} catch (InterruptedException e) {
+						} catch (IllegalArgumentException e) {
 						}
 					}
 					this.agentSubject.getAgentController().performUserActions();
