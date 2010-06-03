@@ -23,7 +23,7 @@
   <!-- this template is used to achieve the order of inits -->
   <!-- first is the order of entitytypes, second the order of inits -->
   <xsl:template
-    match="aorsml:PhysicalAgent | aorsml:PhysicalAgents | aorsml:PhysicalObject | aorsml:PhysicalObjects | aorsml:Object | aorsml:Agent | aorsml:Agents"
+    match="aorsml:PhysicalAgent | aorsml:PhysicalAgents | aorsml:PhysicalObject | aorsml:PhysicalObjects | aorsml:Object | aorsml:Objects | aorsml:Agent | aorsml:Agents"
     mode="shared.helper.initAORObjects.manager">
     <xsl:param name="indent" required="yes"/>
     <xsl:param name="className" required="yes"/>
@@ -54,7 +54,7 @@
 
   <!-- set the initial objects (used by initAgents and initObjects) -->
   <xsl:template
-    match="aorsml:PhysicalAgent | aorsml:PhysicalAgents | aorsml:PhysicalObject | aorsml:PhysicalObjects | aorsml:Object | aorsml:Agent | aorsml:Agents"
+    match="aorsml:PhysicalAgent | aorsml:PhysicalAgents | aorsml:PhysicalObject | aorsml:PhysicalObjects | aorsml:Object | aorsml:Objects | aorsml:Agent | aorsml:Agents"
     mode="shared.helper.initAORObjects">
     <xsl:param name="indent" required="yes"/>
     <xsl:param name="className" required="yes"/>
@@ -367,7 +367,7 @@
 
           </xsl:when>
 
-          <xsl:when test="local-name() = 'Object'">
+          <xsl:when test="local-name() = 'Object' or local-name() = 'Objects'">
 
             <xsl:variable name="objNodeType" as="node()" select="//aorsml:ObjectType[@name = current()/@type][1]"/>
 
@@ -867,7 +867,7 @@
   </xsl:template>
 
   <!-- with java-loop for sets -->
-  <xsl:template match="aorsml:PhysicalAgents | aorsml:PhysicalObjects | aorsml:Agents" mode="shared.helper.initAORObjectsSet">
+  <xsl:template match="aorsml:PhysicalAgents | aorsml:PhysicalObjects | aorsml:Agents | aorsml:Objects" mode="shared.helper.initAORObjectsSet">
     <xsl:param name="indent" required="yes"/>
     <xsl:param name="className" required="yes"/>
     <xsl:param name="varName" required="yes"/>
@@ -1562,7 +1562,7 @@
 
   <!-- set here the initialValues from aorsml:InitialValue there be a default value for objects/agents -->
   <xsl:template
-    match="aorsml:PhysicalAgent | aorsml:PhysicalObject | aorsml:PhysicalAgents | aorsml:PhysicalObjects | aorsml:Object | aorsml:Agent | aorsml:Agents"
+    match="aorsml:PhysicalAgent | aorsml:PhysicalObject | aorsml:PhysicalAgents | aorsml:PhysicalObjects | aorsml:Object | aorsml:Objects | aorsml:Agent | aorsml:Agents"
     mode="shared.helper.setInitialAttributes">
     <xsl:param name="indent" as="xs:integer" required="yes"/>
 
