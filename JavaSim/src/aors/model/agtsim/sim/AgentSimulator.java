@@ -173,4 +173,10 @@ public interface AgentSimulator extends Runnable, PropertyChangeListener {
 	 */
 	public void setAgentIsControlled();
 
+	/**
+	 * Sets the time until the current step has to be finished.
+	 * @param stepEndTime the deadline
+	 */
+	public void setStepEndTime(long stepEndTime);
+
 }

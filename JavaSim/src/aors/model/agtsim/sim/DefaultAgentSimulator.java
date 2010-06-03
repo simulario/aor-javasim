@@ -132,8 +132,10 @@ public class DefaultAgentSimulator implements AgentSimulator,
   private AgentObject agentObject;
 
 	private AbstractSimulator abstractSimulator;
+	
+	private long stepEndTime;
 
-  /**
+	/**
    * Creates a new DefaultAgentSimulator instance.
    * 
    * @param agentSubject
@@ -154,6 +156,7 @@ public class DefaultAgentSimulator implements AgentSimulator,
     this.propertyChangeListener = pcl;
     this.running = true;
     this.initializeAgentMemory();
+		this.stepEndTime = 0;
   } // DefaultAgentSimulator
 
   @Override
@@ -459,15 +462,13 @@ public class DefaultAgentSimulator implements AgentSimulator,
         this.agentSubject.setNewEvents(this.perceptionEvents);
         this.agentSubject.setCurrentSimulationStep(this.currentSimulationStep);
         this.agentSubject.run();
-
 				if(this.agentIsControlled()) {
 					// wait for ActionEvents response from AgentController
 					synchronized (this) {
-						long startTime = System.currentTimeMillis();
-						long timeOut = startTime + agentTimeout * 1000;
 						try {
-							while (System.currentTimeMillis() < timeOut && !stepCompleted) {
-								wait(agentTimeout * 1000);
+							if((this.stepEndTime - System.currentTimeMillis()) > 0
+								&& !stepCompleted) {
+								wait(this.stepEndTime - System.currentTimeMillis());
 							}
 						} catch (InterruptedException e) {
 						}
@@ -500,11 +501,12 @@ public class DefaultAgentSimulator implements AgentSimulator,
 
     this.fireEvent(actionEvents, null);
     stepCompleted = true;
-    if (responseSimulationStep == this.currentSimulationStep)
+    if (responseSimulationStep == this.currentSimulationStep) {
       synchronized (this) {
         // wake up the current thread so that it can complete
         notify();
       }
+		}
   }
 
   @Override
@@ -518,6 +520,7 @@ public class DefaultAgentSimulator implements AgentSimulator,
     }
   }
 
+	@Override
   public void notifyRemoval() {
     // TODO create a last log for the removed AgentSubject?
     this.running = false;
@@ -541,5 +544,9 @@ public class DefaultAgentSimulator implements AgentSimulator,
 	@Override
 	public void setAgentIsControlled() {
 		this.abstractSimulator.setAgentIsControlled(this);
+	}
+
+	public void setStepEndTime(long stepEndTime) {
+		this.stepEndTime = stepEndTime;
 	}
 }
