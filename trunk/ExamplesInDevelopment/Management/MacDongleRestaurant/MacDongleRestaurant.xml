@@ -420,7 +420,7 @@ Integer.parseInt(getMessagePart(evt.getReminderMsg(),4))
 				<Attribute name="hamburgerOnTheTray" type="Integer" />
 				<Attribute name="cheeseburgerOnTheTray" type="Integer" />
 				<Attribute name="saladOnTheTray" type="Integer" />
-				<Attribute name="specialOnTheTray" type="Integer" />
+				<Attribute name="superOnTheTray" type="Integer" />
 				<Attribute name="lostRevenue" type="Float"/>
 				
 				<!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~-->
@@ -437,7 +437,7 @@ if ( requestedType == 0){
 }
 	else
 if ( requestedType == 1){
-	if ( requestedQuantity <= pw.getCheeseBurgerOnTheTray() ) {
+	if ( requestedQuantity <= pw.getCheeseburgerOnTheTray() ) {
 		return true;
 	}
 }
@@ -449,7 +449,7 @@ if ( requestedType == 2){
 }
 	else
 if ( requestedType == 3){
-	if ( requestedQuantity <= pw.getSpecialOnTheTray() ) {
+	if ( requestedQuantity <= pw.getSuperOnTheTray() ) {
 		return true;
 	}
 }		  
@@ -662,6 +662,15 @@ cust.getOrderNo()
 						</UPDATE-AGT>
 					</DO>
 				</CommunicationRule>
+				<!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->
+				<CommunicationRule name="PatienceExpired_Rule" agentVariable="cust">
+					<!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->
+					<WHEN eventType="ReminderEvent" reminderMsg="PatienceExpired"/>
+					<DO>
+						<UPDATE-AGT>
+						</UPDATE-AGT>
+					</DO>
+				</CommunicationRule>
 			</AgentType>
 			<!-- =================================================== -->
 			<AgentType name="Truck">
@@ -729,12 +738,14 @@ evt.getOccurrenceTime()
 								</Slot>
 								<Slot property="patience">
 									<ValueExpr language="Java"><![CDATA[
-cust.randomPatienceTime()										
+customer.randomPatienceTime()										
 									]]></ValueExpr>
 								</Slot>
 								<!--
-								<ReminderEvent reminderMsg="PatienceExpires">
-								
+								<ReminderEvent reminderMsg="PatienceExpired">
+								  <Delay>
+								    <ValueExpr language="Java">customer.getPatience()</ValueExpr>
+								  </Delay>
 								</ReminderEvent>
 								-->
 							</Agent>
@@ -791,7 +802,7 @@ SimStatistics.numberOfCustomers.getValue() + 1
 				<documentation>
 					<description> If the order of the customer is available on the PickupWindow tray, then the MenuBoard will not send anymore an order to the Kitchen. </description>
 				</documentation>
-				<WHEN eventType="OutMessageExpr" messageType="SendOrder" messageVariable="mes" eventVariable="evt"/>
+				<WHEN eventType="OutMessageEvent" messageType="SendOrder" messageVariable="mes" eventVariable="evt"/>
 				<FOR objectVariable="pw" objectType="PickupWindow" objectIdRef="2"/>
 				<FOR objectVariable="mbq" objectType="Collection" objectName="MenuBoardQueue" objectIdRef="3"/>
 				<FOR objectVariable="cust" objectType="Customer">
@@ -808,7 +819,7 @@ SimStatistics.numberOfCustomers.getValue() + 1
 				</FOR>
 				<IF language="Java"><![CDATA[
 pw.isAvailableOnTheTray(type,quantity,pw)
-					]]></IF>
+				]]></IF>
 				<THEN>
 					<SCHEDULE-EVT>
 						<InMessageEventExpr messageType="ConfirmOrder" senderIdRef="1">
@@ -1165,6 +1176,7 @@ SimStatistics.cumulativeResponseTime.getValue() + evt.getOccurrenceTime() - pwq.
 					<description> When an order is prepared, the Kitchen Service send it to the PW Service. The PW Service asks the client which is at the desk what is his orderNo (only if the client is waiting for his order to arrive).</description>
 				</documentation>
 				<WHEN eventType="OutMessageEvent" messageType="OrderPrepared" messageVariable="mes"/>
+				<FOR objectVariable="k" objectType="Kitchen" objectIdRef="5" />
 				<FOR objectVariable="pw" objectName="PickupWindow" objectType="PickupWindow"
 					objectIdRef="2"/>
 				<FOR objectVariable="pwq" objectType="Collection" objectName="PickupWindowQueue"
@@ -1183,7 +1195,7 @@ mes.getHamburgerType()
 					<UPDATE-ENV>
 						<UpdateStatisticsVariable variable="revenue">
 							<ValueExpr language="Java"><![CDATA[
-SimStatistics.revenue.getValue() + (float)pw.hamburgerPrice(hamburgerType)
+SimStatistics.revenue.getValue() + (float)k.burgPrice((int)hamburgerType)
 						]]></ValueExpr>
 						</UpdateStatisticsVariable>
 					</UPDATE-ENV>
@@ -1227,6 +1239,7 @@ mes.getCustID()
 					<description> When an order is prepared, the MenuBoard Service send it to the PW Service. The PW Service asks the client which is at the desk what is his orderNo (only if the client is waiting for his order to arrive).</description>
 				</documentation>
 				<WHEN eventType="OutMessageEvent" messageType="AnticipatedOrder" messageVariable="mes"/>
+				<FOR objectVariable="k" objectType="Kitchen" objectIdRef="5" />
 				<FOR objectVariable="pw" objectName="PickupWindow" objectType="PickupWindow"
 					objectIdRef="2"/>
 				<FOR objectVariable="pwq" objectType="Collection" objectName="PickupWindowQueue"
@@ -1245,7 +1258,7 @@ mes.getHamburgerType()
 					<UPDATE-ENV>
 						<UpdateStatisticsVariable variable="revenue">
 							<ValueExpr language="Java"><![CDATA[
-SimStatistics.revenue.getValue() + (float)pw.hamburgerPrice(hamburgerType)
+SimStatistics.revenue.getValue() + (float)k.burgPrice((int)hamburgerType)
 						]]></ValueExpr>
 						</UpdateStatisticsVariable>
 					</UPDATE-ENV>
@@ -1293,7 +1306,7 @@ mes.getCustID()
 					<UPDATE-ENV>
 						<UpdateStatisticsVariable variable="revenue">
 							<ValueExpr language="Java"><![CDATA[
-SimStatistics.revenue.getValue() - t.getInvoice(t)								
+SimStatistics.revenue.getValue() - t.invoice(t)								
 						   ]]></ValueExpr>
 						</UpdateStatisticsVariable>	
 					</UPDATE-ENV>
@@ -1369,18 +1382,19 @@ k.getTomatoQuantity() + t.getQuantityPerIngredient()
 				<!-- ================================================ -->
 				<WHEN eventType="EmptyTheTrayEvery15Min" eventVariable="evt"/>
 				<FOR objectVariable="pw" objectType="PickupWindow" objectIdRef="2" />
+				<FOR objectVariable="k" objectType="Kitchen" objectIdRef="5" />
 				<DO>
 					<UPDATE-ENV>
 						<UpdateStatisticsVariable variable="lostRevenue">
 							<ValueExpr language="Java"><![CDATA[
-SimStatistics.lostRevenue.getValue() + (float)pw.burgPrice(0) * pw.getHamburgerOnTheTray() + (float)pw.burgPrice(1) * pw.getCheeseburgerOnTheTray() + (float)pw.burgPrice(2) * pw.getSaladOnTheTray() + (float)pw.burgPrice(3) * pw.getSuperHamburgerOnTheTray()
+SimStatistics.lostRevenue.getValue() + (float)k.burgPrice(0) * pw.getHamburgerOnTheTray() + (float)k.burgPrice(1) * pw.getCheeseburgerOnTheTray() + (float)k.burgPrice(2) * pw.getSaladOnTheTray() + (float)k.burgPrice(3) * pw.getSuperOnTheTray()
 						]]></ValueExpr>
 						</UpdateStatisticsVariable>
 						<UpdateObject objectVariable="pw">
 							<Slot property="hamburgerOnTheTray" value="0" />
 							<Slot property="cheeseburgerOnTheTray" value="0" />
 							<Slot property="saladOnTheTray" value="0" />
-							<Slot property="superHamburgerOnTheTray" value="0" />
+							<Slot property="superOnTheTray" value="0" />
 						</UpdateObject>
 					</UPDATE-ENV>
 					<SCHEDULE-EVT>
@@ -1398,24 +1412,24 @@ SimStatistics.lostRevenue.getValue() + (float)pw.burgPrice(0) * pw.getHamburgerO
 				<DO>
 					<UPDATE-ENV>
 						<Create>
-							<Object type="Hamburger" addToCollection="PWTray" objectVariable="pwt"/>
-							<Object type="Hamburger" addToCollection="PWTray" objectVariable="pwt"/>
-							<Object type="Hamburger" addToCollection="PWTray" objectVariable="pwt"/>
-							<Object type="Cheeseburger" addToCollection="PWTray" objectVariable="pwt"/>
-							<Object type="Cheeseburger" addToCollection="PWTray" objectVariable="pwt"/>
-							<Object type="Cheeseburger" addToCollection="PWTray" objectVariable="pwt"/>
-							<Object type="Salad" addToCollection="PWTray" objectVariable="pwt"/>
-							<Object type="Salad" addToCollection="PWTray" objectVariable="pwt"/>
-							<Object type="Salad" addToCollection="PWTray" objectVariable="pwt"/>
-							<Object type="SuperHamburger" addToCollection="PWTray" objectVariable="pwt"/>
-							<Object type="SuperHamburger" addToCollection="PWTray" objectVariable="pwt"/>
-							<Object type="SuperHamburger" addToCollection="PWTray" objectVariable="pwt"/>
+							<Object  objectVariable="h" type="Hamburger" addToCollection="PWTray" />
+							<Object  objectVariable="h1" type="Hamburger" addToCollection="PWTray" />
+							<Object  objectVariable="h2" type="Hamburger" addToCollection="PWTray" />
+							<Object  objectVariable="c" type="Cheeseburger" addToCollection="PWTray" />
+							<Object  objectVariable="c1" type="Cheeseburger" addToCollection="PWTray" />
+							<Object  objectVariable="c2" type="Cheeseburger" addToCollection="PWTray" />
+							<Object  objectVariable="s" type="Salad" addToCollection="PWTray" />
+							<Object  objectVariable="s1" type="Salad" addToCollection="PWTray" />
+							<Object  objectVariable="s2" type="Salad" addToCollection="PWTray" />
+							<Object  objectVariable="sh" type="SuperHamburger" addToCollection="PWTray" />
+							<Object  objectVariable="sh1" type="SuperHamburger" addToCollection="PWTray" />
+							<Object  objectVariable="sh2" type="SuperHamburger" addToCollection="PWTray" />
 						</Create>
 						<UpdateObject objectVariable="pw">
 							<Slot property="hamburgerOnTheTray" value="3" />
 							<Slot property="cheeseburgerOnTheTray" value="3" />
 							<Slot property="saladOnTheTray" value="3" />
-							<Slot property="superHamburgerOnTheTray" value="3" />
+							<Slot property="superOnTheTray" value="3" />
 						</UpdateObject>
 						<UpdateObject objectVariable="k">
 							<Slot property="hamburgerQuantity">
@@ -1434,7 +1448,7 @@ SimStatistics.lostRevenue.getValue() + (float)pw.burgPrice(0) * pw.getHamburgerO
 								<ValueExpr language="Java">k.getMozzarellaQuantity() - 9</ValueExpr>
 							</Slot>
 							<Slot property="lettuceQuantity">
-								<ValueExpr language="Java">k.getLetucceQuantity() - 6</ValueExpr>
+								<ValueExpr language="Java">k.getLettuceQuantity() - 6</ValueExpr>
 							</Slot>
 							<Slot property="mayonnaiseQuantity">
 								<ValueExpr language="Java">k.getMayonnaiseQuantity() - 6</ValueExpr>
@@ -1454,6 +1468,7 @@ SimStatistics.lostRevenue.getValue() + (float)pw.burgPrice(0) * pw.getHamburgerO
 				</documentation>
 				<WHEN eventType="OutMessageEvent" messageType="ProductionOrder" messageVariable="mes" />
 				<FOR objectVariable="kq" objectType="Collection" objectName="KitchenQueue" objectIdRef="8" />
+				<FOR objectVariable="k" objectType="Kitchen" objectIdRef="5" />
 				<DO>
 					<UPDATE-ENV>
 						<Create>
@@ -1577,13 +1592,13 @@ SimStatistics.lostRevenue.getValue() + (float)pw.burgPrice(0) * pw.getHamburgerO
 				<documentation>
 					<description>Kitchen creates hamburgers.</description>
 				</documentation>
-				<WHEN eventType="KitchenCreatesCustomerOrder" messageVariable="mes" eventVariable="evt"/>
+				<WHEN eventType="KitchenCreatesCustomerOrder" eventVariable="evt"/>
 				<FOR dataVariable="quantity" dataType="Integer">
-					<ValueExpr language="Java">mes.getHamburgerQuantity()</ValueExpr>
+					<ValueExpr language="Java">evt.getHamburgerQuantity()</ValueExpr>
 				</FOR>
 				<FOR objectVariable="k" objectType="Kitchen" />
 					<IF language="Java"><![CDATA[
-mes.getHamburgerType() == 0						
+evt.getHamburgerType() == 0						
 					  ]]></IF>
 				<THEN>
 					<UPDATE-ENV>
@@ -1596,10 +1611,10 @@ evt.getOccurrenceTime() + 1
 evt.getOccurrenceTime() + quantity									
 								]]></RangeEndID>	
 								<Slot property="orderNo">
-									<ValueExpr language="Java">mes.getOrderNo()</ValueExpr>
+									<ValueExpr language="Java">evt.getOrderNo()</ValueExpr>
 								</Slot>
 								<Slot property="price">
-									<ValueExpr language="Java">k.getBurgPrice(0)</ValueExpr>
+									<ValueExpr language="Java">k.burgPrice(0)</ValueExpr>
 								</Slot>	
 								<Slot property="breadQuantity" value="1"/>
 								<Slot property="specialSouceQuantity" value="1"/>
@@ -1620,13 +1635,13 @@ evt.getOccurrenceTime() + quantity
 				<documentation>
 					<description>Kitchen creates cheeseburgers.</description>
 				</documentation>
-				<WHEN eventType="KitchenCreatesCustomerOrder" messageVariable="mes"/>
+				<WHEN eventType="KitchenCreatesCustomerOrder" eventVariable="evt"/>
 				<FOR dataVariable="quantity" dataType="Integer">
-					<ValueExpr language="Java">mes.getHamburgerQuantity()</ValueExpr>
+					<ValueExpr language="Java">evt.getHamburgerQuantity()</ValueExpr>
 				</FOR>
 				<FOR objectVariable="k" objectType="Kitchen" />
 				<IF language="Java"><![CDATA[
-mes.getHamburgerType() == 1						
+evt.getHamburgerType() == 1						
 					]]></IF>
 				<THEN>
 					<UPDATE-ENV>
@@ -1639,10 +1654,10 @@ evt.getOccurrenceTime() + 1
 evt.getOccurrenceTime() + quantity									
 								]]></RangeEndID>	
 								<Slot property="orderNo">
-									<ValueExpr language="Java">mes.getOrderNo()</ValueExpr>
+									<ValueExpr language="Java">evt.getOrderNo()</ValueExpr>
 								</Slot>
 								<Slot property="price">
-									<ValueExpr language="Java">k.getBurgPrice(1)</ValueExpr>
+									<ValueExpr language="Java">k.burgPrice(1)</ValueExpr>
 								</Slot>	
 								<Slot property="breadQuantity" value="1"/>
 								<Slot property="specialSouceQuantity" value="1"/>
@@ -1654,7 +1669,7 @@ evt.getOccurrenceTime() + quantity
 							<Decrement property="breadQuantity" value="1"/>
 							<Decrement property="specialSouceQuantity" value="1"/>
 							<Decrement property="hamburgerQuantity" value="1"/>
-							<Decrement property="mozzarellaQuantiy" value="1"/>
+							<Decrement property="mozzarellaQuantity" value="1"/>
 						</UpdateObject>						
 					</UPDATE-ENV>
 				</THEN>
@@ -1665,13 +1680,13 @@ evt.getOccurrenceTime() + quantity
 				<documentation>
 					<description>Kitchen creates salad.</description>
 				</documentation>
-				<WHEN eventType="KitchenCreatesCustomerOrder" messageVariable="mes"/>
+				<WHEN eventType="KitchenCreatesCustomerOrder" eventVariable="evt"/>
 				<FOR dataVariable="quantity" dataType="Integer">
-					<ValueExpr language="Java">mes.getHamburgerQuantity()</ValueExpr>
+					<ValueExpr language="Java">evt.getHamburgerQuantity()</ValueExpr>
 				</FOR>
 				<FOR objectVariable="k" objectType="Kitchen" />
 				<IF language="Java"><![CDATA[
-mes.getHamburgerType() == 2	
+evt.getHamburgerType() == 2	
 					]]></IF>
 				<THEN>
 					<UPDATE-ENV>
@@ -1684,10 +1699,10 @@ evt.getOccurrenceTime() + 1
 evt.getOccurrenceTime() + quantity									
 								]]></RangeEndID>	
 								<Slot property="orderNo">
-									<ValueExpr language="Java">mes.getOrderNo()</ValueExpr>
+									<ValueExpr language="Java">evt.getOrderNo()</ValueExpr>
 								</Slot>
 								<Slot property="price">
-									<ValueExpr language="Java">k.getBurgPrice(2)</ValueExpr>
+									<ValueExpr language="Java">k.burgPrice(2)</ValueExpr>
 								</Slot>	
 								<Slot property="breadQuantity" value="1"/>
 								<Slot property="specialSouceQuantity" value="1"/>
@@ -1702,7 +1717,7 @@ evt.getOccurrenceTime() + quantity
 							<Decrement property="breadQuantity" value="1"/>
 							<Decrement property="specialSouceQuantity" value="1"/>
 							<Decrement property="hamburgerQuantity" value="1"/>
-							<Decrement property="mozzarellaQuantiy" value="1"/>
+							<Decrement property="mozzarellaQuantity" value="1"/>
 							<Decrement property="lettuceQuantity" value="1"/>
 							<Decrement property="tomatoQuantity" value="1"/>
 							<Decrement property="mayonnaiseQuantity" value="1"/>
@@ -1716,13 +1731,13 @@ evt.getOccurrenceTime() + quantity
 				<documentation>
 					<description>Kitchen creates super hamburgers.</description>
 				</documentation>
-				<WHEN eventType="KitchenCreatesCustomerOrder" messageVariable="mes"/>
+				<WHEN eventType="KitchenCreatesCustomerOrder"  eventVariable="evt"/>
 				<FOR dataVariable="quantity" dataType="Integer">
-					<ValueExpr language="Java">mes.getHamburgerQuantity()</ValueExpr>
+					<ValueExpr language="Java">evt.getHamburgerQuantity()</ValueExpr>
 				</FOR>
 				<FOR objectVariable="k" objectType="Kitchen" />
 				<IF language="Java"><![CDATA[
-mes.getHamburgerType() == 3						
+evt.getHamburgerType() == 3						
 					]]></IF>
 				<THEN>
 					<UPDATE-ENV>
@@ -1735,10 +1750,10 @@ evt.getOccurrenceTime() + 1
 evt.getOccurrenceTime() + quantity									
 								]]></RangeEndID>	
 								<Slot property="orderNo">
-									<ValueExpr language="Java">mes.getOrderNo()</ValueExpr>
+									<ValueExpr language="Java">evt.getOrderNo()</ValueExpr>
 								</Slot>
 								<Slot property="price">
-									<ValueExpr language="Java">k.getBurgPrice(3)</ValueExpr>
+									<ValueExpr language="Java">k.burgPrice(3)</ValueExpr>
 								</Slot>	
 								<Slot property="breadQuantity" value="1"/>
 								<Slot property="specialSouceQuantity" value="1"/>
@@ -1754,7 +1769,7 @@ evt.getOccurrenceTime() + quantity
 							<Decrement property="breadQuantity" value="1"/>
 							<Decrement property="specialSouceQuantity" value="1"/>
 							<Decrement property="hamburgerQuantity" value="1"/>
-							<Decrement property="mozzarellaQuantiy" value="1"/>
+							<Decrement property="mozzarellaQuantity" value="1"/>
 							<Decrement property="lettuceQuantity" value="1"/>
 							<Decrement property="tomatoQuantity" value="1"/>
 							<Decrement property="mayonnaiseQuantity" value="1"/>
@@ -1766,9 +1781,9 @@ evt.getOccurrenceTime() + quantity
 			<!-- =================================================== -->
 			<EnvironmentRule name="DestroyHamburgers_Rule">
 			<!-- =================================================== -->
-				<WHEN eventType="DestroyHamburgers" messageVariable="mes"/>
+				<WHEN eventType="DestroyHamburgers" eventVariable="evt"/>
 				<FOR objectVariable="h" objectType="Hamburger" />
-				<IF language="Java">mes.getOrderNo() == h.getOrderNo()</IF>
+				<IF language="Java">evt.getOrderNo() == h.getOrderNo()</IF>
 				<THEN>
 					<UPDATE-ENV>
 						<DestroyObject objectVariable="h" />
