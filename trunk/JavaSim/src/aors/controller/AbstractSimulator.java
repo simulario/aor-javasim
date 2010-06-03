@@ -666,15 +666,15 @@ public abstract class AbstractSimulator implements AgentSimulatorListener {
 	 * @see <code>run()</code>
 	 */
 	private void runSimulationStep() {
-
 		this.stepRunning = true;
 		long stepStartTime = System.currentTimeMillis();
+		long stepEndTime = stepStartTime  + this.stepTimeDelay;
+
 		this.dataBus.notifySimStepStart(this.currentSimulationStep);
 
 		// process the events in the current simulation step
 		// starts the complete simulation-process in the environment
 		this.envSim.run(currentSimulationStep);
-
 		this.processCreationAndDestructionEvents();
 
 		// only proceed if there are any agents
@@ -684,7 +684,7 @@ public abstract class AbstractSimulator implements AgentSimulatorListener {
 
 			// run AgentSimulators
 			if (this.multithreading) {
-				this.runAgentSimulatorsMultiThreaded(currentPerceptionEvents);
+				this.runAgentSimulatorsMultiThreaded(currentPerceptionEvents, stepEndTime);
 			} else {
 				this.runAgentSimulatorsSingleThreaded(currentPerceptionEvents);
 			}
@@ -764,9 +764,11 @@ public abstract class AbstractSimulator implements AgentSimulatorListener {
 	 * 
 	 * @param currentPerceptionEvents
 	 *            PerceptionEvents in current step
+	 * @param stepEndTime
+	 *						time until the current step has to be finished
 	 */
 	private void runAgentSimulatorsMultiThreaded(
-			List<PerceptionEvent> currentPerceptionEvents) {
+			List<PerceptionEvent> currentPerceptionEvents, long stepEndTime) {
 		/**
 		 * Creates a barrier for externalCount + 1 threads This barrier is for
 		 * AgentWorker Threads (externalized agents) and this current thread.
@@ -786,6 +788,9 @@ public abstract class AbstractSimulator implements AgentSimulatorListener {
 
 			if (agentSimulator.isAgentSubjectProxySet() ||
 				agentSimulator.agentIsControlled()) {
+
+				agentSimulator.setStepEndTime(stepEndTime);
+
 				// external agent is started in its own thread
 				Thread t = new AgentWorker(agentSimulator);
 				t.setName(agentSimulator.getAgentName());
@@ -971,7 +976,7 @@ public abstract class AbstractSimulator implements AgentSimulatorListener {
 	}
 
 	private boolean isEventProcessed(EnvironmentEvent environmentEvent) {
-	if (environmentEvent.getOccurrenceTime() <= this.currentSimulationStep) {
+		if (environmentEvent.getOccurrenceTime() <= this.currentSimulationStep) {
 			return true;
 		}
 		return false;
