@@ -1,4 +1,4 @@
-package aors.module.agentControl;
+package aors.module.agentControl.gui.interaction;
 
 import java.util.HashMap;
 

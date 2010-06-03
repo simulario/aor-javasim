@@ -5,6 +5,10 @@ import javax.swing.JComponent;
 import javax.swing.JLabel;
 import javax.swing.JPanel;
 
+/**
+ * The default view for the agent control module.
+ * @author Thomas Grundmann
+ */
 public class DefaultView implements View {
   private static final long serialVersionUID = 1L;
 	private JPanel guiComponent;

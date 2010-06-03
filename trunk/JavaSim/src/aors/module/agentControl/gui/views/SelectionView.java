@@ -2,42 +2,42 @@ package aors.module.agentControl.gui.views;
 
 import aors.model.agtsim.AgentSubject;
 import aors.module.agentControl.AgentController;
-import aors.module.agentControl.gui.GUIManager;
-import aors.module.agentControl.gui.EventMediator;
+import aors.module.agentControl.gui.GUIController;
+import aors.module.agentControl.gui.interaction.EventMediator;
+import aors.module.agentControl.gui.interaction.InteractiveComponent.Pair;
 import aors.module.agentControl.gui.renderer.AORSPanel;
 import aors.module.agentControl.gui.renderer.AORSReplacedElementFactory;
 import java.beans.PropertyChangeEvent;
-import java.beans.PropertyChangeListener;
+import java.util.Map;
 import java.util.Set;
-import javax.swing.JComponent;
 import org.jdom.Attribute;
 import org.jdom.Document;
 import org.jdom.Element;
 import org.jdom.JDOMException;
 import org.jdom.output.DOMOutputter;
 
-public class SelectionView implements View, PropertyChangeListener {
+public class SelectionView extends InteractiveView<AORSPanel> {
 
 	private static final long serialVersionUID = 1L;
-	private EventMediator eventMediator;
-	private GUIManager gui;
-	private AORSPanel guiComponent;
 
-	public SelectionView(GUIManager gui,
-		Set<AgentController<? extends AgentSubject>> agentControllers) {
-		this.gui = gui;
+	private GUIController guiController;
 
-		this.eventMediator = new EventMediator();
+	public SelectionView(GUIController guiController,
+		Map<Long, AgentController<? extends AgentSubject>> agentControllers) {
+		super(new AORSPanel());
+		this.guiController = guiController;
+
+		this.eventMediator = new EventMediator(this);
 		this.eventMediator.addReceiver("controlledAgentId", this, null);
 
-		guiComponent = new AORSPanel();
-		guiComponent.getSharedContext().setReplacedElementFactory(
+		this.getGUIComponent().getSharedContext().setReplacedElementFactory(
 			new AORSReplacedElementFactory(this.eventMediator));
 
 		createContent(agentControllers);
 	}
 
-	private void createContent(Set<AgentController<? extends AgentSubject>> controllableAgents) {
+	private void createContent(Map<Long, AgentController<? extends AgentSubject>>
+		controllableAgents) {
 
 		//body that contains the content
 		Element body = new Element("body").setAttribute("style",
@@ -95,52 +95,54 @@ public class SelectionView implements View, PropertyChangeListener {
 			"padding: 2px; " +
 			"border: 1px solid black; ");
 
-		AgentSubject subject = null;
-		for(AgentController<? extends AgentSubject> agentController : controllableAgents) {
-			subject = agentController.getSubject();
+		AgentController<? extends AgentSubject> agentController;
+		for(long agentId : controllableAgents.keySet()) {
+			agentController = controllableAgents.get(agentId);
 
-			long id = subject.getId();
 			Element dataRow = new Element("tr");
 			Attribute style = dataStyle;
 
 			Element radioButton = new Element("td").addContent(
 				new Element("radiobutton").setAttribute("name", "controlledAgentId").
 				setAttribute("slot", "controlledAgentId").
-				setAttribute("value", String.valueOf(id)).
+				setAttribute("value", String.valueOf(agentId)).
 				setAttribute("style", "display: block; margin: auto;"));
 
 			dataRow.addContent(new Element("td").addContent(radioButton).
 				setAttribute((Attribute)style.clone()));
-			dataRow.addContent(new Element("td").addContent(subject.getName()).
+			dataRow.addContent(new Element("td").addContent(agentController.getAgentName()).
 				setAttribute((Attribute)style.clone()));
 			dataRow.addContent(new Element("td").addContent(
-				String.valueOf(id)).setAttribute((Attribute)style.clone()));
+				String.valueOf(agentId)).setAttribute((Attribute)style.clone()));
 			dataRow.addContent(new Element("td").addContent(
-				subject.getType()).setAttribute((Attribute)style.clone()));
+				agentController.getAgentType()).setAttribute((Attribute)style.clone()));
 
 			table.addContent(dataRow);
 		}
 
 		try {
-			guiComponent.setDocument(new DOMOutputter().output(new Document().setRootElement(body)));
+			this.getGUIComponent().setDocument(new DOMOutputter().output(
+				new Document().setRootElement(body)));
 		} catch(JDOMException e) {
 			e.printStackTrace();
 		}
 	}
 
 	@Override
-	public JComponent getGUIComponent() {
-		return this.guiComponent;
+	protected Set<Pair<String, String>> getMouseEvents(String senderName) {
+		return null;
 	}
 
 	@Override
 	public void propertyChange(PropertyChangeEvent evt) {
-		if("controlledAgentId".equals(evt.getPropertyName())) {
-		}
-		try {
-			gui.setControlledAgent(Long.valueOf(evt.getNewValue().toString()));
-		} catch(NumberFormatException e) {
-			e.printStackTrace();
+		if("controlledAgentId".equals(evt.getPropertyName()) &&
+			evt.getNewValue() != null) {
+			try {
+				this.guiController.setControlledAgentController(Long.valueOf(evt.
+					getNewValue().toString()));
+			} catch(NumberFormatException e) {
+				e.printStackTrace();
+			}
 		}
 	}
 }
