@@ -1499,14 +1499,16 @@ public abstract class AgentSubject extends Entity implements Rollbackable {
       return this.agentSubject.currentSimulationStep;
     }
 
-    public abstract void setNewEvents(List<PerceptionEvent> perceptionEvents);
-
     protected void processInternalEvent(InternalEvent internalEvent) {
       this.agentSubject.processInternalEvent(internalEvent);
     }
 
-    public abstract boolean ruleIsSuspended(ReactionRule reactionRule);
+    public abstract void setNewEvents(List<PerceptionEvent> perceptionEvents);
+
+		public abstract boolean ruleIsSuspended(ReactionRule reactionRule);
 
     public abstract void performUserActions();
+
+		public abstract void updateView();
   }
 }
