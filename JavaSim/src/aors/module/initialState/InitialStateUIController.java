@@ -47,7 +47,9 @@ public class InitialStateUIController implements Module, ActionListener {
   public Object getGUIComponent() {
     return this.tabScroll;
   }
-
+  
+  
+  //constructor for each entity as table style
   public InitialStateUIController(JTable table, DefaultTableModel model,
 	      String type, Vector<JButton> buttonContainer, String objectType) {
 
@@ -59,7 +61,7 @@ public class InitialStateUIController implements Module, ActionListener {
 
 	  }
 
-
+  //get the DOM of scenario.xml file and initialize the InitialStateUITab
   public void simulationDomOnlyInitialization(
       SimulationDescription simulationDescription) {
 
@@ -138,13 +140,13 @@ public class InitialStateUIController implements Module, ActionListener {
 
 	    JButton selectButton = (JButton) e.getSource();
 	    if (selectButton == buttonContainer.get(0)) {
-	      copyRow();
+	      copyRow(); // process copy operation
 	    } else if (selectButton == buttonContainer.get(1)) {
-	      delRow();
+	      delRow(); // process del operation
 	    } else if (selectButton == buttonContainer.get(2)) {
-	      createNewRow( selectButton);
+	      createNewRow( selectButton); // process create operation
 	    } else if (selectButton == buttonContainer.get(3)) {
-	      createEditRow(selectButton);
+	      createEditRow(selectButton); // process edit operation
 	    }
 	  }
 
@@ -165,10 +167,13 @@ public class InitialStateUIController implements Module, ActionListener {
 	      String tempKey = null;
 	      tempKey = typeTransfer(objectType, type);
 
+	      
+	      // specially to process RandomVariable
 	      processCopyAndDelete(tabScroll.getRanTypePropertyMap(), tempKey,
 	          tempLanSet, "copy", cRow, tabScroll.getRanVarPropertyContainerMap(),
 	          null);
-
+	      
+          // specially to process ValueExpr
 	      processCopyAndDelete(tabScroll.getValueExprTypePropertyMap(), tempKey,
 	          tempLanSet, "copy", cRow, null, tabScroll
 	              .getValueExprPropertyContainerMap());
@@ -410,15 +415,15 @@ public class InitialStateUIController implements Module, ActionListener {
   
 
   
-  private Document dom;
-  private JTable table;
+  private Document dom;   //Dom of the scenario.xml file
+  private JTable table;   // table container to hold the content of each entity
   private DefaultTableModel model;
-  private File scenario;
-  private String type;
-  private SimulationDescription sd;
-  private static InitialStateUITab tabScroll;
-  private String objectType;
-  private Vector<JButton> buttonContainer;
+  private File scenario;  // the scenario.xml file
+  private String type;    // the type of each entity
+  private SimulationDescription sd; // Utility class that provides method for xpath parse and namespace support
+  private static InitialStateUITab tabScroll; // scrollPane of InitialStateUITab
+  private String objectType; // 
+  private Vector<JButton> buttonContainer;// ButtonContainer hold button instances for each entity(copy, del, create, edit)
 
   @Override
   public void objektDestroyEvent(ObjektDestroyEvent objektDestroyEvent) {
@@ -635,8 +640,7 @@ class EditJDialog extends JDialog {
 	                    return;
 	                  } else {
 	                    
-	                    insertEditRow.addElement(Boolean
-	                        .valueOf(((JTextField) field[i]).getText()));
+	                    insertEditRow.addElement(Boolean.valueOf(((JTextField) field[i]).getText()));
 	                  }
 	                }
 	              }
