@@ -1647,7 +1647,7 @@
                             <xsl:value-of select="'getObjectById'"/>
                           </xsl:when>
                           <xsl:otherwise>
-                            <xsl:value-of select="'getObjectsByType'"/>
+                            <xsl:value-of select="'getListReferenceObjectsByType'"/>
                           </xsl:otherwise>
                         </xsl:choose>
                       </xsl:with-param>
