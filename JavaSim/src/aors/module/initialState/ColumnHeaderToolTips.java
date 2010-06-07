@@ -32,7 +32,7 @@ public class ColumnHeaderToolTips extends MouseMotionAdapter {
     }
 
     if (col != curCol) {
-      header.setToolTipText(tips.get(col));
+      header.setToolTipText((String) tips.get(col));
       curCol = col;
     }
   }

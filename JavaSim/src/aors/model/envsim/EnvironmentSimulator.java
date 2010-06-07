@@ -27,7 +27,6 @@
 package aors.model.envsim;
 
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
@@ -1189,22 +1188,7 @@ public class EnvironmentSimulator implements EnvironmentAccessFacet {
 		if (this.aorObjectsByType.containsKey(type)) {
 			return new ArrayList<Objekt>(this.aorObjectsByType.get(type));
 		}
-		return Collections.emptyList();
-	}
-	
-	/*
-	 * this method is used by statistic variables with source ObjectProperty defined by type
-	 * (this need a reference to the list with all aor-objekts defined by an object type in @objectType)
-	 */
-	public List<Objekt> getListReferenceObjectsByType(Class<?> type) {
-    return this.getListReferenceObjectsByType(type.getSimpleName());
-  }
-	
-	public List<Objekt> getListReferenceObjectsByType(String type) {
-	  if (this.aorObjectsByType.containsKey(type)) {
-      return this.aorObjectsByType.get(type);
-    }
-    return Collections.emptyList();
+		return new ArrayList<Objekt>();
 	}
 
 	/**

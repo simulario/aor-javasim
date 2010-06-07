@@ -432,11 +432,11 @@
     <xsl:value-of>ay</xsl:value-of>
     <xsl:value-of>az</xsl:value-of>
     <!-- new -->
-    <xsl:value-of>rotX</xsl:value-of>
+    <xsl:value-of>rotationAngleX</xsl:value-of>
     <!-- new -->
-    <xsl:value-of>rotY</xsl:value-of>
+    <xsl:value-of>rotationAngleY</xsl:value-of>
     <!-- new -->
-    <xsl:value-of>rotZ</xsl:value-of>
+    <xsl:value-of>rotationAngleZ</xsl:value-of>
     <!-- new -->
     <xsl:value-of>omegaX</xsl:value-of>
     <!-- new -->

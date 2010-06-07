@@ -122,7 +122,7 @@ public class Perception {
       calculateDistance();
     }
 
-    double orientation = perceiver.getRotZ();
+    double orientation = perceiver.getRotationAngleZ();
 
     double angle = Math.atan2(distanceY, distanceX);
     angle = (angle < 0) ? angle + 2 * Math.PI : angle;

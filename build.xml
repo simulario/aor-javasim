@@ -37,20 +37,18 @@
   <tstamp>
     <format property="date" pattern="dd-MMMM-yyyy" locale="en"/>
   </tstamp>
-
+  
   <property name="JavaSim.dir" value="JavaSim"/>
   <property name="AORSL.dir" value="AORSL"/>
-  <property name="PrettyPrint.dir" value="PrettyPrint/css"/>
 
   <property name="jar.filename.gui" value="AOR-Simulator.jar"/>
   <property name="jar.filename.console" value="AOR-Simulator_console.jar"/>
   <!--property name="ear.filename.jsf" value="AOR-WebSimulator.ear"/-->
   <!--property name="jar.filename.xslt2processor_ejb3" value="050XSLT2Processor.jar"/-->
   <!--property name="jar.filename.xslt2processor_interface" value="XSLT2ProcessorRemoteInterface.jar"/-->
-  <property name="dist.dir" value="Distribution"/>
+  <property name="dist.dir" value="distribution"/>
   <property name="dist.javagen.dir" value="${dist.dir}/ext/javagen"/>
-  <property name="dist.schema.dir" value="${dist.dir}/ext/AORSL"/>
-  <property name="dist.PrettyPrint.dir" value="${dist.dir}/PrettyPrint/css"/>
+  <property name="dist.schema.dir" value="${dist.dir}/ext/aorsl"/>
   <property name="dist.documents.dir" value="${dist.dir}/ext/documents"/>
   <property name="dist.media.dir" value="${dist.dir}/media"/>
   <property name="dist.modules.dir" value="${dist.dir}/modules"/>
@@ -80,13 +78,13 @@
 
   <!-- exclude this directory for compilation since these are modules and are not need to be compiled here -->
   <property name="modules.src.dir" value="module"/>
-
+  
   <!-- for webstart -->
   <property name="gui.webstart.contents.path" value="${ext.dir}/manifest/gui_webstart"/>
   <property name="manifest.gui.webstart" value="${gui.webstart.contents.path}/MANIFEST.MF"/>
   <property name="keystore.webstart" value="${gui.webstart.contents.path}/simularioKeyStore"/>
 
-  <property name="projects.dir" value="Examples"/>
+  <property name="projects.dir" value="projects"/>
   <property name="dist-version" value="${date}"/>
   <property name="dist-zip.name" value="AOR-JavaSim-${dist-version}"/>
   <property name="dist-zip.file" value="${dist-zip.name}.zip"/>
@@ -116,7 +114,6 @@
       <exclude name="${modules.src.dir}/sound/**"/>
       <exclude name="${modules.src.dir}/physics2d/**"/>
       <exclude name="${modules.src.dir}/initialState/**"/>
-      <exclude name="${modules.src.dir}/agentControl/**"/>
       <exclude name="controller/webstart/**"/>
       <exclude name="gui/swing/webstart/**"/>
       <compilerarg value="-Xlint"/>
@@ -126,22 +123,20 @@
 
   <target name="exec_env"
     description="Build the environment that are necessary for the execution of the application, which means to copy all libraries and external files like XSLTs to the dist folder.">
-    
     <mkdir dir="${dist.dir}"/>
 
     <!-- copy the XSLT's for the Java code generation -->
     <copy todir="${dist.javagen.dir}" overwrite="true">
-      <fileset dir="${javagen.dir}" excludes=".svn, *.xpr, *.bak, *.xsd"/>
+      <fileset dir="${javagen.dir}" excludes=".svn, *.xpr, *.bak, *.xsd">
+        <exclude name="/ProgrammingLanguages/**"/>
+        <exclude name="/Test/**"/>
+        <exclude name="**/*_new*"/>
+      </fileset>
     </copy>
 
     <!-- copy the XML Schema for the validation of the simulation description-->
     <copy todir="${dist.schema.dir}" overwrite="true">
-      <fileset dir="${schema.dir}" excludes=".svn, *.vsd, *.xpr"/>
-    </copy>
-
-    <!-- copy the CSS files for prettyprinting -->
-    <copy todir="${dist.PrettyPrint.dir}" overwrite="true">
-      <fileset dir="${PrettyPrint.dir}"/>
+      <fileset dir="${schema.dir}" excludes=".svn, *.vsd"/>
     </copy>
 
     <!-- copy the document e.g. HTML files for the GUI -->
@@ -158,7 +153,7 @@
     <!-- copy the modules -->
     <mkdir dir="${dist.modules.dir}"/>
     <copy todir="${dist.modules.dir}" overwrite="true">
-      <fileset dir="${modules.dir}" includes="*.xml soundModule.jar statisticsModule.jar visOpenGLModule_win32.jar agentControlModule.jar"/>
+      <fileset dir="${modules.dir}" includes="*.jar *.xml"/>
     </copy>
 
     <!-- copy the readme.htm in the dist-folder -->
@@ -204,8 +199,9 @@
     </delete>
   </target>
 
-  <target name="build-zip" depends="clean, exec_env, compile"
+  <target name="build-zip" depends="message_zip, clean, exec_env, compile"
     description="Build the AOR Simulator application with GUI and creates a Zip.">
+
 
     <jar destfile="${dist.dir}/${jar.filename.gui}" basedir="${class.dir}" includes="aors/**" manifest="${manifest.gui}"/>
     <!-- delete the created bin directory -->
@@ -213,15 +209,27 @@
       <fileset dir="${class.dir}"/>
     </delete>
 
-    <!-- save the existing projects in a temp-dir
+    <!-- save the existing projects in a temp-dir 
     <move todir="${dist.dir}/${projects.dir}-temp" failonerror="false">
       <fileset dir="${dist.dir}/${projects.dir}"/>
-      </move> -->
+    </move-->
 
-    <!-- copy the examples -->
+
+    <!-- copy the recommended projects
     <copy todir="${dist.dir}/${projects.dir}" overwrite="true">
-      <fileset dir="${projects.dir}" includes="*/*/scenario.xml */*/*.png */*/prettyprint.xsl"/>
-    </copy>
+      <fileset dir="${projects.dir}" includes="${project.list}">
+        <filename name="*/*/*.xml"/>
+      </fileset>
+      <fileset dir="${projects.dir}" includes="${project.list}">
+        <filename name="*/*/*.png"/>
+      </fileset>
+      <fileset dir="${projects.dir}" includes="${project.list}">
+        <filename name="*/*/prettyprint.xsl"/>
+      </fileset>
+      <fileset dir="${projects.dir}" includes="${project.list}">
+        <filename name="*/*/project.xs"/>
+      </fileset>
+    </copy-->
 
     <zip destfile="./${dist-zip.file}" update="true">
       <zipfileset dir="${dist.dir}" prefix="${dist-zip.name}" excludes="${projects.dir}-temp/**, properties.xml"/>
@@ -231,10 +239,10 @@
       <fileset dir="${dist.dir}/${projects.dir}"/>
     </delete-->
 
-    <!-- move the saved existing projects back to the projects-folder 
+    <!-- move the saved existing projects back to the projects-folder
     <move todir="${dist.dir}/${projects.dir}" failonerror="false">
       <fileset dir="${dist.dir}/${projects.dir}-temp"/>
-      </move>-->
+    </move>-->
   </target>
 
   <target name="build-zip-with-compiler" depends="message_zip, clean, exec_env, compile"
@@ -250,13 +258,24 @@
     <!-- save the existing projects in a temp-dir 
     <move todir="${dist.dir}/${projects.dir}-temp" failonerror="false">
       <fileset dir="${dist.dir}/${projects.dir}"/>
-      </move>-->
+    </move>-->
 
 
-    <!-- copy the examples -->
+    <!-- copy the recommended projects
     <copy todir="${dist.dir}/${projects.dir}" overwrite="true">
-      <fileset dir="${projects.dir}" includes="*/*/scenario.xml */*/*.png */*/prettyprint.xsl"/>
-    </copy>
+      <fileset dir="${projects.dir}" includes="${project.list}">
+        <filename name="*/*/*.xml"/>
+      </fileset>
+      <fileset dir="${projects.dir}" includes="${project.list}">
+        <filename name="*/*/*.png"/>
+      </fileset>
+      <fileset dir="${projects.dir}" includes="${project.list}">
+        <filename name="*/*/prettyprint.xsl"/>
+      </fileset>
+      <fileset dir="${projects.dir}" includes="${project.list}">
+        <filename name="*/*/project.xs"/>
+      </fileset>
+    </copy>-->
 
     <!-- copy the libraries -->
     <copy todir="${dist.lib.dir}" overwrite="true">
@@ -269,15 +288,14 @@
       <zipfileset dir="${dist.dir}" prefix="${dist-zip.name}" excludes="${projects.dir}-temp/**, properties.xml"/>
     </zip>
 
-    <!--delete includeemptydirs="true" failonerror="false">
+    <delete includeemptydirs="true" failonerror="false">
       <fileset dir="${dist.dir}/${projects.dir}"/>
-    </delete-->
+    </delete>
 
     <!-- move the saved existing projects back to the projects-folder
     <move todir="${dist.dir}/${projects.dir}" failonerror="false">
       <fileset dir="${dist.dir}/${projects.dir}-temp"/>
-      </move> -->
-
+    </move>-->
   </target>
 
   <target name="message_zip" description="Some communication for zip-creation">
@@ -332,16 +350,15 @@
       <arg value="${mpj.home}/bin/mpjrun.sh -np 2 -jar ${mpj.home}/lib/test.jar"/>
     </exec>
   </target>
-
+  
   <!-- Webstart -->
-  <target name="build_web_start" depends="clean_webstart, exec_env_webstart, compile_webstart"
-    description="Build the AOR Simulator application with GUI as a Web Start Version.">
+  <target name="build_web_start" depends="clean_webstart, exec_env_webstart, compile_webstart" description="Build the AOR Simulator application with GUI as a Web Start Version.">
     <jar destfile="${webstart.dir}/${jar.filename.gui}" basedir="${class.dir}" manifest="${manifest.gui.webstart}">
       <fileset dir="." includes="aors/**"/>
       <fileset dir="." includes="ext/documents/about.htm"/>
       <fileset dir="." includes="${thirdparty-licenses.dir}/*.txt"/>
     </jar>
-
+    
     <!-- sign the jars  -->
     <signjar jar="${webstart.dir}/${jar.filename.gui}" alias="simulario" keystore="${keystore.webstart}" storepass="simulario09"/>
     <signjar alias="simulario" keystore="${keystore.webstart}" storepass="simulario09" lazy="true">
@@ -351,36 +368,37 @@
         <fileset dir="${webstart.dir}/modules" includes="**/*.jar"/>
       </path>
     </signjar>
-
+  
     <!-- delete the created bin directory -->
     <delete includeemptydirs="true" failonerror="false">
       <fileset dir="${class.dir}"/>
     </delete>
   </target>
-
+  
   <target name="exec_env_webstart"
     description="Build the environment that are necessary for the execution of the application, which means to copy all libraries and external files like XSLTs to the dist folder.">
     <mkdir dir="${webstart.dir}"/>
-
+    
     <!-- copy the ext media data -->
     <mkdir dir="${webstart.dir}/${media.dir}"/>
     <copy todir="${webstart.dir}/${media.dir}" overwrite="true">
       <fileset dir="${media.dir}" excludes=".svn"/>
     </copy>
-
+    
     <!-- copy the modules -->
     <mkdir dir="${webstart.dir}/${modules.dir}"/>
     <copy todir="${webstart.dir}/${modules.dir}" overwrite="true">
       <fileset dir="${modules.dir}" includes="*.jar *.xml"/>
       <!-- <fileset dir="${gui.webstart.contents.path}" includes="*.jar"/> -->
     </copy>
-
+    
     <!-- copy the libraries -->
     <copy todir="${webstart.dir}/${lib.dir}" overwrite="true">
       <fileset dir="${lib.dir}"
-        includes="AORS-Log-API.jar bounce.jar icons.jar json_simple-1.1.jar BrowserLauncher2-1_3.jar json_simple-1.1.jar colt.jar"/>
+        includes="AORS-Log-API.jar bounce.jar icons.jar json_simple-1.1.jar BrowserLauncher2-1_3.jar json_simple-1.1.jar colt.jar"
+        />
     </copy>
-
+    
     <!-- copy the thirdparty-licenses -->
     <copy todir="${webstart.dir}/${thirdparty-licenses.dir}" overwrite="true">
       <fileset dir="${thirdparty-licenses.dir}" includes="*.txt"/>
@@ -390,35 +408,35 @@
     <copy todir="${webstart.dir}" overwrite="true">
       <fileset dir="${gui.webstart.contents.path}" includes="aor-simulator.jnlp Page.html"/>
     </copy>
-
+    
   </target>
-
+  
   <target name="clean_webstart" description="cleans the project">
     <!-- remove all except the content of the project folder -->
     <delete includeemptydirs="true" failonerror="false">
       <fileset dir="${webstart.dir}" excludes="scenarios/**"/>
     </delete>
   </target>
-
-
+  
+  
   <target name="compile_webstart">
     <mkdir dir="${class.dir}"/>
     <echo message="Directory ${modules.src.dir} is excluded from compilation!"/>
-    <javac srcdir="${core.dir}" destdir="${class.dir}" classpathref="classpath" debug="true">
+    <javac  srcdir="${core.dir}" destdir="${class.dir}" classpathref="classpath" debug="true">
       <exclude name="${modules.src.dir}/visopengl/**"/>
       <exclude name="${modules.src.dir}/statistics/**"/>
       <exclude name="${modules.src.dir}/sound/**"/>
       <exclude name="${modules.src.dir}/physics2d/**"/>
       <exclude name="${modules.src.dir}/initialState/**"/>
       <exclude name="controller/Project.java"/>
-      <exclude name="controller/SimulationManager.java"/>
+      <exclude name="controller/SimulationManager.java"/>     
       <exclude name="gui/swing/AORJavaGui.java"/>
       <exclude name="gui/swing/ProjectFileView.java"/>
       <exclude name="gui/swing/DialogPreferences.java"/>
       <exclude name="test/**"/>
       <compilerarg value="-Xlint"/>
     </javac>
-
+    
   </target>
 
 </project>

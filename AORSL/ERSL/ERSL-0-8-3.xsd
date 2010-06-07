@@ -1,0 +1,171 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<?xml-stylesheet type="text/xsl" href="refman/refman.xsl"?>
+<xs:schema
+		xmlns:ers="http://aor-simulation.org"
+		xmlns:dc="http://purl.org/dc/elements/1.1/"
+		xmlns:h="http://www.w3.org/1999/xhtml"
+		xmlns:xs="http://www.w3.org/2001/XMLSchema"
+		targetNamespace="http://aor-simulation.org"
+		elementFormDefault="qualified" attributeFormDefault="unqualified">
+	<xs:annotation><xs:documentation><dc:title>ERSL 0.8.3</dc:title></xs:documentation></xs:annotation>
+	<xs:annotation id="preface">
+		<xs:documentation xml:lang="en">
+			<h:img style="float:right" href="ERS-Types.png" alt="ERS types"/>
+			<h:p>Created on 20100422, Copyright 2010 Gerd Wagner, some rights reserved (<h:a href="http://creativecommons.org/licenses/by-sa/3.0/" rel="nofollow">Creative Commons 3.0 BY-SA</h:a>). With contributions by Mircea Diaconescu, Daniel Draeger, Thomas Grundmann and Jens Werner. See also the <h:a href="http://AOR-Simulation.org">project website</h:a>.</h:p>
+			<h:p>The main element of an ERSL file is <h:strong><h:code>SimulationScenario</h:code></h:strong>, which essentially consists of a <h:code>SimulationModel</h:code>, an <h:code>InitialState</h:code>, and a <h:code>UserInterface</h:code> element.</h:p>
+		</xs:documentation>
+	</xs:annotation>
+	<!-- =================================================================== -->
+	<!-- Open issues
+		- Add UPD-ENV/UpdateObject/ComplexDataPropertySlot
+		- Add DO/CALL @procedure="..." onObjectRef="..." for invoking a method
+		- Replace <PhysicalObjectType/InitialAttributeValue attribute="width" value="1.5"/>
+		  by <PhysicalObjectType/InitialAttributeValues width="1.5"/>
+		- Introduce SpatialObject as a supertype of PhysicalObject
+		- Rename ExogenousEvent(Type) to PeriodicTimeEvent(Type)?		
+		- Clean up the content model of UPDATE-ENV (why can DestroyObjects not be freely mixed?) 
+	-->
+	<!-- =================================================================== -->
+	<xs:include schemaLocation="SimulationScenario.xsd"/>
+	<xs:include schemaLocation="SimulationModel.xsd"/>
+	<xs:include schemaLocation="EntityTypes.xsd"/>
+	<xs:include schemaLocation="Rules.xsd"/>
+	<xs:include schemaLocation="UserInterface.xsd"/>
+	<!-- =================================================================== -->
+	<!-- ************    Root element    *********************************** -->
+	<xs:element name="SimulationScenario" type="ers:SimulationScenario.type">
+	<!-- =================================================================== -->
+		<xs:annotation>
+			<xs:documentation>
+				<h:p>Consists essentially of a <h:code>SimulationModel</h:code>, an <h:code>InitialState</h:code>, and a <h:code>UserInterface</h:code> (including a statistics user interface and an animation user interface).</h:p>
+			</xs:documentation>
+		</xs:annotation>
+	</xs:element>
+	<xs:complexType name="SimulationScenario.type">
+		<xs:sequence>
+			<xs:element ref="ers:documentation" minOccurs="0"/>
+			<xs:element ref="ers:SimulationParameters"/>
+			<xs:choice>
+				<xs:group ref="ers:include"/>
+				<xs:element ref="ers:SimulationModel"/>
+			</xs:choice>
+			<xs:element ref="ers:InitialState"/>
+			<xs:element ref="ers:UserInterface" minOccurs="0"/>
+		</xs:sequence>
+		<xs:attributeGroup ref="ers:SimulationScenario.attributes"/>
+	</xs:complexType>	
+	
+	<!-- =================================================================== -->
+	<xs:element name="SimulationModel">
+	<!-- =================================================================== -->
+		<xs:complexType>
+			<xs:sequence>
+				<xs:element ref="ers:documentation" minOccurs="0"/>
+				<xs:element ref="ers:SimulationParameterDeclaration" minOccurs="0" maxOccurs="unbounded"/>
+				<xs:element ref="ers:SpaceModel" minOccurs="0"/>
+				<xs:element ref="ers:Statistics" minOccurs="0"/>
+				<xs:element ref="ers:DataTypes" minOccurs="0"/>
+				<xs:element ref="ers:Globals" minOccurs="0"/>
+				<xs:element ref="ers:EntityTypes" minOccurs="0"/>
+				<xs:element ref="ers:EnvironmentRules" minOccurs="0"/>
+				<xs:element ref="ers:Collections" minOccurs="0"/>
+			</xs:sequence>
+			<xs:attributeGroup ref="ers:SimulationModel.attributes"/>
+		</xs:complexType>
+		<!-- =================================================================== -->
+		<!-- KEY and KEYREF constraints  -->
+		<!-- =================================================================== -->
+		<xs:key name="ExternalEntityTypeKey">
+			<xs:selector xpath="ers:EntityTypes/ers:ObjectType | ers:EntityTypes/ers:PhysicalObjectType | ers:EntityTypes/ers:CausedEventType | ers:EntityTypes/ers:ExogenousEventType"/>
+			<xs:field xpath="@name"/>
+		</xs:key>
+		<!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->
+		<xs:key name="ObjectTypeKey">
+			<xs:selector xpath="ers:EntityTypes/ers:ObjectType | ers:EntityTypes/ers:PhysicalObjectType"/>
+			<xs:field xpath="@name"/>
+		</xs:key>
+		<xs:keyref name="ObjectTypeReference" refer="ers:ObjectTypeKey">
+			<!--
+				<xs:selector xpath="ers:EnvironmentRules/ers:EnvironmentRule/ers:VariableDeclaration[@objectType != 'Collection'] | ers:EnvironmentRules/ers:EnvironmentRule/ers:UPDATE-ENV/ers:UpdateObjects"/>
+			-->
+			<xs:selector xpath="ers:EnvironmentRules/ers:EnvironmentRule/ers:UPDATE-ENV/ers:UpdateObjects"/>
+			<xs:field xpath="@objectType"/>
+		</xs:keyref>
+		<!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->
+		<xs:key name="ReferenceTypeKey">
+			<xs:selector xpath="ers:EntityTypes/ers:ObjectType | ers:EntityTypes/ers:PhysicalObjectType"/>
+			<xs:field xpath="@name"/>
+		</xs:key>
+		<xs:keyref name="ReferenceProperty-TypeReference" refer="ers:ReferenceTypeKey">
+			<xs:selector xpath="ers:EntityTypes/ers:*/ers:ReferenceProperty"/>
+			<xs:field xpath="@type"/>
+		</xs:keyref>
+		<!--
+			The following keyref cannot be used as there are predfined superclass types (such as the agent type for sincere and trustful communication)
+			<xs:keyref name="ObjectType-SuperTypeReference" refer="ers:ObjectTypeKey">
+			<xs:selector xpath="ers:EntityTypes/ers:ObjectType | ers:EntityTypes/ers:PhysicalObjectType"/>
+			<xs:field xpath="@superType"/>
+			</xs:keyref>
+		-->
+		<!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->
+		<xs:key name="EnvironmentEventTypeKey">
+			<xs:selector xpath="ers:EntityTypes/ers:ExogenousEventType | ers:EntityTypes/ers:CausedEventType"/>
+			<xs:field xpath="@name"/>
+		</xs:key>
+		<!--
+			The following keyref cannot be used as there are predfined event types such as OutMessageEvent
+			<xs:keyref name="EnvironmentEventTypeReference" refer="ers:EnvironmentEventTypeKey">
+			<xs:selector xpath="ers:EnvironmentRules/ers:EnvironmentRule/ers:TriggeringAtomicEventExpr"/>
+			<xs:field xpath="@eventType"/>
+			</xs:keyref>
+		-->
+		<!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->
+		<xs:key name="CausedEventTypeKey">
+			<xs:selector xpath="ers:EntityTypes/ers:CausedEventType"/>
+			<xs:field xpath="@name"/>
+		</xs:key>
+		<!--
+			The following keyref cannot be used as there are predfined event types such as StopSimulation
+			<xs:keyref name="CausedEventTypeReference" refer="ers:CausedEventTypeKey">
+			<xs:selector xpath="ers:EnvironmentRules/ers:EnvironmentRule/ers:ResultingEventExpr/ers:CausedEventExpr"/>
+			<xs:field xpath="@eventType"/>
+			</xs:keyref>
+		-->
+	</xs:element>
+	<!-- =================================================================== -->
+	<xs:element name="EntityTypes">
+	<!-- =================================================================== -->
+		<xs:complexType>
+			<xs:sequence>
+				<xs:element ref="ers:EnvironmentEventType" minOccurs="0" maxOccurs="unbounded"/>
+				<xs:element ref="ers:ObjectType" minOccurs="0" maxOccurs="unbounded"/>
+			</xs:sequence>
+		</xs:complexType>
+	</xs:element>
+	<!-- =================================================================== -->
+	<xs:element name="Collections">
+	<!-- =================================================================== -->
+		<xs:complexType>
+			<xs:sequence>
+				<xs:element ref="ers:Collection" maxOccurs="unbounded"/>
+			</xs:sequence>
+		</xs:complexType>
+	</xs:element>
+	<!-- =================================================================== -->
+	<xs:element name="InitialState">
+	<!-- =================================================================== -->
+		<xs:complexType>
+			<xs:sequence>
+				<xs:choice minOccurs="0" maxOccurs="unbounded">
+					<xs:element name="GlobalVariable" type="ers:UpdateGlobalVariable.type" minOccurs="0" maxOccurs="unbounded"/>
+					<xs:element ref="ers:Object" minOccurs="0" maxOccurs="unbounded"/>
+					<xs:element ref="ers:ExogenousEvent" minOccurs="0" maxOccurs="unbounded"/>
+					<xs:element ref="ers:CausedEvent" minOccurs="0" maxOccurs="unbounded"/>
+					<xs:element ref="ers:Objects" minOccurs="0" maxOccurs="unbounded"/>
+					<xs:element ref="ers:GridCells" minOccurs="0"/>
+				</xs:choice>
+				<xs:element ref="ers:InitializationRule" minOccurs="0" maxOccurs="unbounded"/>
+			</xs:sequence>
+		</xs:complexType>
+	</xs:element>
+</xs:schema>

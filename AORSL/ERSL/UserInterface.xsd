@@ -4,6 +4,16 @@
 	elementFormDefault="qualified" attributeFormDefault="unqualified">
 	<xs:include schemaLocation="Views.xsd"/>
 	<!-- =================================================================== -->
+	<xs:element name="UserInterface" type="ers:UserInterface.type"/>
+	<!-- =================================================================== -->
+	<xs:complexType name="UserInterface.type">
+		<xs:sequence>
+			<xs:element ref="ers:InitialStateUI" minOccurs="0"/>
+			<xs:element ref="ers:StatisticsUI" minOccurs="0"/>
+			<xs:element ref="ers:AnimationUI" minOccurs="0"/>
+		</xs:sequence>
+	</xs:complexType>
+	<!-- =================================================================== -->
 	<xs:element name="StatisticsUI">
 	<!-- =================================================================== -->
 		<xs:complexType>
@@ -84,7 +94,7 @@
 	</xs:group>
 	<!-- =================================================================== -->
 	<xs:element name="InitialStateUI">
-	<!-- =================================================================== -->
+		<!-- =================================================================== -->
 		<xs:complexType>
 			<xs:sequence>
 				<xs:element ref="ers:GlobalVariableUI" minOccurs="0" maxOccurs="unbounded"/>
@@ -94,9 +104,32 @@
 			</xs:sequence>
 		</xs:complexType>
 	</xs:element>
-	<!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->
+	<!-- =================================================================== -->
+	<xs:element name="AnimationUI">
+		<!-- =================================================================== -->
+		<xs:complexType>
+			<xs:sequence>
+				<xs:element name="DisplayDescription" type="ers:AnyXHTML.type" minOccurs="0"/>
+				<!-- <xs:element ref="ers:Scales" minOccurs="0"/> -->
+				<xs:element name="Views">
+					<xs:complexType>
+						<xs:sequence>
+							<xs:element ref="ers:SpaceView"  minOccurs="0"/>
+							<xs:element ref="ers:ObjectView" minOccurs="0" maxOccurs="unbounded"/>
+							<xs:element ref="ers:PhysicalObjectView" minOccurs="0" maxOccurs="unbounded"/>
+							<xs:element ref="ers:EventAppearance" minOccurs="0" maxOccurs="unbounded"/>
+						</xs:sequence>
+					</xs:complexType>
+				</xs:element>
+			</xs:sequence>
+			<xs:attribute name="introSoundFile" type="xs:anyURI" use="optional">
+				<xs:annotation><xs:documentation>The source file can be mp3 or midi. It is identified by its extension (.mp3 or .mid). The file is searched first in the project folder under "media/sounds". If the file is not found then it is searched in the global media/sounds folder. If still not found, then no sound is played. Note that the path is relative to the media/sounds folder (of the project or the global one). </xs:documentation></xs:annotation>
+			</xs:attribute>
+		</xs:complexType>
+	</xs:element>
+	<!-- =================================================================== -->
 	<xs:element name="EventUI">
-	<!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->
+		<!-- =================================================================== -->
 		<xs:complexType>
 			<xs:sequence>
 				<xs:element ref="ers:PropertyUI" maxOccurs="unbounded"/>
@@ -105,9 +138,9 @@
 			<xs:attributeGroup ref="ers:EntityUI.attributes"/>
 		</xs:complexType>
 	</xs:element>
-	<!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->
+	<!-- =================================================================== -->
 	<xs:attributeGroup name="EntityUI.attributes">
-	<!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->
+		<!-- =================================================================== -->
 		<xs:attribute name="nmrOfInstances" use="optional">
 			<xs:simpleType>
 				<xs:restriction base="xs:integer">
@@ -117,9 +150,9 @@
 			</xs:simpleType>
 		</xs:attribute>
 	</xs:attributeGroup>
-	<!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->
+	<!-- =================================================================== -->
 	<xs:element name="ObjectUI">
-	<!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->
+		<!-- =================================================================== -->
 		<xs:complexType>
 			<xs:sequence>
 				<xs:element ref="ers:PropertyUI" maxOccurs="unbounded"/>
@@ -128,9 +161,9 @@
 			<xs:attributeGroup ref="ers:EntityUI.attributes"/>
 		</xs:complexType>
 	</xs:element>
-	<!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->
+	<!-- =================================================================== -->
 	<xs:element name="AgentUI">
-	<!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->
+		<!-- =================================================================== -->
 		<xs:complexType>
 			<xs:sequence>
 				<xs:element ref="ers:PropertyUI" minOccurs="0" maxOccurs="unbounded"/>
@@ -141,28 +174,18 @@
 			<xs:attributeGroup ref="ers:EntityUI.attributes"/>
 		</xs:complexType>
 	</xs:element>
-	<!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->
+	<!-- =================================================================== -->
 	<xs:element name="PropertyUI" type="ers:PropertyUI.type"/>
 	<xs:element name="SelfBeliefPropertyUI" type="ers:PropertyUI.type"/>
 	<xs:element name="BeliefPropertyUI" type="ers:PropertyUI.type"/>
-	<!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->
+	<!-- =================================================================== -->
 	<xs:complexType name="PropertyUI.type">
-	<!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->
 		<xs:sequence>
 			<xs:element ref="ers:Label"/>
 			<xs:element ref="ers:Hint"/>
 			<xs:element ref="ers:Unit" minOccurs="0"/>
 		</xs:sequence>
 		<xs:attribute name="property" type="ers:CanonicalName" use="required"/>
-		<xs:attribute name="widget" use="optional">
-			<xs:simpleType>
-				<xs:restriction base="xs:string">
-					<xs:enumeration value="Slider"/>
-					<xs:enumeration value="Meter"/>
-				</xs:restriction>
-			</xs:simpleType>
-		</xs:attribute>
-		<xs:attribute name="readonly" type="xs:boolean" use="optional"/>
 		<xs:attributeGroup ref="ers:inputFieldLength.attrGrp"/>
 	</xs:complexType>
 	<!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->
@@ -211,9 +234,9 @@
 			</xs:sequence>
 		</xs:complexType>
 	</xs:element>
-	<!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->
+	<!-- =================================================================== -->
 	<xs:element name="GlobalVariableUI">
-	<!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->
+		<!-- =================================================================== -->
 		<xs:complexType>
 			<xs:sequence>
 				<xs:sequence>
@@ -226,9 +249,9 @@
 			<xs:attributeGroup ref="ers:inputFieldLength.attrGrp"/>
 		</xs:complexType>
 	</xs:element>
-	<!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->
+	<!-- =================================================================== -->
 	<xs:element name="BeliefEntityUI">
-	<!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->
+	<!-- =================================================================== -->
 		<xs:complexType>
 			<xs:sequence>
 				<xs:element ref="ers:BeliefPropertyUI" maxOccurs="unbounded"/>
@@ -237,234 +260,5 @@
 			<xs:attributeGroup ref="ers:EntityUI.attributes"/>
 		</xs:complexType>
 	</xs:element>
-	<!-- =================================================================== -->
-	<xs:element name="AnimationUI" type="ers:AnimationUI.type"/>
-	<!-- =================================================================== -->
-	<xs:complexType name="AnimationUI.type">
-	  <xs:sequence>
-	    <xs:element name="DisplayDescription" type="ers:AnyXHTML.type" minOccurs="0"/>
-	    <!-- <xs:element ref="ers:Scales" minOccurs="0"/> -->
-	    <xs:element name="Views">
-	      <xs:complexType>
-	        <xs:sequence>
-	          <xs:element ref="ers:SpaceView"  minOccurs="0"/>
-	          <xs:element ref="ers:ObjectView" minOccurs="0" maxOccurs="unbounded"/>
-	          <xs:element ref="ers:PhysicalObjectView" minOccurs="0" maxOccurs="unbounded"/>
-	          <xs:element ref="ers:EventAppearance" minOccurs="0" maxOccurs="unbounded"/>
-	        </xs:sequence>
-	      </xs:complexType>
-	    </xs:element>
-	    <!--				<xs:element name="AgentControlUI" minOccurs="0">
-	      <xs:complexType>
-	      <xs:sequence>
-	      <xs:element ref="ers:PropertyUI" minOccurs="0" maxOccurs="unbounded"/>
-	      <xs:element ref="ers:SelfBeliefPropertyUI" minOccurs="0" maxOccurs="unbounded"/>
-	    -->							<!--
-	      <xs:element ref="ers:BeliefEntityUI" minOccurs="0" maxOccurs="unbounded"/>
-	    -->
-	    <!--							<xs:element ref="ers:ReactionRuleUI"  minOccurs="0" maxOccurs="unbounded"/>
-	      <xs:element ref="ers:UserInterfaceEventListener" minOccurs="0" maxOccurs="unbounded"/>
-	      </xs:sequence>
-	      <xs:attribute name="agentType" type="ers:CanonicalName" use="required">
-	      <xs:annotation><xs:documentation>The type of agent for which this agent control UI is defined. </xs:documentation></xs:annotation>
-	      </xs:attribute>
-	      </xs:complexType>
-	      </xs:element>
-	    -->			</xs:sequence>
-	  <xs:attribute name="playableAgents" type="ers:ListOfCanonicalName" use="optional">
-	    <xs:annotation><xs:documentation>A list of agent names specifying those agents (defined in the initial state) that are playable by a human user. </xs:documentation></xs:annotation>
-	  </xs:attribute>
-	  <xs:attribute name="timeoutSec" type="xs:positiveInteger" use="optional">
-	    <xs:annotation><xs:documentation>The timeout for the human-controlled agents' response time in number of seconds. </xs:documentation></xs:annotation>
-	  </xs:attribute>
-	  <xs:attribute name="introSoundFile" type="xs:anyURI" use="optional">
-	    <xs:annotation><xs:documentation>The sound file can be mp3 or midi, as identified by its extension (.mp3 or .mid). The file is searched first in the project folder under "media/sounds". If the file is not found in this folder, then it is searched in the global media/sounds folder. If still not found, then no sound is played. Note that the path is relative to the media/sounds folder. </xs:documentation></xs:annotation>
-	  </xs:attribute>
-	</xs:complexType>
-  
-	<!-- =================================================================== -->
-	<xs:element name="ReactionRuleUI">
-	<!-- =================================================================== -->
-		<xs:complexType>
-			<xs:sequence>
-				<xs:element name="ActionEventUI" minOccurs="0" maxOccurs="unbounded">
-					<xs:complexType>
-						<xs:sequence>
-							<xs:element ref="ers:PropertyUI" minOccurs="0" maxOccurs="unbounded"/>
-						</xs:sequence>
-						<xs:attribute name="actionEventType" type="ers:CanonicalName" use="required"/>
-					</xs:complexType>
-				</xs:element>
-				<xs:element name="OutMessageEventUI" minOccurs="0" maxOccurs="unbounded">
-					<xs:complexType>
-						<xs:sequence>
-							<xs:element ref="ers:PropertyUI" minOccurs="0" maxOccurs="unbounded"/>
-						</xs:sequence>
-						<xs:attribute name="messageType" type="ers:CanonicalName" use="required"/>
-					</xs:complexType>
-				</xs:element>
-			</xs:sequence>
-			<xs:attribute name="rule" type="ers:CanonicalName" use="required">
-				<xs:annotation><xs:documentation>The name of the affected rule. </xs:documentation></xs:annotation>
-			</xs:attribute>
-			<xs:attribute name="activationMode" use="optional">
-				<xs:annotation><xs:documentation>Defines the way in which a reaction rule is activated or used when the agent is controlled by a human user. In case of "suspend", the rule is not used/executed at all. In case of "entryform", the rule is used in combination with an entry form that allows the user to enter a value for a paramter of the rule's action. In case of "activate", the rule is applied by the simulator, but has to be activated by the user for being fired (by a mouse-click or another kind of activation). </xs:documentation></xs:annotation>
-				<xs:simpleType>
-					<xs:restriction base="xs:string">
-						<xs:enumeration value="suspend"/>
-						<xs:enumeration value="entryform"/>
-						<xs:enumeration value="activate"/>
-					</xs:restriction>
-				</xs:simpleType>
-			</xs:attribute>
-		</xs:complexType>
-	</xs:element>
-	<!-- =================================================================== -->
-	<xs:element name="UserInterfaceEventListener">
-	<!-- =================================================================== -->
-		<xs:complexType>
-			<xs:sequence>
-				<xs:element name="WHEN">
-				  <xs:complexType>
-				    <xs:complexContent>
-				      <xs:restriction base="ers:UserInterfaceEventListenerTriggeringEvent.type">
-				        <xs:choice maxOccurs="1">
-				          <xs:element ref="ers:KeyboardEvent"/>
-				          <xs:element ref="ers:MouseEvent"/>
-				        </xs:choice>
-				      </xs:restriction>
-				    </xs:complexContent>
-				  </xs:complexType>
-				</xs:element>
-				<xs:element name="DO" type="ers:UserInterfaceEventListenerResultingEvent.type"/>
-			</xs:sequence>
-		</xs:complexType>
-	</xs:element>
-  
-  <xs:complexType name="UserInterfaceEventListenerTriggeringEvent.type">
-    <xs:annotation>
-      <xs:documentation>
-        User interface events are defined in the DOM3-Spezifikation [http://www.w3.org/TR/DOM-Level-3-Events]
-      </xs:documentation>
-    </xs:annotation>
-    <xs:choice maxOccurs="unbounded">
-      <xs:element ref="ers:KeyboardEvent"/>
-      <xs:element ref="ers:MouseEvent"/>
-    </xs:choice>
-  </xs:complexType>
-  
-  <xs:element name="KeyboardEvent">
-    <xs:complexType>
-      <xs:attribute name="keyIdentifier" type="ers:KeyIdentifiers.type" use="required"/>
-      <xs:attribute name="shiftKey" type="xs:boolean" use="optional"/>
-      <xs:attribute name="ctrlKey" type="xs:boolean" use="optional"/>
-      <!--									
-        <xs:attribute name="altKey" type="xs:boolean" use="optional">
-        <xs:annotation><xs:documentation>On Macintosh systems this key modifier corresponds to the Option key modifier. </xs:documentation></xs:annotation>
-        </xs:attribute>
-      -->									
-    </xs:complexType>
-  </xs:element>
-  
-  <xs:simpleType name="KeyIdentifiers.type">
-    <xs:annotation><xs:documentation>See http://www.w3.org/TR/2009/WD-DOM-Level-3-Events-20090908/#keyset-keyidentifiers </xs:documentation></xs:annotation>
-    <xs:restriction base="xs:string">
-      <xs:enumeration value="Down"/>
-      <xs:enumeration value="Left"/>
-      <xs:enumeration value="Right"/>
-      <xs:enumeration value="Up"/>
-      <xs:enumeration value="Enter">
-        <xs:annotation><xs:documentation>This key identifier shall be also used for the Return (Macintosh numpad) key. </xs:documentation></xs:annotation>
-      </xs:enumeration>
-      <xs:enumeration value="F1"/>
-      <xs:enumeration value="F2"/>
-      <xs:enumeration value="F3"/>
-      <xs:enumeration value="F4"/>
-      <xs:enumeration value="F5"/>
-      <xs:enumeration value="F6"/>
-      <xs:enumeration value="F7"/>
-      <xs:enumeration value="F8"/>
-      <xs:enumeration value="F9"/>
-      <xs:enumeration value="F10"/>
-      <xs:enumeration value="F11"/>
-      <xs:enumeration value="F12"/>
-      <xs:enumeration value="Insert"/>
-      <xs:enumeration value="Del">
-        <xs:annotation><xs:documentation>This key identifier shall be also used for the key labeled 'delete' MacOS keyboards when modified by the 'Fn' key.</xs:documentation></xs:annotation>
-      </xs:enumeration>
-      <xs:enumeration value="Backspace">
-        <xs:annotation><xs:documentation>This key identifier shall be also used for the key labeled 'delete' MacOS keyboards when not modified by the 'Fn' key.</xs:documentation></xs:annotation>
-      </xs:enumeration>
-      <xs:enumeration value="PageDown"/>
-      <xs:enumeration value="PageUp"/>
-      <xs:enumeration value="Tab"/>
-      <xs:enumeration value="Esc"/>
-      <xs:enumeration value="Spacebar"/>
-      <xs:enumeration value="#"/>
-      <xs:enumeration value="+"/>
-      <xs:enumeration value="-"/>
-      <xs:enumeration value="1"/>
-      <xs:enumeration value="2"/>
-      <xs:enumeration value="3"/>
-      <xs:enumeration value="4"/>
-      <xs:enumeration value="5"/>
-      <xs:enumeration value="6"/>
-      <xs:enumeration value="7"/>
-      <xs:enumeration value="8"/>
-      <xs:enumeration value="9"/>
-      <xs:enumeration value="0"/>
-      <xs:enumeration value="A"/>
-      <xs:enumeration value="B"/>
-      <xs:enumeration value="C"/>
-      <xs:enumeration value="D"/>
-      <xs:enumeration value="E"/>
-      <xs:enumeration value="F"/>
-      <xs:enumeration value="G"/>
-      <xs:enumeration value="H"/>
-      <xs:enumeration value="I"/>
-      <xs:enumeration value="J"/>
-      <xs:enumeration value="K"/>
-      <xs:enumeration value="L"/>
-      <xs:enumeration value="M"/>
-      <xs:enumeration value="N"/>
-      <xs:enumeration value="O"/>
-      <xs:enumeration value="P"/>
-      <xs:enumeration value="Q"/>
-      <xs:enumeration value="R"/>
-      <xs:enumeration value="S"/>
-      <xs:enumeration value="T"/>
-      <xs:enumeration value="U"/>
-      <xs:enumeration value="V"/>
-      <xs:enumeration value="W"/>
-      <xs:enumeration value="X"/>
-      <xs:enumeration value="Y"/>
-      <xs:enumeration value="Z"/>
-    </xs:restriction>
-  </xs:simpleType>
-  
-  <xs:element name="MouseEvent">
-   <xs:complexType>
-     <xs:attribute name="targetType" type="ers:CanonicalName" use="optional"/>
-     <xs:attribute name="targetIdRef" type="xs:long" use="optional"/>
-     <xs:attribute name="mouseEventType" type="ers:MouseEvent.type" use="required"/>
-     <xs:attribute name="eventVariable" type="ers:CanonicalName" use="optional"/>
-   </xs:complexType>
- </xs:element>
-	
-  <xs:simpleType name="MouseEvent.type">
-		<xs:annotation><xs:documentation>See http://www.w3.org/TR/2009/WD-DOM-Level-3-Events-20090908/#events-mouseevents </xs:documentation></xs:annotation>
-		<xs:restriction base="xs:string">
-			<xs:enumeration value="click"/>
-			<xs:enumeration value="dblclick"/>
-			<xs:enumeration value="mousedown"/>
-			<xs:enumeration value="mouseup"/>
-		</xs:restriction>
-	</xs:simpleType>
 
-  <xs:complexType name="UserInterfaceEventListenerResultingEvent.type">
-    <xs:sequence>
-      <xs:element ref="ers:Slot" minOccurs="0" maxOccurs="unbounded"/>
-    </xs:sequence>
-    <xs:attribute name="actionType" type="ers:CanonicalName" use="required"/>
-  </xs:complexType>
 </xs:schema>

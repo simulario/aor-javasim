@@ -1647,7 +1647,7 @@
                             <xsl:value-of select="'getObjectById'"/>
                           </xsl:when>
                           <xsl:otherwise>
-                            <xsl:value-of select="'getListReferenceObjectsByType'"/>
+                            <xsl:value-of select="'getObjectsByType'"/>
                           </xsl:otherwise>
                         </xsl:choose>
                       </xsl:with-param>
@@ -2250,6 +2250,20 @@
                   <xsl:with-param name="indent" select="$indent + 2"/>
                   <xsl:with-param name="spaceModelVar" select="$spaceModelVar"/>
                 </xsl:apply-templates>
+
+                <!-- add the propertyChangelistener  -->
+                <xsl:if test="$observeGridCells">
+                  <xsl:call-template name="java:callMethod">
+                    <xsl:with-param name="indent" select="$indent + 3"/>
+                    <xsl:with-param name="objInstance" select="$gridCellVariable"/>
+                    <xsl:with-param name="method" select="'addPropertyChangeListener'"/>
+                    <xsl:with-param name="args" as="xs:string*">
+                      <xsl:call-template name="java:varByDotNotation">
+                        <xsl:with-param name="varName" select="$databus.class.dataBus"/>
+                      </xsl:call-template>
+                    </xsl:with-param>
+                  </xsl:call-template>
+                </xsl:if>
 
               </xsl:with-param>
               <xsl:with-param name="elseContent">

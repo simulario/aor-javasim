@@ -29,9 +29,10 @@
 package aors.model.agtsim;
 
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.List;
 
+import aors.model.AtomicEvent;
+import aors.model.Message;
 import aors.model.Rule;
 import aors.model.envevt.ActionEvent;
 import aors.model.intevt.InternalEvent;
@@ -63,8 +64,7 @@ public abstract class ReactionRule extends Rule {
   protected List<ActionEvent> resultingActionEvents;
 
   /**
-   * Usage: ALWAYS call super in the sub-classes Create a new {@code
-   * ReactionRule}.
+   * Usage: ALWAYS call super in the sub-classes Create a new {@code ReactionRule}.
    * 
    * @param agentSubject
    */
@@ -96,38 +96,38 @@ public abstract class ReactionRule extends Rule {
   }
 
   /**
-   * hooks; may overwrite in instances
+   * 
+   * Usage:
+   * 
+   * 
+   * Comments: contains a list of Internal Events that are computed after the
+   * rule execution
    * 
    * @return list of internal events after the rule processing
    */
-  protected List<? extends InternalEvent> doResultingInternalEvents() {
-    return Collections.emptyList();
-  }
+  protected abstract List<? extends InternalEvent> doResultingInternalEvents();
 
-  protected List<? extends InternalEvent> thenResultingInternalEvents() {
-    return Collections.emptyList();
-  }
+  protected abstract List<? extends InternalEvent> thenResultingInternalEvents();
 
-  protected List<? extends InternalEvent> elseResultingInternalEvents() {
-    return Collections.emptyList();
-  }
+  protected abstract List<? extends InternalEvent> elseResultingInternalEvents();
 
   /**
-   * hooks; may overwrite in instances
+   * 
+   * Usage:
+   * 
+   * 
+   * Comments: contains a list of ActionEvents that are computed after the rule
+   * execution
+   * 
+   * 
    * 
    * @return list of ActionEvents after processing the rule
    */
-  protected List<? extends ActionEvent> doResultingActionEvents() {
-    return Collections.emptyList();
-  }
+  protected abstract List<? extends ActionEvent> doResultingActionEvents();
 
-  protected List<? extends ActionEvent> thenResultingActionEvents() {
-    return Collections.emptyList();
-  }
+  protected abstract List<? extends ActionEvent> thenResultingActionEvents();
 
-  protected List<? extends ActionEvent> elseResultingActionEvents() {
-    return Collections.emptyList();
-  }
+  protected abstract List<? extends ActionEvent> elseResultingActionEvents();
 
   /**
    * 
@@ -149,7 +149,7 @@ public abstract class ReactionRule extends Rule {
    * computing the necessarily action events, or perception events.
    */
   public abstract void execute();
-
+  
   /**
    * 
    * Usage: If the rule is triggered by an InMessageEvent or OutMessageEvent
@@ -159,7 +159,7 @@ public abstract class ReactionRule extends Rule {
    * Comments:
    * 
    */
-  // @Deprecated
-  // public abstract Class<? extends Message> getMessageType();
+//  @Deprecated
+//  public abstract Class<? extends Message> getMessageType();
   public abstract String getMessageType();
 }

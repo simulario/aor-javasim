@@ -439,7 +439,7 @@ public class Box2DSimulator extends PhysicsSimulator {
         }
 
         // orientation
-        object.setRotZ(body.getAngle() * 180 / Math.PI);
+        object.setRotationAngleZ(body.getAngle() * 180 / Math.PI);
 
         // velocity
         // object.setVx(body.getLinearVelocity().x);
@@ -488,7 +488,7 @@ public class Box2DSimulator extends PhysicsSimulator {
 
         // update object properties
         body.setXForm(new Vec2((float) object.getX(), (float) object.getY()),
-            (float) (object.getRotZ() * Math.PI / 180));
+            (float) (object.getRotationAngleZ() * Math.PI / 180));
 
         // Vec2 v = new Vec2((float) object.getV().getX(), (float) object.getV()
         // .getY());

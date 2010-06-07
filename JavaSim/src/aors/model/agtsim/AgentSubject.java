@@ -45,16 +45,10 @@ import java.util.concurrent.CopyOnWriteArrayList;
 import aors.logger.model.AgentSimulatorStep;
 import aors.model.AtomicEvent;
 import aors.model.Entity;
-import aors.model.Rollbackable;
 import aors.model.agtsim.beliefs.ERDFBeliefEntityManager;
 import aors.model.agtsim.beliefs.ERDFBeliefEntityManagerImpl;
 import aors.model.agtsim.jaxb.JaxbLogGenerator;
 import aors.model.agtsim.json.JsonLogGenerator;
-import aors.model.agtsim.proxy.agentcontrol.AgentControlBroker;
-import aors.model.agtsim.proxy.agentcontrol.CoreAgentController;
-import aors.model.agtsim.proxy.agentcontrol.ModuleAgentController;
-import aors.model.agtsim.proxy.agentcontrol.Pair;
-import aors.model.agtsim.sim.AgentSimulator;
 import aors.model.envevt.ActionEvent;
 import aors.model.envevt.InMessageEvent;
 import aors.model.envevt.PerceptionEvent;
@@ -64,8 +58,6 @@ import aors.model.intevt.PeriodicTimeEvent;
 import aors.query.sparql.QueryEngine;
 import aors.util.Constants;
 import aors.util.JsonData;
-import java.util.HashSet;
-import java.util.Set;
 
 /**
  * AgentSubject
@@ -74,7 +66,7 @@ import java.util.Set;
  * @since May 25, 2008
  * @version $Revision$
  */
-public abstract class AgentSubject extends Entity implements Rollbackable {
+public abstract class AgentSubject extends Entity {
 
   protected final PropertyChangeSupport propertyChangeSupport = new PropertyChangeSupport(
       this);
@@ -147,10 +139,6 @@ public abstract class AgentSubject extends Entity implements Rollbackable {
    */
   private List<ActionEvent> resultingActionEvents;
 
-  private AgentController controller;
-
-  private AgentSimulator simulator;
-
   /**
    * 
    * Comments: Create a new {@code AgentSubject}. This constructor is to be
@@ -166,10 +154,9 @@ public abstract class AgentSubject extends Entity implements Rollbackable {
    */
   public AgentSubject(long id, String name) {
     super(id, name);
-    if ("".equals(name)) {
+    if (name == "") {
       this.setName(getClass().getSimpleName() + "_" + id);
     }
-    this.controller = null;
   }
 
   /**
@@ -180,10 +167,9 @@ public abstract class AgentSubject extends Entity implements Rollbackable {
    */
   public AgentSubject(long id) {
     super(id);
-    if ("".equals(getName())) {
+    if (getName().equals("")) {
       this.setName(getClass().getSimpleName() + "_" + id);
     }
-    this.controller = null;
   }
 
   public boolean isLogGenerationEnabled() {
@@ -1073,9 +1059,6 @@ public abstract class AgentSubject extends Entity implements Rollbackable {
    *          New perception events
    */
   public void setNewEvents(List<PerceptionEvent> perceptionEvents) {
-    if (this.controller != null) {
-      this.controller.setNewPerceptionEvents(perceptionEvents);
-    }
     this.perceptionEvents = perceptionEvents;
   } // setNewEvents
 
@@ -1338,7 +1321,6 @@ public abstract class AgentSubject extends Entity implements Rollbackable {
           // if the produced list contains any elements the content
           // will be added to the list of events that will
           // be sent to SimulationEngine
-
           this.resultingActionEvents.addAll(agentRuleResult);
         }
       }
@@ -1363,58 +1345,52 @@ public abstract class AgentSubject extends Entity implements Rollbackable {
    */
   public List<ActionEvent> executeRule(ReactionRule rule) {
 
-    List<ActionEvent> actions = new ArrayList<ActionEvent>();
+    // execute the rule - conditions are checked inside the rule
+    rule.execute();
 
-    // executes the rule if and only if the rule is not suspended
-    if (this.controller == null || !this.controller.ruleIsSuspended(rule)) {
+    // extract resulting internal events
+    List<? extends InternalEvent> resultingInternalEvents;
+    resultingInternalEvents = rule.getResultingInternalEvents();
 
-      // execute the rule - conditions are checked inside the rule
-      rule.execute();
+    this.newInternalEvents.addAll(resultingInternalEvents);
 
-      // extract resulting internal events
-      List<? extends InternalEvent> resultingInternalEvents;
-      resultingInternalEvents = rule.getResultingInternalEvents();
+    /**
+     * clear the internal events list for this rule already stored in the
+     * internalEvents.
+     * 
+     * If not cleared, on the next step, we will have also internal events from
+     * the previous step
+     */
+    rule.resultingInternalEvents.clear();
 
-      this.newInternalEvents.addAll(resultingInternalEvents);
-
+    /**
+     * the use of generic type <?> in ReactionRule class as return type for
+     * resultingActionEvents implies a cast here. this is to achieve the
+     * non-physical agents feature the cast rises warning s for unchecked cast,
+     * and for this reason the block has been surrounded by try catch block in
+     * case of exception an empty list is returned.
+     */
+    try {
+      List<ActionEvent> actions = new ArrayList<ActionEvent>();
+      actions.addAll((List<? extends ActionEvent>) rule
+          .getResultingActionEvents());
       /**
-       * clear the internal events list for this rule already stored in the
-       * internalEvents.
+       * clear the action events list for this rule already returned.
        * 
-       * If not cleared, on the next step, we will have also internal events
-       * from the previous step
+       * If not cleared, on the next step, we will have also action events from
+       * the previous step
        */
-      rule.resultingInternalEvents.clear();
+      rule.resultingActionEvents.clear();
 
-      /**
-       * the use of generic type <?> in ReactionRule class as return type for
-       * resultingActionEvents implies a cast here. this is to achieve the
-       * non-physical agents feature the cast rises warning s for unchecked
-       * cast, and for this reason the block has been surrounded by try catch
-       * block in case of exception an empty list is returned.
-       */
-      try {
-        actions.addAll((List<? extends ActionEvent>) rule
-            .getResultingActionEvents());
-        /**
-         * clear the action events list for this rule already returned.
-         * 
-         * If not cleared, on the next step, we will have also action events
-         * from the previous step
-         */
-        rule.resultingActionEvents.clear();
-
-      } catch (ClassCastException e) {
-        e.printStackTrace();
-        return new ArrayList<ActionEvent>();
-      } catch (Exception e) {
-        e.printStackTrace();
-        return new ArrayList<ActionEvent>();
-      }
+      // return actions for this rules
+      return actions;
+    } catch (ClassCastException e) {
+      e.printStackTrace();
+      return new ArrayList<ActionEvent>();
+    } catch (Exception e) {
+      e.printStackTrace();
+      return new ArrayList<ActionEvent>();
     }
-
-    // return actions for this rules
-    return actions;
   }
 
   /**
@@ -1441,217 +1417,4 @@ public abstract class AgentSubject extends Entity implements Rollbackable {
     // TODO Is there something to do here?
   } // notifyRemoval
 
-  @Override
-  public void activateMonitoring() {
-    // System.out.println("Monitoring activated for " + this.getName());
-  }
-
-  @Override
-  public void acceptChanges() {
-    // System.out.println("Changes accepted for " + this.getName());
-  }
-
-  @Override
-  public void rejectChanges() {
-    // System.out.println("Changes rejected for " + this.getName());
-  }
-
-  public void setAgentSimulator(AgentSimulator simulator) {
-    this.simulator = simulator;
-  }
-
-  public AgentController getAgentController() {
-    return this.controller;
-  }
-
-  protected void setController(AgentController controller) {
-    this.controller = controller;
-  }
-
-  public Map<String, Object> getBeliefProperties() {
-    return new HashMap<String, Object>();
-  }
-
-  public boolean isControllable() {
-    return this.controller != null;
-  }
-
-  public boolean isControlled() {
-    return this.isControllable() && this.controller.agentIsControlled();
-  }
-
-  
-	/**
-	 * This class represents the core part of the agent controller. To have access
-	 * to some private methods and field of the agent subject it is designed as an
-	 * inner class of agent subject.
-	 * @author Thomas Grundmann
-	 */
-	public static abstract class AgentController implements CoreAgentController {
-
-		/**
-		 * Reference to its enclosing agent subject
-		 */
-    private AgentSubject agentSubject;
-
-		/**
-		 * Reference to its counterpart in the agent control module.
-		 */
-		private ModuleAgentController moduleAgentController;
-
-		/**
-		 * Indicates if the agent that belogs to this controller is controlled by an
-		 * user.
-		 */
-    protected boolean agentIsControlled;
-
-		/**
-		 * Set of rule name for the rules that are suspended if the agent is
-		 * controlled by an user.
-		 */
-		protected Set<String> suspendedRules;
-
-		/**
-		 * Set of key events on that the agent control gui reacts.
-		 * This set is filled by the concrete agent controller that is generated by
-		 * the code generation.
-		 */
-		private Set<Pair<String, String>> keyEvents;
-
-		/**
-		 * Set of mouse events on that the agent control gui reacts.
-		 * This set is filled by the concrete agent controller that is generated by
-		 * the code generation.
-		 */
-		private Map<String, Set<Pair<String, String>>> mouseEvents;
-
-		/*******************/
-		/*** constructor ***/
-		/*******************/
-
-		/**
-		 * Instantiates the abstract part of the core side agent conroller.
-		 * When this part is instantiated the {@link AgentControlBroker} will notify
-		 * the agent control module about this new controller.
-		 * @param agentSubject
-		 */
-    protected AgentController(AgentSubject agentSubject) {
-      this.agentSubject = agentSubject;
-      this.moduleAgentController = null;
-			this.agentIsControlled = false;
-			this.suspendedRules = new HashSet<String>();
-			this.keyEvents = new HashSet<Pair<String, String>>();
-			this.mouseEvents = new HashMap<String, Set<Pair<String, String>>>();
-			System.out.println("AgentSubject.AgentController.init: " + this);
-			AgentControlBroker.getInstance().agentControllerInitialized(this);
-    }
-
-		/***********************************************************/
-		/*** implementation of the CoreAgentController interface ***/
-		/***********************************************************/
-
-		@Override
-		public void setModuleAgentController(ModuleAgentController moduleAgentController) {
-			this.moduleAgentController = moduleAgentController;
-		}
-
-		@Override
-		public final Long getAgentId() {
-			if(this.agentSubject != null) {
-				return this.agentSubject.getId();
-			}
-			return null;
-		}
-
-		@Override
-		public final String getAgentName() {
-			if(this.agentSubject != null) {
-				return this.agentSubject.getName();
-			}
-			return null;
-		}
-
-		@Override
-		public final String getAgentType() {
-			if(this.agentSubject != null) {
-				return this.agentSubject.getType();
-			}
-			return null;
-		}
-
-
-		public Set<Pair<String, String>> getKeyEvents() {
-			return this.keyEvents;
-		}
-
-		public Map<String, Set<Pair<String, String>>> getMouseEvents() {
-			return this.mouseEvents;
-		}
-
-		@Override
-    public void setAgentIsControlled(boolean agentIsControlled) {
-			this.agentIsControlled = agentIsControlled;
-			if (this.agentSubject.simulator != null) {
-				this.agentSubject.simulator.setAgentIsControlled();
-			}
-    }
-
-		@Override
-		public void processInternalEvent(String eventName, Map<String, String> eventData) {
-      this.agentSubject.processInternalEvent(this.createEvent(eventName, eventData));
-    }
-
-		/*****************************************************/
-		/*** methods that are just used by core components ***/
-		/*****************************************************/
-
-		public boolean agentIsControlled() {
-      return this.agentIsControlled;
-    }
-
-		public boolean ruleIsSuspended(ReactionRule reactionRule) {
-			return this.agentIsControlled && this.suspendedRules.contains(
-				reactionRule.getName());
-		}
-
-		public void setNewPerceptionEvents(List<PerceptionEvent> perceptionEvents) {
-			if(this.moduleAgentController != null) {
-				this.moduleAgentController.setNewPerceptionEvents(perceptionEvents);
-			}
-		}
-
-    public void performUserActions() {
-			if(this.moduleAgentController != null) {
-				this.moduleAgentController.performUserActions();
-			}
-		}
-
-		public void updateView() {
-			if(this.moduleAgentController != null) {
-				this.moduleAgentController.updateView(this.agentSubject.getBeliefProperties());
-			}
-		}
-
-		/************************************************************************/
-		/*** methods that are just used by the concrete core agent controller ***/
-		/************************************************************************/
-
-		protected long getCurrentSimulationStep() {
-      return this.agentSubject.currentSimulationStep;
-    }
-
-		protected void addKeyEvent(String keyName, String action) {
-			this.keyEvents.add(new Pair<String, String>(keyName, action));
-		}
-
-		protected void addMouseEvent(String sender, String eventType, String action) {
-			if(!this.mouseEvents.containsKey(sender)) {
-				this.mouseEvents.put(sender, new HashSet<Pair<String, String>>());
-			}
-			this.mouseEvents.get(sender).add(new Pair<String, String>(eventType, action));
-		}
-
-		protected abstract InternalEvent createEvent(	String eventName,
-			Map<String, String> eventData);
-  }
 }

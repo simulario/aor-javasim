@@ -1424,7 +1424,7 @@ public class XMLReader {
 
     // Check if the point string is valid
     if (!str
-        .matches("[-]?[\\d]+([.]){0,1}[\\d]*[,][-]?[\\d]+([.]){0,1}[\\d]*([,][-]?[\\d]+([.]){0,1}[\\d]*){0,1}([\\s]{1}[-]?[\\d]+([.]){0,1}[\\d]*[,][-]?[\\d]+([.]){0,1}[\\d]*([,][-]?[\\d]+([.]){0,1}[\\d]*){0,1})+")) {
+        .matches("[-]?[\\d]+[,][-]?[\\d]+([,][-]?[\\d]+){0,1}([\\s]{1}[-]?[\\d]+[,][-]?[\\d]+([,][-]?[\\d]+){0,1})+")) {
       System.out
           .println("Visualization Error: Point description is not valid!");
       return null;

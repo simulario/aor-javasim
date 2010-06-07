@@ -163,13 +163,13 @@ public class DisplayInfo {
         propertyValue = format.format(phy.getZ());
 
       else if (property.equals("rotationAngleX"))
-        propertyValue = format.format(phy.getRotX());
+        propertyValue = format.format(phy.getRotationAngleX());
 
       else if (property.equals("rotationAngleY"))
-        propertyValue = format.format(phy.getRotY());
+        propertyValue = format.format(phy.getRotationAngleY());
 
       else if (property.equals("rotationAngleZ"))
-        propertyValue = format.format(phy.getRotZ());
+        propertyValue = format.format(phy.getRotationAngleZ());
 
       else if (property.equals("vx"))
         propertyValue = format.format(phy.getVx());

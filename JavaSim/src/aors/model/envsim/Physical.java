@@ -22,17 +22,17 @@ public interface Physical {
   /**
    * Constant that defines the String name of the xAngle property
    */
-  public static final String PROP_ROTATION_ANGLE_X = "rotX";
+  public static final String PROP_ROTATION_ANGLE_X = "rotationAngleX";
 
   /**
    * Constant that defines the String name of the yAngle property
    */
-  public static final String PROP_ROTATION_ANGLE_Y = "rotY";
+  public static final String PROP_ROTATION_ANGLE_Y = "rotationAngleY";
 
   /**
    * Constant that defines the String name of the zAngle property
    */
-  public static final String PROP_ROTATION_ANGLE_Z = "rotZ";
+  public static final String PROP_ROTATION_ANGLE_Z = "rotationAngleZ";
 
   /**
    * Constant that defines the String name of the vx property
@@ -262,79 +262,82 @@ public interface Physical {
    * Usage:
    * 
    * 
-   * Comments: Set the {@code rotation} X component.
+   * Comments: Set the {@code rotationAngleX}.
    * 
    * 
    * 
-   * @param rotX
-   *          the {@code rotation} X component value - rotation around the G
-   *          center.
+   * @param rotationAngleX
+   *          Set the {@code rotationAngleX} rotationAngleX rotation around the
+   *          G center.
    */
-  public abstract void setRotX(double rotX);
+  public abstract void setRotationAngleX(double rotationAngleX);
 
   /**
    * Usage:
    * 
    * 
-   * Comments: Set the {@code rotation} Y component.
+   * Comments: Set the {@code rotationAngleY}.
    * 
    * 
    * 
-   * @param rotY
-   *          the {@code rotation} Y component value - rotation around the G
-   *          center.
+   * @param rotationAngleY
+   *          Set the {@code rotationAngleY} rotationAngleY rotation around the
+   *          G center.
    */
-  public abstract void setRotY(double rotY);
+  public abstract void setRotationAngleY(double rotationAngleY);
 
   /**
    * Usage:
    * 
    * 
-   * Comments: Set the {@code rotZ}.
+   * Comments: Set the {@code rotationAngleZ}.
    * 
    * 
    * 
-   * @param rotZ
-   *          Set the {@code rotation} Z component value - rotation around the G
-   *          center.
+   * @param rotationAngleZ
+   *          Set the {@code rotationAngleZ} rotationAngleZ rotation around the
+   *          G center.
    */
-  public abstract void setRotZ(double rotZ);
+  public abstract void setRotationAngleZ(double rotationAngleZ);
 
   /**
    * Usage:
    * 
    * 
-   * Comments: Get the {@code rotation} X component value.
+   * Comments: Get the {@code rotationAngleX}.
    * 
    * 
    * 
-   * @return the {@code rotation} X component value.
+   * @return the {@code rotationAngleX} rotationAngleX rotation around the G
+   *         center.
    */
-  public abstract double getRotX();
+  public abstract double getRotationAngleX();
 
   /**
    * Usage:
    * 
    * 
-   * Comments: Get the {@code rotation} Y component value.
+   * Comments: Get the {@code rotationAngleY}.
    * 
    * 
    * 
-   * @return the {@code rotation} Y component value.
+   * @return the {@code rotationAngleY} rotationAngleY rotation around the G
+   *         center.
    */
-  public abstract double getRotY();
+  public abstract double getRotationAngleY();
 
   /**
    * Usage:
    * 
    * 
-   * Comments: Get the {@code rotation} Z component value.
+   * Comments: Get the {@code rotationAngleZ}.
    * 
    * 
    * 
-   * @return the {@code rotation} Z component value.
+   * @return the {@code rotationAngleZ} rotationAngleZ rotation around the G
+   *         center.
    */
-  public abstract double getRotZ();
+  public abstract double getRotationAngleZ();
 
   /**
    * Set a new alpha vector.

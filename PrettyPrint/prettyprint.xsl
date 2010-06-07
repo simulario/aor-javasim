@@ -102,7 +102,7 @@
 				        <xsl:apply-templates select="aors:Globals" mode="navigation"/>
 				        <xsl:apply-templates select="aors:EntityTypes" mode="navigation"/>
 				        <xsl:variable name="agentRules"
-                          select="aors:EntityTypes/aors:*/aors:ActualPerceptionRule|aors:EntityTypes/aors:*/aors:ReactionRule|aors:EntityTypes/aors:*/aors:CommunicationRule"/>
+                          select="aors:EntityTypes/aors:*/aors:ActualPerceptionRule|aors:EntityTypes/aors:*/aors:AgentRule|aors:EntityTypes/aors:*/aors:CommunicationRule"/>
 				        <xsl:apply-templates select="$agentRules[1]" mode="navigation">
 					          <xsl:with-param name="content" select="$agentRules"/>
 				        </xsl:apply-templates>
@@ -271,9 +271,7 @@
 	  <xsl:key name="Types"
             match="//aors:EntityTypes//aors:*|//aors:DataTypes//aors:*|//aors:Collections//aors:*"
             use="@name"/>
-  <xsl:key name="StatisticsVariables" match="//aors:Statistics/aors:Variable" use="@name"/>
-  <xsl:key name="GlobalVariables" match="//aors:Globals/aors:GlobalVariable" use="@name"/>
-  
+
 	  <!--##############-->
 	<!--### Macros ###-->
 	<!--##############-->
@@ -1308,7 +1306,7 @@
 	  </xsl:template>
 
 	  <xsl:template xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-                 match="aors:CommunicationRule/aors:FOR|aors:ReactionRule/aors:FOR"
+                 match="aors:CommunicationRule/aors:FOR|aors:AgentRule/aors:FOR"
                  mode="for"
                  priority="-5">
 		    <li>
@@ -2984,9 +2982,6 @@
 
 	<xsl:template match="aors:GlobalVariable" mode="property" priority="-7">
 		    <li>
-		       <xsl:attribute name="id">
-		          <xsl:call-template name="getId"/>
-		       </xsl:attribute>
 			      <xsl:value-of select="@name"/>
 			      <xsl:text> : </xsl:text>
 			      <xsl:call-template name="getOptionalValue">
@@ -3853,7 +3848,7 @@
 						            <xsl:text>../</xsl:text>
 					          </xsl:otherwise>
 				        </xsl:choose>
-				        <xsl:text>PrettyPrint/css/prettyprint.css</xsl:text>
+				        <xsl:text>ext/prettyPrint/css/prettyprint.css</xsl:text>
 			      </xsl:attribute>
 		    </link>
 	  </xsl:template>
@@ -3905,7 +3900,7 @@
 		    <xsl:apply-templates select="aors:Globals" mode="chapter"/>
 		    <xsl:apply-templates select="aors:EntityTypes" mode="chapter"/>
 		    <xsl:variable name="agentRules"
-                    select="aors:EntityTypes/aors:*/aors:ActualPerceptionRule|aors:EntityTypes/aors:*/aors:ReactionRule|aors:EntityTypes/aors:*/aors:CommunicationRule"/>
+                    select="aors:EntityTypes/aors:*/aors:ActualPerceptionRule|aors:EntityTypes/aors:*/aors:AgentRule|aors:EntityTypes/aors:*/aors:CommunicationRule"/>
 		    <xsl:apply-templates select="$agentRules[1]" mode="chapter">
 			      <xsl:with-param name="content" select="$agentRules"/>
 		    </xsl:apply-templates>
@@ -4008,13 +4003,13 @@
 	<!--### heading ###-->
 	<!--###############-->
 
-	<xsl:template match="aors:ActualPerceptionRule|aors:ReactionRule|aors:CommunicationRule"
+	<xsl:template match="aors:ActualPerceptionRule|aors:AgentRule|aors:CommunicationRule"
                  mode="chapterHeading"
                  priority="-12">
 		    <xsl:text>Agent Rules</xsl:text>
 	  </xsl:template>
 
-	  <xsl:template match="aors:ActualPerceptionRule|aors:ReactionRule|aors:CommunicationRule"
+	  <xsl:template match="aors:ActualPerceptionRule|aors:AgentRule|aors:CommunicationRule"
                  mode="heading"
                  priority="-12">
 		    <xsl:value-of select="concat(../@name,'::',@name)"/>
@@ -4024,7 +4019,7 @@
 	<!--### navigation ###-->
 	<!--##################-->
 
-	<xsl:template match="aors:ActualPerceptionRule|aors:ReactionRule|aors:CommunicationRule"
+	<xsl:template match="aors:ActualPerceptionRule|aors:AgentRule|aors:CommunicationRule"
                  mode="navigation"
                  priority="-12">
 		    <xsl:param name="content"/>
@@ -4048,14 +4043,14 @@
 	<!--###  content ###-->
 	<!--################-->
 
-	<xsl:template match="aors:ActualPerceptionRule|aors:ReactionRule|aors:CommunicationRule"
+	<xsl:template match="aors:ActualPerceptionRule|aors:AgentRule|aors:CommunicationRule"
                  mode="chapterContent"
                  priority="-12">
 		    <xsl:param name="content"/>
 		    <xsl:apply-templates select="$content" mode="section1"/>
 	  </xsl:template>
 
-	  <xsl:template match="aors:ActualPerceptionRule|aors:ReactionRule|aors:CommunicationRule"
+	  <xsl:template match="aors:ActualPerceptionRule|aors:AgentRule|aors:CommunicationRule"
                  mode="section1"
                  priority="-12">
 		    <xsl:param name="class"/>
@@ -4063,7 +4058,7 @@
 			      <xsl:with-param name="class">
 				        <xsl:text> rule</xsl:text>
 				        <xsl:choose>
-					          <xsl:when test="count(preceding::aors:ActualPerceptionRule|preceding::aors:ReactionRule|preceding::aors:CommunicationRule) mod 2 = 0">
+					          <xsl:when test="count(preceding::aors:ActualPerceptionRule|preceding::aors:AgentRule|preceding::aors:CommunicationRule) mod 2 = 0">
 						            <xsl:text> odd</xsl:text>
 					          </xsl:when>
 					          <xsl:otherwise>
@@ -4074,7 +4069,7 @@
 		    </xsl:apply-templates>
 	  </xsl:template>
 
-	  <xsl:template match="aors:ReactionRule|aors:CommunicationRule" mode="content" priority="-12">
+	  <xsl:template match="aors:AgentRule|aors:CommunicationRule" mode="content" priority="-12">
 		    <xsl:apply-templates select="aors:documentation" mode="content"/>
 		    <xsl:apply-templates select="aors:WHEN" mode="section2">
 			      <xsl:with-param name="class" select="'when'"/>
@@ -4196,7 +4191,7 @@
 
 	  <!-- AgentRules -->
 
-	<xsl:template match="aors:ActualPerceptionRule|aors:ReactionRule|aors:CommunicationRule"
+	<xsl:template match="aors:ActualPerceptionRule|aors:AgentRule|aors:CommunicationRule"
                  mode="classSectionHeading"
                  priority="-13">
 		    <xsl:text>Rules</xsl:text>
@@ -4316,7 +4311,7 @@
 			      <xsl:with-param name="content" select="$events"/>
 		    </xsl:apply-templates>
 		    <xsl:variable name="rules"
-                    select="aors:ActualPerceptionRule|aors:ReactionRule|aors:CommunicationRule"/>
+                    select="aors:ActualPerceptionRule|aors:AgentRule|aors:CommunicationRule"/>
 		    <xsl:apply-templates select="$rules[1]" mode="classSection">
 			      <xsl:with-param name="headingElement" select="$section2Heading"/>
 			      <xsl:with-param name="class" select="'rules'"/>
@@ -4324,7 +4319,7 @@
 		    </xsl:apply-templates>
 	  </xsl:template>
 
-	  <xsl:template match="aors:BeliefEntityType|aors:ActualPerceptionEventType|aors:TimeEventType|aors:PeriodicTimeEventType|aors:ActualPerceptionRule|aors:ReactionRule|aors:CommunicationRule"
+	  <xsl:template match="aors:BeliefEntityType|aors:ActualPerceptionEventType|aors:TimeEventType|aors:PeriodicTimeEventType|aors:ActualPerceptionRule|aors:AgentRule|aors:CommunicationRule"
                  mode="classSectionContent"
                  priority="-13">
 		    <xsl:param name="content"/>
@@ -4333,7 +4328,7 @@
 		    </ul>
 	  </xsl:template>
 
-	  <xsl:template match="aors:BeliefEntityType|aors:ActualPerceptionEventType|aors:TimeEventType|aors:PeriodicTimeEventType|aors:ActualPerceptionRule|aors:ReactionRule|aors:CommunicationRule"
+	  <xsl:template match="aors:BeliefEntityType|aors:ActualPerceptionEventType|aors:TimeEventType|aors:PeriodicTimeEventType|aors:ActualPerceptionRule|aors:AgentRule|aors:CommunicationRule"
                  mode="entityTypeComponent"
                  priority="-13">
 		    <li>
@@ -4744,7 +4739,7 @@
 			      <thead>
 				        <tr>
 					          <th scope="col">variable</th>
-					          <th scope="col">value</th>
+					          <th scope="col">function</th>
 					          <th scope="col">compute only at end</th>
 				        </tr>
 			      </thead>
@@ -4756,9 +4751,6 @@
 
 	  <xsl:template match="aors:Variable" mode="statistics" priority="-18">
 		    <tr>
-		       <xsl:attribute name="id">
-		          <xsl:call-template name="getId"/>
-		       </xsl:attribute>
 			      <td class="left">
 				        <ul>
 					          <li>
@@ -4781,109 +4773,48 @@
 			      <td class="left">
 				        <xsl:call-template name="getOptionalValue">
 					          <xsl:with-param name="node">
-					             <xsl:apply-templates select="aors:Source" mode="statistics"/>
+						            <xsl:if test="@aggregationFunction">
+							              <code>
+								                <xsl:value-of select="concat(@aggregationFunction,'(')"/>
+								                <xsl:call-template name="createOptionalLink">
+									                  <xsl:with-param name="node" select="key('EntityTypes',@sourceObjectType)"/>
+									                  <xsl:with-param name="text" select="@sourceObjectType"/>
+								                </xsl:call-template>
+								                <xsl:value-of select="concat('[',@sourceObjectRef,'].',@sourceObjectProperty,')')"/>
+							              </code>
+						            </xsl:if>
+						            <xsl:if test="aors:ValueExpr">
+							              <xsl:choose>
+								                <xsl:when test="count(aors:ValueExpr) &gt; 1 or string-length(normalize-space(aors:ValueExpr/text())) &gt; number($smallExpressionLength)">
+									                  <xsl:call-template name="hideContent">
+										                    <xsl:with-param name="content">
+											                      <xsl:call-template name="copyCode">
+												                        <xsl:with-param name="code" select="aors:ValueExpr"/>
+											                      </xsl:call-template>
+										                    </xsl:with-param>
+										                    <xsl:with-param name="heading" select="'Expression'"/>
+										                    <xsl:with-param name="headingPrefix" select="concat('Code of ',@name,'.')"/>
+									                  </xsl:call-template>
+								                </xsl:when>
+								                <xsl:otherwise>
+									                  <xsl:call-template name="copyCode">
+										                    <xsl:with-param name="code" select="aors:ValueExpr"/>
+										                    <xsl:with-param name="class" select="'inline'"/>
+									                  </xsl:call-template>
+								                </xsl:otherwise>
+							              </xsl:choose>
+						            </xsl:if>
 					          </xsl:with-param>
-				           <xsl:with-param name="copy" select="true()"/>
+					          <xsl:with-param name="copy" select="true()"/>
 				        </xsl:call-template>
 			      </td>
-		       <td>
-		          <xsl:call-template name="getBooleanValue">
-		             <xsl:with-param name="value" select="aors:Source/@computeOnlyAtEnd"/>
-		          </xsl:call-template>
-		       </td>
+			      <td>
+				        <xsl:call-template name="getBooleanValue">
+					          <xsl:with-param name="value" select="@computeOnlyAtEnd"/>
+				        </xsl:call-template>
+			      </td>
 		    </tr>
 	  </xsl:template>
-  
-  <xsl:template match="aors:Source" mode="statistics" priority="-18">
-      <xsl:variable name="content">
-         <xsl:apply-templates select="." mode="statisticsSource"/>
-      </xsl:variable>
-      <xsl:choose>
-         <xsl:when test="@aggregationFunction">
-            <code>
-               <xsl:value-of select="concat(@aggregationFunction,'(')"/>
-               <xsl:copy-of select="$content"/>
-               <xsl:text>)</xsl:text>
-            </code>
-         </xsl:when>
-         <xsl:otherwise>
-            <xsl:copy-of select="$content"/>
-         </xsl:otherwise>
-      </xsl:choose>
-  </xsl:template>
-  
-  <xsl:template match="aors:StatisticsVariable" mode="statisticsSource" priority="-18">
-      <xsl:call-template name="createOptionalLink">
-         <xsl:with-param name="node" select="key('StatisticVariables',@name)"/>
-         <xsl:with-param name="text" select="@name"/>
-      </xsl:call-template>
-  </xsl:template>
-  
-  <xsl:template match="aors:GlobalVariable" mode="statisticsSource" priority="-18">
-      <xsl:call-template name="createOptionalLink">
-         <xsl:with-param name="node" select="key('GlobalVariables',@name)"/>
-         <xsl:with-param name="text" select="@name"/>
-      </xsl:call-template>    
-  </xsl:template>
-  
-  <xsl:template match="aors:ObjectProperty" mode="statisticsSource" priority="-18">    
-      <xsl:call-template name="createOptionalLink">
-         <xsl:with-param name="node" select="key('EntityTypes',@objectType)"/>
-         <xsl:with-param name="text" select="@objectType"/>
-      </xsl:call-template>
-      <xsl:if test="@objectIdRef">
-         <xsl:value-of select="concat('[',@objectIdRef,']')"/>
-      </xsl:if>
-      <xsl:value-of select="concat('.', @property)"/>
-  </xsl:template>
-  
-  <xsl:template match="aors:ValueExpr" mode="statisticsSource" priority="-18">
-      <xsl:if test="count(preceding-sibling::aors:ValueExpr) = 0">
-         <xsl:choose>
-            <xsl:when test="count(../aors:ValueExpr) &gt; 1 or string-length(normalize-space(text())) &gt; number($smallExpressionLength)">
-               <xsl:call-template name="hideContent">
-                  <xsl:with-param name="content">
-                     <xsl:call-template name="copyCode">
-                        <xsl:with-param name="code" select="../aors:ValueExpr"/>
-                     </xsl:call-template>
-                  </xsl:with-param>
-                  <xsl:with-param name="heading" select="'Expression'"/>
-                  <xsl:with-param name="headingPrefix" select="concat('Code of ',@name,'.')"/>
-               </xsl:call-template>
-            </xsl:when>
-            <xsl:otherwise>
-               <xsl:call-template name="copyCode">
-                  <xsl:with-param name="code" select="../aors:ValueExpr"/>
-                  <xsl:with-param name="class" select="'inline'"/>
-               </xsl:call-template>
-            </xsl:otherwise>
-         </xsl:choose>      
-      </xsl:if>
-  </xsl:template>
-  
-  <xsl:template match="aors:ObjectTypeExtensionSize" mode="statisticsSource" priority="-18">
-      <xsl:text>size-of(</xsl:text>
-      <xsl:call-template name="createOptionalLink">
-         <xsl:with-param name="node" select="key('EntityTypes',@objectType)"/>
-         <xsl:with-param name="text" select="@objectType"/>
-      </xsl:call-template>
-      <xsl:text>)</xsl:text>
-  </xsl:template>
-  
-  <xsl:template match="aors:ResourceUtilization" mode="statisticsSource" priority="-18">
-      <xsl:call-template name="createOptionalLink">
-         <xsl:with-param name="node" select="key('EntityTypes',@activityType)"/>
-         <xsl:with-param name="text" select="@activityType"/>
-      </xsl:call-template>
-      <xsl:text>.</xsl:text>    
-      <xsl:call-template name="createOptionalLink">
-         <xsl:with-param name="node" select="key('EntityTypes',@resourceObjectType)"/>
-         <xsl:with-param name="text" select="@resourceObjectType"/>
-      </xsl:call-template>
-      <xsl:if test="@objectIdRef">
-         <xsl:value-of select="concat('[',@resourceObjectIdRef,']')"/>
-      </xsl:if>
-  </xsl:template>
    <!--copied from SpaceModel.xsl-->
 
 	

@@ -1,4 +1,4 @@
-/*package aors.module.initialState;
+package aors.module.initialState;
 
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
@@ -155,4 +155,3 @@ public class ChooseLanguageFieldsHandler implements ActionListener {
   private JComboBox box;
 
 }
-*/

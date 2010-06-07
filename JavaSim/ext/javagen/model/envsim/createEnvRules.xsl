@@ -881,33 +881,19 @@
     <xsl:param name="indent" required="yes" as="xs:integer"/>
 
     <!-- create all neccessary collections (excluding if its exists @collectionObjectVariable, because these was defined global from FOR[@objectVariable])-->
-    <!--xsl:apply-templates
+    <xsl:apply-templates
       select="aorsml:RemoveObjectFromCollection[(not (fn:exists(@collectionObjectVariable))) and 
       not(@collectionName = preceding-sibling::aorsml:UPDATE-ENV/aorsml:RemoveObjectFromCollection/@collectionName)]/@collectionName"
       mode="createEnvironmentRules.helper.method.stateEffects.setCollections">
       <xsl:with-param name="indent" select="$indent"/>
-    </xsl:apply-templates-->
+    </xsl:apply-templates>
 
-    <xsl:variable name="root" select="root()"/>
-    <xsl:variable name="distinctAddToCollection" as="xs:string*">
-      <xsl:if test="aorsml:Create/aorsml:*/@addToCollection">
-        <xsl:copy-of select="distinct-values(aorsml:Create/aorsml:*/@addToCollection)"/>
-      </xsl:if>
-    </xsl:variable>
-    <xsl:variable name="distinctCollectionName" as="xs:string*">
-      <xsl:if test="aorsml:RemoveObjectFromCollection[(not(fn:exists(@collectionObjectVariable)))]">
-        <xsl:copy-of select="distinct-values(aorsml:RemoveObjectFromCollection[(not(fn:exists(@collectionObjectVariable)))]/@collectionName)"/>
-      </xsl:if>
-    </xsl:variable>
-    <xsl:for-each select="($distinctAddToCollection, $distinctCollectionName)">
-
-      <xsl:apply-templates select="$root//aorsml:Collections/aorsml:Collection[@name = current()]"
-        mode="createEnvironmentRules.helper.method.stateEffects.setCollections">
-        <xsl:with-param name="indent" select="$indent"/>
-      </xsl:apply-templates>
-
-    </xsl:for-each>
-
+    <xsl:apply-templates
+      select="aorsml:Create/aorsml:*[not(@addToCollection = preceding-sibling::aorsml:UPDATE-ENV/aorsml:*/aorsml:Object/@addToCollection) and 
+      not(@addToCollection = ../../aorsml:RemoveObjectFromCollection/@collectionName)]/@addToCollection"
+      mode="createEnvironmentRules.helper.method.stateEffects.setCollections">
+      <xsl:with-param name="indent" select="$indent"/>
+    </xsl:apply-templates>
 
     <!-- achieve the order -->
     <xsl:apply-templates
@@ -940,30 +926,34 @@
     </xsl:apply-templates>
 
   </xsl:template>
-  
   <!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->
   <!-- stateEffects() -->
   <!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->
-  <xsl:template match="aorsml:Collection" mode="createEnvironmentRules.helper.method.stateEffects.setCollections">
+
+
+  <xsl:template match="@addToCollection | @collectionName" mode="createEnvironmentRules.helper.method.stateEffects.setCollections">
     <xsl:param name="indent" as="xs:integer" required="yes"/>
 
+    <xsl:variable name="collectionNode" as="node()">
+      <xsl:copy-of select="//aorsml:Collections/aorsml:Collection[@name = current()][1]"/>
+    </xsl:variable>
     <xsl:call-template name="java:variable">
       <xsl:with-param name="indent" select="$indent + 1"/>
       <xsl:with-param name="type">
         <xsl:call-template name="java:classWithGenericType">
           <xsl:with-param name="genericType">
-            <xsl:value-of select="@itemType"/>
+            <xsl:value-of select="$collectionNode/@itemType"/>
           </xsl:with-param>
           <xsl:with-param name="class" select="$collection.class.aORCollection"/>
         </xsl:call-template>
       </xsl:with-param>
       <xsl:with-param name="name">
-        <xsl:value-of select="jw:createCollectionVarname(.)"/>
+        <xsl:value-of select="jw:createCollectionVarname($collectionNode)"/>
       </xsl:with-param>
       <xsl:with-param name="castType">
         <xsl:call-template name="java:classWithGenericType">
           <xsl:with-param name="genericType">
-            <xsl:value-of select="@itemType"/>
+            <xsl:value-of select="//aorsml:Collections/aorsml:Collection[@name = current()]/@itemType"/>
           </xsl:with-param>
           <xsl:with-param name="class" select="$collection.class.aORCollection"/>
         </xsl:call-template>
@@ -979,12 +969,11 @@
             </xsl:call-template>
           </xsl:with-param>
           <xsl:with-param name="method" select="'getCollectionByName'"/>
-          <xsl:with-param name="args" select="jw:quote(@name)"/>
+          <xsl:with-param name="args" select="jw:quote(.)"/>
           <xsl:with-param name="inLine" select="true()"/>
         </xsl:call-template>
       </xsl:with-param>
     </xsl:call-template>
-
   </xsl:template>
 
   <!-- this forwarding is necessary, because we have toachieve the order of elements in UpdateObjectiveStateExpr (see: createEnvironmentRules.method.stateEffects) -->
@@ -1597,8 +1586,7 @@
 
         <xsl:call-template name="java:return">
           <xsl:with-param name="indent" select="$indent + 1"/>
-          <xsl:with-param name="value" select="jw:quote(if (aorsml:WHEN/@eventType) then aorsml:WHEN/@eventType else $core.class.onEveryStepEnvEvent)"
-          />
+          <xsl:with-param name="value" select="jw:quote(if (aorsml:WHEN/@eventType) then aorsml:WHEN/@eventType else $core.class.onEveryStepEnvEvent)"/>
         </xsl:call-template>
 
       </xsl:with-param>
@@ -2090,16 +2078,14 @@
 
   </xsl:template>
 
-  <!-- helper: create objects from objectset -->
+  <!-- helper: create objectss from objecttset -->
   <xsl:template match="aorsml:Objects" mode="createEnvironmentRules.helper.method.createObjekt">
     <xsl:param name="indent" required="yes"/>
 
-    <xsl:variable name="varNameObj">
-      <xsl:apply-templates select="." mode="createEnvironmentRules.helper.method.createObjekt.varName"/>
-    </xsl:variable>
+    <xsl:variable name="varNameObj" select="jw:lowerWord(@objectVariable)"/>
     <xsl:variable name="classNameObj" select="jw:upperWord(@type)"/>
     <xsl:variable name="creationLoopVar"
-      select="if (fn:exists(@creationLoopVar) and @creationLoopVar != '') then @creationLoopVar else jw:createInternalVarName('creationLoopVar')"/>
+      select="if (fn:exists(@creationLoopVar) and @creationLoopVar != '') then @creationLoopVar else 'creationLoopVar'"/>
 
     <xsl:variable name="endId">
       <xsl:apply-templates select="." mode="assistents.getEndID"/>
@@ -2131,7 +2117,6 @@
       <xsl:with-param name="increment" select="1"/>
       <xsl:with-param name="content">
 
-        <!-- calls direct the object creation without the detour via shared.helper.initAORObjectsSet -->
         <xsl:apply-templates select="." mode="shared.helper.initAORObjects">
           <xsl:with-param name="indent" select="$indent + 1"/>
           <xsl:with-param name="className" select="$classNameObj"/>
@@ -3396,11 +3381,8 @@
 
   <!-- set a variablename for a created AOR-Objekt; if @objectVariable is exists then use this from classvariable; otherwise use a 
     lowerCaseStarted @type -->
-  <xsl:template
-    match="aorsml:Object | aorsml:Objects | aorsml:Agent | aorsml:Agents | aorsml:PhysicalObject | aorsml:PhysicalObjects |
-    aorsml:PhysicalAgent | aorsml:PhysicalAgents"
+  <xsl:template match="aorsml:Object | aorsml:Agent | aorsml:PhysicalObject | aorsml:PhysicalAgent"
     mode="createEnvironmentRules.helper.method.createObjekt.varName">
-
     <xsl:choose>
       <xsl:when test="@objectVariable">
         <xsl:call-template name="java:varByDotNotation">
@@ -3411,7 +3393,6 @@
         <xsl:value-of select="if (@name) then @name else jw:lowerWord(@type)"/>
       </xsl:otherwise>
     </xsl:choose>
-
   </xsl:template>
 
   <!-- check the @activityType if exist -->

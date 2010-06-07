@@ -5,10 +5,7 @@ import javax.swing.JComboBox;
 
 public class ComboBoxEditor extends DefaultCellEditor {
 
-  
-	private static final long serialVersionUID = 1771422301703392768L;
-
-    public ComboBoxEditor(String[] items) {
+  public ComboBoxEditor(String[] items) {
 
     super(new JComboBox(items));
   }

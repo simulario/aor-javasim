@@ -124,7 +124,7 @@ public class XSLT2Processor {
       controller.setMessageEmitter(this.messageEmitter);
 
       transformer.setOutputProperty(OutputKeys.OMIT_XML_DECLARATION, "yes");
-//      transformer.setOutputProperty(OutputKeys.STANDALONE, "yes");
+      transformer.setOutputProperty(OutputKeys.STANDALONE, "yes");
       transformer.setOutputProperty(OutputKeys.METHOD, "xml");
       transformer.setOutputProperty(INDENT_AMOUNT, "4");
       transformer.setOutputProperty(OutputKeys.INDENT, "yes");

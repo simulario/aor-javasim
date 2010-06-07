@@ -8,9 +8,7 @@ import javax.swing.table.DefaultTableCellRenderer;
 
 public class ColorColumnRenderer extends DefaultTableCellRenderer {
 
-  
-	private static final long serialVersionUID = -8337524591365893098L;
-    Color bgColor, fgColor;
+  Color bgColor, fgColor;
 
   public ColorColumnRenderer(Color bgColor, Color fgColor) {
 

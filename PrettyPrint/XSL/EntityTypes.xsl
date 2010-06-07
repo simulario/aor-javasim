@@ -80,7 +80,7 @@
 
 	<!-- AgentRules -->
 
-	<xsl:template match="aors:ActualPerceptionRule|aors:ReactionRule|aors:CommunicationRule" mode="classSectionHeading">
+	<xsl:template match="aors:ActualPerceptionRule|aors:AgentRule|aors:CommunicationRule" mode="classSectionHeading">
 		<xsl:text>Rules</xsl:text>
 	</xsl:template>
 
@@ -186,7 +186,7 @@
 			<xsl:with-param name="class" select="'events'"/>
 			<xsl:with-param name="content" select="$events"/>
 		</xsl:apply-templates>
-		<xsl:variable name="rules" select="aors:ActualPerceptionRule|aors:ReactionRule|aors:CommunicationRule"/>
+		<xsl:variable name="rules" select="aors:ActualPerceptionRule|aors:AgentRule|aors:CommunicationRule"/>
 		<xsl:apply-templates select="$rules[1]" mode="classSection">
 			<xsl:with-param name="headingElement" select="$section2Heading"/>
 			<xsl:with-param name="class" select="'rules'"/>
@@ -194,14 +194,14 @@
 		</xsl:apply-templates>
 	</xsl:template>
 
-	<xsl:template match="aors:BeliefEntityType|aors:ActualPerceptionEventType|aors:TimeEventType|aors:PeriodicTimeEventType|aors:ActualPerceptionRule|aors:ReactionRule|aors:CommunicationRule" mode="classSectionContent">
+	<xsl:template match="aors:BeliefEntityType|aors:ActualPerceptionEventType|aors:TimeEventType|aors:PeriodicTimeEventType|aors:ActualPerceptionRule|aors:AgentRule|aors:CommunicationRule" mode="classSectionContent">
 		<xsl:param name="content"/>
 		<ul>
 			<xsl:apply-templates select="$content" mode="entityTypeComponent"/>
 		</ul>
 	</xsl:template>
 
-	<xsl:template match="aors:BeliefEntityType|aors:ActualPerceptionEventType|aors:TimeEventType|aors:PeriodicTimeEventType|aors:ActualPerceptionRule|aors:ReactionRule|aors:CommunicationRule" mode="entityTypeComponent">
+	<xsl:template match="aors:BeliefEntityType|aors:ActualPerceptionEventType|aors:TimeEventType|aors:PeriodicTimeEventType|aors:ActualPerceptionRule|aors:AgentRule|aors:CommunicationRule" mode="entityTypeComponent">
 		<li>
 			<a>
 				<xsl:attribute name="href">

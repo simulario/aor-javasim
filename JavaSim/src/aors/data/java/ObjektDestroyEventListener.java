@@ -14,7 +14,7 @@ public interface ObjektDestroyEventListener extends EventListener {
   /**
    * This method gets called when a physObj was destroyed.
    * 
-   * @param objektDestroyEvent
+   * @param objDestroyEvent
    */
   void objektDestroyEvent(ObjektDestroyEvent objektDestroyEvent);
 

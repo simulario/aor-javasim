@@ -84,18 +84,17 @@ public abstract class AbstractObjectPropertyStatisticVariable extends
   }
 
   /**
-   * hook - overwrite in created class
+   * 
+   * Usage:
+   * 
+   * 
+   * Comments:
+   * 
+   * @return
    */
-  public AbstractPropertyIterator getPropertyIterator() {
-    return null;
-  }
+  public abstract AbstractPropertyIterator getPropertyIterator();
 
-  /**
-   * hook - overwrite in created class
-   */
-  public AbstractObjektIDRefPropertyIterator getObjektIDRefPropertyIterator() {
-    return null;
-  }
+  public abstract AbstractObjektIDRefPropertyIterator getObjektIDRefPropertyIterator();
 
   /**
    * 

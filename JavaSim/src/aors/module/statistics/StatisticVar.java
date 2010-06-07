@@ -104,14 +104,12 @@ public class StatisticVar {
       // ResourceUtil
       if (this.sourceDataSource
           .equals(StatVarDataSourceEnumLit.ResourceUtilization)) {
-        newValue = initialState.getResourceUtilization(this.getName(),
-            stepEvent);
+        newValue = initialState.getResourceUtilization(this.getName(), stepEvent);
       } else if ((this.sourceDataSource
           .equals(StatVarDataSourceEnumLit.ObjectProperty))
           && (this.sourceObjIdRef == -1)) {
         this.objectTypeValues = new ArrayList<Number>();
-        List<Double> valueList = initialState.getObjectPropertyIteration(this
-            .getName());
+        List<Double> valueList = initialState.getObjectPropertyIteration(this.getName());
         List<Number> valuesCurrStep = new ArrayList<Number>();
         for (int i = 0; i < valueList.size(); i++) {
           valuesCurrStep.add(valueList.get(i));
@@ -124,23 +122,10 @@ public class StatisticVar {
         return;
       } else if (this.sourceDataSource
           .equals(StatVarDataSourceEnumLit.ObjectTypeExtensionSize)) {
-        newValue = initialState.getInstancesNumberForType(this
-            .getSourceObjType());
-      } else if (this.sourceDataSource
-          .equals(StatVarDataSourceEnumLit.ValueExpr)) {
-
-        if (this.getDataType().equals(StatVarDataTypeEnumLit.Float)) {
-          newValue = initialState.getStatisticVariableComputedValueFloat(this
-              .getName());
-        } else if (this.getDataType().equals(StatVarDataTypeEnumLit.Integer)) {
-          newValue = initialState.getStatisticVariableComputedValueLong(this
-              .getName());
-        }
-
+        newValue = initialState.getInstancesNumberForType(this.getSourceObjType());
       } else {
         if (this.getDataType().equals(StatVarDataTypeEnumLit.Float)) {
-          newValue = initialState
-              .getStatisticVariableValueFloat(this.getName());
+          newValue = initialState.getStatisticVariableValueFloat(this.getName());
         } else if (this.getDataType().equals(StatVarDataTypeEnumLit.Integer)) {
           newValue = initialState.getStatisticVariableValueLong(this.getName());
         } else {

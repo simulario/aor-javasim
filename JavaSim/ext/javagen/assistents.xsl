@@ -65,11 +65,6 @@
       select="fn:concat(jw:lowerWord(jw:lowerWord($collectionNode/@itemType)), $collection.class.aORCollection, $collectionNode/@name, $collectionNode/@id)"
     />
   </xsl:function>
-  
-  <xsl:function name="jw:createInternalVarName" as="xs:string">
-    <xsl:param name="varName"/>
-    <xsl:value-of select="fn:concat($createdVariablesNamePrefix, $varName)"/>
-  </xsl:function>
 
   <!-- all attributes as param of a class incl. superclassattributes -->
   <xsl:template match="aorsml:PhysicalObjectType | aorsml:PhysicalAgentType | aorsml:AgentType | aorsml:ObjectType | aorsml:BeliefEntityType"
@@ -815,7 +810,7 @@
     </xsl:choose>
   </xsl:template>
 
-  <xsl:template match="aorsml:UpdateObjects | aorsml:PhysicalObjects | aorsml:PhysicalAgents | aorsml:Agents | aorsml:Objects | aorsml:DestroyObjects"
+  <xsl:template match="aorsml:UpdateObjects | aorsml:PhysicalObjects | aorsml:PhysicalAgents | aorsml:Agents | aorsml:DestroyObjects"
     mode="assistents.getStartID">
     <xsl:choose>
       <xsl:when test="fn:exists(@rangeStartID)">
@@ -835,7 +830,7 @@
     </xsl:choose>
   </xsl:template>
 
-  <xsl:template match="aorsml:UpdateObjects | aorsml:PhysicalObjects | aorsml:PhysicalAgents | aorsml:Agents | aorsml:Objects | aorsml:DestroyObjects"
+  <xsl:template match="aorsml:UpdateObjects | aorsml:PhysicalObjects | aorsml:PhysicalAgents | aorsml:Agents | aorsml:DestroyObjects"
     mode="assistents.getEndID">
     <xsl:choose>
       <xsl:when test="fn:exists(@rangeEndID)">

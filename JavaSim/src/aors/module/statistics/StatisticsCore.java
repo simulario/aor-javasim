@@ -263,7 +263,7 @@ public class StatisticsCore implements Module {
 
   @Override
   public void simulationStepEnd(SimulationStepEvent simulationStepEvent) {
-
+    // TODO Auto-generated method stub
     this.stepEvent = simulationStepEvent;
     if (isModuleEnabled) {
       for (int i = 0; i < statisticVars.size(); i++) {

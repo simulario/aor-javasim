@@ -28,7 +28,7 @@
 		<xsl:variable name="optionalAttributes">
 			<xsl:choose>
 				<xsl:when test="@type">
-					<xsl:apply-templates select="/xs:schema/xs:complexType[@name = current()/@type or @name = substring-after(current()/@type,':')]" mode="attributes"/>
+					<xsl:apply-templates select="/xs:schema/xs:complexType[@name = current()/@type or @name = substring-after(current()/@type,':')]" mode="attributes"> </xsl:apply-templates>
 				</xsl:when>
 				<xsl:otherwise>
 					<xsl:apply-templates select="xs:complexType" mode="attributes"/>
@@ -208,24 +208,24 @@
 	<xsl:template match="xs:attribute[@ref and not(@use = 'prohibited')]" mode="attributes">
 		<xsl:param name="use"/>
 		<xsl:param name="restrictedAttributes"/>
-		<xsl:apply-templates select="/xs:schema/xs:attribute[(@name = current()/@ref or @name = substring-after(current()/@ref,':')) and @use = 'required']" mode="attributes">
-		  <xsl:with-param name="use" select="$use"/>
-			<xsl:with-param name="restrictedAttributes" select="$restrictedAttributes"/>
-		</xsl:apply-templates>
+		<xsl:if test="@use = $use or (not(@use) and $use = 'optional')">
+			<xsl:apply-templates select="/xs:schema/xs:attribute[(@name = current()/@ref or @name = substring-after(current()/@ref,':')) and @use = 'required']" mode="attributes">
+				<xsl:with-param name="restrictedAttributes" select="$restrictedAttributes"/>
+			</xsl:apply-templates>
+		</xsl:if>
 	</xsl:template>
 
 	<xsl:template match="xs:attribute[@name and not(@use = 'prohibited')]" mode="attributes">
 		<xsl:param name="use"/>
-		<xsl:param name="restrictedAttributes"/>	  
-	  <xsl:variable name="restricted">
+		<xsl:param name="restrictedAttributes"/>
+		<xsl:variable name="restricted">
 			<xsl:call-template name="x1f:List.containsValue">
 				<xsl:with-param name="list" select="$restrictedAttributes"/>
 				<xsl:with-param name="value" select="@name"/>
 			</xsl:call-template>
-	  </xsl:variable>
-	  
-	  <xsl:if test="$restricted = 'false'">	    
-	    <xsl:if test="@use = $use or (not(@use) and $use = 'optional')">
+		</xsl:variable>
+		<xsl:if test="$restricted = 'false'">
+			<xsl:if test="@use = $use or (not(@use) and $use = 'optional')">
 				<tr>
 					<th scope="row">
 						<xsl:value-of select="@name"/>
@@ -265,7 +265,6 @@
 		<xsl:param name="use"/>
 		<xsl:param name="restrictedAttributes"/>
 		<xsl:apply-templates select="/xs:schema/xs:attributeGroup[@name = current()/@ref or @name = substring-after(current()/@ref,':')]" mode="attributes">
-		  <xsl:with-param name="use" select="$use"/>
 			<xsl:with-param name="restrictedAttributes" select="$restrictedAttributes"/>
 		</xsl:apply-templates>
 	</xsl:template>
@@ -274,8 +273,7 @@
 		<xsl:param name="use"/>
 		<xsl:param name="restrictedAttributes"/>
 		<xsl:apply-templates select="xs:attributeGroup | xs:attribute" mode="attributes">
-		  <xsl:with-param name="use" select="$use"/>
-		  <xsl:with-param name="restrictedAttributes" select="$restrictedAttributes"/>
+			<xsl:with-param name="restrictedAttributes" select="$restrictedAttributes"/>
 		</xsl:apply-templates>
 	</xsl:template>
 

@@ -15,7 +15,6 @@ import java.net.URLClassLoader;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.InvalidPropertiesFormatException;
-import java.util.List;
 import java.util.Properties;
 import java.util.jar.JarEntry;
 import java.util.jar.JarFile;
@@ -38,25 +37,15 @@ import aors.module.Constants;
 import aors.module.GUIModule;
 import aors.module.Module;
 import aors.util.jar.JarUtil;
-import java.lang.reflect.Constructor;
-import java.lang.reflect.InvocationTargetException;
-import java.net.MalformedURLException;
-import java.util.HashSet;
-import java.util.Map;
-import java.util.Set;
 
 /**
  * This class represents the manager of the simulation.
  * 
  * SimulationManager
  * 
- * @author Marco Pehla, Mircea Diaconescu, Jens Werner
+ * @author Marco Pehla, Mircea Diaconescu
  * @since 31.07.2008
  * @version $Revision$
- * 
- *          last change by $Author$ at $Date: 2010-05-03 21:29:08
- *          +0200 (Mo, 03 Mai 2010) $
- * 
  */
 public class SimulationManager {
 
@@ -73,7 +62,7 @@ public class SimulationManager {
   private static Project project;
 
   // the list with all current loaded modules
-  private List<Module> modules;
+  private ArrayList<Module> modules;
 
   // the user directory
   private final String APP_ROOT_DIRECTORY = System.getProperty("user.dir");
@@ -81,30 +70,25 @@ public class SimulationManager {
   // the projects directory
   public final static String PROJECT_DIRECTORY = "projects";
 
-  private String AORSLDirectory;
-  private String AORSLSchemaName;
+  // the AORSL directory
+  private final String aorslDirectory = "ext" + File.separator + "aorsl";
 
-  private String codeGenXsltDirectory;
-  private String codeGenXsltName;
+  // the AORSK schema name
+  private String AORSL_SCHEMA_NAME;
 
   // the current (used as defautl) schema name
-  private final String CURRENT_AORSL_SCHEMA_NAME = "AORSL_0-8-4.xsd";
-  private final String DEFAULT_CODEGEN_XSLT_FILE = "aorsl2java.xsl";
+  private final String CURRENT_AORSL_SCHEMA_NAME = "AORSL-0-8-3.xsd";
 
-  // the project properties object
+  // teh project properties object
   private Properties properties;
 
   // the project property file
-  private final String PROPERTY_FILE_NAME = "properties.xml";
+  private final String propertyFileName = "properties.xml";
 
-  // property keys
-  private final String propertyLoggerFileName = "logger.file.name";
-  private final String propertyLoggerPath = "logger.path";
-  private final String propertyAutoMultithreading = "auto.multithreading";
-  private final String propertyXMLSchemaFileName = "XML-Schema.file.name";
-  private final String propertyXMLSchemaFilePath = "XML-Schema.file.path";
-  private final String propertyXSLTFileName = "CodeGen.XSLT.file.name";
-  private final String propertyXSLTFilePath = "CodeGen.XSLT.file.path";
+  // the property that defines the logger file name
+  private final String propertyLoggerFileName = "logger file name";
+  private final String propertyLoggerPath = "logger path";
+  private final String propertyAutoMultithreading = "auto multithreading";
 
   public static final String propertyLogger = "logger";
 
@@ -119,6 +103,9 @@ public class SimulationManager {
 
   // the project directory
   private File projectDirectory;
+
+  // the file that represents the main XSLT file for code generation
+  private File xsltFile;
 
   /**
    * Create a new simulation manager.
@@ -144,6 +131,10 @@ public class SimulationManager {
     // the mapt with XSLT parameters
     this.xsltParameter = new HashMap<String, String>();
 
+    // path to the XSLT main transformation file
+    this.xsltFile = new File(APP_ROOT_DIRECTORY + File.separator + "ext"
+        + File.separator + "javagen" + File.separator + "aorsml2java.xsl");
+
     // set the project directory
     this.projectDirectory = new File(APP_ROOT_DIRECTORY + File.separator
         + PROJECT_DIRECTORY);
@@ -154,304 +145,219 @@ public class SimulationManager {
     }
   }
 
-	/**
-	 * Initialize the modules found in the modules directory as jar files.
-	 */
-	private void initModules() {
-		// create reference file to modules directory
-		File modulesDir = new File(Constants.modulesDirectory);
+  /**
+   * Initialize the modules found in the modules directory as jar files.
+   */
+  private void initModules() {
+    // create reference file to modules directory
+    File modulesDir = new File(Constants.modulesDirectory);
 
-		// get all files from the modules directory
-		File[] moduleJars = modulesDir.listFiles();
+    // get all files from the modules directory
+    File[] moduleJars = modulesDir.listFiles();
 
-		// access the general modules property file
-		Properties generalproperties = new Properties();
-		InputStream input;
-		try {
-			input = new FileInputStream(new File(Constants.modulesDirectory + File.separator + "properties.xml"));
-			generalproperties.loadFromXML(input);
-		} catch(FileNotFoundException e) {
-			e.printStackTrace();
-		} catch(InvalidPropertiesFormatException e) {
-			e.printStackTrace();
-		} catch(IOException e) {
-			e.printStackTrace();
-		}
+    // access the general modules property file
+    Properties generalproperties = new Properties();
+    InputStream input;
+    try {
+      input = new FileInputStream(new File(Constants.modulesDirectory
+          + File.separator + "properties.xml"));
+      generalproperties.loadFromXML(input);
+    } catch (FileNotFoundException e) {
+      e.printStackTrace();
+    } catch (InvalidPropertiesFormatException e) {
+      e.printStackTrace();
+    } catch (IOException e) {
+      e.printStackTrace();
+    }
 
-		// directory not there, then is no module, so just ignore
-		if(moduleJars == null) {
-			// nothing to do further...
-			return;
-		}
+    // directory not there, then is no module, so just ignore
+    if (moduleJars == null) {
+      // nothing to do further...
+      return;
+    }
 
-		List<ValuePair<JarFile, Integer>> modulesToLoad = new ArrayList<ValuePair<JarFile, Integer>>();
+    // create the empty modules list
+    this.modules = new ArrayList<Module>();
 
-		System.out.println("********** Manager: Load modules **********");
+    System.out.println("********** Manager: Load modules **********");
 
-		// load GUI component of the module
-		for(File moduleJar : moduleJars) {
+    // load GUI component of the module
+    for (int i = 0; i < moduleJars.length; i++) {
 
-			// only jar files are considered, ignore all others possible files
-			if(!moduleJar.getName().endsWith(".jar")) {
-				continue;
-			}
+      // only jar files are considered, ignore all others possible files
+      if (!moduleJars[i].getName().endsWith(".jar")) {
+        continue;
+      }
 
-			try {
-				// new jar file...so, new module
-				JarFile jarFile = new JarFile(moduleJar);
+      try {
+        // new jar file...so, new module
+        JarFile jarFile = new JarFile(moduleJars[i]);
 
-				// access the properties file from inside this jar
-				JarEntry jarEntry = jarFile.getJarEntry("properties.xml");
+        // access the properties file from inside this jar
+        JarEntry jarEntry = jarFile.getJarEntry("properties.xml");
 
-				// no property file...then we can't continue loading this module.
-				if(jarEntry == null) {
-					System.out.println("The module: " + moduleJar.getName() + " does not " +
-						"contains a property.xml file! This module can't be loaded! \n");
+        // no property file...then we can't continue loading this module.
+        if (jarEntry == null) {
+          System.out
+              .println("The module: "
+                  + moduleJars[i].getName()
+                  + " does not contains a property.xml file! This module can't be loaded! \n");
 
-					// go to the next jar file (new module) if there is one
-					continue;
-				}
+          // go to the next jar file (new module) if there is one
+          continue;
+        }
 
-				// initially the position is undefined
-				int pos = -1;
+        // access the properties file of the module
+        Properties properties = new Properties();
+        InputStream inputStream = jarFile.getInputStream(jarEntry);
+        properties.loadFromXML(inputStream);
 
-				// try to get the tab position for this module, if there is defined a
-				// position in the general modules property file...
-				if(generalproperties.getProperty(moduleJar.getName()) != null) {
-					pos = Integer.parseInt(generalproperties.getProperty(moduleJar.getName()));
-				}
+        System.out.println(" - NAME: "
+            + properties.getProperty(Module.PROP_NAME));
 
-				modulesToLoad.add(new ValuePair<JarFile, Integer>(jarFile, pos));
+        // check if the OS version is specified, otherwise is loaded by default
+        if (properties.getProperty(Module.PROP_MODULE_OS_VERSION) != null) {
+          String propVal = properties
+              .getProperty(Module.PROP_MODULE_OS_VERSION).trim().toLowerCase();
 
-			} catch(IOException e) {
-				e.printStackTrace();
-			}
-		}
-		this.modules = loadModules(modulesToLoad);
+          // the OS specified in prop file match the PC OS
+          if ((JarUtil.isWindows() && propVal
+              .equals(Module.PROP_MODULE_OS_VERSION_VALUE_WINDOWS))
+              || (JarUtil.isUnix() && propVal
+                  .equals(Module.PROP_MODULE_OS_VERSION_VALUE_LINUX))
+              || (JarUtil.isMac() && propVal
+                  .equals(Module.PROP_MODULE_OS_VERSION_VALUE_MAC))) {
+            System.out.println(" - OS Version: " + propVal);
+          }
+          // wrong OS...skip loading
+          else {
+            System.out
+                .println(" - OS Version: not match! Skip loading of this module! \n");
+            continue;
+          }
+        } else {
+          System.out.println(" - OS Version: ALL");
+        }
 
-		System.out.println("*******************************************");
-	}
+        // check if the OS bits version is specified
+        if (properties.getProperty(Module.PROP_MODULE_OS_BITS_VERSION) != null) {
+          String propValue = properties.getProperty(
+              Module.PROP_MODULE_OS_BITS_VERSION).trim();
+          boolean is64BitsOs = System.getProperty("os.arch").indexOf("64") != -1;
 
-	private List<Module> loadModules(
-		List<ValuePair<JarFile, Integer>> modulesToLoad) {
-		Map<String, ValuePair<Module, Integer>> loadedModules =
-			new HashMap<String, ValuePair<Module, Integer>>();
-		Map<String, Set<ValuePair<JarFile, Integer>>> dependingModules =
-			new HashMap<String, Set<ValuePair<JarFile, Integer>>>();
+          // the OS Bits version match the version from property file
+          if ((propValue.equals("32") && !is64BitsOs)
+              || (propValue.equals("64") && is64BitsOs)) {
+            System.out.println(" - OS Bits Version: "
+                + properties.getProperty(Module.PROP_MODULE_OS_BITS_VERSION));
+          }
+          // OS Bits version does not match the version from property file.
+          else {
+            System.out
+                .println(" - OS Bits Version: not match! Skip loading of this module! \n");
+            continue;
+          }
+        } else {
+          System.out.println(" - OS Bits Version: ALL");
+        }
 
-		for(ValuePair<JarFile, Integer> moduleToLoad : modulesToLoad) {
-			try {
-				tryToLoadModule(moduleToLoad, loadedModules, dependingModules);
-			} catch(IOException e) {
-				e.printStackTrace();
-			}
-		}
+        // check if we have a GUI component for this module
+        if (properties.getProperty(GUIModule.PROP_GUI_MODULE_CLASS) != null) {
+          System.out.println(" - HAS GUI: YES");
+        } else {
+          System.out.println(" - HAS GUI: NO");
+        }
 
-		List<Module> returnValue = new ArrayList<Module>();
-		for(ValuePair<Module, Integer> loadedModule : loadedModules.values()) {
-			Module module = loadedModule.value1;
-			int pos = loadedModule.value2;
+        // check if we have the base component for this module
+        if (properties.getProperty(Module.PROP_BASE_MODULE_CLASS) != null) {
+          System.out.println(" - HAS BASE: YES");
+        } else {
+          System.out
+              .println(" - HAS BASE: NO... Failed to load this module. \n");
 
-			//TODO: FIXME
-			// add the new module to list according to its position
-			if(pos >= 0 && returnValue.size() >= pos) {
-				returnValue.add(pos - 1, module);
-			} // no order found for this module, so it is added at end
-			else {
-				returnValue.add(module);
-			}
-		}
-		return returnValue;
-	}
+          // go to the next module if there is any
+          continue;
+        }
 
-	private void tryToLoadModule(ValuePair<JarFile, Integer> moduleToLoad,
-		Map<String, ValuePair<Module, Integer>> loadedModules,
-		Map<String, Set<ValuePair<JarFile, Integer>>> dependingModules)
-		throws IOException {
+        // define this Jar file as usable - See JarUtil for more details...
+        JarUtil.loadJar(new URL("file:///" + moduleJars[i].getPath()));
 
-		JarFile jarFile = moduleToLoad.value1;
-		int pos = moduleToLoad.value2;
+        try {
+          // load the base logic module
+          Class<? extends Object> moduleClass = Class.forName(properties
+              .getProperty(Module.PROP_BASE_MODULE_CLASS));
 
-		// access the properties file of the module
-		JarEntry jarEntry = jarFile.getJarEntry("properties.xml");
-		Properties moduleProperties = new Properties();
-		InputStream inputStream = jarFile.getInputStream(jarEntry);
-		moduleProperties.loadFromXML(inputStream);
+          // get the tab instance
+          Module module = ((Module) moduleClass.newInstance());
 
-		String[] dependencies = moduleProperties.getProperty(
-			Module.PROP_DEPENDS_ON_MODULE_CLASSES, " ").split("\\s+");
+          // initially the position is undefined
+          int pos = -1;
 
-		// check if alle dependencies are available
-		boolean isDependingOnAMissingModule = false;
-		for(String dependency : dependencies) {
-			if(!loadedModules.containsKey(dependency)) {
-				if(!dependingModules.containsKey(dependency)) {
-					dependingModules.put(dependency,
-						new HashSet<ValuePair<JarFile, Integer>>());
-				}
-				dependingModules.get(dependency).add(
-					new ValuePair<JarFile, Integer>(jarFile, moduleToLoad.value2));
-				isDependingOnAMissingModule = true;
-			}
-		}
-		if(isDependingOnAMissingModule) {
-			return;
-		}
+          // try to get the tab position for this module, if there is defined a
+          // position in the general modules property file...
+          if (generalproperties.getProperty(moduleJars[i].getName()) != null) {
+            pos = Integer.parseInt(generalproperties.getProperty(moduleJars[i]
+                .getName()));
+          }
 
-		// start loading
-		System.out.println(" - NAME: " + moduleProperties.getProperty(Module.PROP_NAME));
+          // add the new module to list
+          if (pos >= 0 && this.modules.size() >= pos) {
+            this.modules.add(pos - 1, module);
+            System.out.println(" - Priority: " + pos);
+          }
+          // no order found for this module, so it is added at end
+          else {
+            System.out
+                .println(" - Priority: "
+                    + (generalproperties.getProperty(moduleJars[i].getName()) == null ? "NONE"
+                        : generalproperties
+                            .getProperty(moduleJars[i].getName())));
 
-		// check if the OS version is specified, otherwise is loaded by default
-		if(moduleProperties.getProperty(Module.PROP_MODULE_OS_VERSION) != null) {
-			String propVal = moduleProperties.getProperty(Module.PROP_MODULE_OS_VERSION).
-				trim().toLowerCase();
+            this.modules.add(module);
+          }
 
-			// wrong OS...skip loading (the OS specified in prop file does not match
-			// the PC OS
-			if(!((JarUtil.isWindows() && propVal.equals(Module.PROP_MODULE_OS_VERSION_VALUE_WINDOWS)) ||
-				(JarUtil.isUnix() && propVal.equals(Module.PROP_MODULE_OS_VERSION_VALUE_LINUX)) ||
-				(JarUtil.isMac() && propVal.equals(Module.PROP_MODULE_OS_VERSION_VALUE_MAC)))) {
-				System.out.println(" - OS Version: not match! Skip loading of this " +
-					"module! \n");
-				return;
-			}
+          // module is a listener for simulation step events
+          this.dataBus.addSimulationStepEventListener(module);
 
-			System.out.println(" - OS Version: " + propVal);
-		} else {
-			System.out.println(" - OS Version: ALL");
-		}
+          // module is a listener for simulation events
+          this.dataBus.addSimulationEventListener(module);
 
-		// check if the OS bits version is specified
-		if(moduleProperties.getProperty(Module.PROP_MODULE_OS_BITS_VERSION) != null) {
-			String propValue = moduleProperties.getProperty(Module.PROP_MODULE_OS_BITS_VERSION).trim();
-			boolean is64BitsOs = System.getProperty("os.arch").indexOf("64") != -1;
+          // the module is a listener for destroy object/agent event
+          this.dataBus.addDestroyObjektEventListener(module);
 
-			// OS Bits version does not match the version from property file.
-			if(!((propValue.equals("32") && !is64BitsOs) || (propValue.equals("64") && is64BitsOs))) {
-				System.out.println(" - OS Bits Version: not match! Skip loading of " +
-					"this module! \n");
-				return;
-			}
+          // the module is a listener for object/agent creation events
+          this.dataBus.addObjektInitEventListener(module);
 
-			System.out.println(" - OS Bits Version: " + moduleProperties.getProperty(Module.PROP_MODULE_OS_BITS_VERSION));
-		} else {
-			System.out.println(" - OS Bits Version: ALL");
-		}
+          // get the module tab title from the property file
+          if (module.getGUIComponent() != null
+              && properties.getProperty(GUIModule.PROP_GUI_TITLE) != null) {
 
-		// check if we have the base component for this module
-		if(moduleProperties.getProperty(Module.PROP_BASE_MODULE_CLASS) == null) {
-			System.out.println(" - HAS BASE: NO... Failed to load this module. \n");
-			return;
-		}
-		System.out.println(" - HAS BASE: YES");
+            ((JScrollPane) module.getGUIComponent()).setName(properties
+                .getProperty(GUIModule.PROP_GUI_TITLE));
+          }
 
-		// check if we have a GUI component for this module
-		if(moduleProperties.getProperty(GUIModule.PROP_GUI_MODULE_CLASS) != null) {
-			System.out.println(" - HAS GUI: YES");
-		} else {
-			System.out.println(" - HAS GUI: NO");
-		}
+          System.out.println("\n");
 
-		// return the priority
-		if(pos < 0) {
-			System.out.println(" - PRIORITY: NONE");
-		} else {
-			System.out.println(" - PRIORITY: " + pos);
-		}
+        } catch (ClassNotFoundException ex) {
+          ex.printStackTrace();
+          continue;
+        } catch (IllegalAccessException ex) {
+          ex.printStackTrace();
+          continue;
+        } catch (InstantiationException ex) {
+          ex.printStackTrace();
+          continue;
+        }
 
-		Module module = null;
-		try {
-			module = loadModule(moduleToLoad, loadedModules);
-		} catch(IllegalAccessException e) {
-			e.printStackTrace();
-		} catch(InstantiationException e) {
-			e.printStackTrace();
-		} catch(MalformedURLException e) {
-			e.printStackTrace();
-		} catch(ClassNotFoundException e) {
-			e.printStackTrace();
-		} catch(NoSuchMethodException e) {
-			e.printStackTrace();
-		} catch(InvocationTargetException e) {
-			e.printStackTrace();
-		}
+      } catch (IOException ioex) {
+        ioex.printStackTrace();
+      }
+    }
 
-		if(module != null) {
-			// module is a listener for simulation step events
-			this.dataBus.addSimulationStepEventListener(module);
+    System.out.println("**********************************");
 
-			// module is a listener for simulation events
-			this.dataBus.addSimulationEventListener(module);
-
-			// the module is a listener for destroy object/agent event
-			this.dataBus.addDestroyObjektEventListener(module);
-
-			// the module is a listener for object/agent creation events
-			this.dataBus.addObjektInitEventListener(module);
-
-			// get the module tab title from the property file
-			if(module.getGUIComponent() != null && moduleProperties.getProperty(GUIModule.PROP_GUI_TITLE) != null) {
-				((JScrollPane)module.getGUIComponent()).setName(moduleProperties.getProperty(GUIModule.PROP_GUI_TITLE));
-			}
-		}
-		System.out.println();
-
-		String moduleClassName =
-						moduleProperties.getProperty(Module.PROP_BASE_MODULE_CLASS);
-
-		if(module != null && moduleClassName != null &&
-			dependingModules.containsKey(moduleClassName)) {
-			for(ValuePair<JarFile, Integer> dependingModule : dependingModules.
-				remove(moduleClassName)) {
-				tryToLoadModule(dependingModule, loadedModules, dependingModules);
-			}
-		}
-	}
-
-	@SuppressWarnings("rawtypes")
-	private Module loadModule(ValuePair<JarFile, Integer> moduleToLoad,
-		Map<String, ValuePair<Module, Integer>> loadedModules) throws
-		IllegalAccessException, InstantiationException, MalformedURLException,
-		ClassNotFoundException, IOException, NoSuchMethodException,
-		InvocationTargetException {
-
-		JarFile jarFile = moduleToLoad.value1;
-
-		// access the properties file of the module
-		JarEntry jarEntry = jarFile.getJarEntry("properties.xml");
-		Properties moduleProperties = new Properties();
-		InputStream inputStream = jarFile.getInputStream(jarEntry);
-		moduleProperties.loadFromXML(inputStream);
-
-		// define this Jar file as usable - See JarUtil for more details...
-		JarUtil.loadJar(new URL("file:///" + jarFile.getName()));
-
-		String className = moduleProperties.getProperty(
-			Module.PROP_BASE_MODULE_CLASS);
-		String[] dependencies = moduleProperties.getProperty(
-			Module.PROP_DEPENDS_ON_MODULE_CLASSES, " ").split("\\s+");
-
-		// load the base logic module
-		Class<? extends Object> moduleClass = Class.forName(className);
-
-		List<Class<? extends Module>> parameterClasses
-			= new ArrayList<Class<? extends Module>>();
-		List<Module> parameterObjects = new ArrayList<Module>();
-
-		for(String dependency : dependencies) {
-			parameterClasses.add(Module.class);
-			parameterObjects.add(loadedModules.get(dependency).value1);
-		}
-
-		Class[] parameters = new Class[parameterClasses.size()];
-		parameters = parameterClasses.toArray(parameters);
-		Constructor moduleConstructor =
-			moduleClass.getConstructor(parameterClasses.toArray(parameters));
-		Module module = ((Module)moduleConstructor.newInstance(parameterObjects.toArray()));
-		loadedModules.put(className, new ValuePair<Module, Integer>(module,
-			moduleToLoad.value2));
-		return module;
-	}
+    // order modules by priorities set in /modules/properties.xml file
+  }
 
   /**
    * Gets the "global" data bus object
@@ -521,63 +427,44 @@ public class SimulationManager {
     this.properties = new Properties();
 
     try {
-      this.properties.loadFromXML(new FileInputStream(this.PROPERTY_FILE_NAME));
-      this.setProperties();
-
+      this.properties.loadFromXML(new FileInputStream(this.propertyFileName));
     } catch (IOException ioe) {
-      System.err.println("Can not load the file " + this.PROPERTY_FILE_NAME
+      System.err.println("Can not load the file " + this.propertyFileName
           + ". Using the default values.");
-      this.setDefaultProperties();
     }
 
-  }
+    // load logger path plus file name
+    String value;
 
-  /*
-   * this values are used when no property file exists
-   */
-  private void setDefaultProperties() {
-    this.AORSLDirectory = "ext" + File.separator + "aorsl";
-    this.AORSLSchemaName = CURRENT_AORSL_SCHEMA_NAME;
-
-    this.codeGenXsltDirectory = APP_ROOT_DIRECTORY + File.separator + "ext"
-        + File.separator + "javagen";
-    this.codeGenXsltName = DEFAULT_CODEGEN_XSLT_FILE;
-  }
-
-  private void setProperties() {
-
-    String value = this.properties.getProperty(propertyAutoMultithreading);
-    if (value != null && value.equals("true")) {
-      this.autoMultithreading = true;
-    }
-
-    value = this.properties.getProperty(propertyXMLSchemaFileName);
+    value = this.properties.getProperty(propertyAutoMultithreading);
     if (value != null) {
-      this.AORSLSchemaName = value;
-    } else {
-      this.AORSLSchemaName = CURRENT_AORSL_SCHEMA_NAME;
+      if (value.equals("true")) {
+        this.autoMultithreading = true;
+      }
     }
 
-    value = this.properties.getProperty(propertyXMLSchemaFilePath);
-    if (value != null) {
-      this.AORSLDirectory = value;
-    } else {
-      this.AORSLDirectory = "ext" + File.separator + "aorsl";
-    }
+    // load the properties regarding the XML Schema validation
+    Properties aorslProperties = new Properties();
 
-    value = this.properties.getProperty(propertyXSLTFileName);
-    if (value != null) {
-      this.codeGenXsltName = value;
-    } else {
-      this.codeGenXsltName = DEFAULT_CODEGEN_XSLT_FILE;
+    try {
+      aorslProperties.loadFromXML(new FileInputStream(this.aorslDirectory
+          + File.separator + this.propertyFileName));
+    } catch (IOException ioe) {
+      System.err.println("Can not load the file " + this.propertyFileName
+          + ". Using the default value: " + CURRENT_AORSL_SCHEMA_NAME + " .");
+      this.AORSL_SCHEMA_NAME = CURRENT_AORSL_SCHEMA_NAME;
     }
+    // get the property setting
+    this.AORSL_SCHEMA_NAME = aorslProperties
+        .getProperty(PROPERTY_XML_SCHEMA_FILE_NAME);
 
-    value = this.properties.getProperty(propertyXSLTFilePath);
-    if (value != null) {
-      this.codeGenXsltDirectory = value;
-    } else {
-      this.codeGenXsltDirectory = APP_ROOT_DIRECTORY + File.separator + "ext"
-          + File.separator + "javagen";
+    // just in case somebody forgot to define a file name
+    if (this.AORSL_SCHEMA_NAME == null || this.AORSL_SCHEMA_NAME.equals("")) {
+      this.AORSL_SCHEMA_NAME = CURRENT_AORSL_SCHEMA_NAME;
+      System.err.println("File \"" + this.aorslDirectory + "/"
+          + this.propertyFileName
+          + "\" contains no XML Schema file name for AORSL. "
+          + " Using the default value: " + CURRENT_AORSL_SCHEMA_NAME + " .");
     }
 
   }
@@ -585,35 +472,24 @@ public class SimulationManager {
   /**
    * Save the properties to the project property file
    */
-  public void storeProperties() {
+  public void saveProperties() {
 
-    this.setPropertiesFromSystem();
-    this.saveProperties();
-
-  }
-
-  private void setPropertiesFromSystem() {
     // put on the simulator's properties
     // notice that an GUI may added already different properties as well!
     this.properties.put(this.propertyLoggerFileName, this.loggerFileName);
     this.properties.put(this.propertyLoggerPath, this.loggerPath);
     this.properties.put(this.propertyAutoMultithreading, String
         .valueOf(autoMultithreading));
-    this.properties.put(this.propertyXMLSchemaFileName, this.AORSLSchemaName);
-    this.properties.put(this.propertyXMLSchemaFilePath, this.AORSLDirectory);
-    this.properties.put(this.propertyXSLTFileName, this.codeGenXsltName);
-    this.properties.put(this.propertyXSLTFilePath, this.codeGenXsltDirectory);
-  }
 
-  private void saveProperties() {
     // store properties in the properies XML file
     try {
       this.properties.storeToXML(new FileOutputStream(new File(
-          this.PROPERTY_FILE_NAME)),
+          this.propertyFileName)),
           "This is the property file for the AOR simulator.", "UTF-8");
     } catch (IOException ioe) {
       ioe.printStackTrace();
     }
+
   }
 
   /**
@@ -694,10 +570,10 @@ public class SimulationManager {
    */
   public String readXMLFile(File file) {
     try {
-
+      
       InputStreamReader streamReader = new InputStreamReader(
-          new FileInputStream(file), "UTF8");
-
+          new FileInputStream(file),"UTF8");
+      
       BufferedReader fileReader = new BufferedReader(streamReader);
 
       String line = "";
@@ -708,7 +584,7 @@ public class SimulationManager {
       }
 
       fileReader.close();
-
+      
       // return the content of the string writer
       return result;
 
@@ -766,15 +642,18 @@ public class SimulationManager {
 
     String xml = this.getProject().getSimulationDescription();
 
-    File schemaFile = this.getXMLSchema();
-
     try {
       // lookup a factory for the W3C XML Schema language
       SchemaFactory factory = SchemaFactory
           .newInstance(XMLConstants.W3C_XML_SCHEMA_NS_URI);
 
+      // get the XML Schema
+      File schemaLocation = new File(System.getProperty("user.dir")
+          + File.separator + "ext" + File.separator + "aorsl" + File.separator
+          + AORSL_SCHEMA_NAME);
+
       // create a new Schema instance
-      Schema schema = factory.newSchema(schemaFile);
+      Schema schema = factory.newSchema(schemaLocation);
 
       // get a validator from the schema.
       Validator validator = schema.newValidator();
@@ -800,24 +679,6 @@ public class SimulationManager {
 
     return result;
   }
-  
-  private File getXMLSchema() {
-    
-    File schemaLocation = new File(System.getProperty("user.dir")
-        + File.separator + this.AORSLDirectory + File.separator
-        + this.AORSLSchemaName);
-
-    if (!schemaLocation.exists()) {
-      System.err.println("The XML-Schema [" + this.AORSLSchemaName
-          + "] was not found. Try with [" + this.CURRENT_AORSL_SCHEMA_NAME
-          + "].");
-      this.AORSLSchemaName = this.CURRENT_AORSL_SCHEMA_NAME;
-      schemaLocation = new File(System.getProperty("user.dir") + File.separator
-          + this.AORSLDirectory + File.separator + this.AORSLSchemaName);
-    }
-    
-    return schemaLocation;
-  }
 
   /**
    * Generate the source code starting from XML description file and using XSLT
@@ -828,13 +689,6 @@ public class SimulationManager {
    */
   public boolean generate() {
     boolean result = false;
-
-    File xsltFile = new File(this.codeGenXsltDirectory + File.separator
-        + this.codeGenXsltName);
-    if (!xsltFile.exists()) {
-      System.err.println("No transformation file found!");
-      return false;
-    }
 
     // out = switch generation to memory on, java = switch write to disk on
     this.xsltParameter.put("output.fileExtension", "java");
@@ -850,7 +704,8 @@ public class SimulationManager {
 
       // transform the simulation description -> generate Java code
       this.xslt2Processor.transformFromURL(this.getProject()
-          .getSimulationDescription(), xsltFile.toURI(), this.xsltParameter);
+          .getSimulationDescription(), this.xsltFile.toURI(),
+          this.xsltParameter);
 
       // test if the Java code generation succeed
       if (this.xslt2Processor.getMessages().isEmpty()) {
@@ -948,8 +803,8 @@ public class SimulationManager {
    * 
    * @return the existing modules
    */
-  public List<Module> getModules() {
-    return this.modules;
+  public ArrayList<Module> getModules() {
+    return modules;
   }
 
   /**
@@ -1023,20 +878,4 @@ public class SimulationManager {
 
     }
   }
-
-	private class ValuePair<T1, T2> {
-
-		public T1 value1;
-		public T2 value2;
-
-		public ValuePair(T1 value1, T2 value2) {
-			this.value1 = value1;
-			this.value2 = value2;
-		}
-
-		@Override
-		public String toString() {
-			return "(" + value1.toString() + ", " + value2.toString() + ")";
-		}
-	}
 }

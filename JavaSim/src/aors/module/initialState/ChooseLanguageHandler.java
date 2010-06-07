@@ -1,4 +1,4 @@
-/*package aors.module.initialState;
+package aors.module.initialState;
 
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
@@ -101,4 +101,3 @@ public class ChooseLanguageHandler implements ActionListener {
   private String objectType;
 
 }
-*/

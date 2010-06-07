@@ -11,7 +11,7 @@ The build.xml in the folder creates a distribution with following structure:
      /media/sounds        - mp3-sounds
      /lib                 - libraries for the core implementation
      /modules             - module
-     /Examples            - project examples
+     /projects            - projects
      /thirdparty-licenses - thirdparty licenses
      AOR-Simulator.exe    - run the simulator in windows
      AOR-Simulator.sh     - run the simulator in unix
@@ -36,9 +36,10 @@ The build.xml in the folder creates a distribution with following structure:
 
 2. Create a zip-file
    
-   - it will be copy all the project exampes from the Examples folder in the 
-     trunk
-   - NOTICE: the source folder from trunk has to be named 'Examples'
+   - to define which projects from trunk folder will be copied to the 
+     projects folder, change the content of build.properties file 
+     (for more information open build.properties)
+   - NOTICE: the source folder from trunk has to be named 'projects'
    - NOTICE: these projects are independent from your own projects in the 
              dist folder (if existing)
 

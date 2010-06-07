@@ -877,17 +877,17 @@ public class UpdateManager {
 
       if (phyAgt.getRotationAngleX() != null) {
         double rotationAngleX = phyAgt.getRotationAngleX();
-        obj.setRotX(rotationAngleX);
+        obj.setRotationAngleX(rotationAngleX);
       }
 
       if (phyAgt.getRotationAngleY() != null) {
         double rotationAngleY = phyAgt.getRotationAngleY();
-        obj.setRotZ(rotationAngleY);
+        obj.setRotationAngleZ(rotationAngleY);
       }
 
       if (phyAgt.getRotationAngleZ() != null) {
         double rotationAngleZ = phyAgt.getRotationAngleZ();
-        obj.setRotZ(rotationAngleZ);
+        obj.setRotationAngleZ(rotationAngleZ);
       }
 
       if (phyAgt.getVx() != null) {
@@ -1022,17 +1022,17 @@ public class UpdateManager {
 
       if (phyObj.getRotationAngleX() != null) {
         double rotationAngleX = phyObj.getRotationAngleX();
-        obj.setRotX(rotationAngleX);
+        obj.setRotationAngleX(rotationAngleX);
       }
 
       if (phyObj.getRotationAngleY() != null) {
         double rotationAngleY = phyObj.getRotationAngleY();
-        obj.setRotZ(rotationAngleY);
+        obj.setRotationAngleZ(rotationAngleY);
       }
 
       if (phyObj.getRotationAngleZ() != null) {
         double rotationAngleZ = phyObj.getRotationAngleZ();
-        obj.setRotZ(rotationAngleZ);
+        obj.setRotationAngleZ(rotationAngleZ);
       }
 
       if (phyObj.getVx() != null) {

@@ -108,6 +108,7 @@ public class Simulator1D extends PhysicsSimulator {
 
     // put all objects in separate interval lists for each lane, then initialize
     // each interval list
+
     if (spaceModel.getMultiplicity() == 1) {
       for (Physical object : getPhysicals()) {
         currentLanes.put(object, object.getY());

@@ -416,118 +416,133 @@
       <xsl:with-param name="name" select="'getValue'"/>
       <xsl:with-param name="content">
 
-        <!-- single object instance -->
-        <xsl:if test="@objectIdRef">
+        <xsl:choose>
+          <!-- single object instance -->
+          <xsl:when test="@objectIdRef">
 
-          <xsl:call-template name="java:if">
-            <xsl:with-param name="indent" select="$indent + 1"/>
-            <xsl:with-param name="condition">
-              <xsl:call-template name="java:boolExpr">
-                <xsl:with-param name="value1">
-                  <xsl:call-template name="java:varByDotNotation">
-                    <xsl:with-param name="varName" select="'objekt'"/>
-                  </xsl:call-template>
-                </xsl:with-param>
-                <xsl:with-param name="value2" select="'null'"/>
-                <xsl:with-param name="operator" select="'!='"/>
-              </xsl:call-template>
-            </xsl:with-param>
-            <xsl:with-param name="thenContent">
-              <xsl:variable name="varName" select="concat('__', jw:lowerWord(@objectType))"/>
+            <xsl:call-template name="java:if">
+              <xsl:with-param name="indent" select="$indent + 1"/>
+              <xsl:with-param name="condition">
+                <xsl:call-template name="java:boolExpr">
+                  <xsl:with-param name="value1">
+                    <xsl:call-template name="java:varByDotNotation">
+                      <xsl:with-param name="varName" select="'objekt'"/>
+                    </xsl:call-template>
+                  </xsl:with-param>
+                  <xsl:with-param name="value2" select="'null'"/>
+                  <xsl:with-param name="operator" select="'!='"/>
+                </xsl:call-template>
+              </xsl:with-param>
+              <xsl:with-param name="thenContent">
+                <xsl:variable name="varName" select="concat('__', jw:lowerWord(@objectType))"/>
 
-              <!-- [@objectType] __[@objectType] = this.objekt -->
-              <xsl:call-template name="java:variable">
-                <xsl:with-param name="indent" select="$indent + 2"/>
-                <xsl:with-param name="type" select="@objectType"/>
-                <xsl:with-param name="castType" select="@objectType"/>
-                <xsl:with-param name="name" select="$varName"/>
-                <xsl:with-param name="value">
-                  <xsl:call-template name="java:varByDotNotation">
-                    <xsl:with-param name="varName" select="'objekt'"/>
-                  </xsl:call-template>
-                </xsl:with-param>
-              </xsl:call-template>
+                <!-- [@objectType] __[@objectType] = this.objekt -->
+                <xsl:call-template name="java:variable">
+                  <xsl:with-param name="indent" select="$indent + 2"/>
+                  <xsl:with-param name="type" select="@objectType"/>
+                  <xsl:with-param name="castType" select="@objectType"/>
+                  <xsl:with-param name="name" select="$varName"/>
+                  <xsl:with-param name="value">
+                    <xsl:call-template name="java:varByDotNotation">
+                      <xsl:with-param name="varName" select="'objekt'"/>
+                    </xsl:call-template>
+                  </xsl:with-param>
+                </xsl:call-template>
 
-              <xsl:call-template name="java:return">
-                <xsl:with-param name="indent" select="$indent + 2"/>
-                <xsl:with-param name="value">
-                  <xsl:call-template name="java:callGetterMethod">
-                    <xsl:with-param name="inLine" select="true()"/>
-                    <xsl:with-param name="objInstance" select="$varName"/>
-                    <xsl:with-param name="instVariable" select="@property"/>
-                  </xsl:call-template>
-                </xsl:with-param>
-              </xsl:call-template>
+                <xsl:call-template name="java:return">
+                  <xsl:with-param name="indent" select="$indent + 2"/>
+                  <xsl:with-param name="value">
+                    <xsl:call-template name="java:callGetterMethod">
+                      <xsl:with-param name="inLine" select="true()"/>
+                      <xsl:with-param name="objInstance" select="$varName"/>
+                      <xsl:with-param name="instVariable" select="@property"/>
+                    </xsl:call-template>
+                  </xsl:with-param>
+                </xsl:call-template>
 
-            </xsl:with-param>
-          </xsl:call-template>
+              </xsl:with-param>
+            </xsl:call-template>
+            
+            <xsl:call-template name="java:return">
+              <xsl:with-param name="indent" select="$indent + 1"/>
+              <xsl:with-param name="value" select="'null'"/>
+            </xsl:call-template>
 
-        </xsl:if>
+          </xsl:when>
+          <xsl:otherwise>
 
-        <xsl:call-template name="java:return">
-          <xsl:with-param name="indent" select="$indent + 1"/>
-          <xsl:with-param name="value" select="'null'"/>
-        </xsl:call-template>
+            <xsl:call-template name="java:return">
+              <xsl:with-param name="indent" select="$indent + 1"/>
+              <xsl:with-param name="value" select="'null'"/>
+            </xsl:call-template>
+
+          </xsl:otherwise>
+        </xsl:choose>
 
       </xsl:with-param>
     </xsl:call-template>
 
+    <xsl:call-template name="java:method">
+      <xsl:with-param name="indent" select="$indent"/>
+      <xsl:with-param name="modifier" select="'public'"/>
+      <xsl:with-param name="type" select="$sim.class.simStatistics.Variable.PropertyIterator"/>
+      <xsl:with-param name="name" select="'getPropertyIterator'"/>
+      <xsl:with-param name="content">
 
-    <xsl:if test="not(@objectIdRef)">
+        <xsl:call-template name="java:return">
+          <xsl:with-param name="indent" select="$indent + 1"/>
+          <xsl:with-param name="value">
+            <xsl:choose>
+              <xsl:when test="not(@objectIdRef)">
+                <xsl:call-template name="java:newObject">
+                  <xsl:with-param name="inLine" select="true()"/>
+                  <xsl:with-param name="class" select="$sim.class.simStatistics.Variable.PropertyIterator"/>
+                  <xsl:with-param name="isVariable" select="true()"/>
+                </xsl:call-template>
+              </xsl:when>
+              <xsl:otherwise>
+                <xsl:value-of select="'null'"/>
+              </xsl:otherwise>
+            </xsl:choose>
+          </xsl:with-param>
+        </xsl:call-template>
+      </xsl:with-param>
+    </xsl:call-template>
 
-      <xsl:call-template name="java:method">
-        <xsl:with-param name="indent" select="$indent"/>
-        <xsl:with-param name="modifier" select="'public'"/>
-        <xsl:with-param name="type" select="$sim.class.simStatistics.Variable.PropertyIterator"/>
-        <xsl:with-param name="name" select="'getPropertyIterator'"/>
-        <xsl:with-param name="content">
+    <xsl:call-template name="java:method">
+      <xsl:with-param name="indent" select="$indent"/>
+      <xsl:with-param name="modifier" select="'public'"/>
+      <xsl:with-param name="type" select="$sim.class.simStatistics.Variable.PropertyWithObjektIDRefIterator"/>
+      <xsl:with-param name="name" select="'getObjektIDRefPropertyIterator'"/>
+      <xsl:with-param name="content">
 
-          <xsl:call-template name="java:return">
-            <xsl:with-param name="indent" select="$indent + 1"/>
-            <xsl:with-param name="value">
+        <xsl:call-template name="java:return">
+          <xsl:with-param name="indent" select="$indent + 1"/>
+          <xsl:with-param name="value">
+            <xsl:choose>
+              <xsl:when test="not(@objectIdRef)">
+                <xsl:call-template name="java:newObject">
+                  <xsl:with-param name="inLine" select="true()"/>
+                  <xsl:with-param name="class" select="$sim.class.simStatistics.Variable.PropertyWithObjektIDRefIterator"/>
+                  <xsl:with-param name="isVariable" select="true()"/>
+                </xsl:call-template>
+              </xsl:when>
+              <xsl:otherwise>
+                <xsl:value-of select="'null'"/>
+              </xsl:otherwise>
+            </xsl:choose>
+          </xsl:with-param>
+        </xsl:call-template>
+      </xsl:with-param>
+    </xsl:call-template>
 
-              <xsl:call-template name="java:newObject">
-                <xsl:with-param name="inLine" select="true()"/>
-                <xsl:with-param name="class" select="$sim.class.simStatistics.Variable.PropertyIterator"/>
-                <xsl:with-param name="isVariable" select="true()"/>
-              </xsl:call-template>
+    <xsl:apply-templates select="." mode="createStatistics.createVariableClasses.createPropertyIterator">
+      <xsl:with-param name="indent" select="$indent"/>
+    </xsl:apply-templates>
 
-            </xsl:with-param>
-          </xsl:call-template>
-        </xsl:with-param>
-      </xsl:call-template>
-
-      <xsl:call-template name="java:method">
-        <xsl:with-param name="indent" select="$indent"/>
-        <xsl:with-param name="modifier" select="'public'"/>
-        <xsl:with-param name="type" select="$sim.class.simStatistics.Variable.PropertyWithObjektIDRefIterator"/>
-        <xsl:with-param name="name" select="'getObjektIDRefPropertyIterator'"/>
-        <xsl:with-param name="content">
-
-          <xsl:call-template name="java:return">
-            <xsl:with-param name="indent" select="$indent + 1"/>
-            <xsl:with-param name="value">
-
-              <xsl:call-template name="java:newObject">
-                <xsl:with-param name="inLine" select="true()"/>
-                <xsl:with-param name="class" select="$sim.class.simStatistics.Variable.PropertyWithObjektIDRefIterator"/>
-                <xsl:with-param name="isVariable" select="true()"/>
-              </xsl:call-template>
-
-            </xsl:with-param>
-          </xsl:call-template>
-        </xsl:with-param>
-      </xsl:call-template>
-
-      <xsl:apply-templates select="." mode="createStatistics.createVariableClasses.createPropertyIterator">
-        <xsl:with-param name="indent" select="$indent"/>
-      </xsl:apply-templates>
-
-      <xsl:apply-templates select="." mode="createStatistics.createVariableClasses.createPropertyWithObjektIDRefIterator">
-        <xsl:with-param name="indent" select="$indent"/>
-      </xsl:apply-templates>
-
-    </xsl:if>
+    <xsl:apply-templates select="." mode="createStatistics.createVariableClasses.createPropertyWithObjektIDRefIterator">
+      <xsl:with-param name="indent" select="$indent"/>
+    </xsl:apply-templates>
 
   </xsl:template>
 
@@ -597,7 +612,7 @@
               <xsl:with-param name="name" select="$cumulativeVarName"/>
               <xsl:with-param name="value" select="'0'"/>
             </xsl:call-template>
-
+            
             <xsl:call-template name="java:for-each-loop">
               <xsl:with-param name="indent" select="$indent + 1"/>
               <xsl:with-param name="elementType" select="$core.class.object"/>
@@ -873,7 +888,7 @@
 
           <xsl:when test="not(@objectIdRef)">
 
-            <xsl:variable name="varName" select="concat('__', jw:lowerWord(@objectType))"/>
+            <xsl:variable name="varName" select="concat('___', jw:lowerWord(@objectType))"/>
             <xsl:call-template name="java:newObject">
               <xsl:with-param name="indent" select="$indent + 1"/>
               <xsl:with-param name="class" select="@objectType"/>
