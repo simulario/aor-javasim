@@ -1,6 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <?xml-stylesheet type="text/xsl" href="prettyprint.xsl"?>
 
+
 <SimulationScenario 
 	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
 	xsi:schemaLocation="http://aor-simulation.org ../../../ext/aorsl/AORSL-0-8-3.xsd" 
@@ -11,7 +12,7 @@
 	scenarioTitle="Thief and Police in traffic simulation"
 	simulationManagerDirectory="../../..">
 	
-	<SimulationParameters simulationSteps="10000" stepDuration="1" stepTimeDelay="50"/>
+	<SimulationParameters simulationSteps="2000" stepDuration="1" stepTimeDelay="50"/>
 	
 	<SimulationModel modelName="ThiefAndPolice" modelTitle="ThiefAndPolice">
 		<documentation>
@@ -32,10 +33,6 @@
 		<Statistics>
 			<Variable name="thief_win" dataType="Integer"><Source><ObjectProperty property="thiefWin" objectType="Thief"/></Source></Variable>
 			<Variable name="thief_lose" dataType="Integer"><Source><ObjectProperty property="thiefLose" objectType="Thief"/></Source></Variable>
-			<Variable name="steps_per_distance" dataType="Float"><Source><ObjectProperty property="stepsPerDistance" objectType="Traffic"/></Source></Variable>
-			<Variable name="starting_distance" dataType="Integer"><Source><ObjectProperty property="startingDistance" objectType="Traffic"/></Source></Variable>
-			<Variable name="timesteps" dataType="Integer"><Source><ObjectProperty property="timeSteps" objectType="Traffic"/></Source></Variable>
-			<Variable name="distance_to_target" dataType="Float"><Source><ObjectProperty property="distanceToTarget" objectType="Traffic"/></Source></Variable>
 			<Variable name="distance_to_police" dataType="Float"><Source><ObjectProperty property="lastDistanceToPolice" objectType="Thief"/></Source></Variable>
 			<Variable name="last_police_x" dataType="Integer"><Source><ObjectProperty property="lastPoliceX" objectType="Thief"/></Source></Variable>
 			<Variable name="last_police_y" dataType="Integer"><Source><ObjectProperty property="lastPoliceY" objectType="Thief"/></Source></Variable>
@@ -45,6 +42,7 @@
 			<Variable name="value_3" dataType="Float"><Source><ObjectProperty property="value3" objectType="Car"/></Source></Variable>
 			<Variable name="value_4" dataType="Float"><Source><ObjectProperty property="value4" objectType="Car"/></Source></Variable>
 		</Statistics>
+	
 	
 		<DataTypes>
 			<Enumeration name="Direction4">
@@ -64,10 +62,6 @@
 				<EnumerationLiteral>CHASE</EnumerationLiteral>
 				<EnumerationLiteral>BLOCK</EnumerationLiteral>
 			</Enumeration>
-			<Enumeration name="TrafficState">
-				<EnumerationLiteral>START</EnumerationLiteral>
-				<EnumerationLiteral>DESTINATION</EnumerationLiteral>
-			</Enumeration>
 			<Enumeration name="LearningModes">
 				<EnumerationLiteral>LA</EnumerationLiteral>
 				<EnumerationLiteral>QL</EnumerationLiteral>
@@ -80,7 +74,7 @@
 				<ClassDef language="Java">
 					<![CDATA[
 					private double[][][] P = new double[16][8][4];
-					double alpha = 0.99;
+					double alpha = 0.9;
 					private int subState1 = 0;
 					private int subState2 = 0;
 					private int action = 0;
@@ -94,23 +88,19 @@
 							}
 						}
 					}
-					
-					public double getValue(long r, long s, long c) {
-						return P[(int)r-1][(int)s-1][(int)c-1];
-					}
-					
+						
 					public int randomIndex(long r, long s) {
 						subState1 = (int)r - 1;
 					  	subState2 = (int)s - 1;
 						action = 0;
-						double[] test = new double[4];
+						double[] weight = new double[4];
 						
 						for (int j=0; j < 4; j++) {
-							test[j] = Math.random() * P[subState1][subState2][j];
+							weight[j] = Math.random() * P[subState1][subState2][j];
 						}
 						
 						for (int i=1; i < 4; i++) {
-							if (test[i] > test[action]) {
+							if (weight[i] > weight[action]) {
 								action = i;
 							}
 						}
@@ -185,6 +175,10 @@
 							P[subState1][subState2][j] = P[subState1][subState2][j] / action_sum;
 						}
 					}
+					
+					public double getValue(long r, long s, long c) {
+						return P[(int)r-1][(int)s-1][(int)c-1];
+					}
 					]]>
 				</ClassDef>
 			</ComplexDataType>
@@ -192,7 +186,7 @@
 				<ClassDef language="Java">
 					<![CDATA[
 					private double[][][] Q = new double[16][8][4];
-					double alpha = 0.05;
+					double alpha = 0.1;
 					double gamma = 0.5;
 					private int subState1 = 0;
 					private int subState2 = 0;
@@ -207,23 +201,19 @@
 							}
 						}
 					}
-					
-					public double getValue(long r, long s, long c) {
-						return Q[(int)r-1][(int)s-1][(int)c-1];
-					}
-					
+										
 					public int randomIndex(long r, long s) {
 						subState1 = (int)r - 1;
 					  	subState2 = (int)s - 1;
 						action = 0;
-						double[] test = new double[4];
+						double[] weight = new double[4];
 						
 						for (int j=0; j < 4; j++) {
-							test[j] = Math.random() * Q[subState1][subState2][j];
+							weight[j] = Math.random() * Q[subState1][subState2][j];
 						}
 						
 						for (int i=1; i < 4; i++) {
-							if (test[i] > test[action]) {
+							if (weight[i] > weight[action]) {
 								action = i;
 							}
 						}
@@ -245,6 +235,12 @@
 						return action + 1;
 					}
 					
+					public void update(long nextSubState1, long nextSubstate2, double reward) {
+						// Q(a,s) = Q(a,s) + alpha * (reward + gamma * max{Q(a',s')} - Q(a,s))
+						Q[subState1][subState2][action] = Q[subState1][subState2][action] + alpha * (reward + gamma * this.maxValue(nextSubState1, nextSubstate2) - Q[subState1][subState2][action]);
+						this.normalize();
+					}
+					
 					public double maxValue(long r, long s) {
 						int nextSubstate1 = (int)r - 1;
 					  	int nextSubstate2 = (int)s - 1;
@@ -255,12 +251,6 @@
 							}
 						}
 						return Q[nextSubstate1][nextSubstate2][bestAction];
-					}
-					
-					public void update(long nextSubState1, long nextSubstate2, double reward) {
-						// Q(a,s) = Q(a,s) + alpha * (reward + gamma * max{Q(a',s')} - Q(a,s))
-						Q[subState1][subState2][action] = Q[subState1][subState2][action] + alpha * (reward + gamma * this.maxValue(nextSubState1, nextSubstate2) - Q[subState1][subState2][action]);
-						//this.normalize();
 					}
 					
 					public void normalize() {
@@ -286,6 +276,10 @@
 						for (int j=0; j < 4; j++) { 
 							Q[subState1][subState2][j] = Q[subState1][subState2][j] / action_sum;
 						}
+					}
+					
+					public double getValue(long r, long s, long c) {
+						return Q[(int)r-1][(int)s-1][(int)c-1];
 					}
 					]]>
 				</ClassDef>
@@ -1094,7 +1088,7 @@
 					</Body>
 				</Function>
 				
-				<ReactionRule name="FromBankToBank" agentVariable="thief">
+				<AgentRule name="FromBankToBank" agentVariable="thief">
 					<documentation>
 						<dc:description>Stay in state BANK and move to destination.</dc:description>
 					</documentation>
@@ -1107,8 +1101,8 @@
 							<Slot property="progressInCell"><ValueExpr language="Java"><![CDATA[ thief.setProgressInCell() ]]></ValueExpr></Slot>
 						</UPDATE-AGT>
 					</THEN>
-				</ReactionRule>
-				<ReactionRule name="FromBankToRob" agentVariable="thief">
+				</AgentRule>
+				<AgentRule name="FromBankToRob" agentVariable="thief">
 					<documentation>
 						<dc:description>By arriving bank the thief changes state to ROBBING and stops.</dc:description>
 					</documentation>
@@ -1121,8 +1115,8 @@
 							<Slot property="progressInCell"><ValueExpr language="Java"><![CDATA[ 0.0 ]]></ValueExpr></Slot>
 						</UPDATE-AGT>
 					</THEN>
-				</ReactionRule>
-				<ReactionRule name="FromRobToRob" agentVariable="thief">
+				</AgentRule>
+				<AgentRule name="FromRobToRob" agentVariable="thief">
 					<documentation>
 						<dc:description>Checking if robbery is done and increasing progress on it.</dc:description>
 					</documentation>
@@ -1133,8 +1127,8 @@
 							<Slot property="currentRobTime"><ValueExpr language="Java"><![CDATA[ thief.getCurrentRobTime() + 1 ]]></ValueExpr></Slot>
 						</UPDATE-AGT>
 					</THEN>
-				</ReactionRule>
-				<ReactionRule name="FromRobToHideout" agentVariable="thief">
+				</AgentRule>
+				<AgentRule name="FromRobToHideout" agentVariable="thief">
 					<documentation>
 						<dc:description>Robbery completed, change state to HIDEOUT and move to destination.</dc:description>
 					</documentation>
@@ -1148,8 +1142,8 @@
 							<Slot property="speed"><ValueExpr language="Java"><![CDATA[ thief.getNormalSpeed() ]]></ValueExpr></Slot>
 						</UPDATE-AGT>
 					</THEN>
-				</ReactionRule>	
-				<ReactionRule name="FromHideoutToHideout" agentVariable="thief">
+				</AgentRule>	
+				<AgentRule name="FromHideoutToHideout" agentVariable="thief">
 					<documentation>
 						<dc:description>Stay in state HIDEOUT and move to destination.</dc:description>
 					</documentation>
@@ -1162,8 +1156,8 @@
 							<Slot property="progressInCell"><ValueExpr language="Java"><![CDATA[ thief.setProgressInCell() ]]></ValueExpr></Slot>
 						</UPDATE-AGT>
 					</THEN>
-				</ReactionRule>
-				<ReactionRule name="FromChaseToBank" agentVariable="thief">
+				</AgentRule>
+				<AgentRule name="FromChaseToBank" agentVariable="thief">
 					<documentation>
 						<dc:description>Return from state CHASE to BANK, if no police percepted and robbery not completed.</dc:description>
 					</documentation>
@@ -1179,8 +1173,8 @@
 							<Slot property="progressInCell"><ValueExpr language="Java"><![CDATA[ thief.setProgressInCell() ]]></ValueExpr></Slot>
 						</UPDATE-AGT>
 					</THEN>
-				</ReactionRule>
-				<ReactionRule name="FromChaseToHideout" agentVariable="thief">
+				</AgentRule>
+				<AgentRule name="FromChaseToHideout" agentVariable="thief">
 					<documentation>
 						<dc:description>Return from state CHASE to HIDEOUT, if no police percepted and robbery completed.</dc:description>
 					</documentation>
@@ -1196,8 +1190,8 @@
 							<Slot property="progressInCell"><ValueExpr language="Java"><![CDATA[ thief.setProgressInCell() ]]></ValueExpr></Slot>
 						</UPDATE-AGT>
 					</THEN>
-				</ReactionRule>
-				<ReactionRule name="FromXToChase" agentVariable="thief">
+				</AgentRule>
+				<AgentRule name="FromXToChase" agentVariable="thief">
 					<documentation>
 						<dc:description>Initial steps to change to state CHASE because of percepted police.</dc:description>
 					</documentation>
@@ -1213,8 +1207,8 @@
 							<Slot property="progressInCell"><ValueExpr language="Java"><![CDATA[ thief.setProgressInCell() ]]></ValueExpr></Slot>
 						</UPDATE-AGT>
 					</THEN>
-				</ReactionRule>				
-				<ReactionRule name="UpdateLA" agentVariable="thief">
+				</AgentRule>				
+				<AgentRule name="UpdateLA" agentVariable="thief">
 					<documentation>
 						<dc:description>Success rule for the LA algorihm.</dc:description>
 					</documentation>
@@ -1243,8 +1237,8 @@
 							<Slot property="value4"><ValueExpr language="Java"><![CDATA[ thief.getProbMatLA().getValue(1, 1, 4) ]]></ValueExpr></Slot>
 						</UPDATE-AGT>
 					</THEN>
-				</ReactionRule>
-				<ReactionRule name="UpdateQL" agentVariable="thief">
+				</AgentRule>
+				<AgentRule name="UpdateQL" agentVariable="thief">
 					<documentation>
 						<dc:description>Update rule for the QL algorihm.</dc:description>
 					</documentation>
@@ -1276,7 +1270,7 @@
 							<Slot property="value4"><ValueExpr language="Java"><![CDATA[ thief.getProbMatQL().getValue(1, 1, 4) ]]></ValueExpr></Slot>
 						</UPDATE-AGT>
 					</THEN>
-				</ReactionRule>
+				</AgentRule>
 			</PhysicalAgentType>
 			
 			<!-- Police -->
@@ -1358,7 +1352,7 @@
 					</Body>
 				</Function>
 
-				<ReactionRule name="FromPatrolToPatrol" agentVariable="police">
+				<AgentRule name="FromPatrolToPatrol" agentVariable="police">
 					<WHEN eventType="PrepareToAct"/>
 					<IF language="Java"><![CDATA[ police.getCurrentState() == PoliceState.PATROL ]]></IF>
 					<THEN>
@@ -1368,8 +1362,8 @@
 							<Slot property="progressInCell"><ValueExpr language="Java"><![CDATA[ police.setProgressInCell() ]]></ValueExpr></Slot>
 						</UPDATE-AGT>
 					</THEN>
-				</ReactionRule>
-				<ReactionRule name="FromPatrolToChase" agentVariable="police">
+				</AgentRule>
+				<AgentRule name="FromPatrolToChase" agentVariable="police">
 					<WHEN eventType="InMessageEvent" messageType="TellTarget" messageVariable="m"/>
 					<DO>
 						<UPDATE-AGT>
@@ -1379,8 +1373,8 @@
 							<Slot property="speed"><ValueExpr language="Java"><![CDATA[ police.getChaseSpeed() ]]></ValueExpr></Slot>
 						</UPDATE-AGT>
 					</DO>
-				</ReactionRule>
-				<ReactionRule name="FromChaseToChase" agentVariable="police">
+				</AgentRule>
+				<AgentRule name="FromChaseToChase" agentVariable="police">
 					<WHEN eventType="PrepareToAct"/>
 					<IF language="Java"><![CDATA[ police.getCurrentState() == PoliceState.CHASE ]]></IF>
 					<THEN>
@@ -1390,8 +1384,8 @@
 							<Slot property="progressInCell"><ValueExpr language="Java"><![CDATA[ police.setProgressInCell() ]]></ValueExpr></Slot>
 						</UPDATE-AGT>
 					</THEN>
-				</ReactionRule>
-				<ReactionRule name="FromChaseToBlock" agentVariable="police">
+				</AgentRule>
+				<AgentRule name="FromChaseToBlock" agentVariable="police">
 					<WHEN eventType="PrepareToAct"/>
 					<IF language="Java"><![CDATA[ police.getCurrentState() == PoliceState.CHASE && police.atDestination() ]]></IF>
 					<THEN>
@@ -1401,8 +1395,8 @@
 							<Slot property="progressInCell"><ValueExpr language="Java"><![CDATA[ 0.0 ]]></ValueExpr></Slot>
 						</UPDATE-AGT>
 					</THEN>
-				</ReactionRule>
-				<ReactionRule name="FromBlockToChase" agentVariable="police">
+				</AgentRule>
+				<AgentRule name="FromBlockToChase" agentVariable="police">
 					<WHEN eventType="PrepareToAct"/>
 					<IF language="Java"><![CDATA[ police.getCurrentState() == PoliceState.BLOCK && !police.atDestination() ]]></IF>
 					<THEN>
@@ -1411,8 +1405,8 @@
 							<Slot property="speed"><ValueExpr language="Java"><![CDATA[ police.getChaseSpeed() ]]></ValueExpr></Slot>
 						</UPDATE-AGT>
 					</THEN>
-				</ReactionRule>
-				<ReactionRule name="FromXToPatrol" agentVariable="police">
+				</AgentRule>
+				<AgentRule name="FromXToPatrol" agentVariable="police">
 					<WHEN eventType="InMessageEvent" messageType="AbortChase" messageVariable="m"/>
 					<DO>
 						<UPDATE-AGT>
@@ -1420,8 +1414,8 @@
 							<Slot property="speed"><ValueExpr language="Java"><![CDATA[ police.getNormalSpeed() ]]></ValueExpr></Slot>
 						</UPDATE-AGT>
 					</DO>
-				</ReactionRule>
-				<ReactionRule name="TellTargetToStation" agentVariable="police">
+				</AgentRule>
+				<AgentRule name="TellTargetToStation" agentVariable="police">
 					<WHEN eventType="PrepareToAct"/>
 					<IF language="Java"><![CDATA[ police.perceptThief() ]]></IF>
 					<THEN>
@@ -1432,7 +1426,7 @@
 							</OutMessageEventExpr>
 						</SCHEDULE-EVT>
 					</THEN>
-				</ReactionRule>
+				</AgentRule>
 			</PhysicalAgentType>
 			
 			<!-- Police Station -->
@@ -1544,269 +1538,7 @@
 					</THEN>
 				</CommunicationRule>
 			</AgentType>
-			
-			<!-- Traffic -->
-			<PhysicalAgentType name="Traffic" superType="Car">
-				<EnumerationProperty name="currentState" type="TrafficState"/>
-				<EnumerationProperty name="learningMode" type="LearningModes"/>
-				<EnumerationProperty name="actionChoice" type="ActionChoices"/>
-				<Attribute type="Float" name="distanceToTarget"/>
-				<Attribute type="Float" name="startingDistance"/>
-				<Attribute type="Integer" name="timeSteps"/>
-				<Attribute type="Float" name="stepsPerDistance"/>
-				<ComplexDataProperty name="ProbMatLA" type="LA_ProbabilityMatrix_16_8_4"/>
-				<ComplexDataProperty name="ProbMatQL" type="QL_ProbabilityMatrix_16_8_4"/>
-				
-				<Function name="resolveSubState1" resultType="Integer">
-					<Body language="Java">
-						<![CDATA[
-						int result = 0;
-						int xCurrent = (int)this.getX();
-						int yCurrent = (int)this.getY();
-						int northCellType  = (int)Simulator.spaceModel.getGridCell(xCurrent + 0, yCurrent + 1).getCellType();
-						int eastCellType   = (int)Simulator.spaceModel.getGridCell(xCurrent + 1, yCurrent + 0).getCellType();
-						int southCellType  = (int)Simulator.spaceModel.getGridCell(xCurrent + 0, yCurrent - 1).getCellType();
-						int westCellType   = (int)Simulator.spaceModel.getGridCell(xCurrent - 1, yCurrent + 0).getCellType();
 						
-						if (northCellType != 0 && eastCellType != 0 && southCellType != 0 && westCellType != 0) {
-							result = 1;
-						}
-						
-						if (northCellType != 0 && eastCellType != 0 && southCellType != 0 && westCellType == 0) {
-							result = 2;
-						}
-						
-						if (northCellType != 0 && eastCellType != 0 && southCellType == 0 && westCellType != 0) {
-							result = 3;
-						}
-						
-						if (northCellType != 0 && eastCellType == 0 && southCellType != 0 && westCellType != 0) {
-							result = 4;
-						}
-						
-						if (northCellType == 0 && eastCellType != 0 && southCellType != 0 && westCellType != 0) {
-							result = 5;
-						}
-						
-						if (northCellType != 0 && eastCellType != 0 && southCellType == 0 && westCellType == 0) {
-							result = 6;
-						}
-						
-						if (northCellType != 0 && eastCellType == 0 && southCellType != 0 && westCellType == 0) {
-							result = 7;
-						}
-						
-						if (northCellType != 0 && eastCellType == 0 && southCellType == 0 && westCellType != 0) {
-							result = 8;
-						}
-						
-						if (northCellType == 0 && eastCellType != 0 && southCellType != 0 && westCellType == 0) {
-							result = 9;
-						}
-						
-						if (northCellType == 0 && eastCellType != 0 && southCellType == 0 && westCellType != 0) {
-							result = 10;
-						}
-						
-						if (northCellType == 0 && eastCellType == 0 && southCellType != 0 && westCellType != 0) {  
-							result = 11;
-						}
-						
-						if (northCellType != 0 && eastCellType == 0 && southCellType == 0 && westCellType == 0) {  
-							result = 12;
-						}
-						
-						if (northCellType == 0 && eastCellType != 0 && southCellType == 0 && westCellType == 0) {
-							result = 13;
-						}
-						
-						if (northCellType == 0 && eastCellType == 0 && southCellType != 0 && westCellType == 0) {  
-							result = 14;
-						}
-						
-						if (northCellType == 0 && eastCellType == 0 && southCellType == 0 && westCellType != 0) {  
-							result = 15;
-						}
-						
-						return (int)result;
-						]]>
-					</Body>
-				</Function>
-				<Function name="resolveSubState2" resultType="Integer">
-					<Body language="Java">
-						<![CDATA[
-						int result = 1;
-						int posX = (int)this.getX();
-						int posY = (int)this.getY();
-						int destX = (int)this.getDestinationX();
-						int destY = (int)this.getDestinationY();
-						int relPosX = posX - destX;
-						int relPosY = posY - destY;
-						
-						if (relPosX == 0 && relPosY < 0) {
-							result = 1;
-						}
-						if (relPosX < 0 && relPosY < 0) {
-							result = 2;
-						}
-						if (relPosX < 0 && relPosY == 0) {
-							result = 3;
-						}
-						if (relPosX < 0 && relPosY > 0) {
-							result = 4;
-						}
-						if (relPosX == 0 && relPosY > 0) {
-							result = 5;
-						}
-						if (relPosX > 0 && relPosY > 0) {
-							result = 6;
-						}
-						if (relPosX > 0 && relPosY == 0) {
-							result = 7;
-						}
-						if (relPosX > 0 && relPosY < 0) {
-							result = 8;
-						}
-						
-						return result;
-						]]>
-					</Body>
-				</Function>
-				<Function name="resolveAction" resultType="Integer">
-					<Body language="Java">
-						<![CDATA[
-						int result = 0;
-						
-						if (this.getLearningMode() == LearningModes.LA) {
-							if (this.getActionChoice() == ActionChoices.RANDOM) {
-								result = (int)this.getProbMatLA().randomIndex(this.resolveSubState1(), this.resolveSubState2());
-							}
-							if (this.getActionChoice() == ActionChoices.MAX) {
-								result = (int)this.getProbMatLA().maxIndex(this.resolveSubState1(), this.resolveSubState2());
-							}							
-						}
-						if (this.getLearningMode() == LearningModes.QL) {
-							if (this.getActionChoice() == ActionChoices.RANDOM) {
-								result = (int)this.getProbMatQL().randomIndex(this.resolveSubState1(), this.resolveSubState2());
-							}
-							if (this.getActionChoice() == ActionChoices.MAX) {
-								result = (int)this.getProbMatQL().maxIndex(this.resolveSubState1(), this.resolveSubState2());
-							}
-						}
-						
-						return result;
-						]]>
-					</Body>
-				</Function>
-				<Function name="resolveReward" resultType="Float">
-					<Body language="Java">
-						<![CDATA[
-						double result = 0;
-						result = (double)this.getDistanceToTarget() - (double)this.getDistanceToDestination((int)this.getX(), (int)this.getY());
-						return result;
-						]]>
-					</Body>
-				</Function>
-				<Function name="getStartX" resultType="Integer">
-					<Body language="Java">
-						<![CDATA[
-						int result = 0;
-						int random = (int)(Math.random() * 8) + 1;
-						
-						result = random * 3;
-						
-						if(result == 15) {
-							result = 9;
-						}
-						
-						return result;
-						]]>
-					</Body>
-				</Function>
-				<Function name="getStartY" resultType="Integer">
-					<Body language="Java">
-						<![CDATA[
-						int result = 0;
-						int random = (int)(Math.random() * 8) + 1;
-						
-						result = random * 3;
-						
-						return result;
-						]]>
-					</Body>
-				</Function>
-				
-				<ReactionRule name="StartRule" agentVariable="traffic">
-					<WHEN eventType="PrepareToAct"/>
-					<IF language="Java"><![CDATA[ traffic.getCurrentState() == TrafficState.START ]]></IF>
-					<THEN>
-						<UPDATE-AGT>
-							<Slot property="currentState"><ValueExpr language="Java"><![CDATA[ TrafficState.DESTINATION ]]></ValueExpr></Slot>
-							<Slot property="distanceToTarget"><ValueExpr language="Java"><![CDATA[ traffic.getDistanceToDestination((int)traffic.getX(), (int)traffic.getY()) ]]></ValueExpr></Slot>
-							<Slot property="startingDistance"><ValueExpr language="Java"><![CDATA[ traffic.getDistanceToDestination((int)traffic.getX(), (int)traffic.getY()) ]]></ValueExpr></Slot>
-							<Slot property="timeSteps"><ValueExpr language="Java"><![CDATA[ 0 ]]></ValueExpr></Slot>
-							<Slot property="direction"><ValueExpr language="Java"><![CDATA[ traffic.actionToDirection(traffic.resolveAction()) ]]></ValueExpr></Slot>
-							<Slot property="comingFrom"><ValueExpr language="Java"><![CDATA[ traffic.setComingFrom() ]]></ValueExpr></Slot>
-							<Slot property="progressInCell"><ValueExpr language="Java"><![CDATA[ traffic.setProgressInCell() ]]></ValueExpr></Slot>
-						</UPDATE-AGT>
-					</THEN>
-				</ReactionRule>
-				<ReactionRule name="UpdateQL" agentVariable="traffic">
-					<WHEN eventType="PrepareToAct"/>
-					<IF language="Java"><![CDATA[ traffic.getLearningMode() == LearningModes.QL && traffic.getCurrentState() == TrafficState.DESTINATION ]]></IF>
-					<THEN>
-						<UPDATE-AGT>
-							<UpdateComplexDataPropertyValue complexDataProperty="ProbMatQL" procedure="update" >
-								<Argument>
-									<ValueExpr language="Java"><![CDATA[ traffic.resolveSubState1() ]]></ValueExpr>
-								</Argument>
-								<Argument>
-									<ValueExpr language="Java"><![CDATA[ traffic.resolveSubState2() ]]></ValueExpr>
-								</Argument>
-								<Argument>
-									<ValueExpr language="Java"><![CDATA[ traffic.resolveReward() ]]></ValueExpr>
-								</Argument>
-							</UpdateComplexDataPropertyValue>
-							<Slot property="distanceToTarget"><ValueExpr language="Java"><![CDATA[ traffic.getDistanceToDestination((int)traffic.getX(), (int)traffic.getY()) ]]></ValueExpr></Slot>
-							<Slot property="direction"><ValueExpr language="Java"><![CDATA[ traffic.actionToDirection(traffic.resolveAction()) ]]></ValueExpr></Slot>
-							<Slot property="comingFrom"><ValueExpr language="Java"><![CDATA[ traffic.setComingFrom() ]]></ValueExpr></Slot>
-							<Slot property="progressInCell"><ValueExpr language="Java"><![CDATA[ traffic.setProgressInCell() ]]></ValueExpr></Slot>
-							<Slot property="timeSteps"><ValueExpr language="Java"><![CDATA[ traffic.getTimeSteps() + 1 ]]></ValueExpr></Slot>
-							<Slot property="value1"><ValueExpr language="Java"><![CDATA[ traffic.getProbMatQL().getValue(1, 1, 1) ]]></ValueExpr></Slot>
-							<Slot property="value2"><ValueExpr language="Java"><![CDATA[ traffic.getProbMatQL().getValue(1, 1, 2) ]]></ValueExpr></Slot>
-							<Slot property="value3"><ValueExpr language="Java"><![CDATA[ traffic.getProbMatQL().getValue(1, 1, 3) ]]></ValueExpr></Slot>
-							<Slot property="value4"><ValueExpr language="Java"><![CDATA[ traffic.getProbMatQL().getValue(1, 1, 4) ]]></ValueExpr></Slot>
-						</UPDATE-AGT>
-					</THEN>
-				</ReactionRule>
-				<ReactionRule name="UpdateLA" agentVariable="traffic">
-					<WHEN eventType="PrepareToAct"/>
-					<IF language="Java"><![CDATA[ traffic.getLearningMode() == LearningModes.LA && traffic.getCurrentState() == TrafficState.DESTINATION ]]></IF>
-					<THEN>
-						<UPDATE-AGT>
-							<UpdateComplexDataPropertyValue complexDataProperty="ProbMatLA" procedure="update">
-								<Argument>
-									<ValueExpr language="Java"><![CDATA[ traffic.resolveReward() ]]></ValueExpr>
-								</Argument>
-								<Argument>
-									<ValueExpr language="Java"><![CDATA[ 2 ]]></ValueExpr>
-								</Argument>	
-							</UpdateComplexDataPropertyValue>
-							<Slot property="reward"><ValueExpr language="Java"><![CDATA[ traffic.resolveReward() ]]></ValueExpr></Slot>
-							<Slot property="distanceToTarget"><ValueExpr language="Java"><![CDATA[ traffic.getDistanceToDestination((int)traffic.getX(), (int)traffic.getY()) ]]></ValueExpr></Slot>
-							<Slot property="direction"><ValueExpr language="Java"><![CDATA[ traffic.actionToDirection(traffic.resolveAction()) ]]></ValueExpr></Slot>
-							<Slot property="comingFrom"><ValueExpr language="Java"><![CDATA[ traffic.setComingFrom() ]]></ValueExpr></Slot>
-							<Slot property="progressInCell"><ValueExpr language="Java"><![CDATA[ traffic.setProgressInCell() ]]></ValueExpr></Slot>
-							<Slot property="timeSteps"><ValueExpr language="Java"><![CDATA[ traffic.getTimeSteps() + 1 ]]></ValueExpr></Slot>
-							<Slot property="value1"><ValueExpr language="Java"><![CDATA[ traffic.getProbMatLA().getValue(1, 1, 1) ]]></ValueExpr></Slot>
-							<Slot property="value2"><ValueExpr language="Java"><![CDATA[ traffic.getProbMatLA().getValue(1, 1, 2) ]]></ValueExpr></Slot>
-							<Slot property="value3"><ValueExpr language="Java"><![CDATA[ traffic.getProbMatLA().getValue(1, 1, 3) ]]></ValueExpr></Slot>
-							<Slot property="value4"><ValueExpr language="Java"><![CDATA[ traffic.getProbMatLA().getValue(1, 1, 4) ]]></ValueExpr></Slot>
-						</UPDATE-AGT>
-					</THEN>
-				</ReactionRule>
-			</PhysicalAgentType>
-			
 			<!-- Bank -->
 			<PhysicalObjectType name="Bank"  />
 			
@@ -1864,29 +1596,6 @@
 							<YCoordinate language="Java"><![CDATA[ (int)car.getY() ]]></YCoordinate>
 							<Slot property="carID"><ValueExpr language="Java"><![CDATA[ car.getId() ]]></ValueExpr></Slot>
 						</UpdateGridCell>
-					</UPDATE-ENV>
-				</THEN>
-			</EnvironmentRule>
-			<EnvironmentRule name="TrafficWinRule">
-				<ON-EACH-SIMULATION-STEP/>
-				<FOR objectVariable="traffic" objectType="Traffic" />
-				<IF language="Java"><![CDATA[ traffic.getCurrentState() == TrafficState.DESTINATION && traffic.atDestination() ]]></IF>
-				<THEN>
-					<UPDATE-ENV>
-						<UpdateGridCell>
-							<XCoordinate language="Java"><![CDATA[ (int)traffic.getX() ]]></XCoordinate>
-							<YCoordinate language="Java"><![CDATA[ (int)traffic.getY() ]]></YCoordinate>
-							<Slot property="carID" value="0"/>
-						</UpdateGridCell>
-						<UpdateObject objectVariable="traffic">
-							<Slot property="x"><ValueExpr language="Java"><![CDATA[ traffic.getStartX() ]]></ValueExpr></Slot>
-							<Slot property="y"><ValueExpr language="Java"><![CDATA[ traffic.getStartY() ]]></ValueExpr></Slot>
-							<Slot property="destinationX"><ValueExpr language="Java"><![CDATA[ 15 ]]></ValueExpr></Slot>
-							<Slot property="destinationY"><ValueExpr language="Java"><![CDATA[ 15 ]]></ValueExpr></Slot>
-							<Slot property="currentState"><ValueExpr language="Java"><![CDATA[ TrafficState.START ]]></ValueExpr></Slot>
-							<Slot property="progressInCell"><ValueExpr language="Java"><![CDATA[ 0 ]]></ValueExpr></Slot>
-							<Slot property="stepsPerDistance"><ValueExpr language="Java"><![CDATA[ (float)((float)traffic.getTimeSteps() / (float)traffic.getStartingDistance()) ]]></ValueExpr></Slot>
-						</UpdateObject>
 					</UPDATE-ENV>
 				</THEN>
 			</EnvironmentRule>
@@ -1962,8 +1671,8 @@
 	
 	<InitialState>
 		<PhysicalAgent type="Thief" id="1" x="12" y="21">
-			<Slot property="learningMode"><ValueExpr language="Java"><![CDATA[ LearningModes.LA ]]></ValueExpr></Slot>
-			<Slot property="actionChoice"><ValueExpr language="Java"><![CDATA[ ActionChoices.RANDOM ]]></ValueExpr></Slot>
+			<Slot property="learningMode"><ValueExpr language="Java"><![CDATA[ LearningModes.QL ]]></ValueExpr></Slot>
+			<Slot property="actionChoice"><ValueExpr language="Java"><![CDATA[ ActionChoices.MAX ]]></ValueExpr></Slot>
 			<Slot property="direction"><ValueExpr language="Java"><![CDATA[ Direction4.S ]]></ValueExpr></Slot>
 			<Slot property="comingFrom"><ValueExpr language="Java"><![CDATA[ Direction4.N ]]></ValueExpr></Slot>
 			<Slot property="currentState"><ValueExpr language="Java"><![CDATA[ ThiefState.BANK ]]></ValueExpr></Slot>
@@ -2020,19 +1729,7 @@
 			<Slot property="chaseSpeed"><ValueExpr language="Java"><![CDATA[ 0.5 ]]></ValueExpr></Slot>
 			<Slot property="progressInCell"><ValueExpr language="Java"><![CDATA[ 0 ]]></ValueExpr></Slot>
 		</PhysicalAgent>
-		<!--
-		<PhysicalAgent type="Traffic" id="98" x="6" y="24">
-			<Slot property="learningMode"><ValueExpr language="Java"><![CDATA[ LearningModes.LA ]]></ValueExpr></Slot>
-			<Slot property="actionChoice"><ValueExpr language="Java"><![CDATA[ ActionChoices.RANDOM ]]></ValueExpr></Slot>
-			<Slot property="direction"><ValueExpr language="Java"><![CDATA[ Direction4.S ]]></ValueExpr></Slot>
-			<Slot property="comingFrom"><ValueExpr language="Java"><![CDATA[ Direction4.N ]]></ValueExpr></Slot>
-			<Slot property="currentState"><ValueExpr language="Java"><![CDATA[ TrafficState.START ]]></ValueExpr></Slot>
-			<Slot property="progressInCell"><ValueExpr language="Java"><![CDATA[ 0 ]]></ValueExpr></Slot>
-			<Slot property="speed"><ValueExpr language="Java"><![CDATA[ 1.0 ]]></ValueExpr></Slot>
-			<Slot property="destinationX"><ValueExpr language="Java"><![CDATA[ 15 ]]></ValueExpr></Slot>
-			<Slot property="destinationY"><ValueExpr language="Java"><![CDATA[ 15 ]]></ValueExpr></Slot>
-		</PhysicalAgent>
-		-->
+		
 		<PhysicalObject type="Bank" id="99" x="14" y="14"/>
 		<PhysicalObject type="Hideout" id="100" x="26" y="4"/>
 		
@@ -2418,7 +2115,7 @@
 	
 	<UserInterface>
 		<StatisticsUI>
-			<StatisticsVariableUI variable="thief_win" comparisonGroup="test" showChart="true">
+			<StatisticsVariableUI variable="thief_win" comparisonGroup="win_lose" showChart="true">
 				<Label>
 					<Text xml:lang="en">Thief Win</Text>
 				</Label>
@@ -2426,31 +2123,15 @@
 					<Text xml:lang="en">amount of escapes of the thief</Text>
 				</Hint>
 			</StatisticsVariableUI>
-			<StatisticsVariableUI variable="thief_lose" comparisonGroup="test" showChart="true">
+			<StatisticsVariableUI variable="thief_lose" comparisonGroup="win_lose" showChart="true">
 				<Label>
 					<Text xml:lang="en">Thief Lose</Text>
 				</Label>
 				<Hint>
 					<Text xml:lang="en">amount of captures of the thief</Text>
 				</Hint>
-			</StatisticsVariableUI>
-			<StatisticsVariableUI variable="starting_distance" comparisonGroup="test" showChart="true">
-				<Label>
-					<Text xml:lang="en">Starting Distance</Text>
-				</Label>
-				<Hint>
-					<Text xml:lang="en"></Text>
-				</Hint>
-			</StatisticsVariableUI>
-			<StatisticsVariableUI variable="steps_per_distance" comparisonGroup="test" showChart="true">
-				<Label>
-					<Text xml:lang="en">TimeSteps per Distance</Text>
-				</Label>
-				<Hint>
-					<Text xml:lang="en">average timesteps needed per one distance</Text>
-				</Hint>
-			</StatisticsVariableUI>
-			<StatisticsVariableUI variable="reward" comparisonGroup="test" showChart="true">
+			</StatisticsVariableUI>	
+			<StatisticsVariableUI variable="reward" showChart="true">
 				<Label>
 					<Text xml:lang="en">Reward</Text>
 				</Label>
@@ -2458,15 +2139,7 @@
 					<Text xml:lang="en">e</Text>
 				</Hint>
 			</StatisticsVariableUI>
-			<StatisticsVariableUI variable="distance_to_target" comparisonGroup="test" showChart="true">
-				<Label>
-					<Text xml:lang="en">Distance to Target</Text>
-				</Label>
-				<Hint>
-					<Text xml:lang="en">e</Text>
-				</Hint>
-			</StatisticsVariableUI>
-			<StatisticsVariableUI variable="distance_to_police" comparisonGroup="test" showChart="true">
+			<StatisticsVariableUI variable="distance_to_police" showChart="true">
 				<Label>
 					<Text xml:lang="en">Distance to Police</Text>
 				</Label>
@@ -2474,7 +2147,7 @@
 					<Text xml:lang="en">e</Text>
 				</Hint>
 			</StatisticsVariableUI>
-			<StatisticsVariableUI variable="last_police_x" comparisonGroup="test" showChart="true">
+			<StatisticsVariableUI variable="last_police_x" showChart="true">
 				<Label>
 					<Text xml:lang="en">Police X</Text>
 				</Label>
@@ -2482,44 +2155,12 @@
 					<Text xml:lang="en">e</Text>
 				</Hint>
 			</StatisticsVariableUI>
-			<StatisticsVariableUI variable="last_police_y" comparisonGroup="test" showChart="true">
+			<StatisticsVariableUI variable="last_police_y" showChart="true">
 				<Label>
 					<Text xml:lang="en">Police Y</Text>
 				</Label>
 				<Hint>
 					<Text xml:lang="en">e</Text>
-				</Hint>
-			</StatisticsVariableUI>
-			<StatisticsVariableUI variable="value_1" comparisonGroup="values" showChart="true">
-				<Label>
-					<Text xml:lang="en">Action 1</Text>
-				</Label>
-				<Hint>
-					<Text xml:lang="en">Action 1</Text>
-				</Hint>
-			</StatisticsVariableUI>
-			<StatisticsVariableUI variable="value_2" comparisonGroup="values" showChart="true">
-				<Label>
-					<Text xml:lang="en">Action 2</Text>
-				</Label>
-				<Hint>
-					<Text xml:lang="en">Action 2</Text>
-				</Hint>
-			</StatisticsVariableUI>
-			<StatisticsVariableUI variable="value_3" comparisonGroup="values" showChart="true">
-				<Label>
-					<Text xml:lang="en">Action 3</Text>
-				</Label>
-				<Hint>
-					<Text xml:lang="en">Action 3</Text>
-				</Hint>
-			</StatisticsVariableUI>
-			<StatisticsVariableUI variable="value_4" comparisonGroup="values" showChart="true">
-				<Label>
-					<Text xml:lang="en">Action 4</Text>
-				</Label>
-				<Hint>
-					<Text xml:lang="en">Action 4</Text>
 				</Hint>
 			</StatisticsVariableUI>
 		</StatisticsUI>
@@ -2538,12 +2179,7 @@
 				</PhysicalObjectView>
 				<PhysicalObjectView physicalObjectType="Police">
 					<PhysicalShape2D>
-						<Square fill="blue"></Square>
-					</PhysicalShape2D>
-				</PhysicalObjectView>
-				<PhysicalObjectView physicalObjectType="Traffic">
-					<PhysicalShape2D>
-						<Square fill="black"></Square>
+						<Circle fill="blue"></Circle>
 					</PhysicalShape2D>
 				</PhysicalObjectView>
 				<PhysicalObjectView physicalObjectType="Bank">
