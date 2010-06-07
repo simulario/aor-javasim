@@ -940,11 +940,10 @@
     </xsl:apply-templates>
 
   </xsl:template>
+  
   <!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->
   <!-- stateEffects() -->
   <!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->
-
-
   <xsl:template match="aorsml:Collection" mode="createEnvironmentRules.helper.method.stateEffects.setCollections">
     <xsl:param name="indent" as="xs:integer" required="yes"/>
 
@@ -980,7 +979,7 @@
             </xsl:call-template>
           </xsl:with-param>
           <xsl:with-param name="method" select="'getCollectionByName'"/>
-          <xsl:with-param name="args" select="jw:quote(@itemType)"/>
+          <xsl:with-param name="args" select="jw:quote(@name)"/>
           <xsl:with-param name="inLine" select="true()"/>
         </xsl:call-template>
       </xsl:with-param>
