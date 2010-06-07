@@ -18,7 +18,7 @@
 			<dc:modified>20100607</dc:modified>
 			<dc:creator>Oana Nicolae</dc:creator>
 			<dc:contributor>Gerd Wagner</dc:contributor>
-			<dc:source>"Introduction to Simulation" by R.G. Ingalls. In: Proceedings of the 2008 Winter Simulation Conference.</dc:source>
+			<dc:source>Mac Dongle Restaurant paper description.</dc:source>
 		</documentation>
 
 		<Statistics>
@@ -36,7 +36,7 @@ SimStatistics.cumulativeResponseTime.getValue() / SimStatistics.nrOfDepartures.g
 			</Variable>
 			<Variable name="lostRevenue" dataType="Float">
 				<Source>
-					<ObjectProperty property="lostRevenue" objectType="PickupWindow"/>
+					<ObjectProperty property="lostRevenue" objectType="PickupWindow" objectIdRef="2"/>
 				</Source>
 			</Variable>
 			<Variable name="maxLengthOfMBQ" dataType="Integer">
@@ -64,17 +64,17 @@ SimStatistics.cumulativeResponseTime.getValue() / SimStatistics.nrOfDepartures.g
 				<Body language="Java"><![CDATA[
 int r1 = Random.uniformInt(1,6);
 int r2 = Random.uniformInt(1,6);
-	if (r1+r2 < 3)  return (2*factor);            // with probability  0.028
-	if (r1+r2 < 4)  return (3*factor);            // with probability  0.056
-	if (r1+r2 < 5)  return (4*factor);            // with probability  0.083
-	if (r1+r2 < 6)  return (5*factor);            // with probability  0.111
-	if (r1+r2 < 7)  return (6*factor);            // with probability  0.139
-	if (r1+r2 < 8)  return (7*factor);            // with probability  0.166
-	if (r1+r2 < 9)  return (8*factor);            // with probability  0.139
-	if (r1+r2 < 10) return (9*factor);            // with probability  0.111
-	if (r1+r2 < 11) return (10*factor);           // with probability  0.083
-	if (r1+r2 < 12) return (11*factor);           // with probability  0.056
-                    return (12*factor);           // with probability  0.028
+	if (r1+r2 < 3)  return (2*factor);    // with probability  0.028
+	if (r1+r2 < 4)  return (3*factor);    // with probability  0.056
+	if (r1+r2 < 5)  return (4*factor);    // with probability  0.083
+	if (r1+r2 < 6)  return (5*factor);    // with probability  0.111
+	if (r1+r2 < 7)  return (6*factor);    // with probability  0.139
+	if (r1+r2 < 8)  return (7*factor);    // with probability  0.166
+	if (r1+r2 < 9)  return (8*factor);    // with probability  0.139
+	if (r1+r2 < 10) return (9*factor);    // with probability  0.111
+	if (r1+r2 < 11) return (10*factor);   // with probability  0.083
+	if (r1+r2 < 12) return (11*factor);   // with probability  0.056
+                    return (12*factor);   // with probability  0.028
 		     ]]></Body>
 			</GlobalFunction>		
 			<!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->
@@ -429,8 +429,7 @@ Integer.parseInt(getMessagePart(evt.getReminderMsg(),4))
 				<Attribute name="cheeseburgerOnTheTray" type="Integer" />
 				<Attribute name="saladOnTheTray" type="Integer" />
 				<Attribute name="superOnTheTray" type="Integer" />
-				<Attribute name="lostRevenue" type="Float"/>
-				
+				<Attribute name="lostRevenue" type="Float"/>			
 				<!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~-->
 				<Function name="isAvailableOnTheTray" resultType="Boolean">
 					<!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~-->
@@ -701,9 +700,9 @@ return t.getQuantityPerIngredient() * (t.getHamburgerPrice() + t.getSpecialSouce
 			</AgentType>
 		</EntityTypes>
 		<EnvironmentRules>
-			<!-- ======================================================= -->
+			<!-- =========================================== -->
 			<EnvironmentRule name="CustomerArrival_Rule">
-				<!-- ======================================================== -->
+				<!-- ========================================= -->
 				<documentation>
 					<description>When a car arrives at the Fast Food Restaurant, and the Menu Board queue is full, the customer leaves and he is considered a dissatisfied customer. If Menu Board queue is not full then the car gets in the waiting line as a new customer. Furthermore, If the Menu Board service is not busy, a StartMenuBoardService is created. </description>
 				</documentation>
@@ -803,9 +802,9 @@ SimStatistics.numberOfCustomers.getValue() + 1
 				<documentation>
 					<description> If the order of the customer is available on the PickupWindow tray, then the MenuBoard will not send anymore an order to the Kitchen. </description>
 				</documentation>
-				<WHEN eventType="OutMessageEvent" messageType="SendOrder" messageVariable="mes" eventVariable="evt"/>
-				<FOR objectVariable="pw" objectType="PickupWindow" objectIdRef="2"/>
-				<FOR objectVariable="mbq" objectType="Collection" objectName="MenuBoardQueue" objectIdRef="3"/>
+				<WHEN eventType="OutMessageEvent" messageType="SendOrder" messageVariable="mes" eventVariable="evt" />
+				<FOR objectVariable="pw" objectType="PickupWindow" objectIdRef="2" />
+				<FOR objectVariable="mbq" objectType="Collection" objectName="MenuBoardQueue" objectIdRef="3" />
 				<FOR objectVariable="cust" objectType="Customer">
 					<ObjectRef language="Java">mbq.getItem()</ObjectRef>
 				</FOR>
@@ -819,7 +818,7 @@ SimStatistics.numberOfCustomers.getValue() + 1
 					<ValueExpr language="Java">evt.getOccurrenceTime()</ValueExpr>
 				</FOR>
 				<IF language="Java"><![CDATA[
-pw.isAvailableOnTheTray(type,quantity,pw)
+pw.isAvailableOnTheTray( type, quantity, pw)
 				]]></IF>
 				<THEN>
 					<SCHEDULE-EVT>
@@ -881,11 +880,9 @@ quantity
 					<description> When a menu board service ends, but the PickupWindowQueue is full, the customer cannot move forward. We just update the customer attribute, so we know that he is waiting for a free place in the Pickup Window waiting line.</description>
 				</documentation>
 				<WHEN eventType="OutMessageEvent" messageType="ConfirmOrder" messageVariable="mes"/>
-				<FOR objectVariable="mbq" objectName="MenuBoardQueue" objectType="Collection"
-					objectIdRef="3"/>
+				<FOR objectVariable="mbq" objectName="MenuBoardQueue" objectType="Collection" objectIdRef="3"/>
 				<FOR objectVariable="pw" objectType="PickupWindow" objectIdRef="2"/>
-				<FOR objectVariable="pwq" objectName="PickupWindowQueue" objectType="Collection"
-					objectIdRef="4"/>
+				<FOR objectVariable="pwq" objectName="PickupWindowQueue" objectType="Collection" objectIdRef="4"/>
 				<FOR objectVariable="q2" objectType="Queue" objectIdRef="7"/>
 				<FOR objectVariable="cust" objectType="Customer">
 					<ObjectRef language="Java">mbq.getItem()</ObjectRef>
@@ -917,14 +914,11 @@ mes.getOrderNo()
 				<documentation>
 					<description>When a menu board service ends and the pickup window service queue is not full, then the current customer moves forward. Furthermore, if there are no more customers in the menu board queue, then the menu board is no longer busy. Otherwise, a new StartMenuBoardService event is created for serving the next customer. </description>
 				</documentation>
-				<WHEN eventType="OutMessageEvent" messageType="ConfirmOrder" messageVariable="mes"
-					eventVariable="evt"/>
+				<WHEN eventType="OutMessageEvent" messageType="ConfirmOrder" messageVariable="mes" eventVariable="evt"/>
 				<FOR objectVariable="mb" objectType="MenuBoard" objectIdRef="1"/>
 				<FOR objectVariable="pw" objectType="PickupWindow" objectIdRef="2"/>
-				<FOR objectVariable="mbq" objectName="MenuBoardQueue" objectType="Collection"
-					objectIdRef="3"/>
-				<FOR objectVariable="pwq" objectName="PickupWindowQueue" objectType="Collection"
-					objectIdRef="4"/>
+				<FOR objectVariable="mbq" objectName="MenuBoardQueue" objectType="Collection" objectIdRef="3"/>
+				<FOR objectVariable="pwq" objectName="PickupWindowQueue" objectType="Collection" objectIdRef="4"/>
 				<FOR objectVariable="q1" objectType="Queue" objectIdRef="6"/>
 				<FOR objectVariable="q2" objectType="Queue" objectIdRef="7"/>
 				<FOR objectVariable="cust" objectType="Customer">
@@ -982,8 +976,7 @@ mbq.size() > 0
 				</documentation>
 				<WHEN eventType="StartPickupWindowService"/>
 				<FOR objectVariable="pw" objectType="PickupWindow" objectIdRef="2"/>
-				<FOR objectVariable="pwq" objectName="PickupWindowQueue" objectType="Collection"
-					objectIdRef="4"/>
+				<FOR objectVariable="pwq" objectName="PickupWindowQueue" objectType="Collection" objectIdRef="4"/>
 				<FOR objectVariable="cust" objectType="Customer">
 					<ObjectRef language="Java">pwq.getItem()</ObjectRef>
 				</FOR>
@@ -1013,10 +1006,8 @@ pwq.size() > 0 && cust.isWaitingForOrderToArrive()
 				<WHEN eventType="StartPickupWindowService"/>
 				<FOR objectVariable="mb" objectType="MenuBoard" objectIdRef="1"/>
 				<FOR objectVariable="pw" objectType="PickupWindow" objectIdRef="2"/>
-				<FOR objectVariable="pwq" objectName="PickupWindowQueue" objectType="Collection"
-					objectIdRef="4"/>
-				<FOR objectVariable="mbq" objectName="MenuBoardQueue" objectType="Collection"
-					objectIdRef="3"/>
+				<FOR objectVariable="pwq" objectName="PickupWindowQueue" objectType="Collection" objectIdRef="4"/>
+				<FOR objectVariable="mbq" objectName="MenuBoardQueue" objectType="Collection" objectIdRef="3"/>
 				<FOR objectVariable="q1" objectType="Queue" objectIdRef="6"/>
 				<FOR objectVariable="q2" objectType="Queue" objectIdRef="7"/>
 				<FOR objectVariable="cust" objectType="Customer">
@@ -1120,10 +1111,8 @@ pwq.size() > 0
 				<WHEN eventType="OutMessageEvent" messageType="HereIsYourHamburger" eventVariable="evt"/>
 				<FOR objectVariable="mb" objectType="MenuBoard" objectIdRef="1"/>
 				<FOR objectVariable="pw" objectType="PickupWindow" objectIdRef="2"/>
-				<FOR objectVariable="mbq" objectName="MenuBoardQueue" objectType="Collection"
-					objectIdRef="3"/>
-				<FOR objectVariable="pwq" objectName="PickupWindowQueue" objectType="Collection"
-					objectIdRef="4"/>
+				<FOR objectVariable="mbq" objectName="MenuBoardQueue" objectType="Collection" objectIdRef="3"/>
+				<FOR objectVariable="pwq" objectName="PickupWindowQueue" objectType="Collection" objectIdRef="4"/>
 				<FOR objectVariable="q2" objectType="Queue" objectIdRef="7"/>
 				<FOR objectVariable="cust" objectType="Customer">
 					<ObjectRef language="Java">pwq.getItem()</ObjectRef>
@@ -1178,10 +1167,8 @@ SimStatistics.cumulativeResponseTime.getValue() + evt.getOccurrenceTime() - pwq.
 				</documentation>
 				<WHEN eventType="OutMessageEvent" messageType="OrderPrepared" messageVariable="mes"/>
 				<FOR objectVariable="k" objectType="Kitchen" objectIdRef="5" />
-				<FOR objectVariable="pw" objectName="PickupWindow" objectType="PickupWindow"
-					objectIdRef="2"/>
-				<FOR objectVariable="pwq" objectType="Collection" objectName="PickupWindowQueue"
-					objectIdRef="4"/>
+				<FOR objectVariable="pw" objectName="PickupWindow" objectType="PickupWindow" objectIdRef="2"/>
+				<FOR objectVariable="pwq" objectType="Collection" objectName="PickupWindowQueue" objectIdRef="4"/>
 				<FOR dataVariable="custID" dataType="Integer">
 					<ValueExpr language="Java"><![CDATA[
 mes.getCustID()
@@ -1241,10 +1228,8 @@ mes.getCustID()
 				</documentation>
 				<WHEN eventType="OutMessageEvent" messageType="AnticipatedOrder" messageVariable="mes"/>
 				<FOR objectVariable="k" objectType="Kitchen" objectIdRef="5" />
-				<FOR objectVariable="pw" objectName="PickupWindow" objectType="PickupWindow"
-					objectIdRef="2"/>
-				<FOR objectVariable="pwq" objectType="Collection" objectName="PickupWindowQueue"
-					objectIdRef="4"/>
+				<FOR objectVariable="pw" objectName="PickupWindow" objectType="PickupWindow" objectIdRef="2"/>
+				<FOR objectVariable="pwq" objectType="Collection" objectName="PickupWindowQueue" objectIdRef="4"/>
 				<FOR dataVariable="custID" dataType="Integer">
 					<ValueExpr language="Java"><![CDATA[
 mes.getCustID()
@@ -1591,7 +1576,7 @@ SimStatistics.lostRevenue.getValue() + (float)k.burgPrice(0) * pw.getHamburgerOn
 			<EnvironmentRule name="KitchenCreatesCustomerOrder_Hamburger_Rule">
 			<!-- =========================================================== -->
 				<documentation>
-					<description>Kitchen creates hamburgers.</description>
+					<description>Kitchen creates the requested hamburgers.</description>
 				</documentation>
 				<WHEN eventType="KitchenCreatesCustomerOrder" eventVariable="evt"/>
 				<FOR dataVariable="quantity" dataType="Integer">
@@ -1634,7 +1619,7 @@ evt.getOccurrenceTime() + quantity
 			<EnvironmentRule name="KitchenCreatesCustomerOrder_Cheeseburger_Rule">
 				<!-- ============================================================= -->
 				<documentation>
-					<description>Kitchen creates cheeseburgers.</description>
+					<description>Kitchen creates the requested cheeseburgers.</description>
 				</documentation>
 				<WHEN eventType="KitchenCreatesCustomerOrder" eventVariable="evt"/>
 				<FOR dataVariable="quantity" dataType="Integer">
@@ -1679,7 +1664,7 @@ evt.getOccurrenceTime() + quantity
 			<EnvironmentRule name="KitchenCreatesCustomerOrder_Salad_Rule">
 				<!-- =========================================================== -->
 				<documentation>
-					<description>Kitchen creates salad.</description>
+					<description>Kitchen creates the requested salad.</description>
 				</documentation>
 				<WHEN eventType="KitchenCreatesCustomerOrder" eventVariable="evt"/>
 				<FOR dataVariable="quantity" dataType="Integer">
@@ -1730,7 +1715,7 @@ evt.getOccurrenceTime() + quantity
 			<EnvironmentRule name="KitchenCreatesCustomerOrder_SuperHamburger_Rule">
 				<!-- ============================================================= -->
 				<documentation>
-					<description>Kitchen creates super hamburgers.</description>
+					<description>Kitchen creates the requested super hamburgers.</description>
 				</documentation>
 				<WHEN eventType="KitchenCreatesCustomerOrder"  eventVariable="evt"/>
 				<FOR dataVariable="quantity" dataType="Integer">
@@ -1804,7 +1789,7 @@ evt.getOccurrenceTime() + quantity
 	<InitialState>
 	<!-- =================================================== -->		
 		<Agent type="MenuBoard" name="MB" id="1">
-		<!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->
+		<!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->
 			<Slot property="menuBoardBusy" value="false"/>
 			<Slot property="maxMenuBoardQL" value="5"/>
 		</Agent>
@@ -1826,6 +1811,7 @@ evt.getOccurrenceTime() + quantity
 		<!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->
 			<Slot property="pickupWindowBusy" value="false"/>
 			<Slot property="maxPickupQL" value="5"/>
+			<Slot property="lostRevenue" value="0"/>
 			<Slot property="hamburgerOnTheTray" value="3" />
 			<Slot property="cheeseburgerOnTheTray" value="3" />
 			<Slot property="saladOnTheTray" value="3" />
@@ -1833,7 +1819,7 @@ evt.getOccurrenceTime() + quantity
 		</Agent>
 		<!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->
 		<Agent type="Truck" name="T" id="10">
-			<!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->
+		<!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->
 			<Slot property="unloadingTime" value="60"/>
 			<Slot property="quantityPerIngredient" value="1000"/>
 			<Slot property="hamburgerPrice" value="2.0"/>
@@ -1857,12 +1843,12 @@ evt.getOccurrenceTime() + quantity
 		</Object>
 		<!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->
 		<Object type="Queue" id="9" name="KQueue">
-			<!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->
+		<!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->
 			<Slot property="lengthOfQueue" value="0"/>
 		</Object>
 		<!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->
 		<Object type="Queue" id="11" name="PWTray">
-			<!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->
+		<!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->
 			<Slot property="lengthOfQueue" value="0"/>
 		</Object>
 		<!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->
@@ -1999,7 +1985,7 @@ evt.getOccurrenceTime() + quantity
 				<!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->
 				<ObjectView objectType="Kitchen">
 					<!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->
-					<Shape2D x="400px" y="200px">
+					<Shape2D x="450px" y="350px">
 						<Rectangle fill="green" height="50" width="50" stroke="black" strokeWidth="10">
 							<ShapePropertyMap shapeProperty="fill" property="kitchenBusy" mapType="equalityCaseWise" v0="green" a0="false" a1="true" v1="red"/>
 						</Rectangle>
@@ -2039,22 +2025,22 @@ evt.getOccurrenceTime() + quantity
 				<!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->
 				<ObjectView objectType="Queue" objectIdRef="9">
 					<!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->
-					<Shape2D x="400px" y="225px">
+					<Shape2D x="400px" y="400px">
 						<Rectangle positioning="LeftCenter" fill="green" height="10" width="1" stroke="black" strokeWidth="2">
 							<ShapePropertyMap shapeProperty="width" property="lengthOfQueue" mapType="polynomial" a0="0" a1="30"/>
 						</Rectangle>
 					</Shape2D>
-					<DisplayInfo content="Order" property="lengthOfQueue" />
+					<DisplayInfo content="orders" property="lengthOfQueue" />
 				</ObjectView>
 				<!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->
 				<ObjectView objectType="Queue" objectIdRef="11">
 					<!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->
-					<Shape2D x="250px" y="225px">
-						<Rectangle positioning="LeftCenter" fill="green" height="10" width="1" stroke="black" strokeWidth="2">
+					<Shape2D x="200px" y="200px">
+						<Rectangle positioning="LeftCenter" fill="yellow" height="10" width="1" stroke="black" strokeWidth="2">
 							<ShapePropertyMap shapeProperty="width" property="lengthOfQueue" mapType="polynomial" a0="0" a1="30"/>
 						</Rectangle>
 					</Shape2D>
-					<DisplayInfo content="Tray" property="lengthOfQueue" />
+					<DisplayInfo content="burgers on the Tray" property="lengthOfQueue" />
 				</ObjectView>
 			</Views>
 		</AnimationUI>
