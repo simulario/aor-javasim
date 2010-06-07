@@ -1,0 +1,113 @@
+<?xml version="1.0" standalone="yes"?>
+<!--
+*************************************************************************************************************
+* Agent-Object-Relationship (AOR) Simulation
+* Ontologically well-founded and closer-to-reality simulation of complex discrete event scenarios
+*
+* AOR-JSim v.2
+*
+* Copyright (C) 2008 AOR Team: Daniel Draeger, Adrian Giurca, Emilian Pascalau, Andreas Post, Marco Pehla,
+* Gerd Wagner, Jens Werner, Mircea Diaconescu
+*
+* This program is free software; you can redistribute it and/or
+* modify it under the terms of the GNU General Public License
+* as published by the Free Software Foundation; either version 2
+* of the License, or (at your option) any later version.
+*
+* This program is distributed in the hope that it will be useful,
+* but WITHOUT ANY WARRANTY; without even the implied warranty of
+* MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+* GNU General Public License for more details.
+*
+* You should have received a copy of the GNU General Public License
+* along with this program; if not, write to the Free Software
+* Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
+*************************************************************************************************************
+-->
+<!--
+* @author Holger Wuerke
+* @since December 1, 2009
+* @version: 1.0
+-->
+<project name="Physics module" default="build" basedir=".">
+	<description>
+        This ANT file builds an executeable JAR archive from the physics module
+        and copy it to the plugins directory.
+    </description>
+
+	<import file="../build.xml" />
+
+	<property name="jar.filename" value="physicsModule.jar" />
+	<property name="dist.dir" value="./dist" />
+	<property name="lib.dir" value="./lib" />
+	<property name="class.dir" value="${dist.dir}" />
+	<property name="include.dir" value="../../../" />
+	<property name="modules.dir" value="../../../../modules" />
+	<property name="dist.modules.dir" value="../../../../dist/modules" />
+
+	<path id="classpath">
+		<fileset dir="${aors.lib.dir}">
+			<include name="*.jar" />
+		</fileset>
+		<fileset dir="${lib.dir}">
+			<include name="*.jar" />
+		</fileset>
+	</path>
+
+	<target name="clean" description="cleans the project">
+		<!-- remove all created dirs/files -->
+		<echo message="Cleaning, please wait..." />
+		<delete includeemptydirs="true" failonerror="false">
+			<fileset dir="${dist.dir}" />
+		</delete>
+	</target>
+
+	<target name="compile" depends="compileAORS">
+		<mkdir dir="${dist.dir}" />
+		<echo message="Compile physics module sources, please wait..." />
+		<javac destdir="${class.dir}" classpathref="classpath" debug="true">
+			<src path="${include.dir}/aors" />
+			<include name="module/physics2d/**" />
+			<compilerarg value="-Xlint" />
+		</javac>
+		<echo message="Physics module sources were compiled with success." />
+	</target>
+
+	<target name="build" depends="clean, compile" description="Build the physics module.">
+		<echo message="Creating the required structure, please wait..." />
+
+		<copy todir="${dist.dir}/${lib.dir}" overwrite="true">
+			<fileset dir="${lib.dir}" includes="*.jar" />
+		</copy>
+
+		<copy todir="${dist.dir}" overwrite="true">
+			<fileset dir=".">
+				<filename name="properties.xml" />
+			</fileset>
+		</copy>
+
+		<echo message="Build jar file, please wait..." />
+		<jar destfile="${dist.dir}/${jar.filename}" basedir="${class.dir}">
+			<include name="aors/module/physics2d/**" />
+			<include name="properties.xml" />
+			<include name="lib/**" />
+		</jar>
+
+		<copy todir="${modules.dir}" overwrite="true">
+			<fileset dir="${dist.dir}">
+				<filename name="${jar.filename}" />
+			</fileset>
+		</copy>
+
+		<copy todir="${dist.modules.dir}" overwrite="true">
+			<fileset dir="${dist.dir}">
+				<filename name="${jar.filename}" />
+			</fileset>
+		</copy>
+		
+		<antcall target="clean" />
+
+		<echo message="Task completed. Physics module file ${jar.filename} was build and the jar was copied to ${modules.dir}." />
+	</target>
+
+</project>

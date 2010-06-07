@@ -1,0 +1,642 @@
+<?xml version="1.0" encoding="iso-8859-1"?>
+<?xml-stylesheet type="text/xsl" href="ersl/refman/refman.xsl"?>
+<!-- ================================================================
+AORS-Log 0.6 created on 08-MDec-2008 by Gerd Wagner and Jens Werner
+=================================================================== -->
+<xs:schema xmlns:xs="http://www.w3.org/2001/XMLSchema" xmlns:log="http://aor-simulation.org/log" xmlns:aors="http://aor-simulation.org" xmlns:ers="http://aor-simulation.org"
+  targetNamespace="http://aor-simulation.org/log" elementFormDefault="qualified" attributeFormDefault="unqualified">
+  <xs:import namespace="http://aor-simulation.org" schemaLocation="ersl/Views.xsd"/>
+  <xs:element name="SimulationLog">
+    <xs:complexType>
+      <xs:sequence>
+        <xs:element ref="log:SimulationScenario"/>
+        <xs:element ref="log:SpaceModel" minOccurs="0"/>
+        <xs:element ref="log:InitialState"/>
+        <xs:element ref="log:SimulationStep" minOccurs="0" maxOccurs="unbounded"/>
+      </xs:sequence>
+    </xs:complexType>
+  </xs:element>
+  <xs:element name="SimulationScenario">
+    <xs:complexType>
+      <xs:sequence>
+        <xs:element ref="log:SimulationParameters"/>
+        <xs:element ref="log:SimulationModel"/>
+      </xs:sequence>
+      <xs:attribute name="modelName" type="xs:string"/>
+      <xs:attribute name="modelTitle" type="xs:string"/>
+      <xs:attribute name="modelBaseURI" type="xs:string"/>
+      <xs:attribute name="scenarioName" type="xs:string"/>
+      <xs:attribute name="scenarioTitle" type="xs:string"/>
+      <xs:attribute name="version" type="xs:string"/>
+    </xs:complexType>
+  </xs:element>
+  <xs:element name="SimulationParameters">
+    <xs:complexType>
+      <xs:sequence>
+        <xs:element ref="log:Slot" minOccurs="0" maxOccurs="unbounded"/>
+      </xs:sequence>
+      <xs:attribute name="simulationSteps" type="xs:long"/>
+      <xs:attribute name="stepDuration" type="xs:double"/>
+      <xs:attribute name="timeUnit" type="xs:string"/>
+      <xs:attribute name="stepTimeDelay" type="xs:double"/>
+      <xs:attribute name="randomSeed" type="xs:long"/>
+    </xs:complexType>
+  </xs:element>
+  <xs:element name="SimulationModel">
+    <xs:complexType>
+      <xs:attribute name="modelName" type="xs:NCName" use="required"/>
+      <xs:attribute name="modelTitle" type="xs:normalizedString" use="optional"/>
+      <xs:attribute name="autoKinematics" type="xs:boolean" use="optional" default="false"/>
+      <xs:attribute name="autoGravitation" type="xs:boolean" use="optional" default="false"/>
+      <xs:attribute name="autoImpulse" type="xs:boolean" use="optional" default="false"/>
+      <xs:attribute name="autoCollision" type="xs:boolean" use="optional" default="false"/>
+      <xs:attribute name="baseURI" type="xs:anyURI" use="optional"/>
+    </xs:complexType>
+  </xs:element>
+  <xs:element name="SpaceModel">
+    <xs:complexType>
+      <xs:sequence>
+        <xs:element ref="aors:SpaceView" minOccurs="0"/>
+      </xs:sequence>
+      <xs:attribute name="dimensions" use="required">
+        <xs:simpleType>
+          <xs:restriction base="xs:string">
+            <xs:enumeration value="1"/>
+            <xs:enumeration value="2"/>
+            <xs:enumeration value="3"/>
+          </xs:restriction>
+        </xs:simpleType>
+      </xs:attribute>
+      <xs:attribute name="geometry" use="required">
+        <xs:simpleType>
+          <xs:restriction base="xs:string">
+            <xs:enumeration value="Euclidean"/>
+            <xs:enumeration value="Toroidal"/>
+          </xs:restriction>
+        </xs:simpleType>
+      </xs:attribute>
+      <xs:attribute name="discrete" type="xs:boolean" use="required"/>
+      <xs:attribute name="spatialDistanceUnit" type="xs:string" use="required"/>
+      <xs:attribute name="xMax" type="xs:double" use="required"/>
+      <xs:attribute name="yMax" type="xs:double"/>
+      <xs:attribute name="zMax" type="xs:double"/>
+    </xs:complexType>
+  </xs:element>
+  <xs:element name="InitialState">
+    <xs:complexType>
+      <xs:sequence>
+        <xs:element ref="log:Objects"/>
+        <xs:element ref="log:Agents"/>
+        <xs:element ref="log:PhysicalObjects"/>
+        <xs:element ref="log:PhysicalAgents"/>
+        <xs:element ref="log:Collections"/>
+        <xs:element ref="log:GridCells" minOccurs="0" maxOccurs="1"/>
+      </xs:sequence>
+    </xs:complexType>
+  </xs:element>
+  <xs:element name="SimulationStep">
+    <xs:complexType>
+      <xs:sequence>
+        <xs:element ref="log:EnvironmentSimulatorStep"/>
+        <xs:element ref="log:AgentSimulatorStep" minOccurs="0" maxOccurs="unbounded"/>
+        <xs:element name="AgentSimResultingStateChanges" minOccurs="0" maxOccurs="1">
+          <xs:complexType>
+            <xs:complexContent>
+              <xs:restriction base="log:ResultingStateChanges.type">
+                <xs:sequence>
+                  <xs:element ref="log:Agents" minOccurs="0"/>
+                  <xs:element ref="log:PhysicalAgents" minOccurs="0"/>
+                </xs:sequence>
+              </xs:restriction>
+            </xs:complexContent>
+          </xs:complexType>
+        </xs:element>
+      </xs:sequence>
+      <xs:attribute name="stepTime" type="xs:long" use="required"/>
+    </xs:complexType>
+  </xs:element>
+  <!-- =================================================================== -->
+  <!-- *** EnvironmentSimulatorStep  *** -->
+  <!-- =================================================================== -->
+  <xs:element name="EnvironmentSimulatorStep">
+    <xs:complexType>
+      <xs:sequence>
+        <xs:element ref="log:PhysicsSimulation" minOccurs="0"/>
+        <xs:element ref="log:EnvSimInputEvent" minOccurs="0" maxOccurs="unbounded"/>
+      </xs:sequence>
+    </xs:complexType>
+  </xs:element>
+  <xs:element name="PhysicsSimulation" type="log:PhysicsSimulation.type"/>
+  <xs:complexType name="PhysicsSimulation.type">
+    <xs:sequence>
+      <xs:element name="ResultingStateChanges"  minOccurs="0" maxOccurs="unbounded">
+        <xs:complexType>
+          <xs:sequence>
+            <xs:element ref="log:Objects" minOccurs="0"/>
+            <xs:element ref="log:PhysicalObjects" minOccurs="0"/>
+            <xs:element ref="log:PhysicalAgents" minOccurs="0"/>
+            <xs:element ref="log:Collections" minOccurs="0"/>
+          </xs:sequence>
+        </xs:complexType>
+      </xs:element>
+      <xs:element name="ResultingEvents"  minOccurs="0" maxOccurs="unbounded">
+        <xs:complexType>
+          <xs:choice minOccurs="0" maxOccurs="unbounded">
+            <xs:element ref="log:CausedEvent" minOccurs="0" maxOccurs="unbounded"/>
+            <xs:element ref="log:PerceptionEvent" minOccurs="0" maxOccurs="unbounded"/>
+          </xs:choice>
+        </xs:complexType>
+      </xs:element>
+    </xs:sequence>
+  </xs:complexType>
+  <!-- *** AtomicEvent  *** -->
+  <xs:element name="AtomicEvent" type="log:AtomicEvent.type" abstract="true" substitutionGroup="log:Entity"/>
+  <xs:complexType name="AtomicEvent.type">
+    <xs:complexContent>
+      <xs:extension base="log:Entity.type">
+        <xs:attribute name="occurrenceTime" type="xs:long" use="optional"/>
+      </xs:extension>
+    </xs:complexContent>
+  </xs:complexType>
+  <!-- *** EnvSimInputEvent  *** -->
+  <xs:element name="EnvSimInputEvent" type="log:EnvSimInputEvent.type" abstract="true" substitutionGroup="log:AtomicEvent"/>
+  <xs:complexType name="EnvSimInputEvent.type">
+    <xs:complexContent>
+      <xs:extension base="log:AtomicEvent.type">
+        <xs:sequence>
+          <xs:element name="Activities"  minOccurs="0" maxOccurs="1">
+            <xs:complexType>
+              <xs:sequence>
+                <xs:element name="StartActivity" minOccurs="0" maxOccurs="unbounded">
+                  <xs:complexType>
+                    <xs:complexContent>
+                      <xs:extension base="log:Activity.type">
+                        <xs:attribute name="duration" type="xs:long" use="optional"/>
+                      </xs:extension>
+                    </xs:complexContent>
+                  </xs:complexType>
+                </xs:element>
+                <xs:element name="FinalizeActivity" minOccurs="0" maxOccurs="unbounded">
+                  <xs:complexType>
+                    <xs:complexContent>
+                      <xs:extension base="log:Activity.type">
+                        <xs:sequence>
+                          <xs:element name="ResultingEvents"  minOccurs="0" maxOccurs="1">
+                            <xs:complexType>
+                              <xs:sequence>
+                                <xs:element name="CausedEvent" maxOccurs="unbounded">
+                                  <xs:complexType>
+                                    <xs:complexContent>
+                                      <xs:extension base="log:CausedEvent.type">
+                                        <xs:attribute name="correlation" use="optional" type="xs:string"/>
+                                      </xs:extension>
+                                    </xs:complexContent>
+                                  </xs:complexType>
+                                </xs:element>
+                              </xs:sequence>
+                            </xs:complexType>
+                          </xs:element>
+                        </xs:sequence>
+                      </xs:extension>
+                    </xs:complexContent>
+                  </xs:complexType>
+                </xs:element>
+              </xs:sequence>
+            </xs:complexType>
+          </xs:element>
+          <xs:element ref="log:ResultingStateChanges" minOccurs="0" maxOccurs="unbounded"/>
+          <xs:element name="ResultingEvents"  minOccurs="0" maxOccurs="unbounded">
+            <xs:complexType>
+              <xs:choice minOccurs="0" maxOccurs="unbounded">
+                <xs:element ref="log:CausedEvent" minOccurs="0" maxOccurs="unbounded"/>
+                <xs:element ref="log:PerceptionEvent" minOccurs="0" maxOccurs="unbounded"/>
+                <xs:element ref="log:InMessageEvent" minOccurs="0" maxOccurs="unbounded"/>
+                <xs:element ref="log:ActivityStartEvent" minOccurs="0" maxOccurs="unbounded"/>
+                <xs:element ref="log:ActivityEndEvent" minOccurs="0" maxOccurs="unbounded"/>
+              </xs:choice>
+              <xs:attribute name="resultingFromRule" type="xs:NCName" use="required"/>
+            </xs:complexType>
+          </xs:element>
+        </xs:sequence>
+      </xs:extension>
+    </xs:complexContent>
+  </xs:complexType>
+  <xs:element name="ResultingStateChanges" type="log:ResultingStateChanges.type"/>
+  <xs:complexType name="ResultingStateChanges.type">
+    <xs:sequence>
+      <xs:element ref="log:Objects" minOccurs="0"/>
+      <xs:element ref="log:Agents" minOccurs="0"/>
+      <xs:element ref="log:PhysicalObjects" minOccurs="0"/>
+      <xs:element ref="log:PhysicalAgents" minOccurs="0"/>
+      <xs:element ref="log:GridCells" minOccurs="0"/>
+      <xs:element name="Create" minOccurs="0">
+        <xs:complexType>
+          <xs:sequence>
+            <xs:element ref="log:Objects" minOccurs="0"/>
+            <xs:element ref="log:Agents" minOccurs="0"/>
+            <xs:element ref="log:PhysicalObjects" minOccurs="0"/>
+            <xs:element ref="log:PhysicalAgents" minOccurs="0"/>
+          </xs:sequence>
+        </xs:complexType>
+      </xs:element>
+      <xs:element ref="log:Collections" minOccurs="0"/>
+      <xs:element name="DestroyObjects"  minOccurs="0">
+        <xs:complexType>
+          <xs:sequence>
+            <xs:element ref="log:DestroyObj" minOccurs="0" maxOccurs="unbounded"/>
+          </xs:sequence>
+        </xs:complexType>
+      </xs:element>
+    </xs:sequence>
+    <xs:attribute name="resultingFromRule" type="xs:NCName" use="optional"/>
+  </xs:complexType>
+
+  <!-- *** ExogeneousEvent  *** -->
+  <xs:element name="ExogenousEvent" type="log:ExogeneousEvent.type" substitutionGroup="log:EnvSimInputEvent"/>
+  <xs:complexType name="ExogeneousEvent.type">
+    <xs:complexContent>
+      <xs:extension base="log:EnvSimInputEvent.type">
+        <xs:attribute name="nextOccurrenceTime" type="xs:double" use="optional"/>
+      </xs:extension>
+    </xs:complexContent>
+  </xs:complexType>
+  <!-- *** ActionEvent  *** -->
+  <xs:element name="ActionEvent" type="log:ActionEvent.type" substitutionGroup="log:EnvSimInputEvent"/>
+  <xs:complexType name="ActionEvent.type">
+    <xs:complexContent>
+      <xs:extension base="log:EnvSimInputEvent.type">
+        <xs:attribute name="actorIdRef" type="xs:long"/>
+      </xs:extension>
+    </xs:complexContent>
+  </xs:complexType>
+  <!-- *** OutMessageEvent  *** -->
+  <xs:element name="OutMessageEvent" type="log:OutMessageEvent.type" substitutionGroup="log:EnvSimInputEvent"/>
+  <xs:complexType name="OutMessageEvent.type">
+    <xs:complexContent>
+      <xs:extension base="log:EnvSimInputEvent.type">
+        <xs:attribute name="senderIdRef" type="xs:long"/>
+        <xs:attribute name="receiverIdRef" type="xs:long"/>
+        <xs:attribute name="messageType" type="xs:string"/>
+      </xs:extension>
+    </xs:complexContent>
+  </xs:complexType>
+  <!-- *** CausedEvent  *** -->
+  <xs:element name="CausedEvent" type="log:CausedEvent.type" substitutionGroup="log:EnvSimInputEvent"/>
+  <xs:complexType name="CausedEvent.type">
+    <xs:complexContent>
+      <xs:extension base="log:EnvSimInputEvent.type">
+        <xs:attribute name="delay" type="xs:long" use="optional"/>
+      </xs:extension>
+    </xs:complexContent>
+  </xs:complexType>
+  <!-- *** ActivityStartEvent *** -->
+  <xs:element name="ActivityStartEvent" type="log:ActivityStartEvent.type" substitutionGroup="log:EnvSimInputEvent"/>
+  <xs:complexType name="ActivityStartEvent.type">
+    <xs:complexContent>
+      <xs:extension base="log:CausedEvent.type">
+        <xs:attribute name="activity" type="xs:string" use="required"/>
+      </xs:extension>
+    </xs:complexContent>
+  </xs:complexType>
+  <!-- *** ActivityEndEvent *** -->
+  <xs:element name="ActivityEndEvent" type="log:ActivityEndEvent.type" substitutionGroup="log:EnvSimInputEvent"/>
+  <xs:complexType name="ActivityEndEvent.type">
+    <xs:complexContent>
+      <xs:extension base="log:CausedEvent.type">
+        <xs:attribute name="activity" type="xs:string" use="required"/>
+      </xs:extension>
+    </xs:complexContent>
+  </xs:complexType>
+  <!-- *** Message  *** -->
+  <xs:element name="Message" type="log:Message.type" substitutionGroup="log:Entity"/>
+  <xs:complexType name="Message.type">
+    <xs:complexContent>
+      <xs:extension base="log:Entity.type"/>
+    </xs:complexContent>
+  </xs:complexType>
+  <!-- =================================================================== -->
+  <!-- *** AgentSimulatorStep  *** -->
+  <!-- =================================================================== -->
+  <xs:element name="AgentSimulatorStep">
+    <xs:complexType>
+      <xs:sequence>
+        <xs:element ref="log:AgtSimInputEvent" minOccurs="0" maxOccurs="unbounded"/>
+      </xs:sequence>
+      <xs:attribute name="agentType" type="xs:string" use="required"/>
+      <xs:attribute name="agent" type="xs:long" use="required"/>
+      <xs:attribute name="agentName" type="xs:string" use="optional"/>
+    </xs:complexType>
+  </xs:element>
+  <!-- *** AgtSimInputEvent  *** -->
+  <xs:element name="AgtSimInputEvent" type="log:AgtSimInputEvent.type" abstract="true" substitutionGroup="log:AtomicEvent"/>
+  <xs:complexType name="AgtSimInputEvent.type">
+    <xs:complexContent>
+      <xs:extension base="log:AtomicEvent.type">
+        <xs:sequence>
+          <xs:element name="ResultingEvents"  minOccurs="0" maxOccurs="unbounded">
+            <xs:complexType>
+              <xs:choice minOccurs="0" maxOccurs="unbounded">
+                <xs:element name="ActionEvent"  minOccurs="0" maxOccurs="unbounded">
+                  <xs:complexType>
+                    <xs:complexContent>
+                      <xs:extension base="log:AtomicEvent.type"/>
+                    </xs:complexContent>
+                  </xs:complexType>
+                </xs:element>
+                <xs:element name="OutMessageEvent"  minOccurs="0" maxOccurs="unbounded">
+                  <xs:complexType>
+                    <xs:attribute name="messageType" type="ers:CanonicalName" use="required"/>
+                    <xs:attribute name="id" type="xs:long" use="optional"/>
+                    <xs:attribute name="occurrenceTime" type="xs:double" use="required"/>
+                    <xs:attribute name="receiverIdRef" type="xs:long" use="required"/>
+                  </xs:complexType>
+                </xs:element>
+              </xs:choice>
+              <xs:attribute name="resultingFromRule" type="xs:NCName" use="required"/>
+            </xs:complexType>
+          </xs:element>
+          <xs:element name="ResultingStateChanges"  minOccurs="0" maxOccurs="unbounded">
+            <xs:complexType>
+              <xs:sequence>
+                <xs:element ref="log:SelfBeliefSlot" minOccurs="0" maxOccurs="unbounded"/>
+              </xs:sequence>
+              <xs:attribute name="resultingFromRule" type="xs:NCName" use="required"/>
+            </xs:complexType>
+          </xs:element>
+        </xs:sequence>
+      </xs:extension>
+    </xs:complexContent>
+  </xs:complexType>
+  <!-- *** PerceptionEvent  *** -->
+  <xs:element name="PerceptionEvent" type="log:PerceptionEvent.type" substitutionGroup="log:AgtSimInputEvent"/>
+  <xs:complexType name="PerceptionEvent.type">
+    <xs:complexContent>
+      <xs:extension base="log:AgtSimInputEvent.type">
+        <xs:attribute name="perceiverIdRef" type="xs:long" use="optional"/>
+      </xs:extension>
+    </xs:complexContent>
+  </xs:complexType>
+  <!-- *** PhysicalObjectPerceptionEvent  *** -->
+  <xs:element name="PhysicalObjectPerceptionEvent" type="log:PhysicalObjectPerceptionEvent.type" substitutionGroup="log:AgtSimInputEvent"/>
+  <xs:complexType name="PhysicalObjectPerceptionEvent.type">
+    <xs:complexContent>
+      <xs:extension base="log:PerceptionEvent.type">
+        <xs:attribute name="perceivedType" type="xs:string" use="required"/>
+        <xs:attribute name="perceivedId" type="xs:long" use="required"/>
+        <xs:attribute name="distance" type="xs:double" use="required"/>
+        <xs:attribute name="perceptionAngle" type="xs:double" use="required"/>
+      </xs:extension>
+    </xs:complexContent>
+  </xs:complexType>
+  <!-- *** ActualPerceptionEvent  *** -->
+  <xs:element name="ActualPerceptionEvent" type="log:PerceptionEvent.type" substitutionGroup="log:AgtSimInputEvent"/>
+  <!-- *** InMessageEvent  *** -->
+  <xs:element name="InMessageEvent" type="log:InMessageEvent.type" substitutionGroup="log:AgtSimInputEvent"/>
+  <xs:complexType name="InMessageEvent.type">
+    <xs:complexContent>
+      <xs:extension base="log:AgtSimInputEvent.type">
+        <xs:sequence>
+          <xs:element ref="log:Message"/>
+        </xs:sequence>
+        <xs:attribute name="senderIdRef" type="xs:long" use="required"/>
+        <xs:attribute name="receiverIdRef" type="xs:long" use="required"/>
+      </xs:extension>
+    </xs:complexContent>
+  </xs:complexType>
+  <!-- *** ActualInMessageEvent  *** -->
+  <xs:element name="ActualInMessageEvent" type="log:InMessageEvent.type" substitutionGroup="log:AgtSimInputEvent"/>
+  <!-- *** PeriodicTimeEvent  *** -->
+  <xs:element name="PeriodicTimeEvent" type="log:PeriodicTimeEvent.type" substitutionGroup="log:AgtSimInputEvent"/>
+  <xs:complexType name="PeriodicTimeEvent.type">
+    <xs:complexContent>
+      <xs:extension base="log:AgtSimInputEvent.type"/>
+    </xs:complexContent>
+  </xs:complexType>
+  <!-- =================================================================== -->
+  <!-- *** Slot  *** -->
+  <!-- =================================================================== -->
+  <xs:element name="Slot" type="log:Slot.type"/>
+  <xs:complexType name="Slot.type">
+    <xs:attribute name="property" type="xs:NCName" use="required"/>
+    <xs:attribute name="value" type="xs:string" use="optional"/>
+    <xs:attribute name="refId" type="xs:long" use="optional"/>
+  </xs:complexType>
+  <xs:element name="SelfBeliefSlot" type="log:SelfBeliefSlot.type"/>
+  <xs:complexType name="SelfBeliefSlot.type">
+    <xs:attribute name="selfBeliefProperty" type="xs:NCName" use="required"/>
+    <xs:attribute name="value" type="xs:string" use="required"/>
+  </xs:complexType>
+  <!-- =================================================================== -->
+  <!-- *** Objects and PhysicalAgents and  PhysicalObjects *** -->
+  <!-- =================================================================== -->
+  <xs:element name="Objects">
+    <xs:complexType>
+      <xs:sequence>
+        <xs:element ref="log:Obj" minOccurs="0" maxOccurs="unbounded"/>
+      </xs:sequence>
+    </xs:complexType>
+  </xs:element>
+  <xs:element name="Agents">
+    <xs:complexType>
+      <xs:sequence>
+        <xs:element ref="log:Agt" minOccurs="0" maxOccurs="unbounded"/>
+      </xs:sequence>
+    </xs:complexType>
+  </xs:element>
+  <xs:element name="PhysicalAgents">
+    <xs:complexType>
+      <xs:sequence>
+        <xs:element ref="log:PhysAgt" minOccurs="0" maxOccurs="unbounded"/>
+      </xs:sequence>
+    </xs:complexType>
+  </xs:element>
+  <xs:element name="PhysicalObjects">
+    <xs:complexType>
+      <xs:sequence>
+        <xs:element ref="log:PhysObj" minOccurs="0" maxOccurs="unbounded"/>
+      </xs:sequence>
+    </xs:complexType>
+  </xs:element>
+  <!-- =================================================================== -->
+  <!-- *** Collections *** -->
+  <!-- =================================================================== -->
+  <xs:element name="Collections">
+    <xs:complexType>
+      <xs:sequence>
+        <xs:element ref="log:Coll" minOccurs="0" maxOccurs="unbounded"/>
+      </xs:sequence>
+    </xs:complexType>
+  </xs:element>
+  <!-- =================================================================== -->
+  <!-- *** GridCells *** -->
+  <!-- =================================================================== -->
+  <xs:element name="GridCells">
+    <xs:complexType>
+      <xs:sequence>
+        <xs:element ref="log:GridCell" minOccurs="0" maxOccurs="unbounded"/>
+      </xs:sequence>
+    </xs:complexType>
+  </xs:element>
+  <!-- =================================================================== -->
+  <!-- *** Entity  *** -->
+  <!-- =================================================================== -->
+  <xs:element name="Entity" type="log:Entity.type"/>
+  <xs:complexType name="Entity.type">
+    <xs:sequence>
+      <xs:element ref="log:Slot" minOccurs="0" maxOccurs="unbounded"/>
+    </xs:sequence>
+    <xs:attribute name="name" type="xs:string" use="optional"/>
+    <xs:attribute name="type" type="xs:NCName" use="optional"/>
+    <xs:attribute name="id" type="xs:long" use="optional"/>
+  </xs:complexType>
+  <!-- =================================================================== -->
+  <!-- *** Object  *** -->
+  <!-- =================================================================== -->
+  <xs:element name="Object" type="log:Object.type" abstract="true" substitutionGroup="log:Entity"/>
+  <xs:complexType name="Object.type">
+    <xs:complexContent>
+      <xs:extension base="log:Entity.type"/>
+    </xs:complexContent>
+  </xs:complexType>
+  <!-- *** Obj *** -->
+  <xs:element name="Obj" type="log:Obj.type" substitutionGroup="log:Object"/>
+  <xs:complexType name="Obj.type">
+    <xs:complexContent>
+      <xs:extension base="log:Object.type"/>
+    </xs:complexContent>
+  </xs:complexType>
+  <!-- =================================================================== -->
+  <!-- *** Agent  *** -->
+  <!-- =================================================================== -->
+  <xs:element name="Agent" type="log:Agent.type" abstract="true" substitutionGroup="log:Entity"/>
+  <xs:complexType name="Agent.type">
+    <xs:complexContent>
+      <xs:extension base="log:Entity.type"/>
+    </xs:complexContent>
+  </xs:complexType>
+  <!-- *** Agt *** -->
+  <xs:element name="Agt" type="log:Agt.type" substitutionGroup="log:Agent"/>
+  <xs:complexType name="Agt.type">
+    <xs:complexContent>
+      <xs:extension base="log:Agent.type"/>
+    </xs:complexContent>
+  </xs:complexType>
+  <!-- =================================================================== -->
+  <!-- *** PhysicalObject *** -->
+  <!-- =================================================================== -->
+  <xs:element name="PhysicalObject" type="log:PhysicalObject.type" abstract="true" substitutionGroup="log:Object"/>
+  <xs:complexType name="PhysicalObject.type">
+    <xs:complexContent>
+      <xs:extension base="log:Object.type">
+        <xs:sequence>
+          <xs:element ref="aors:View" minOccurs="0" maxOccurs="unbounded"/>
+        </xs:sequence>
+        <xs:attribute name="x" type="xs:double" use="optional"/>
+        <xs:attribute name="y" type="xs:double" use="optional"/>
+        <xs:attribute name="z" type="xs:double" use="optional"/>
+        <xs:attribute name="rotationAngleX" type="xs:double" use="optional"/>
+        <xs:attribute name="rotationAngleY" type="xs:double" use="optional"/>
+        <xs:attribute name="rotationAngleZ" type="xs:double" use="optional"/>
+        <xs:attribute name="m" type="xs:double" use="optional"/>
+        <xs:attribute name="width" type="xs:double" use="optional"/>
+        <xs:attribute name="height" type="xs:double" use="optional"/>
+        <xs:attribute name="depth" type="xs:double" use="optional"/>
+        <xs:attribute name="vx" type="xs:double" use="optional"/>
+        <xs:attribute name="vy" type="xs:double" use="optional"/>
+        <xs:attribute name="vz" type="xs:double" use="optional"/>
+        <xs:attribute name="omegaX" type="xs:double" use="optional"/>
+        <xs:attribute name="omegaY" type="xs:double" use="optional"/>
+        <xs:attribute name="omegaZ" type="xs:double" use="optional"/>
+        <xs:attribute name="alphaX" type="xs:double" use="optional"/>
+        <xs:attribute name="alphaY" type="xs:double" use="optional"/>
+        <xs:attribute name="alphaZ" type="xs:double" use="optional"/>
+        <xs:attribute name="ax" type="xs:double" use="optional"/>
+        <xs:attribute name="ay" type="xs:double" use="optional"/>
+        <xs:attribute name="az" type="xs:double" use="optional"/>
+        <xs:attribute name="points" type="xs:string" use="optional"/>
+        <xs:attribute name="materialType" type="xs:string" use="optional"/>
+        <xs:attribute name="shape2D" type="xs:string" use="optional"/>
+        <xs:attribute name="shape3D" type="xs:string" use="optional"/>
+      </xs:extension>
+    </xs:complexContent>
+  </xs:complexType>
+  <!-- *** PhysicalAgent  *** -->
+  <xs:element name="PhysAgt" type="log:PhysAgt.type" substitutionGroup="log:PhysicalObject"/>
+  <xs:complexType name="PhysAgt.type">
+    <xs:complexContent>
+      <xs:extension base="log:PhysicalObject.type">
+        <xs:sequence>
+          <xs:element ref="log:SelfBeliefSlot" minOccurs="0" maxOccurs="unbounded"/>
+        </xs:sequence>
+        <xs:attribute name="perceptionRadius" type="xs:double" use="optional" default="100"/>
+      </xs:extension>
+    </xs:complexContent>
+  </xs:complexType>
+  <!-- *** PhysicalObject  *** -->
+  <xs:element name="PhysObj" type="log:PhysicalObj.type" substitutionGroup="log:PhysicalObject"/>
+  <xs:complexType name="PhysicalObj.type">
+    <xs:complexContent>
+      <xs:extension base="log:PhysicalObject.type"/>
+    </xs:complexContent>
+  </xs:complexType>
+  <!-- =================================================================== -->
+  <!-- *** Collection *** -->
+  <!-- =================================================================== -->
+  <xs:element name="Coll" type="log:Collection.type"/>
+  <xs:complexType name="Collection.type">
+    <xs:sequence>
+      <xs:element ref="log:Obj" minOccurs="0"/>
+    </xs:sequence>
+    <xs:attribute name="name" type="xs:string" use="optional"/>
+    <xs:attribute name="id" type="xs:long" use="optional"/>
+    <xs:attribute name="itemType" type="xs:NCName" use="optional"/>
+    <xs:attribute name="type" use="optional">
+      <xs:simpleType>
+        <xs:restriction base="xs:string">
+          <xs:enumeration value="FIFO_QUEUE"/>
+          <xs:enumeration value="LIFO_QUEUE"/>
+          <xs:enumeration value="SET"/>
+        </xs:restriction>
+      </xs:simpleType>
+    </xs:attribute>
+    <xs:attribute name="action" use="optional">
+      <xs:simpleType>
+        <xs:restriction base="xs:string">
+          <xs:enumeration value="add"/>
+          <xs:enumeration value="remove"/>
+        </xs:restriction>
+      </xs:simpleType>
+    </xs:attribute>
+    <xs:attribute name="newSize" type="xs:int" use="optional"/>
+  </xs:complexType>
+  <xs:element name="GridCell" type="log:GridCell.type"/>
+  <xs:complexType name="GridCell.type">
+    <xs:sequence>
+      <xs:element ref="log:Slot" maxOccurs="unbounded"/>
+    </xs:sequence>
+    <xs:attribute name="x" type="xs:double" use="required"/>
+    <xs:attribute name="y" type="xs:double" use="required"/>
+  </xs:complexType>
+  <!-- =================================================================== -->
+  <!-- *** DestroyObject *** -->
+  <!-- =================================================================== -->
+  <xs:element name="DestroyObj" type="log:DestroyObject.type"/>
+  <xs:complexType name="DestroyObject.type">
+    <xs:attribute name="objectType" type="xs:NCName" use="optional"/>
+    <xs:attribute name="id" type="xs:long" use="required"/>
+    <xs:attribute name="objectName" type="xs:NCName" use="optional"/>
+  </xs:complexType>
+  <!-- =================================================================== -->
+  <!-- *** Activity *** -->
+  <!-- =================================================================== -->
+  <xs:complexType name="Activity.type">
+    <xs:sequence>
+      <xs:element ref="log:ResultingStateChanges" minOccurs="0"/>
+    </xs:sequence>
+    <xs:attribute name="activityName" type="ers:CanonicalName" use="required"/>
+    <xs:attribute name="correlationValue" type="xs:string" use="optional"/>
+    <xs:attribute name="correlationProperty" type="xs:string" use="optional"/>
+    <xs:attribute name="actor" type="xs:long" use="optional"/>
+  </xs:complexType>
+
+</xs:schema>
