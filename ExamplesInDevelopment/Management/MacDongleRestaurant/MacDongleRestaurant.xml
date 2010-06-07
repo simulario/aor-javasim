@@ -57,7 +57,9 @@ SimStatistics.cumulativeResponseTime.getValue() / SimStatistics.nrOfDepartures.g
 		</Statistics>
 
 		<Globals>
+			<!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->
 			<GlobalFunction name="twoDice" resultType="Integer">
+				<!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->
 				<Parameter name="factor" type="Integer"/>
 				<Body language="Java"><![CDATA[
 int r1 = Random.uniformInt(1,6);
@@ -72,10 +74,16 @@ int r2 = Random.uniformInt(1,6);
 	if (r1+r2 < 10) return (9*factor);            // with probability  0.111
 	if (r1+r2 < 11) return (10*factor);           // with probability  0.083
 	if (r1+r2 < 12) return (11*factor);           // with probability  0.056
-                  return (12*factor);             // with probability  0.028
+                    return (12*factor);           // with probability  0.028
 		     ]]></Body>
-			</GlobalFunction>
-			
+			</GlobalFunction>		
+			<!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->
+			<GlobalFunction name="randomPatienceTime" resultType="Integer">
+			<!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->
+				<Body language="Java"><![CDATA[
+return Random.uniformInt(10,20);						
+				]]></Body>
+			</GlobalFunction>		
 		</Globals>
 		<EntityTypes>
 			<!-- =================================================== -->
@@ -574,14 +582,7 @@ Integer.parseInt(evt.getReminderMsg())
 				<Attribute name="orderNo" type="Integer"/>
 				<Attribute name="waitingForOrderToArrive" type="Boolean"/>
 				<Attribute name="patience" type="Integer"/>
-				
-				<!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->
-				<Function name="randomPatienceTime" resultType="Integer">
-					<!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->
-					<Body language="Java"><![CDATA[
-return Random.uniformInt(10,20);						
-					]]></Body>
-				</Function>			
+					
 				<!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->
 				<SubjectiveFunction name="randomHamburgerType" resultType="Integer">
 					<!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->
@@ -662,15 +663,15 @@ cust.getOrderNo()
 						</UPDATE-AGT>
 					</DO>
 				</CommunicationRule>
-				<!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->
+				<!--
 				<CommunicationRule name="PatienceExpired_Rule" agentVariable="cust">
-					<!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->
 					<WHEN eventType="ReminderEvent" reminderMsg="PatienceExpired"/>
 					<DO>
 						<UPDATE-AGT>
 						</UPDATE-AGT>
 					</DO>
 				</CommunicationRule>
+				-->
 			</AgentType>
 			<!-- =================================================== -->
 			<AgentType name="Truck">
@@ -738,7 +739,7 @@ evt.getOccurrenceTime()
 								</Slot>
 								<Slot property="patience">
 									<ValueExpr language="Java"><![CDATA[
-customer.randomPatienceTime()										
+Global.randomPatienceTime()										
 									]]></ValueExpr>
 								</Slot>
 								<!--
@@ -1407,8 +1408,8 @@ SimStatistics.lostRevenue.getValue() + (float)k.burgPrice(0) * pw.getHamburgerOn
 				<!-- ================================================ -->
 				<WHEN eventType="OutMessageEvent" messageType="RefillTheTray" eventVariable="evt"/>
 				<FOR objectVariable="pw" objectType="PickupWindow" objectIdRef="2" />
-				<FOR objectVariable="pwt" objectType="Collection" objectIdRef="11" />
 				<FOR objectVariable="k" objectType="Kitchen" objectIdRef="5" />
+				<FOR objectVariable="pwt" objectType="Collection" objectIdRef="11" />
 				<DO>
 					<UPDATE-ENV>
 						<Create>
