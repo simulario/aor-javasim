@@ -1755,7 +1755,7 @@
     <xsl:param name="eventVar" required="yes" as="xs:string"/>
     <xsl:param name="eventList" required="yes" as="xs:string"/>
 
-    <xsl:variable name="remEvtVarName" select="fn:concat(jw:lowerWord($core.class.reminderEvent), '_', position())"/>
+    <xsl:variable name="remEvtVarName" select="jw:createInternalVarName(fn:concat(jw:lowerWord($core.class.reminderEvent), '_', position()))"/>
 
     <xsl:variable name="output">
       <xsl:variable name="block-indent" select="if (fn:exists(aorsml:Condition[@language eq $output.language])) then $indent + 1 else $indent"/>
@@ -1791,7 +1791,6 @@
                 <xsl:value-of select="jw:quote($empty.string.quotation.symbol)"/>
               </xsl:otherwise>
             </xsl:choose>
-
           </xsl:variable>
 
           <xsl:value-of select="fn:concat($occurenceTime, ' + ', $delay)"/>
