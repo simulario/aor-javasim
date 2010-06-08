@@ -54,9 +54,8 @@
 		</xs:complexContent>
 	</xs:complexType>
 	<!-- =================================================================== -->
-	<!-- *** InternalEvent  *** -->
-	<!-- =================================================================== -->
 	<xs:element name="InternalEvent" type="aors:InternalEvent.type" abstract="true" substitutionGroup="ers:AtomicEvent"/>
+	<!-- =================================================================== -->
 	<xs:complexType name="InternalEvent.type">
 		<xs:complexContent>
 			<xs:extension base="ers:AtomicEvent.type">
@@ -67,9 +66,8 @@
 		</xs:complexContent>
 	</xs:complexType>
 	<!-- =================================================================== -->
-	<!-- *** TimeEvents  *** -->
-	<!-- =================================================================== -->
 	<xs:element name="TimeEvent" type="aors:TimeEvent.type" abstract="true" substitutionGroup="aors:InternalEvent"/>
+	<!-- =================================================================== -->
 	<xs:complexType name="TimeEvent.type">
 		<xs:complexContent>
 			<xs:extension base="aors:InternalEvent.type"/>
@@ -84,12 +82,23 @@
 	<xs:element name="ReminderEvent" type="aors:ReminderEvent.type" substitutionGroup="aors:TimeEvent"/>
 	<xs:complexType name="ReminderEvent.type">
 		<xs:complexContent>
-			<xs:extension base="aors:TimeEvent.type">
+			<xs:extension base="aors:ReminderEvent-0.type">
 				<xs:sequence>
 					<xs:element name="ReminderMsg" type="aors:OpaqueExpression" minOccurs="0"/>
 				</xs:sequence>
-				<xs:attribute name="reminderMsg" type="xs:string" use="required"/>
+				<xs:attribute name="reminderMsg" type="xs:string" use="optional"/>
 			</xs:extension>
+		</xs:complexContent>
+	</xs:complexType>
+	<xs:complexType name="ReminderEvent-0.type">
+		<xs:complexContent>
+			<xs:restriction base="aors:TimeEvent.type">
+				<xs:sequence>
+					<xs:element ref="ers:Slot" minOccurs="0" maxOccurs="unbounded"/>
+				</xs:sequence>
+				<xs:attribute name="type" type="ers:CanonicalName" use="required" fixed="ReminderEvent"/>
+				<xs:attribute name="occurrenceTime" type="xs:positiveInteger" use="optional"/>
+			</xs:restriction>
 		</xs:complexContent>
 	</xs:complexType>
 	<!-- =================================================================== -->
