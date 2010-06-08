@@ -662,7 +662,7 @@
     <xsl:param name="envSimVarName"/>
     <xsl:param name="spaceReservationSystem"/>
     <xsl:param name="aorObject" as="node()" required="yes"/>
-    
+
     <xsl:variable name="positionVarName" select="'positionData'"/>
     <xsl:if test="@hasRandomPosition = true()">
 
@@ -765,8 +765,7 @@
 
     <xsl:if test="$envSimVarName">
       <xsl:choose>
-        <xsl:when
-          test="$spaceReservationSystem and not(@ignorePositionConstraint = true()) and starts-with(local-name($aorObject), 'Physical')">
+        <xsl:when test="$spaceReservationSystem and not(@ignorePositionConstraint = true()) and starts-with(local-name($aorObject), 'Physical')">
 
           <xsl:apply-templates select="." mode="shared.helper.initAORObjects.WithOccupanceCheck">
             <xsl:with-param name="indent" select="$indent"/>
@@ -1049,7 +1048,7 @@
     </xsl:choose>
 
   </xsl:template>
-  
+
   <!-- create an PhysicalAgentSubject with all selbeliefattributes in the constructor -->
   <xsl:template match="aorsml:PhysicalAgent | aorsml:PhysicalAgents | aorsml:Agent | aorsml:Agents" mode="shared.helper.initAgentSubject">
     <xsl:param name="indent" required="yes"/>
@@ -1171,46 +1170,19 @@
     </xsl:apply-templates>
 
     <!-- set the periodicTimeEvents -->
-    <xsl:variable name="objNode" select="."/>
-    <xsl:variable name="objPosition" select="position()"/>
-    <xsl:for-each select="aorsml:PeriodicTimeEvent">
-      <xsl:variable name="perTimEvtVarName" select="fn:concat(jw:lowerWord(@type), jw:upperWord(../@type), '_', $objPosition)"/>
-      <xsl:call-template name="java:variable">
-        <xsl:with-param name="indent" select="$indent"/>
-        <xsl:with-param name="name" select="$perTimEvtVarName"/>
-        <xsl:with-param name="type" select="fn:concat($objNode/@type, $prefix.agentSubject, '.', current()/@type)"/>
-        <xsl:with-param name="value">
-          <xsl:call-template name="java:varByDotNotation">
-            <xsl:with-param name="name" select="$varName"/>
-            <xsl:with-param name="varName">
-              <xsl:call-template name="java:newObject">
-                <xsl:with-param name="class" select="@type"/>
-                <xsl:with-param name="inLine" select="true()"/>
-                <xsl:with-param name="isVariable" select="true()"/>
-                <xsl:with-param name="args">
-                  <xsl:if test="local-name($objNode/..) eq 'Create'">
-                    <xsl:call-template name="java:callGetterMethod">
-                      <xsl:with-param name="inLine" select="true()"/>
-                      <xsl:with-param name="instVariable" select="'triggeredTime'"/>
-                    </xsl:call-template>
-                    <xsl:text> + </xsl:text>
-                  </xsl:if>
-                  <xsl:value-of select="@occurrenceTime"/>
-                </xsl:with-param>
-              </xsl:call-template>
-            </xsl:with-param>
-          </xsl:call-template>
-        </xsl:with-param>
-      </xsl:call-template>
+    <xsl:apply-templates select="aorsml:PeriodicTimeEvent" mode="shared.helper.initAgentSubject.PeriodicTimeEvent">
+      <xsl:with-param name="indent" select="$indent"/>
+      <xsl:with-param name="objPosition" select="position()"/>
+      <xsl:with-param name="objNode" select="."/>
+      <xsl:with-param name="varName" select="$varName"/>
+    </xsl:apply-templates>
 
-      <!-- add it to InternalEventList -->
-      <xsl:call-template name="java:callMethod">
-        <xsl:with-param name="indent" select="$indent"/>
-        <xsl:with-param name="objInstance" select="$varName"/>
-        <xsl:with-param name="method" select="'addInternalEvent'"/>
-        <xsl:with-param name="args" select="$perTimEvtVarName"/>
-      </xsl:call-template>
-    </xsl:for-each>
+    <xsl:apply-templates select="aorsml:ReminderEvent" mode="shared.helper.initAgentSubject.ReminderEvent">
+      <xsl:with-param name="indent" select="$indent"/>
+      <xsl:with-param name="objPosition" select="position()"/>
+      <xsl:with-param name="objNode" select="."/>
+      <xsl:with-param name="varName" select="$varName"/>
+    </xsl:apply-templates>
 
     <!-- set a OnEveryStepIntEvent -->
     <xsl:apply-templates select="//aorsml:PhysicalAgentType[@name = current()/@type][1]"
@@ -1230,6 +1202,119 @@
       </xsl:otherwise>
     </xsl:choose>
     <xsl:call-template name="java:newLine"/>
+
+  </xsl:template>
+
+  <xsl:template match="aorsml:PeriodicTimeEvent" mode="shared.helper.initAgentSubject.PeriodicTimeEvent">
+    <xsl:param name="indent" as="xs:integer" required="yes"/>
+    <xsl:param name="objPosition" as="xs:positiveInteger" required="yes"/>
+    <xsl:param name="objNode" as="element()" required="yes"/>
+    <xsl:param name="varName" as="xs:string" required="yes"/>
+
+    <xsl:variable name="perTimEvtVarName"
+      select="jw:createInternalVarName(fn:concat(jw:lowerWord(@type), jw:upperWord(../@type), '_',
+      $objPosition))"/>
+    <xsl:call-template name="java:variable">
+      <xsl:with-param name="indent" select="$indent"/>
+      <xsl:with-param name="name" select="$perTimEvtVarName"/>
+      <xsl:with-param name="type" select="fn:concat($objNode/@type, $prefix.agentSubject, '.', current()/@type)"/>
+      <xsl:with-param name="value">
+        <xsl:call-template name="java:varByDotNotation">
+          <xsl:with-param name="name" select="$varName"/>
+          <xsl:with-param name="varName">
+            <xsl:call-template name="java:newObject">
+              <xsl:with-param name="class" select="@type"/>
+              <xsl:with-param name="inLine" select="true()"/>
+              <xsl:with-param name="isVariable" select="true()"/>
+              <xsl:with-param name="args">
+                <xsl:if test="local-name($objNode/..) eq 'Create'">
+                  <xsl:call-template name="java:callGetterMethod">
+                    <xsl:with-param name="inLine" select="true()"/>
+                    <xsl:with-param name="instVariable" select="'triggeredTime'"/>
+                  </xsl:call-template>
+                  <xsl:text> + </xsl:text>
+                </xsl:if>
+                <xsl:choose>
+                  <xsl:when test="fn:exists(aorsml:OccurrenceTime[@language eq $output.language])">
+                    <xsl:value-of select="aorsml:OccurrenceTime[@language eq $output.language]"/>
+                  </xsl:when>
+                  <xsl:otherwise>
+                    <xsl:value-of select="@occurrenceTime"/>
+                  </xsl:otherwise>
+                </xsl:choose>
+              </xsl:with-param>
+            </xsl:call-template>
+          </xsl:with-param>
+        </xsl:call-template>
+      </xsl:with-param>
+    </xsl:call-template>
+
+    <!-- add it to InternalEventList -->
+    <xsl:call-template name="java:callMethod">
+      <xsl:with-param name="indent" select="$indent"/>
+      <xsl:with-param name="objInstance" select="$varName"/>
+      <xsl:with-param name="method" select="'addInternalEvent'"/>
+      <xsl:with-param name="args" select="$perTimEvtVarName"/>
+    </xsl:call-template>
+
+  </xsl:template>
+
+  <xsl:template match="aorsml:ReminderEvent" mode="shared.helper.initAgentSubject.ReminderEvent">
+    <xsl:param name="indent" as="xs:integer" required="yes"/>
+    <xsl:param name="objPosition" as="xs:integer" required="yes"/>
+    <xsl:param name="objNode" as="element()" required="yes"/>
+    <xsl:param name="varName" as="xs:string" required="yes"/>
+
+    <xsl:variable name="reminderEvtVarName"
+      select="jw:createInternalVarName(fn:concat(jw:lowerWord($core.class.reminderEvent), '_',
+      $objPosition))"/>
+
+    <xsl:variable name="occurrenceTime">
+      <xsl:if test="local-name($objNode/..) eq 'Create'">
+        <xsl:call-template name="java:callGetterMethod">
+          <xsl:with-param name="inLine" select="true()"/>
+          <xsl:with-param name="instVariable" select="'triggeredTime'"/>
+        </xsl:call-template>
+        <xsl:text> + </xsl:text>
+      </xsl:if>
+      <xsl:choose>
+        <xsl:when test="fn:exists(aorsml:OccurrenceTime[@language eq $output.language])">
+          <xsl:value-of select="aorsml:OccurrenceTime[@language eq $output.language]"/>
+        </xsl:when>
+        <xsl:otherwise>
+          <xsl:value-of select="@occurrenceTime"/>
+        </xsl:otherwise>
+      </xsl:choose>
+    </xsl:variable>
+
+    <xsl:variable name="reminderMsg">
+      <xsl:choose>
+        <xsl:when test="fn:exists(aorsml:ReminderMsg[@language eq $output.language])">
+          <xsl:value-of select="aorsml:ReminderMsg[@language eq $output.language][1]"/>
+        </xsl:when>
+        <xsl:when test="@reminderMsg">
+          <xsl:value-of select="jw:quote(@reminderMsg)"/>
+        </xsl:when>
+        <xsl:otherwise>
+          <xsl:value-of select="jw:quote($empty.string.quotation.symbol)"/>
+        </xsl:otherwise>
+      </xsl:choose>
+    </xsl:variable>
+
+    <xsl:call-template name="java:newObject">
+      <xsl:with-param name="indent" select="$indent"/>
+      <xsl:with-param name="class" select="$core.package.reminderEvent"/>
+      <xsl:with-param name="varName" select="$reminderEvtVarName"/>
+      <xsl:with-param name="args" as="xs:string*" select="($occurrenceTime, $reminderMsg)"/>
+    </xsl:call-template>
+    
+    <!-- add it to InternalEventList -->
+    <xsl:call-template name="java:callMethod">
+      <xsl:with-param name="indent" select="$indent"/>
+      <xsl:with-param name="objInstance" select="$varName"/>
+      <xsl:with-param name="method" select="'addInternalEvent'"/>
+      <xsl:with-param name="args" select="$reminderEvtVarName"/>
+    </xsl:call-template>
 
   </xsl:template>
 
@@ -1483,8 +1568,7 @@
   </xsl:template>
 
   <!-- create the method getMessageType() for rules -->
-  <xsl:template match="aorsml:ReactionRule | aorsml:CommunicationRule | aorsml:ActualPerceptionRule"
-    mode="shared.method.getMessageType">
+  <xsl:template match="aorsml:ReactionRule | aorsml:CommunicationRule | aorsml:ActualPerceptionRule" mode="shared.method.getMessageType">
     <xsl:param name="indent" required="yes" as="xs:integer"/>
 
     <xsl:call-template name="java:method">
@@ -1512,18 +1596,17 @@
     </xsl:call-template>
 
   </xsl:template>
-  
-  <xsl:template match="aorsml:EnvironmentRule"
-    mode="shared.method.getMessageType">
+
+  <xsl:template match="aorsml:EnvironmentRule" mode="shared.method.getMessageType">
     <xsl:param name="indent" required="yes" as="xs:integer"/>
-    
+
     <xsl:call-template name="java:method">
       <xsl:with-param name="indent" select="$indent"/>
       <xsl:with-param name="modifier" select="'public'"/>
       <xsl:with-param name="type" select="'String'"/>
       <xsl:with-param name="name" select="'getMessageType'"/>
       <xsl:with-param name="content">
-        
+
         <xsl:call-template name="java:return">
           <xsl:with-param name="indent" select="$indent + 1"/>
           <xsl:with-param name="value">
@@ -1537,10 +1620,10 @@
             </xsl:choose>
           </xsl:with-param>
         </xsl:call-template>
-        
+
       </xsl:with-param>
     </xsl:call-template>
-    
+
   </xsl:template>
 
   <xsl:template match="aorsml:UpdateStatisticsVariable" mode="shared.helper.updateStatistics">
