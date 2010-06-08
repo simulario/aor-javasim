@@ -19,7 +19,6 @@
       <xs:extension base="ers:ObjectType.type">
         <xs:sequence>
           <xs:group ref="aors:AgentType.elements"/>
-          <xs:element ref="aors:OutMessageRule" minOccurs="0" maxOccurs="unbounded"/>
           <xs:element ref="aors:CommunicationRule" minOccurs="0" maxOccurs="unbounded"/>
         </xs:sequence>
         <xs:attributeGroup ref="aors:AgentType.attributes"/>
@@ -48,23 +47,7 @@
   <!-- =================================================================== -->
   <!-- *** PhysicalAgentType *** -->
   <!-- =================================================================== -->
-  <xs:element name="PhysicalAgentType" substitutionGroup="ers:PhysicalObjectType">
-    <xs:complexType>
-      <xs:complexContent>
-        <xs:extension base="ers:PhysicalObjectType.type">
-          <xs:sequence>
-            <xs:group ref="aors:AgentType.elements"/>
-            <xs:element ref="aors:ActualPerceptionEventType" minOccurs="0" maxOccurs="unbounded"/>
-            <xs:element ref="aors:ActionRule" minOccurs="0" maxOccurs="unbounded"/>
-            <xs:element ref="aors:OutMessageRule" minOccurs="0" maxOccurs="unbounded"/>
-            <xs:element ref="aors:ActualPerceptionRule" minOccurs="0" maxOccurs="unbounded"/>
-            <xs:element ref="aors:ReactionRule" minOccurs="0" maxOccurs="unbounded"/>
-          </xs:sequence>
-          <xs:attribute name="autoPerception" type="xs:boolean" use="optional" default="false"/>
-          <xs:attributeGroup ref="aors:AgentType.attributes"/>
-        </xs:extension>
-      </xs:complexContent>
-    </xs:complexType>
+  <xs:element name="PhysicalAgentType" type="aors:PhysicalAgentType.type" substitutionGroup="ers:PhysicalObjectType">
     <xs:unique name="UniqueActionRule">
       <xs:selector xpath="aors:ActionRule"/>
       <xs:field xpath="@actionEventType"/>
@@ -82,10 +65,24 @@
       <xs:field xpath="@actualPercEvtType"/>
     </xs:keyref>
     <!--xs:keyref name="MessageTypeReference" refer="aors:ActualPerceptionEventTypeKey">
-			<xs:selector xpath="aors:ActualPerceptionRule/aors:CREATE-EVT"/>
-			<xs:field xpath="@messageType"/>
-		</xs:keyref-->
+      <xs:selector xpath="aors:ActualPerceptionRule/aors:CREATE-EVT"/>
+      <xs:field xpath="@messageType"/>
+    </xs:keyref-->
   </xs:element>
+  <xs:complexType name="PhysicalAgentType.type">
+    <xs:complexContent>
+      <xs:extension base="ers:PhysicalObjectType.type">
+        <xs:sequence>
+          <xs:group ref="aors:AgentType.elements"/>
+          <xs:element ref="aors:ActualPerceptionEventType" minOccurs="0" maxOccurs="unbounded"/>
+          <xs:element ref="aors:ActualPerceptionRule" minOccurs="0" maxOccurs="unbounded"/>
+          <xs:element ref="aors:ReactionRule" minOccurs="0" maxOccurs="unbounded"/>
+        </xs:sequence>
+        <xs:attribute name="autoPerception" type="xs:boolean" use="optional" default="false"/>
+        <xs:attributeGroup ref="aors:AgentType.attributes"/>
+      </xs:extension>
+    </xs:complexContent>
+  </xs:complexType>
   <!-- =================================================================== -->
   <!-- *** SelfBeliefProperty *** -->
   <!-- =================================================================== -->
