@@ -149,10 +149,10 @@ return Random.uniformInt(10,20);
 				</Periodicity>
 			</ExogenousEventType>	
 			<!-- =================================================== -->
-			<ExogenousEventType name="EmptyTheTrayEvery15Min">
+			<ExogenousEventType name="EmptyTheTrayEvery2Hours">
 			<!-- =================================================== -->
 				<Periodicity>
-					<ValueExpr language="Java">15</ValueExpr>
+					<ValueExpr language="Java">120</ValueExpr>
 				</Periodicity>
 			</ExogenousEventType>
 			<!-- =================================================== -->
@@ -317,8 +317,7 @@ Integer.parseInt( getMessagePart( evt.getReminderMsg(), 2))
 				<Attribute name="mozzarellaQuantity" type="Integer"/>
 				<Attribute name="lettuceQuantity" type="Integer"/>
 				<Attribute name="mayonnaiseQuantity" type="Integer"/>
-				<Attribute name="tomatoQuantity" type="Integer"/>
-				
+				<Attribute name="tomatoQuantity" type="Integer"/>			
 				<!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~-->
 				<Function name="burgPrice" resultType="Float">
 					<!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->
@@ -435,24 +434,28 @@ Integer.parseInt( getMessagePart( evt.getReminderMsg(),4))
 					<Body language="Java"><![CDATA[
 if ( requestedType == 0){
 	if ( requestedQuantity <= pw.getHamburgerOnTheTray() ) {
+	    pw.setHamburgerOnTheTray((int)pw.getHamburgerOnTheTray() - requestedQuantity);
 		return true;
 	}
 }
 	else
 if ( requestedType == 1){
 	if ( requestedQuantity <= pw.getCheeseburgerOnTheTray() ) {
+	    pw.setCheeseburgerOnTheTray((int)pw.getCheeseburgerOnTheTray() - requestedQuantity);
 		return true;
 	}
 }
 	else
 if ( requestedType == 2){
 	if ( requestedQuantity <= pw.getSaladOnTheTray() ) {
+	    pw.setSaladOnTheTray((int) pw.getSaladOnTheTray() - requestedQuantity);
 		return true;
 	}
 }
 	else
 if ( requestedType == 3){
 	if ( requestedQuantity <= pw.getSuperOnTheTray() ) {
+	    pw.setSuperOnTheTray((int)pw.getSuperOnTheTray() - requestedQuantity);
 		return true;
 	}
 }		  
@@ -699,7 +702,7 @@ cust.getOrderNo()
 					</documentation>
 					<Parameter name="t" type="Truck"/>
 					<Body language="Java"><![CDATA[
-return t.getQuantityPerIngredient() * (t.getHamburgerPrice() + t.getSpecialSoucePrice()+ t.getBreadPrice() + t.getSpecialBreadPrice() +t.getMozzarellaPrice() + t.getLettucePrice() + t.getMayonnaisePrice() + t.getTomatoPrice());
+return t.getQuantityPerIngredient() * (t.getHamburgerPrice() + t.getSpecialSoucePrice() + t.getBreadPrice() + t.getSpecialBreadPrice() + t.getMozzarellaPrice() + t.getLettucePrice() + t.getMayonnaisePrice() + t.getTomatoPrice());
 					]]></Body>
 				</Function>			
 			</AgentType>
@@ -801,15 +804,16 @@ SimStatistics.numberOfCustomers.getValue() + 1
 					</SCHEDULE-EVT>
 				</DO>
 			</EnvironmentRule>
-			<!-- ================================================================ -->
+			<!-- ======================================= -->
 			<EnvironmentRule name="SendOrderENV_Rule">
-				<!-- ================================================================ -->
+			<!-- ======================================= -->
 				<documentation>
 					<description> If the order of the customer is available on the PickupWindow tray, then the MenuBoard will not send anymore an order to the Kitchen. </description>
 				</documentation>
 				<WHEN eventType="OutMessageEvent" messageType="SendOrder" messageVariable="mes" eventVariable="evt" />
 				<FOR objectVariable="pw" objectType="PickupWindow" objectIdRef="2" />
 				<FOR objectVariable="mbq" objectType="Collection" objectName="MenuBoardQueue" objectIdRef="3" />
+				<FOR objectVariable="q4" objectType="Queue" objectIdRef="12" />
 				<FOR objectVariable="cust" objectType="Customer">
 					<ObjectRef language="Java">mbq.getItem()</ObjectRef>
 				</FOR>
@@ -826,6 +830,13 @@ SimStatistics.numberOfCustomers.getValue() + 1
 pw.isAvailableOnTheTray( type, quantity, pw)
 				]]></IF>
 				<THEN>
+					<UPDATE-ENV>
+						<UpdateObject objectVariable="q4">
+							<Slot property="lengthOfQueue">
+								<ValueExpr language="Java">pw.getHamburgerOnTheTray() + pw.getCheeseburgerOnTheTray() + pw.getSaladOnTheTray() + pw.getSuperOnTheTray()</ValueExpr>
+							</Slot>
+						</UpdateObject>
+					</UPDATE-ENV>
 					<SCHEDULE-EVT>
 						<InMessageEventExpr messageType="ConfirmOrder" senderIdRef="1">
 							<ReceiverIdRef language="Java">cust.getId()</ReceiverIdRef>
@@ -878,9 +889,9 @@ quantity
 					</SCHEDULE-EVT>
 				</ELSE>
 			</EnvironmentRule>
-			<!-- ================================================================ -->
+			<!-- ===================================================================== -->
 			<EnvironmentRule name="EndMenuBoardServiceWhenPickupWindowQueueFull_Rule">
-				<!-- ================================================================ -->
+				<!-- ===================================================================== -->
 				<documentation>
 					<description> When a menu board service ends, but the PickupWindowQueue is full, the customer cannot move forward. We just update the customer attribute, so we know that he is waiting for a free place in the Pickup Window waiting line.</description>
 				</documentation>
@@ -894,7 +905,7 @@ quantity
 				</FOR>
 				<IF language="Java"><![CDATA[
 pwq.size() >= pw.getMaxPickupQL()       
-         ]]></IF>
+                 ]]></IF>
 				<THEN>
 					<UPDATE-ENV>
 						<UpdateObject objectVariable="cust">
@@ -902,7 +913,7 @@ pwq.size() >= pw.getMaxPickupQL()
 							<Slot property="orderNo">
 								<ValueExpr language="Java"><![CDATA[
 mes.getOrderNo()
-						]]></ValueExpr>
+						         ]]></ValueExpr>
 							</Slot>
 						</UpdateObject>
 						<UpdateObject objectVariable="q2">
@@ -931,7 +942,7 @@ mes.getOrderNo()
 				</FOR>
 				<IF language="Java"><![CDATA[
 pwq.size() < pw.getMaxPickupQL()
-        ]]></IF>
+               ]]></IF>
 				<THEN>
 					<UPDATE-ENV>
 						<UpdateObject objectVariable="cust">
@@ -940,7 +951,7 @@ pwq.size() < pw.getMaxPickupQL()
 							</Slot>
 							<Slot property="waitingForOrderToArrive" value="true"/>
 						</UpdateObject>
-						<RemoveObjectFromCollection collectionName="MenuBoardQueue"/>
+						<RemoveObjectFromCollection collectionName="MenuBoardQueue" />
 						<AddObjectToCollection collectionName="PickupWindowQueue" itemObjectVariable="cust"/>
 						<UpdateObject objectVariable="mb">
 							<Slot property="menuBoardBusy">
@@ -962,12 +973,12 @@ pwq.size() < pw.getMaxPickupQL()
 						<CausedEventExpr eventType="StartMenuBoardService">
 							<Condition language="Java"><![CDATA[
 mbq.size() > 0
-	           ]]></Condition>
+	           			]]></Condition>
 						</CausedEventExpr>
 						<CausedEventExpr eventType="StartPickupWindowService">
 							<Condition language="Java"><![CDATA[
 ! pw.isPickupWindowBusy() 
-	          ]]></Condition>
+	          				]]></Condition>
 						</CausedEventExpr>
 					</SCHEDULE-EVT>
 				</THEN>
@@ -994,7 +1005,7 @@ mbq.size() > 0
 						<InMessageEventExpr messageType="AskOrderNo">
 							<Condition language="Java"><![CDATA[
 pwq.size() > 0 && cust.isWaitingForOrderToArrive()
-              ]]></Condition>
+                            ]]></Condition>
 							<SenderIdRef language="Java">pw.getId()</SenderIdRef>
 							<ReceiverIdRef language="Java">cust.getId()</ReceiverIdRef>
 						</InMessageEventExpr>
@@ -1023,8 +1034,7 @@ cust.isWaitingForPWFree()
 				<THEN>
 					<UPDATE-ENV>
 						<RemoveObjectFromCollection collectionName="MenuBoardQueue"/>
-						<AddObjectToCollection collectionName="PickupWindowQueue"
-							itemObjectVariable="cust"/>
+						<AddObjectToCollection collectionName="PickupWindowQueue" itemObjectVariable="cust"/>
 						<UpdateObject objectVariable="cust">
 							<Slot property="waitingForOrderToArrive" value="true"/>
 						</UpdateObject>
@@ -1132,7 +1142,7 @@ pwq.size() == pw.getMaxPickupQL()
 						<UpdateStatisticsVariable variable="cumulativeResponseTime">
 							<ValueExpr language="Java"><![CDATA[
 SimStatistics.cumulativeResponseTime.getValue() + evt.getOccurrenceTime() - pwq.getItem().getArrivalTime()
-            ]]></ValueExpr>
+                        ]]></ValueExpr>
 						</UpdateStatisticsVariable>
 						<RemoveObjectFromCollection collectionName="PickupWindowQueue" destroyObject="true"/>
 						<UpdateObject objectVariable="q2">
@@ -1187,19 +1197,18 @@ mes.getHamburgerType()
 					<UPDATE-ENV>
 						<UpdateStatisticsVariable variable="revenue">
 							<ValueExpr language="Java"><![CDATA[
-SimStatistics.revenue.getValue() + (float)k.burgPrice((int)hamburgerType)
-						]]></ValueExpr>
+SimStatistics.revenue.getValue() + ( float)k.burgPrice(( int) hamburgerType)
+						   ]]></ValueExpr>
 						</UpdateStatisticsVariable>
 					</UPDATE-ENV>
 					<SCHEDULE-EVT>
 						<InMessageEventExpr messageType="AskOrderNo" senderIdRef="2">
 							<Condition language="Java"><![CDATA[
 pwq.size() > 0  && (( Customer)pwq.getItem()).getId() == custID && (( Customer)pwq.getItem()).isWaitingForOrderToArrive()
-              ]]></Condition>
+              				]]></Condition>
 							<ReceiverIdRef language="Java">custID</ReceiverIdRef>
 						</InMessageEventExpr>
-						<InMessageEventExpr messageType="OrderPrepared" receiverIdRefs="2"
-							senderIdRef="5">
+						<InMessageEventExpr messageType="OrderPrepared" receiverIdRefs="2" senderIdRef="5">
 							<Slot property="orderNo">
 								<ValueExpr language="Java"><![CDATA[
 mes.getOrderNo()
@@ -1248,17 +1257,11 @@ mes.getHamburgerType()
 					<UPDATE-ENV>
 						<UpdateStatisticsVariable variable="revenue">
 							<ValueExpr language="Java"><![CDATA[
-SimStatistics.revenue.getValue() + (float)k.burgPrice((int)hamburgerType)
+SimStatistics.revenue.getValue() + ( float)k.burgPrice(( int) hamburgerType)
 						]]></ValueExpr>
 						</UpdateStatisticsVariable>
 					</UPDATE-ENV>
 					<SCHEDULE-EVT>
-						<InMessageEventExpr messageType="AskOrderNo" senderIdRef="2">
-							<Condition language="Java"><![CDATA[
-pwq.size() > 0  && (( Customer)pwq.getItem()).getId() == custID && (( Customer)pwq.getItem()).isWaitingForOrderToArrive()
-                           ]]></Condition>
-							<ReceiverIdRef language="Java">custID</ReceiverIdRef>
-						</InMessageEventExpr>
 						<InMessageEventExpr messageType="AnticipatedOrder" receiverIdRefs="2" senderIdRef="1">
 							<Slot property="orderNo">
 								<ValueExpr language="Java"><![CDATA[
@@ -1311,11 +1314,11 @@ t.getUnloadingTime()
 					</SCHEDULE-EVT>
 				</DO>
 			</EnvironmentRule>
-			<!-- ======================================== -->
+			<!-- ============================================= -->
 			<EnvironmentRule name="UpdateIngredientsStock_Rule">
-				<!-- ======================================= -->	
+				<!-- =========================================== -->	
 				<documentation>
-					<description> </description>
+					<description>The ingredients stock of the kitchen is filled in with the ingredients brought by the truck.</description>
 				</documentation>
 				<WHEN eventType="UpdateIngredientsStock"/>
 				<FOR objectVariable="k" objectType="Kitchen" objectIdRef="5" />
@@ -1368,9 +1371,9 @@ k.getTomatoQuantity() + t.getQuantityPerIngredient()
 				</DO>
 			</EnvironmentRule>
 			<!-- ================================================ -->
-			<EnvironmentRule name="EmptyTheTrayEvery15Min_Rule">
+			<EnvironmentRule name="EmptyTheTrayEvery2Hours_Rule">
 				<!-- ================================================ -->
-				<WHEN eventType="EmptyTheTrayEvery15Min" eventVariable="evt" />
+				<WHEN eventType="EmptyTheTrayEvery2Hours" eventVariable="evt" />
 				<FOR objectVariable="pw" objectType="PickupWindow" objectIdRef="2" />
 				<FOR objectVariable="k" objectType="Kitchen" objectIdRef="5" />
 				<FOR objectVariable="q4" objectType="Queue" objectIdRef="12" />
@@ -1378,8 +1381,8 @@ k.getTomatoQuantity() + t.getQuantityPerIngredient()
 					<UPDATE-ENV>
 						<UpdateStatisticsVariable variable="lostRevenue">
 							<ValueExpr language="Java"><![CDATA[
-SimStatistics.lostRevenue.getValue() + (float)k.burgPrice(0) * pw.getHamburgerOnTheTray() + (float)k.burgPrice(1) * pw.getCheeseburgerOnTheTray() + (float)k.burgPrice(2) * pw.getSaladOnTheTray() + (float)k.burgPrice(3) * pw.getSuperOnTheTray()
-						]]></ValueExpr>
+SimStatistics.lostRevenue.getValue() + ( float)k.burgPrice(0) * pw.getHamburgerOnTheTray() + ( float)k.burgPrice(1) * pw.getCheeseburgerOnTheTray() + ( float)k.burgPrice(2) * pw.getSaladOnTheTray() + ( float)k.burgPrice(3) * pw.getSuperOnTheTray()
+								]]></ValueExpr>
 						</UpdateStatisticsVariable>
 						<UpdateObject objectVariable="pw">
 							<Slot property="hamburgerOnTheTray" value="0" />
@@ -1392,7 +1395,11 @@ SimStatistics.lostRevenue.getValue() + (float)k.burgPrice(0) * pw.getHamburgerOn
 						</UpdateObject>
 					</UPDATE-ENV>
 					<SCHEDULE-EVT>
-						<CausedEventExpr eventType="RefillTheTray" />
+						<CausedEventExpr eventType="RefillTheTray" >
+							<Delay>
+								<ValueExpr language="Java">Global.twoDice(8)</ValueExpr>
+							</Delay>
+						</CausedEventExpr>
 					</SCHEDULE-EVT>
 				</DO>
 			</EnvironmentRule>
@@ -1407,18 +1414,18 @@ SimStatistics.lostRevenue.getValue() + (float)k.burgPrice(0) * pw.getHamburgerOn
 				<DO>
 					<UPDATE-ENV>
 						<Create>
-							<Object  objectVariable="h" type="Hamburger" addToCollection="PWTray" />
-							<Object  objectVariable="h1" type="Hamburger" addToCollection="PWTray" />
-							<Object  objectVariable="h2" type="Hamburger" addToCollection="PWTray" />
-							<Object  objectVariable="c" type="Cheeseburger" addToCollection="PWTray" />
-							<Object  objectVariable="c1" type="Cheeseburger" addToCollection="PWTray" />
-							<Object  objectVariable="c2" type="Cheeseburger" addToCollection="PWTray" />
-							<Object  objectVariable="s" type="Salad" addToCollection="PWTray" />
-							<Object  objectVariable="s1" type="Salad" addToCollection="PWTray" />
-							<Object  objectVariable="s2" type="Salad" addToCollection="PWTray" />
-							<Object  objectVariable="sh" type="SuperHamburger" addToCollection="PWTray" />
-							<Object  objectVariable="sh1" type="SuperHamburger" addToCollection="PWTray" />
-							<Object  objectVariable="sh2" type="SuperHamburger" addToCollection="PWTray" />
+							<Object objectVariable="h" type="Hamburger" addToCollection="PWTray" />
+							<Object objectVariable="h1" type="Hamburger" addToCollection="PWTray" />
+							<Object objectVariable="h2" type="Hamburger" addToCollection="PWTray" />
+							<Object objectVariable="c" type="Cheeseburger" addToCollection="PWTray" />
+							<Object objectVariable="c1" type="Cheeseburger" addToCollection="PWTray" />
+							<Object objectVariable="c2" type="Cheeseburger" addToCollection="PWTray" />
+							<Object objectVariable="s" type="Salad" addToCollection="PWTray" />
+							<Object objectVariable="s1" type="Salad" addToCollection="PWTray" />
+							<Object objectVariable="s2" type="Salad" addToCollection="PWTray" />
+							<Object objectVariable="sh" type="SuperHamburger" addToCollection="PWTray" />
+							<Object objectVariable="sh1" type="SuperHamburger" addToCollection="PWTray" />
+							<Object objectVariable="sh2" type="SuperHamburger" addToCollection="PWTray" />
 						</Create>
 						<UpdateObject objectVariable="pw">
 							<Slot property="hamburgerOnTheTray" value="3" />
@@ -1741,7 +1748,7 @@ evt.getOccurrenceTime() + quantity
 				<documentation>
 					<description>Kitchen creates the requested super hamburgers.</description>
 				</documentation>
-				<WHEN eventType="KitchenCreatesCustomerOrder"  eventVariable="evt"/>
+				<WHEN eventType="KitchenCreatesCustomerOrder" eventVariable="evt"/>
 				<FOR dataVariable="quantity" dataType="Integer">
 					<ValueExpr language="Java">evt.getHamburgerQuantity()</ValueExpr>
 				</FOR>
@@ -1800,7 +1807,6 @@ evt.getOccurrenceTime() + quantity
 					</UPDATE-ENV>
 				</THEN>
 			</EnvironmentRule>
-			
 		</EnvironmentRules>
 		<Collections>
 			<Collection itemType="Customer" type="FIFO_QUEUE" name="MenuBoardQueue" id="3" />
@@ -1880,7 +1886,7 @@ evt.getOccurrenceTime() + quantity
 		<!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->
 		<ExogenousEvent type="TruckArrival" occurrenceTime="480" />
 		<!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->
-		<ExogenousEvent type="EmptyTheTrayEvery15Min" occurrenceTime="15" />
+		<ExogenousEvent type="EmptyTheTrayEvery2Hours" occurrenceTime="120" />
 		<!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->
 	</InitialState>
 	<!-- =================================================== -->
@@ -2069,7 +2075,7 @@ evt.getOccurrenceTime() + quantity
 				<ObjectView objectType="Queue" objectIdRef="9">
 				<!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->
 					<Shape2D x="400px" y="400px">
-						<Rectangle positioning="LeftCenter" fill="orange" height="10" width="1" stroke="black" strokeWidth="2">
+						<Rectangle positioning="LeftCenter" fill="orange" height="5" width="1" stroke="black" strokeWidth="2">
 							<ShapePropertyMap shapeProperty="width" property="lengthOfQueue" mapType="polynomial" a0="0" a1="30"/>
 						</Rectangle>
 					</Shape2D>
@@ -2079,8 +2085,8 @@ evt.getOccurrenceTime() + quantity
 				<ObjectView objectType="Queue" objectIdRef="12">
 				<!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->
 					<Shape2D x="200px" y="200px">
-						<Rectangle positioning="LeftCenter" fill="orange" height="10" width="1" stroke="black" strokeWidth="2">
-							<ShapePropertyMap shapeProperty="width" property="lengthOfQueue" mapType="polynomial" a0="0" a1="30"/>
+						<Rectangle positioning="LeftCenter" fill="orange" height="5" width="1" stroke="black" strokeWidth="2">
+							<ShapePropertyMap shapeProperty="width" property="lengthOfQueue" mapType="polynomial" a0="0" a1="10"/>
 						</Rectangle>
 					</Shape2D>
 					<DisplayInfo content="burgers on the Tray" property="lengthOfQueue" />
