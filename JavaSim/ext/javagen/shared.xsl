@@ -1207,7 +1207,7 @@
 
   <xsl:template match="aorsml:PeriodicTimeEvent" mode="shared.helper.initAgentSubject.PeriodicTimeEvent">
     <xsl:param name="indent" as="xs:integer" required="yes"/>
-    <xsl:param name="objPosition" as="xs:positiveInteger" required="yes"/>
+    <xsl:param name="objPosition" as="xs:integer" required="yes"/>
     <xsl:param name="objNode" as="element()" required="yes"/>
     <xsl:param name="varName" as="xs:string" required="yes"/>
 
