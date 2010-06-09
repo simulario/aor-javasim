@@ -25,23 +25,16 @@
 
     <EntityTypes>
 
-      <!--MessageType name="Hello">
-        <Attribute name="message" type="String"/>
-      </MessageType-->
-
-      <!-- The vehicle perceive its speed -->
-      <!--PerceptionEventType name="UpdateVelocityBelief">
-        <Attribute name="velocity" type="Float"/>
-        </PerceptionEventType-->
+      <ActionEventType name="Accelerate">
+        <Attribute name="velocity" type="Integer"/>        
+      </ActionEventType>
 
       <!-- Vehicle speed up event -->
-      <ActionEventType name="SpeedUp">
-        <Attribute name="velocity" type="Integer"/>
+      <ActionEventType name="SpeedUp" superType="Accelerate">
       </ActionEventType>
 
       <!-- Vehicle slow down event -->
-      <ActionEventType name="SlowDown">
-        <Attribute name="velocity" type="Integer"/>
+      <ActionEventType name="SlowDown" superType="Accelerate">
       </ActionEventType>
 
       <PhysicalObjectType name="SpeedLimitSign">
@@ -56,61 +49,11 @@
 
       <!-- ========================== The vehicle agent ====================== -->
       <PhysicalAgentType name="Vehicle" autoPerception="true" memorySize="0">
-        <SelfBeliefAttribute type="String" name="receivedMessage"/>
         <SelfBeliefAttribute name="maxVelocity" type="Integer"/>
         <SelfBeliefAttribute name="speedLimit" type="Integer" initialValue="0"/>
         <SelfBeliefAttribute name="myVelocity" type="Integer" initialValue="0"/>
-
-        <ReactionRule name="SpeedLimitStart_Rule" agentVariable="vehicle" useActionRules="true">
-          <documentation>
-            <dc:description>
-              When a vehicle perceives a speed limit sign, it decreases its
-              velocity to the admissible maximum velocity prescribed by the
-              sign.
-            </dc:description>
-          </documentation>
-          <WHEN eventType="PhysicalObjectPerceptionEvent" physicalObjectType="SpeedLimitSign" eventVariable="e"/>
-          <DO>
-            <UPDATE-AGT>
-              <SelfBeliefSlot property="speedLimit">
-                <ValueExpr language="Java">((SpeedLimitSign)e.getPerceivedPhysicalObject()).getAdmMaxVelocity()</ValueExpr>
-              </SelfBeliefSlot>
-            </UPDATE-AGT>
-          </DO>
-          <IF language="Java">
-            <![CDATA[
-              vehicle.getMyVelocity() > ((SpeedLimitSign) e.getPerceivedPhysicalObject()).getAdmMaxVelocity()
-            ]]>
-          </IF>
-          <THEN>
-            <SCHEDULE-EVT>
-              <ActionEventExpr actionEventType="SlowDown">
-                <Slot property="velocity">
-                  <ValueExpr language="Java">
-                    <![CDATA[
-                      vehicle.getMyVelocity() - ((SpeedLimitSign) e.getPerceivedPhysicalObject()).getAdmMaxVelocity()
-                    ]]>
-                  </ValueExpr>
-                </Slot>
-              </ActionEventExpr>
-            </SCHEDULE-EVT>
-          </THEN>
-        </ReactionRule>
-
-        <ReactionRule name="SpeedLimitEnd_Rule" agentVariable="vehicle">
-          <documentation>
-            <dc:description> When a vehicle perceives a speed limit cancelation sign, it increases
-              its velocity until its maximum velocity. </dc:description>
-          </documentation>
-          <WHEN eventType="PhysicalObjectPerceptionEvent" physicalObjectType="SpeedLimitCancelationSign" eventVariable="e"/>
-          <DO>
-            <UPDATE-AGT>
-              <SelfBeliefSlot property="speedLimit" value="0"/>
-            </UPDATE-AGT>
-          </DO>
-        </ReactionRule>
-
-        <ReactionRule name="SpeedUp_Rule" agentVariable="vehicle" useActionRules="true">
+        
+        <ReactionRule name="SpeedUp_Rule" agentVariable="vehicle" useActionRules="true" actionRuleEvaluation="all-or-nothing">
           <documentation>
             <dc:description>
               No speed limit in this area, so increase the speed.
@@ -131,19 +74,62 @@
             </SCHEDULE-EVT>
           </THEN>
         </ReactionRule>
-
-        <!--ReactionRule name="ReceivedMessage_Rule" agentVariable="vehicle">
-          <WHEN eventType="InMessageEvent" messageType="Hello" messageVariable="m"/>
+        
+        <ReactionRule name="SpeedLimitStart_Rule" agentVariable="vehicle" useActionRules="true">
+          <documentation>
+            <dc:description>
+              When a vehicle perceives a speed limit sign, it decreases its
+              velocity to the admissible maximum velocity prescribed by the
+              sign.
+            </dc:description>
+          </documentation>
+          <WHEN eventType="PhysicalObjectPerceptionEvent" physicalObjectType="SpeedLimitSign" eventVariable="e"/>
           <DO>
             <UPDATE-AGT>
-              <SelfBeliefSlot property="receivedMessage">
-                <ValueExpr language="Java">m.getMessage()</ValueExpr>
+              <SelfBeliefSlot property="speedLimit">
+                <ValueExpr language="Java">((SpeedLimitSign)e.getPerceivedPhysicalObject()).getAdmMaxVelocity()</ValueExpr>
               </SelfBeliefSlot>
             </UPDATE-AGT>
           </DO>
-        </ReactionRule-->
+        </ReactionRule>
         
-        <ActionRule actionEventType="SlowDown" eventVariable="e" agentVariable="vehicle">
+        <ReactionRule name="SlowDown_Rule" agentVariable="vehicle" useActionRules="true" actionRuleEvaluation="as-much-as-possible">
+          <ON-EACH-SIMULATION-STEP/>
+          <IF language="Java">
+            <![CDATA[
+              vehicle.getSpeedLimit() > 0 &&
+              vehicle.getMyVelocity() > vehicle.getSpeedLimit()
+            ]]>
+          </IF>
+          <THEN>
+            <SCHEDULE-EVT>
+              <ActionEventExpr actionEventType="SlowDown">
+                <Slot property="velocity">
+                  <ValueExpr language="Java">
+                    <![CDATA[
+                      vehicle.getMyVelocity() - vehicle.getSpeedLimit()
+                    ]]>                    
+                  </ValueExpr>
+                </Slot>
+              </ActionEventExpr>
+            </SCHEDULE-EVT>
+          </THEN>
+        </ReactionRule>
+
+        <ReactionRule name="SpeedLimitEnd_Rule" agentVariable="vehicle" useActionRules="true" actionRuleEvaluation="as-much-as-possible">
+          <documentation>
+            <dc:description> When a vehicle perceives a speed limit cancelation sign, it increases
+              its velocity until its maximum velocity. </dc:description>
+          </documentation>
+          <WHEN eventType="PhysicalObjectPerceptionEvent" physicalObjectType="SpeedLimitCancelationSign" eventVariable="e"/>
+          <DO>
+            <UPDATE-AGT>
+              <SelfBeliefSlot property="speedLimit" value="0"/>
+            </UPDATE-AGT>
+          </DO>
+        </ReactionRule>
+                
+        <ActionRule actionEventType="SlowDown" eventVariable="e" agentVariable="vehicle" inheritanceMethod="disjunctive">
           <IF language="Java">
             <![CDATA[
               (vehicle.getMyVelocity() - e.getVelocity()) >= 0
@@ -170,7 +156,7 @@
           </ELSE>
         </ActionRule>
         
-        <ActionRule actionEventType="SpeedUp" eventVariable="e" agentVariable="vehicle">
+        <ActionRule actionEventType="SpeedUp" eventVariable="e" agentVariable="vehicle" inheritanceMethod="disjunctive">
           <IF language="Java">
             <![CDATA[
               (vehicle.getMyVelocity() + e.getVelocity()) <= vehicle.getMaxVelocity()
@@ -195,44 +181,13 @@
               </SelfBeliefSlot>
             </UPDATE-AGT>
           </ELSE>
-        </ActionRule>
-        
+        </ActionRule>        
       </PhysicalAgentType>
 
       <!-- ========================== The car agent ====================== -->
       <PhysicalAgentType name="Car" superType="Vehicle" autoPerception="true">
         <InitialAttributeValue attribute="perceptionRadius" value="50"/>
-        <InitialAttributeValue attribute="width" value="10"/>
-        <SelfBeliefAttribute type="String" name="sentMessage"/>
-        
-        <ActionRule actionEventType="SlowDown"/>
-        
-        <!--OutMessageRule messageType="Hello" messageVariable="m">
-          <DO>
-            <UPDATE-MSG>
-              <Slot property="message">
-                <ValueExpr language="Java">m.getMessage() + " Go Faster!"</ValueExpr>
-              </Slot>
-            </UPDATE-MSG>
-            <UPDATE-AGT>
-              <SelfBeliefSlot property="sentMessage">
-                <ValueExpr language="Java">m.getMessage()</ValueExpr>
-              </SelfBeliefSlot>
-            </UPDATE-AGT>
-          </DO>
-        </OutMessageRule-->
-        <!--ReactionRule name="SendMessageRule" agentVariable="car" useActionAndOutMessageRules="true">
-          <WHEN eventType="PhysicalObjectPerceptionEvent" physicalObjectType="Vehicle" eventVariable="e"/>
-          <DO>
-            <SCHEDULE-EVT>
-              <OutMessageEventExpr messageType="Hello">
-                <ReceiverIdRef language="Java">e.getId()</ReceiverIdRef>
-                <ReceiverIdRef language="JavaScript">this.e.getId()</ReceiverIdRef>
-                <Slot property="message" value="Hello Friend!"/>
-              </OutMessageEventExpr>
-            </SCHEDULE-EVT>
-          </DO>
-        </ReactionRule-->
+        <InitialAttributeValue attribute="width" value="10"/>        
       </PhysicalAgentType>
 
       <!-- ========================= The agent Truck ======================= -->
@@ -257,20 +212,6 @@
               </SelfBeliefSlot>
             </UPDATE-AGT>
           </DO>
-          <IF language="Java">
-            <![CDATA[
-              truck.getMyVelocity() > ((TruckSpeedLimitSign) e.getPerceivedPhysicalObject()).getAdmMaxVelocity()
-            ]]>
-          </IF>
-          <THEN>
-            <SCHEDULE-EVT>
-              <ActionEventExpr actionEventType="SlowDown">
-                <Slot property="velocity">
-                  <ValueExpr language="Java">truck.getMyVelocity() - ((TruckSpeedLimitSign)e.getPerceivedPhysicalObject()).getAdmMaxVelocity()</ValueExpr>
-                </Slot>
-              </ActionEventExpr>
-            </SCHEDULE-EVT>
-          </THEN>
         </ReactionRule>
       </PhysicalAgentType>
     </EntityTypes>
@@ -409,7 +350,7 @@
         </EventAppearance>
       </Views>
       <AgentControlUI>
-        <ControllableAgentType type="Car" suspendRules="SpeedUp_Rule SlowDown_Rule">
+        <ControllableAgentType type="Car" controllableAgents="1 4 5 6 7" suspendRules="SpeedUp_Rule SlowDown_Rule">
           <ControlInterface>
             <Style type="text/css">
               <![CDATA[
@@ -508,6 +449,37 @@
 								</li>
 							</ul>
             </Structure>
+            <Structure xml:lang="de">
+              <h1>Eigenschaften</h1>
+              <ul>
+                <li>
+                  <label>Geschwindigkeitsbgrenzung</label>
+                  <textfield property="speedLimit" readonly="true" type="Integer"/>
+                </li>
+                <li>
+                  <label>Maximalgeschwindigkeit</label>
+                  <textfield property="maxVelocity" readonly="true" type="Integer"/>
+                </li>
+                <li>
+                  <label>aktuelle Geschwindigkeit</label>
+                  <textfield property="myVelocity" readonly="true" type="Integer"/>
+                </li>
+              </ul>
+              <h1>Handlungen</h1>
+              <ul>
+                <li>
+                  <div>
+                    <label>Geschwindigkeit ändern um</label>
+                    <slider property="__speed" minValue="0" maxValue="10" initialValue="5" type="Integer"/>
+                    <textfield property="__speed" initialValue="5" type="Integer"  name="speed"/>
+                  </div>
+                  <div>
+                    <button title="Beschleunigen" name="SpeedUp"/>
+                    <button title="Verlangsamen" name="SlowDown"/>
+                  </div>
+                </li>
+              </ul>
+            </Structure>
           </ControlInterface>
           <ControlRules>
             <UserInterfaceEventListener name="SpeedUp" interfaceVariable="gui">
@@ -523,7 +495,7 @@
                 </SCHEDULE-EVT>
               </DO>
             </UserInterfaceEventListener>
-            <UserInterfaceEventListener name="SlowDown" interfaceVariable="gui">
+            <UserInterfaceEventListener name="SlowDown" interfaceVariable="gui" actionRuleEvaluation="until-1st-fail">
               <WHEN>
                 <KeyboardEvent keyIdentifier="Down"/>
                 <MouseEvent mouseEventType="click" targetName="SlowDown"/>
