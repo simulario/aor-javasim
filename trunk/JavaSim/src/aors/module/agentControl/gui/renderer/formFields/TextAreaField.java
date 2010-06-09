@@ -1,12 +1,13 @@
 package aors.module.agentControl.gui.renderer.formFields;
 
 import aors.module.agentControl.gui.interaction.EventMediator;
+import aors.module.agentControl.gui.interaction.Receiver;
+import aors.module.agentControl.gui.interaction.Sender;
 import aors.module.agentControl.gui.renderer.AORSForm;
 import java.awt.Dimension;
 import java.awt.FontMetrics;
 import java.awt.Insets;
 import java.beans.PropertyChangeEvent;
-import java.beans.PropertyChangeListener;
 import javax.swing.JComponent;
 import javax.swing.JScrollPane;
 import javax.swing.JTextArea;
@@ -29,8 +30,7 @@ import org.xhtmlrenderer.render.BlockBox;
 import org.xhtmlrenderer.simple.extend.form.FormFieldState;
 import org.xhtmlrenderer.util.GeneralUtil;
 
-class TextAreaField extends FormField<JComponent> implements
-	PropertyChangeListener {
+class TextAreaField extends FormField<JComponent> implements Receiver {
 
 	private JTextArea _textarea;
 
@@ -196,11 +196,11 @@ class TextAreaField extends FormField<JComponent> implements
 			this._textarea.setText(evt.getNewValue().toString());
 		}
 	}
-
-	@Override
+@Override
 	protected void registerWithMediator() {
-		mediator.addReceiver(getAttribute("slot"), this, this.getValue());
-		mediator.addSender(getAttribute("name"), this);
+		mediator.addReceiver(getAttribute(Receiver.RECEIVER_ATTRIBUTE), this,
+			this.getValue());
+		mediator.addSender(getAttribute(Sender.SENDER_ATTRIBUTE), this);
 		_textarea.getDocument().addDocumentListener(new DocumentListener() {
 
 			@Override
@@ -220,7 +220,7 @@ class TextAreaField extends FormField<JComponent> implements
 
 			private void notifyMediator() {
 				mediator.propertyChange(new PropertyChangeEvent(TextAreaField.this,
-					getAttribute("name"), null, TextAreaField.this.getValue()));
+					getAttribute(Receiver.RECEIVER_ATTRIBUTE), null, TextAreaField.this.getValue()));
 			}
 		});
 	}

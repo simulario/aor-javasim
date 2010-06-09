@@ -9,6 +9,7 @@ import aors.module.agentControl.gui.views.ControlView;
 import aors.module.agentControl.gui.views.DefaultView;
 import aors.module.agentControl.gui.views.SelectionView;
 import aors.module.agentControl.gui.views.View;
+import java.io.FileNotFoundException;
 import java.util.Map;
 import javax.swing.JScrollPane;
 
@@ -50,6 +51,8 @@ public class GUIController extends JScrollPane implements GUIModule {
 	 * The agent controller for the controlled agent.
 	 */
 	private AgentController controlledAgentController;
+
+	private String controlViewLanguage;
 
 	/*******************************************************/
 	/*** Constructor and methods inherite from GUIModule ***/
@@ -167,8 +170,11 @@ public class GUIController extends JScrollPane implements GUIModule {
 
 		// creates a new control view if necessary
 		if(this.controlView == null) {
-			this.controlView = new ControlView(this.controlledAgentController,
-				this.moduleController.getProjectPath());
+			try {
+				this.controlView = new ControlView(this.controlledAgentController,
+					this.moduleController.getProjectPath(), this.controlViewLanguage);
+			} catch(FileNotFoundException e) {
+			}
 		}
 
 		// if the control view is available, show it
@@ -209,13 +215,15 @@ public class GUIController extends JScrollPane implements GUIModule {
 	 * Sets the controlled agent's controller based on the agent's id and shows
 	 * the corresponding control view.
 	 * @param id
+	 * @param lang
 	 */
-	public void setControlledAgentController(long id) {
+	public void setControlledAgentController(long id, String lang) {
 		if(this.moduleController != null) {
 			Map<Long, CoreAgentController> agentControllers =	this.moduleController.
 				getAgentControllers();
 			if(agentControllers != null) {
 				this.controlledAgentController = new AgentController(agentControllers.get(id));
+				this.controlViewLanguage = lang;
 				this.showControlView();
 			}
 		}

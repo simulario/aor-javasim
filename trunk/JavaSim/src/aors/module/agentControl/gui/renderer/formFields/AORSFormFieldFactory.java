@@ -39,9 +39,6 @@ public class AORSFormFieldFactory {
     if (typeKey.equals("textfield")) {
       return new TextField(e, form, context, box, mediator);
     }
-		if(typeKey.equals("visualization")) {
-			return new VizualisationField(e, form, context, box, mediator);
-		}
     return FormFieldFactory.create(form, context, box);
   }
 }

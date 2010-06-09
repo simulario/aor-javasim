@@ -64,6 +64,7 @@ import aors.model.intevt.PeriodicTimeEvent;
 import aors.query.sparql.QueryEngine;
 import aors.util.Constants;
 import aors.util.JsonData;
+import java.util.Arrays;
 import java.util.HashSet;
 import java.util.Set;
 
@@ -1525,6 +1526,10 @@ public abstract class AgentSubject extends Entity implements Rollbackable {
 		 */
 		private Map<String, Set<Pair<String, String>>> mouseEvents;
 
+		private Set<String> UILanguages;
+
+		private String defaultUILanguage;
+
 		/*******************/
 		/*** constructor ***/
 		/*******************/
@@ -1532,18 +1537,26 @@ public abstract class AgentSubject extends Entity implements Rollbackable {
 		/**
 		 * Instantiates the abstract part of the core side agent conroller.
 		 * When this part is instantiated the {@link AgentControlBroker} will notify
-		 * the agent control module about this new controller.
+		 * the agent control module about this new controller if and only if the
+		 * agent's id is contains in the array of controllable agents or if the
+		 * array is empty.
 		 * @param agentSubject
+		 * @param controllableAgents
 		 */
-    protected AgentController(AgentSubject agentSubject) {
+    protected AgentController(AgentSubject agentSubject,
+			Long[] controllableAgents) {
       this.agentSubject = agentSubject;
       this.moduleAgentController = null;
 			this.agentIsControlled = false;
 			this.suspendedRules = new HashSet<String>();
 			this.keyEvents = new HashSet<Pair<String, String>>();
 			this.mouseEvents = new HashMap<String, Set<Pair<String, String>>>();
-			System.out.println("AgentSubject.AgentController.init: " + this);
-			AgentControlBroker.getInstance().agentControllerInitialized(this);
+			if((controllableAgents == null) || (controllableAgents.length == 0) ||
+				(Arrays.binarySearch(controllableAgents, this.getAgentId()) >= 0)) {
+				AgentControlBroker.getInstance().agentControllerInitialized(this);
+			}
+			this.UILanguages = new HashSet<String>();
+			this.defaultUILanguage = null;
     }
 
 		/***********************************************************/
@@ -1632,6 +1645,14 @@ public abstract class AgentSubject extends Entity implements Rollbackable {
 			}
 		}
 
+		public Set<String> getUILanguages() {
+			return this.UILanguages;
+		}
+
+		public String getDefaultUILanguage() {
+			return this.defaultUILanguage;
+		}
+
 		/************************************************************************/
 		/*** methods that are just used by the concrete core agent controller ***/
 		/************************************************************************/
@@ -1653,5 +1674,12 @@ public abstract class AgentSubject extends Entity implements Rollbackable {
 
 		protected abstract InternalEvent createEvent(	String eventName,
 			Map<String, String> eventData);
-  }
+
+		protected void addUILanguage(String language) {
+			this.UILanguages.add(language);
+			if(this.defaultUILanguage == null) {
+				this.defaultUILanguage = language;
+			}
+		}
+	}
 }

@@ -4,9 +4,13 @@ import aors.model.agtsim.proxy.agentcontrol.CoreAgentController;
 import aors.module.agentControl.gui.GUIController;
 import aors.module.agentControl.gui.interaction.EventMediator;
 import aors.model.agtsim.proxy.agentcontrol.Pair;
+import aors.model.dataTypes.AORSInteger;
+import aors.model.dataTypes.AORSString;
+import aors.module.agentControl.gui.interaction.Sender;
 import aors.module.agentControl.gui.renderer.AORSPanel;
 import aors.module.agentControl.gui.renderer.AORSReplacedElementFactory;
 import java.beans.PropertyChangeEvent;
+import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
 import org.jdom.Attribute;
@@ -50,17 +54,16 @@ public class SelectionView extends InteractiveView<AORSPanel> {
 			"text-align: center; " +
 			"background-color:silver;");
 
-		//heading
-		Element heading = new Element("h1").addContent("Agent Selection");
-		body.addContent(heading);
+		// heading
+		body.addContent(new Element("h1").addContent("Agent Selection"));
 
 		//explaination
-		Element explaination = new Element("p").addContent("Please select the " +
-			"agent you want to control from the table below.");
-		body.addContent(explaination);
+		body.addContent(new Element("p").addContent("Please select the " +
+			"agent you want to control from the table below."));
 
 		//table containing controllable agents
-		Element tableWrapper = new Element("div").setAttribute("style", "display: inline-block;");
+		Element tableWrapper = new Element("div").setAttribute("style",
+			"display: inline-block;");
 		Element table = new Element("table").setAttribute("style",
 			"margin: auto;" +
 			"border: 1px solid black; " +
@@ -86,6 +89,8 @@ public class SelectionView extends InteractiveView<AORSPanel> {
 			setAttribute((Attribute)headCellStyle.clone()));
 		headRow.addContent(new Element("th").addContent("type").
 			setAttribute((Attribute)headCellStyle.clone()));
+		headRow.addContent(new Element("th").addContent("language").
+			setAttribute((Attribute)headCellStyle.clone()));
 
 		table.addContent(headRow);
 
@@ -98,23 +103,39 @@ public class SelectionView extends InteractiveView<AORSPanel> {
 		for(long agentId : controllableAgents.keySet()) {
 			coreAgentController = controllableAgents.get(agentId);
 
+			String defaultLanguage = coreAgentController.getDefaultUILanguage();
+
 			Element dataRow = new Element("tr");
 			Attribute style = dataStyle;
 
-			Element radioButton = new Element("td").addContent(
-				new Element("radiobutton").setAttribute("name", "controlledAgentId").
-				setAttribute("slot", "controlledAgentId").
-				setAttribute("value", String.valueOf(agentId)).
-				setAttribute("style", "display: block; margin: auto;"));
+			Element button = new Element("td").addContent(
+				new Element("button").setAttribute("name", "select").
+				setAttribute("title", "take control"));
 
-			dataRow.addContent(new Element("td").addContent(radioButton).
+			dataRow.addContent(new Element("td").addContent(button).
 				setAttribute((Attribute)style.clone()));
 			dataRow.addContent(new Element("td").addContent(coreAgentController.getAgentName()).
 				setAttribute((Attribute)style.clone()));
 			dataRow.addContent(new Element("td").addContent(
-				String.valueOf(agentId)).setAttribute((Attribute)style.clone()));
+				new Element("textfield").setAttribute("name", "id").setAttribute(
+				"initialValue", String.valueOf(agentId)).setAttribute("readonly", "true").
+				setAttribute("style", "display: inline-block;").setAttribute("type",
+				"Integer")).setAttribute((Attribute)style.clone()));
 			dataRow.addContent(new Element("td").addContent(
 				coreAgentController.getAgentType()).setAttribute((Attribute)style.clone()));
+
+			Element langSelection = new Element("select");
+			langSelection.setAttribute("name", "lang").setAttribute("type", "String");
+			for(String lang : coreAgentController.getUILanguages()) {
+				Element option = new Element("option").setAttribute("value",
+					lang).addContent(lang);
+				if(lang.equals(defaultLanguage)) {
+					option.setAttribute("selected", "selected");
+				}
+				langSelection.addContent(option);
+			}
+			dataRow.addContent(new Element("td").addContent(langSelection).
+				setAttribute((Attribute)style.clone()));
 
 			table.addContent(dataRow);
 		}
@@ -129,19 +150,22 @@ public class SelectionView extends InteractiveView<AORSPanel> {
 
 	@Override
 	protected Set<Pair<String, String>> getMouseEvents(String senderName) {
+		if("select".equals(senderName)) {
+			Set<Pair<String, String>> events = new HashSet<Pair<String, String>>();
+			events.add(new Pair<String, String>("click", "select"));
+			return events;
+		}
 		return null;
 	}
 
 	@Override
 	public void propertyChange(PropertyChangeEvent evt) {
-		if("controlledAgentId".equals(evt.getPropertyName()) &&
-			evt.getNewValue() != null) {
-			try {
-				this.guiController.setControlledAgentController(Long.valueOf(evt.
-					getNewValue().toString()));
-			} catch(NumberFormatException e) {
-				e.printStackTrace();
-			}
+		if(evt != null && Sender.SEND_PROPERTY_NAME.equals(evt.getPropertyName()) &&
+			evt.getNewValue() instanceof Sender.ValueMap) {
+			Sender.ValueMap values = (Sender.ValueMap)evt.getNewValue();
+			this.guiController.setControlledAgentController(AORSInteger.valueOf(
+				values.get("id")).getValue(), AORSString.valueOf(values.get("lang")).
+				getValue());
 		}
 	}
 }

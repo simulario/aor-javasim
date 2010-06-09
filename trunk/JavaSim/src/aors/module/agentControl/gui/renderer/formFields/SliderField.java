@@ -1,9 +1,10 @@
 package aors.module.agentControl.gui.renderer.formFields;
 
 import aors.module.agentControl.gui.interaction.EventMediator;
+import aors.module.agentControl.gui.interaction.Receiver;
+import aors.module.agentControl.gui.interaction.Sender;
 import aors.module.agentControl.gui.renderer.AORSForm;
 import java.beans.PropertyChangeEvent;
-import java.beans.PropertyChangeListener;
 import java.util.Hashtable;
 import javax.swing.JLabel;
 import javax.swing.JSlider;
@@ -13,8 +14,7 @@ import org.w3c.dom.Element;
 import org.xhtmlrenderer.layout.LayoutContext;
 import org.xhtmlrenderer.render.BlockBox;
 
-class SliderField extends InputField<JSlider> implements
-	PropertyChangeListener {
+class SliderField extends InputField<JSlider> implements Receiver {
 
   public SliderField(Element e, AORSForm form, LayoutContext context,
     BlockBox box, EventMediator mediator) {
@@ -82,14 +82,16 @@ class SliderField extends InputField<JSlider> implements
 
 	@Override
 	protected void registerWithMediator() {
-    mediator.addReceiver(getAttribute("slot"), this, this.getValue());
-    mediator.addSender(getAttribute("name"), this);
+    mediator.addReceiver(getAttribute(Receiver.RECEIVER_ATTRIBUTE), this,
+			this.getValue());
+    mediator.addSender(getAttribute(Sender.SENDER_ATTRIBUTE), this);
     this.getComponent().addChangeListener(new ChangeListener() {
 
       @Override
       public void stateChanged(ChangeEvent e) {
         mediator.propertyChange(new PropertyChangeEvent(SliderField.this,
-          getAttribute("slot"), null, SliderField.this.getValue()));
+          getAttribute(Receiver.RECEIVER_ATTRIBUTE), null,
+					SliderField.this.getValue()));
       }
     });
 	}

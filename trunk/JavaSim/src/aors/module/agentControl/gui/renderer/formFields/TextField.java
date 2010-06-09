@@ -1,13 +1,14 @@
 package aors.module.agentControl.gui.renderer.formFields;
 
 import aors.module.agentControl.gui.interaction.EventMediator;
+import aors.module.agentControl.gui.interaction.Receiver;
+import aors.module.agentControl.gui.interaction.Sender;
 import aors.module.agentControl.gui.renderer.AORSForm;
 import java.awt.FontMetrics;
 import java.awt.Insets;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.beans.PropertyChangeEvent;
-import java.beans.PropertyChangeListener;
 import javax.swing.BorderFactory;
 import javax.swing.JTextField;
 import javax.swing.border.Border;
@@ -24,8 +25,7 @@ import org.xhtmlrenderer.layout.LayoutContext;
 import org.xhtmlrenderer.render.BlockBox;
 import org.xhtmlrenderer.util.GeneralUtil;
 
-class TextField extends InputField<JTextField> implements
-  PropertyChangeListener {
+class TextField extends InputField<JTextField> implements Receiver {
 
   public TextField(Element e, AORSForm form, LayoutContext context,
     BlockBox box, EventMediator mediator) {
@@ -170,14 +170,16 @@ class TextField extends InputField<JTextField> implements
 
 	@Override
 	protected void registerWithMediator() {
-    mediator.addReceiver(getAttribute("slot"), this, this.getValue());
-    mediator.addSender(getAttribute("name"), this);
+    mediator.addReceiver(getAttribute(Receiver.RECEIVER_ATTRIBUTE), this,
+			this.getValue());
+    mediator.addSender(getAttribute(Sender.SENDER_ATTRIBUTE), this);
 		this.getComponent().addActionListener(new ActionListener() {
 
       @Override
       public void actionPerformed(ActionEvent e) {
         mediator.propertyChange(new PropertyChangeEvent(TextField.this,
-          getAttribute("slot"), null, TextField.this.getValue()));
+          getAttribute(Receiver.RECEIVER_ATTRIBUTE), null,
+					TextField.this.getValue()));
       }
     });
 	}

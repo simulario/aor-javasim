@@ -4,6 +4,7 @@ import java.util.HashMap;
 
 public interface Sender extends InteractiveComponent {
 
+	public final static String SENDER_ATTRIBUTE = "name";
 	public final static String SEND_PROPERTY_NAME = "__send";
 
   public String getValue();
