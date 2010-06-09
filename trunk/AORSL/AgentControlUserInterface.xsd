@@ -703,7 +703,29 @@
       <xs:element name="UserInterfaceEventListener">
         <xs:complexType>
           <xs:sequence>
-            <xs:element name="WHEN" type="aors:UserInterfaceEventListenerTriggeringEvent.type"/>
+            <xs:element name="WHEN">
+              <xs:complexType>
+                <xs:complexContent>
+                  <xs:extension base="aors:UserInterfaceEventListenerTriggeringEvent.type0">
+                    <xs:choice>
+                      <xs:element name="MouseEvent">
+                        <xs:complexType>
+                          <xs:complexContent>
+                            <xs:restriction base="aors:MouseEvent.type">
+                              <xs:attribute name="targetType" type="aors:CanonicalName" use="prohibited"/>
+                              <xs:attribute name="targetIdRef" type="xs:long" use="prohibited"/>
+                              <xs:attribute name="targetName" type="xs:string" use="required"/>
+                              <xs:attribute name="mouseEventType" type="aors:MouseEventType.type" use="required"/>
+                              <xs:attribute name="eventVariable" type="aors:CanonicalName" use="prohibited"/>                          
+                            </xs:restriction>
+                          </xs:complexContent>
+                        </xs:complexType>
+                      </xs:element>                  
+                    </xs:choice>
+                  </xs:extension>
+                </xs:complexContent>
+              </xs:complexType>
+            </xs:element>
             <xs:element name="DO">
               <xs:complexType>
                 <xs:choice maxOccurs="unbounded">
@@ -718,5 +740,16 @@
         </xs:complexType>
       </xs:element>
     </xs:sequence>
+  </xs:complexType>
+  
+  <xs:complexType name="UserInterfaceEventListenerTriggeringEvent.type0">
+    <xs:complexContent>
+      <xs:restriction base="aors:UserInterfaceEventListenerTriggeringEvent.type">
+        <xs:choice maxOccurs="unbounded">
+          <xs:element ref="aors:KeyboardEvent"/>          
+          <xs:element ref="aors:MouseEvent" minOccurs="0" maxOccurs="0"/>
+        </xs:choice>
+      </xs:restriction>
+    </xs:complexContent>
   </xs:complexType>
 </xs:schema>
