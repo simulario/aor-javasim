@@ -718,6 +718,9 @@ return t.getQuantityPerIngredient() * (t.getHamburgerPrice() + t.getSpecialSouce
 				<FOR objectVariable="mb" objectType="MenuBoard" objectIdRef="1"/>
 				<FOR objectVariable="mbq" objectName="MenuBoardQueue" objectType="Collection" objectIdRef="3"/>
 				<FOR objectVariable="q1" objectType="Queue" objectIdRef="6"/>
+				<FOR dataVariable="cp" dataType="Integer">
+					<ValueExpr language="Java">Global.randomPatienceTime()</ValueExpr>
+				</FOR>
 				<IF language="Java"><![CDATA[
 mbq.size() >= mb.getMaxMenuBoardQL()
                ]]></IF>
@@ -746,16 +749,11 @@ evt.getOccurrenceTime()
 								</Slot>
 								<Slot property="patience">
 									<ValueExpr language="Java"><![CDATA[
-Global.randomPatienceTime()										
+cp										
 									]]></ValueExpr>
 								</Slot>
-								<!--
-								<ReminderEvent reminderMsg="PatienceExpired">
-								  <Delay>
-								    <ValueExpr language="Java">customer.getPatience()</ValueExpr>
-								  </Delay>
+								<ReminderEvent reminderMsg="PatienceExpired" type="ReminderEvent">
 								</ReminderEvent>
-								-->
 							</Agent>
 						</Create>
 						<UpdateObject objectVariable="q1">
@@ -987,7 +985,7 @@ mbq.size() > 0
 			<EnvironmentRule name="StartPickupWindowService_Rule">
 				<!-- ======================================================================-->
 				<documentation>
-					<description> On StartPickupWindowService, the pickupWindowBusy variable is set to true, and, when the customer's order has already arrived, an HereIsYourPizza message is created with appropriate delay. </description>
+					<description>On StartPickupWindowService, the pickupWindowBusy variable is set to true, and, when the customer's order has already arrived, an HereIsYourPizza message is created with appropriate delay. </description>
 				</documentation>
 				<WHEN eventType="StartPickupWindowService"/>
 				<FOR objectVariable="pw" objectType="PickupWindow" objectIdRef="2"/>
@@ -1062,7 +1060,7 @@ mbq.size() > 0
 			<EnvironmentRule name="EndPickupWindowServiceWhenQueueNotFull_Rule">
 				<!-- ==================================================================== -->
 				<documentation>
-					<description> On EndPickupWindowService, when the queue is not full, the current customer object is removed from the queue and destroyed. Furthermore, if the queue is empty, the pickup window is no longer busy. Otherwise, a new StartPickupWindowService is created. </description>
+					<description>On EndPickupWindowService, when the queue is not full, the current customer object is removed from the queue and destroyed. Furthermore, if the queue is empty, the pickup window is no longer busy. Otherwise, a new StartPickupWindowService is created. </description>
 				</documentation>
 				<WHEN eventType="OutMessageEvent" messageType="HereIsYourHamburger" eventVariable="evt"/>
 				<FOR objectVariable="mb" objectType="MenuBoard" objectIdRef="1"/>
@@ -1084,7 +1082,7 @@ pwq.size() < pw.getMaxPickupQL()
 						</UpdateObject>
 						<UpdateObject objectVariable="q2">
 							<Slot property="lengthOfQueue">
-								<ValueExpr language="Java">pwq.size()-1</ValueExpr>
+								<ValueExpr language="Java">pwq.size() - 1</ValueExpr>
 							</Slot>
 						</UpdateObject>
 						<UpdateStatisticsVariable variable="nrOfDepartures">
