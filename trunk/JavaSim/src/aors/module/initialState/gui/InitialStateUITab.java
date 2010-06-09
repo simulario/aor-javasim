@@ -15,6 +15,7 @@ import java.util.Collection;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Iterator;
+import java.util.Map;
 import java.util.Set;
 import java.util.Vector;
 
@@ -171,6 +172,18 @@ public class InitialStateUITab extends JScrollPane implements GUIModule {
     
     /* map between RandomVariable property  and its value container */
     ranVarPropertyContainerMap = new HashMap<String, Vector<RanVarPropertyContainer>>();
+    
+   /* map between a type and the correspondent enumeration property*/
+    enumPropertyTypeMap = new HashMap<String, HashSet<String>>();
+    
+     /* map between a type and his super type*/
+    superTypeMap = new HashMap<String,String>();
+    
+    /* map between a type and his super type set*/
+    superTypeSetMap = new HashMap<String,HashSet<String>>();
+    
+    propertyUnitMap = new HashMap<String,String>();
+    
 
     initialStatePanel = new JPanel();
 
@@ -224,7 +237,22 @@ public class InitialStateUITab extends JScrollPane implements GUIModule {
           .getAttribute("name");
       String type = ((Element) EnumerationPropertys.item(j))
           .getAttribute("type");
-
+      
+      String parentName = ((Element)(EnumerationPropertys.item(j)).getParentNode()).getAttribute("name");
+      
+      if(enumPropertyTypeMap.keySet().contains(parentName)){
+    	  
+    	  HashSet<String> tempSet = enumPropertyTypeMap.get(parentName);
+    	  tempSet.add(name+parentName);
+    	  enumPropertyTypeMap.put(parentName, tempSet);
+        	  
+      }else{
+    	  
+          HashSet<String> newTempSet = new HashSet<String>();
+          newTempSet.add(name+parentName);
+          enumPropertyTypeMap.put(parentName, newTempSet);
+      }
+      
       NodeList enumNodes = null;
 
       enumNodes = sd.getNodeList("/" + PX + "SimulationScenario/" + PX
@@ -241,9 +269,83 @@ public class InitialStateUITab extends JScrollPane implements GUIModule {
 
       }
 
-      enumMap.put(name, enumNameSet);
+      enumMap.put(name+parentName, enumNameSet);
 
     }
+    
+     processSuperTypeMap();
+  }
+  
+  /*get all enumeration values from superType to subType*/
+  public void processSuperTypeMap(){
+	  
+	  NodeList superTypeList = sd.getNodeList("//*[@superType]");
+	  
+	  for(int i=0; i<superTypeList.getLength(); i++){
+		  
+		  String tempType = ((Element)superTypeList.item(i)).getAttribute("name");
+		  String tempSuperType = ((Element)superTypeList.item(i)).getAttribute("superType");
+		  
+		  superTypeMap.put(tempType,tempSuperType);
+	  }
+	  
+	  
+	  for(Map.Entry<String, String> entry : superTypeMap.entrySet()){
+		  
+		  HashSet<String> superTypeSet = new HashSet<String>();
+		  
+		  String tempType = entry.getKey();
+		  String tempSuperType = entry.getValue();
+		  superTypeSet.add(tempSuperType);
+		  
+		  superTypeSetMap.put(tempType, processSuperTypeSet(tempSuperType,superTypeSet));
+		  
+	 }
+	  
+	 for(Iterator<String> it = superTypeSetMap.keySet().iterator(); it.hasNext();){
+		 
+		 String tempType = it.next();
+		 HashSet<String> tempSet = superTypeSetMap.get(tempType);
+		 
+		 for(Iterator<String> tempSuperTypes = tempSet.iterator(); tempSuperTypes.hasNext();){
+			 
+			 String tempSuperType = tempSuperTypes.next();
+			 
+			 if(enumPropertyTypeMap.keySet().contains(tempSuperType)){
+				 
+			     HashSet<String> tempPropertyTypeSet = enumPropertyTypeMap.get(tempSuperType);
+			     
+			     for(Iterator<String> propertyTypes = tempPropertyTypeSet.iterator(); propertyTypes.hasNext();){
+			    	 
+			    	 String tempPropertyType = propertyTypes.next();
+			    	 String newTempPropertyType = tempPropertyType.substring(0, 
+			    			 tempPropertyType.length()-tempSuperType.length())+tempType;
+			    	 
+			    	 HashSet<String> tempEnumSet = enumMap.get(tempPropertyType);
+			    	 enumMap.put(newTempPropertyType, tempEnumSet);
+			    		    	 
+			     }
+			   }
+			 }
+		  }
+	 
+	 
+	     System.out.println("enumMap: " + enumMap);
+	}
+  
+  
+  
+  public HashSet<String> processSuperTypeSet(String type, HashSet<String> tempSet){
+	  
+	     if(superTypeMap.get(type) != null){
+	    	 
+	    	 tempSet.add(superTypeMap.get(type));
+	    	 processSuperTypeSet(superTypeMap.get(type),tempSet);
+	    	 
+	     }
+	  
+	     return tempSet;
+	  
   }
 
  
@@ -467,7 +569,10 @@ public class InitialStateUITab extends JScrollPane implements GUIModule {
             
             //System.out.println("type: " + type + " |propertyType: " + propertyType + " |inputFieldLength : " + inputFieldLength);
             processInputFieldLength(type, propertyType, inputFieldLength);
-
+            
+            String propertyUnit = sd.getNodeContent(UNITCONTENT,propertyUIs.item(k));
+            processPropertyUnitMap(propertyType, propertyUnit);
+            
             NodeList labelnodes = sd.getNodeList(LT, propertyUIs.item(k));
             NodeList hintnodes = sd.getNodeList(HT, propertyUIs.item(k));
 
@@ -508,6 +613,9 @@ public class InitialStateUITab extends JScrollPane implements GUIModule {
         String inputFieldLength = ((Element) child)
             .getAttribute("@inputFieldLength");
         processInputFieldLength(type, propertyType, inputFieldLength);
+        
+        String propertyUnit = sd.getNodeContent(UNITCONTENT,child);
+        processPropertyUnitMap(propertyType, propertyUnit);
 
         NodeList labelnodes = sd.getNodeList(LT, child);
         NodeList hintnodes = sd.getNodeList(HT, child);
@@ -529,6 +637,15 @@ public class InitialStateUITab extends JScrollPane implements GUIModule {
     userInterfaceMap.put("globalVariable", userInterfaceVariableVector);
     lanType.put("globalVariable", lanVariableSet);
 
+  }
+  
+  public void processPropertyUnitMap(String propertyType, String propertyUnit){
+	  
+	  if((propertyUnit != null)&(!propertyUnit.isEmpty())){
+		  
+		  propertyUnitMap.put(propertyType, propertyUnit);
+	  }
+	  
   }
 
   public void createBeliefEntityUI() {
@@ -556,6 +673,11 @@ public class InitialStateUITab extends JScrollPane implements GUIModule {
           String inputFieldLength = sd.getNodeContent("@inputFieldLength",
               beliefPropertyUIs.item(k));
           processInputFieldLength(type, propertyType, inputFieldLength);
+          
+          String propertyUnit = sd.getNodeContent(UNITCONTENT,beliefPropertyUIs
+                  .item(k));
+          processPropertyUnitMap(propertyType, propertyUnit);
+          
 
           NodeList labelnodes = sd.getNodeList(LT, beliefPropertyUIs.item(k));
           NodeList hintnodes = sd.getNodeList(HT, beliefPropertyUIs.item(k));
@@ -2925,10 +3047,9 @@ public class InitialStateUITab extends JScrollPane implements GUIModule {
     Iterator<String> labelKeys = tempContent.iterator();
     while (labelKeys.hasNext()) {
       String labelKey = labelKeys.next();
-      String property = labelKey.substring(0, (labelKey.length()
-          - type.length() - 2));
-      if (enumPropertySet.contains(property)) {
-        HashSet<String> tempRange = enumMap.get(property);
+      String propertyType = labelKey.substring(0, (labelKey.length()- 2));
+      if (enumPropertySet.contains(propertyType)) {
+        HashSet<String> tempRange = enumMap.get(propertyType);
         String[] valuesComboBox = new String[tempRange.size()];
         int k = 0;
         for (Iterator<String> it = tempRange.iterator(); it.hasNext();) {
@@ -3284,6 +3405,10 @@ public class InitialStateUITab extends JScrollPane implements GUIModule {
   private HashMap<String, Vector<ValueExprPropertyContainer>> valueExprPropertyContainerMap;
   private HashMap<String, HashSet<String>> ranTypePropertyMap;
   private HashMap<String, Vector<RanVarPropertyContainer>> ranVarPropertyContainerMap;
+  private HashMap<String,HashSet<String>> enumPropertyTypeMap;
+  private HashMap<String,String> superTypeMap;
+  private HashMap<String, HashSet<String>> superTypeSetMap;
+  private HashMap<String,String> propertyUnitMap;
 
   private final String PX = SimulationDescription.ER_AOR_PREFIX + ":";
   private final String IS = "/" + PX + "SimulationScenario/" + PX
@@ -3298,6 +3423,7 @@ public class InitialStateUITab extends JScrollPane implements GUIModule {
   private final String HT = PX + "Hint/" + PX + "Text";
   private final String XLAN = "@xml:lang";
   private final String ENUMPROPERTY = "//" + PX + "EnumerationProperty";
+  private final String UNITCONTENT = PX + "Unit/*/text()";
 
   public class FieldsEdit {
 
@@ -3334,6 +3460,34 @@ public class InitialStateUITab extends JScrollPane implements GUIModule {
 
       return editFieldsContainer;
     }
+    
+    
+    public void processFieldUnit(JPanel innerPnl, String label){
+    	
+    	Vector<String> tempLabelKeyContainer = userInterfaceMap.get(type);
+    	for(int i=0; i<tempLabelKeyContainer.size(); i++){
+    		
+    		String tempLabelKey = tempLabelKeyContainer.get(i);
+    		if(labelMap.get(tempLabelKey).equals(label)){
+    			
+    			String tempPropertyType = tempLabelKey.substring(0,(tempLabelKey.length()-2));
+    			
+    			if(propertyUnitMap.keySet().contains(tempPropertyType)){
+    				
+    				String tempUnit = propertyUnitMap.get(tempPropertyType);
+    				JComboBox unitBox = new JComboBox();
+    				unitBox.addItem(tempUnit);
+    				unitBox.setPreferredSize(new Dimension(45,19));
+    				innerPnl.add(unitBox);
+    			}
+    			
+    		}
+    		
+       	}
+    	
+    }
+    
+    
 
     public JPanel createGridLayoutPanel() {
 
@@ -3364,6 +3518,7 @@ public class InitialStateUITab extends JScrollPane implements GUIModule {
           JPanel innerPnl = new JPanel(new FlowLayout(FlowLayout.LEFT));
           innerPnl.add(labels[i]);
           innerPnl.add((JTextField) fields[i]);
+          processFieldUnit(innerPnl, labelsContainer.get(i));
           entry.add(innerPnl);
 
         }
@@ -3396,6 +3551,7 @@ public class InitialStateUITab extends JScrollPane implements GUIModule {
 
                 editFieldsContainer.add(fields[i]);
                 innerPnl.add((JButton) fields[i]);
+                processFieldUnit(innerPnl, labelsContainer.get(i));
                 entry.add(innerPnl);
 
                 ((JButton) fields[i]).setPreferredSize(new Dimension(
@@ -3440,6 +3596,7 @@ public class InitialStateUITab extends JScrollPane implements GUIModule {
 
                 editFieldsContainer.add(fields[i]);
                 innerPnl.add((JButton) fields[i]);
+                processFieldUnit(innerPnl, labelsContainer.get(i));
                 entry.add(innerPnl);
 
                 ((JButton) fields[i]).setPreferredSize(new Dimension(
@@ -3478,6 +3635,7 @@ public class InitialStateUITab extends JScrollPane implements GUIModule {
           ((JTextField) fields[i]).setText(fieldsContainer.get(i));
           editFieldsContainer.add(fields[i]);
           innerPnl.add((JTextField) fields[i]);
+          processFieldUnit(innerPnl, labelsContainer.get(i));
           entry.add(innerPnl);
 
         }

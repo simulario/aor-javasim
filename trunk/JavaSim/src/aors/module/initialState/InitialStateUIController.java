@@ -705,14 +705,15 @@ class EditJDialog extends JDialog {
 	            } else {
 
 	              boolean enumProperty = false;
-	              String property = "";
+	              String propertyType = "";
 	              tempStop: {
 	               
 	                for (Iterator<String> it = initialStateUITab.getEnumMap()
 	                    .keySet().iterator(); it.hasNext();) {
 
-	                  property = it.next();
-	                  String propertyType = property + type;
+	                  propertyType = it.next();
+	                  //String propertyType = property + type;
+	                  
 	                  HashSet<String> tempLanSet = initialStateUITab.getLanType().get(type);
 	                  for (Iterator<String> lans = tempLanSet.iterator(); lans
 	                      .hasNext();) {
@@ -745,7 +746,7 @@ class EditJDialog extends JDialog {
 	              } else {
 
 	                HashSet<String> tempEnumContent = initialStateUITab
-	                    .getEnumMap().get(property);
+	                    .getEnumMap().get(propertyType);
 
 	                
 
