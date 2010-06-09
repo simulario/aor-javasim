@@ -8,6 +8,7 @@ import aors.module.agentControl.gui.renderer.AORSPanel;
 import aors.module.agentControl.gui.renderer.AORSReplacedElementFactory;
 import java.beans.PropertyChangeEvent;
 import java.io.File;
+import java.io.FileNotFoundException;
 import java.util.Set;
 
 public class ControlView extends InteractiveView<AORSPanel> {
@@ -17,7 +18,7 @@ public class ControlView extends InteractiveView<AORSPanel> {
 	private AgentController agentController;
 
   public ControlView(AgentController agentController,
-		String projectPath) {
+		String projectPath, String lang) throws FileNotFoundException {
 		super(new AORSPanel());
 
 		this.eventMediator = new EventMediator(this);
@@ -32,7 +33,7 @@ public class ControlView extends InteractiveView<AORSPanel> {
 			type = type.substring(0, type.lastIndexOf("AgentSubject"));
 		}
 		String guiPath = projectPath + sep + "src" + sep + "interaction" +
-			sep + "agentcontrol" + sep + type + ".gui";
+			sep + "agentcontrol" + sep + type + "_" + lang + ".gui";
 
 		this.getGUIComponent().getSharedContext().setReplacedElementFactory(
 			new AORSReplacedElementFactory(this.eventMediator));

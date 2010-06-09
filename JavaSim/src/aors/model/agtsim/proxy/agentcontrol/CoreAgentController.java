@@ -18,7 +18,7 @@ public interface CoreAgentController {
 
 	public void processInternalEvent(String eventName, Map<String, String> eventData);
 
-	
+	public Set<String> getUILanguages();
 
-	
+	public String getDefaultUILanguage();
 }

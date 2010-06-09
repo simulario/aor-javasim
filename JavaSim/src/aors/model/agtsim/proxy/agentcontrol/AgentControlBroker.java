@@ -22,7 +22,6 @@ public class AgentControlBroker implements AgentControlListener {
 
 	public void addAgentControlListener(AgentControlListener
 		agentControlListener) {
-		System.out.println("AgentControlBroker.addAgentControlListener: " + agentControlListener);
 		if(!this.agentControlListeners.contains(agentControlListener)) {
 			this.agentControlListeners.add(agentControlListener);
 		}
@@ -35,7 +34,6 @@ public class AgentControlBroker implements AgentControlListener {
 
 	@Override
 	public void agentControllerInitialized(CoreAgentController agentController) {
-		System.out.println("AgentControlBroker.agentControllerInitialized: " + agentController);
 		for(AgentControlListener agentControlListener : agentControlListeners) {
 			agentControlListener.agentControllerInitialized(agentController);
 		}
