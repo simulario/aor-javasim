@@ -1,12 +1,15 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <?xml-stylesheet type="text/xsl" href="prettyprint.xsl"?>
 
-<SimulationScenario version="0.8.4" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-	xsi:schemaLocation="http://aor-simulation.org ../../../AORSL/AORSL_0-8-4.xsd"
-	xmlns="http://aor-simulation.org" xmlns:aors="http://aor-simulation.org"
-	xmlns:dc="http://purl.org/dc/elements/1.1/" scenarioName="MacDongleRestaurant_AgentBasedVersion"
-	scenarioTitle="A drive-through restaurant with a menu board, a kitchen, a pickup window and a truck that brings the ingredients for the hamburgers"
-	simulationManagerDirectory="../../..">
+<SimulationScenario xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+ xsi:schemaLocation="http://aor-simulation.org ../../../AORSL/AORSL_0-8-4.xsd"
+ xmlns="http://aor-simulation.org"
+ xmlns:dc="http://purl.org/dc/elements/1.1/"
+ xmlns:aors="http://aor-simulation.org"
+ version="0.8.4"
+ scenarioName="MacDongleRestaurant_AgentBasedVersion"
+ scenarioTitle="A drive-through restaurant with a menu board, a kitchen, a pickup window and a truck that brings the ingredients for the hamburgers"
+ simulationManagerDirectory="../../..">
 
 	<SimulationParameters simulationSteps="3000" stepDuration="1" timeUnit="min" randomSeed="1111"/>
 	<SimulationModel modelName="MacDongleRestaurant_AgentBasedVersion"
@@ -536,9 +539,6 @@ if ( requestedType == 3){
 mes.getOrderNo() == (( Order) order).getOrderNo()                         
                      ]]></IF>
 					<THEN>
-						<UPDATE-AGT>
-							<DestroyBeliefEntity beliefEntityVariable="order" />
-						</UPDATE-AGT>
 						<SCHEDULE-EVT>
 							<OutMessageEventExpr messageType="OrderArrived">
 								<ReceiverIdRef language="Java">evt.getSenderIdRef()</ReceiverIdRef>
@@ -670,16 +670,16 @@ cust.getOrderNo()
 							</OutMessageEventExpr>
 						</SCHEDULE-EVT>
 					</DO>
-				</CommunicationRule>
-				<!--
+				</CommunicationRule>	
+				<!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->
 				<CommunicationRule name="PatienceExpired_Rule" agentVariable="cust">
+					<!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->
 					<WHEN eventType="ReminderEvent" reminderMsg="PatienceExpired"/>
 					<DO>
 						<UPDATE-AGT>
 						</UPDATE-AGT>
 					</DO>
 				</CommunicationRule>
-				-->
 			</AgentType>
 			<!-- =================================================== -->
 			<AgentType name="Truck">
@@ -753,6 +753,9 @@ cp
 									]]></ValueExpr>
 								</Slot>
 								<ReminderEvent reminderMsg="PatienceExpired" type="ReminderEvent">
+									<OccurrenceTime language="Java"><![CDATA[
+cp										
+									]]></OccurrenceTime>
 								</ReminderEvent>
 							</Agent>
 						</Create>
@@ -831,7 +834,9 @@ pw.isAvailableOnTheTray( type, quantity, pw)
 					<UPDATE-ENV>
 						<UpdateObject objectVariable="q4">
 							<Slot property="lengthOfQueue">
-								<ValueExpr language="Java">pw.getHamburgerOnTheTray() + pw.getCheeseburgerOnTheTray() + pw.getSaladOnTheTray() + pw.getSuperOnTheTray()</ValueExpr>
+								<ValueExpr language="Java"><![CDATA[
+pw.getHamburgerOnTheTray() + pw.getCheeseburgerOnTheTray() + pw.getSaladOnTheTray() + pw.getSuperOnTheTray()									
+									]]></ValueExpr>
 							</Slot>
 						</UpdateObject>
 					</UPDATE-ENV>
@@ -891,7 +896,7 @@ quantity
 			<EnvironmentRule name="EndMenuBoardServiceWhenPickupWindowQueueFull_Rule">
 				<!-- ===================================================================== -->
 				<documentation>
-					<description> When a menu board service ends, but the PickupWindowQueue is full, the customer cannot move forward. We just update the customer attribute, so we know that he is waiting for a free place in the Pickup Window waiting line.</description>
+					<description> When a MenuBoard service ends, but the PickupWindowQueue is full, the customer cannot move forward. We just update the customer attribute, so we know that he is waiting for a free place in the Pickup Window waiting line.</description>
 				</documentation>
 				<WHEN eventType="OutMessageEvent" messageType="ConfirmOrder" messageVariable="mes"/>
 				<FOR objectVariable="mbq" objectName="MenuBoardQueue" objectType="Collection" objectIdRef="3"/>
@@ -981,9 +986,9 @@ mbq.size() > 0
 					</SCHEDULE-EVT>
 				</THEN>
 			</EnvironmentRule>
-			<!-- ====================================================================== -->
+			<!-- ================================================== -->
 			<EnvironmentRule name="StartPickupWindowService_Rule">
-				<!-- ======================================================================-->
+				<!-- ===================================================-->
 				<documentation>
 					<description>On StartPickupWindowService, the pickupWindowBusy variable is set to true, and, when the customer's order has already arrived, an HereIsYourPizza message is created with appropriate delay. </description>
 				</documentation>
@@ -1010,7 +1015,7 @@ pwq.size() > 0 && cust.isWaitingForOrderToArrive()
 					</SCHEDULE-EVT>
 				</DO>
 			</EnvironmentRule>
-			<!-- ====================================================================== -->
+			<!-- ======================================================================-->
 			<EnvironmentRule name="StartPickupWindowService_AddRemoveFromMBQueue_Rule">
 			<!-- ======================================================================-->
 				<documentation>
@@ -1171,9 +1176,9 @@ SimStatistics.cumulativeResponseTime.getValue() + evt.getOccurrenceTime() - pwq.
 					</SCHEDULE-EVT>
 				</THEN>
 			</EnvironmentRule>
-			<!-- ============================================================================== -->
+			<!-- ========================================= -->
 			<EnvironmentRule name="OrderPrepared_Rule">
-				<!-- ============================================================================= -->
+				<!-- ========================================== -->
 				<documentation>
 					<description> When an order is prepared, the Kitchen Service send it to the PW Service. The PW Service asks the client which is at the desk what is his orderNo (only if the client is waiting for his order to arrive).</description>
 				</documentation>
@@ -1189,7 +1194,7 @@ mes.getCustID()
 				<FOR dataVariable="hamburgerType" dataType="Integer">
 					<ValueExpr language="Java"><![CDATA[
 mes.getHamburgerType()					
-				 ]]></ValueExpr>
+			    	 ]]></ValueExpr>
 				</FOR>
 				<DO>
 					<UPDATE-ENV>
@@ -1231,9 +1236,9 @@ mes.getCustID()
 					</SCHEDULE-EVT>
 				</DO>
 			</EnvironmentRule>
-			<!-- ============================================================================== -->
+			<!-- ================================================ -->
 			<EnvironmentRule name="AnticipatedOrderENV_Rule">
-				<!-- ============================================================================= -->
+				<!-- ================================================== -->
 				<documentation>
 					<description> When an order is prepared, the MenuBoard Service send it to the PW Service. The PW Service asks the client which is at the desk what is his orderNo (only if the client is waiting for his order to arrive).</description>
 				</documentation>
@@ -1249,14 +1254,14 @@ mes.getCustID()
 				<FOR dataVariable="hamburgerType" dataType="Integer">
 					<ValueExpr language="Java"><![CDATA[
 mes.getHamburgerType()					
-				 ]]></ValueExpr>
+				    ]]></ValueExpr>
 				</FOR>
 				<DO>
 					<UPDATE-ENV>
 						<UpdateStatisticsVariable variable="revenue">
 							<ValueExpr language="Java"><![CDATA[
 SimStatistics.revenue.getValue() + ( float)k.burgPrice(( int) hamburgerType)
-						]]></ValueExpr>
+					    	]]></ValueExpr>
 						</UpdateStatisticsVariable>
 					</UPDATE-ENV>
 					<SCHEDULE-EVT>
@@ -1709,7 +1714,7 @@ evt.getHamburgerType() == 2
 							<Objects type="Salad">
 								<RangeStartID language="Java"><![CDATA[
 evt.getOccurrenceTime() + 1								
-							]]></RangeStartID>
+							    ]]></RangeStartID>
 								<RangeEndID language="Java"><![CDATA[						
 evt.getOccurrenceTime() + quantity									
 								]]></RangeEndID>	
@@ -1822,8 +1827,19 @@ evt.getOccurrenceTime() + quantity
 			<Slot property="maxMenuBoardQL" value="5"/>
 		</Agent>
 		<!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->
-		<Agent type="Kitchen" name="K" id="5">
+			<Agent type="PickupWindow" name="PW" id="2">
 		<!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->
+			<Slot property="pickupWindowBusy" value="false"/>
+			<Slot property="maxPickupQL" value="5"/>
+			<Slot property="lostRevenue" value="0"/>
+			<Slot property="hamburgerOnTheTray" value="3" />
+			<Slot property="cheeseburgerOnTheTray" value="3" />
+			<Slot property="saladOnTheTray" value="3" />
+			<Slot property="superOnTheTray" value="3" />
+			</Agent>
+		<!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->
+		<Agent type="Kitchen" name="K" id="5">
+			<!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->
 			<Slot property="kitchenBusy" value="false" />
 			<Slot property="hamburgerQuantity" value="1000"/>
 			<Slot property="specialSouceQuantity" value="1000"/>
@@ -1833,17 +1849,6 @@ evt.getOccurrenceTime() + quantity
 			<Slot property="lettuceQuantity" value="1000"/>
 			<Slot property="mayonnaiseQuantity" value="1000"/>
 			<Slot property="tomatoQuantity" value="1000"/>
-		</Agent>
-		<!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->
-			<Agent type="PickupWindow" name="PW" id="2">
-		<!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->
-			<Slot property="pickupWindowBusy" value="false"/>
-			<Slot property="maxPickupQL" value="5"/>
-			<Slot property="lostRevenue" value="0"/>
-			<Slot property="hamburgerOnTheTray" value="3" />
-			<Slot property="cheeseburgerOnTheTray" value="3" />
-			<Slot property="saladOnTheTray" value="3" />
-			<Slot property="superHamburgerOnTheTray" value="3" />
 		</Agent>
 		<!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->
 		<Agent type="Truck" name="T" id="10">
@@ -1889,7 +1894,7 @@ evt.getOccurrenceTime() + quantity
 	</InitialState>
 	<!-- =================================================== -->
 	<UserInterface>
-	<!-- ================================================== -->
+	<!-- =================================================== -->
 		<StatisticsUI>
 		<!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->
 			<StatisticsVariableUI variable="numberOfCustomers">
