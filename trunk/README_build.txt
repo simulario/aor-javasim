@@ -36,11 +36,11 @@ The build.xml in the folder creates a distribution with following structure:
 
 2. Create a zip-file
    
-   - it will be copy all the project exampes from the Examples folder in the 
+   - it will be copy all the project examples from the Examples folder in the 
      trunk
    - NOTICE: the source folder from trunk has to be named 'Examples'
    - NOTICE: these projects are independent from your own projects in the 
-             dist folder (if existing)
+             dist folder (if exists)
 
 2.1. To create a distribution in a zip-file, you have to call:
 
