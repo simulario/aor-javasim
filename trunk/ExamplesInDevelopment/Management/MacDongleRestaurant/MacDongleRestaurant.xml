@@ -330,92 +330,6 @@ double[] price = {8.90, 9.80, 8.50, 7.20};
 	return price[( int) hamburgerType];
 					]]></Body>
 				</Function>
-				<!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->
-				<Function name="getMessagePart" resultType="String">
-					<!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->
-					<documentation>
-						<description> The function deals with retrieving the needed information from a string that comprises four distinct information (orderNo, hamburgerType, hamburgerQuantity and customer ID) separated by the "and" string. It is needed bc. the ReminderEvent has only one string field to keep the information. From this field we need to extract the needed parts. </description>
-					</documentation>
-					<Parameter name="messageInfo" type="String"/>
-					<Parameter name="argumentIndex" type="Integer"/>
-					<Body language="Java"><![CDATA[
-String resultInfo = ""; 
-int i = messageInfo.indexOf("and");
-String substr = messageInfo.substring(i+3,messageInfo.length());
-int j = substr.indexOf("and");
-String substrstr = substr.substring(j+3,substr.length());
-int k = substrstr.indexOf("and");
-  if (argumentIndex == 1) {
-    	resultInfo = messageInfo.substring(0,i); 
-  } 
-  else
-  if (argumentIndex == 2) {                                     
-  		resultInfo = substr.substring(0,j);
- }
-  else
-  if (argumentIndex == 3) {
- 		resultInfo = substrstr.substring(0,k); 
- }
-  else {
-    	resultInfo = substrstr.substring(k+3,substrstr.length());
- }    
-   return resultInfo; 
-          ]]></Body>
-				</Function>
-			<!--
-				<CommunicationRule name="ProductionOrder_Rule" agentVariable="k">
-					<documentation>
-						<description> The MenuBoard agent sends a ProductionOrder for the Kitchen agent, in which it specifies the orderNo, the hamburgerType, the hamburgerQuantity and the customer id. The Kitchen agent schedules a reminder event with the appropriate delay i.e. the delay at the kitchen. </description>
-					</documentation>
-					<WHEN eventType="InMessageEvent" messageType="ProductionOrder" messageVariable="mes"/>
-					<DO>
-						<SCHEDULE-EVT>
-							<ReminderEventExpr>
-								<ReminderMsg language="Java"><![CDATA[
-( mes.getOrderNo() + "and" + mes.getHamburgerType() + "and" + mes.getHamburgerQuantity() + "and" + mes.getCustID())
-								]]></ReminderMsg>
-								<Delay>
-									<ValueExpr language="Java">Global.twoDice(8)</ValueExpr>
-								</Delay>
-							</ReminderEventExpr>
-						</SCHEDULE-EVT>
-					</DO>
-				</CommunicationRule>
-				
-				<CommunicationRule name="KitchenReminder_Rule" agentVariable="k">
-				
-					<documentation>
-						<description> Once the reminder event is triggered, the Kitchen service notifies the PW agent by sending an appropriate message OrderPrepared containing the orderNo, hamburgerType, hamburgerQuantity and custID information.</description>
-					</documentation>
-					<WHEN eventType="ReminderEvent" eventVariable="evt"/>
-					<DO>
-						<SCHEDULE-EVT>
-							<OutMessageEventExpr messageType="OrderPrepared" receiverIdRefs="2">
-								<Slot property="orderNo">
-									<ValueExpr language="Java"><![CDATA[
-Integer.parseInt( getMessagePart( evt.getReminderMsg(),1))
-                  					]]></ValueExpr>
-								</Slot>
-								<Slot property="hamburgerType">
-									<ValueExpr language="Java"><![CDATA[
-Integer.parseInt( getMessagePart( evt.getReminderMsg(),2))
-                  					]]></ValueExpr>
-								</Slot>
-								<Slot property="hamburgerQuantity">
-									<ValueExpr language="Java"><![CDATA[
-Integer.parseInt( getMessagePart( evt.getReminderMsg(),3))
-                  				]]></ValueExpr>
-								</Slot>
-								<Slot property="custID">
-									<ValueExpr language="Java"><![CDATA[
-Integer.parseInt( getMessagePart( evt.getReminderMsg(),4))
-								]]></ValueExpr>
-								</Slot>
-							</OutMessageEventExpr>
-						</SCHEDULE-EVT>
-					</DO>
-				</CommunicationRule>
-				-->
 			</AgentType>
 			<!-- ============================= -->
 			<AgentType name="PickupWindow">
@@ -426,7 +340,15 @@ Integer.parseInt( getMessagePart( evt.getReminderMsg(),4))
 				<Attribute name="cheeseburgerOnTheTray" type="Integer" />
 				<Attribute name="saladOnTheTray" type="Integer" />
 				<Attribute name="superOnTheTray" type="Integer" />
-				<Attribute name="lostRevenue" type="Float"/>			
+				<Attribute name="lostRevenue" type="Float"/>		
+				
+				<Function name="print" resultType="Integer">
+					<Parameter name="param" type="Integer"/>
+					<Body language="Java">
+						System.out.println("Valoarea este: "+param);
+						return param;
+					</Body>
+				</Function>						
 				<!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~-->
 				<Function name="isAvailableOnTheTray" resultType="Boolean">
 				<!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~-->
@@ -476,7 +398,7 @@ if ( requestedType == 3){
 				<CommunicationRule name="OrderPrepared_Rule" agentVariable="pw">
 					<!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->
 					<documentation>
-						<description> The PW agent receives the prepared order from the Kitchen agent (i.e. the orderNo) He uses this information and he creates for each new Customer agent a new Order BeliefEntityType for which it sets the orderNo attribute. </description>
+						<description> The PW agent receives the prepared order from the Kitchen agent (i.e. the orderNo). He uses this information and he creates for each new Customer agent a new Order BeliefEntityType for which it sets the orderNo attribute. </description>
 					</documentation>
 					<WHEN eventType="InMessageEvent" messageType="OrderPrepared" messageVariable="mes"/>
 					<DO>
@@ -484,7 +406,7 @@ if ( requestedType == 3){
 							<CreateBeliefEntity beliefEntityType="Order">
 								<BeliefEntityIdRef language="Java">mes.getOrderNo()</BeliefEntityIdRef>
 								<BeliefSlot property="orderNo">
-									<ValueExpr language="Java">mes.getOrderNo()</ValueExpr>
+									<ValueExpr language="Java">print((int)mes.getOrderNo())</ValueExpr>
 								</BeliefSlot>
 								<BeliefSlot property="hamburgerType">
 									<ValueExpr language="Java">mes.getHamburgerType()</ValueExpr>
@@ -975,7 +897,7 @@ pwq.size() < pw.getMaxPickupQL()
 						<CausedEventExpr eventType="StartMenuBoardService">
 							<Condition language="Java"><![CDATA[
 mbq.size() > 0
-	           			]]></Condition>
+	           			   ]]></Condition>
 						</CausedEventExpr>
 						<CausedEventExpr eventType="StartPickupWindowService">
 							<Condition language="Java"><![CDATA[
@@ -1324,7 +1246,7 @@ k.getTomatoQuantity() + t.getQuantityPerIngredient()
 						<UpdateStatisticsVariable variable="lostRevenue">
 							<ValueExpr language="Java"><![CDATA[
 SimStatistics.lostRevenue.getValue() + ( float)k.burgPrice(0) * pw.getHamburgerOnTheTray() + ( float)k.burgPrice(1) * pw.getCheeseburgerOnTheTray() + ( float)k.burgPrice(2) * pw.getSaladOnTheTray() + ( float)k.burgPrice(3) * pw.getSuperOnTheTray()
-								]]></ValueExpr>
+							]]></ValueExpr>
 						</UpdateStatisticsVariable>
 						<UpdateObject objectVariable="pw">
 							<Slot property="hamburgerOnTheTray" value="0" />
@@ -1475,7 +1397,7 @@ SimStatistics.lostRevenue.getValue() + ( float)k.burgPrice(0) * pw.getHamburgerO
 							<Delay>
 								<ValueExpr language="Java">Global.twoDice(8)</ValueExpr>
 							</Delay>
-							<Slot property="custID">
+							<Slot property="orderNo">
 								<ValueExpr language="Java">o.getOrderNo()</ValueExpr>
 							</Slot>
 							<Slot property="hamburgerType">
