@@ -14,7 +14,7 @@
 		<dc:created>20090821</dc:created>
 		<dc:creator>Gerd Wagner</dc:creator>
 		<dc:source>Peter Fleissner and Gregor Fleissner: "Beyond the Chinese Room: The blind jumper - Self-organised semantics and pragmatics on the computer". In: W. Hofkirchner (Ed.) Information und Selbstorganisation - Annäherungen an eine vereinheitlichte Theorie der Information, Innsbruck Wien: StudienVerlag, pp. 325-340, 1998.</dc:source>
-			<description><h:p>In this model there is an agent (the "jumper") that is not able to see the width of the barrier over which it has to jump, and there is another agent (the "speaker") that is able to see how wide the barrier is and tries to communicate this to the jumper. However, both agents first have to learn which symbols to use for communicating the width of the barrier. Both agents can perceive the success or failure of a jump (a jump fails if it is too short or too long), and then update their symbol interpretation function accordingly.</h:p><h:p>This problem description has been extracted from the paper <h:em><h:a href="http://peter.fleissner.org/petergre/documents/blinderspringer.html">Beyond the Chinese Room: The blind jumper</h:a> - Self-organised semantics and pragmatics on the computer</h:em> by Peter Fleissner and Gregor Fleissner. There is also an <h:a href="http://igw.tuwien.ac.at/peterf/springer/default.htm">implementation</h:a> of this model by its authors.</h:p></description>
+			<description><h:p>In this model there is an agent (the "jumper") that is not able to see the size of the barrier over which it has to jump, and there is another agent (the "speaker") that is able to see how wide the barrier is and tries to communicate this to the jumper. However, both agents first have to learn which symbols to use for communicating the size of the barrier. Both agents can perceive the success or failure of a jump (a jump fails if it is too short or too long), and then update their symbol interpretation function accordingly.</h:p><h:p>This problem description has been extracted from the paper <h:em><h:a href="http://peter.fleissner.org/petergre/documents/blinderspringer.html">Beyond the Chinese Room: The blind jumper</h:a> - Self-organised semantics and pragmatics on the computer</h:em> by Peter Fleissner and Gregor Fleissner. There is also an <h:a href="http://igw.tuwien.ac.at/peterf/springer/default.htm">implementation</h:a> of this model by its authors.</h:p></description>
 	</documentation>
   
 	<SpaceModel geometry="Euclidean" spatialDistanceUnit="m">
@@ -68,15 +68,6 @@
 					if (j != col) P[row][j] = (1+alpha)*P[row][j];
 				}
 			}
-			public String toString() {
-			  int M = P.length; 		// number of rows
-				int N = P[0].length;  // number of columns
-				String S = "";
-				for (int i=0; i < M; i++) {
-					for (int j=0; j < N; j++) S = S + " " + valueOf( P[i][j]);
-					S = S + "\n";
-				}			  
-			}
 			]]></ClassDef>
 		</ComplexDataType>
 		<ComplexDataType name="ProbabilityMatrix_3_4">
@@ -117,15 +108,6 @@
 					if (j != col) P[row][j] = (1+alpha)*P[row][j];
 				}
 			}
-			public String toString() {
-			  int M = P.length; 		// number of rows
-				int N = P[0].length;  // number of columns
-				String S = "";
-				for (int i=0; i < M; i++) {
-					for (int j=0; j < N; j++) S = S + " " + valueOf( P[i][j]);
-					S = S + "\n";
-				}			  
-			}
 			]]></ClassDef>
 		</ComplexDataType>
 	</DataTypes>
@@ -139,12 +121,14 @@
 		<PerceptionEventType name="Success"/>
 		<PerceptionEventType name="Failure"/>
 		<PerceptionEventType name="ObserveNewBarrier">
-			<Attribute name="width" type="Integer"/>
+			<Attribute name="size" type="Integer"/>
 		</PerceptionEventType>
 		<CausedEventType name="CreateNewBarrier">
-			<Attribute name="width" type="Integer"/>
+			<Attribute name="size" type="Integer"/>
 		</CausedEventType>
-		<PhysicalObjectType name="Barrier"/>
+		<PhysicalObjectType name="Barrier">
+			<Attribute name="size" type="Integer"/>
+		</PhysicalObjectType>
 	<!-- =================================================================== -->
 	<PhysicalAgentType name="Jumper">
 	<!-- =================================================================== -->
@@ -227,11 +211,11 @@
 		<!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->
 		<ReactionRule name="Tell_AgtRule" agentVariable="agt">
 		<!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->
-			<documentation><description>When the speaker perceives a new barrier with width 1-3 (corresponding to a state index of 1-3), it stores the state index as well as the action parameter value index pointing to the maximum value, and then it sends a Tell message with a distance symbol corresponding to this parameter value.</description></documentation>
+			<documentation><description>When the speaker perceives a new barrier with size 1-3 (corresponding to a state index of 1-3), it stores the state index as well as the action parameter value index pointing to the maximum value, and then it sends a Tell message with a distance symbol corresponding to this parameter value.</description></documentation>
 			<WHEN eventType="ObserveNewBarrier" eventVariable="e"/>
 			<DO>
 				<UPDATE-AGT>
-					<Slot property="currentTellRuleStateIndex"><ValueExpr language="Java">e.getWidth()</ValueExpr></Slot>
+					<Slot property="currentTellRuleStateIndex"><ValueExpr language="Java">e.getSize()</ValueExpr></Slot>
 					<Slot property="currentActionParameterValueIndex">
 						<ValueExpr language="Java">agt.getTellSuccessProbMat().maxIndex( agt.getCurrentTellRuleStateIndex())</ValueExpr>
 					</Slot>
@@ -303,11 +287,11 @@
 			</UPDATE-ENV>
 			<SCHEDULE-EVT>
 				<CausedEventExpr eventType="CreateNewBarrier" delay="5">
-					<Slot property="width"><RandomVariable><UniformInt lowerBound="1" upperBound="3"/></RandomVariable></Slot>
+					<Slot property="size"><RandomVariable><UniformInt lowerBound="1" upperBound="3"/></RandomVariable></Slot>
 				</CausedEventExpr>
 			</SCHEDULE-EVT>
 		</DO>
-		<IF language="Java">e.getDistance() == b.getWidth()+1</IF>
+		<IF language="Java">e.getDistance() == b.getSize()+1</IF>
 		<THEN>
 			<SCHEDULE-EVT>
 				<PerceptionEventExpr eventType="Success" perceiverIdRefs="2 3"/>
@@ -332,17 +316,17 @@
    				<Slot property="x" value="1"/>
    			</UpdateObject>
    			<UpdateObject objectVariable="b">
-   				<Slot property="width"><ValueExpr language="Java">e.getWidth()</ValueExpr></Slot>
+   				<Slot property="size"><ValueExpr language="Java">e.getSize()</ValueExpr></Slot>
    			</UpdateObject>
    			<UpdateGridCells startX="3" endX="4" startY="1" endY="1" gridCellVariable="c">
    				 <Slot property="isBarrierCell">
-   				 	<ValueExpr language="Java"> (e.getWidth() + 1 >= c.getPosX()) ?  1 : 0 </ValueExpr>
+   				 	<ValueExpr language="Java"> (e.getSize() + 1 >= c.getPosX()) ?  1 : 0 </ValueExpr>
    				 </Slot>
    			</UpdateGridCells>
    		</UPDATE-ENV>
    		<SCHEDULE-EVT>
    			<PerceptionEventExpr eventType="ObserveNewBarrier" perceiverIdRefs="3">
-   				<Slot property="width"><ValueExpr language="Java">e.getWidth()</ValueExpr></Slot>
+   				<Slot property="size"><ValueExpr language="Java">e.getSize()</ValueExpr></Slot>
    			</PerceptionEventExpr>
    		</SCHEDULE-EVT>
    	</DO>
@@ -354,13 +338,15 @@
 <InitialState>
 <!-- =================================================================== -->
 	<CausedEvent type="CreateNewBarrier" occurrenceTime="1">
-		<Slot property="width">
+		<Slot property="size">
 			<RandomVariable>
 				<UniformInt lowerBound="1" upperBound="3"/>
 			</RandomVariable>
 		</Slot>
 	</CausedEvent>  
-	<PhysicalObject type="Barrier" id="1" x="2" y="1"/>
+	<PhysicalObject type="Barrier" id="1" x="2" y="1">
+		<Slot property="size" value="1"/>
+	</PhysicalObject>
 	<GridCells>
 		<GridCell x="2" y="1">
 			<Slot property="isBarrierCell" value="1"/>
