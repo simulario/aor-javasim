@@ -168,6 +168,14 @@ return Random.uniformInt(10,20);
 				<ReferenceProperty name="order" type="OrderRequested"/>
 			</CausedEventType>
 			<!-- =================================================== -->
+			<CausedEventType name="EndKitchenService">
+			<!-- =================================================== -->
+				<Attribute name="orderNo" type="Integer"/>
+				<Attribute name="hamburgerType" type="Integer"/>
+				<Attribute name="hamburgerQuantity" type="Integer"/>
+				<Attribute name="custID" type="Integer"/>
+			</CausedEventType>
+			<!-- =================================================== -->
 			<CausedEventType name="UpdateIngredientsStock"/>
 			<!-- =================================================== -->
 			<CausedEventType name="KitchenCreatesCustomerOrder" >
@@ -348,7 +356,7 @@ double[] price = {8.90, 9.80, 8.50, 7.20};
 						System.out.println("Valoarea este: "+param);
 						return param;
 					</Body>
-				</Function>						
+				</Function>   						
 				<!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~-->
 				<Function name="isAvailableOnTheTray" resultType="Boolean">
 				<!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~-->
@@ -430,7 +438,7 @@ if ( requestedType == 3){
 					<WHEN eventType="InMessageEvent" messageType="AnticipatedOrder" messageVariable="mes"/>
 					<DO>
 						<UPDATE-AGT>
-							<CreateBeliefEntity beliefEntityType="Order">
+    							<CreateBeliefEntity beliefEntityType="Order">
 								<BeliefEntityIdRef language="Java">mes.getOrderNo()</BeliefEntityIdRef>
 								<BeliefSlot property="orderNo">
 									<ValueExpr language="Java">mes.getOrderNo()</ValueExpr>
@@ -1386,6 +1394,9 @@ SimStatistics.lostRevenue.getValue() + ( float)k.burgPrice(0) * pw.getHamburgerO
 				<FOR objectVariable="o" objectType="OrderRequested">
 					<ObjectRef language="Java">evt.getOrder()</ObjectRef>
 				</FOR>
+				<FOR dataVariable="delay" dataType="Integer">
+					<ValueExpr language="Java">Global.twoDice(8)</ValueExpr>
+				</FOR>
 				<DO>
 					<UPDATE-ENV>
 						<UpdateObject objectVariable="k">
@@ -1393,9 +1404,26 @@ SimStatistics.lostRevenue.getValue() + ( float)k.burgPrice(0) * pw.getHamburgerO
 						</UpdateObject>
 					</UPDATE-ENV>
 					<SCHEDULE-EVT>
+						<CausedEventExpr eventType="EndKitchenService">
+							<Delay>
+								<ValueExpr language="Java">delay</ValueExpr>
+							</Delay>
+							<Slot property="orderNo">
+								<ValueExpr language="Java">o.getOrderNo()</ValueExpr>
+							</Slot>
+							<Slot property="hamburgerType">
+								<ValueExpr language="Java">o.getHamburgerType()</ValueExpr>
+							</Slot>
+							<Slot property="hamburgerQuantity">
+								<ValueExpr language="Java">o.getHamburgerQuantity()</ValueExpr>
+							</Slot>
+							<Slot property="custID">
+								<ValueExpr language="Java">o.getCustID()</ValueExpr>
+							</Slot>
+						</CausedEventExpr>
 						<InMessageEventExpr messageType="OrderPrepared" senderIdRef="5" receiverIdRefs="2">
 							<Delay>
-								<ValueExpr language="Java">Global.twoDice(8)</ValueExpr>
+								<ValueExpr language="Java">delay</ValueExpr>
 							</Delay>
 							<Slot property="orderNo">
 								<ValueExpr language="Java">o.getOrderNo()</ValueExpr>
@@ -1419,7 +1447,7 @@ SimStatistics.lostRevenue.getValue() + ( float)k.burgPrice(0) * pw.getHamburgerO
 				<documentation>
 					<description>The Kitchen Service ends with the scheduling of an OrderPrepared message.</description>
 				</documentation>
-				<WHEN eventType="OutMessageEvent" messageType="OrderPrepared" messageVariable="mes" />
+				<WHEN eventType="EndKitchenService" eventVariable="evt"/>
 				<FOR objectVariable="pwq" objectType="Collection" objectName="PickupWindowQueue" objectIdRef="4"/>
 				<FOR objectVariable="pw" objectName="PickupWindow" objectType="PickupWindow" objectIdRef="2"/>
 				<FOR objectVariable="kq" objectType="Collection" objectIdRef="8" objectName="KitchenQueue" />
@@ -1427,12 +1455,12 @@ SimStatistics.lostRevenue.getValue() + ( float)k.burgPrice(0) * pw.getHamburgerO
 				<FOR objectVariable="k" objectType="Kitchen" objectIdRef="5" />	
 				<FOR dataVariable="custID" dataType="Integer">
 					<ValueExpr language="Java"><![CDATA[
-mes.getCustID()
+evt.getCustID()
 					]]></ValueExpr>
 				</FOR>
 				<FOR dataVariable="hamburgerType" dataType="Integer">
 					<ValueExpr language="Java"><![CDATA[
-mes.getHamburgerType()					
+evt.getHamburgerType()					
 			    	 ]]></ValueExpr>
 				</FOR>
 				<DO>
@@ -1452,16 +1480,16 @@ SimStatistics.revenue.getValue() + ( float)k.burgPrice(( int) hamburgerType)
 						<SCHEDULE-EVT>
 							<CausedEventExpr eventType="KitchenCreatesCustomerOrder">
 								<Slot property="custID">
-									<ValueExpr language="Java">mes.getOrderNo()</ValueExpr>
+									<ValueExpr language="Java">evt.getOrderNo()</ValueExpr>
 								</Slot>
 								<Slot property="hamburgerType">
-									<ValueExpr language="Java">mes.getHamburgerType()</ValueExpr>
+									<ValueExpr language="Java">evt.getHamburgerType()</ValueExpr>
 								</Slot>
 								<Slot property="hamburgerQuantity">
-									<ValueExpr language="Java">mes.getHamburgerQuantity()</ValueExpr>
+									<ValueExpr language="Java">evt.getHamburgerQuantity()</ValueExpr>
 								</Slot>
 								<Slot property="custID">
-									<ValueExpr language="Java">mes.getCustID()</ValueExpr>
+									<ValueExpr language="Java">evt.getCustID()</ValueExpr>
 								</Slot>
 							</CausedEventExpr>
 							<InMessageEventExpr messageType="AskOrderNo" senderIdRef="2">
@@ -1469,28 +1497,6 @@ SimStatistics.revenue.getValue() + ( float)k.burgPrice(( int) hamburgerType)
 pwq.size() > 0  && (( Customer)pwq.getItem()).getId() == custID && (( Customer)pwq.getItem()).isWaitingForOrderToArrive()
               				]]></Condition>
 								<ReceiverIdRef language="Java">custID</ReceiverIdRef>
-							</InMessageEventExpr>
-							<InMessageEventExpr messageType="OrderPrepared" receiverIdRefs="2" senderIdRef="5">
-								<Slot property="orderNo">
-									<ValueExpr language="Java"><![CDATA[
-mes.getOrderNo()
-							 		]]></ValueExpr>
-								</Slot>
-								<Slot property="hamburgerType">
-									<ValueExpr language="Java"><![CDATA[
-mes.getHamburgerType()
-									]]></ValueExpr>
-								</Slot>
-								<Slot property="hamburgerQuantity">
-									<ValueExpr language="Java"><![CDATA[
-mes.getHamburgerQuantity()
-									]]></ValueExpr>
-								</Slot>
-								<Slot property="custID">
-									<ValueExpr language="Java"><![CDATA[
-mes.getCustID()
-									]]></ValueExpr>
-								</Slot>
 							</InMessageEventExpr>
 						</SCHEDULE-EVT>
 					</DO>
