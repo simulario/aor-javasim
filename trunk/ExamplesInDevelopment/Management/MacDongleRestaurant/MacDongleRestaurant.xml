@@ -18,7 +18,7 @@
 		<documentation>
 			<description>As a car enters from the street, the driver, who we will call Fred, decides whether or not to get in line. If Fred decides to leave the restaurant, he leaves as a dissatisfied customer. One of the great things about a simulation is that it is easy to track these type of customers. In most real-world systems, it is usually difficult to track lostCustomers who leave dissatisfied. If Fred decides to get in line, then he waits until the menu board (with the speaker no normal human being can understand) is available. At that time, Fred gives the order to the order taker. After the order is taken, then two things occur simultaneously: (1) Fred moves forward if there is room. If there is no room, then he has to wait at the menu board until there is room to move forward. As soon as there is room, he moves so the next customer can order. (2) The order is sent electronically back to the kitchen where it is prepared as soon as the cook is available. As soon as Fred reaches the pickup window, then he pays and picks up his food, if it is ready. If the food is not ready, then Fred has to wait until his order is prepared.</description>
 			<dc:created>20090331</dc:created>
-			<dc:modified>20100607</dc:modified>
+			<dc:modified>20100614</dc:modified>
 			<dc:creator>Oana Nicolae</dc:creator>
 			<dc:contributor>Gerd Wagner</dc:contributor>
 			<dc:source>Mac Dongle Restaurant paper description.</dc:source>
@@ -93,18 +93,18 @@ return Random.uniformInt(10,20);
 			<MessageType name="OrderSolicitation"/>
 			<!-- =================================================== -->
 			<MessageType name="SendOrder">
-				<!-- =================================================== -->
+			<!-- =================================================== -->
 				<Attribute name="hamburgerType" type="Integer"/>
 				<Attribute name="hamburgerQuantity" type="Integer"/>
 			</MessageType>
 			<!-- =================================================== -->
 			<MessageType name="ConfirmOrder">
-				<!-- =================================================== -->
+			<!-- =================================================== -->
 				<Attribute name="orderNo" type="Integer"/>
 			</MessageType>
 			<!-- =================================================== -->
 			<MessageType name="ProductionOrder">
-				<!-- =================================================== -->
+			<!-- =================================================== -->
 				<Attribute name="orderNo" type="Integer" />
 				<Attribute name="hamburgerType" type="Integer" />
 				<Attribute name="hamburgerQuantity" type="Integer" />
@@ -112,7 +112,7 @@ return Random.uniformInt(10,20);
 			</MessageType>
 			<!-- =================================================== -->
 			<MessageType name="OrderPrepared">
-				<!-- =================================================== -->
+			<!-- =================================================== -->
 				<Attribute name="orderNo" type="Integer" />
 				<Attribute name="hamburgerType" type="Integer" />
 				<Attribute name="hamburgerQuantity" type="Integer" />
@@ -120,7 +120,7 @@ return Random.uniformInt(10,20);
 			</MessageType>
 			<!-- =================================================== -->
 			<MessageType name="AnticipatedOrder">
-				<!-- =================================================== -->
+			<!-- =================================================== -->
 				<Attribute name="orderNo" type="Integer" />
 				<Attribute name="hamburgerType" type="Integer" />
 				<Attribute name="hamburgerQuantity" type="Integer" />
@@ -130,7 +130,7 @@ return Random.uniformInt(10,20);
 			<MessageType name="AskOrderNo"/>
 			<!-- =================================================== -->
 			<MessageType name="ReplyOrderNo">
-				<!-- =================================================== -->
+			<!-- =================================================== -->
 				<Attribute name="orderNo" type="Integer" />
 			</MessageType>
 			<!-- =================================================== -->
@@ -1750,7 +1750,7 @@ evt.getOccurrenceTime() + quantity
 			<Slot property="superOnTheTray" value="3" />
 			</Agent>
 		<!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->
-		<Agent type="Kitchen" name="K" id="5">
+		<Agent type="Kitchen" name="Kitchen" id="5">
 			<!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->
 			<Slot property="kitchenBusy" value="false" />
 			<Slot property="hamburgerQuantity" value="1000"/>
@@ -1947,14 +1947,74 @@ evt.getOccurrenceTime() + quantity
 					<DisplayInfo content="Menu Board" />
 				</ObjectView>		
 				<!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->
-				<ObjectView objectType="Kitchen">
+				<ObjectView objectType="Kitchen" displayName="true">
 				<!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->
-					<Shape2D x="450px" y="350px">
-						<Rectangle fill="green" height="50" width="50" stroke="black" strokeWidth="10">
-							<ShapePropertyMap shapeProperty="fill" property="kitchenBusy" mapType="equalityCaseWise" v0="green" a0="false" a1="true" v1="red"/>
-						</Rectangle>
+					<Shape2D x="400px" y="400px">
+						<Rectangle width="600" height="120" fill="lightgrey" stroke="black" strokeWidth="2"/>
 					</Shape2D>
-					<DisplayInfo content="Kitchen" />
+					<EmbeddedView offsetX="-250px" offsetY="0px">
+						<Shape2D>
+							<Rectangle fill="green" height="50" width="50" stroke="black" strokeWidth="10">
+								<ShapePropertyMap shapeProperty="fill" property="kitchenBusy" mapType="equalityCaseWise" v0="green" a0="false" a1="true" v1="red"/>
+							</Rectangle>
+						</Shape2D>
+					</EmbeddedView>
+					<EmbeddedView label="Hamburger" offsetX="0px" offsetY="200px">
+						<Shape2D>
+							<Rectangle width="10" positioning="LeftBottom" fill="brown" stroke="black" strokeWidth="1">
+								<ShapePropertyMap shapeProperty="width" property="hamburgerQuantity" mapType="polynomial" a0="1" a1="10.0"/>
+							</Rectangle>
+						</Shape2D>
+					</EmbeddedView>
+					<EmbeddedView label="SpecialSouce" offsetX="0px" offsetY="180px">
+						<Shape2D>
+							<Rectangle width="10" positioning="LeftBottom" fill="red" stroke="black" strokeWidth="1">
+								<ShapePropertyMap shapeProperty="width" property="specialSouceQuantity" mapType="polynomial" a0="1" a1="10.0"/>
+							</Rectangle>
+						</Shape2D>
+					</EmbeddedView>
+					<EmbeddedView label="Bread" offsetX="0px" offsetY="160px">
+						<Shape2D>
+							<Rectangle width="10" positioning="LeftBottom" fill="yellow" stroke="black" strokeWidth="1">
+								<ShapePropertyMap shapeProperty="width" property="breadQuantity" mapType="polynomial" a0="1" a1="10.0"/>
+							</Rectangle>
+						</Shape2D>
+					</EmbeddedView>
+					<EmbeddedView label="SpecialBread" offsetX="0px" offsetY="140px">
+						<Shape2D>
+							<Rectangle width="10" positioning="LeftBottom" fill="orange" stroke="black" strokeWidth="1">
+								<ShapePropertyMap shapeProperty="width" property="specialBreadQuantity" mapType="polynomial" a0="1" a1="10.0"/>
+							</Rectangle>
+						</Shape2D>
+					</EmbeddedView>
+					<EmbeddedView label="Mozzarella" offsetX="0px" offsetY="120px">
+						<Shape2D>
+							<Rectangle width="10" positioning="LeftBottom" fill="white" stroke="black" strokeWidth="1">
+								<ShapePropertyMap shapeProperty="width" property="mozzarellaQuantity" mapType="polynomial" a0="1" a1="10.0"/>
+							</Rectangle>
+						</Shape2D>
+					</EmbeddedView>
+					<EmbeddedView label="Lettuce" offsetX="0px" offsetY="100px">
+						<Shape2D>
+							<Rectangle width="10" positioning="LeftBottom" fill="green" stroke="black" strokeWidth="1">
+								<ShapePropertyMap shapeProperty="width" property="lettuceQuantity" mapType="polynomial" a0="1" a1="10.0"/>
+							</Rectangle>
+						</Shape2D>
+					</EmbeddedView>
+					<EmbeddedView label="Mayonnaise" offsetX="0px" offsetY="80px">
+						<Shape2D>
+							<Rectangle width="10" positioning="LeftBottom" fill="pink" stroke="black" strokeWidth="1">
+								<ShapePropertyMap shapeProperty="width" property="mayonnaiseQuantity" mapType="polynomial" a0="1" a1="10.0"/>
+							</Rectangle>
+						</Shape2D>
+					</EmbeddedView>
+					<EmbeddedView label="Tomato" offsetX="0px" offsetY="60px">
+						<Shape2D>
+							<Rectangle width="10" positioning="LeftBottom" fill="fuchsia" stroke="black" strokeWidth="1">
+								<ShapePropertyMap shapeProperty="width" property="tomatoQuantity" mapType="polynomial" a0="1" a1="10.0"/>
+							</Rectangle>
+						</Shape2D>
+					</EmbeddedView>
 				</ObjectView>
 				<!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->
 				<ObjectView objectType="PickupWindow">
@@ -1989,7 +2049,7 @@ evt.getOccurrenceTime() + quantity
 				<!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->
 				<ObjectView objectType="Queue" objectIdRef="9">
 				<!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->
-					<Shape2D x="400px" y="400px">
+					<Shape2D x="200px" y="400px">
 						<Rectangle positioning="LeftCenter" fill="orange" height="5" width="1" stroke="black" strokeWidth="2">
 							<ShapePropertyMap shapeProperty="width" property="lengthOfQueue" mapType="polynomial" a0="0" a1="30"/>
 						</Rectangle>
