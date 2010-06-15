@@ -18,7 +18,7 @@
 		<documentation>
 			<description>As a car enters from the street, the driver, who we will call Fred, decides whether or not to get in line. If Fred decides to leave the restaurant, he leaves as a dissatisfied customer. One of the great things about a simulation is that it is easy to track these type of customers. In most real-world systems, it is usually difficult to track lostCustomers who leave dissatisfied. If Fred decides to get in line, then he waits until the menu board (with the speaker no normal human being can understand) is available. At that time, Fred gives the order to the order taker. After the order is taken, then two things occur simultaneously: (1) Fred moves forward if there is room. If there is no room, then he has to wait at the menu board until there is room to move forward. As soon as there is room, he moves so the next customer can order. (2) The order is sent electronically back to the kitchen where it is prepared as soon as the cook is available. As soon as Fred reaches the pickup window, then he pays and picks up his food, if it is ready. If the food is not ready, then Fred has to wait until his order is prepared.</description>
 			<dc:created>20090331</dc:created>
-			<dc:modified>20100614</dc:modified>
+			<dc:modified>20100615</dc:modified>
 			<dc:creator>Oana Nicolae</dc:creator>
 			<dc:contributor>Gerd Wagner</dc:contributor>
 			<dc:source>Mac Dongle Restaurant paper description.</dc:source>
@@ -40,6 +40,13 @@ SimStatistics.cumulativeResponseTime.getValue() / SimStatistics.nrOfDepartures.g
 			<Variable name="lostRevenue" dataType="Float">
 				<Source>
 					<ObjectProperty property="lostRevenue" objectType="PickupWindow" objectIdRef="2"/>
+				</Source>
+			</Variable>
+			<Variable name="profit" dataType="Integer">
+				<Source computeOnlyAtEnd="true">
+					<ValueExpr language="Java"><![CDATA[
+SimStatistics.revenue.getValue() - SimStatistics.lostRevenue.getValue()						
+					]]></ValueExpr>
 				</Source>
 			</Variable>
 			<Variable name="maxLengthOfMBQ" dataType="Integer">
@@ -138,10 +145,15 @@ return Random.uniformInt(10,20);
 			<!-- =================================================== -->
 			<MessageType name="HereIsYourHamburger"/>
 			<!-- =================================================== -->
+			<MessageType name="LeavesRestaurant">
+			<!-- =================================================== -->
+				<Attribute name="custID" type="Integer"/>
+			</MessageType>
+			<!-- =================================================== -->
 			<ExogenousEventType name="CustomerArrival">
 			<!-- =================================================== -->
 				<Periodicity>
-					<ValueExpr language="Java">Global.twoDice(10)</ValueExpr>
+					<ValueExpr language="Java">Global.twoDice(1)</ValueExpr>
 				</Periodicity>
 			</ExogenousEventType>
 			<!-- =================================================== -->
@@ -524,7 +536,7 @@ return Random.uniformInt(0,3);
 						<description>Complete description </description>
 					</documentation>
 					<Body language="Java"><![CDATA[
-return Random.uniformInt(1,4);
+return Random.uniformInt(1,3);
 		      		]]></Body>
 				</SubjectiveFunction>
 				<!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->
@@ -603,10 +615,15 @@ cust.getOrderNo()
 				<!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->
 				<CommunicationRule name="PatienceExpired_Rule" agentVariable="cust">
 					<!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->
-					<WHEN eventType="ReminderEvent" reminderMsg="PatienceExpired"/>
+					<WHEN eventType="ReminderEvent" reminderMsg="PatienceExpired" eventVariable="evt"/>
 					<DO>
-						<UPDATE-AGT>
-						</UPDATE-AGT>
+						<SCHEDULE-EVT>
+							<OutMessageEventExpr messageType="LeavesRestaurant" receiverIdRefs="1">
+								<Slot property="custID">
+									<ValueExpr language="Java">evt.getSenderIdRef()</ValueExpr>
+								</Slot>
+							</OutMessageEventExpr>
+						</SCHEDULE-EVT>
 					</DO>
 				</CommunicationRule>
 			</AgentType>
@@ -631,7 +648,7 @@ cust.getOrderNo()
 					</documentation>
 					<Parameter name="t" type="Truck"/>
 					<Body language="Java"><![CDATA[
-return t.getQuantityPerIngredient() * (t.getHamburgerPrice() + t.getSpecialSoucePrice() + t.getBreadPrice() + t.getSpecialBreadPrice() + t.getMozzarellaPrice() + t.getLettucePrice() + t.getMayonnaisePrice() + t.getTomatoPrice());
+return t.getQuantityPerIngredient() * ( t.getHamburgerPrice() + t.getSpecialSoucePrice() + t.getBreadPrice() + t.getSpecialBreadPrice() + t.getMozzarellaPrice() + t.getLettucePrice() + t.getMayonnaisePrice() + t.getTomatoPrice());
 					]]></Body>
 				</Function>			
 			</AgentType>
@@ -1286,7 +1303,9 @@ SimStatistics.lostRevenue.getValue() + ( float)k.burgPrice(0) * pw.getHamburgerO
 				<DO>
 					<UPDATE-ENV>
 						<Create>
-							<Object objectVariable="h" type="Hamburger" addToCollection="PWTray" />
+							<Object objectVariable="h" type="Hamburger" addToCollection="PWTray" >
+								<Slot property="price" value="6"/>
+							</Object>
 							<Object objectVariable="h1" type="Hamburger" addToCollection="PWTray" />
 							<Object objectVariable="h2" type="Hamburger" addToCollection="PWTray" />
 							<Object objectVariable="c" type="Cheeseburger" addToCollection="PWTray" />
@@ -1538,7 +1557,7 @@ evt.getHamburgerType() == 0
 							<Objects type="Hamburger">
 								<RangeStartID language="Java"><![CDATA[
 evt.getOccurrenceTime() + 1								
-							]]></RangeStartID>
+							    ]]></RangeStartID>
 								<RangeEndID language="Java"><![CDATA[						
 evt.getOccurrenceTime() + quantity									
 								]]></RangeEndID>	
@@ -1722,6 +1741,34 @@ evt.getOccurrenceTime() + quantity
 					</UPDATE-ENV>
 				</THEN>
 			</EnvironmentRule>
+			<!-- =================================================== -->
+			<EnvironmentRule name="LeavesRestaurant_Rule">
+			<!-- =================================================== -->
+			  <WHEN eventType="OutMessageEvent" messageType="LeavesRestaurant" messageVariable="mes"/>
+				<FOR objectVariable="cust" objectType="Customer">
+					<ObjectIdRef language="Java">mes.getCustID()</ObjectIdRef>
+				</FOR>
+				<FOR objectVariable="mbq" objectType="Collection" objectIdRef="3" />
+				<FOR objectVariable="pwq" objectType="Collection" objectIdRef="4" />
+				<DO>
+					<UPDATE-ENV>
+						<DestroyObject objectVariable="cust" deferred="true"/>
+					</UPDATE-ENV>
+				</DO>
+				<IF language="Java"><![CDATA[
+cust.isWaitingForOrderToArrive() && ((Customer)pwq.getItem()).getId() != cust.getId()					
+					]]></IF>
+				<THEN>
+					<UPDATE-ENV>
+						<RemoveObjectFromCollection itemObjectVariable="cust" collectionID="4" />
+					</UPDATE-ENV>
+				</THEN>
+				<ELSE>
+					<UPDATE-ENV>
+						<RemoveObjectFromCollection itemObjectVariable="cust" collectionID="3" />
+					</UPDATE-ENV>
+				</ELSE>
+			</EnvironmentRule>
 		</EnvironmentRules>
 		<Collections>
 			<Collection itemType="Customer" type="FIFO_QUEUE" name="MenuBoardQueue" id="3" />
@@ -1753,20 +1800,20 @@ evt.getOccurrenceTime() + quantity
 		<Agent type="Kitchen" name="Kitchen" id="5">
 			<!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->
 			<Slot property="kitchenBusy" value="false" />
-			<Slot property="hamburgerQuantity" value="500"/>
-			<Slot property="specialSouceQuantity" value="500"/>
-			<Slot property="breadQuantity" value="500"/>
-			<Slot property="specialBreadQuantity" value="500"/>
-			<Slot property="mozzarellaQuantity" value="500"/>
-			<Slot property="lettuceQuantity" value="500"/>
-			<Slot property="mayonnaiseQuantity" value="500"/>
-			<Slot property="tomatoQuantity" value="500"/>
+			<Slot property="hamburgerQuantity" value="100"/>
+			<Slot property="specialSouceQuantity" value="100"/>
+			<Slot property="breadQuantity" value="100"/>
+			<Slot property="specialBreadQuantity" value="100"/>
+			<Slot property="mozzarellaQuantity" value="100"/>
+			<Slot property="lettuceQuantity" value="100"/>
+			<Slot property="mayonnaiseQuantity" value="100"/>
+			<Slot property="tomatoQuantity" value="100"/>
 		</Agent>
 		<!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->
 		<Agent type="Truck" name="T" id="10">
 		<!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->
 			<Slot property="unloadingTime" value="60"/>
-			<Slot property="quantityPerIngredient" value="500"/>
+			<Slot property="quantityPerIngredient" value="200"/>
 			<Slot property="hamburgerPrice" value="2.0"/>
 			<Slot property="specialSoucePrice" value="1.0"/>
 			<Slot property="breadPrice" value="1.5"/>
@@ -1879,6 +1926,25 @@ evt.getOccurrenceTime() + quantity
 					<Currency>EUR(&#8364;)</Currency>
 				</Format>
 			</StatisticsVariableUI>
+			<StatisticsVariableUI variable="profit">
+				<Label>
+					<Text xml:lang="en">Profit</Text>
+					<Text xml:lang="de"></Text>
+					<Text xml:lang="fr"></Text>	
+					<Text xml:lang="es"></Text>
+					<Text xml:lang="ro"></Text>
+				</Label>
+				<Hint>
+					<Text xml:lang="en">What is the revenue of the restaurant?</Text>
+					<Text xml:lang="de"></Text>
+					<Text xml:lang="fr"></Text>
+					<Text xml:lang="es"></Text>
+					<Text xml:lang="ro"></Text>
+				</Hint>
+				<Format decimalPlaces="2">
+					<Currency>EUR(&#8364;)</Currency>
+				</Format>
+			</StatisticsVariableUI>
 			<StatisticsVariableUI variable="averageTimeInSystem">
 				<Label>
 					<Text xml:lang="en">Mean response time</Text>
@@ -1939,7 +2005,7 @@ evt.getOccurrenceTime() + quantity
 				<!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->
 				<ObjectView objectType="MenuBoard">
 				<!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->
-					<Shape2D x="600px" y="50px">
+					<Shape2D x="450px" y="50px">
 						<Rectangle fill="green" height="50" width="50" stroke="black" strokeWidth="10">
 							<ShapePropertyMap shapeProperty="fill" property="menuBoardBusy" mapType="equalityCaseWise" v0="green" a0="false" a1="true" v1="red"/>
 						</Rectangle>
@@ -1949,7 +2015,7 @@ evt.getOccurrenceTime() + quantity
 				<!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->
 				<ObjectView objectType="Kitchen" displayName="true">
 				<!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->
-					<Shape2D x="400px" y="250px">
+					<Shape2D x="450px" y="250px">
 						<Rectangle width="800" height="200" fill="lightgrey" stroke="black" strokeWidth="2"/>
 					</Shape2D>
 					<EmbeddedView offsetX="-350px" offsetY="0px">
@@ -2019,7 +2085,7 @@ evt.getOccurrenceTime() + quantity
 				<!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->
 				<ObjectView objectType="PickupWindow">
 				<!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->
-					<Shape2D x="250px" y="50px">
+					<Shape2D x="100px" y="50px">
 						<Rectangle fill="green" width="50" height="50" stroke="black" strokeWidth="10">
 							<ShapePropertyMap shapeProperty="fill" property="pickupWindowBusy" mapType="equalityCaseWise" v0="green" a0="false" a1="true" v1="red"/>
 						</Rectangle>
@@ -2029,7 +2095,7 @@ evt.getOccurrenceTime() + quantity
 				<!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->
 				<ObjectView objectType="Queue" objectIdRef="7">
 				<!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->
-					<Shape2D x="225px" y="100px">
+					<Shape2D x="100px" y="100px">
 						<Rectangle positioning="LeftCenter" fill="lightgrey" height="10" width="1" stroke="black" strokeWidth="2">
 							<ShapePropertyMap shapeProperty="width" property="lengthOfQueue" mapType="polynomial" a0="0" a1="50"/>
 						</Rectangle>
@@ -2039,7 +2105,7 @@ evt.getOccurrenceTime() + quantity
 				<!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->
 				<ObjectView objectType="Queue" objectIdRef="6">
 				<!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->
-					<Shape2D x="575px" y="100px">
+					<Shape2D x="450px" y="100px">
 						<Rectangle positioning="LeftCenter" fill="lightgrey" height="10" width="1" stroke="black" strokeWidth="2">
 							<ShapePropertyMap shapeProperty="width" property="lengthOfQueue" mapType="polynomial" a0="0" a1="50"/>
 						</Rectangle>
@@ -2049,7 +2115,7 @@ evt.getOccurrenceTime() + quantity
 				<!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->
 				<ObjectView objectType="Queue" objectIdRef="9">
 				<!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->
-					<Shape2D x="10px" y="400px">
+					<Shape2D x="100px" y="350px">
 						<Rectangle positioning="LeftCenter" fill="lightgrey" height="10" width="1" stroke="black" strokeWidth="2">
 							<ShapePropertyMap shapeProperty="width" property="lengthOfQueue" mapType="polynomial" a0="0" a1="30"/>
 						</Rectangle>
@@ -2059,7 +2125,7 @@ evt.getOccurrenceTime() + quantity
 				<!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->
 				<ObjectView objectType="Queue" objectIdRef="12">
 				<!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->
-					<Shape2D x="320px" y="50px">
+					<Shape2D x="200px" y="50px">
 						<Rectangle positioning="LeftCenter" fill="lightgrey" height="5" width="1" stroke="black" strokeWidth="2">
 							<ShapePropertyMap shapeProperty="width" property="lengthOfQueue" mapType="polynomial" a0="0" a1="10"/>
 						</Rectangle>
