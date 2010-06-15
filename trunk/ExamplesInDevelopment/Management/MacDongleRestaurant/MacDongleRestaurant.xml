@@ -91,7 +91,7 @@ int r2 = Random.uniformInt(1,6);
 			<GlobalFunction name="randomPatienceTime" resultType="Integer">
 			<!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->
 				<Body language="Java"><![CDATA[
-return Random.uniformInt(10,20);						
+return Random.uniformInt(200,250);						
 				]]></Body>
 			</GlobalFunction>		
 		</Globals>
@@ -615,14 +615,16 @@ cust.getOrderNo()
 				<!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->
 				<CommunicationRule name="PatienceExpired_Rule" agentVariable="cust">
 					<!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->
-					<WHEN eventType="ReminderEvent" reminderMsg="PatienceExpired" eventVariable="evt"/>
+					<WHEN eventType="ReminderEvent" eventVariable="evt"/>
 					<DO>
 						<SCHEDULE-EVT>
+							<!--
 							<OutMessageEventExpr messageType="LeavesRestaurant" receiverIdRefs="1">
 								<Slot property="custID">
-									<ValueExpr language="Java">evt.getSenderIdRef()</ValueExpr>
+									<ValueExpr language="Java">cust.getId()</ValueExpr>
 								</Slot>
 							</OutMessageEventExpr>
+							-->
 						</SCHEDULE-EVT>
 					</DO>
 				</CommunicationRule>
@@ -954,7 +956,7 @@ mbq.size() > 0
 						<InMessageEventExpr messageType="AskOrderNo">
 							<Condition language="Java"><![CDATA[
 pwq.size() > 0 && cust.isWaitingForOrderToArrive()
-               ]]></Condition>
+               				]]></Condition>
 							<SenderIdRef language="Java">pw.getId()</SenderIdRef>
 							<ReceiverIdRef language="Java">cust.getId()</ReceiverIdRef>
 						</InMessageEventExpr>
@@ -1741,6 +1743,7 @@ evt.getOccurrenceTime() + quantity
 					</UPDATE-ENV>
 				</THEN>
 			</EnvironmentRule>
+			
 			<!-- =================================================== -->
 			<EnvironmentRule name="LeavesRestaurant_Rule">
 			<!-- =================================================== -->
@@ -1748,8 +1751,8 @@ evt.getOccurrenceTime() + quantity
 				<FOR objectVariable="cust" objectType="Customer">
 					<ObjectIdRef language="Java">mes.getCustID()</ObjectIdRef>
 				</FOR>
-				<FOR objectVariable="mbq" objectType="Collection" objectIdRef="3" />
-				<FOR objectVariable="pwq" objectType="Collection" objectIdRef="4" />
+				<FOR objectVariable="mbq" objectType="Collection" objectIdRef="3" objectName="MenuBoardQueue"/>
+				<FOR objectVariable="pwq" objectType="Collection" objectIdRef="4"  objectName="PickupWindowQueue"/>
 				<DO>
 					<UPDATE-ENV>
 						<DestroyObject objectVariable="cust" deferred="true"/>
@@ -1757,15 +1760,19 @@ evt.getOccurrenceTime() + quantity
 				</DO>
 				<IF language="Java"><![CDATA[
 cust.isWaitingForOrderToArrive() && ((Customer)pwq.getItem()).getId() != cust.getId()					
-					]]></IF>
+				]]></IF>
 				<THEN>
 					<UPDATE-ENV>
-						<RemoveObjectFromCollection itemObjectVariable="cust" collectionID="4" />
+						<!--
+						<RemoveObjectFromCollection itemObjectVariable="cust" collectionID="4" collectionName="PickupWindowQueue" />
+						-->
 					</UPDATE-ENV>
 				</THEN>
 				<ELSE>
 					<UPDATE-ENV>
-						<RemoveObjectFromCollection itemObjectVariable="cust" collectionID="3" />
+						<!--
+						<RemoveObjectFromCollection itemObjectVariable="cust" collectionID="3"  collectionName="MenuBoardQueue"/>
+						-->
 					</UPDATE-ENV>
 				</ELSE>
 			</EnvironmentRule>
