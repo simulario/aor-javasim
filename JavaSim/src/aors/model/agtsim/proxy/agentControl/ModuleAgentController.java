@@ -1,4 +1,4 @@
-package aors.model.agtsim.proxy.agentcontrol2;
+package aors.model.agtsim.proxy.agentControl;
 
 import aors.model.envevt.PerceptionEvent;
 import java.util.List;
