@@ -4,7 +4,7 @@ package aors.model;
  * Components that implement this interface are rollbackable.
  * Rollbackable means, that after activated alle state changes are monitored
  * until these chages are accepted or rejected. If they are rejected the
- * compnente returns to the state before the activation.
+ * component returns to the state before the activation.
  *
  * @author Thomas Grundmann
  * @since May 04, 2010
