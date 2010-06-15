@@ -1,15 +1,15 @@
 package aors.module.agentControl.gui.views;
 
-import aors.model.agtsim.proxy.agentcontrol.Pair;
+import aors.util.Pair;
 import aors.module.agentControl.gui.interaction.EventMediator;
 import aors.module.agentControl.gui.interaction.InteractiveComponent;
+import aors.module.agentControl.gui.interaction.Receiver;
 import aors.module.agentControl.gui.interaction.Sender;
 import java.awt.event.KeyEvent;
 import java.awt.event.KeyListener;
 import java.awt.event.MouseEvent;
 import java.awt.event.MouseListener;
 import java.beans.PropertyChangeEvent;
-import java.beans.PropertyChangeListener;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
@@ -17,7 +17,7 @@ import java.util.Set;
 import javax.swing.JComponent;
 
 public abstract class InteractiveView<T extends JComponent> implements View,
-	InteractiveComponent, PropertyChangeListener {
+	InteractiveComponent, Receiver {
 
 	private T guiComponent;
 
@@ -37,14 +37,17 @@ public abstract class InteractiveView<T extends JComponent> implements View,
 		return this.eventMediator;
 	}
 
+	@Override
 	public boolean isFocusable() {
 		return this.guiComponent.isFocusable();
 	}
 
+	@Override
 	public void setFocusable(boolean focusable) {
 		this.guiComponent.setFocusable(focusable);
 	}
 
+	@Override
 	public boolean requestFocusInWindow() {
 		return this.guiComponent.requestFocusInWindow();
 	}
@@ -54,9 +57,11 @@ public abstract class InteractiveView<T extends JComponent> implements View,
 		this.guiComponent.addKeyListener(keyListener);
 	}
 
+	@Override
 	public void addMouseListener(MouseListener mouseListener) {
 		this.guiComponent.addMouseListener(mouseListener);
 	}
+
 	private final static Map<String, Integer> keyCodes = initKeyCodes();
 
 	private static Map<String, Integer> initKeyCodes() {

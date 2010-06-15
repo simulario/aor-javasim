@@ -11,12 +11,12 @@ import javax.swing.JComponent;
 
 public class EventMediator implements PropertyChangeListener {
 
-  private Map<String, Set<PropertyChangeListener>> receivers;
+  private Map<String, Set<Receiver>> receivers;
   private Map<String, Sender> senders;
 	private InteractiveView<? extends JComponent> interactiveView;
 
 	public EventMediator() {
-		this.receivers = new Hashtable<String, Set<PropertyChangeListener>>();
+		this.receivers = new Hashtable<String, Set<Receiver>>();
     this.senders = new Hashtable<String, Sender>();
 	}
 
@@ -44,22 +44,22 @@ public class EventMediator implements PropertyChangeListener {
 
     if(receivers != null) {
       if(receivers.get(evt.getPropertyName()) != null) {
-        for(PropertyChangeListener pcl : receivers.get(evt.getPropertyName())) {
-          if(!pcl.equals(evt.getSource())) {
-            pcl.propertyChange(evt);
+        for(Receiver receiver : receivers.get(evt.getPropertyName())) {
+          if(!receiver.equals(evt.getSource())) {
+            receiver.propertyChange(evt);
           }
         }
       }
     }
   }
 
-  public void addReceiver(String property, PropertyChangeListener receiver,
+  public void addReceiver(String property, Receiver receiver,
 		String initialValue) {
     if(property != null && property.length()>0) {
 
 			//receiver aufnehmen
 			if(!receivers.containsKey(property)) {
-        receivers.put(property, new HashSet<PropertyChangeListener>());
+        receivers.put(property, new HashSet<Receiver>());
       }
       receivers.get(property).add(receiver);
     }

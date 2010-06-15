@@ -6,9 +6,9 @@ import aors.data.java.ObjektDestroyEvent;
 import aors.data.java.ObjektInitEvent;
 import aors.data.java.SimulationEvent;
 import aors.data.java.SimulationStepEvent;
-import aors.model.agtsim.proxy.agentcontrol.AgentControlBroker;
-import aors.model.agtsim.proxy.agentcontrol.AgentControlListener;
-import aors.model.agtsim.proxy.agentcontrol.CoreAgentController;
+import aors.model.agtsim.proxy.agentControl.AgentControlBroker;
+import aors.model.agtsim.proxy.agentControl.AgentControlListener;
+import aors.model.agtsim.proxy.agentControl.CoreAgentController;
 import aors.model.envevt.EnvironmentEvent;
 import aors.module.Module;
 import aors.module.agentControl.gui.GUIController;
@@ -25,14 +25,14 @@ import java.util.Map;
 public class ModuleController implements Module, AgentControlListener {
 
 	/**
-	 * Reference to the project directory.
+	 * The project's path.
 	 */
-	private File projectDirectory;	
+	private String projectPath;
 
 	/**
 	 * Reference to the base class of the module's gui.
 	 */
-	private GUIController gui;
+	private GUIController guiController;
 
 	/**
 	 * This variable is a switch to solve the multiple initializiation problem.
@@ -48,34 +48,34 @@ public class ModuleController implements Module, AgentControlListener {
 	 */
 	private Map<Boolean, Map<Long, CoreAgentController>> agentControllers;
 
-
-	/*****************************************************************/
-	/*** Constructors and methods to get an instance of this class ***/
-	/*****************************************************************/
+	/*******************/
+	/*** constructor ***/
+	/*******************/
 
 	/**
-	 * Instantiates the class.
+	 * Instantiates the controller and registers itself at the
+	 * {@link AgentControlBroker} as {@link AgentControlListener}.
 	 */
 	public ModuleController() {
-		this.projectDirectory = null;
-		this.gui = new GUIController(this);
-		
+		this.projectPath = null;
+		this.guiController = new GUIController(this);
 		this.initIdentifier = true;
 		this.agentControllers = new HashMap<Boolean, Map<Long,
 			CoreAgentController>>();
 
+		// registers itself at the agent control broker
 		AgentControlBroker.getInstance().addAgentControlListener(this);
 	}
 
-	/**
-	 * Instantiales the class with a reference to the visualization module's
-	 * main class.
-	 * For the moment this constructor just ignores the referenced module.
-	 * @param vizualisationModule
-	 */
-	public ModuleController(Module vizualisationModule) {
-		this();
-	}
+//	/**
+//	 * Instantiales the class with a reference to the visualization module's
+//	 * main class.
+//	 * For the moment this constructor just ignores the referenced module.
+//	 * @param vizualisationModule
+//	 */
+//	public ModuleController(Module vizualisationModule) {
+//		this();
+//	}
 
 	/**********************************/
 	/*** methods related to the gui ***/
@@ -87,7 +87,7 @@ public class ModuleController implements Module, AgentControlListener {
 	 */
 	@Override
 	public GUIController getGUIComponent() {
-		return this.gui;
+		return this.guiController;
 	}
 
 	/**
@@ -95,10 +95,7 @@ public class ModuleController implements Module, AgentControlListener {
 	 * @return the project path or <code>null</code> if no path is known
 	 */
 	public String getProjectPath() {
-		if(projectDirectory != null) {
-			return projectDirectory.getPath();
-		}
-		return null;
+		return this.projectPath;
 	}
 
 	/**
@@ -107,7 +104,9 @@ public class ModuleController implements Module, AgentControlListener {
 	 */
 	@Override
 	public void simulationProjectDirectoryChanged(File projectDirectory) {
-		this.projectDirectory = projectDirectory;
+		if(projectDirectory != null) {
+			this.projectPath = projectDirectory.getPath();
+		}
 	}
 
 	/****************************************************/
@@ -154,9 +153,8 @@ public class ModuleController implements Module, AgentControlListener {
 		/* Notifies the gui that it should update, because a new simulation has
 		 * started.
 		 */
-		this.gui.update();
+		this.guiController.update();
 	}
-
 
 	/**
 	 * Notifies that the simulation was stoped.
@@ -165,14 +163,14 @@ public class ModuleController implements Module, AgentControlListener {
 	public void simulationEnded() {
 
 		/* With the end of the simulation we no longer need the registered agent
-		 * controllers so we can change the switch's value back.
+		 * controllers so we can remove then values.
 		 */
 		this.agentControllers.remove(this.initIdentifier);
 
-		/* Notifies the gui that it should update, because the current simulation
+		/* Notifies the gui that it should reset, because the current simulation
 		 * has ended.
 		 */
-		this.gui.reset();
+		this.guiController.reset();
 	}
 
 	/**********************************************************************/
@@ -185,12 +183,12 @@ public class ModuleController implements Module, AgentControlListener {
 	 */
 	@Override
 	public void agentControllerInitialized(CoreAgentController agentController) {
-		if(!this.agentControllers.containsKey(initIdentifier)) {
-			this.agentControllers.put(initIdentifier,
+		if(!this.agentControllers.containsKey(this.initIdentifier)) {
+			this.agentControllers.put(this.initIdentifier,
 				new HashMap<Long, CoreAgentController>());
 		}
-		this.agentControllers.get(initIdentifier).put(agentController.getAgentId(),
-			agentController);
+		this.agentControllers.get(this.initIdentifier).put(
+			agentController.getAgentId(), agentController);
 	}
 
 	/**
@@ -198,7 +196,7 @@ public class ModuleController implements Module, AgentControlListener {
 	 * @return the map of agent controllers
 	 */
 	public Map<Long, CoreAgentController>	getAgentControllers() {
-		return this.agentControllers.get(initIdentifier);
+		return this.agentControllers.get(this.initIdentifier);
 	}
 
 	/********************************************/
@@ -222,22 +220,12 @@ public class ModuleController implements Module, AgentControlListener {
 	@Override
 	public void simulationInfosEvent(SimulationEvent simulationEvent) {}
 
-
 	@Override
 	public void simulationPaused(boolean pauseState) {}
 
 	@Override
-	public void simulationStepStart(long stepNumber) {
-//		if(this.controlledAgent != null) {
-//			controlledAgent.updateView();
-//		}
-	}
+	public void simulationStepStart(long stepNumber) {}
 
 	@Override
-	public void simulationStepEnd(SimulationStepEvent simulationStepEvent) {
-//		if(controlledAgent != null) {
-//			controlledAgent.performUserActions();
-//		}
-//		System.out.println("=======");
-	}
+	public void simulationStepEnd(SimulationStepEvent simulationStepEvent) {}
 }

@@ -1,9 +1,9 @@
 package aors.module.agentControl.gui.views;
 
-import aors.model.agtsim.proxy.agentcontrol.CoreAgentController;
+import aors.model.agtsim.proxy.agentControl.CoreAgentController;
 import aors.module.agentControl.gui.GUIController;
 import aors.module.agentControl.gui.interaction.EventMediator;
-import aors.model.agtsim.proxy.agentcontrol.Pair;
+import aors.util.Pair;
 import aors.model.dataTypes.AORSInteger;
 import aors.model.dataTypes.AORSString;
 import aors.module.agentControl.gui.interaction.Sender;
@@ -163,9 +163,9 @@ public class SelectionView extends InteractiveView<AORSPanel> {
 		if(evt != null && Sender.SEND_PROPERTY_NAME.equals(evt.getPropertyName()) &&
 			evt.getNewValue() instanceof Sender.ValueMap) {
 			Sender.ValueMap values = (Sender.ValueMap)evt.getNewValue();
-			this.guiController.setControlledAgentController(AORSInteger.valueOf(
-				values.get("id")).getValue(), AORSString.valueOf(values.get("lang")).
-				getValue());
+			this.guiController.setControlledAgentController(
+				AORSInteger.valueOf(values.get("id")),
+				AORSString.valueOf(values.get("lang")));
 		}
 	}
 }
