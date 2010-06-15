@@ -50,10 +50,10 @@ import aors.model.agtsim.beliefs.ERDFBeliefEntityManager;
 import aors.model.agtsim.beliefs.ERDFBeliefEntityManagerImpl;
 import aors.model.agtsim.jaxb.JaxbLogGenerator;
 import aors.model.agtsim.json.JsonLogGenerator;
-import aors.model.agtsim.proxy.agentcontrol.AgentControlBroker;
-import aors.model.agtsim.proxy.agentcontrol.CoreAgentController;
-import aors.model.agtsim.proxy.agentcontrol.ModuleAgentController;
-import aors.model.agtsim.proxy.agentcontrol.Pair;
+import aors.model.agtsim.proxy.agentControl.AgentControlBroker;
+import aors.model.agtsim.proxy.agentControl.CoreAgentController;
+import aors.model.agtsim.proxy.agentControl.ModuleAgentController;
+import aors.util.Pair;
 import aors.model.agtsim.sim.AgentSimulator;
 import aors.model.envevt.ActionEvent;
 import aors.model.envevt.InMessageEvent;
@@ -1551,12 +1551,12 @@ public abstract class AgentSubject extends Entity implements Rollbackable {
 			this.suspendedRules = new HashSet<String>();
 			this.keyEvents = new HashSet<Pair<String, String>>();
 			this.mouseEvents = new HashMap<String, Set<Pair<String, String>>>();
+			this.UILanguages = new HashSet<String>();
+			this.defaultUILanguage = null;
 			if((controllableAgents == null) || (controllableAgents.length == 0) ||
 				(Arrays.binarySearch(controllableAgents, this.getAgentId()) >= 0)) {
 				AgentControlBroker.getInstance().agentControllerInitialized(this);
 			}
-			this.UILanguages = new HashSet<String>();
-			this.defaultUILanguage = null;
     }
 
 		/***********************************************************/
@@ -1592,11 +1592,12 @@ public abstract class AgentSubject extends Entity implements Rollbackable {
 			return null;
 		}
 
-
+		@Override
 		public Set<Pair<String, String>> getKeyEvents() {
 			return this.keyEvents;
 		}
 
+		@Override
 		public Map<String, Set<Pair<String, String>>> getMouseEvents() {
 			return this.mouseEvents;
 		}
@@ -1645,10 +1646,12 @@ public abstract class AgentSubject extends Entity implements Rollbackable {
 			}
 		}
 
+		@Override
 		public Set<String> getUILanguages() {
 			return this.UILanguages;
 		}
 
+		@Override
 		public String getDefaultUILanguage() {
 			return this.defaultUILanguage;
 		}
