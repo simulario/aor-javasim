@@ -1,4 +1,4 @@
-package aors.model.agtsim.proxy.agentcontrol2;
+package aors.model.agtsim.proxy.agentControl;
 
 public class Pair<M, N> {
 
