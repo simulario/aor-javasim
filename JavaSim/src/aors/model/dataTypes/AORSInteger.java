@@ -1,17 +1,16 @@
 package aors.model.dataTypes;
 
-public final class AORSInteger extends AORSDatatype<Long> {
+public final class AORSInteger {
 
-  public AORSInteger(long value) {
-    super(value);
+  public static Long clone(Long original) {
+    return Long.valueOf(original);
   }
 
-  @Override
-  public AORSInteger clone() {
-    return new AORSInteger(this.getValue());
-  }
+	public static Long valueOf(String string) {
+		return Long.valueOf(string);
+	}
 
-	public static AORSInteger valueOf(String string) {
-		return new AORSInteger(Long.valueOf(string));
+	public static String toString(Long value) {
+		return value.toString();
 	}
 }

@@ -1,17 +1,16 @@
 package aors.model.dataTypes;
 
-public final class AORSFloat extends AORSDatatype<Double> {
+public final class AORSFloat {
 
-  public AORSFloat(double value) {
-    super(value);
+  public static Double clone(Double original) {
+    return Double.valueOf(original);
   }
 
-  @Override
-  public AORSFloat clone() {
-    return new AORSFloat(this.getValue());
-  }
+	public static Double valueOf(String string) {
+		return Double.valueOf(string);
+	}
 
-	public static AORSFloat valueOf(String string) {
-		return new AORSFloat(Double.valueOf(string));
+	public static String toString(Double value) {
+		return value.toString();
 	}
 }
