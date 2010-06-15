@@ -2,7 +2,7 @@ package aors.module.agentControl.gui.views;
 
 import aors.module.agentControl.AgentController;
 import aors.module.agentControl.gui.interaction.EventMediator;
-import aors.model.agtsim.proxy.agentcontrol.Pair;
+import aors.util.Pair;
 import aors.module.agentControl.gui.interaction.Sender;
 import aors.module.agentControl.gui.renderer.AORSPanel;
 import aors.module.agentControl.gui.renderer.AORSReplacedElementFactory;

@@ -1,6 +1,6 @@
 package aors.module.agentControl.gui;
 
-import aors.model.agtsim.proxy.agentcontrol.CoreAgentController;
+import aors.model.agtsim.proxy.agentControl.CoreAgentController;
 import aors.module.GUIModule;
 import aors.module.Module;
 import aors.module.agentControl.AgentController;
