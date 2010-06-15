@@ -1,17 +1,16 @@
 package aors.model.dataTypes;
 
-public final class AORSString extends AORSDatatype<String> {
+public final class AORSString {
 
-  public AORSString(String value) {
-    super(value);
+  public static String clone(String original) {
+    return new String(original);
   }
 
-  @Override
-  public AORSString clone() {
-    return new AORSString(this.getValue());
-  }
+	public static String valueOf(String string) {
+		return AORSString.clone(string);
+	}
 
-	public static AORSString valueOf(String string) {
-		return new AORSString(string);
+	public static String toString(String value) {
+		return AORSString.clone(value);
 	}
 }

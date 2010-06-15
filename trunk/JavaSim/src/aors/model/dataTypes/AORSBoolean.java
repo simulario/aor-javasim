@@ -1,17 +1,16 @@
 package aors.model.dataTypes;
 
-public final class AORSBoolean extends AORSDatatype<Boolean> {
+public final class AORSBoolean {
 
-  public AORSBoolean(boolean value) {
-    super(value);
+  public static Boolean clone(Boolean original) {
+		return Boolean.valueOf(original);
   }
 
-  @Override
-  public AORSBoolean clone() {
-    return new AORSBoolean(this.getValue());
-  }
+	public static Boolean valueOf(String string) {
+		return Boolean.valueOf(string);
+	}
 
-	public static AORSBoolean valueOf(String string) {
-		return new AORSBoolean(Boolean.valueOf(string));
+	public static String toString(Boolean value) {
+		return value.toString();
 	}
 }
