@@ -93,7 +93,14 @@ int r2 = Random.uniformInt(1,6);
 				<Body language="Java"><![CDATA[
 return Random.uniformInt(200,250);						
 				]]></Body>
-			</GlobalFunction>		
+			</GlobalFunction>	
+			<GlobalFunction name="print" resultType="Integer">
+				<Parameter name="param" type="Integer"/>
+				<Body language="Java">
+					System.out.println("Valoarea este: "+param);
+					return param;
+				</Body>
+			</GlobalFunction>   	
 		</Globals>
 		<EntityTypes>
 			<!-- =================================================== -->
@@ -346,7 +353,7 @@ Integer.parseInt( getMessagePart( evt.getReminderMsg(), 2))
 					<!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->
 					<Parameter name="hamburgerType" type="Integer"/>
 					<Body language="Java"><![CDATA[
-double[] price = {8.90, 9.80, 8.50, 7.20};
+double[] price = {2.55, 3.65, 5.55, 6.55};
 	return price[( int) hamburgerType];
 					]]></Body>
 				</Function>
@@ -361,14 +368,7 @@ double[] price = {8.90, 9.80, 8.50, 7.20};
 				<Attribute name="saladOnTheTray" type="Integer" />
 				<Attribute name="superOnTheTray" type="Integer" />
 				<Attribute name="lostRevenue" type="Float"/>		
-				
-				<Function name="print" resultType="Integer">
-					<Parameter name="param" type="Integer"/>
-					<Body language="Java">
-						System.out.println("Valoarea este: "+param);
-						return param;
-					</Body>
-				</Function>   						
+									
 				<!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~-->
 				<Function name="isAvailableOnTheTray" resultType="Boolean">
 				<!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~-->
@@ -624,7 +624,7 @@ cust.getOrderNo()
 									<ValueExpr language="Java">cust.getId()</ValueExpr>
 								</Slot>
 							</OutMessageEventExpr>
-							-->
+						     -->
 						</SCHEDULE-EVT>
 					</DO>
 				</CommunicationRule>
@@ -951,7 +951,7 @@ mbq.size() > 0
 						<UpdateObject objectVariable="pw">
 							<Slot property="pickupWindowBusy" value="true"/>
 						</UpdateObject>
-					</UPDATE-ENV>
+					</UPDATE-ENV>			
 					<SCHEDULE-EVT>
 						<InMessageEventExpr messageType="AskOrderNo">
 							<Condition language="Java"><![CDATA[
@@ -1146,11 +1146,13 @@ mes.getHamburgerType()
 				</FOR>
 				<DO>
 					<UPDATE-ENV>
+					<!--
 						<UpdateStatisticsVariable variable="revenue">
 							<ValueExpr language="Java"><![CDATA[
 SimStatistics.revenue.getValue() + ( float)k.burgPrice(( int) hamburgerType)
 					    	]]></ValueExpr>
 						</UpdateStatisticsVariable>
+						-->
 					</UPDATE-ENV>
 					<SCHEDULE-EVT>
 						<InMessageEventExpr messageType="AnticipatedOrder" receiverIdRefs="2" senderIdRef="1">
@@ -1188,9 +1190,9 @@ mes.getCustID()
 				<FOR objectVariable="t" objectType="Truck" objectIdRef="10" />
 				<DO>
 					<UPDATE-ENV>
-						<UpdateStatisticsVariable variable="revenue">
+						<UpdateStatisticsVariable variable="lostRevenue">
 							<ValueExpr language="Java"><![CDATA[
-SimStatistics.revenue.getValue() - t.invoice(t)								
+SimStatistics.lostRevenue.getValue() + Global.print((int)t.invoice(t))								
 						   ]]></ValueExpr>
 						</UpdateStatisticsVariable>	
 					</UPDATE-ENV>
@@ -1306,19 +1308,41 @@ SimStatistics.lostRevenue.getValue() + ( float)k.burgPrice(0) * pw.getHamburgerO
 					<UPDATE-ENV>
 						<Create>
 							<Object objectVariable="h" type="Hamburger" addToCollection="PWTray" >
-								<Slot property="price" value="6"/>
+								<Slot property="price" value="2.55"/>
 							</Object>
-							<Object objectVariable="h1" type="Hamburger" addToCollection="PWTray" />
-							<Object objectVariable="h2" type="Hamburger" addToCollection="PWTray" />
-							<Object objectVariable="c" type="Cheeseburger" addToCollection="PWTray" />
-							<Object objectVariable="c1" type="Cheeseburger" addToCollection="PWTray" />
-							<Object objectVariable="c2" type="Cheeseburger" addToCollection="PWTray" />
-							<Object objectVariable="s" type="Salad" addToCollection="PWTray" />
-							<Object objectVariable="s1" type="Salad" addToCollection="PWTray" />
-							<Object objectVariable="s2" type="Salad" addToCollection="PWTray" />
-							<Object objectVariable="sh" type="SuperHamburger" addToCollection="PWTray" />
-							<Object objectVariable="sh1" type="SuperHamburger" addToCollection="PWTray" />
-							<Object objectVariable="sh2" type="SuperHamburger" addToCollection="PWTray" />
+							<Object objectVariable="h1" type="Hamburger" addToCollection="PWTray" >
+								<Slot property="price" value="2.55"/>
+							</Object>
+							<Object objectVariable="h2" type="Hamburger" addToCollection="PWTray" >
+								<Slot property="price" value="2.55"/>
+							</Object>
+							<Object objectVariable="c" type="Cheeseburger" addToCollection="PWTray" >
+							<Slot property="price" value="3.65"/>
+							</Object>
+							<Object objectVariable="c1" type="Cheeseburger" addToCollection="PWTray" >
+							<Slot property="price" value="3.65"/>
+							</Object>
+							<Object objectVariable="c2" type="Cheeseburger" addToCollection="PWTray" >
+							<Slot property="price" value="3.65"/>
+							</Object>							
+							<Object objectVariable="s" type="Salad" addToCollection="PWTray" >
+							<Slot property="price" value="5.55"/>
+							</Object>
+							<Object objectVariable="s1" type="Salad" addToCollection="PWTray" >
+							<Slot property="price" value="5.55"/>
+							</Object>
+							<Object objectVariable="s2" type="Salad" addToCollection="PWTray" >
+							<Slot property="price" value="5.55"/>
+							</Object>							
+							<Object objectVariable="sh" type="SuperHamburger" addToCollection="PWTray" >
+							<Slot property="price" value="6.55"/>
+							</Object>
+							<Object objectVariable="sh1" type="SuperHamburger" addToCollection="PWTray" >
+							<Slot property="price" value="6.55"/>
+							</Object>
+							<Object objectVariable="sh2" type="SuperHamburger" addToCollection="PWTray" >
+							<Slot property="price" value="6.55"/>
+							</Object>
 						</Create>
 						<UpdateObject objectVariable="pw">
 							<Slot property="hamburgerOnTheTray" value="3" />
@@ -1486,11 +1510,13 @@ evt.getHamburgerType()
 				</FOR>
 				<DO>
 					<UPDATE-ENV>
+						<!--
 						<UpdateStatisticsVariable variable="revenue">
 							<ValueExpr language="Java"><![CDATA[
 SimStatistics.revenue.getValue() + ( float)k.burgPrice(( int) hamburgerType)
 						     ]]></ValueExpr>
 						</UpdateStatisticsVariable>
+						-->
 						<RemoveObjectFromCollection collectionID="8" collectionObjectVariable="kq" />
 						<UpdateObject objectVariable="q3">
 							<Slot property="lengthOfQueue">
@@ -1821,14 +1847,14 @@ cust.isWaitingForOrderToArrive() && ((Customer)pwq.getItem()).getId() != cust.ge
 		<!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->
 			<Slot property="unloadingTime" value="60"/>
 			<Slot property="quantityPerIngredient" value="200"/>
-			<Slot property="hamburgerPrice" value="2.0"/>
-			<Slot property="specialSoucePrice" value="1.0"/>
-			<Slot property="breadPrice" value="1.5"/>
-			<Slot property="specialBreadPrice" value="2.0"/>
-			<Slot property="mozzarellaPrice" value="2.0"/>
-			<Slot property="lettucePrice" value="1.0"/>
-			<Slot property="mayonnaisePrice" value="1.5"/>
-			<Slot property="tomatoPrice" value="1.0"/>
+			<Slot property="hamburgerPrice" value="1.2"/>
+			<Slot property="specialSoucePrice" value="0.4"/>
+			<Slot property="breadPrice" value="0.65"/>
+			<Slot property="specialBreadPrice" value="0.9"/>
+			<Slot property="mozzarellaPrice" value="0.9"/>
+			<Slot property="lettucePrice" value="0.4"/>
+			<Slot property="mayonnaisePrice" value="0.6"/>
+			<Slot property="tomatoPrice" value="0.5"/>
 		</Agent>
 		<!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->
 		<Object type="Queue" id="6" name="MBQueue">
