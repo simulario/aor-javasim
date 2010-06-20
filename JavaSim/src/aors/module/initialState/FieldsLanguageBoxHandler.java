@@ -19,7 +19,7 @@ public class FieldsLanguageBoxHandler implements ActionListener {
   public FieldsLanguageBoxHandler(
       HashMap<String, Vector<InitialStateUITab.FieldsEdit>> fieldsTypeMap,
       HashMap<String, String> labelMap, HashMap<String, String> hintMap,
-      HashMap<String, Vector<String>> userInterfaceMap,
+      HashMap<String, HashSet<String>> userInterfaceMap,
       HashMap<String, HashSet<String>> objectObjectEventMap,
       Vector<JButton> buttons) {
 
@@ -113,7 +113,7 @@ public class FieldsLanguageBoxHandler implements ActionListener {
         }
       }
 
-      Vector<String> tempPropertyVector = userInterfaceMap
+      HashSet<String> tempPropertyVector = userInterfaceMap
           .get(userInterfaceType);
       Vector<InitialStateUITab.FieldsEdit> fieldsContainer = fieldsTypeMap
           .get(tempFieldsType);
@@ -187,7 +187,7 @@ public class FieldsLanguageBoxHandler implements ActionListener {
   private HashMap<String, Vector<String>> buttonLanMap = new HashMap<String, Vector<String>>();
   private HashMap<String, String> labelMap;
   private HashMap<String, String> hintMap;
-  private HashMap<String, Vector<String>> userInterfaceMap;
+  private HashMap<String, HashSet<String>> userInterfaceMap;
   private HashMap<String, HashSet<String>> objectObjectEventMap;
 
 }

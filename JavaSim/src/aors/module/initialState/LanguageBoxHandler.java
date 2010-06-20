@@ -3,6 +3,7 @@ package aors.module.initialState;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.Iterator;
 import java.util.Vector;
 
@@ -16,7 +17,7 @@ public class LanguageBoxHandler implements ActionListener {
 
   public LanguageBoxHandler(String type, JTable table,
       HashMap<String, String> labelMap, HashMap<String, String> hintMap,
-      HashMap<String, Vector<String>> userInterfaceMap, Vector<JButton> buttons) {
+      HashMap<String, HashSet<String>> userInterfaceMap, Vector<JButton> buttons) {
 
     this.type = type;
     this.table = table;
@@ -158,10 +159,10 @@ public class LanguageBoxHandler implements ActionListener {
 
   private String type;
   private JTable table;
-  private Vector<String> tempPropertyVector;
+  private HashSet<String> tempPropertyVector;
   private HashMap<String, String> labelMap;
   private HashMap<String, String> hintMap;
-  private HashMap<String, Vector<String>> userInterfaceMap;
+  private HashMap<String, HashSet<String>> userInterfaceMap;
   private HashMap<String, Vector<String>> buttonLanMap = new HashMap<String, Vector<String>>();
   private Vector<JButton> buttons;
 
