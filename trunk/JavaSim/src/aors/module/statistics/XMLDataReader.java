@@ -315,21 +315,24 @@ public class XMLDataReader {
                   + statisticsVariableUI + "[@variable='" + var.getName()
                   + "']/" + PREFIX + formatNode);
               if (format != null) {
-                getAttributes(format, var);
+                this.getAttributes(format, var);
+                
                 Node formatCategory = simDescription.getNode("//" + PREFIX
                     + statisticsVariableUI + "[@variable='" + var.getName()
                     + "']/" + PREFIX + formatNode + "/*");
-                if (formatCategory.getNodeName().equalsIgnoreCase("Currency")) {
-                  String curr = formatCategory.getTextContent();
-                  if (curr.length() > currencyISOLength) {
-                    curr = " "
-                        + curr.substring(currencyISOLength + 1,
-                            curr.length() - 1);
+                if (formatCategory != null) {
+                  if (formatCategory.getNodeName().equalsIgnoreCase("Currency")) {
+                    String curr = formatCategory.getTextContent();
+                    if (curr.length() > currencyISOLength) {
+                      curr = " "
+                          + curr.substring(currencyISOLength + 1,
+                              curr.length() - 1);
+                    }
+                    var.getStatsVarUIMap().put(formatNode, curr);
+                  } else {
+                    var.getStatsVarUIMap().put(formatNode,
+                        formatCategory.getTextContent());
                   }
-                  var.getStatsVarUIMap().put(formatNode, curr);
-                } else {
-                  var.getStatsVarUIMap().put(formatNode,
-                      formatCategory.getTextContent());
                 }
               }
             }
