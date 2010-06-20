@@ -660,8 +660,8 @@ class EditJDialog extends JDialog {
 	                  for (Iterator<String> propertys = tempPropertySet.iterator(); propertys
 	                      .hasNext();) {
 
-	                    String property = propertys.next();
-	                    String propertyType = property + type;
+	                    String propertyType = propertys.next();
+	                    
 
 	                    HashSet<String> tempLanSet = initialStateUITab.getLanType()
 	                        .get(type);
@@ -675,7 +675,7 @@ class EditJDialog extends JDialog {
 	                          label[i].getText())) {
 
 	                        Vector<Integer> tempValueRange = initialStateUITab
-	                            .getConstrainNameMapRange().get(property);
+	                            .getConstrainNameMapRange().get(propertyType);
 	                        int minValue = tempValueRange.get(0);
 	                        int maxValue = tempValueRange.get(1);
 
