@@ -259,7 +259,7 @@ public class InitialStateUITab extends JScrollPane implements GUIModule {
 	    
 	  }
   
-   // return all super type
+   // return all super type for a type
    public HashSet<String> processSuperTypeSet(String type, HashSet<String> tempSet){
 	  
 	     if(superTypeMap.get(type) != null){
@@ -298,6 +298,7 @@ public class InitialStateUITab extends JScrollPane implements GUIModule {
 
   public void enumValueConstrain() {
 
+	//get all EnumerationProperty elements from the secnario.xml file  
     NodeList EnumerationPropertys = sd.getNodeList(ENUMPROPERTY);
     for (int j = 0; j < EnumerationPropertys.getLength(); j++) {
 
@@ -331,12 +332,13 @@ public class InitialStateUITab extends JScrollPane implements GUIModule {
 
     }
     
+    //get all enumeration property from super type
     processSuperTypeContainerMap(enumPropertyTypeMap,"enum");
   }
   
   
   
-  /*get all values from superType to subType*/
+  /*set all correspondent values from superType to subType*/
   public void processSuperTypeContainerMap(HashMap<String,HashSet<String>> propertyTypeMap,String type){
 	  
 	 	  
@@ -360,7 +362,7 @@ public class InitialStateUITab extends JScrollPane implements GUIModule {
 			    			 tempPropertyType.length()-tempSuperType.length())+tempType;
 			    	 
 			    	 
-			    	 
+			    	 //process enumeration property if possible
 			    	 if(type.equals("enum")){
 			             
 			               HashSet<String> tempEnumSet = enumMap.get(tempPropertyType);
@@ -368,7 +370,7 @@ public class InitialStateUITab extends JScrollPane implements GUIModule {
 			            
 			            }else{
 			              
-			              
+			              //process minvalue and maxvalue if possible
 			              Vector<Integer> tempValueRange = minMaxRangeMap.get(tempPropertyType);
 			              minMaxRangeMap.put(newTempPropertyType, tempValueRange);
 			                         
@@ -566,7 +568,7 @@ public class InitialStateUITab extends JScrollPane implements GUIModule {
   /*
    * create the typeUITableHead to save every Type. The type of GlobalVariable
    * is globalVariable and the BeliefEntityUI is a special one that we will deal
-   * with separately
+   * with it separately
    */
 
   public void createInitialStateUITableHeader(NodeList list) {
@@ -610,6 +612,7 @@ public class InitialStateUITab extends JScrollPane implements GUIModule {
    }
   
   
+  //Utility method to process label and hint information
   public void processLabelAndHint(String property, String type, Node node){
 	    
 	       
@@ -752,7 +755,7 @@ public class InitialStateUITab extends JScrollPane implements GUIModule {
 
   }
   
-  /*we use this method to process configuring table cell length */
+  /*We use this method to process configuring table cell length */
   public void processTableFieldLength(String type, JTable table) {
 
     if (fieldLengthTypeSet.contains(type)) {
@@ -786,14 +789,14 @@ public class InitialStateUITab extends JScrollPane implements GUIModule {
 
   }
   
-  /*we use this method to create new object type there are two style
+  /*We use this method to create new object type there are two style
   one is table, the other is label with textField*/
   public JPanel createObjectContent(String type, Node node, String nodeName) {
 
     String title = type + "<<" + nodeName + ">>";
     JPanel objectSubPanel = createSubPanel(title);
-    JPanel objectCenterPanel = createCenterPanel();
-    JPanel objectBottomPanel = createBottomPanel();
+    JPanel objectCenterPanel = createContentPanel(null);
+    JPanel objectBottomPanel = createContentPanel(null);
 
     DefaultTableModel model = null;
     // process table style
@@ -805,7 +808,8 @@ public class InitialStateUITab extends JScrollPane implements GUIModule {
 
       JTable table = new JTable();
       table.setModel(model);
-
+      
+      //Here we will render the table cell of SelfBeliefProperty
       for (int j = 0; j < model.getColumnCount(); j++) {
 
         String colHeadValue = model.getColumnName(j);
@@ -1107,8 +1111,8 @@ public class InitialStateUITab extends JScrollPane implements GUIModule {
 
     String title = type + "<<" + node.getNodeName() + ">>";
     JPanel eventSubPanel = createSubPanel(title);
-    JPanel eventCenterPanel = createCenterPanel();
-    JPanel eventBottomPanel = createBottomPanel();
+    JPanel eventCenterPanel = createContentPanel(null);
+    JPanel eventBottomPanel = createContentPanel(null);
 
     DefaultTableModel model = null;
 
@@ -1234,22 +1238,17 @@ public class InitialStateUITab extends JScrollPane implements GUIModule {
 
   }
 
- 
+  //process Slot element with ValueExpr sub element  
   public void processSlotValueExpr(String type, NodeList nodes,
       String property, String objectType) {
 
+	//map a property in a type with correspondent language set 
     HashMap<String, HashSet<String>> valueExprLanMap = new HashMap<String, HashSet<String>>();
+    
+    //map a property of a type in a language with correspondent value  
     HashMap<String, String> valueExprValueMap = new HashMap<String, String>();
 
-    String valueExprLanKey;
-
-    if (objectType != null) {
-
-      valueExprLanKey = property + objectType + type;
-    } else {
-
-      valueExprLanKey = property + type;
-    }
+    String valueExprLanKey = property+typeTransfer(objectType,type);
 
     HashSet<String> tempLanSet = new HashSet<String>();
 
@@ -1264,9 +1263,12 @@ public class InitialStateUITab extends JScrollPane implements GUIModule {
     }
 
     valueExprLanMap.put(valueExprLanKey, tempLanSet);
+    
+    // create ValueExpr container for each Slot element with sub ValueExpr sub element
     ValueExprPropertyContainer vContainer = new ValueExprPropertyContainer(
         valueExprLanKey, valueExprLanMap, valueExprValueMap);
-
+    
+    // map a property of a type to the correspondent container 
     if (!valueExprPropertyContainerMap.containsKey(valueExprLanKey)) {
 
       Vector<ValueExprPropertyContainer> newContainers = new Vector<ValueExprPropertyContainer>();
@@ -2484,14 +2486,7 @@ public class InitialStateUITab extends JScrollPane implements GUIModule {
 
   }
 
-  public JPanel createCenterPanel() {
-
-    JPanel contentPanel = new JPanel();
-    contentPanel.setLayout(new BoxLayout(contentPanel, BoxLayout.Y_AXIS));
-    return contentPanel;
-
-  }
-
+ 
   public JScrollPane createScrollPane(JTable table) {
 
     JScrollPane tableScroll = new JScrollPane();
@@ -2500,18 +2495,14 @@ public class InitialStateUITab extends JScrollPane implements GUIModule {
 
   }
 
-  public JPanel createBottomPanel() {
-
-    JPanel bottomPanel = new JPanel();
-    bottomPanel.setLayout(new BoxLayout(bottomPanel, BoxLayout.Y_AXIS));
-    return bottomPanel;
-
-  }
-
   public JPanel createContentPanel(String title) {
 
     JPanel contentPanel = new JPanel();
+    
+    if(title != null){
     contentPanel.setBorder(BorderFactory.createTitledBorder(title));
+    }
+    
     contentPanel.setLayout(new BoxLayout(contentPanel, BoxLayout.Y_AXIS));
     return contentPanel;
 
