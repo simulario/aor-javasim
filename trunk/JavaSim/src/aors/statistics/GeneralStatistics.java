@@ -17,11 +17,6 @@ public abstract class GeneralStatistics {
   protected EnvironmentSimulator environmentSimulator;
 
   /**
-   * a list with variables for output (is set displayName)
-   */
-  private List<AbstractStatisticsVariable> displayVars = new ArrayList<AbstractStatisticsVariable>();
-
-  /**
    * a list with variables with expressions and computed in every step
    * computeOnlyAtEnd = false
    */
@@ -33,23 +28,12 @@ public abstract class GeneralStatistics {
    */
   private List<AbstractStatisticsVariable> exprVarSim = new ArrayList<AbstractStatisticsVariable>();
 
-  public void addDisplayVar(AbstractStatisticsVariable v) {
-    this.displayVars.add(v);
-  }
-
   public void addExprVarStep(AbstractStatisticsVariable v) {
     this.exprVarStep.add(v);
   }
 
   public void addExprVarSim(AbstractStatisticsVariable v) {
     this.exprVarSim.add(v);
-  }
-
-  /**
-   * @return the displayVars
-   */
-  public List<AbstractStatisticsVariable> getDisplayVars() {
-    return displayVars;
   }
 
   /**
