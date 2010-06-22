@@ -1734,33 +1734,6 @@
       </xsl:call-template>
     </xsl:if>
 
-    <!-- set displayName -->
-    <xsl:if test="fn:exists(@displayName)">
-      <xsl:call-template name="java:callSetterMethod">
-        <xsl:with-param name="indent" select="$indent"/>
-        <xsl:with-param name="objInstance">
-          <xsl:call-template name="java:varByDotNotation">
-            <xsl:with-param name="name" select="$sim.class.simStatistics"/>
-            <xsl:with-param name="varName" select="@name"/>
-          </xsl:call-template>
-        </xsl:with-param>
-        <xsl:with-param name="instVariable" select="'displayName'"/>
-        <xsl:with-param name="value" select="jw:quote(@displayName)"/>
-      </xsl:call-template>
-
-      <xsl:call-template name="java:callMethod">
-        <xsl:with-param name="indent" select="$indent"/>
-        <xsl:with-param name="objInstance" select="$statisticVarName"/>
-        <xsl:with-param name="method" select="'addDisplayVar'"/>
-        <xsl:with-param name="args">
-          <xsl:call-template name="java:varByDotNotation">
-            <xsl:with-param name="name" select="$sim.class.simStatistics"/>
-            <xsl:with-param name="varName" select="@name"/>
-          </xsl:call-template>
-        </xsl:with-param>
-      </xsl:call-template>
-    </xsl:if>
-
     <!-- set aggregat function -->
     <xsl:if test="exists(aorsml:Source/@aggregationFunction)">
       <xsl:call-template name="java:callSetterMethod">
