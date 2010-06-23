@@ -727,7 +727,7 @@ public class InitialStateUITab extends JScrollPane implements GUIModule {
             if (!typeSet.contains(type)) {
               typeSet.add(type);
 
-              initialStatePanel.add(createEventContent(type, child));
+              initialStatePanel.add(createEventPanel(child,type,null));
               initialStatePanel.add(Box.createVerticalStrut(5));
             } else {
 
@@ -902,7 +902,7 @@ public class InitialStateUITab extends JScrollPane implements GUIModule {
           if (typeUITableHead.contains(eventType)) {
             if (!typeSet.contains(objectEventType)) {
               typeSet.add(objectEventType);
-              objectEventPanel = createObjectEventPanel(children.item(i),
+              objectEventPanel = createEventPanel(children.item(i),
                   eventType, type);
 
               if (!fieldStyleSet.contains(eventType)) {
@@ -931,7 +931,7 @@ public class InitialStateUITab extends JScrollPane implements GUIModule {
           if (typeUITableHead.contains(entityType)) {
             if (!typeSet.contains(agentEntityType)) {
               typeSet.add(agentEntityType);
-              agentEntityPanel = createObjectEventPanel(children.item(i),
+              agentEntityPanel = createEventPanel(children.item(i),
                   entityType, type);
 
               if (!fieldStyleSet.contains(entityType)) {
@@ -1105,72 +1105,7 @@ public class InitialStateUITab extends JScrollPane implements GUIModule {
     }
   }
   
-   /*we use this method to create panel for
-   some type of event*/
-  public JPanel createEventContent(String type, Node node) {
-
-    String title = type + "<<" + node.getNodeName() + ">>";
-    JPanel eventSubPanel = createSubPanel(title);
-    JPanel eventCenterPanel = createContentPanel(null);
-    JPanel eventBottomPanel = createContentPanel(null);
-
-    DefaultTableModel model = null;
-
-    if (!fieldStyleSet.contains(type)) {
-
-      model = createTableModel(type, node);
-
-    } else {
-
-      createFieldModel(type, node, null);
-
-    }
-
-    if (node.hasChildNodes()) {
-
-      HashSet<String> tempContent = userInterfaceMap.get(type);
-
-      NodeList subNodes = node.getChildNodes();
-      for (int i = 0; i < subNodes.getLength(); i++) {
-               
-    	  if (subNodes.item(i).getNodeName().equalsIgnoreCase("Slot")) {
-    	
-    	  //process Slot sub element of some type of event  
-          processCreateSlot(model, subNodes.item(i), tempContent, type, null);
-
-        }
-
-      }
-
-    }
-
-    if (!fieldStyleSet.contains(type)) {
-
-      JTable table = new JTable(model);
-      processTableFieldLength(type, table);
-      JScrollPane tablePane = createScrollPane(table);
-      eventCenterPanel.add(tablePane);
-      eventCenterPanel.add(createButtonPanel(model, table, type, node, null));
-      eventSubPanel.add(eventCenterPanel, BorderLayout.CENTER);
-      tableType.put(type, table);
-    } else {
-
-      Vector<String> tempLabels = labelTypeMap.get(type);
-      Vector<String> tempFields = fieldTypeMap.get(type);
-      FieldsEdit fieldsEdit = new FieldsEdit(tempLabels, tempFields,
-          initialStateUITab, type, null);
-      Vector<FieldsEdit> fieldsContainer = new Vector<FieldsEdit>();
-      fieldsContainer.add(fieldsEdit);
-      fieldsTypeMap.put(type, fieldsContainer);
-      JPanel entry = fieldsEdit.createGridLayoutPanel();
-      eventBottomPanel.add(entry);
-      eventSubPanel.add(eventBottomPanel, BorderLayout.SOUTH);
-      contentPanelTypeMap.put(type, eventBottomPanel);
-
-    }
-    return eventSubPanel;
-
-  }
+  
   
   /*process GlobalVaribale element, for Globalvariable
   there is only one style label with textField*/
@@ -1286,9 +1221,10 @@ public class InitialStateUITab extends JScrollPane implements GUIModule {
 
   }
 
-  public JPanel createObjectEventPanel(Node node, String type, String objectType) {
+  //We use this method to process all event(event,objectevent)
+  public JPanel createEventPanel(Node node, String type, String objectType) {
 
-    String objectEventType = objectType + type;
+    String modelType = typeTransfer(objectType,type);
     String title = type + "<<" + node.getNodeName() + ">>";
 
     DefaultTableModel model = null;
@@ -1308,55 +1244,87 @@ public class InitialStateUITab extends JScrollPane implements GUIModule {
       for (int i = 0; i < subNodes.getLength(); i++) {
         if (subNodes.item(i).getNodeName().equals("Slot")
             | subNodes.item(i).getNodeName().equals("BeliefSlot")) {
-          // Vector<String> columnValue = new Vector<String>();
+          
           processCreateSlot(model, subNodes.item(i), tempContent, type,
               objectType);
         }
       }
     }
 
-    JPanel objectEventPanel = createContentPanel(title);
+    JPanel returnPanel = null;
 
     if (!fieldStyleSet.contains(type)) {
 
       JTable table = new JTable(model);
       processTableFieldLength(type, table);
       JScrollPane tablePane = createScrollPane(table);
-      objectEventPanel.add(tablePane);
-      objectEventPanel.add(createButtonPanel(model, table, type, node,
-          objectType));
-      tableType.put(objectEventType, table);
+      
+      if(objectType != null){  
+          
+          returnPanel = createContentPanel(title);
+          returnPanel.add(tablePane);
+          returnPanel.add(createButtonPanel(model, table, type, node,objectType));
+          
+        }else{
+          
+          returnPanel = createSubPanel(title);
+          JPanel eventCenterPanel = createContentPanel(null);
+          eventCenterPanel.add(tablePane);
+          eventCenterPanel.add(createButtonPanel(model, table, type, node, null));
+          returnPanel.add(eventCenterPanel,BorderLayout.CENTER);
+          
+        }
+      
+      
+      
+      tableType.put(modelType, table);
 
     } else {
 
-      Vector<String> tempLabels = labelTypeMap.get(objectType + type);
-      Vector<String> tempFields = fieldTypeMap.get(objectType + type);
+      Vector<String> tempLabels = labelTypeMap.get(modelType);
+      Vector<String> tempFields = fieldTypeMap.get(modelType);
       FieldsEdit fieldsEdit = new FieldsEdit(tempLabels, tempFields,
           initialStateUITab, type, objectType);
       Vector<FieldsEdit> fieldsContainer = new Vector<FieldsEdit>();
       fieldsContainer.add(fieldsEdit);
       JPanel entry = fieldsEdit.createGridLayoutPanel();
-      objectEventPanel.add(entry);
-      contentPanelTypeMap.put(objectEventType, objectEventPanel);
-      fieldsTypeMap.put(objectEventType, fieldsContainer);
+      
+      if(objectType != null){
+          returnPanel = createContentPanel(title);
+          returnPanel.add(entry);
+      }else{
+          returnPanel = createSubPanel(title);
+          JPanel eventBottomPanel = createContentPanel(null);
+          eventBottomPanel.add(entry);
+          returnPanel.add(eventBottomPanel,BorderLayout.SOUTH);
+      }
+      
+      
+      contentPanelTypeMap.put(modelType, returnPanel);
+      fieldsTypeMap.put(modelType, fieldsContainer);
 
     }
+    
+    
+    if(objectType != null){ 
 
     if ((objectObjectEventMap.keySet()).contains(objectType)) {
 
       HashSet<String> tempSet = objectObjectEventMap.get(objectType);
-      tempSet.add(objectEventType);
+      tempSet.add(modelType);
       objectObjectEventMap.put(objectType, tempSet);
 
     } else {
 
       HashSet<String> newObjectEventTypeSet = new HashSet<String>();
-      newObjectEventTypeSet.add(objectEventType);
+      newObjectEventTypeSet.add(modelType);
       objectObjectEventMap.put(objectType, newObjectEventTypeSet);
 
     }
+    
+    }
 
-    return objectEventPanel;
+    return returnPanel;
 
   }
 
