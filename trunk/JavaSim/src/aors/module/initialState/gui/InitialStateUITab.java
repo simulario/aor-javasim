@@ -1130,7 +1130,7 @@ public class InitialStateUITab extends JScrollPane implements GUIModule {
           if (subNodeName.equals("ValueExpr")) {
 
             value = "ValueExpr";
-            
+            //process ValueExpr sub element if possible
             processPropertyTypeMap(valueExprTypePropertyMap,name,type);
             NodeList valueExprNodes = sd.getNodeList(PX + "ValueExpr", nodes
                 .item(i));
@@ -1157,16 +1157,28 @@ public class InitialStateUITab extends JScrollPane implements GUIModule {
       }
 
     }
-
+    
+    //process the labels of all GlobalVariables
     labelTypeMap.put(type, tempLabels);
+    
+    //process the values of all GlobalVariables
     fieldTypeMap.put(type, tempFields);
+    
+    //create a FieldEdit instance
     FieldsEdit fieldsEdit = new FieldsEdit(tempLabels, tempFields,
         initialStateUITab, type, null);
     Vector<FieldsEdit> fieldsContainer = new Vector<FieldsEdit>();
     fieldsContainer.add(fieldsEdit);
+    //create the correspondent panel to contain correspondent labels with fields 
     JPanel entry = fieldsEdit.createGridLayoutPanel();
+    
+    //add each GlobalVariable label with field entry into the GlobalVaribale panel
     globalVariablePanel.add(entry);
+    
+    //create a map between a concrete GlobalVariable and the panel
     contentPanelTypeMap.put(type, globalVariablePanel);
+    
+    //create a map between a concrete GlobalVariable and the container 
     fieldsTypeMap.put(type, fieldsContainer);
 
     return globalVariablePanel;
@@ -1259,13 +1271,13 @@ public class InitialStateUITab extends JScrollPane implements GUIModule {
       processTableFieldLength(type, table);
       JScrollPane tablePane = createScrollPane(table);
       
-      if(objectType != null){  
+      if(objectType != null){//process independent event
           
           returnPanel = createContentPanel(title);
           returnPanel.add(tablePane);
           returnPanel.add(createButtonPanel(model, table, type, node,objectType));
           
-        }else{
+        }else{//process object event
           
           returnPanel = createSubPanel(title);
           JPanel eventCenterPanel = createContentPanel(null);
@@ -1307,7 +1319,7 @@ public class InitialStateUITab extends JScrollPane implements GUIModule {
     
     
     if(objectType != null){ 
-
+    //create a map between a object and objectEvent
     if ((objectObjectEventMap.keySet()).contains(objectType)) {
 
       HashSet<String> tempSet = objectObjectEventMap.get(objectType);
@@ -1392,6 +1404,7 @@ public class InitialStateUITab extends JScrollPane implements GUIModule {
 
   }
 
+  //create tha button panel for each table e.g. copy,delete,edit,create
   public JPanel createButtonPanel(DefaultTableModel model, JTable table,
       String type, Node node, String objectType) {
 
@@ -1418,7 +1431,7 @@ public class InitialStateUITab extends JScrollPane implements GUIModule {
 
     JButton edit = new JButton("Edit");
     buttonContainer.add(edit);
-
+    //add an ActionListener for each button
     copy.addActionListener(new InitialStateUIController(table, model, type,
         buttonContainer, objectType));
 
@@ -1431,6 +1444,7 @@ public class InitialStateUITab extends JScrollPane implements GUIModule {
     edit.addActionListener(new InitialStateUIController(table, model, type,
         buttonContainer, objectType));
 
+    //create the language ComboBox button for language converting
     JComboBox lanBox = new JComboBox(tempVector);
     lanBox.setSelectedItem("en");
     lanBox.addActionListener(new LanguageBoxHandler(type, table, labelMap,
@@ -1446,11 +1460,13 @@ public class InitialStateUITab extends JScrollPane implements GUIModule {
 
   }
 
+  //We use this method to create tabel header for each table
   public Vector<String> createRowHeader(NamedNodeMap hattrs, String type) {
 
     Vector<String> rowHeaderTemp = new Vector<String>();
     HashSet<String> tempContent = userInterfaceMap.get(type);
-
+    
+    //these attributes are special, we process them at first 
     for (int k = 0; k < hattrs.getLength(); k++) {
       Attr attribute = (Attr) hattrs.item(k);
       if ((attribute.getName().equals("id"))
@@ -1472,6 +1488,10 @@ public class InitialStateUITab extends JScrollPane implements GUIModule {
         rowHeaderTemp.addElement(label);
       }
     }
+    
+    //set the position of attribute id, idRef, rangeStartID, rangeEndID with correct position
+    //the correct position for id, idRef, rangeStartID is 0
+    //the position for rangeEndID is 1
 
     int idPosition = rowHeaderTemp.indexOf("id");
 
@@ -1503,7 +1523,8 @@ public class InitialStateUITab extends JScrollPane implements GUIModule {
 
     return rowHeaderTemp;
   }
-
+  
+  //create table data container for each table
   public Vector<Vector<Object>> createRowData(NamedNodeMap rattrs, String type,
       Vector<String> rowHeader) {
 
@@ -1513,6 +1534,7 @@ public class InitialStateUITab extends JScrollPane implements GUIModule {
 
   }
 
+  //create each record in a table
   public Vector<Object> createRowDatum(NamedNodeMap rattrs, String type,
       Vector<String> rowHeader) {
 
@@ -1541,20 +1563,21 @@ public class InitialStateUITab extends JScrollPane implements GUIModule {
 
           String tempString = it.next();
           if (tempString.endsWith("en")) {
-
+            
+        	//match the attribute with correspondent labelKey 
             if ((!(attribute.getName()).equals("type") & (tempString.substring(
                 0, (tempString.length() - type.length() - 2))).equals(attribute
                 .getName())))
 
               if (!fieldStyleSet.contains(type)) {
-
+                //process boolean value
                 if (attribute.getValue().equals("true")
                     || attribute.getValue().equals("false")) {
 
                   Boolean flag = Boolean.valueOf(attribute.getValue());
                   rowDatumTemp.set(rowHeader.indexOf(labelMap.get(tempString)),
                       flag);
-
+                //process int value for min,max constrain
                 } else if (minMaxRangeMap.keySet().contains(
                     attribute.getName()+type)) {
 
@@ -1565,12 +1588,12 @@ public class InitialStateUITab extends JScrollPane implements GUIModule {
                 }
 
                 else {
-
+                  //process String value in the table
                   rowDatumTemp.set(rowHeader.indexOf(labelMap.get(tempString)),
                       attribute.getValue());
                 }
               } else {
-
+                  //process String value in the field 
                 rowDatumTemp.set(rowHeader.indexOf(labelMap.get(tempString)),
                     attribute.getValue());
               }
@@ -1582,6 +1605,7 @@ public class InitialStateUITab extends JScrollPane implements GUIModule {
     return rowDatumTemp;
   }
 
+  //process field content in the label with field style for each type
   public Vector<String> createFieldRowDatum(NamedNodeMap rattrs, String type,
       Vector<String> rowHeader) {
 
@@ -1627,7 +1651,8 @@ public class InitialStateUITab extends JScrollPane implements GUIModule {
     return rowDatumTemp;
 
   }
-
+  
+  //create save panel
   public JPanel createSaveButtonPanel() {
 
     Vector<JButton> buttonContainer = new Vector<JButton>();
@@ -1654,7 +1679,7 @@ public class InitialStateUITab extends JScrollPane implements GUIModule {
 
     buttonContainer.add(save);
     buttonContainer.add(saveAs);
-
+    //language labels container for all label with field style
     HashSet<String> tempLanSetAll = new HashSet<String>();
     for (Iterator<String> it = lanType.keySet().iterator(); it.hasNext();) {
 
@@ -1678,8 +1703,10 @@ public class InitialStateUITab extends JScrollPane implements GUIModule {
     saveButtonPanel.add(saveAs);
     ActionListener listenSave = new ActionListener() {
       public void actionPerformed(ActionEvent ae) {
-
+        //process to save dom
         processDom();
+        
+        //process label with field save process
         if (fieldValidateTypeMap != null) {
           for (Iterator<String> it = fieldValidateTypeMap.keySet().iterator(); it
               .hasNext();) {
@@ -1688,7 +1715,7 @@ public class InitialStateUITab extends JScrollPane implements GUIModule {
             Vector<Vector<Boolean>> tempBooleanContainer = fieldValidateTypeMap
                 .get(tempType);
             for (int b = 0; b < tempBooleanContainer.size(); b++) {
-
+              //if there are on errors, then continue saving process 
               if (tempBooleanContainer.get(b).contains(false)) {
 
                 return;
@@ -1777,26 +1804,27 @@ public class InitialStateUITab extends JScrollPane implements GUIModule {
           if (typeUITableHead.contains(type)) {
             if (!savedTypeContainer.contains(type)) {
               savedTypeContainer.add(type);
-
+              //process table style
               if (!fieldStyleSet.contains(type)) {
 
                 JTable table = tableType.get(type);
                 DefaultTableModel model = (DefaultTableModel) table.getModel();
                 Vector<Vector<Object>> dataRows = model.getDataVector();
-
+                //get the  content in the correspondent table and prepare to save 
                 NodeList objectsAfterDel = prepareProcess(type, InitialState,
                     dataRows);
 
                 for (int l = 0; l < objectsAfterDel.getLength(); l++) {
-
+                  //get the correspondent attribute name  
                   Vector<String> attrNames = createAttributeContainer(objectsAfterDel
                       .item(l));
-
+                  //replace the old value with correspondent new value
                   processPropertyEdit(model, dataRows, type, attrNames, l,
                       objectsAfterDel.item(l), null);
 
                   NodeList objectEventNodes = sd.getNodeList(
                       "*[contains(name(),'Event')]", objectsAfterDel.item(l));
+                  //process all objectEvent sub element, if possible
                   if (objectEventNodes.getLength() > 0) {
                     processSubNodes(objectEventNodes, objectsAfterDel.item(l),
                         l, type);
@@ -1805,6 +1833,7 @@ public class InitialStateUITab extends JScrollPane implements GUIModule {
                   NodeList beliefEntityNodes = sd.getNodeList(
                       "*[contains(name(),'BeliefEntity')]", objectsAfterDel
                           .item(l));
+                  //process all BeliefEntity, if possible
                   if (beliefEntityNodes.getLength() > 0) {
                     processSubNodes(beliefEntityNodes, objectsAfterDel.item(l),
                         l, type);
@@ -1815,6 +1844,7 @@ public class InitialStateUITab extends JScrollPane implements GUIModule {
 
                 NodeList nodes = sd.getNodeList("*[@type='" + type
                     + "']", InitialState);
+                // get correspondent field container with a type
                 Vector<FieldsEdit> fieldsContainer = fieldsTypeMap.get(type);
 
                 for (int f = 0; f < fieldsContainer.size(); f++) {
@@ -1845,7 +1875,7 @@ public class InitialStateUITab extends JScrollPane implements GUIModule {
             }
           }
         }
-
+        //process event sub element 
         if (nodeName.contains("Event")) {
 
           String type = sd.getNodeContent("@type", child);
@@ -1890,7 +1920,7 @@ public class InitialStateUITab extends JScrollPane implements GUIModule {
             }
           }
         }
-
+        //process GlobalVariable sub element
         if (nodeName.contains("GlobalVariable")) {
           if (typeUITableHead.contains("globalVariable")) {
             if (!savedTypeContainer.contains("globalVariable")) {
@@ -1993,12 +2023,12 @@ public class InitialStateUITab extends JScrollPane implements GUIModule {
 
         if ((dataRows.get(l).get(j).getClass().getName())
             .equals("java.lang.Boolean")) {
-
+          //type cast from Boolean to String 
           tempPropertyValue = String.valueOf(dataRows.get(l).get(j));
 
         } else if ((dataRows.get(l).get(j).getClass().getName())
             .equals("java.lang.Integer")) {
-
+          //from Integer to String
           tempPropertyValue = String.valueOf(dataRows.get(l).get(j));
         }
 
@@ -2073,9 +2103,9 @@ public class InitialStateUITab extends JScrollPane implements GUIModule {
             - type.length() - 2));
 
         if (attrNames.contains(tempPropertyName)) {
-
+          //replace old value with new value
           setAttribute((Element) editNode, tempPropertyName, tempPropertyValue);
-
+               //process sub element 
         } else if (editNode.hasChildNodes()) {
 
           NodeList subChildren = editNode.getChildNodes();
@@ -2089,7 +2119,9 @@ public class InitialStateUITab extends JScrollPane implements GUIModule {
                   .item(h));
 
               if (tempPropertyName.equals(property)) {
-
+                //Here there are three cases, if no sub element, 
+            	//we will replace the old value with the new value
+            	//otherwise,we will distinguish between RandomVariable and ValueExpr
                 if (subChildren.item(h).hasChildNodes()) {
 
                   NodeList subNodes = subChildren.item(h).getChildNodes();
@@ -2099,28 +2131,29 @@ public class InitialStateUITab extends JScrollPane implements GUIModule {
                     Node child = subNodes.item(s);
 
                     if (child instanceof Element) {
-                      // RandomVariable
+                      
                       String nodeName = child.getNodeName();
 
                       if (nodeName.equals("RandomVariable")) {
-
+                        // get RandomVaribale container
                         Vector<RanVarPropertyContainer> tempContainers = ranVarPropertyContainerMap
                             .get(property + pLanType);
 
                         RanVarPropertyContainer tempContainer = tempContainers
                             .get(l);
-
+                        //replace the old value with new value for the RandomVarible
                         processRandomVariable(child, tempContainer, property,
                             type, objectType);
 
                       } else if (nodeName.equals("ValueExpr")) {
-
+                    	  // get ValueExpr container
                         Vector<ValueExprPropertyContainer> tempContainers = valueExprPropertyContainerMap
                             .get(property + pLanType);
 
                         ValueExprPropertyContainer tempContainer = tempContainers
                             .get(l);
-
+                        
+                        //replace the old value with new value for the ValueExpr
                         processValueExpr(subChildren.item(h), tempContainer,
                             property, type, objectType);
                         break;
@@ -2274,6 +2307,8 @@ public class InitialStateUITab extends JScrollPane implements GUIModule {
 
   }
 
+  //remove the old element, copy the first element
+  //prepare for processing
   public NodeList prepareProcess(String type, Node node,
       Vector<Vector<Object>> dataRows) {
 
