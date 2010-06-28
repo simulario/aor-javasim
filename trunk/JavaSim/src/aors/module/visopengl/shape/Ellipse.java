@@ -142,6 +142,7 @@ public class Ellipse extends Shape2D {
         applyTexture(outContour, texture.getImageTexCoords());
 
         // Enable texture support
+        texture.bind();
         texture.enable();
 
         // Draw the textured ellipse
