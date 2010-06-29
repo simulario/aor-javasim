@@ -3,7 +3,8 @@ import java.awt.*;
 import javax.swing.*;
 import javax.swing.table.*;
  
-
+/*this class is used to render the unit with ValueExpr or RandomVariable
+and show them with JButton*/
 public class ButtonRenderer extends JButton implements TableCellRenderer {
  
   /**
