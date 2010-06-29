@@ -353,7 +353,7 @@ public class InitialState {
    * 
    * @param statisticVariables         
    */
-  protected void initStatisticVarsMap(
+  protected void setStatisticVariables(
       Map<String, AbstractStatisticsVariable> statisticVariables) {
     this.statisticVariables = statisticVariables;
   }
