@@ -316,7 +316,7 @@ public abstract class AbstractSimulator implements AgentSimulatorListener {
 
 		// /initialize the statistics on InitialState object
 		if (this.statistics != null) {
-			this.initialState.initStatisticVarsMap(this.statistics.getStatisticVariables());
+			this.initialState.setStatisticVariables(this.statistics.getStatisticVariables());
 		}
 
 		// initialize the space model
