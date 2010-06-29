@@ -524,13 +524,13 @@
       <xsl:with-param name="indent" select="$indent"/>
       <xsl:with-param name="spaceModelVar" select="$spaceModelVar"/>
     </xsl:apply-templates>
-    
+
     <xsl:call-template name="java:callMethod">
       <xsl:with-param name="indent" select="$indent + 1"/>
       <xsl:with-param name="objInstance" select="$spaceModelVar"/>
       <xsl:with-param name="method" select="'initSpace'"/>
     </xsl:call-template>
-      
+
     <xsl:apply-templates select="." mode="createSimSystem.method.createSpaceModel.properties.extra">
       <xsl:with-param name="indent" select="$indent"/>
       <xsl:with-param name="spaceModelVar" select="$spaceModelVar"/>
@@ -1680,6 +1680,18 @@
       </xsl:with-param>
     </xsl:call-template>
 
+    <xsl:call-template name="java:callMethod">
+      <xsl:with-param name="indent" select="$indent"/>
+      <xsl:with-param name="objInstance" select="$statisticVarName"/>
+      <xsl:with-param name="method" select="'addStatisticVariable'"/>
+      <xsl:with-param name="args">
+        <xsl:call-template name="java:varByDotNotation">
+          <xsl:with-param name="name" select="$sim.class.simStatistics"/>
+          <xsl:with-param name="varName" select="@name"/>
+        </xsl:call-template>
+      </xsl:with-param>
+    </xsl:call-template>
+
   </xsl:template>
 
   <xsl:template match="aorsml:Variable" mode="createSimSystem.helper.createStatistic.parameter">
@@ -1878,48 +1890,21 @@
         </xsl:choose>
       </xsl:variable>
 
-      <xsl:choose>
-        <xsl:when test="boolean($computeOnlyAtEnd)">
+      <xsl:if test="boolean($computeOnlyAtEnd)">
 
-          <xsl:call-template name="java:callSetterMethod">
-            <xsl:with-param name="indent" select="$indent"/>
-            <xsl:with-param name="objInstance">
-              <xsl:call-template name="java:varByDotNotation">
-                <xsl:with-param name="name" select="$sim.class.simStatistics"/>
-                <xsl:with-param name="varName" select="$statVarName"/>
-              </xsl:call-template>
-            </xsl:with-param>
-            <xsl:with-param name="instVariable" select="'computeOnlyAtEnd'"/>
-            <xsl:with-param name="value" select="'true'"/>
-          </xsl:call-template>
+        <xsl:call-template name="java:callSetterMethod">
+          <xsl:with-param name="indent" select="$indent"/>
+          <xsl:with-param name="objInstance">
+            <xsl:call-template name="java:varByDotNotation">
+              <xsl:with-param name="name" select="$sim.class.simStatistics"/>
+              <xsl:with-param name="varName" select="$statVarName"/>
+            </xsl:call-template>
+          </xsl:with-param>
+          <xsl:with-param name="instVariable" select="'computeOnlyAtEnd'"/>
+          <xsl:with-param name="value" select="'true'"/>
+        </xsl:call-template>
 
-          <xsl:call-template name="java:callMethod">
-            <xsl:with-param name="indent" select="$indent"/>
-            <xsl:with-param name="objInstance" select="$statisticVarName"/>
-            <xsl:with-param name="method" select="'addExprVarSim'"/>
-            <xsl:with-param name="args">
-              <xsl:call-template name="java:varByDotNotation">
-                <xsl:with-param name="name" select="$sim.class.simStatistics"/>
-                <xsl:with-param name="varName" select="$statVarName"/>
-              </xsl:call-template>
-            </xsl:with-param>
-          </xsl:call-template>
-        </xsl:when>
-        <xsl:otherwise>
-          <xsl:call-template name="java:callMethod">
-            <xsl:with-param name="indent" select="$indent"/>
-            <xsl:with-param name="objInstance" select="$statisticVarName"/>
-            <xsl:with-param name="method" select="'addExprVarStep'"/>
-            <xsl:with-param name="args">
-              <xsl:call-template name="java:varByDotNotation">
-                <xsl:with-param name="name" select="$sim.class.simStatistics"/>
-                <xsl:with-param name="varName" select="$statVarName"/>
-              </xsl:call-template>
-            </xsl:with-param>
-          </xsl:call-template>
-        </xsl:otherwise>
-
-      </xsl:choose>
+      </xsl:if>
 
     </xsl:if>
 
