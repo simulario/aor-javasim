@@ -23,8 +23,6 @@
  **************************************************************************************************************/
 package aors.controller;
 
-import java.lang.reflect.Field;
-import java.lang.reflect.Modifier;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -40,7 +38,6 @@ import aors.model.envsim.Objekt;
 import aors.statistics.AbstractObjectPropertyStatisticVariable;
 import aors.statistics.AbstractResourceUtilizationStatisticVariable;
 import aors.statistics.AbstractStatisticsVariable;
-import aors.statistics.GeneralStatistics;
 import aors.statistics.AbstractObjectPropertyStatisticVariable.AbstractObjektIDRefPropertyIterator;
 import aors.statistics.AbstractObjectPropertyStatisticVariable.AbstractPropertyIterator;
 import aors.statistics.AbstractObjectPropertyStatisticVariable.ObjektIdPropertyData;
