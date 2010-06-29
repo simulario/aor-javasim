@@ -354,34 +354,8 @@ public class InitialState {
    * 
    * NOTE: this method has to be called only by the AbstractSimulator!
    * 
-   * @param generalStatistics
-   *          the general statistics object that will be stored by this initial
-   *          state object
+   * @param statisticVariables         
    */
-  @Deprecated
-  protected void initStatisticVarsMap(GeneralStatistics generalStatistics) {
-    if (this.statisticVariables == null) {
-      this.statisticVariables = new HashMap<String, AbstractStatisticsVariable>();
-    }
-    Field[] declaredFields = generalStatistics.getClass().getDeclaredFields();
-    for (Field f : declaredFields) {
-      int modifiers = f.getModifiers();
-      if (Modifier.isStatic(modifiers)) {
-        try {
-          Object o = f.get(generalStatistics.getClass());
-          if (AbstractStatisticsVariable.class.isInstance(o)) {
-            this.statisticVariables.put(f.getName(),
-                (AbstractStatisticsVariable) o);
-          }
-        } catch (IllegalArgumentException e) {
-          e.printStackTrace();
-        } catch (IllegalAccessException e) {
-          e.printStackTrace();
-        }
-      }
-    }
-  }
-
   protected void initStatisticVarsMap(
       Map<String, AbstractStatisticsVariable> statisticVariables) {
     this.statisticVariables = statisticVariables;
