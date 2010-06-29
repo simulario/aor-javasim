@@ -4,7 +4,7 @@
     xsi:schemaLocation="http://aor-simulation.org ../../../AORSL/AORSL_0-8-4.xsd"
     xmlns:dc="http://purl.org/dc/elements/1.1/" xmlns="http://aor-simulation.org" version="0.8.4"
     scenarioName="GunShot">
-    <SimulationParameters simulationSteps="300" timeUnit="s"/>
+    <SimulationParameters simulationSteps="3000" timeUnit="ms" stepTimeDelay="5"/>
 
     <SimulationModel modelName="GunShot" modelTitle="Gun Shot with Gravitation Effect">
         <documentation>
@@ -21,24 +21,23 @@
             <GlobalVariable name="gravitation" dataType="Float"/>
             <GlobalVariable name="PI" dataType="Float"/>
             <GlobalVariable name="shotAngle" dataType="Float"/>
+            <GlobalVariable name="startVelocity" dataType="Float"/>
             <GlobalVariable name="startX" dataType="Float"/>
             <GlobalVariable name="startY" dataType="Float"/>
-            <GlobalFunction name="debug" resultType="double">
-                <Parameter name="toPrintValue" type="double"/>
-                <Body language="Java">
-                    System.out.println(toPrintValue);
-                    
-                    return 1;
-                </Body>
-            </GlobalFunction>
-            
         </Globals>
 
 
         <EntityTypes>
             <ExogenousEventType name="Shut" periodicity="1"/>
+            <ExogenousEventType name="Step" periodicity="1"/>
             <PhysicalObjectType name="Bullet"/>
             <PhysicalObjectType name="Gun"/>
+
+            <PhysicalObjectType name="HorizontalBar"/>
+            <PhysicalObjectType name="HorizontalSlider"/>
+
+            <PhysicalObjectType name="VerticalBar"/>
+            <PhysicalObjectType name="VerticalSlider"/>
         </EntityTypes>
 
         <EnvironmentRules>
@@ -55,8 +54,8 @@
                                 <Slot property="y">
                                     <ValueExpr language="Java">Global.getStartY()</ValueExpr>
                                 </Slot>
-                                <Slot property="vx" value="5"/>
-                                <Slot property="vy" value="5"/>
+                                <Slot property="vx" value="100"/>
+                                <Slot property="vy" value="150"/>
                                 <Slot property="width" value="113"/>
                                 <Slot property="height" value="112"/>
                             </PhysicalObject>
@@ -66,27 +65,75 @@
             </EnvironmentRule>
 
             <EnvironmentRule name="MoveBulletRule">
-                <WHEN eventType="Shut" eventVariable="shutEvent"/>
+                <WHEN eventType="Step" eventVariable="stepEvent"/>
                 <FOR objectVariable="bullet" objectType="Bullet" objectIdRef="2"/>
-                <IF language="Java">shutEvent.getOccurrenceTime() >1</IF>
-                <THEN>
+                <FOR objectVariable="hSlider" objectType="HorizontalSlider" objectIdRef="101"/>
+                <FOR objectVariable="vSlider" objectType="VerticalSlider" objectIdRef="201"/>
+                <FOR dataVariable="currentTime" dataType="Float">
+                    <ValueExpr language="Java">
+                        <![CDATA[
+                            stepEvent.getOccurrenceTime()/25.0f
+                        ]]>
+                    </ValueExpr>
+                </FOR>
+                <DO>
                     <UPDATE-ENV>
-                        <UpdateObject objectVariable="bullet">
+                        <UpdateObject objectVariable="bullet">                        
                             <Slot property="x">
-                                <ValueExpr language="Java">Global.getStartX() + bullet.getVx()*java.lang.Math.cos(Global.getShotAngle())*shutEvent.getOccurrenceTime()</ValueExpr>
+                                <ValueExpr language="Java">
+                                    <![CDATA[
+                                         Global.getStartX() + Global.getStartVelocity() * java.lang.Math.cos(Global.getShotAngle()) * currentTime
+                                    ]]>
+                                </ValueExpr>
                             </Slot>
                             <Slot property="y">
                                 <ValueExpr language="Java">
                                     <![CDATA[
-                                        Global.getStartY() + bullet.getX() * java.lang.Math.tan(Global.getShotAngle()) 
-                                        - Global.getGravitation() * java.lang.Math.pow(bullet.getX(), 2)
-                                        /(2*5*5*java.lang.Math.pow(java.lang.Math.cos(Global.getShotAngle()), 2))*java.lang.Math.cos(Global.getShotAngle()))
-                                    *Global.debug(bullet.getY()
+                                        Global.getStartY() + Global.getStartVelocity() * java.lang.Math.sin(Global.getShotAngle()) * currentTime
+                                        - (Global.getGravitation() / 2.0f) * currentTime * currentTime
+                                    ]]>
+                                </ValueExpr>
+                            </Slot>
+                            <Slot property="rotZ">
+                                <ValueExpr language="Java">
+                                    <![CDATA[
+                                    0
+                                    ]]>
+                                </ValueExpr>
+                            </Slot>
+                        </UpdateObject>
+
+                        <UpdateObject objectVariable="hSlider">
+                            <Slot property="x">
+                                <ValueExpr language="Java">
+                                    <![CDATA[
+                                        bullet.getX()
+                                    ]]>
+                                </ValueExpr>
+                            </Slot>
+                        </UpdateObject>
+
+                        <UpdateObject objectVariable="vSlider">
+                            <Slot property="y">
+                                <ValueExpr language="Java">
+                                    <![CDATA[
+                                        bullet.getY()
                                     ]]>
                                 </ValueExpr>
                             </Slot>
                         </UpdateObject>
                     </UPDATE-ENV>
+                </DO>
+            </EnvironmentRule>
+
+            <EnvironmentRule name="BulletFallsToGroundRule">
+                <WHEN eventType="Step" eventVariable="stepEvent"/>
+                <FOR objectVariable="bullet" objectType="Bullet" objectIdRef="2"/>
+                <IF language="Java"><![CDATA[bullet.getY() <= 0.5]]></IF>
+                <THEN>
+                    <SCHEDULE-EVT>
+                        <CausedEventExpr eventType="StopSimulationEvent"/>
+                    </SCHEDULE-EVT>
                 </THEN>
             </EnvironmentRule>
         </EnvironmentRules>
@@ -95,8 +142,34 @@
 
     <InitialState>
         <PhysicalObject type="Gun" id="1" x="400" y="350" width="645" height="750"/>
+
+        <PhysicalObject type="HorizontalBar" id="100" x="2500" y="2800" z="1" width="5000"
+            height="50"/>
+        <PhysicalObject type="HorizontalSlider" id="101" y="2775" z="2" width="25" height="100">
+            <Slot property="x">
+                <ValueExpr language="Java">
+                    <![CDATA[
+                        Global.getStartX()
+                    ]]>
+                </ValueExpr>
+            </Slot>
+        </PhysicalObject>
+
+        <PhysicalObject type="VerticalBar" id="200" x="4800" z="1" y="1500" width="50" height="3000"/>
+        <PhysicalObject type="VerticalSlider" id="201" x="4850" z="2" width="150" height="25">
+            <Slot property="y">
+                <ValueExpr language="Java">
+                    <![CDATA[
+                        Global.getStartY()
+                    ]]>
+                </ValueExpr>
+            </Slot>
+        </PhysicalObject>
+
         <ExogenousEvent type="Shut" occurrenceTime="1"/>
-        
+        <ExogenousEvent type="Step" occurrenceTime="1"/>
+
+        <GlobalVariable name="startVelocity" value="170"/>
         <GlobalVariable name="startX" value="520"/>
         <GlobalVariable name="startY" value="700"/>
         <GlobalVariable name="gravitation" value="9.81"/>
@@ -125,7 +198,32 @@
                     <PhysicalShape2D>
                         <Rectangle texture="bullet.png"/>
                     </PhysicalShape2D>
-                    <DisplayInfo property="x" content="m"></DisplayInfo>
+                </PhysicalObjectView>
+
+                <PhysicalObjectView physicalObjectType="HorizontalSlider">
+                    <PhysicalShape2D>
+                        <Rectangle fill="red"/>
+                    </PhysicalShape2D>
+                    <DisplayInfo property="x" content="m"/>
+                </PhysicalObjectView>
+
+                <PhysicalObjectView physicalObjectType="HorizontalBar">
+                    <PhysicalShape2D>
+                        <Rectangle fill="white" stroke="blue" strokeWidth="1"/>
+                    </PhysicalShape2D>
+                </PhysicalObjectView>
+
+                <PhysicalObjectView physicalObjectType="VerticalSlider">
+                    <PhysicalShape2D>
+                        <Rectangle fill="red"/>
+                    </PhysicalShape2D>
+                    <DisplayInfo property="y" content="m"/>
+                </PhysicalObjectView>
+
+                <PhysicalObjectView physicalObjectType="VerticalBar">
+                    <PhysicalShape2D>
+                        <Rectangle fill="white" stroke="blue" strokeWidth="1"/>
+                    </PhysicalShape2D>
                 </PhysicalObjectView>
             </Views>
         </AnimationUI>
