@@ -2177,7 +2177,10 @@ public class InitialStateUITab extends JScrollPane implements GUIModule {
       }
     }
   }
-
+  
+  /*We will use this method to process ValueExpr during the save  process.
+  Firstly we will delete the old node ValueExpr, then create the new one
+  the content of new one will be contained in the container*/
   public void processValueExpr(Node slot,
       ValueExprPropertyContainer tempContainer, String property, String type,
       String objectType) {
@@ -2207,7 +2210,7 @@ public class InitialStateUITab extends JScrollPane implements GUIModule {
     HashSet<String> tempLanSet = tempContainer.getValueExprPropertyMap().get(
         tempPropertyType);
     HashMap<String, String> tempValueMap = tempContainer.getValueExprValueMap();
-    // Document newDom = builder.newDocument();
+   
 
     for (Iterator<String> it = tempLanSet.iterator(); it.hasNext();) {
 
@@ -2226,7 +2229,12 @@ public class InitialStateUITab extends JScrollPane implements GUIModule {
     parentSlot.appendChild(newSlot);
 
   }
-
+  
+  
+  /*We will use this method to process RandomVariable during the Saving process
+  Firstly we will delete the old node, then we will distinguish the RandomVariabel between
+  with language and without language, then create the new node, all the content will be 
+  contained in the tempContainer*/
   public void processRandomVariable(Node node,
       RanVarPropertyContainer tempContainer, String property, String type,
       String objectType) {
@@ -2327,6 +2335,9 @@ public class InitialStateUITab extends JScrollPane implements GUIModule {
     return nodesAfterDel;
 
   }
+  
+  /*process the sub nodes of a type,especially the object event 
+  during the saving process*/
 
   @SuppressWarnings("unchecked")
   public void processSubNodes(NodeList nodes, Node node, int l, String type) {
@@ -2394,6 +2405,7 @@ public class InitialStateUITab extends JScrollPane implements GUIModule {
 
   }
 
+  //copy a node
   public static void duplicateNode(Node node) {
 
     Element parentNode = (Element) node.getParentNode();
@@ -2401,6 +2413,7 @@ public class InitialStateUITab extends JScrollPane implements GUIModule {
     parentNode.insertBefore(newNode, node);
   }
 
+  // set the new value to the correspondent attribute
   public static void setAttribute(Element element, String name, String value) {
 
     element.setAttribute(name, value);
@@ -2480,6 +2493,7 @@ public class InitialStateUITab extends JScrollPane implements GUIModule {
 
   }
 
+  //create the sub panel, in the InitialStateUI for a certain type
   public JPanel createSubPanel(String title) {
 
     JPanel subPanel = new JPanel();
@@ -2489,7 +2503,7 @@ public class InitialStateUITab extends JScrollPane implements GUIModule {
 
   }
 
- 
+ //create a ScrollPane for containing a table 
   public JScrollPane createScrollPane(JTable table) {
 
     JScrollPane tableScroll = new JScrollPane();
@@ -2497,7 +2511,8 @@ public class InitialStateUITab extends JScrollPane implements GUIModule {
     return tableScroll;
 
   }
-
+  
+  //create a sub section in a sub panel
   public JPanel createContentPanel(String title) {
 
     JPanel contentPanel = new JPanel();
@@ -2511,6 +2526,7 @@ public class InitialStateUITab extends JScrollPane implements GUIModule {
 
   }
 
+  // return all attribute name of a node
   public Vector<String> createAttributeContainer(Node node) {
 
     NamedNodeMap attrs = node.getAttributes();
@@ -2522,6 +2538,10 @@ public class InitialStateUITab extends JScrollPane implements GUIModule {
 
     return attrNames;
   }
+  
+ /* create the default table model, and fill it with empty string, if the 
+  value of a cell is null, and render the cell as JCheckBox if the type
+  of value of one cell is boolean*/ 
 
   @SuppressWarnings("serial")
   public DefaultTableModel createTableModel(String type, Node node) {
@@ -2550,7 +2570,11 @@ public class InitialStateUITab extends JScrollPane implements GUIModule {
     };
     return model;
   }
-
+  
+  
+  //create a label with field model for a type and create two maps
+  //one is between the type and the label and the other is between
+  //the type and field value
   public void createFieldModel(String type, Node node, String objectType) {
 
     String modelType = null;
@@ -2562,7 +2586,8 @@ public class InitialStateUITab extends JScrollPane implements GUIModule {
     labelTypeMap.put(modelType, labels);
     fieldTypeMap.put(modelType, fields);
   }
-
+  
+  //process the Slot sub nodes when we create the UI
   @SuppressWarnings("unchecked")
   private void processCreateSlot(DefaultTableModel model, Node node,
 		  HashSet<String> tempContent, String type, String objectType) {
@@ -2596,7 +2621,7 @@ public class InitialStateUITab extends JScrollPane implements GUIModule {
             for (int i = 0; i < slotSubNodes.getLength(); i++) {
 
               String subNodeName = slotSubNodes.item(i).getNodeName();
-
+               //process ValueExpr
               if (subNodeName.equals("ValueExpr")) {
 
                 value = "ValueExpr";
@@ -2608,7 +2633,7 @@ public class InitialStateUITab extends JScrollPane implements GUIModule {
                     .getNodeList(PX + "ValueExpr", node);
                 processSlotValueExpr(type, ValueExprNodes, property, objectType);
                 break;
-
+                // process RandomVariable
               } else if (subNodeName.equals("RandomVariable")) {
 
                 value = "RandomVariable";
@@ -2810,6 +2835,7 @@ public class InitialStateUITab extends JScrollPane implements GUIModule {
 
   }
 
+  //process add Slot sub node, when we create UI
   private void processAddSlot(Vector<String> header, Node node,
 		  HashSet<String> tempContent, String type, Vector<Object> rowDatumTemp,
       String objectType) {
@@ -2835,6 +2861,7 @@ public class InitialStateUITab extends JScrollPane implements GUIModule {
             for (int i = 0; i < slotSubNodes.getLength(); i++) {
 
               String subNodeName = slotSubNodes.item(i).getNodeName();
+              //process ValueExpr
               if (subNodeName.equals("ValueExpr")) {
 
                 value = "ValueExpr";
@@ -2842,7 +2869,7 @@ public class InitialStateUITab extends JScrollPane implements GUIModule {
                     .getNodeList(PX + "ValueExpr", node);
                 processSlotValueExpr(type, valueExprNodes, property, objectType);
                 break;
-
+                // process RandomVariable
               } else if (subNodeName.equals("RandomVariable")) {
 
                 value = "RandomVariable";
@@ -2893,6 +2920,7 @@ public class InitialStateUITab extends JScrollPane implements GUIModule {
 
   }
 
+  //prepare to process JSlider rendering for minValue and maxValue 
   public void prepareProcessJSliderRender() {
 
     Set<String> tableTypeKeySet = tableType.keySet();
@@ -2930,6 +2958,7 @@ public class InitialStateUITab extends JScrollPane implements GUIModule {
     }
   }
 
+  //prepare to process JComboBox rendering with enumeration value 
   public void prepareProcessJComboBoxRender() {
 
     Set<String> objectObjectEventKeySet = objectObjectEventMap.keySet();
@@ -2973,6 +3002,9 @@ public class InitialStateUITab extends JScrollPane implements GUIModule {
     }
   }
 
+  /*in this method we will check whether a table contains value 
+  with enumeration value,if so, we will use JComboBox to render 
+  the correspondent cell*/
   public void processJComboBoxRender(JTable table, String type) {
 
     Set<String> enumPropertySet = enumMap.keySet();
@@ -3008,6 +3040,8 @@ public class InitialStateUITab extends JScrollPane implements GUIModule {
     }
   }
 
+  /*in this method we will check whether a table contain the cell with 
+  minValue and maxValue, if so, we will use JSlider to render them*/
   public void processJSliderRender(JTable table, String type) {
 
     HashSet<String> tempConstrainSet = minMaxPropertyTypeMap.get(type);
@@ -3039,6 +3073,8 @@ public class InitialStateUITab extends JScrollPane implements GUIModule {
     }
   }
 
+  /*in this method we will check whether a table contain the cell with 
+  ValueExpr, if so, we will use JButton to render them*/
   public void processValueExprTableRender() {
 
     for (Iterator<String> it = tableType.keySet().iterator(); it.hasNext();) {
@@ -3143,6 +3179,8 @@ public class InitialStateUITab extends JScrollPane implements GUIModule {
 
   }
 
+  /*in this method we will check whether a table contain the cell with 
+  RandomVariable, if so, we will use JButton to render them*/
   public void processRanVarTableRender() {
 
     for (Iterator<String> it = tableType.keySet().iterator(); it.hasNext();) {
@@ -3357,12 +3395,13 @@ public class InitialStateUITab extends JScrollPane implements GUIModule {
   private final String ENUMPROPERTY = "//" + PX + "EnumerationProperty";
   private final String UNITCONTENT = PX + "Unit/*/text()";
 
+  //this inner class used to process label with field style
   public class FieldsEdit {
 
     public FieldsEdit(Vector<String> labelsContainer,
         Vector<String> fieldsContainer, InitialStateUITab initialStateUITab,
         String type, String objectType) {
-
+      
       this.labelsContainer = labelsContainer;
       this.fieldsContainer = fieldsContainer;
       this.initialStateUITab = initialStateUITab;
@@ -3393,7 +3432,7 @@ public class InitialStateUITab extends JScrollPane implements GUIModule {
       return editFieldsContainer;
     }
     
-    
+    //process Unit for each field in a label with field style in a certain type
     public void processFieldUnit(JPanel innerPnl, String label){
     	
     	HashSet<String> tempLabelKeyContainer = userInterfaceMap.get(type);
@@ -3420,14 +3459,16 @@ public class InitialStateUITab extends JScrollPane implements GUIModule {
     }
     
     
-
+    //create the panel for each type with label and field style
     public JPanel createGridLayoutPanel() {
 
       String modelType = typeTransfer(objectType, type);
 
       JPanel entry = new JPanel();
       entry.setLayout(new GridLayout(0, 4, 0, 0));
-
+      
+      /*if in the label with field style there are no ValueExpr field or RandomVariable
+      then we will use JLabel and JTextField to show them.*/
       if (!ranTypePropertyMap.containsKey(modelType)
           & !valueExprTypePropertyMap.containsKey(modelType)) {
 
@@ -3454,7 +3495,12 @@ public class InitialStateUITab extends JScrollPane implements GUIModule {
           entry.add(innerPnl);
 
         }
-      } else {
+                
+      } 
+      /*if in the label with field style there are ValueExprs field or RandomVariables
+      then we will use JButon to show them, others will be used JTextField to render.*/
+            
+      else {
 
         String tempLabel = null;
 
@@ -3465,7 +3511,7 @@ public class InitialStateUITab extends JScrollPane implements GUIModule {
           editLabelsContainer.add(labels[i]);
           JPanel innerPnl = new JPanel(new FlowLayout(FlowLayout.LEFT));
           innerPnl.add(labels[i]);
-
+          //if containing RandomVariable
           if (ranTypePropertyMap.containsKey(modelType)) {
 
             HashSet<String> tempPropertySet = ranTypePropertyMap.get(modelType);
@@ -3507,7 +3553,7 @@ public class InitialStateUITab extends JScrollPane implements GUIModule {
               }
             }
           }
-
+          //if containing ValueExpr
           if (valueExprTypePropertyMap.containsKey(modelType)) {
 
             HashSet<String> tempPropertySet = valueExprTypePropertyMap
@@ -3813,17 +3859,17 @@ public class InitialStateUITab extends JScrollPane implements GUIModule {
 
     }
 
-    private Vector<String> labelsContainer;
-    private Vector<String> fieldsContainer;
-    private JLabel labels[];
-    private Object fields[];
+    private Vector<String> labelsContainer;//contain all String value of label for a type 
+    private Vector<String> fieldsContainer;//contain all String value of field value for a type
+    private JLabel labels[];//a JLabel array to contain all String value for label
+    private Object fields[];//an object array to contain all value for each field
     private InitialStateUITab initialStateUITab;
-    private boolean fieldValidate;
-    private Vector<JLabel> editLabelsContainer;
-    private Vector<Object> editFieldsContainer;
+    private boolean fieldValidate;//We use this boolean variable to determine whether there is a field error during saving process
+    private Vector<JLabel> editLabelsContainer;//Container for all JLabel for a type
+    private Vector<Object> editFieldsContainer;//Container for all field
     private String objectType;
     private String type;
-    private int cRow;
+    private int cRow;//We use this variable to determine which instance in a certain type
   }
 
 }

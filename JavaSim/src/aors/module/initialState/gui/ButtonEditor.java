@@ -8,6 +8,8 @@ import java.util.Vector;
 import javax.swing.*;
 import javax.swing.table.*;
  
+/*this class is used to render for JButton when user click
+the JButton, and then a JDialog will be pop up*/
 
 public class ButtonEditor extends DefaultCellEditor {
   
@@ -100,7 +102,7 @@ public class ButtonEditor extends DefaultCellEditor {
  
   
   public Object getCellEditorValue() {
-    
+      //if user click the JButton, then pop up ShowRandomVariableDialog
 	  if (isPushed)  {
     	
        Frame frame = (Frame)SwingUtilities.getRoot(button);
@@ -108,7 +110,7 @@ public class ButtonEditor extends DefaultCellEditor {
        System.out.println("objectType: "+ objectType);
        
        showRanDialog = new ShowRandomVariableDialog(
-                                       frame,
+                                           frame,
     		                               "RandomVariableDialog",
     		                               true,
     		                               cRow,
