@@ -8,27 +8,31 @@ import java.util.Vector;
 import javax.swing.*;
 import javax.swing.table.*;
  
-/**
- * @version 1.0 11/09/98
- */
+/*We will use this class to render the table cell as JButton and 
+when the user click the button a new JDialog window will be pop 
+up*/
+
+
 public class ExprValueButtonEditor extends DefaultCellEditor {
   
-  /**
-   * 
-   */
+  
   private static final long serialVersionUID = -7906091828974872584L;
-  protected JButton button;
-  private String    label;
-  private boolean   isPushed;
-  private ShowValueExprDialog sspd ;
-  private int cRow;
-  private String type;
+  protected JButton button;// used to render the table cell as JButton
+  private String    label;// the label of JButton
+  private boolean   isPushed;//test if user has clicked the Button or not
+  private ShowValueExprDialog sspd ;//JDialog Box used to show the content of element ValueExpr
+  private int cRow; //choose the correspondent row that contained the cell of ValueExpr
+  private String type;// the type of Entity that contains ValueExpr
+  //map between a enetity and its ValueExpr, we use it to check which table cell is ValueExpr 
+  //and will be render as JButton
   private HashMap<String,HashSet<String>> ValueExprTypePropertyMap = null;
+  //map between a property and its ValueExpr container
   private HashMap<String,Vector<ValueExprPropertyContainer>> ValueExprPropertyContainerMap = null;
-  private String colHeadValue;
-  private String objectType;
-  private HashMap<String,HashSet<String>>lanTypeMap;
-  private HashMap<String,String> labelMap;
+  
+  private String colHeadValue;//table head value of ValueExpr
+  private String objectType; 
+  private HashMap<String,HashSet<String>>lanTypeMap;//
+  private HashMap<String,String> labelMap;// map between a property and its table head value in certain language
  
   
   
@@ -140,9 +144,5 @@ public class ExprValueButtonEditor extends DefaultCellEditor {
   protected void fireEditingStopped() {
     super.fireEditingStopped();
   }
-  
-  
- 
-  
   
 }

@@ -1,10 +1,12 @@
 package aors.module.initialState.gui;
 
 import java.awt.Component;
-
 import javax.swing.JComboBox;
 import javax.swing.JTable;
 import javax.swing.table.TableCellRenderer;
+
+/*We will use this class to render the enumeration value
+contained by JComboBox*/
 
 public class ComboBoxRenderer extends JComboBox implements TableCellRenderer {
 

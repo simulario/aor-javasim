@@ -13,7 +13,8 @@ import javax.swing.*;
 import aors.module.initialState.RanVarConstant;
 
 
-
+/*We will use this class to show JDialog Box that contains
+information about RandomVariable*/
 public class ShowRandomVariableDialog extends JDialog implements RanVarConstant{
 	
    
