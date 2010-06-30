@@ -7,14 +7,20 @@ import javax.swing.JSlider;
 import javax.swing.JTable;
 import javax.swing.table.TableCellEditor;
 
+
+/*we will use this class to render the table cell
+as JSlider, when user click the correpondent cell
+which contains value that has minValue and maxValue*/
+
 class JSliderTableEditor extends AbstractCellEditor implements TableCellEditor {
 
  
-	private static final long serialVersionUID = -6172697509994071914L;
-    protected JSlider slider = null;
+  private static final long serialVersionUID = -6172697509994071914L;
+  protected JSlider slider = null;
 
   public JSliderTableEditor(int min, int max) {
-    slider = new JSlider(min, max);
+   
+	slider = new JSlider(min, max);
     // slider.setPaintLabels(true);
     // slider.setPaintTicks(true);
     // slider.setMajorTickSpacing((max-min)/100);

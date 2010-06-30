@@ -2,8 +2,11 @@ package aors.module.initialState.gui;
 import java.util.HashMap;
 import java.util.HashSet;
 
-
-
+/*This class will be used as RandomVariable container
+it will contain the entity type, property and vale 
+of RandomVariable. There are two version. One is with
+different language. the other is not.
+*/
 public class RanVarPropertyContainer {
 	
 	

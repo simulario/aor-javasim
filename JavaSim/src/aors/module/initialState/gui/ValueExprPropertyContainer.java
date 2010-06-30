@@ -2,7 +2,11 @@ package aors.module.initialState.gui;
 import java.util.HashMap;
 import java.util.HashSet;
 
-
+/*This class will be used as ValueExpr container
+it will contain the propertyType(property+type) and  
+and two mappings. one maps between a property  and its language
+set, the other maps between ValueExpr property and its value
+*/
 
 public class ValueExprPropertyContainer {
   

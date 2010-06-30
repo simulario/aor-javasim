@@ -6,6 +6,7 @@ import java.awt.Component;
 import javax.swing.JTable;
 import javax.swing.table.DefaultTableCellRenderer;
 
+//We will use this class to render SelfBeliefSlot
 public class ColorColumnRenderer extends DefaultTableCellRenderer {
 
   

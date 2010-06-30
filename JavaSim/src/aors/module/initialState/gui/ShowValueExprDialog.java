@@ -8,7 +8,8 @@ import java.util.Vector;
 import java.util.Iterator;
 import javax.swing.*;
 
-
+/*We will use this class to show JDialog Box that contains
+information about ValueExpr*/
 public class ShowValueExprDialog extends JDialog {
 	
 	 
