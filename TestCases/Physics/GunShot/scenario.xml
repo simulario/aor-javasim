@@ -34,11 +34,12 @@
 
 
         <EntityTypes>
-            <CausedEventType name="MaxHeightReached"/>
             <ExogenousEventType name="Shot" periodicity="1"/>
             <ExogenousEventType name="Step" periodicity="1"/>
             <PhysicalObjectType name="Bullet">
                 <Attribute type="Float" name="distance"/>
+                <Attribute type="Boolean" name="maxHeightReached" initialValue="false"/>
+                <Attribute type="Boolean" name="vMaxSliderCreated" initialValue="false"/>
             </PhysicalObjectType>
             <PhysicalObjectType name="Gun"/>
             <PhysicalObjectType name="PathPoint"/>
@@ -158,12 +159,11 @@
                 </ELSE>
             </EnvironmentRule>
             
-            <EnvironmentRule name="UpdateStatisticsRule">
+            <EnvironmentRule name="MaxHeightReachedRule">
                 <WHEN eventType="Step" eventVariable="stepEvent"/>
                 <FOR objectVariable="bullet" objectIdRef="2" objectType="Bullet"/>
-                <FOR objectVariable="vMaxSlider" objectIdRef="10000" objectType="VerticalSlider"/>
-                <IF language="Java"><![CDATA[Statistics.maxHeight < bullet.getY() && !vMaxSlider == null]]></IF>
-                <IF language="JavaScript"><![CDATA[gunshot.controller.Statistics.maxHeight < this.bullet.getY()]]></IF>
+                <IF language="Java"><![CDATA[SimStatistics.maxHeight.getValue() < bullet.getY()]]></IF>
+                <IF language="JavaScript"><![CDATA[gunshot.controller.SimStatistics.maxHeight.getValue() < this.bullet.getY()]]></IF>
                 <THEN>
                     <UPDATE-ENV>
                         <UpdateStatisticsVariable variable="maxHeight">
@@ -174,14 +174,39 @@
                 </THEN>
                 <ELSE>
                     <UPDATE-ENV>
-                        <Create>
-                            <Object type="VerticalSlider" id="10000">
-                                <Slot property="x"><ValueExpr language="Java">4850</ValueExpr></Slot>
-                                <Slot property="y"><ValueExpr language="Java"><![CDATA[bullet.getY()]]></ValueExpr></Slot>
-                            </Object>
-                        </Create>
+                        <UpdateObject objectVariable="bullet">
+                            <Slot property="maxHeightReached" value="true"/>
+                        </UpdateObject>
                     </UPDATE-ENV>
                 </ELSE>
+            </EnvironmentRule>
+            
+            <EnvironmentRule name="CreateMaxHeightSliderRule">
+                <WHEN eventType="Step" eventVariable="stepEvent"/>
+                <FOR objectVariable="bullet" objectIdRef="2" objectType="Bullet"/>
+                <IF language="Java"><![CDATA[bullet.isMaxHeightReached() && !bullet.isVMaxSliderCreated()]]></IF>
+                <IF language="JavaScript"><![CDATA[this.bullet.isMaxHeightReached()  && !bullet.isVMaxSliderCreated()]]></IF>
+                <THEN>
+                    <UPDATE-ENV>
+                        <Create>
+                            <PhysicalObject type="VerticalSlider">
+                                <Slot property="x">
+                                    <ValueExpr language="Java"><![CDATA[bullet.getX()]]></ValueExpr>
+                                    <ValueExpr language="JavaScript"><![CDATA[this.bullet.getX()]]></ValueExpr>
+                                </Slot>
+                                <Slot property="y">
+                                    <ValueExpr language="Java"><![CDATA[bullet.getY()]]></ValueExpr>
+                                    <ValueExpr language="JavaScript"><![CDATA[this.bullet.getY()]]></ValueExpr>
+                                </Slot>
+                                <Slot property="width" value="250"/>
+                                <Slot property="height" value="10"/>
+                            </PhysicalObject>
+                        </Create>
+                        <UpdateObject objectVariable="bullet">
+                            <Slot property="vMaxSliderCreated" value="true"/>
+                        </UpdateObject>
+                    </UPDATE-ENV>
+                </THEN>
             </EnvironmentRule>
        
             <EnvironmentRule name="DrawBulletPathRule">
@@ -218,18 +243,17 @@
                 <ValueExpr language="JavaScript"><![CDATA[gunshot.controller.Global.getShotAngle() * 180/Math.PI]]></ValueExpr>
             </Slot>
         </PhysicalObject>
-
-        <PhysicalObject type="HorizontalBar" id="100" x="2500" y="2800" z="1" width="5000"
-            height="50"/>
-        <PhysicalObject type="HorizontalSlider" id="101" y="2775" z="2" width="25" height="100">
+        
+        <PhysicalObject type="HorizontalBar" id="100" x="2500" y="2750" z="1" width="5000" height="50"/>
+        <PhysicalObject type="HorizontalSlider" id="101" y="2750" z="2" width="25" height="150">
             <Slot property="x">
                 <ValueExpr language="Java"><![CDATA[Global.getStartX()]]></ValueExpr>
                 <ValueExpr language="JavaScript"><![CDATA[gunshot.controller.Global.getStartX()]]></ValueExpr>
             </Slot>
         </PhysicalObject>
-
-        <PhysicalObject type="VerticalBar" id="200" x="4800" z="1" y="1500" width="50" height="3000"/>
-        <PhysicalObject type="VerticalSlider" id="201" x="4850" z="2" width="150" height="25">
+        
+        <PhysicalObject type="VerticalBar" id="200" x="4750" z="1" y="1500" width="50" height="3000"/>
+        <PhysicalObject type="VerticalSlider" id="201" x="4750" z="2" width="150" height="25">
             <Slot property="y">
                 <ValueExpr language="Java"><![CDATA[Global.getStartY()]]></ValueExpr>
                 <ValueExpr language="JavaScript"><![CDATA[gunshot.controller.Global.getStartY()]]></ValueExpr>
