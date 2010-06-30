@@ -16,8 +16,13 @@
         <SpaceModel geometry="Euclidean" spatialDistanceUnit="m">
             <TwoDimensional_LateralView xMax="5000" yMax="3000"/>
         </SpaceModel>
+        
+        <Statistics>
+            <Variable name="maxHeight" dataType="Float" initialValue="0"/>
+        </Statistics>
 
         <Globals>
+            <GlobalVariable name="simluationSlowDownRatio" dataType="Float"/>
             <GlobalVariable name="gravitation" dataType="Float"/>
             <GlobalVariable name="PI" dataType="Float"/>
             <GlobalVariable name="shotAngle" dataType="Float"/>
@@ -29,6 +34,7 @@
 
 
         <EntityTypes>
+            <CausedEventType name="MaxHeightReached"/>
             <ExogenousEventType name="Shot" periodicity="1"/>
             <ExogenousEventType name="Step" periodicity="1"/>
             <PhysicalObjectType name="Bullet">
@@ -78,10 +84,12 @@
                 <FOR objectVariable="hSlider" objectType="HorizontalSlider" objectIdRef="101"/>
                 <FOR objectVariable="vSlider" objectType="VerticalSlider" objectIdRef="201"/>
                 <FOR dataVariable="currentTime" dataType="Float">
-                    <ValueExpr language="Java"><![CDATA[stepEvent.getOccurrenceTime()/10.0f]]></ValueExpr>
-                    <ValueExpr language="JavaScript"><![CDATA[this.stepEvent.getOccurrenceTime()/10.0]]></ValueExpr>
+                    <ValueExpr language="Java"><![CDATA[stepEvent.getOccurrenceTime()/Global.getSimluationSlowDownRatio()]]></ValueExpr>
+                    <ValueExpr language="JavaScript"><![CDATA[this.stepEvent.getOccurrenceTime()/gunshot.controller.Global.getSimluationSlowDownRatio()]]></ValueExpr>
                 </FOR>
-                <DO>
+                <IF language="Java"><![CDATA[bullet.getY() - bullet.getHeight() / 2 > 0 ]]></IF>
+                <IF language="JavaScript"><![CDATA[this.bullet.getY() - this.bullet.getHeight() / 2.0 > 0]]></IF>
+                <THEN>
                     <UPDATE-ENV>
                         <UpdateObject objectVariable="bullet">  
                             <Slot property="distance">
@@ -131,14 +139,56 @@
                             </Slot>
                         </UpdateObject>
                     </UPDATE-ENV>
-                </DO>
+                </THEN>
+                <ELSE>
+                    <UPDATE-ENV>
+                        <UpdateObject objectVariable="bullet">  
+                            <Slot property="y">
+                                <ValueExpr language="Java"><![CDATA[bullet.getHeight()/2]]></ValueExpr>
+                                <ValueExpr language="JavaScript"><![CDATA[this.bullet.getHeight()/2]]></ValueExpr>
+                            </Slot>
+                        </UpdateObject>
+                        <UpdateObject objectVariable="vSlider">
+                            <Slot property="y" value="0"/>
+                        </UpdateObject>
+                    </UPDATE-ENV>
+                    <SCHEDULE-EVT>
+                        <CausedEventExpr eventType="StopSimulationEvent"/>
+                    </SCHEDULE-EVT>
+                </ELSE>
             </EnvironmentRule>
             
+            <EnvironmentRule name="UpdateStatisticsRule">
+                <WHEN eventType="Step" eventVariable="stepEvent"/>
+                <FOR objectVariable="bullet" objectIdRef="2" objectType="Bullet"/>
+                <FOR objectVariable="vMaxSlider" objectIdRef="10000" objectType="VerticalSlider"/>
+                <IF language="Java"><![CDATA[Statistics.maxHeight < bullet.getY() && !vMaxSlider == null]]></IF>
+                <IF language="JavaScript"><![CDATA[gunshot.controller.Statistics.maxHeight < this.bullet.getY()]]></IF>
+                <THEN>
+                    <UPDATE-ENV>
+                        <UpdateStatisticsVariable variable="maxHeight">
+                            <ValueExpr language="Java"><![CDATA[bullet.getY()]]></ValueExpr>
+                            <ValueExpr language="JavaScript"><![CDATA[this.bullet.getY()]]></ValueExpr>
+                        </UpdateStatisticsVariable>
+                    </UPDATE-ENV>
+                </THEN>
+                <ELSE>
+                    <UPDATE-ENV>
+                        <Create>
+                            <Object type="VerticalSlider" id="10000">
+                                <Slot property="x"><ValueExpr language="Java">4850</ValueExpr></Slot>
+                                <Slot property="y"><ValueExpr language="Java"><![CDATA[bullet.getY()]]></ValueExpr></Slot>
+                            </Object>
+                        </Create>
+                    </UPDATE-ENV>
+                </ELSE>
+            </EnvironmentRule>
+       
             <EnvironmentRule name="DrawBulletPathRule">
                 <WHEN eventType="Step" eventVariable="stepEvent"/>
                 <FOR objectVariable="bullet" objectType="Bullet" objectIdRef="2"/>
-                <IF language="Java"><![CDATA[stepEvent.getOccurrenceTime() % 20 == 0]]></IF>
-                <IF language="JavaScript"><![CDATA[this.stepEvent.getOccurrenceTime() % 20 == 0]]></IF>
+                <IF language="Java"><![CDATA[stepEvent.getOccurrenceTime() % 10 == 0]]></IF>
+                <IF language="JavaScript"><![CDATA[this.stepEvent.getOccurrenceTime() % 10 == 0]]></IF>
                 <THEN>
                     <UPDATE-ENV>
                         <Create>
@@ -155,18 +205,6 @@
                             </PhysicalObject>
                         </Create>
                      </UPDATE-ENV>  
-                </THEN>
-            </EnvironmentRule>
-
-            <EnvironmentRule name="BulletFallsToGroundRule">
-                <WHEN eventType="Step" eventVariable="stepEvent"/>
-                <FOR objectVariable="bullet" objectType="Bullet" objectIdRef="2"/>
-                <IF language="Java"><![CDATA[bullet.getY() <= 0.5]]></IF>
-                <IF language="JavaScript"><![CDATA[this.bullet.getY() <= 0.5]]></IF>
-                <THEN>
-                    <SCHEDULE-EVT>
-                        <CausedEventExpr eventType="StopSimulationEvent"/>
-                    </SCHEDULE-EVT>
                 </THEN>
             </EnvironmentRule>
         </EnvironmentRules>
@@ -202,6 +240,7 @@
         <ExogenousEvent type="Step" occurrenceTime="1"/>
 
         <GlobalVariable name="startVelocity" value="170"/>
+        <GlobalVariable name="simluationSlowDownRatio" value="3"/>
         <GlobalVariable name="gunRectRadius" value="316"/>
         <GlobalVariable name="startX" value="400"/>
         <GlobalVariable name="startY" value="475"/>
