@@ -891,11 +891,11 @@ public class InitialStateUITab extends JScrollPane implements GUIModule {
         if (subNodeName.equals("Slot") | (subNodeName.equals("SelfBeliefSlot"))
             | subNodeName.equals("BeliefSlot")) {
 
-          processCreateSlot(model, children.item(i), tempContent, type, null);
+          processSlot(model, children.item(i), tempContent, type, null, null);
         }
         
         // process Event sub element
-        if (subNodeName.contains("Event")) {
+        if (subNodeName.contains("Event")|subNodeName.contains("BeliefEntity")) {
           JPanel objectEventPanel = new JPanel();
           String eventType = ((Element) children.item(i)).getAttribute("type");
           String objectEventType = type + eventType;
@@ -923,35 +923,7 @@ public class InitialStateUITab extends JScrollPane implements GUIModule {
           }
         }
 
-       // process BeliefEntity sub element
-        if (subNodeName.contains("BeliefEntity")) {
-          JPanel agentEntityPanel = new JPanel();
-          String entityType = ((Element) children.item(i)).getAttribute("type");
-          String agentEntityType = type + entityType;
-          if (typeUITableHead.contains(entityType)) {
-            if (!typeSet.contains(agentEntityType)) {
-              typeSet.add(agentEntityType);
-              agentEntityPanel = createEventPanel(children.item(i),
-                  entityType, type);
-
-              if (!fieldStyleSet.contains(entityType)) {
-
-                centerPanel.add(agentEntityPanel);
-                centerPanel.add(Box.createVerticalStrut(5));
-              } else {
-
-                bottomPanel.add(agentEntityPanel);
-                bottomPanel.add(Box.createVerticalStrut(5));
-
-              }
-
-            } else {
-              addObjectEventContent(entityType, agentEntityType, children
-                  .item(i));
-
-            }
-          }
-        }
+      
 
         // process Range sub element
         if (subNodeName.contains("Range")) {
@@ -1032,23 +1004,18 @@ public class InitialStateUITab extends JScrollPane implements GUIModule {
         if (subNodeName.equals("Slot") | (subNodeName.equals("SelfBeliefSlot"))
             | subNodeName.equals("BeliefSlot")) {
 
-          processAddSlot(header, children.item(i), tempContent, type,
-              rowDatumTemp, null);
+          processSlot(tempModel, children.item(i), tempContent, type,
+              null,rowDatumTemp);
         }
 
-        if (subNodeName.contains("Event")) {
+        if (subNodeName.contains("Event")|subNodeName.contains("BeliefEntity")) {
           String eventType = ((Element) children.item(i)).getAttribute("type");
           String objectEventType = type + eventType;
 
           addObjectEventContent(eventType, objectEventType, children.item(i));
         }
 
-        if (subNodeName.contains("BeliefEntity")) {
-          String entityType = ((Element) children.item(i)).getAttribute("type");
-          String agentEntityType = type + entityType;
-
-          addObjectEventContent(entityType, agentEntityType, children.item(i));
-        }
+        
 
         if (subNodeName.contains("Range")) {
           String property = subNodeName;
@@ -1257,8 +1224,8 @@ public class InitialStateUITab extends JScrollPane implements GUIModule {
         if (subNodes.item(i).getNodeName().equals("Slot")
             | subNodes.item(i).getNodeName().equals("BeliefSlot")) {
           
-          processCreateSlot(model, subNodes.item(i), tempContent, type,
-              objectType);
+          processSlot(model, subNodes.item(i), tempContent, type,
+              objectType,null);
         }
       }
     }
@@ -1378,8 +1345,8 @@ public class InitialStateUITab extends JScrollPane implements GUIModule {
         String subNodeName = children.item(i).getNodeName();
         if (subNodeName.equals("Slot") | subNodeName.equals("BeliefSlot")) {
 
-          processAddSlot(header, children.item(i), tempContent, type,
-              rowDatumTemp, objectType);
+          processSlot(tempModel, children.item(i), tempContent, type,
+               objectType,rowDatumTemp);
 
         }
       }
@@ -2589,8 +2556,9 @@ public class InitialStateUITab extends JScrollPane implements GUIModule {
   
   //process the Slot sub nodes when we create the UI
   @SuppressWarnings("unchecked")
-  private void processCreateSlot(DefaultTableModel model, Node node,
-		  HashSet<String> tempContent, String type, String objectType) {
+  private void processSlot(DefaultTableModel model, Node node,
+		  HashSet<String> tempContent, String type, String objectType,
+		  Vector<Object> rowDatumTemp) {
 
     String property = sd.getNodeContent("@property", node);
 
@@ -2625,22 +2593,27 @@ public class InitialStateUITab extends JScrollPane implements GUIModule {
               if (subNodeName.equals("ValueExpr")) {
 
                 value = "ValueExpr";
-                valueExprType = typeTransfer(objectType, type);
-
-                processPropertyTypeMap(valueExprTypePropertyMap,property,valueExprType);
-
-                NodeList ValueExprNodes = sd
-                    .getNodeList(PX + "ValueExpr", node);
+                
+                if(rowDatumTemp==null){
+                	
+                   valueExprType = typeTransfer(objectType, type);
+                   processPropertyTypeMap(valueExprTypePropertyMap,property,valueExprType);
+                }
+                
+                NodeList ValueExprNodes = sd.getNodeList(PX + "ValueExpr", node);
                 processSlotValueExpr(type, ValueExprNodes, property, objectType);
                 break;
                 // process RandomVariable
               } else if (subNodeName.equals("RandomVariable")) {
 
                 value = "RandomVariable";
-                ranRavType = typeTransfer(objectType, type);
-
-                processPropertyTypeMap(ranTypePropertyMap,property,ranRavType);
-
+                
+                if(rowDatumTemp==null){
+                  
+                   ranRavType = typeTransfer(objectType, type);
+                   processPropertyTypeMap(ranTypePropertyMap,property,ranRavType);
+                   
+                }
                 Node ranNode = sd.getNode(PX + "RandomVariable", node);
                 processSlotRandomVariable(type, ranNode, property, objectType);
                 break;
@@ -2663,22 +2636,36 @@ public class InitialStateUITab extends JScrollPane implements GUIModule {
           }
 
           if (!fieldStyleSet.contains(type)) {
+        	  
+        	Vector<Object> tempRow = null; 
+        	
 
-            Vector<Vector<Object>> tempData = (Vector<Vector<Object>>) model
-                .getDataVector();
-            Vector<Object> tempRow = tempData.elementAt(0);
+        	if(rowDatumTemp==null){
+        	   
+        		Vector<Vector<Object>> tempData = (Vector<Vector<Object>>) model.getDataVector();
+                tempRow = tempData.elementAt(0);
+        	}
 
             Vector<String> header = new Vector<String>();
 
             for (int j = 0; j < model.getColumnCount(); j++) {
+            	
               String colHeadValue = model.getColumnName(j);
               header.addElement(colHeadValue);
+              
             }
 
+            
             if (value.equals("true") || value.equals("false")) {
-              Boolean flag = Boolean.valueOf(value);
-              tempRow.set(header.indexOf(labelMap.get(tempString)), flag);
-
+              
+            	Boolean flag = Boolean.valueOf(value);
+            	if(rowDatumTemp==null){
+                   
+            		tempRow.set(header.indexOf(labelMap.get(tempString)), flag);
+            	}else{
+            		
+            		rowDatumTemp.set(header.indexOf(labelMap.get(tempString)), flag);	
+            	}
             }
 
             else if (minMaxPropertyTypeMap.containsKey(type)
@@ -2691,11 +2678,25 @@ public class InitialStateUITab extends JScrollPane implements GUIModule {
             {
 
               Integer intValue = Integer.valueOf(value);
-              tempRow.set(header.indexOf(labelMap.get(tempString)), intValue);
+              if(rowDatumTemp==null){
+              
+                tempRow.set(header.indexOf(labelMap.get(tempString)), intValue);
+              }
+              else{
+            	  
+            	  rowDatumTemp.set(header.indexOf(labelMap.get(tempString)), intValue); 
+              }
             }
 
             else {
-              tempRow.set(header.indexOf(labelMap.get(tempString)), value);
+            
+            	if(rowDatumTemp==null){	
+                   
+            		tempRow.set(header.indexOf(labelMap.get(tempString)), value);
+            	}else{
+            		
+            		rowDatumTemp.set(header.indexOf(labelMap.get(tempString)), value);
+            	}
             }
 
           } else {
@@ -2835,82 +2836,7 @@ public class InitialStateUITab extends JScrollPane implements GUIModule {
 
   }
 
-  //process add Slot sub node, when we create UI
-  private void processAddSlot(Vector<String> header, Node node,
-		  HashSet<String> tempContent, String type, Vector<Object> rowDatumTemp,
-      String objectType) {
-
-    String property = sd.getNodeContent("@property", node);
-
-    String value = "";
-
-    Iterator<String> it = tempContent.iterator();
-    while (it.hasNext()) {
-      String tempString = it.next();
-      if (tempString.endsWith("en")) {
-        if ((tempString.substring(0, (tempString.length() - type.length() - 2)))
-            .equals(property)) {
-
-          if (!node.hasChildNodes()) {
-
-            value = sd.getNodeContent("@value", node);
-
-          } else {
-
-            NodeList slotSubNodes = node.getChildNodes();
-            for (int i = 0; i < slotSubNodes.getLength(); i++) {
-
-              String subNodeName = slotSubNodes.item(i).getNodeName();
-              //process ValueExpr
-              if (subNodeName.equals("ValueExpr")) {
-
-                value = "ValueExpr";
-                NodeList valueExprNodes = sd
-                    .getNodeList(PX + "ValueExpr", node);
-                processSlotValueExpr(type, valueExprNodes, property, objectType);
-                break;
-                // process RandomVariable
-              } else if (subNodeName.equals("RandomVariable")) {
-
-                value = "RandomVariable";
-                Node ranNode = sd.getNode(PX + "RandomVariable", node);
-                processSlotRandomVariable(type, ranNode, property, objectType);
-                break;
-
-              }
-
-            }
-
-          }
-
-          if (!fieldStyleSet.contains(type)) {
-            if (value.equals("true") || value.equals("false")) {
-
-              Boolean flag = Boolean.valueOf(value);
-              rowDatumTemp.set(header.indexOf(labelMap.get(tempString)), flag);
-            } else if (minMaxRangeMap.keySet().contains(property+type)) {
-
-              Integer intValue = Integer.valueOf(value);
-              rowDatumTemp.set(header.indexOf(labelMap.get(tempString)),
-                  intValue);
-            } else {
-
-              rowDatumTemp.set(header.indexOf(labelMap.get(tempString)), value);
-            }
-          } else {
-
-            String tempSlotFieldType = typeTransfer(objectType, type);
-            fieldTypeMap.get(tempSlotFieldType).set(
-                labelTypeMap.get(tempSlotFieldType).indexOf(
-                    labelMap.get(tempString)), value);
-
-          }
-        }
-      }
-    }
-
-  }
-
+ 
   public void processTableRenderer() {
 
     prepareProcessJSliderRender();
