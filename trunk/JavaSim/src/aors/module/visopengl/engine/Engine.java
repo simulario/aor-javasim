@@ -511,6 +511,7 @@ public class Engine implements GLEventListener {
         // Set the display info's position
         if (displayInfo.isEnabled()) {
           displayInfo.setX(pos[0]);
+          displayInfo.setZ(pos[2]);
 
           if (shape.getHeight() > 0) {
             if (shape.getPositioning().equals(Positioning.CenterCenter)
@@ -703,6 +704,7 @@ public class Engine implements GLEventListener {
         // Set the display info's position
         if (displayInfo.isEnabled()) {
           displayInfo.setX(pos[0]);
+          displayInfo.setZ(pos[2]);
 
           if (shape.getHeight() > 0) {
             if (shape.getPositioning().equals(Positioning.CenterCenter)

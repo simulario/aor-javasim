@@ -37,7 +37,7 @@ public class DisplayInfo {
   private boolean enabled;
 
   // Text coordinates
-  private double x, y;
+  private double x, y, z;
 
   // Values
   private String id;
@@ -82,32 +82,32 @@ public class DisplayInfo {
     }
 
     if (displayName && name != null) {
-      gl.glRasterPos2d(x, y);
+      gl.glRasterPos3d(x, y, z);
       glut.glutBitmapString(GLUT.BITMAP_HELVETICA_12, name);
       y -= 12;
     }
     
     if (displayID && id != null) {
-      gl.glRasterPos2d(x, y);
+      gl.glRasterPos3d(x, y, z);
       glut.glutBitmapString(GLUT.BITMAP_HELVETICA_12, "ID: " + id);
       y -= 12;
     }
 
     if (content != null && propertyValue != null) {
-      gl.glRasterPos2d(x, y);
+      gl.glRasterPos3d(x, y, z);
       glut.glutBitmapString(GLUT.BITMAP_HELVETICA_12, propertyValue + " "
           + content);
       y -= 12;
     }
 
     else if (content != null && propertyValue == null) {
-      gl.glRasterPos2d(x, y);
+      gl.glRasterPos3d(x, y, z);
       glut.glutBitmapString(GLUT.BITMAP_HELVETICA_12, content);
       y -= 12;
     }
 
     else if (content == null && propertyValue != null) {
-      gl.glRasterPos2d(x, y);
+      gl.glRasterPos3d(x, y, z);
       glut.glutBitmapString(GLUT.BITMAP_HELVETICA_12, propertyValue);
       y -= 12;
     }
@@ -115,7 +115,7 @@ public class DisplayInfo {
     gl.glPopMatrix();
   }
 
-  /**
+	/**
    * Applies the property value for the initial state.
    * 
    * @param obj
@@ -308,6 +308,14 @@ public class DisplayInfo {
   public void setY(double y) {
     this.y = y;
   }
+  
+  public double getZ() {
+		return z;
+	}
+
+	public void setZ(double z) {
+		this.z = z;
+	}
 
   public boolean isDisplayID() {
     return displayID;
