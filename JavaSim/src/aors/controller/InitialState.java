@@ -34,6 +34,9 @@ import aors.GeneralSpaceModel;
 import aors.data.DataBus;
 import aors.data.DataBusInterface;
 import aors.data.java.SimulationStepEvent;
+import aors.model.agtsim.AgentSubject;
+import aors.model.envevt.EnvironmentEvent;
+import aors.model.envsim.AgentObject;
 import aors.model.envsim.Objekt;
 import aors.statistics.AbstractObjectPropertyStatisticVariable;
 import aors.statistics.AbstractResourceUtilizationStatisticVariable;
@@ -55,6 +58,12 @@ import aors.statistics.AbstractObjectPropertyStatisticVariable.ObjektIdPropertyD
  * @version $Revision$
  */
 public class InitialState {
+
+  /**
+   * a reference to the simulator instance - this is used only for internal
+   * operations and is not accessible directly from outside
+   */
+  private AbstractSimulator simulator = null;
 
   /** the data bus object currently used in the simulator */
   private DataBus databus = null;
@@ -351,7 +360,7 @@ public class InitialState {
    * 
    * NOTE: this method has to be called only by the AbstractSimulator!
    * 
-   * @param statisticVariables         
+   * @param statisticVariables
    */
   protected void setStatisticVariables(
       Map<String, AbstractStatisticsVariable> statisticVariables) {
@@ -411,9 +420,118 @@ public class InitialState {
    * 
    * @param id
    *          the id of the object to be deleted
+   * @return true if an entity with the given is found and deleted
    * 
    */
-  public void deleteObjectById(long id) {
+  public boolean deleteAORObjektById(long id) {
+    boolean check = (this.aorObjectsById.get(id) != null);
+
+    if (check) {
+      this.aorObjectsById.remove(id);
+      return true;
+    }
+
+    return false;
+  }
+
+  /**
+   * Add an AORS-Agent (subjective and objective parts) to the system.
+   * 
+   * @param agentObject
+   *          the objective agent
+   * @param agentSubject
+   *          the subjective agent
+   * @return true if the add is performed successfully, false otherwise
+   */
+  public boolean addAgent(AgentObject agentObject, AgentSubject agentSubject) {
+
+    if (agentObject == null || agentSubject == null) {
+      return false;
+    }
+
+    return (this.simulator.getEnvironmentSimulator().addAgent(agentObject) && this.simulator
+        .addAgentSubject(agentSubject));
 
   }
+
+  /**
+   * Add an AORS-Objekt to the system.
+   * 
+   * @param objekt
+   *          the object to add
+   * @return true if the add is successful, false otherwise
+   */
+  public boolean addObjekt(Objekt objekt) {
+    if (objekt == null) {
+      return false;
+    }
+
+    return this.simulator.getEnvironmentSimulator().addObjekt(objekt);
+  }
+
+  /**
+   * Add an AORS-EnvironmentEvent to the system.
+   * 
+   * @param environmentEvent
+   *          the environment event to add
+   * @return true if the add is successful, false otherwise
+   */
+  public boolean addEnvironmentEvent(EnvironmentEvent environmentEvent) {
+    if (environmentEvent == null) {
+      return false;
+    }
+    return this.simulator.environmentEvents.add(environmentEvent);
+  }
+
+  /**
+   * Return all the environments events from the system
+   * 
+   * @return the environment events
+   */
+  public List<EnvironmentEvent> getEvents() {
+    return this.simulator.environmentEvents;
+  }
+
+  /**
+   * Remove an a given environment event from the simulator
+   * 
+   * @param environmentEvent
+   *          the environment event instance to remove
+   * @return true if environment event was found and removed, false otherwise
+   */
+  public boolean deleteEnvironmentEvent(EnvironmentEvent environmentEvent) {
+    if (environmentEvent == null) {
+      return false;
+    }
+    return this.simulator.environmentEvents.remove(environmentEvent);
+  }
+
+  /**
+   * Set the reference to the abstract simulator implementation.
+   * 
+   * @param simulator
+   *          the reference to the AbstractSimulator implementation
+   */
+  protected void setSimulator(AbstractSimulator simulator) {
+    this.simulator = simulator;
+  }
+
+  /**
+   * Get the class context for an given packageAndClass name. This is required
+   * for being able to create any dynamic instances inside the simulator from
+   * outside (modules like InitialStateUI module)
+   * 
+   * @param packageAndClassName
+   * @return
+   */
+  public Class<?> classForName(String packageAndClassName) {
+    try {
+      return this.simulator.getClass().getClassLoader().loadClass(
+          packageAndClassName);
+    } catch (ClassNotFoundException e) {
+      e.printStackTrace();
+      return null;
+    }
+  }
+
 }
