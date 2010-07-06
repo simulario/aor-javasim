@@ -80,1185 +80,1179 @@ import java.util.Set;
  */
 public abstract class AbstractSimulator implements AgentSimulatorListener {
 
-	/**
-	 * some switches; only for debug/test modules
-	 */
-	// if there is false, the ActivityManager will don't use
-	public final static boolean runActivities = true;
-
-	// if there is false, the Logger will don't use
-	public final static boolean runLogger = true;
-
-	// if there is false, the PhysSim will don't use
-	public final static boolean runPhysics = true;
-
-	// switch the debug-state output in the gui
-	public final static boolean showDebugFlags = false;
-
-	/**
-	 * The DataBus used for sending messages and notifications
-	 */
-	protected DataBusInterface dataBus;
-
-	/**
-	 * The space model for this simulation
-	 */
-	private GeneralSpaceModel generalSpaceModel = null;
-
-	/**
-	 * The initialState object used everywhere in the AORS core inside AORSim.
-	 * 
-	 * NOTE: please not change the field name, this is used via reflection in
-	 * other parts.
-	 */
-	private InitialState initialState;
-
-	/**
-	 * Instance of PhySim (physics simulation extension)
-	 */
-	protected PhysicsSimulator physim = null;
-
-	/**
-	 * the statistics object
-	 */
-	private GeneralStatistics statistics = null;
-
-	/**
-	 * List of displayable Variables
-	 */
-	// private List<AbstractStatisticsVariable> statisticVars;
-
-	/**
-	 * List of executable StatisticVariables (every step)
-	 */
-	// private List<AbstractStatisticsVariable> statisticVarExprStep;
-
-	/**
-	 * List of executable StatisticVariables (end of simulation)
-	 */
-	// private List<AbstractStatisticsVariable> statisticVarExprSim;
-
-	/**
-	 * An Object which holds some informations about the current
-	 * simulation/scenario.
-	 */
-	protected ScenarioInfos scenarioInfos;
-
-	protected GeneralSimulationModel simModel;
-
-	/**
-	 * An Object which holds the generalSimulationParameters.
-	 */
-	protected GeneralSimulationParameters generalSimulationParameters;
-
-	/**
-	 * Total number of simulationSteps. Will be set by controller.
-	 */
-	private long totalSimulationSteps = 0;
-
-	/**
-	 * The current SimulationStep
-	 */
-	private long currentSimulationStep;
-
-	/**
-	 * If true the simulation will pause. The "volatile"-modifier defines that
-	 * read and write on "pause" are always atomic.
-	 */
-	private volatile boolean pause = false;
-
-	/**
-	 * singleStepMode specifies whether the simulation runs fluently or in
-	 * single steps
-	 * 
-	 * true = singleStep mode
-	 */
-	private boolean singleStepMode = false;
-
-	/**
-	 * Variable used to stop simulation from the outside.
-	 * 
-	 * @see stopSimulation()
-	 */
-	private volatile boolean stop = false;
-
-	/**
-	 * true if currently a step is running. Steps might run long with external
-	 * agents. If control flow is inside <code>runSimulationStep()</code>, this
-	 * variable is set to true
-	 */
-	private boolean stepRunning = false;
-
-	/**
-	 * the envSim
-	 */
-	protected EnvironmentSimulator envSim;
-
-	/**
-	 * A list of agentSimulators
-	 */
-	private List<AgentSimulator> agentSimulators;
-
-	private boolean randomOrderAgentSimulation = true;
-
-	/**
-	 * List of EnvironmentEvent
-	 */
-	protected List<EnvironmentEvent> environmentEvents;
-
-	/**
-	 * Usage: it is used in the {@code run} method
-	 * 
-	 * @see #runSimulation() method Comments: this is the time when a simulation
-	 *      has started; It is initialized in the {@code run} method. It can be
-	 *      of use when some kind of calendar date is wanted. For more
-	 *      information regarding its meaning read <a href="http://www.informatik.tu-cottbus.de/~gwagner/AORS/papers/AOIS2003-revised-LNCS3030.pdf"
-	 *      >LNCS3030.pdf</a>
-	 */
-	private long simulationStartTime;
-
-	/**
-	 * Usage: it is used in the run method
-	 * 
-	 * @see #runSimulation() method Comments: this is the time when a simulation
-	 *      has ended Notice that this might be useless when a simulation has
-	 *      been paused or when {@code SimulatipnParameters.stepTimeDelay} it is
-	 *      used. It is initialized in the {@code run} method. For more
-	 *      information regarding its meaning read <a href="http://www.informatik.tu-cottbus.de/~gwagner/AORS/papers/AOIS2003-revised-LNCS3030.pdf"
-	 *      >LNCS3030.pdf</a>
-	 */
-	private long simulationEndTime;
-
-	/**
-	 * The time in milliseconds that each simulation step must last. Used for
-	 * realtime simulations. If a simulation step finishes earlier, an
-	 * artificial delay is inserted using Thread.sleep().
-	 */
-	private long stepTimeDelay;
-
-	/**
-	 * Time in seconds that an agentsimulator for an external agent might wait
-	 * for the agent to send its response in a step.
-	 */
-	private long agentTimeout;
-
-	/**
-	 * Specifies if multi-threading should be used, which often results in a
-	 * better performance on multiprocessors or multi-core machines.
-	 */
-	private boolean multithreading = false;
-
-	/**
-	 * Specifies whether the simulator should switch to MultiThreading mode
-	 * automatically if running in an multi core environment. Even if this
-	 * variable is set to false, the simulation could run multithreaded if there
-	 * are external agents.
-	 */
-	private boolean autoMultithreading = false;
-
-	/**
-	 * Used to synchronize AgentSimulators. External Agents (e.g. simulated in
-	 * JavaScript) do not immediately submit ActionEvents but after some time
-	 * only. The synchronization ensures that all AgentSubjects (were it
-	 * internal or external ones) have completed their current step before the
-	 * main loop proceeds to the next simulationStep.
-	 */
-	private CyclicBarrier barrier = null;
-
-	/**
-	 * Number of agents that are not internally simulated but are connected with
-	 * an AgentSimulatorProxy which passes events from/to an external Agent
-	 * (e.g. JavaScript)
-	 */
-	private int externalCount;
-
-	/**
-	 * Size of thread pool for agent execution
-	 */
-	private int threadPoolSize = 0;
-	
-	private Set<AgentSimulator> controlledAgentSimulators;
-
-	/**
-	 * Constructor
-	 * 
-	 * @param totalSimulationSteps
-	 */
-	public AbstractSimulator(long totalSimulationSteps) {
-		this.totalSimulationSteps = totalSimulationSteps;
-		this.generalSimulationParameters = this.getSimParams();
-		this.initialState = new InitialState();
-	}
-
-	public void setDataBus(DataBusInterface dataBus) {
-		this.dataBus = dataBus;
-
-		if (this.initialState != null) {
-			this.initialState.setDatabus(dataBus);
-		}
-	}
-
-	/**
-	 * Create the initial state object
-	 * 
-	 * @return the initialState object that was created and initialized.
-	 */
-	private void createInitialState() {
-		if (this.envSim != null) {
-			// the ID based entities map
-			this.initialState
-					.setAorObjectsById(this.envSim.getAorObjectsById());
-
-			// the type based entities map
-			this.initialState.setAorObjectsByType(this.envSim
-					.getAorObjectsByType());
-		}
-
-		// /initialize the statistics on InitialState object
-		if (this.statistics != null) {
-			this.initialState.setStatisticVariables(this.statistics.getStatisticVariables());
-		}
-
-		// initialize the space model
-		if (this.generalSpaceModel != null) {
-			this.initialState.setSpaceModel(this.generalSpaceModel);
-		}
-	}
-
-	/**
-	 * This method is the once called when the thread starts the run method
-	 * defined in this class.
-	 */
-	public void initialize() {
-
-		if (AbstractSimulator.runPhysics) {
-			this.physim = new PhysicsSimulator();
-			this.physim.setDataBus(dataBus);
-		}
-
-		this.agentSimulators = new ArrayList<AgentSimulator>();
-		this.controlledAgentSimulators = new HashSet<AgentSimulator>();
-		
-		this.environmentEvents = new ArrayList<EnvironmentEvent>();
-		this.agentSimulators.clear();
-
-		this.scenarioInfos = new ScenarioInfos();
-
-		this.dataBus.initialize();
-		this.dataBus.notifyStart();
-
-		// 01 call in created simulator
-		this.setInformations();
-
-		// set the seed for random if its set
-		try {
-			Field field = this.generalSimulationParameters.getClass()
-					.getDeclaredField(GeneralSimulationParameters.RANDOM_SEED);
-			int seed = field.getInt(this.generalSimulationParameters);
-			aors.util.Random.setSeed(seed);
-			aors.util.JavaRandom.setSeed(seed);
-
-		} catch (NoSuchFieldException nsfe) {
-			aors.util.Random.setRandomSeed();
-		} catch (IllegalArgumentException e) {
-			e.printStackTrace();
-		} catch (IllegalAccessException e) {
-			e.printStackTrace();
-		}
-
-		// set the randomOrderAgentSimulation if its set
-		try {
-			Field field = this.generalSimulationParameters
-					.getClass()
-					.getDeclaredField(
-							GeneralSimulationParameters.Random_Order_Agent_Simulation);
-			this.randomOrderAgentSimulation = field
-					.getBoolean(this.generalSimulationParameters);
-
-		} catch (NoSuchFieldException nsfe) {
-			// do nothing, because seed isn't set
-		} catch (IllegalArgumentException e) {
-			e.printStackTrace();
-		} catch (IllegalAccessException e) {
-			e.printStackTrace();
-		}
-
-		// 02 call in created simulator
-		this.createSimModel();
-
-		this.dataBus.notifySimulationScenario(this.scenarioInfos,
-				this.generalSimulationParameters, this.simModel
-						.getModelParamMap());
-
-		// 03 call in created simulator
-		this.generalSpaceModel = this.createSpaceModel();
-
-		// 04 call in created simulator
-		this.createInitialEvents();
-
-		this.envSim = new EnvironmentSimulator(dataBus, physim);
-		this.envSim.setEventsList(this.environmentEvents);
-		this.envSim.initialize();
-
-		// 05 call in created simulator
-		this.createEnvironment();
-		// 06 call in created simulator
-		this.setActivityFactory();
-
-		// logger.notifyInitialisation();
-
-		// 07 call in created simulator
-		this.createAgentSubjects();
-
-		// set the base URI value for agent subjects RDF manager
-		for (AgentSimulator agtSimulator : this.agentSimulators) {
-			agtSimulator
-					.setBaseURI(this.simModel
-							.getModelParameter(GeneralSimulationModel.ModelParameter.BASE_URI
-									.name()));
-		}
-
-		if (physim != null)
-			physim.setSimulationParameters(this.generalSimulationParameters);
-
-		/**
-		 * TODO delete following line if past march 2009 ArrayList<AgentSubject>
-		 * agentSubjectsTemp = new ArrayList<AgentSubject>(); for(AgentSimulator
-		 * agentSimulator: agentSimulators) {
-		 * agentSubjectsTemp.add(agentSimulator.getAgentSubject()); }
-		 * physim.setAgentSubjects(agentSubjectsTemp);
-		 */
-
-		// 08 call in created simulator
-		this.executeInitializeRules();
-
-		// set the statistic informations
-		// 09 call in created simulator
-		this.statistics = this.createStatistic();
-
-		// create the initial state
-		this.createInitialState();
-
-		// notify listeners about the simulation initialization
-		this.dataBus.notifyInitialisation(this.initialState);
-
-		// find out size of thread Pool for multithreaded execution
-		this.threadPoolSize = Runtime.getRuntime().availableProcessors() + 1;
-
-		if (this.autoMultithreading
-				&& Runtime.getRuntime().availableProcessors() > 1) {
-			multithreading = true;
-		} else {
-			multithreading = false;
-		}
-	} // initialize
-
-	/**
-	 * Usage: it must be implemented in the main class of each simulation
-	 * 
-	 * Comments: this method it is used to set the scenario informations
-	 */
-	protected abstract void setInformations();
-
-	/**
-	 * Comments: it is only for the logger
-	 * 
-	 * @return
-	 */
-	protected abstract GeneralSimulationParameters getSimParams();
-
-	/**
-	 * Comments: it is only for the logger
-	 */
-	protected abstract void createSimModel();
-
-	/**
-	 * Usage: it must be implemented in the main class of each simulation
-	 * Comments: this method is used to initialise the {@code spaceModel} field
-	 * 
-	 */
-	protected abstract GeneralSpaceModel createSpaceModel();
-
-	protected abstract GeneralStatistics createStatistic();
-
-	/**
-	 * Usage: it is implemented in the main class of each simulation
-	 * 
-	 * Comments: an EnvironmentSImulator must be created It is singleton (only
-	 * one instance in the whole system).
-	 */
-	protected abstract void createEnvironment();
-
-	/**
-	 * Usage: it is implemented in the main class of each simulation
-	 * 
-	 * Comments: All AgentSubject instances are created: - initial state of each
-	 * agent is set - internal events (periodic events & reminder events) are
-	 * created - for each instance is created an internal AgentSimulator
-	 * (internal processor). Notice that when an agent is to be run distributed
-	 * this method must create a facet for the AgentSubject running remotely
-	 */
-	protected abstract void createAgentSubjects();
-
-	/**
-	 * Usage: it must be implemented in the main class of each simulation
-	 * 
-	 * Comments: ExogenousEvents are created if there are any. Events are
-	 * created based on the InitialState element from the AOR description file.
-	 * All these events are added to SimulationEngine.events
-	 */
-	protected abstract void createInitialEvents();
-
-	/**
-	 * Usage: it must be implemented in the main class of each simulation
-	 * 
-	 * Comments: If there are InitializeRules, then the init/runs in this method
-	 */
-	protected abstract void executeInitializeRules();
-
-	protected abstract void setActivityFactory();
-
-	/**
-	 * Run the simulation that has been initialized before.
-	 */
-	public void runSimulation() {
-		this.simulationStartTime = System.currentTimeMillis();
-		this.dataBus.notifySimulationStart(this.simulationStartTime,
-				this.totalSimulationSteps);
-		this.calculateNumberOfExternalAgents();
-		this.doMainLoop();
-		this.sendSimulationEndNoticeToExternalAgents();
-		// this.computeStatisticsVariables(false);
-		// this.dataBus.notifyStatistics(this.statisticVars);
-		this.simulationEndTime = System.currentTimeMillis();
-		this.dataBus.notifySimulationEnd();
-	} // run
-
-	/**
-	 * Calculates the number of AgentSimulators that run externally. These must
-	 * be started in independent threads.
-	 */
-	private void calculateNumberOfExternalAgents() {
-		externalCount = 0;
-		for (AgentSimulator agentSimulator : agentSimulators) {
-
-			if(agentSimulator.agentIsControllable()) {
-				/*
-				 * if an agent is controllable, always run in multithreading
-				 * mode to support CyclicBarrier and AgentSimulator
-				 * synchronization
-				 */
-				this.multithreading = true;
-				// set the timeOut for this external agent simulator
-//				agentSimulator.setAgentTimeout(this.agentTimeout);
-			}
-
-			if (agentSimulator.isAgentSubjectProxySet()) {
-
-				/*
-				 * if there are external agents, always run in multithreading
-				 * mode to support CyclicBarrier and AgentSimulator
-				 * synchronization
-				 */
-				this.multithreading = true;
-
-				// set the timeOut for this external agent simulator
-				agentSimulator.setAgentTimeout(this.agentTimeout);
-				externalCount++;
-				System.out.println("Agent " + agentSimulator.getAgentName()
-						+ " controlled by " + agentSimulator.getUserName());
-			}
-		}
-	} // calculateNumberOfExternalAgents
-
-	/**
-	 * Notifies external agents that simulation has ended.
-	 */
-	private void sendSimulationEndNoticeToExternalAgents() {
-		for (AgentSimulator agentSimulator : agentSimulators) {
-			if (agentSimulator.isAgentSubjectProxySet()) {
-				agentSimulator.notifySimulationEnd();
-			}
-		}
-	} // sendSimulationEndNoticeToExternalAgents
-
-	/**
-	 * The main loop of the simulator.
-	 */
-	private void doMainLoop() {
-		// init stop to false, may be set from stopSimulation()
-		this.stop = false;
-
-		// we start in step 1
-		this.currentSimulationStep = 1;
-
-		// main loop implementation
-		while (this.currentSimulationStep <= this.totalSimulationSteps
-				&& this.stop == false) {
-			// when pausing, wait for Main to call pauseSimulation(false) ->
-			// notify()
-			// changed by cnoack, 5/Jun/2009
-			if (this.pause) {
-				synchronized (this) {
-					while (this.pause)
-						try {
-							wait();
-						} catch (InterruptedException e) {
-						}
-				}
-			} // if pause
-
-			// if simulation has been stopped while in pause mode, leave loop
-			// here
-			if (this.stop == true)
-				break;
-
-			// if Single-step mode == true, set pause to true, too, so that
-			// simulation
-			// pauses after the current step again.
-			this.pause = this.singleStepMode;
-
-			this.runSimulationStep();
-
-			this.calculateNewValueOfCurrentSimulationStep();
-		}// while
-	} // doMainLoop
-
-	/**
-	 * Finds out the next value of <code>currentSimulationStep</code>.
-	 */
-	private void calculateNewValueOfCurrentSimulationStep() {
-		// check if the simulation must be stop forced (before all steps end)...
-		if (envSim.isForceStopSimulation()) {
-			System.out.println("Simulation stoped by: StopSimulationEvent!");
-			this.currentSimulationStep = this.totalSimulationSteps + 1;
-		} else if (agentSimulators.isEmpty() && physim != null
-				&& !physim.isAutoKinematics()) {
-			// jump to the next eventOccurenceTime if no agents exist and
-			// autoKinematics is false
-			this.currentSimulationStep = this
-					.getNearestOccurrenceTimeFromNextEvents();
-		} else {
-			this.currentSimulationStep++;
-		}
-	} // calculateNewValueOfCurrentSimulationStep
-
-	/**
-	 * Returns the nearest occurrenceTime when an event will occur.
-	 * 
-	 * @return closestOccurrenceTime - the next step when an event will occur
-	 */
-	private long getNearestOccurrenceTimeFromNextEvents() {
-		long closestOccurrenceTime = this.totalSimulationSteps + 1;
-		for (EnvironmentEvent envEvent : this.environmentEvents) {
-			if (envEvent.getOccurrenceTime() == this.currentSimulationStep + 1) {
-				return this.currentSimulationStep + 1;
-			} else if (envEvent.getOccurrenceTime() < closestOccurrenceTime) {
-				closestOccurrenceTime = envEvent.getOccurrenceTime();
-			}
-		}
-		return closestOccurrenceTime;
-	} // getNearestOccurrenceTimeFromNextEvents
-
-	/**
-	 * Runs a single simulation step. Called from <code>runMainLoop()</code>.
-	 * 
-	 * @see <code>run()</code>
-	 */
-	private void runSimulationStep() {
-		this.stepRunning = true;
-		long stepStartTime = System.currentTimeMillis();
-		long stepEndTime = stepStartTime  + this.stepTimeDelay;
-
-		this.dataBus.notifySimStepStart(this.currentSimulationStep);
-
-		// process the events in the current simulation step
-		// starts the complete simulation-process in the environment
-		this.envSim.run(currentSimulationStep);
-		this.processCreationAndDestructionEvents();
-
-		// only proceed if there are any agents
-		if (!this.agentSimulators.isEmpty()) {
-			List<PerceptionEvent> currentPerceptionEvents = this
-					.getPerceptionEventsOfCurrentStep();
-
-			// run AgentSimulators
-			if (this.multithreading) {
-				this.runAgentSimulatorsMultiThreaded(currentPerceptionEvents, stepEndTime);
-			} else {
-				this.runAgentSimulatorsSingleThreaded(currentPerceptionEvents);
-			}
-		} // if !agentSimulators.isEmpty()
-
-		this.computeNewAndDeleteProcessedEvents();
-
-		// if some statechanges from PI-Agents
-		this.dataBus.notifyAgentSimulatorsResultingStateChanges();
-		this.dataBus.notifySimStepEnd();
-
-		long stepProcessingTime = System.currentTimeMillis() - stepStartTime;
-		this.delayStepToReachDefinedStepDelay(stepProcessingTime);
-
-		// this.computeStatisticsVariables(true);
-		this.stepRunning = false;
-	} // runSimulationStep
-
-	/**
-	 * Returns true if a step is currently running.
-	 * 
-	 * @return true if a step is currently running, otherwise false
-	 */
-	public boolean isStepRunning() {
-		return this.stepRunning;
-	} // isStepRunning
-
-	/**
-	 * Delays the current step if its execution time was shorter than the
-	 * specified <code>stepTimeDelay</code>. Is used for simulations which run
-	 * in real time.
-	 * 
-	 * @param stepProcessingTime
-	 *            processing time of step in milliseconds
-	 */
-	private void delayStepToReachDefinedStepDelay(long stepProcessingTime) {
-		if (this.stepTimeDelay > 0) {
-			try {
-				long delay = this.stepTimeDelay - stepProcessingTime;
-				if (delay > 0) {
-					Thread.sleep(delay);
-				}
-			} catch (Exception e) {
-			}
-		}
-	} // delayStepToReachDefinedStepDelay
-
-	/**
-	 * Wraps an AgentSimulator and implements CyclicBarrier to synchronize all
-	 * agentSimulators
-	 * 
-	 * @author noack
-	 * @since 6/Jun/2009
-	 */
-	private class AgentWorker extends Thread {
-
-		private AgentSimulator agentSim;
-
-		public AgentWorker(AgentSimulator agentSim) {
-			this.agentSim = agentSim;
-		}
-
-		public void run() {
-			agentSim.run();
-			try {
-				barrier.await();
-			} catch (InterruptedException ex) {
-				return;
-			} catch (BrokenBarrierException ex) {
-				return;
-			}
-		}
-	} // class AgentWorker
-
-	/**
-	 * Runs the AgentSimulators in multi threaded mode.
-	 * 
-	 * @param currentPerceptionEvents
-	 *            PerceptionEvents in current step
-	 * @param stepEndTime
-	 *						time until the current step has to be finished
-	 */
-	private void runAgentSimulatorsMultiThreaded(
-			List<PerceptionEvent> currentPerceptionEvents, long stepEndTime) {
-		/**
-		 * Creates a barrier for externalCount + 1 threads This barrier is for
-		 * AgentWorker Threads (externalized agents) and this current thread.
-		 */
-		this.barrier = new CyclicBarrier(externalCount + 1);
-
-		ExecutorService executorService = Executors
-				.newFixedThreadPool(threadPoolSize);
-
-		for (AgentSimulator agentSimulator : agentSimulators) {
-
-			List<PerceptionEvent> eventsForAgentSubject = getEventsForAgentSubject(
-					agentSimulator.getAgentId(), currentPerceptionEvents);
-
-			agentSimulator.setNewEvents(currentSimulationStep,
-					eventsForAgentSubject);
-
-			if (agentSimulator.isAgentSubjectProxySet() ||
-				agentSimulator.agentIsControlled()) {
-
-				agentSimulator.setStepEndTime(stepEndTime);
-
-				// external agent is started in its own thread
-				Thread t = new AgentWorker(agentSimulator);
-				t.setName(agentSimulator.getAgentName());
-				t.start();
-			} else {
-				// execute all "internal" agents in the execution pool
-				executorService.execute(agentSimulator);
-			}
-		} // for all AgentSimulators
-
-		executorService.shutdown();
-		try {
-			executorService.awaitTermination(10, TimeUnit.SECONDS);
-			barrier.await();
-		} catch (InterruptedException e) {
-			System.err.println("runAgentSimulatorsMultiThreaded in step "
-					+ currentSimulationStep + ": InterruptedExecution");
-		} catch (BrokenBarrierException e) {
-			System.err.println("runAgentSimulatorsMultiThreaded in step "
-					+ currentSimulationStep + ": BrokenBarrier");
-		}
-	} // runAgentSimulatorsMultiThreaded
-
-	/**
-	 * Runs the AgentSimulators in single threaded mode.
-	 * 
-	 * @param currentPerceptionEvents
-	 *            PerceptionEvents in current step
-	 */
-	private void runAgentSimulatorsSingleThreaded(
-			List<PerceptionEvent> currentPerceptionEvents) {
-		for (AgentSimulator agentSimulator : agentSimulators) {
-
-			// get its events in the current simulation step
-			List<PerceptionEvent> eventsForAgentSubject = getEventsForAgentSubject(
-					agentSimulator.getAgentId(), currentPerceptionEvents);
-
-			agentSimulator.setNewEvents(currentSimulationStep,
-					eventsForAgentSubject);
-
-			agentSimulator.run();
-		}
-	} // runAgentSimulatorsSingleThreaded
-
-	/**
-	 * 
-	 * Usage: computes the values for statistic variables
-	 * 
-	 * @param step
-	 *            - if true, then compute variables for every step, otherwise
-	 *            the variables for the end of the simulation
-	 *            (computeOnlyAtEnd="true")
-	 */
-	// private void computeStatisticsVariables(boolean step) {
-	//
-	// if (step) {
-	// for (AbstractStatisticsVariable var : this.statisticVarExprStep) {
-	// var.computeVar();
-	// }
-	// } else {
-	// for (AbstractStatisticsVariable var : this.statisticVarExprSim) {
-	// var.computeVar();
-	// }
-	// }
-	// } // computeStatisticsVariables
-
-	/**
-	 * addAgentSubject adds a new AgentSubject to the simulator
-	 * 
-	 * @param agentSubject
-	 *            the AgentSubject to add to the Simulator
-	 * @return true if the AgentSubject was added successfully
-	 */
-	protected boolean addAgentSubject(AgentSubject agentSubject) {
-		if (agentSubject != null) {
-			if (this.dataBus.getLoggerType() == DataBus.LoggerType.FULL_XML_LOGGER) {
-				// TODO: review this:
-				// change the versions of agent subject logging
-				// agentSubject.enableLogGeneration();
-				agentSubject.enableJaxbLogGeneration();
-			}
-
-			((ObjektInitEventListener) this.dataBus)
-					.objektInitEvent(new ObjektInitEvent(agentSubject));
-
-			AgentSimulator agentSim = new DefaultAgentSimulator(agentSubject,
-					this, this.dataBus, this);
-			agentSim.setCorrespondingAgentObject(this.envSim
-					.getAgentObjectById(agentSubject.getId()));
-
-			if (this.randomOrderAgentSimulation) {
-				// add the agent simulators in a randomize position
-				this.agentSimulators.add(aors.util.Random
-						.uniformInt(this.agentSimulators.size() - 1), agentSim);
-			} else {
-				this.agentSimulators.add(agentSim);
-			}
-
-			return true;
-		}
-		return false;
-	} // addAgentSubject
-
-	/**
-	 * Remove an Agent by his id from the simulation
-	 * 
-	 * @param agentId
-	 */
-	private void removeAgentSubject(long agentId) {
-		Iterator<AgentSimulator> i = this.agentSimulators.iterator();
-		while (i.hasNext()) {
-			AgentSimulator agentSimulator = i.next();
-			if (agentSimulator.getAgentId() == agentId) {
-				// remove agent subject from simulation by notifying its
-				// simulator
-				agentSimulator.notifyRemoval();
-				// and removing the agent simulator from the agentSimulators
-				// list
-				i.remove();
-				return;
-			}
-		}
-	} // removeAgentSubject
-
-	/**
-	 * Checks the events list for AgentSubjectCreationEvent and
-	 * AgentSubjectDestructionEvent and processes them. This step must be done
-	 * before the AgentSimulators are run.
-	 */
-	private void processCreationAndDestructionEvents() {
-		Iterator<EnvironmentEvent> eventIterator = environmentEvents.iterator();
-		// as long as EnvironmentEvent object are available
-		while (eventIterator.hasNext()) {
-			// get the next one
-			EnvironmentEvent environmentEvent = eventIterator.next();
-
-			if (environmentEvent instanceof AgentSubjectCreationEvent) {
-				// add to agents subjects
-				this
-						.addAgentSubject(((AgentSubjectCreationEvent) environmentEvent)
-								.getAgentSubject());
-				eventIterator.remove();
-				// if the event is an instance of AgentSubjectDestructionEvent
-			} else if (environmentEvent instanceof AgentSubjectDestructionEvent) {
-				// remove the specified agent
-				this
-						.removeAgentSubject(((AgentSubjectDestructionEvent) environmentEvent)
-								.getAgentId());
-				eventIterator.remove();
-			}
-		}
-	}
-
-	private void computeNewAndDeleteProcessedEvents() {
-
-		Iterator<EnvironmentEvent> eventIterator = environmentEvents.iterator();
-		while (eventIterator.hasNext()) {
-			EnvironmentEvent environmentEvent = eventIterator.next();
-
-			this.computeNewExogenousEventEvent(environmentEvent);
-			if (this.isEventProcessed(environmentEvent)) {
-				eventIterator.remove();
-			}
-		}
-	}
-
-	private void computeNewExogenousEventEvent(EnvironmentEvent environmentEvent) {
-
-		if (environmentEvent instanceof ExogenousEvent) {
-
-			ExogenousEvent exogEvent = (ExogenousEvent) environmentEvent;
-
-			// if it happened in the actual simulation step
-			if (exogEvent.getOccurrenceTime() == currentSimulationStep
-					&& !exogEvent.stopCondition()) {
-				// it is not created a new object in memory
-				// but reseted the occurrenceTime based on the
-				// nextOccurrenceTime computed in EnvironmentSiulator.run()
-				environmentEvent.setOccurrenceTime(exogEvent
-						.getNextOccurrenceTime());
-			}
-		}
-	}
-
-	private boolean isEventProcessed(EnvironmentEvent environmentEvent) {
-		if (environmentEvent.getOccurrenceTime() <= this.currentSimulationStep) {
-			return true;
-		}
-		return false;
-	}
-
-	/**
-	 * Comments: Get the {@code simulationStartTime}.
-	 * 
-	 * @return the {@code simulationStartTime}.
-	 */
-	public long getSimulationStartTime() {
-		return simulationStartTime;
-	}
-
-	/**
-	 * Comments: Get the {@code simulationEndTime}.
-	 * 
-	 * @return the {@code simulationEndTime}.
-	 */
-	public long getSimulationEndTime() {
-		return simulationEndTime;
-	}
-
-	/**
-	 * Comments: Get the {@code agentTimeout}.
-	 * 
-	 * @return the {@code agentTimeout}.
-	 */
-	public long getAgentTimeout() {
-		return agentTimeout;
-	}
-
-	/**
-	 * Comments: Set the {@code agentTimeout}.
-	 * 
-	 * @param agentTimeout
-	 *            The {@code agentTimeout} to set.
-	 * @author Christian Noack
-	 * @since 30/Jul/2009
-	 */
-	public void setAgentTimeout(long agentTimeout) {
-		this.agentTimeout = agentTimeout;
-	}
-
-	/**
-	 * Comments: Get the {@code stepTimeDelay}.
-	 * 
-	 * @return the {@code stepTimeDelay}.
-	 */
-	public long getStepTimeDelay() {
-		return stepTimeDelay;
-	}
-
-	/**
-	 * Comments: Set the {@code stepTimeDelay}.
-	 * 
-	 * @param stepTimeDelay
-	 *            The {@code stepTimeDelay} to set.
-	 */
-	public void setStepTimeDelay(long stepTimeDelay) {
-		this.stepTimeDelay = stepTimeDelay;
-	}
-
-	/**
-	 * Comments: Get the {@code simulationSteps}.
-	 * 
-	 * @return the {@code simulationSteps}.
-	 */
-	public long getTotalSimulationSteps() {
-		return totalSimulationSteps;
-	}
-
-	/**
-	 * Set the {@code simulationSteps}.
-	 * 
-	 * @param simulationSteps
-	 *            The {@code simulationSteps} to set.
-	 */
-	public void setTotalSimulationSteps(long simulationSteps) {
-		this.totalSimulationSteps = simulationSteps;
-	}
-
-	/**
-	 * Comments: Get the {@code envSim}.
-	 * 
-	 * @return the {@code envSim}.
-	 */
-	public EnvironmentSimulator getEnvironmentSimulator() {
-		return envSim;
-	}
-
-	/**
-	 * Comments: Get the {@code agentSimulators}. Used to transfer control of an
-	 * agent to a third party.
-	 * 
-	 * @return the {@code agentSimulators}.
-	 * @author cnoack
-	 */
-	public List<AgentSimulator> getAgentSimulators() {
-		return agentSimulators;
-	}
-
-	/**
-	 * Return a list of perception events that concern a specific AgentSubject.
-	 * 
-	 * @param agentSubjectId
-	 *            the ID of the AgentSubject in questions
-	 * @param perceptionEvents
-	 *            a list of all perception events
-	 * @return a list of perception events for the specific AgentSubject
-	 */
-	private List<PerceptionEvent> getEventsForAgentSubject(long agentSubjectId,
-			List<PerceptionEvent> perceptionEvents) {
-		List<PerceptionEvent> result = new ArrayList<PerceptionEvent>();
-		for (PerceptionEvent event : perceptionEvents) {
-			if (event.getPerceiverIdRef() == agentSubjectId)
-				result.add(event);
-		}
-		return result;
-	} // getEventsForAgentSubject
-
-	/**
-	 * Generates a list of perception events for current step.
-	 * 
-	 * @return a list with perception events of the current step
-	 */
-	private List<PerceptionEvent> getPerceptionEventsOfCurrentStep() {
-		List<PerceptionEvent> result = new ArrayList<PerceptionEvent>();
-		for (EnvironmentEvent event : this.environmentEvents) {
-			if (event instanceof PerceptionEvent
-					&& event.getOccurrenceTime() == currentSimulationStep) {
-				result.add((PerceptionEvent) event);
-			}
-		}
-		return result;
-	} // getPerceptionEventsOfCurrentStep
-
-	/**
-	 * Comments: Overrides method {@code receiveActionEvents} from super class
-	 * events are added only if there are any
-	 * 
-	 * @param agentSubjectEvent
-	 */
-	public void receiveActionEvents(List<ActionEvent> actions, JsonData agentLog) {
-		this.environmentEvents.addAll(actions);
-		this.dataBus.notifyAgentSimulatorStep(agentLog);
-	}
-
-	public void receiveActionEvents(List<ActionEvent> actions,
-			AgentSimulatorStep agentSimulatorStep) {
-		this.environmentEvents.addAll(actions);
-		this.dataBus.notifyAgentSimulatorStep(agentSimulatorStep);
-	}
-
-	/**
-	 * Comments: Get the {@code currentSimulationStep}.
-	 * 
-	 * @return the {@code currentSimulationStep}.
-	 */
-	public long getCurrentSimulationStep() {
-		return currentSimulationStep;
-	}
-
-	/**
-	 * Returns true if simulation is paused.
-	 * 
-	 * @return true if simulation is paused
-	 */
-	public boolean isPaused() {
-		return pause;
-	}
-
-	/**
-	 * Pause/continue simulation simulation. The simulation will interrupt
-	 * before executing the next step or will continue.
-	 * 
-	 * @param pauseState
-	 *            - true to pause, false to continue
-	 */
-	public void pauseSimulation(boolean pauseState) {
-		synchronized (this) {
-			this.dataBus.notifySimulationPaused(pauseState);
-			this.pause = pauseState;
-
-			// notify to not wait anymore
-			notify();
-		}
-	}
-
-	/**
-	 * Sets single step mode for the simulator. If set to true, the simulation
-	 * will run in single-step mode. Client needs to run continueSimulation for
-	 * executing the next step.
-	 * 
-	 * @param mode
-	 *            true for single-step mode, false for continuous
-	 */
-	public void setSingleStepMode(boolean mode) {
-		this.singleStepMode = mode;
-	}
-
-	/**
-	 * Returns true if simulation runs in SingleStep mode, otherwise false.
-	 * 
-	 * @return
-	 */
-	public boolean isSingleStepMode() {
-		return this.singleStepMode;
-	}
-
-	/**
-	 * Stops the simulation by setting stop variable to true which is examined
-	 * in main loop. Also each running AgentSimulator is notified so that it
-	 * maybe can finish its execution.
-	 */
-	public void stopSimulation() {
-		for (AgentSimulator agentSim : this.agentSimulators) {
-			agentSim.notifySimulationEnd();
-		}
-		synchronized (this) {
-			this.stop = true;
-			if (this.pause) {
-				this.pause = false;
-				notify();
-			}
-		}
-	}
-
-	/**
-	 * Comments: Get the {@code autoMultiThreading}.
-	 * 
-	 * @return the {@code autoMultiThreading}.
-	 */
-	public boolean isAutoMultithreading() {
-		return autoMultithreading;
-	}
-
-	/**
-	 * Comments: Set the {@code autoMultiThreading}.
-	 * 
-	 * @param autoMultiThreading
-	 *            The {@code autoMultiThreading} to set.
-	 */
-	public void setAutoMultithreading(boolean autoMultiThreading) {
-		this.autoMultithreading = autoMultiThreading;
-	}
-
-	public void addObjektDestroyListener(
-			ObjektDestroyEventListener objektDestroyEventListener) {
-		this.dataBus.addDestroyObjektEventListener(objektDestroyEventListener);
-	}
-
-	/**
-	 * Usage:
-	 * 
-	 * 
-	 * Comments: Get the {@code initialState}.
-	 * 
-	 * 
-	 * 
-	 * @return the {@code initialState}.
-	 */
-	public InitialState getInitialState() {
-		return initialState;
-	}
-
-	private void markAsControlled(AgentSimulator agentSimulator) {
-		this.controlledAgentSimulators.add(agentSimulator);
-		this.externalCount++;
-	}
-
-	private void markAsNotControlled(AgentSimulator agentSimulator) {
-		if(this.controlledAgentSimulators.remove(agentSimulator)) {
-			this.externalCount--;
-		}
-	}
-
-	public void setAgentIsControlled(AgentSimulator agentSimulator) {
-		if(agentSimulator.agentIsControlled()) {
-			this.markAsControlled(agentSimulator);
-		} else {
-			this.markAsNotControlled(agentSimulator);
-		}
-	}
+  /**
+   * some switches; only for debug/test modules
+   */
+  // if there is false, the ActivityManager will don't use
+  public final static boolean runActivities = true;
+
+  // if there is false, the Logger will don't use
+  public final static boolean runLogger = true;
+
+  // if there is false, the PhysSim will don't use
+  public final static boolean runPhysics = true;
+
+  // switch the debug-state output in the gui
+  public final static boolean showDebugFlags = false;
+
+  /**
+   * The DataBus used for sending messages and notifications
+   */
+  protected DataBusInterface dataBus;
+
+  /**
+   * The space model for this simulation
+   */
+  private GeneralSpaceModel generalSpaceModel = null;
+
+  /**
+   * The initialState object used everywhere in the AORS core inside AORSim.
+   * 
+   * NOTE: please not change the field name, this is used via reflection in
+   * other parts.
+   */
+  private InitialState initialState;
+
+  /**
+   * Instance of PhySim (physics simulation extension)
+   */
+  protected PhysicsSimulator physim = null;
+
+  /**
+   * the statistics object
+   */
+  private GeneralStatistics statistics = null;
+
+  /**
+   * List of displayable Variables
+   */
+  // private List<AbstractStatisticsVariable> statisticVars;
+
+  /**
+   * List of executable StatisticVariables (every step)
+   */
+  // private List<AbstractStatisticsVariable> statisticVarExprStep;
+
+  /**
+   * List of executable StatisticVariables (end of simulation)
+   */
+  // private List<AbstractStatisticsVariable> statisticVarExprSim;
+
+  /**
+   * An Object which holds some informations about the current
+   * simulation/scenario.
+   */
+  protected ScenarioInfos scenarioInfos;
+
+  protected GeneralSimulationModel simModel;
+
+  /**
+   * An Object which holds the generalSimulationParameters.
+   */
+  protected GeneralSimulationParameters generalSimulationParameters;
+
+  /**
+   * Total number of simulationSteps. Will be set by controller.
+   */
+  private long totalSimulationSteps = 0;
+
+  /**
+   * The current SimulationStep
+   */
+  private long currentSimulationStep;
+
+  /**
+   * If true the simulation will pause. The "volatile"-modifier defines that
+   * read and write on "pause" are always atomic.
+   */
+  private volatile boolean pause = false;
+
+  /**
+   * singleStepMode specifies whether the simulation runs fluently or in single
+   * steps
+   * 
+   * true = singleStep mode
+   */
+  private boolean singleStepMode = false;
+
+  /**
+   * Variable used to stop simulation from the outside.
+   * 
+   * @see stopSimulation()
+   */
+  private volatile boolean stop = false;
+
+  /**
+   * true if currently a step is running. Steps might run long with external
+   * agents. If control flow is inside <code>runSimulationStep()</code>, this
+   * variable is set to true
+   */
+  private boolean stepRunning = false;
+
+  /**
+   * the envSim
+   */
+  protected EnvironmentSimulator envSim;
+
+  /**
+   * A list of agentSimulators
+   */
+  private List<AgentSimulator> agentSimulators;
+
+  private boolean randomOrderAgentSimulation = true;
+
+  /**
+   * List of EnvironmentEvent
+   */
+  protected List<EnvironmentEvent> environmentEvents;
+
+  /**
+   * Usage: it is used in the {@code run} method
+   * 
+   * @see #runSimulation() method Comments: this is the time when a simulation
+   *      has started; It is initialized in the {@code run} method. It can be of
+   *      use when some kind of calendar date is wanted. For more information
+   *      regarding its meaning read <a href="http://www.informatik.tu-cottbus.de/~gwagner/AORS/papers/AOIS2003-revised-LNCS3030.pdf"
+   *      >LNCS3030.pdf</a>
+   */
+  private long simulationStartTime;
+
+  /**
+   * Usage: it is used in the run method
+   * 
+   * @see #runSimulation() method Comments: this is the time when a simulation
+   *      has ended Notice that this might be useless when a simulation has been
+   *      paused or when {@code SimulatipnParameters.stepTimeDelay} it is used.
+   *      It is initialized in the {@code run} method. For more information
+   *      regarding its meaning read <a href="http://www.informatik.tu-cottbus.de/~gwagner/AORS/papers/AOIS2003-revised-LNCS3030.pdf"
+   *      >LNCS3030.pdf</a>
+   */
+  private long simulationEndTime;
+
+  /**
+   * The time in milliseconds that each simulation step must last. Used for
+   * realtime simulations. If a simulation step finishes earlier, an artificial
+   * delay is inserted using Thread.sleep().
+   */
+  private long stepTimeDelay;
+
+  /**
+   * Time in seconds that an agentsimulator for an external agent might wait for
+   * the agent to send its response in a step.
+   */
+  private long agentTimeout;
+
+  /**
+   * Specifies if multi-threading should be used, which often results in a
+   * better performance on multiprocessors or multi-core machines.
+   */
+  private boolean multithreading = false;
+
+  /**
+   * Specifies whether the simulator should switch to MultiThreading mode
+   * automatically if running in an multi core environment. Even if this
+   * variable is set to false, the simulation could run multithreaded if there
+   * are external agents.
+   */
+  private boolean autoMultithreading = false;
+
+  /**
+   * Used to synchronize AgentSimulators. External Agents (e.g. simulated in
+   * JavaScript) do not immediately submit ActionEvents but after some time
+   * only. The synchronization ensures that all AgentSubjects (were it internal
+   * or external ones) have completed their current step before the main loop
+   * proceeds to the next simulationStep.
+   */
+  private CyclicBarrier barrier = null;
+
+  /**
+   * Number of agents that are not internally simulated but are connected with
+   * an AgentSimulatorProxy which passes events from/to an external Agent (e.g.
+   * JavaScript)
+   */
+  private int externalCount;
+
+  /**
+   * Size of thread pool for agent execution
+   */
+  private int threadPoolSize = 0;
+
+  private Set<AgentSimulator> controlledAgentSimulators;
+
+  /**
+   * Constructor
+   * 
+   * @param totalSimulationSteps
+   */
+  public AbstractSimulator(long totalSimulationSteps) {
+    this.totalSimulationSteps = totalSimulationSteps;
+    this.generalSimulationParameters = this.getSimParams();
+    this.initialState = new InitialState();
+  }
+
+  public void setDataBus(DataBusInterface dataBus) {
+    this.dataBus = dataBus;
+
+    if (this.initialState != null) {
+      this.initialState.setDatabus(dataBus);
+    }
+  }
+
+  /**
+   * Create the initial state object
+   * 
+   * @return the initialState object that was created and initialized.
+   */
+  private void createInitialState() {
+    if (this.envSim != null) {
+      // the ID based entities map
+      this.initialState.setAorObjectsById(this.envSim.getAorObjectsById());
+
+      // the type based entities map
+      this.initialState.setAorObjectsByType(this.envSim.getAorObjectsByType());
+    }
+
+    // /initialize the statistics on InitialState object
+    if (this.statistics != null) {
+      this.initialState.setStatisticVariables(this.statistics
+          .getStatisticVariables());
+    }
+
+    // initialize the space model
+    if (this.generalSpaceModel != null) {
+      this.initialState.setSpaceModel(this.generalSpaceModel);
+    }
+
+    // set the reference to the simulator (used internally by the initial state
+    // to do some operations like add/delete agents/objects).
+    this.initialState.setSimulator(this);
+  }
+
+  /**
+   * This method is the once called when the thread starts the run method
+   * defined in this class.
+   */
+  public void initialize() {
+
+    if (AbstractSimulator.runPhysics) {
+      this.physim = new PhysicsSimulator();
+      this.physim.setDataBus(dataBus);
+    }
+
+    this.agentSimulators = new ArrayList<AgentSimulator>();
+    this.controlledAgentSimulators = new HashSet<AgentSimulator>();
+
+    this.environmentEvents = new ArrayList<EnvironmentEvent>();
+    this.agentSimulators.clear();
+
+    this.scenarioInfos = new ScenarioInfos();
+
+    this.dataBus.initialize();
+    this.dataBus.notifyStart();
+
+    // 01 call in created simulator
+    this.setInformations();
+
+    // set the seed for random if its set
+    try {
+      Field field = this.generalSimulationParameters.getClass()
+          .getDeclaredField(GeneralSimulationParameters.RANDOM_SEED);
+      int seed = field.getInt(this.generalSimulationParameters);
+      aors.util.Random.setSeed(seed);
+      aors.util.JavaRandom.setSeed(seed);
+
+    } catch (NoSuchFieldException nsfe) {
+      aors.util.Random.setRandomSeed();
+    } catch (IllegalArgumentException e) {
+      e.printStackTrace();
+    } catch (IllegalAccessException e) {
+      e.printStackTrace();
+    }
+
+    // set the randomOrderAgentSimulation if its set
+    try {
+      Field field = this.generalSimulationParameters.getClass()
+          .getDeclaredField(
+              GeneralSimulationParameters.Random_Order_Agent_Simulation);
+      this.randomOrderAgentSimulation = field
+          .getBoolean(this.generalSimulationParameters);
+
+    } catch (NoSuchFieldException nsfe) {
+      // do nothing, because seed isn't set
+    } catch (IllegalArgumentException e) {
+      e.printStackTrace();
+    } catch (IllegalAccessException e) {
+      e.printStackTrace();
+    }
+
+    // 02 call in created simulator
+    this.createSimModel();
+
+    this.dataBus.notifySimulationScenario(this.scenarioInfos,
+        this.generalSimulationParameters, this.simModel.getModelParamMap());
+
+    // 03 call in created simulator
+    this.generalSpaceModel = this.createSpaceModel();
+
+    // 04 call in created simulator
+    this.createInitialEvents();
+
+    this.envSim = new EnvironmentSimulator(dataBus, physim);
+    this.envSim.setEventsList(this.environmentEvents);
+    this.envSim.initialize();
+
+    // 05 call in created simulator
+    this.createEnvironment();
+    // 06 call in created simulator
+    this.setActivityFactory();
+
+    // logger.notifyInitialisation();
+
+    // 07 call in created simulator
+    this.createAgentSubjects();
+
+    // set the base URI value for agent subjects RDF manager
+    for (AgentSimulator agtSimulator : this.agentSimulators) {
+      agtSimulator.setBaseURI(this.simModel
+          .getModelParameter(GeneralSimulationModel.ModelParameter.BASE_URI
+              .name()));
+    }
+
+    if (physim != null)
+      physim.setSimulationParameters(this.generalSimulationParameters);
+
+    /**
+     * TODO delete following line if past march 2009 ArrayList<AgentSubject>
+     * agentSubjectsTemp = new ArrayList<AgentSubject>(); for(AgentSimulator
+     * agentSimulator: agentSimulators) {
+     * agentSubjectsTemp.add(agentSimulator.getAgentSubject()); }
+     * physim.setAgentSubjects(agentSubjectsTemp);
+     */
+
+    // 08 call in created simulator
+    this.executeInitializeRules();
+
+    // set the statistic informations
+    // 09 call in created simulator
+    this.statistics = this.createStatistic();
+
+    // create the initial state
+    this.createInitialState();
+
+    // notify listeners about the simulation initialization
+    this.dataBus.notifyInitialisation(this.initialState);
+
+    // find out size of thread Pool for multithreaded execution
+    this.threadPoolSize = Runtime.getRuntime().availableProcessors() + 1;
+
+    if (this.autoMultithreading
+        && Runtime.getRuntime().availableProcessors() > 1) {
+      multithreading = true;
+    } else {
+      multithreading = false;
+    }
+  } // initialize
+
+  /**
+   * Usage: it must be implemented in the main class of each simulation
+   * 
+   * Comments: this method it is used to set the scenario informations
+   */
+  protected abstract void setInformations();
+
+  /**
+   * Comments: it is only for the logger
+   * 
+   * @return
+   */
+  protected abstract GeneralSimulationParameters getSimParams();
+
+  /**
+   * Comments: it is only for the logger
+   */
+  protected abstract void createSimModel();
+
+  /**
+   * Usage: it must be implemented in the main class of each simulation
+   * Comments: this method is used to initialise the {@code spaceModel} field
+   * 
+   */
+  protected abstract GeneralSpaceModel createSpaceModel();
+
+  protected abstract GeneralStatistics createStatistic();
+
+  /**
+   * Usage: it is implemented in the main class of each simulation
+   * 
+   * Comments: an EnvironmentSImulator must be created It is singleton (only one
+   * instance in the whole system).
+   */
+  protected abstract void createEnvironment();
+
+  /**
+   * Usage: it is implemented in the main class of each simulation
+   * 
+   * Comments: All AgentSubject instances are created: - initial state of each
+   * agent is set - internal events (periodic events & reminder events) are
+   * created - for each instance is created an internal AgentSimulator (internal
+   * processor). Notice that when an agent is to be run distributed this method
+   * must create a facet for the AgentSubject running remotely
+   */
+  protected abstract void createAgentSubjects();
+
+  /**
+   * Usage: it must be implemented in the main class of each simulation
+   * 
+   * Comments: ExogenousEvents are created if there are any. Events are created
+   * based on the InitialState element from the AOR description file. All these
+   * events are added to SimulationEngine.events
+   */
+  protected abstract void createInitialEvents();
+
+  /**
+   * Usage: it must be implemented in the main class of each simulation
+   * 
+   * Comments: If there are InitializeRules, then the init/runs in this method
+   */
+  protected abstract void executeInitializeRules();
+
+  protected abstract void setActivityFactory();
+
+  /**
+   * Run the simulation that has been initialized before.
+   */
+  public void runSimulation() {
+    this.simulationStartTime = System.currentTimeMillis();
+    this.dataBus.notifySimulationStart(this.simulationStartTime,
+        this.totalSimulationSteps);
+    this.calculateNumberOfExternalAgents();
+    this.doMainLoop();
+    this.sendSimulationEndNoticeToExternalAgents();
+    // this.computeStatisticsVariables(false);
+    // this.dataBus.notifyStatistics(this.statisticVars);
+    this.simulationEndTime = System.currentTimeMillis();
+    this.dataBus.notifySimulationEnd();
+  } // run
+
+  /**
+   * Calculates the number of AgentSimulators that run externally. These must be
+   * started in independent threads.
+   */
+  private void calculateNumberOfExternalAgents() {
+    externalCount = 0;
+    for (AgentSimulator agentSimulator : agentSimulators) {
+
+      if (agentSimulator.agentIsControllable()) {
+        /*
+         * if an agent is controllable, always run in multithreading mode to
+         * support CyclicBarrier and AgentSimulator synchronization
+         */
+        this.multithreading = true;
+        // set the timeOut for this external agent simulator
+        // agentSimulator.setAgentTimeout(this.agentTimeout);
+      }
+
+      if (agentSimulator.isAgentSubjectProxySet()) {
+
+        /*
+         * if there are external agents, always run in multithreading mode to
+         * support CyclicBarrier and AgentSimulator synchronization
+         */
+        this.multithreading = true;
+
+        // set the timeOut for this external agent simulator
+        agentSimulator.setAgentTimeout(this.agentTimeout);
+        externalCount++;
+        System.out.println("Agent " + agentSimulator.getAgentName()
+            + " controlled by " + agentSimulator.getUserName());
+      }
+    }
+  } // calculateNumberOfExternalAgents
+
+  /**
+   * Notifies external agents that simulation has ended.
+   */
+  private void sendSimulationEndNoticeToExternalAgents() {
+    for (AgentSimulator agentSimulator : agentSimulators) {
+      if (agentSimulator.isAgentSubjectProxySet()) {
+        agentSimulator.notifySimulationEnd();
+      }
+    }
+  } // sendSimulationEndNoticeToExternalAgents
+
+  /**
+   * The main loop of the simulator.
+   */
+  private void doMainLoop() {
+    // init stop to false, may be set from stopSimulation()
+    this.stop = false;
+
+    // we start in step 1
+    this.currentSimulationStep = 1;
+
+    // main loop implementation
+    while (this.currentSimulationStep <= this.totalSimulationSteps
+        && this.stop == false) {
+      // when pausing, wait for Main to call pauseSimulation(false) ->
+      // notify()
+      // changed by cnoack, 5/Jun/2009
+      if (this.pause) {
+        synchronized (this) {
+          while (this.pause)
+            try {
+              wait();
+            } catch (InterruptedException e) {
+            }
+        }
+      } // if pause
+
+      // if simulation has been stopped while in pause mode, leave loop
+      // here
+      if (this.stop == true)
+        break;
+
+      // if Single-step mode == true, set pause to true, too, so that
+      // simulation
+      // pauses after the current step again.
+      this.pause = this.singleStepMode;
+
+      this.runSimulationStep();
+
+      this.calculateNewValueOfCurrentSimulationStep();
+    }// while
+  } // doMainLoop
+
+  /**
+   * Finds out the next value of <code>currentSimulationStep</code>.
+   */
+  private void calculateNewValueOfCurrentSimulationStep() {
+    // check if the simulation must be stop forced (before all steps end)...
+    if (envSim.isForceStopSimulation()) {
+      System.out.println("Simulation stoped by: StopSimulationEvent!");
+      this.currentSimulationStep = this.totalSimulationSteps + 1;
+    } else if (agentSimulators.isEmpty() && physim != null
+        && !physim.isAutoKinematics()) {
+      // jump to the next eventOccurenceTime if no agents exist and
+      // autoKinematics is false
+      this.currentSimulationStep = this
+          .getNearestOccurrenceTimeFromNextEvents();
+    } else {
+      this.currentSimulationStep++;
+    }
+  } // calculateNewValueOfCurrentSimulationStep
+
+  /**
+   * Returns the nearest occurrenceTime when an event will occur.
+   * 
+   * @return closestOccurrenceTime - the next step when an event will occur
+   */
+  private long getNearestOccurrenceTimeFromNextEvents() {
+    long closestOccurrenceTime = this.totalSimulationSteps + 1;
+    for (EnvironmentEvent envEvent : this.environmentEvents) {
+      if (envEvent.getOccurrenceTime() == this.currentSimulationStep + 1) {
+        return this.currentSimulationStep + 1;
+      } else if (envEvent.getOccurrenceTime() < closestOccurrenceTime) {
+        closestOccurrenceTime = envEvent.getOccurrenceTime();
+      }
+    }
+    return closestOccurrenceTime;
+  } // getNearestOccurrenceTimeFromNextEvents
+
+  /**
+   * Runs a single simulation step. Called from <code>runMainLoop()</code>.
+   * 
+   * @see <code>run()</code>
+   */
+  private void runSimulationStep() {
+    this.stepRunning = true;
+    long stepStartTime = System.currentTimeMillis();
+    long stepEndTime = stepStartTime + this.stepTimeDelay;
+
+    this.dataBus.notifySimStepStart(this.currentSimulationStep);
+
+    // process the events in the current simulation step
+    // starts the complete simulation-process in the environment
+    this.envSim.run(currentSimulationStep);
+    this.processCreationAndDestructionEvents();
+
+    // only proceed if there are any agents
+    if (!this.agentSimulators.isEmpty()) {
+      List<PerceptionEvent> currentPerceptionEvents = this
+          .getPerceptionEventsOfCurrentStep();
+
+      // run AgentSimulators
+      if (this.multithreading) {
+        this.runAgentSimulatorsMultiThreaded(currentPerceptionEvents,
+            stepEndTime);
+      } else {
+        this.runAgentSimulatorsSingleThreaded(currentPerceptionEvents);
+      }
+    } // if !agentSimulators.isEmpty()
+
+    this.computeNewAndDeleteProcessedEvents();
+
+    // if some statechanges from PI-Agents
+    this.dataBus.notifyAgentSimulatorsResultingStateChanges();
+    this.dataBus.notifySimStepEnd();
+
+    long stepProcessingTime = System.currentTimeMillis() - stepStartTime;
+    this.delayStepToReachDefinedStepDelay(stepProcessingTime);
+
+    // this.computeStatisticsVariables(true);
+    this.stepRunning = false;
+  } // runSimulationStep
+
+  /**
+   * Returns true if a step is currently running.
+   * 
+   * @return true if a step is currently running, otherwise false
+   */
+  public boolean isStepRunning() {
+    return this.stepRunning;
+  } // isStepRunning
+
+  /**
+   * Delays the current step if its execution time was shorter than the
+   * specified <code>stepTimeDelay</code>. Is used for simulations which run in
+   * real time.
+   * 
+   * @param stepProcessingTime
+   *          processing time of step in milliseconds
+   */
+  private void delayStepToReachDefinedStepDelay(long stepProcessingTime) {
+    if (this.stepTimeDelay > 0) {
+      try {
+        long delay = this.stepTimeDelay - stepProcessingTime;
+        if (delay > 0) {
+          Thread.sleep(delay);
+        }
+      } catch (Exception e) {
+      }
+    }
+  } // delayStepToReachDefinedStepDelay
+
+  /**
+   * Wraps an AgentSimulator and implements CyclicBarrier to synchronize all
+   * agentSimulators
+   * 
+   * @author noack
+   * @since 6/Jun/2009
+   */
+  private class AgentWorker extends Thread {
+
+    private AgentSimulator agentSim;
+
+    public AgentWorker(AgentSimulator agentSim) {
+      this.agentSim = agentSim;
+    }
+
+    public void run() {
+      agentSim.run();
+      try {
+        barrier.await();
+      } catch (InterruptedException ex) {
+        return;
+      } catch (BrokenBarrierException ex) {
+        return;
+      }
+    }
+  } // class AgentWorker
+
+  /**
+   * Runs the AgentSimulators in multi threaded mode.
+   * 
+   * @param currentPerceptionEvents
+   *          PerceptionEvents in current step
+   * @param stepEndTime
+   *          time until the current step has to be finished
+   */
+  private void runAgentSimulatorsMultiThreaded(
+      List<PerceptionEvent> currentPerceptionEvents, long stepEndTime) {
+    /**
+     * Creates a barrier for externalCount + 1 threads This barrier is for
+     * AgentWorker Threads (externalized agents) and this current thread.
+     */
+    this.barrier = new CyclicBarrier(externalCount + 1);
+
+    ExecutorService executorService = Executors
+        .newFixedThreadPool(threadPoolSize);
+
+    for (AgentSimulator agentSimulator : agentSimulators) {
+
+      List<PerceptionEvent> eventsForAgentSubject = getEventsForAgentSubject(
+          agentSimulator.getAgentId(), currentPerceptionEvents);
+
+      agentSimulator.setNewEvents(currentSimulationStep, eventsForAgentSubject);
+
+      if (agentSimulator.isAgentSubjectProxySet()
+          || agentSimulator.agentIsControlled()) {
+
+        agentSimulator.setStepEndTime(stepEndTime);
+
+        // external agent is started in its own thread
+        Thread t = new AgentWorker(agentSimulator);
+        t.setName(agentSimulator.getAgentName());
+        t.start();
+      } else {
+        // execute all "internal" agents in the execution pool
+        executorService.execute(agentSimulator);
+      }
+    } // for all AgentSimulators
+
+    executorService.shutdown();
+    try {
+      executorService.awaitTermination(10, TimeUnit.SECONDS);
+      barrier.await();
+    } catch (InterruptedException e) {
+      System.err.println("runAgentSimulatorsMultiThreaded in step "
+          + currentSimulationStep + ": InterruptedExecution");
+    } catch (BrokenBarrierException e) {
+      System.err.println("runAgentSimulatorsMultiThreaded in step "
+          + currentSimulationStep + ": BrokenBarrier");
+    }
+  } // runAgentSimulatorsMultiThreaded
+
+  /**
+   * Runs the AgentSimulators in single threaded mode.
+   * 
+   * @param currentPerceptionEvents
+   *          PerceptionEvents in current step
+   */
+  private void runAgentSimulatorsSingleThreaded(
+      List<PerceptionEvent> currentPerceptionEvents) {
+    for (AgentSimulator agentSimulator : agentSimulators) {
+
+      // get its events in the current simulation step
+      List<PerceptionEvent> eventsForAgentSubject = getEventsForAgentSubject(
+          agentSimulator.getAgentId(), currentPerceptionEvents);
+
+      agentSimulator.setNewEvents(currentSimulationStep, eventsForAgentSubject);
+
+      agentSimulator.run();
+    }
+  } // runAgentSimulatorsSingleThreaded
+
+  /**
+   * 
+   * Usage: computes the values for statistic variables
+   * 
+   * @param step
+   *          - if true, then compute variables for every step, otherwise the
+   *          variables for the end of the simulation (computeOnlyAtEnd="true")
+   */
+  // private void computeStatisticsVariables(boolean step) {
+  //
+  // if (step) {
+  // for (AbstractStatisticsVariable var : this.statisticVarExprStep) {
+  // var.computeVar();
+  // }
+  // } else {
+  // for (AbstractStatisticsVariable var : this.statisticVarExprSim) {
+  // var.computeVar();
+  // }
+  // }
+  // } // computeStatisticsVariables
+
+  /**
+   * addAgentSubject adds a new AgentSubject to the simulator
+   * 
+   * @param agentSubject
+   *          the AgentSubject to add to the Simulator
+   * @return true if the AgentSubject was added successfully
+   */
+  protected boolean addAgentSubject(AgentSubject agentSubject) {
+    if (agentSubject != null) {
+      if (this.dataBus.getLoggerType() == DataBus.LoggerType.FULL_XML_LOGGER) {
+        // TODO: review this:
+        // change the versions of agent subject logging
+        // agentSubject.enableLogGeneration();
+        agentSubject.enableJaxbLogGeneration();
+      }
+
+      ((ObjektInitEventListener) this.dataBus)
+          .objektInitEvent(new ObjektInitEvent(agentSubject));
+
+      AgentSimulator agentSim = new DefaultAgentSimulator(agentSubject, this,
+          this.dataBus, this);
+      agentSim.setCorrespondingAgentObject(this.envSim
+          .getAgentObjectById(agentSubject.getId()));
+
+      if (this.randomOrderAgentSimulation) {
+        // add the agent simulators in a randomize position
+        this.agentSimulators.add(aors.util.Random
+            .uniformInt(this.agentSimulators.size() - 1), agentSim);
+      } else {
+        this.agentSimulators.add(agentSim);
+      }
+
+      return true;
+    }
+    return false;
+  } // addAgentSubject
+
+  /**
+   * Remove an Agent by his id from the simulation
+   * 
+   * @param agentId
+   */
+  private void removeAgentSubject(long agentId) {
+    Iterator<AgentSimulator> i = this.agentSimulators.iterator();
+    while (i.hasNext()) {
+      AgentSimulator agentSimulator = i.next();
+      if (agentSimulator.getAgentId() == agentId) {
+        // remove agent subject from simulation by notifying its
+        // simulator
+        agentSimulator.notifyRemoval();
+        // and removing the agent simulator from the agentSimulators
+        // list
+        i.remove();
+        return;
+      }
+    }
+  } // removeAgentSubject
+
+  /**
+   * Checks the events list for AgentSubjectCreationEvent and
+   * AgentSubjectDestructionEvent and processes them. This step must be done
+   * before the AgentSimulators are run.
+   */
+  private void processCreationAndDestructionEvents() {
+    Iterator<EnvironmentEvent> eventIterator = environmentEvents.iterator();
+    // as long as EnvironmentEvent object are available
+    while (eventIterator.hasNext()) {
+      // get the next one
+      EnvironmentEvent environmentEvent = eventIterator.next();
+
+      if (environmentEvent instanceof AgentSubjectCreationEvent) {
+        // add to agents subjects
+        this.addAgentSubject(((AgentSubjectCreationEvent) environmentEvent)
+            .getAgentSubject());
+        eventIterator.remove();
+        // if the event is an instance of AgentSubjectDestructionEvent
+      } else if (environmentEvent instanceof AgentSubjectDestructionEvent) {
+        // remove the specified agent
+        this
+            .removeAgentSubject(((AgentSubjectDestructionEvent) environmentEvent)
+                .getAgentId());
+        eventIterator.remove();
+      }
+    }
+  }
+
+  private void computeNewAndDeleteProcessedEvents() {
+
+    Iterator<EnvironmentEvent> eventIterator = environmentEvents.iterator();
+    while (eventIterator.hasNext()) {
+      EnvironmentEvent environmentEvent = eventIterator.next();
+
+      this.computeNewExogenousEventEvent(environmentEvent);
+      if (this.isEventProcessed(environmentEvent)) {
+        eventIterator.remove();
+      }
+    }
+  }
+
+  private void computeNewExogenousEventEvent(EnvironmentEvent environmentEvent) {
+
+    if (environmentEvent instanceof ExogenousEvent) {
+
+      ExogenousEvent exogEvent = (ExogenousEvent) environmentEvent;
+
+      // if it happened in the actual simulation step
+      if (exogEvent.getOccurrenceTime() == currentSimulationStep
+          && !exogEvent.stopCondition()) {
+        // it is not created a new object in memory
+        // but reseted the occurrenceTime based on the
+        // nextOccurrenceTime computed in EnvironmentSiulator.run()
+        environmentEvent.setOccurrenceTime(exogEvent.getNextOccurrenceTime());
+      }
+    }
+  }
+
+  private boolean isEventProcessed(EnvironmentEvent environmentEvent) {
+    if (environmentEvent.getOccurrenceTime() <= this.currentSimulationStep) {
+      return true;
+    }
+    return false;
+  }
+
+  /**
+   * Comments: Get the {@code simulationStartTime}.
+   * 
+   * @return the {@code simulationStartTime}.
+   */
+  public long getSimulationStartTime() {
+    return simulationStartTime;
+  }
+
+  /**
+   * Comments: Get the {@code simulationEndTime}.
+   * 
+   * @return the {@code simulationEndTime}.
+   */
+  public long getSimulationEndTime() {
+    return simulationEndTime;
+  }
+
+  /**
+   * Comments: Get the {@code agentTimeout}.
+   * 
+   * @return the {@code agentTimeout}.
+   */
+  public long getAgentTimeout() {
+    return agentTimeout;
+  }
+
+  /**
+   * Comments: Set the {@code agentTimeout}.
+   * 
+   * @param agentTimeout
+   *          The {@code agentTimeout} to set.
+   * @author Christian Noack
+   * @since 30/Jul/2009
+   */
+  public void setAgentTimeout(long agentTimeout) {
+    this.agentTimeout = agentTimeout;
+  }
+
+  /**
+   * Comments: Get the {@code stepTimeDelay}.
+   * 
+   * @return the {@code stepTimeDelay}.
+   */
+  public long getStepTimeDelay() {
+    return stepTimeDelay;
+  }
+
+  /**
+   * Comments: Set the {@code stepTimeDelay}.
+   * 
+   * @param stepTimeDelay
+   *          The {@code stepTimeDelay} to set.
+   */
+  public void setStepTimeDelay(long stepTimeDelay) {
+    this.stepTimeDelay = stepTimeDelay;
+  }
+
+  /**
+   * Comments: Get the {@code simulationSteps}.
+   * 
+   * @return the {@code simulationSteps}.
+   */
+  public long getTotalSimulationSteps() {
+    return totalSimulationSteps;
+  }
+
+  /**
+   * Set the {@code simulationSteps}.
+   * 
+   * @param simulationSteps
+   *          The {@code simulationSteps} to set.
+   */
+  public void setTotalSimulationSteps(long simulationSteps) {
+    this.totalSimulationSteps = simulationSteps;
+  }
+
+  /**
+   * Comments: Get the {@code envSim}.
+   * 
+   * @return the {@code envSim}.
+   */
+  public EnvironmentSimulator getEnvironmentSimulator() {
+    return envSim;
+  }
+
+  /**
+   * Comments: Get the {@code agentSimulators}. Used to transfer control of an
+   * agent to a third party.
+   * 
+   * @return the {@code agentSimulators}.
+   * @author cnoack
+   */
+  public List<AgentSimulator> getAgentSimulators() {
+    return agentSimulators;
+  }
+
+  /**
+   * Return a list of perception events that concern a specific AgentSubject.
+   * 
+   * @param agentSubjectId
+   *          the ID of the AgentSubject in questions
+   * @param perceptionEvents
+   *          a list of all perception events
+   * @return a list of perception events for the specific AgentSubject
+   */
+  private List<PerceptionEvent> getEventsForAgentSubject(long agentSubjectId,
+      List<PerceptionEvent> perceptionEvents) {
+    List<PerceptionEvent> result = new ArrayList<PerceptionEvent>();
+    for (PerceptionEvent event : perceptionEvents) {
+      if (event.getPerceiverIdRef() == agentSubjectId)
+        result.add(event);
+    }
+    return result;
+  } // getEventsForAgentSubject
+
+  /**
+   * Generates a list of perception events for current step.
+   * 
+   * @return a list with perception events of the current step
+   */
+  private List<PerceptionEvent> getPerceptionEventsOfCurrentStep() {
+    List<PerceptionEvent> result = new ArrayList<PerceptionEvent>();
+    for (EnvironmentEvent event : this.environmentEvents) {
+      if (event instanceof PerceptionEvent
+          && event.getOccurrenceTime() == currentSimulationStep) {
+        result.add((PerceptionEvent) event);
+      }
+    }
+    return result;
+  } // getPerceptionEventsOfCurrentStep
+
+  /**
+   * Comments: Overrides method {@code receiveActionEvents} from super class
+   * events are added only if there are any
+   * 
+   * @param agentSubjectEvent
+   */
+  public void receiveActionEvents(List<ActionEvent> actions, JsonData agentLog) {
+    this.environmentEvents.addAll(actions);
+    this.dataBus.notifyAgentSimulatorStep(agentLog);
+  }
+
+  public void receiveActionEvents(List<ActionEvent> actions,
+      AgentSimulatorStep agentSimulatorStep) {
+    this.environmentEvents.addAll(actions);
+    this.dataBus.notifyAgentSimulatorStep(agentSimulatorStep);
+  }
+
+  /**
+   * Comments: Get the {@code currentSimulationStep}.
+   * 
+   * @return the {@code currentSimulationStep}.
+   */
+  public long getCurrentSimulationStep() {
+    return currentSimulationStep;
+  }
+
+  /**
+   * Returns true if simulation is paused.
+   * 
+   * @return true if simulation is paused
+   */
+  public boolean isPaused() {
+    return pause;
+  }
+
+  /**
+   * Pause/continue simulation simulation. The simulation will interrupt before
+   * executing the next step or will continue.
+   * 
+   * @param pauseState
+   *          - true to pause, false to continue
+   */
+  public void pauseSimulation(boolean pauseState) {
+    synchronized (this) {
+      this.dataBus.notifySimulationPaused(pauseState);
+      this.pause = pauseState;
+
+      // notify to not wait anymore
+      notify();
+    }
+  }
+
+  /**
+   * Sets single step mode for the simulator. If set to true, the simulation
+   * will run in single-step mode. Client needs to run continueSimulation for
+   * executing the next step.
+   * 
+   * @param mode
+   *          true for single-step mode, false for continuous
+   */
+  public void setSingleStepMode(boolean mode) {
+    this.singleStepMode = mode;
+  }
+
+  /**
+   * Returns true if simulation runs in SingleStep mode, otherwise false.
+   * 
+   * @return
+   */
+  public boolean isSingleStepMode() {
+    return this.singleStepMode;
+  }
+
+  /**
+   * Stops the simulation by setting stop variable to true which is examined in
+   * main loop. Also each running AgentSimulator is notified so that it maybe
+   * can finish its execution.
+   */
+  public void stopSimulation() {
+    for (AgentSimulator agentSim : this.agentSimulators) {
+      agentSim.notifySimulationEnd();
+    }
+    synchronized (this) {
+      this.stop = true;
+      if (this.pause) {
+        this.pause = false;
+        notify();
+      }
+    }
+  }
+
+  /**
+   * Comments: Get the {@code autoMultiThreading}.
+   * 
+   * @return the {@code autoMultiThreading}.
+   */
+  public boolean isAutoMultithreading() {
+    return autoMultithreading;
+  }
+
+  /**
+   * Comments: Set the {@code autoMultiThreading}.
+   * 
+   * @param autoMultiThreading
+   *          The {@code autoMultiThreading} to set.
+   */
+  public void setAutoMultithreading(boolean autoMultiThreading) {
+    this.autoMultithreading = autoMultiThreading;
+  }
+
+  public void addObjektDestroyListener(
+      ObjektDestroyEventListener objektDestroyEventListener) {
+    this.dataBus.addDestroyObjektEventListener(objektDestroyEventListener);
+  }
+
+  /**
+   * Usage:
+   * 
+   * 
+   * Comments: Get the {@code initialState}.
+   * 
+   * 
+   * 
+   * @return the {@code initialState}.
+   */
+  public InitialState getInitialState() {
+    return initialState;
+  }
+
+  private void markAsControlled(AgentSimulator agentSimulator) {
+    this.controlledAgentSimulators.add(agentSimulator);
+    this.externalCount++;
+  }
+
+  private void markAsNotControlled(AgentSimulator agentSimulator) {
+    if (this.controlledAgentSimulators.remove(agentSimulator)) {
+      this.externalCount--;
+    }
+  }
+
+  public void setAgentIsControlled(AgentSimulator agentSimulator) {
+    if (agentSimulator.agentIsControlled()) {
+      this.markAsControlled(agentSimulator);
+    } else {
+      this.markAsNotControlled(agentSimulator);
+    }
+  }
 }
