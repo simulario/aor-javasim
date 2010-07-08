@@ -13,22 +13,21 @@ the JButton, and then a JDialog will be pop up*/
 
 public class ButtonEditor extends DefaultCellEditor {
   
-  /**
-	 * 
-	 */
+ 
   private static final long serialVersionUID = 1L;
-  protected JButton button;
-  private String label;
-  private boolean   isPushed;
-  private ShowRandomVariableDialog showRanDialog ; //!!
-  private int cRow;
-  private String type;
-  private HashMap<String,HashSet<String>> ranTypePropertyMap = null;
+  protected JButton button;//used to render the cell 
+  private String label;// label on the button
+  private boolean   isPushed;//used to test if user click the button
+  private ShowRandomVariableDialog showRanDialog ; //show the JDialog box to user
+  private int cRow;//the row contains the button 
+  private String type;//the entity type contains property whose column will be render as JButton
+  private HashMap<String,HashSet<String>> ranTypePropertyMap = null;//mapp between type and property
+  //mapping between the RandomVariable property of an entity type and its container
   private HashMap<String,Vector<RanVarPropertyContainer>> ranVarPropertyContainerMap = null;
   private String colHeadValue;
-  private HashMap<String,HashSet<String>>lanTypeMap;
+  private HashMap<String,HashSet<String>>lanTypeMap;//lan set for a RandomVariable property
   private HashMap<String,String> labelMap;
-  private String objectType;
+  private String objectType;//the object type of an objectEvent type, otherwise null
  
   
   
@@ -55,8 +54,8 @@ public class ButtonEditor extends DefaultCellEditor {
     @SuppressWarnings("unchecked")
 	public void actionPerformed(ActionEvent e) {
     	  
-    	  cRow = table.getSelectedRow(); 
-    	  colHeadValue = (String) table.getColumnModel().getColumn(table.getSelectedColumn()).getHeaderValue();
+      cRow = table.getSelectedRow(); 
+      colHeadValue = (String) table.getColumnModel().getColumn(table.getSelectedColumn()).getHeaderValue();
         
          
       DefaultTableModel model = (DefaultTableModel)table.getModel();
@@ -102,12 +101,13 @@ public class ButtonEditor extends DefaultCellEditor {
  
   
   public Object getCellEditorValue() {
-      //if user click the JButton, then pop up ShowRandomVariableDialog
+     
+	  //if user click the JButton, then pop up ShowRandomVariableDialog
 	  if (isPushed)  {
     	
        Frame frame = (Frame)SwingUtilities.getRoot(button);
-       System.out.println("type: "+ type);
-       System.out.println("objectType: "+ objectType);
+       //System.out.println("type: "+ type);
+       //System.out.println("objectType: "+ objectType);
        
        showRanDialog = new ShowRandomVariableDialog(
                                            frame,
@@ -122,12 +122,16 @@ public class ButtonEditor extends DefaultCellEditor {
                                            labelMap,
     		                               objectType);
        
-       showRanDialog.setVisible(true); 
+       showRanDialog.setVisible(true); // show the JDialog box for the RandomVariable
+       
     }
     
     isPushed = false;
     return new String(label);
-  }
+    
+}
+  
+  
    
   
   public boolean stopCellEditing() {
@@ -139,10 +143,6 @@ public class ButtonEditor extends DefaultCellEditor {
   protected void fireEditingStopped() {
     super.fireEditingStopped();
   }
-  
-  
- 
-  
   
 }
 
