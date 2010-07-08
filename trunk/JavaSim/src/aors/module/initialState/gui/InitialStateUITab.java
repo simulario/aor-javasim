@@ -2922,13 +2922,14 @@ public class InitialStateUITab extends JScrollPane implements GUIModule {
         .hasNext();) {
 
       String tableTypeKey = tableTypeKeys.next();
+      //process ObjectEvent types table or BeliefEntity types table
       if (allObjectEvent.contains(tableTypeKey)) {
 
         for (Iterator<String> keys = objectObjectEventKeySet.iterator(); keys
             .hasNext();) {
 
           String tempObjectType = keys.next();
-          if (objectObjectEventMap.get(tempObjectType).equals(tableTypeKey)) {
+          if (objectObjectEventMap.get(tempObjectType).contains(tableTypeKey)) {
 
             String userInterfaceType = tableTypeKey.substring(tempObjectType
                 .length());
@@ -2939,6 +2940,7 @@ public class InitialStateUITab extends JScrollPane implements GUIModule {
         }
       } else {
 
+    	// process other type tables  
         JTable table = tableType.get(tableTypeKey);
         processJComboBoxRender(table, tableTypeKey);
 
@@ -2959,10 +2961,12 @@ public class InitialStateUITab extends JScrollPane implements GUIModule {
     while (labelKeys.hasNext()) {
       String labelKey = labelKeys.next();
       String propertyType = labelKey.substring(0, (labelKey.length()- 2));
+      //test if this property has enumeration value within given type
       if (enumPropertySet.contains(propertyType)) {
         HashSet<String> tempRange = enumMap.get(propertyType);
         String[] valuesComboBox = new String[tempRange.size()];
         int k = 0;
+        //transfer the enumeration value into array, prepare for rendering 
         for (Iterator<String> it = tempRange.iterator(); it.hasNext();) {
           String tempString = it.next();
           valuesComboBox[k] = tempString;
@@ -2972,11 +2976,14 @@ public class InitialStateUITab extends JScrollPane implements GUIModule {
         String constrainTableHeadName = labelMap.get(labelKey);
         for (int i = 0; i < model.getColumnCount(); i++) {
           String tableHeadName = model.getColumnName(i);
+          // if enumeration property matches the correspondent table column 
           if (constrainTableHeadName.equals(tableHeadName)) {
             TableColumn rendererComboBoxColumn = table.getColumnModel()
                 .getColumn(i);
+            //set the cell renderer for the correspondent column
             rendererComboBoxColumn.setCellRenderer(new ComboBoxRenderer(
                 valuesComboBox));
+            //set the cell editor for the correspondent column
             rendererComboBoxColumn.setCellEditor(new ComboBoxEditor(
                 valuesComboBox));
           }
@@ -3139,9 +3146,8 @@ public class InitialStateUITab extends JScrollPane implements GUIModule {
 
         JTable rTable = tableType.get(tempType);
         HashSet<String> tempPropertySet = ranTypePropertyMap.get(tempType);
-        Collection<HashSet<String>> tempTypeCollection = objectObjectEventMap
-            .values();
-
+        Collection<HashSet<String>> tempTypeCollection = objectObjectEventMap.values();
+        //process objectEventType
         for (Iterator<HashSet<String>> tempTypeSets = tempTypeCollection
             .iterator(); tempTypeSets.hasNext();) {
 
@@ -3208,11 +3214,12 @@ public class InitialStateUITab extends JScrollPane implements GUIModule {
 
                 tempLabel = tempProperty + tempType + tempLan;
               }
-
+              //match the correct column name  
               if (labelMap.get(tempLabel).equals(colHeadValue)) {
-
+                //set cell renderer
                 rTable.getColumn(colHeadValue).setCellRenderer(
                     new ButtonRenderer());
+                //set cell editor
                 rTable.getColumn(colHeadValue).setCellEditor(buttonEditor);
 
               }

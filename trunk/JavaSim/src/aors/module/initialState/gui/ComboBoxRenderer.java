@@ -6,7 +6,7 @@ import javax.swing.JTable;
 import javax.swing.table.TableCellRenderer;
 
 /*We will use this class to render the enumeration value
-contained by JComboBox*/
+rendered by JComboBox*/
 
 public class ComboBoxRenderer extends JComboBox implements TableCellRenderer {
 
@@ -30,6 +30,7 @@ public class ComboBoxRenderer extends JComboBox implements TableCellRenderer {
     }
 
     setSelectedItem(value);
+    
     return this;
   }
 

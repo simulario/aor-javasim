@@ -18,15 +18,20 @@ information about RandomVariable*/
 public class ShowRandomVariableDialog extends JDialog implements RanVarConstant{
 	
    
-  private static final long serialVersionUID = 5110207145900859900L;
+    private static final long serialVersionUID = 5110207145900859900L;
     private JPanel contentPanel;
+    //ranTypes used to contain all probability distribution types for a RandomVariable
+    //lanTypesBox used to contain language choices for a RandomVariable 
     private JComboBox ranTypesBox, lanTypesBox;
    
-    private String selectedType;
-    private String selectedLan;
+    private String selectedType;//selected probability distribution by user
+    private String selectedLan;////selected language by user
     private HashMap<String,HashSet<String>> tempPropertyMap;
+    //map between probability distribution variable and its correspondent value for a Randomvariable
     private HashMap<String,String> tempValueMap;
+    //map between a RandomVariable and its correspondent language set 
     private HashMap<String,HashSet<String>> tempLanMap;
+    
 	private HashMap<String,JLabel> rLabelMap = new HashMap<String,JLabel>();
 	private HashMap<String,JTextField> rFieldMap = new HashMap<String,JTextField>();
 	private String tempKey;
@@ -37,10 +42,10 @@ public class ShowRandomVariableDialog extends JDialog implements RanVarConstant{
 			                              int cRow, String type, String colHeadValue,
 			                              HashMap<String,HashSet<String>> ranTypePropertyMap,
 			                              HashMap<String,Vector<RanVarPropertyContainer>>
-	                                  ranVarPropertyContainerMap,
-	                                  HashMap<String,HashSet<String>> lanTypeMap,
-	                                  HashMap<String,String> labelMap,
-	                                  String objectType)
+	                                      ranVarPropertyContainerMap,
+	                                      HashMap<String,HashSet<String>> lanTypeMap,
+	                                      HashMap<String,String> labelMap,
+	                                      String objectType)
 	  {
 		  
 		  super(frame, title, modal);
@@ -66,8 +71,8 @@ public class ShowRandomVariableDialog extends JDialog implements RanVarConstant{
 		     tempSelectedKey = type;
 		  }
 		  
-		
-		  HashSet<String> propertySet = ranTypePropertyMap.get(tempSelectedKey);//
+		  //get all property with RandomVariable in an entity type
+		  HashSet<String> propertySet = ranTypePropertyMap.get(tempSelectedKey);
 		  HashSet<String> lanSet = lanTypeMap.get(type);
 		  for(Iterator<String> it = propertySet.iterator(); it.hasNext();){
 			  
@@ -81,6 +86,7 @@ public class ShowRandomVariableDialog extends JDialog implements RanVarConstant{
 				   
 				   tempKey = tempProperty+tempSelectedKey;//
 				   Vector<RanVarPropertyContainer> tempVector = ranVarPropertyContainerMap.get(tempKey);
+				   //get correspondent container that contains all content for a RandomVariable for a cell
 				   RanVarPropertyContainer tempContainer = tempVector.get(cRow);
 				   				   
 				   selectedType = tempContainer.getSelectedType();
@@ -91,7 +97,7 @@ public class ShowRandomVariableDialog extends JDialog implements RanVarConstant{
 				  
 				   
 				   
-				   if(tempLanMap == null){
+				   if(tempLanMap == null){//RandomVariable without language choice
 				   
 				    for(int i=0; i<ranTypeArr.length; i++){
 					   
@@ -107,7 +113,7 @@ public class ShowRandomVariableDialog extends JDialog implements RanVarConstant{
 					    }
 				   }
 				 }
-				 else{
+				 else{//RandomVariable with language choice
 				   
 				   tempLanContainer = transferContainer(tempLanMap.get(tempKey+selectedType));
                    selectedLan = tempLanContainer.get(0);
@@ -155,6 +161,7 @@ public class ShowRandomVariableDialog extends JDialog implements RanVarConstant{
                    lanTypesBox.addItemListener(
                
                    new ItemListener(){
+                   //process RandomVariable with language choice state change 
                 
                    public void itemStateChanged(ItemEvent e) {
                    
@@ -191,7 +198,7 @@ public class ShowRandomVariableDialog extends JDialog implements RanVarConstant{
                           }
                           
                           contentPanel.add(innerPanel); 
-                        contentPanel.revalidate();
+                          contentPanel.revalidate();
                       }
                      }
                   }
@@ -226,9 +233,9 @@ public class ShowRandomVariableDialog extends JDialog implements RanVarConstant{
 					    
 					     for(int p=0; p<tempPropertyContainer.size(); p++){
 					    	 
-					    	 String tempRanKey = tempKey+selectedType+tempPropertyContainer.get(p)+tempLanContainer.get(0);
+					       String tempRanKey = tempKey+selectedType+tempPropertyContainer.get(p)+tempLanContainer.get(0);
 					       fieldPanel.add(rLabelMap.get(tempRanKey));
-							   fieldPanel.add(rFieldMap.get(tempRanKey));
+						   fieldPanel.add(rFieldMap.get(tempRanKey));
 					     
 				   }
 				   }				   
@@ -288,19 +295,16 @@ public class ShowRandomVariableDialog extends JDialog implements RanVarConstant{
 						    		contentPanel.add(innerPanel);	
 						    		contentPanel.revalidate();
 						    							          
-						     }
-						    }
-						  }
-						 }
-					   }
-				    );
+					     }
+					    }
+					  }
+					 }
+				   }
+			    );
 				   
-				   
-				   
-				      
 			 }
-	     }
-	   }
+		   }
+		 }
 	  }   
 
 
