@@ -16,8 +16,8 @@ public class ColorColumnRenderer extends DefaultTableCellRenderer {
   public ColorColumnRenderer(Color bgColor, Color fgColor) {
 
     super();
-    this.bgColor = bgColor;
-    this.fgColor = fgColor;
+    this.bgColor = bgColor;//initialize the background color for a cell
+    this.fgColor = fgColor;//initialize the foreground color for a cell
 
   }
 
@@ -26,9 +26,11 @@ public class ColorColumnRenderer extends DefaultTableCellRenderer {
 
     Component cell = super.getTableCellRendererComponent(table, value,
         isSelected, hasFocus, row, column);
-
-    cell.setBackground(bgColor);
-    cell.setForeground(fgColor);
+    
+    //always set the back and foreground color 
+    //we don't care isSelected or hasFocus
+    cell.setBackground(bgColor);//set background color as red
+    cell.setForeground(fgColor);//set foreground color as white
 
     return cell;
 

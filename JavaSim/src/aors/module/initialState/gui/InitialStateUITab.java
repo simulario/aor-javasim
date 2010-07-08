@@ -235,7 +235,7 @@ public class InitialStateUITab extends JScrollPane implements GUIModule {
 	      
 	      String tempType = ((Element)superTypeList.item(i)).getAttribute("name");
 	      String tempSuperType = ((Element)superTypeList.item(i)).getAttribute("superType");
-	      
+	      //create a mapping between an entity type and its superType
 	      superTypeMap.put(tempType, tempSuperType);
 	          
 	    }
@@ -249,7 +249,7 @@ public class InitialStateUITab extends JScrollPane implements GUIModule {
 	      String tempType = entry.getKey();
 	      String tempSuperType = entry.getValue();
 	      superTypeSet.add(tempSuperType);
-	      
+	      //create a mapping between a entity type and superType set
 	      superTypeSetMap.put(tempType, processSuperTypeSet(tempSuperType,superTypeSet));
 	      
 	      //System.out.println("superTypeSetMap : " + superTypeSetMap);     
@@ -272,7 +272,7 @@ public class InitialStateUITab extends JScrollPane implements GUIModule {
 	     return tempSet;
 	  
   }
-    // process mapping from type to content  
+    // process mapping from type to correspondent content  
 	public void processPropertyTypeMap(
 			HashMap<String, HashSet<String>> propertyTypeMap, String content,
 			String type) {
@@ -303,12 +303,16 @@ public class InitialStateUITab extends JScrollPane implements GUIModule {
     for (int j = 0; j < EnumerationPropertys.getLength(); j++) {
 
       String name = ((Element) EnumerationPropertys.item(j))
-          .getAttribute("name");
+          .getAttribute("name");//name of property
       String type = ((Element) EnumerationPropertys.item(j))
-          .getAttribute("type");
+          .getAttribute("type");//enumerated type
       
+      //entity type
       String parentName = ((Element)(EnumerationPropertys.item(j)).getParentNode()).getAttribute("name");
       
+     
+      //enumPropertyTypeMap create a mapping between entity type and propertyType
+      //and will be used to test whether a entity contains enumeration property 
       processPropertyTypeMap(enumPropertyTypeMap,name+parentName,parentName);
       
             
@@ -327,7 +331,9 @@ public class InitialStateUITab extends JScrollPane implements GUIModule {
         enumNameSet.add(enumContent);
 
       }
-
+      
+      //enumMap create a mapping between propertyType and enumeration values and will
+      //be used to locate the position of column with enumeration property and set the value
       enumMap.put(name+parentName, enumNameSet);
 
     }
@@ -345,7 +351,13 @@ public class InitialStateUITab extends JScrollPane implements GUIModule {
 	 for(Iterator<String> it = superTypeSetMap.keySet().iterator(); it.hasNext();){
 		 
 		 String tempType = it.next();
+		 
+		 //get a superType Set of an entity type
 		 HashSet<String> tempSet = superTypeSetMap.get(tempType);
+		 
+		 /*test each superType of superType set. if it contains enumeration property or
+		 minValue, maxValue property, we will create new mappings between the property
+		 of subType and correspondent values*/
 		 
 		 for(Iterator<String> tempSuperTypes = tempSet.iterator(); tempSuperTypes.hasNext();){
 			 
@@ -434,6 +446,7 @@ public class InitialStateUITab extends JScrollPane implements GUIModule {
   public void selfPropertyConstrain() {
 
     // only the AgentUI can contain SelfBeliefProperty
+	// get AgentUI node list  
     NodeList nodes = sd.getNodeList("//" + PX + "AgentUI");
 
     for (int i = 0; i < nodes.getLength(); i++) {
@@ -813,7 +826,7 @@ public class InitialStateUITab extends JScrollPane implements GUIModule {
       for (int j = 0; j < model.getColumnCount(); j++) {
 
         String colHeadValue = model.getColumnName(j);
-
+        //test if an entity contains SelfBeliefProperty
         if (selfPropertyMap.keySet().contains(type)) {
 
           HashSet<String> tempContent = userInterfaceMap.get(type);
@@ -821,17 +834,23 @@ public class InitialStateUITab extends JScrollPane implements GUIModule {
 
             String tempString = it.next();
             String label = labelMap.get(tempString);
+            //test if label match column name if so, we will transfer labelKey
+            // to property
             if (label.equals(colHeadValue)) {
 
               String tempPropertyName = tempString.substring(0, (tempString
                   .length()
                   - type.length() - 2));
 
+              //get all SelfBeliefProperty name 
+              //for an Agent type
               Vector<String> tempVector = selfPropertyMap.get(type);
-
+              
+              //if it contains this property, then this property will be rendered
               if (tempVector.contains(tempPropertyName)) {
 
                 TableColumn selfColumn = table.getColumnModel().getColumn(j);
+                //set cell renderer for SelfBeliefProperty
                 selfColumn.setCellRenderer(new ColorColumnRenderer(new Color(
                     168, 64, 89), Color.WHITE));
 
