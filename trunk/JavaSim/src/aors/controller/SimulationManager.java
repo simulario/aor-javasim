@@ -411,7 +411,7 @@ public class SimulationManager {
 		}
 	}
 
-	@SuppressWarnings("rawtypes")
+	@SuppressWarnings("unchecked")
 	private Module loadModule(ValuePair<JarFile, Integer> moduleToLoad,
 		Map<String, ValuePair<Module, Integer>> loadedModules) throws
 		IllegalAccessException, InstantiationException, MalformedURLException,

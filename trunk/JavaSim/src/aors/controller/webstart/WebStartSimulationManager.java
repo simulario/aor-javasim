@@ -198,6 +198,7 @@ public class WebStartSimulationManager {
    * this call is necessary to load the right libraries for the web start
    * version
    */
+  @SuppressWarnings("unused")
   private void loadNativeLibraries() {
 
     // try to load native libraries

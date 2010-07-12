@@ -41,12 +41,12 @@ public class InitialStateUIController implements Module, ActionListener {
 
   public InitialStateUIController() {
     
-    this.tabScroll = new InitialStateUITab(this);
+    InitialStateUIController.tabScroll = new InitialStateUITab(this);
 
   }
 
   public Object getGUIComponent() {
-    return this.tabScroll;
+    return InitialStateUIController.tabScroll;
   }
   
   
