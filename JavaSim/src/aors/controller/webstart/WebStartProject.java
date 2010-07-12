@@ -82,7 +82,7 @@ public class WebStartProject implements ProjectInterface {
   private DataBus dataBus;
 
   // the main class that has to be executed for this simulation
-  private final String simPackageAndClassName = "controller.Simulator";
+  //private final String simPackageAndClassName = "controller.Simulator";
 
   // the destination folder where the simulation is build on request
   private String destinationFolder;

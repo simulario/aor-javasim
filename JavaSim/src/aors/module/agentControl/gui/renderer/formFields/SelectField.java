@@ -1,9 +1,5 @@
 package aors.module.agentControl.gui.renderer.formFields;
 
-import aors.module.agentControl.gui.interaction.EventMediator;
-import aors.module.agentControl.gui.interaction.Receiver;
-import aors.module.agentControl.gui.interaction.Sender;
-import aors.module.agentControl.gui.renderer.AORSForm;
 import java.awt.Component;
 import java.awt.Font;
 import java.awt.event.ActionEvent;
@@ -11,20 +7,26 @@ import java.awt.event.ActionListener;
 import java.awt.event.ItemEvent;
 import java.awt.event.ItemListener;
 import java.beans.PropertyChangeEvent;
-import java.beans.PropertyChangeListener;
 import java.util.ArrayList;
 import java.util.List;
+
 import javax.swing.DefaultListCellRenderer;
 import javax.swing.JComboBox;
 import javax.swing.JList;
 import javax.swing.ListModel;
 import javax.swing.event.ListSelectionEvent;
 import javax.swing.event.ListSelectionListener;
+
 import org.w3c.dom.Element;
 import org.w3c.dom.NodeList;
 import org.xhtmlrenderer.layout.LayoutContext;
 import org.xhtmlrenderer.render.BlockBox;
 import org.xhtmlrenderer.simple.extend.form.FormFieldState;
+
+import aors.module.agentControl.gui.interaction.EventMediator;
+import aors.module.agentControl.gui.interaction.Receiver;
+import aors.module.agentControl.gui.interaction.Sender;
+import aors.module.agentControl.gui.renderer.AORSForm;
 
 class SelectField extends FormField<JComboBox> implements Receiver {
 

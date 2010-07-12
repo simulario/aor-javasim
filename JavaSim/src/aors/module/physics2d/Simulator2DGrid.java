@@ -16,7 +16,6 @@ import aors.data.evt.sim.ObjektDestroyEvent;
 import aors.data.evt.sim.ObjektInitEvent;
 import aors.data.evt.sim.SimulationStepEvent;
 import aors.logger.model.SimulationParameters;
-import aors.model.envevt.CollisionEvent;
 import aors.model.envevt.PhysicalObjectPerceptionEvent;
 import aors.model.envsim.Physical;
 import aors.model.envsim.PhysicalAgentObject;
@@ -228,7 +227,7 @@ public class Simulator2DGrid extends PhysicsSimulator {
    * @param collisions
    *          a list of collisions
    */
-  private void processCollisions(List<Collision1D> collisions) {
+ /* private void processCollisions(List<Collision1D> collisions) {
     for (Collision1D collision : collisions) {
       Physical object1 = collision.getObject1();
       Physical object2 = collision.getObject2();
@@ -241,7 +240,7 @@ public class Simulator2DGrid extends PhysicsSimulator {
       // System.out.println(stepNumber + ": " + collision);
     }
 
-  }
+  }*/
 
   /**
    * Creates perception events.
