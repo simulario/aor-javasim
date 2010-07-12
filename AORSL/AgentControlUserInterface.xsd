@@ -17,38 +17,45 @@
   </xs:redefine>
   <xs:include schemaLocation="ActionRules.xsd"/>
   
-  <xs:element name="AgentControlUI" type="aors:AgentControlUI.type"/>
+  <xs:element name="AgentControlUI">
+    <xs:complexType>
+      <xs:sequence>
+        <xs:element ref="aors:ControllableAgentType" maxOccurs="unbounded"/>
+      </xs:sequence>
+    </xs:complexType>
+  </xs:element>
 
-  <xs:complexType name="AgentControlUI.type">
+  <xs:element name="ControllableAgentType">
+    <xs:complexType>
+      <xs:sequence>
+        <xs:element name="GUI" type="aors:AgentControlUI.GUI.type">
+          <xs:unique name="unqiue_structure_lang">
+            <xs:selector xpath="aors:Structure"/>
+            <xs:field xpath="@xml:lang"/>
+          </xs:unique>        
+        </xs:element>
+        <xs:element name="UserInterfaceEventListener" type="aors:AgentControlUI.UserInterfaceEventListener.type" minOccurs="0" maxOccurs="unbounded">
+          <xs:unique name="unique_variableNames">
+            <xs:selector xpath="."/>
+            <xs:field xpath="@agentVariable"/>
+            <xs:field xpath="@guiVariable"/>
+          </xs:unique>          
+        </xs:element>
+      </xs:sequence>
+      <xs:attribute name="type" type="aors:CanonicalName" use="required"/>
+      <xs:attribute name="controllableAgents" type="aors:ListOfLong" use="optional"/>
+      <xs:attribute name="suspendRules" type="aors:ListOfCanonicalName" use="optional"/>
+    </xs:complexType>
+  </xs:element>
+  
+  <!--###########-->
+  <!--### GUI ###-->
+  <!--###########-->
+
+  <xs:complexType name="AgentControlUI.GUI.type">
     <xs:sequence>
-      <xs:element ref="aors:ControllableAgentType" maxOccurs="unbounded"/>
-    </xs:sequence>
-  </xs:complexType>
-
-  <xs:element name="ControllableAgentType" type="aors:AgentControlUI.ControllableAgentType.type"/>
-  <xs:complexType name="AgentControlUI.ControllableAgentType.type">
-    <xs:sequence>
-      <xs:element name="ControlInterface" type="aors:AgentControlUI.ControlInterface.type">
-        <xs:unique name="unqiue_structure_lang">
-          <xs:selector xpath="aors:Structure"/>
-          <xs:field xpath="@xml:lang"/>
-        </xs:unique>        
-      </xs:element>
-      <xs:element name="ControlRules" type="aors:AgentControlUI.ControlRules.type"/>
-    </xs:sequence>
-    <xs:attribute name="type" type="aors:CanonicalName" use="required"/>
-    <xs:attribute name="controllableAgents" type="aors:ListOfLong" use="optional"/>
-    <xs:attribute name="suspendRules" type="aors:ListOfCanonicalName" use="optional"/>
-  </xs:complexType>
-
-  <!--########################-->
-  <!--### ControlInterface ###-->
-  <!--########################-->
-
-  <xs:complexType name="AgentControlUI.ControlInterface.type">
-    <xs:sequence>
-      <xs:element name="Style" type="aors:AgentControlUI.ControlInterface.StyleSection.type"/>
-      <xs:element name="Structure" type="aors:AgentControlUI.ControlInterface.StructureSection.type" maxOccurs="unbounded">
+      <xs:element name="Style" type="aors:AgentControlUI.GUI.StyleSection.type"/>
+      <xs:element name="Structure" type="aors:AgentControlUI.GUI.StructureSection.type" maxOccurs="unbounded">
         <xs:unique name="structure.unique.names">
           <xs:selector xpath=".//aors:textfield | .//aors:checkbox | .//aors:select | .//aors:button | .//aors:textarea | .//aors:slider"/>
           <xs:field xpath="@name"/>
@@ -83,7 +90,7 @@
     </xs:sequence>
   </xs:complexType>
 
-  <xs:complexType name="AgentControlUI.ControlInterface.StyleSection.type">
+  <xs:complexType name="AgentControlUI.GUI.StyleSection.type">
     <xs:simpleContent>
       <xs:extension base="xs:string">
         <xs:attribute name="type" type="xs:string" fixed="text/css" use="optional"/>
@@ -91,113 +98,112 @@
     </xs:simpleContent>
   </xs:complexType>
 
-  <xs:complexType name="AgentControlUI.ControlInterface.StructureSection.type">
+  <xs:complexType name="AgentControlUI.GUI.StructureSection.type">
     <xs:choice>
-      <xs:group ref="aors:AgentControlUI.ControlInterface.SructuredSection.FlowElements" maxOccurs="unbounded"/>
+      <xs:group ref="aors:AgentControlUI.GUI.SructuredSection.FlowElements" maxOccurs="unbounded"/>
     </xs:choice>
     <xs:attributeGroup ref="aors:lang_mandatory"/>
   </xs:complexType>
 
   <!-- empty and common attributes -->
 
-  <xs:complexType name="AgentControlUI.ControlInterface.StructureSection.EmptyElement.type">
-    <xs:attributeGroup ref="aors:AgentControlUI.ControlInterface.StructureSection.CommonAttributes"/>
+  <xs:complexType name="AgentControlUI.GUI.StructureSection.EmptyElement.type">
+    <xs:attributeGroup ref="aors:AgentControlUI.GUI.StructureSection.CommonAttributes"/>
   </xs:complexType>
 
-  <xs:attributeGroup name="AgentControlUI.ControlInterface.StructureSection.CommonAttributes">
+  <xs:attributeGroup name="AgentControlUI.GUI.StructureSection.CommonAttributes">
     <xs:attribute name="id" type="aors:CanonicalName" use="optional"/>
     <xs:attribute name="class" type="aors:ListOfCanonicalName" use="optional"/>
     <xs:attribute name="title" type="xs:string" use="optional"/>
     <xs:attribute name="style" type="xs:string" use="optional"/>
   </xs:attributeGroup>
 
-
   <!-- inline -->
 
-  <xs:complexType name="AgentControlUI.ControlInterface.StructureSection.InlineElement.type">
+  <xs:complexType name="AgentControlUI.GUI.StructureSection.InlineElement.type">
     <xs:complexContent mixed="true">
-      <xs:extension base="aors:AgentControlUI.ControlInterface.StructureSection.EmptyElement.type">
+      <xs:extension base="aors:AgentControlUI.GUI.StructureSection.EmptyElement.type">
         <xs:sequence>
-          <xs:group ref="aors:AgentControlUI.ControlInterface.StructureSection.InlineElements" minOccurs="0" maxOccurs="unbounded"/>
+          <xs:group ref="aors:AgentControlUI.GUI.StructureSection.InlineElements" minOccurs="0" maxOccurs="unbounded"/>
         </xs:sequence>
       </xs:extension>
     </xs:complexContent>
   </xs:complexType>
 
-  <xs:group name="AgentControlUI.ControlInterface.StructureSection.InlineElements">
+  <xs:group name="AgentControlUI.GUI.StructureSection.InlineElements">
     <xs:choice>
-      <xs:group ref="aors:AgentControlUI.ControlInterface.StructureSection.InlineElements-label"/>
-      <xs:group ref="aors:AgentControlUI.ControlInterface.StructureSection.FormctrlElements.label"/>
+      <xs:group ref="aors:AgentControlUI.GUI.StructureSection.InlineElements-label"/>
+      <xs:group ref="aors:AgentControlUI.GUI.StructureSection.FormctrlElements.label"/>
     </xs:choice>
   </xs:group>
 
-  <xs:group name="AgentControlUI.ControlInterface.StructureSection.InlineElements-label">
+  <xs:group name="AgentControlUI.GUI.StructureSection.InlineElements-label">
     <xs:choice>
-      <xs:group ref="aors:AgentControlUI.ControlInterface.StructureSection.InlineTextElements"/>
-      <!--xs:group ref="aors:AgentControlUI.ControlInterface.StructureSection.EditElements"/-->
-      <xs:group ref="aors:AgentControlUI.ControlInterface.StructureSection.ImageElements"/>
-      <xs:group ref="aors:AgentControlUI.ControlInterface.StructureSection.FormctrlElements-label"/>
+      <xs:group ref="aors:AgentControlUI.GUI.StructureSection.InlineTextElements"/>
+      <!--xs:group ref="aors:AgentControlUI.GUI.StructureSection.EditElements"/-->
+      <xs:group ref="aors:AgentControlUI.GUI.StructureSection.ImageElements"/>
+      <xs:group ref="aors:AgentControlUI.GUI.StructureSection.FormctrlElements-label"/>
     </xs:choice>
   </xs:group>
 
   <!-- block -->
 
-  <xs:complexType name="AgentControlUI.ControlInterface.StructureSection.BlockElement.type">
+  <xs:complexType name="AgentControlUI.GUI.StructureSection.BlockElement.type">
     <xs:complexContent mixed="true">
-      <xs:extension base="aors:AgentControlUI.ControlInterface.StructureSection.EmptyElement.type">
+      <xs:extension base="aors:AgentControlUI.GUI.StructureSection.EmptyElement.type">
         <xs:sequence>
-          <xs:group ref="aors:AgentControlUI.ControlInterface.StructureSection.BlockElements" minOccurs="0" maxOccurs="unbounded"/>
+          <xs:group ref="aors:AgentControlUI.GUI.StructureSection.BlockElements" minOccurs="0" maxOccurs="unbounded"/>
         </xs:sequence>
       </xs:extension>
     </xs:complexContent>
   </xs:complexType>
 
-  <xs:group name="AgentControlUI.ControlInterface.StructureSection.BlockElements">
+  <xs:group name="AgentControlUI.GUI.StructureSection.BlockElements">
     <xs:choice>
-      <xs:group ref="aors:AgentControlUI.ControlInterface.StructureSection.BlockTextElements"/>
-      <xs:group ref="aors:AgentControlUI.ControlInterface.StructureSection.TableElements"/>
-      <xs:group ref="aors:AgentControlUI.ControlInterface.StructureSection.FormElements"/>
+      <xs:group ref="aors:AgentControlUI.GUI.StructureSection.BlockTextElements"/>
+      <xs:group ref="aors:AgentControlUI.GUI.StructureSection.TableElements"/>
+      <xs:group ref="aors:AgentControlUI.GUI.StructureSection.FormElements"/>
     </xs:choice>
   </xs:group>
 
   <!-- flow -->
 
-  <xs:complexType name="AgentControlUI.ControlInterface.StructureSection.FlowElement.type">
+  <xs:complexType name="AgentControlUI.GUI.StructureSection.FlowElement.type">
     <xs:complexContent mixed="true">
-      <xs:extension base="aors:AgentControlUI.ControlInterface.StructureSection.EmptyElement.type">
+      <xs:extension base="aors:AgentControlUI.GUI.StructureSection.EmptyElement.type">
         <xs:choice minOccurs="0" maxOccurs="unbounded">
-          <xs:group ref="aors:AgentControlUI.ControlInterface.SructuredSection.FlowElements"/>
+          <xs:group ref="aors:AgentControlUI.GUI.SructuredSection.FlowElements"/>
         </xs:choice>
       </xs:extension>
     </xs:complexContent>
   </xs:complexType>
 
-  <xs:group name="AgentControlUI.ControlInterface.SructuredSection.FlowElements">
+  <xs:group name="AgentControlUI.GUI.SructuredSection.FlowElements">
     <xs:choice>
-      <xs:group ref="aors:AgentControlUI.ControlInterface.StructureSection.HeadingElements"/>
-      <xs:group ref="aors:AgentControlUI.ControlInterface.StructureSection.BlockElements"/>
-      <xs:group ref="aors:AgentControlUI.ControlInterface.StructureSection.InlineElements"/>
-      <xs:group ref="aors:AgentControlUI.ControlInterface.StructureSection.ListElements"/>
+      <xs:group ref="aors:AgentControlUI.GUI.StructureSection.HeadingElements"/>
+      <xs:group ref="aors:AgentControlUI.GUI.StructureSection.BlockElements"/>
+      <xs:group ref="aors:AgentControlUI.GUI.StructureSection.InlineElements"/>
+      <xs:group ref="aors:AgentControlUI.GUI.StructureSection.ListElements"/>
     </xs:choice>
   </xs:group>
 
   <!-- text -->
 
-  <!--xs:element name="abbr" type="aors:AgentControlUI.ControlInterface.StructureSection.InlineElement.type"/-->
-  <!--xs:element name="acronym" type="aors:AgentControlUI.ControlInterface.StructureSection.InlineElement.type"/-->
-  <xs:element name="br" type="aors:AgentControlUI.ControlInterface.StructureSection.EmptyElement.type"/>
-  <!--xs:element name="cite" type="aors:AgentControlUI.ControlInterface.StructureSection.InlineElement.type"/-->
-  <xs:element name="code" type="aors:AgentControlUI.ControlInterface.StructureSection.InlineElement.type"/>
-  <!--xs:element name="dfn" type="aors:AgentControlUI.ControlInterface.StructureSection.InlineElement.type"/-->
-  <xs:element name="em" type="aors:AgentControlUI.ControlInterface.StructureSection.InlineElement.type"/>
-  <!--xs:element name="kbd" type="aors:AgentControlUI.ControlInterface.StructureSection.InlineElement.type"/-->
-  <xs:element name="q" type="aors:AgentControlUI.ControlInterface.StructureSection.InlineElement.type"/>
-  <!--xs:element name="samp" type="aors:AgentControlUI.ControlInterface.StructureSection.InlineElement.type"/-->
-  <xs:element name="span" type="aors:AgentControlUI.ControlInterface.StructureSection.InlineElement.type"/>
-  <xs:element name="strong" type="aors:AgentControlUI.ControlInterface.StructureSection.InlineElement.type"/>
-  <!--xs:element name="var" type="aors:AgentControlUI.ControlInterface.StructureSection.InlineElement.type"/-->
+  <!--xs:element name="abbr" type="aors:AgentControlUI.GUI.StructureSection.InlineElement.type"/-->
+  <!--xs:element name="acronym" type="aors:AgentControlUI.GUI.StructureSection.InlineElement.type"/-->
+  <xs:element name="br" type="aors:AgentControlUI.GUI.StructureSection.EmptyElement.type"/>
+  <!--xs:element name="cite" type="aors:AgentControlUI.GUI.StructureSection.InlineElement.type"/-->
+  <xs:element name="code" type="aors:AgentControlUI.GUI.StructureSection.InlineElement.type"/>
+  <!--xs:element name="dfn" type="aors:AgentControlUI.GUI.StructureSection.InlineElement.type"/-->
+  <xs:element name="em" type="aors:AgentControlUI.GUI.StructureSection.InlineElement.type"/>
+  <!--xs:element name="kbd" type="aors:AgentControlUI.GUI.StructureSection.InlineElement.type"/-->
+  <xs:element name="q" type="aors:AgentControlUI.GUI.StructureSection.InlineElement.type"/>
+  <!--xs:element name="samp" type="aors:AgentControlUI.GUI.StructureSection.InlineElement.type"/-->
+  <xs:element name="span" type="aors:AgentControlUI.GUI.StructureSection.InlineElement.type"/>
+  <xs:element name="strong" type="aors:AgentControlUI.GUI.StructureSection.InlineElement.type"/>
+  <!--xs:element name="var" type="aors:AgentControlUI.GUI.StructureSection.InlineElement.type"/-->
   
-  <xs:group name="AgentControlUI.ControlInterface.StructureSection.InlineTextElements">
+  <xs:group name="AgentControlUI.GUI.StructureSection.InlineTextElements">
     <xs:choice>
       <!--xs:element ref="aors:abbr"/-->
       <!--xs:element ref="aors:acronym"/-->
@@ -215,27 +221,26 @@
     </xs:choice>
   </xs:group>
 
-
-  <!--xs:element name="address" type="aors:AgentControlUI.ControlInterface.StructureSection.BlockElement.type"/-->
+  <!--xs:element name="address" type="aors:AgentControlUI.GUI.StructureSection.BlockElement.type"/-->
   <!--xs:element name="blockquote">
     <xs:complexType>
       <xs:complexContent>
-        <xs:extension base="aors:AgentControlUI.ControlInterface.StructureSection.EmptyElement.type">
+      <xs:extension base="aors:AgentControlUI.GUI.StructureSection.EmptyElement.type">
           <xs:choice minOccurs="0" maxOccurs="unbounded">
-            <xs:group ref="aors:AgentControlUI.ControlInterface.StructureSection.HeadingElements"/>
-            <xs:group ref="aors:AgentControlUI.ControlInterface.StructureSection.BlockElements"/>
-            <xs:group ref="aors:AgentControlUI.ControlInterface.StructureSection.ListElements"/>
+          <xs:group ref="aors:AgentControlUI.GUI.StructureSection.HeadingElements"/>
+          <xs:group ref="aors:AgentControlUI.GUI.StructureSection.BlockElements"/>
+          <xs:group ref="aors:AgentControlUI.GUI.StructureSection.ListElements"/>
           </xs:choice>
-          <xs:attributeGroup ref="aors:AgentControlUI.ControlInterface.StructureSection.CiteAttributes"/>
+          <xs:attributeGroup ref="aors:AgentControlUI.GUI.StructureSection.CiteAttributes"/>
         </xs:extension>
       </xs:complexContent>
     </xs:complexType>
   </xs:element-->
-  <xs:element name="div" type="aors:AgentControlUI.ControlInterface.StructureSection.FlowElement.type"/>
-  <xs:element name="p" type="aors:AgentControlUI.ControlInterface.StructureSection.BlockElement.type"/>
-  <xs:element name="pre" type="aors:AgentControlUI.ControlInterface.StructureSection.BlockElement.type"/>
+  <xs:element name="div" type="aors:AgentControlUI.GUI.StructureSection.FlowElement.type"/>
+  <xs:element name="p" type="aors:AgentControlUI.GUI.StructureSection.BlockElement.type"/>
+  <xs:element name="pre" type="aors:AgentControlUI.GUI.StructureSection.BlockElement.type"/>
   
-  <xs:group name="AgentControlUI.ControlInterface.StructureSection.BlockTextElements">
+  <xs:group name="AgentControlUI.GUI.StructureSection.BlockTextElements">
     <xs:choice>
       <!--xs:element ref="aors:address"/-->
       <!--xs:element ref="aors:blockquote"/-->
@@ -247,14 +252,14 @@
 
   <!-- heading -->
 
-    <xs:element name="h1" type="aors:AgentControlUI.ControlInterface.StructureSection.InlineElement.type"/>
-    <xs:element name="h2" type="aors:AgentControlUI.ControlInterface.StructureSection.InlineElement.type"/>
-    <xs:element name="h3" type="aors:AgentControlUI.ControlInterface.StructureSection.InlineElement.type"/>
-    <xs:element name="h4" type="aors:AgentControlUI.ControlInterface.StructureSection.InlineElement.type"/>
-    <xs:element name="h5" type="aors:AgentControlUI.ControlInterface.StructureSection.InlineElement.type"/>
-    <xs:element name="h6" type="aors:AgentControlUI.ControlInterface.StructureSection.InlineElement.type"/>
+  <xs:element name="h1" type="aors:AgentControlUI.GUI.StructureSection.InlineElement.type"/>
+  <xs:element name="h2" type="aors:AgentControlUI.GUI.StructureSection.InlineElement.type"/>
+  <xs:element name="h3" type="aors:AgentControlUI.GUI.StructureSection.InlineElement.type"/>
+  <xs:element name="h4" type="aors:AgentControlUI.GUI.StructureSection.InlineElement.type"/>
+  <xs:element name="h5" type="aors:AgentControlUI.GUI.StructureSection.InlineElement.type"/>
+  <xs:element name="h6" type="aors:AgentControlUI.GUI.StructureSection.InlineElement.type"/>
   
-  <xs:group name="AgentControlUI.ControlInterface.StructureSection.HeadingElements">
+  <xs:group name="AgentControlUI.GUI.StructureSection.HeadingElements">
     <xs:choice>
       <xs:element ref="aors:h1"/>
       <xs:element ref="aors:h2"/>
@@ -267,30 +272,30 @@
 
   <!-- edit -->
 
-  <!--xs:element name="del" type="aors:AgentControlUI.ControlInterface.StructureSection.EditElement.type"/-->
-  <!--xs:element name="ins" type="aors:AgentControlUI.ControlInterface.StructureSection.EditElement.type"/-->
+  <!--xs:element name="del" type="aors:AgentControlUI.GUI.StructureSection.EditElement.type"/-->
+  <!--xs:element name="ins" type="aors:AgentControlUI.GUI.StructureSection.EditElement.type"/-->
   
-  <!--xs:group name="AgentControlUI.ControlInterface.StructureSection.EditElements">
+  <!--xs:group name="AgentControlUI.GUI.StructureSection.EditElements">
     <xs:choice>
       <xs:element ref="aors:del"/>
       <xs:element ref="aors:ins"/>
     </xs:choice>
   </xs:group-->
 
-  <!--xs:complexType name="AgentControlUI.ControlInterface.StructureSection.EditElement.type">
+  <!--xs:complexType name="AgentControlUI.GUI.StructureSection.EditElement.type">
     <xs:complexContent>
-      <xs:extension base="aors:AgentControlUI.ControlInterface.StructureSection.FlowElement.type">
-        <xs:attributeGroup ref="aors:AgentControlUI.ControlInterface.StructureSection.CiteAttributes"/>
-        <xs:attributeGroup ref="aors:AgentControlUI.ControlInterface.StructureSection.EditAttributes"/>
+    <xs:extension base="aors:AgentControlUI.GUI.StructureSection.FlowElement.type">
+    <xs:attributeGroup ref="aors:AgentControlUI.GUI.StructureSection.CiteAttributes"/>
+    <xs:attributeGroup ref="aors:AgentControlUI.GUI.StructureSection.EditAttributes"/>
       </xs:extension>
     </xs:complexContent>
   </xs:complexType-->
 
-  <!--xs:attributeGroup name="AgentControlUI.ControlInterface.StructureSection.CiteAttributes">
+  <!--xs:attributeGroup name="AgentControlUI.GUI.StructureSection.CiteAttributes">
     <xs:attribute name="cite" type="xs:anyURI" use="optional"/>
   </xs:attributeGroup-->
 
-  <!--xs:attributeGroup name="AgentControlUI.ControlInterface.StructureSection.EditAttributes">
+  <!--xs:attributeGroup name="AgentControlUI.GUI.StructureSection.EditAttributes">
     <xs:attribute name="datetime" type="xs:dateTime" use="optional"/>
   </xs:attributeGroup-->
 
@@ -299,16 +304,16 @@
   <xs:element name="dl">
     <xs:complexType>
       <xs:choice maxOccurs="unbounded">
-        <xs:element name="dt" type="aors:AgentControlUI.ControlInterface.StructureSection.InlineElement.type"/>
-        <xs:element name="dd" type="aors:AgentControlUI.ControlInterface.StructureSection.FlowElement.type"/>
+        <xs:element name="dt" type="aors:AgentControlUI.GUI.StructureSection.InlineElement.type"/>
+        <xs:element name="dd" type="aors:AgentControlUI.GUI.StructureSection.FlowElement.type"/>
       </xs:choice>
-      <xs:attributeGroup ref="aors:AgentControlUI.ControlInterface.StructureSection.CommonAttributes"/>
+      <xs:attributeGroup ref="aors:AgentControlUI.GUI.StructureSection.CommonAttributes"/>
     </xs:complexType>
   </xs:element>
-  <xs:element name="ol" type="aors:AgentControlUI.ControlInterface.StructureSection.ListElement.type"/>
-  <xs:element name="ul" type="aors:AgentControlUI.ControlInterface.StructureSection.ListElement.type"/>
+  <xs:element name="ol" type="aors:AgentControlUI.GUI.StructureSection.ListElement.type"/>
+  <xs:element name="ul" type="aors:AgentControlUI.GUI.StructureSection.ListElement.type"/>
   
-  <xs:group name="AgentControlUI.ControlInterface.StructureSection.ListElements">
+  <xs:group name="AgentControlUI.GUI.StructureSection.ListElements">
     <xs:choice>
       <xs:element ref="aors:dl"/>
       <xs:element ref="aors:ol"/>
@@ -316,11 +321,11 @@
     </xs:choice>
   </xs:group>
   
-  <xs:complexType name="AgentControlUI.ControlInterface.StructureSection.ListElement.type">
+  <xs:complexType name="AgentControlUI.GUI.StructureSection.ListElement.type">
     <xs:sequence maxOccurs="unbounded">
-      <xs:element name="li" type="aors:AgentControlUI.ControlInterface.StructureSection.FlowElement.type"/>
+      <xs:element name="li" type="aors:AgentControlUI.GUI.StructureSection.FlowElement.type"/>
     </xs:sequence>
-    <xs:attributeGroup ref="aors:AgentControlUI.ControlInterface.StructureSection.CommonAttributes"/>
+    <xs:attributeGroup ref="aors:AgentControlUI.GUI.StructureSection.CommonAttributes"/>
   </xs:complexType>
 
   <!-- table -->
@@ -328,19 +333,19 @@
   <xs:element name="table">
     <xs:complexType>
       <xs:complexContent>
-        <xs:extension base="aors:AgentControlUI.ControlInterface.StructureSection.EmptyElement.type">
+        <xs:extension base="aors:AgentControlUI.GUI.StructureSection.EmptyElement.type">
           <xs:sequence>
-            <xs:element name="caption" type="aors:AgentControlUI.ControlInterface.StructureSection.InlineElement.type" minOccurs="0"/>
+            <xs:element name="caption" type="aors:AgentControlUI.GUI.StructureSection.InlineElement.type" minOccurs="0"/>
             <xs:choice>
-              <xs:group ref="aors:AgentControlUI.ControlInterface.StructureSection.ColElements" minOccurs="0" maxOccurs="unbounded"/>
+              <xs:group ref="aors:AgentControlUI.GUI.StructureSection.ColElements" minOccurs="0" maxOccurs="unbounded"/>
               <xs:element name="colgroup" minOccurs="0" maxOccurs="unbounded">
                 <xs:complexType>
                   <xs:complexContent>
-                    <xs:extension base="aors:AgentControlUI.ControlInterface.StructureSection.EmptyElement.type">
+                    <xs:extension base="aors:AgentControlUI.GUI.StructureSection.EmptyElement.type">
                       <xs:sequence>
-                        <xs:group ref="aors:AgentControlUI.ControlInterface.StructureSection.ColElements" minOccurs="0" maxOccurs="unbounded"/>
+                        <xs:group ref="aors:AgentControlUI.GUI.StructureSection.ColElements" minOccurs="0" maxOccurs="unbounded"/>
                       </xs:sequence>
-                      <xs:attributeGroup ref="aors:AgentControlUI.ControlInterface.StructureSection.ColAttributes"/>
+                      <xs:attributeGroup ref="aors:AgentControlUI.GUI.StructureSection.ColAttributes"/>
                     </xs:extension>
                   </xs:complexContent>
                 </xs:complexType>
@@ -348,11 +353,11 @@
             </xs:choice>
             <xs:choice>
               <xs:sequence>
-                <xs:element name="thead" type="aors:AgentControlUI.ControlInterface.StructureSection.RowWrapper.type" minOccurs="0"/>
-                <xs:element name="tfoot" type="aors:AgentControlUI.ControlInterface.StructureSection.RowWrapper.type" minOccurs="0"/>
-                <xs:element name="tbody" type="aors:AgentControlUI.ControlInterface.StructureSection.RowWrapper.type" maxOccurs="unbounded"/>
+                <xs:element name="thead" type="aors:AgentControlUI.GUI.StructureSection.RowWrapper.type" minOccurs="0"/>
+                <xs:element name="tfoot" type="aors:AgentControlUI.GUI.StructureSection.RowWrapper.type" minOccurs="0"/>
+                <xs:element name="tbody" type="aors:AgentControlUI.GUI.StructureSection.RowWrapper.type" maxOccurs="unbounded"/>
               </xs:sequence>
-              <xs:group ref="aors:AgentControlUI.ControlInterface.StructureSection.RowElements" maxOccurs="unbounded"/>
+              <xs:group ref="aors:AgentControlUI.GUI.StructureSection.RowElements" maxOccurs="unbounded"/>
             </xs:choice>
           </xs:sequence>
           <xs:attribute name="summery" type="xs:string" use="optional"/>
@@ -361,19 +366,19 @@
     </xs:complexType>
   </xs:element>
   
-  <xs:group name="AgentControlUI.ControlInterface.StructureSection.TableElements">
+  <xs:group name="AgentControlUI.GUI.StructureSection.TableElements">
     <xs:sequence>
       <xs:element ref="aors:table"/>
     </xs:sequence>
   </xs:group>
 
-  <xs:group name="AgentControlUI.ControlInterface.StructureSection.ColElements">
+  <xs:group name="AgentControlUI.GUI.StructureSection.ColElements">
     <xs:sequence>
       <xs:element name="col">
         <xs:complexType>
           <xs:complexContent>
-            <xs:extension base="aors:AgentControlUI.ControlInterface.StructureSection.EmptyElement.type">
-              <xs:attributeGroup ref="aors:AgentControlUI.ControlInterface.StructureSection.ColAttributes"/>
+            <xs:extension base="aors:AgentControlUI.GUI.StructureSection.EmptyElement.type">
+              <xs:attributeGroup ref="aors:AgentControlUI.GUI.StructureSection.ColAttributes"/>
             </xs:extension>
           </xs:complexContent>
         </xs:complexType>
@@ -381,7 +386,7 @@
     </xs:sequence>
   </xs:group>
 
-  <xs:attributeGroup name="AgentControlUI.ControlInterface.StructureSection.ColAttributes">
+  <xs:attributeGroup name="AgentControlUI.GUI.StructureSection.ColAttributes">
     <xs:attribute name="span" type="xs:nonNegativeInteger" use="optional"/>
     <xs:attribute name="width" use="optional">
       <xs:simpleType>
@@ -392,25 +397,25 @@
     </xs:attribute>
   </xs:attributeGroup>
 
-  <xs:complexType name="AgentControlUI.ControlInterface.StructureSection.RowWrapper.type">
+  <xs:complexType name="AgentControlUI.GUI.StructureSection.RowWrapper.type">
     <xs:complexContent>
-      <xs:extension base="aors:AgentControlUI.ControlInterface.StructureSection.EmptyElement.type">
+      <xs:extension base="aors:AgentControlUI.GUI.StructureSection.EmptyElement.type">
         <xs:sequence>
-          <xs:group ref="aors:AgentControlUI.ControlInterface.StructureSection.RowElements" maxOccurs="unbounded"/>
+          <xs:group ref="aors:AgentControlUI.GUI.StructureSection.RowElements" maxOccurs="unbounded"/>
         </xs:sequence>
       </xs:extension>
     </xs:complexContent>
   </xs:complexType>
 
-  <xs:group name="AgentControlUI.ControlInterface.StructureSection.RowElements">
+  <xs:group name="AgentControlUI.GUI.StructureSection.RowElements">
     <xs:sequence>
       <xs:element name="tr">
         <xs:complexType>
           <xs:complexContent>
-            <xs:extension base="aors:AgentControlUI.ControlInterface.StructureSection.EmptyElement.type">
+            <xs:extension base="aors:AgentControlUI.GUI.StructureSection.EmptyElement.type">
               <xs:choice maxOccurs="unbounded">
-                <xs:element name="td" type="aors:AgentControlUI.ControlInterface.StructureSection.CellElement.type"/>
-                <xs:element name="th" type="aors:AgentControlUI.ControlInterface.StructureSection.CellElement.type"/>
+                <xs:element name="td" type="aors:AgentControlUI.GUI.StructureSection.CellElement.type"/>
+                <xs:element name="th" type="aors:AgentControlUI.GUI.StructureSection.CellElement.type"/>
               </xs:choice>
             </xs:extension>
           </xs:complexContent>
@@ -419,9 +424,9 @@
     </xs:sequence>
   </xs:group>
 
-  <xs:complexType name="AgentControlUI.ControlInterface.StructureSection.CellElement.type">
+  <xs:complexType name="AgentControlUI.GUI.StructureSection.CellElement.type">
     <xs:complexContent>
-      <xs:extension base="aors:AgentControlUI.ControlInterface.StructureSection.FlowElement.type">
+      <xs:extension base="aors:AgentControlUI.GUI.StructureSection.FlowElement.type">
         <xs:attribute name="abbr" type="xs:string" use="optional"/>
         <xs:attribute name="axis" type="xs:string" use="optional"/>
         <xs:attribute name="scope" use="optional">
@@ -446,7 +451,7 @@
   <xs:element name="img">
     <xs:complexType>
       <xs:complexContent>
-        <xs:extension base="aors:AgentControlUI.ControlInterface.StructureSection.EmptyElement.type">
+        <xs:extension base="aors:AgentControlUI.GUI.StructureSection.EmptyElement.type">
           <xs:attribute name="alt" type="xs:string" use="required"/>
           <xs:attribute name="longdesc" type="xs:anyURI" use="optional"/>
           <xs:attribute name="src" type="xs:anyURI" use="required"/>
@@ -455,7 +460,7 @@
     </xs:complexType>
   </xs:element>
   
-  <xs:group name="AgentControlUI.ControlInterface.StructureSection.ImageElements">
+  <xs:group name="AgentControlUI.GUI.StructureSection.ImageElements">
     <xs:sequence>
       <xs:element ref="aors:img"/>
     </xs:sequence>
@@ -466,16 +471,16 @@
   <xs:element name="fieldset">
     <xs:complexType>
       <xs:complexContent mixed="true">
-        <xs:extension base="aors:AgentControlUI.ControlInterface.StructureSection.FlowElement.type">
+        <xs:extension base="aors:AgentControlUI.GUI.StructureSection.FlowElement.type">
           <xs:choice minOccurs="0" maxOccurs="unbounded">
-            <xs:element name="legend" type="aors:AgentControlUI.ControlInterface.StructureSection.InlineElement.type"/>
+            <xs:element name="legend" type="aors:AgentControlUI.GUI.StructureSection.InlineElement.type"/>
           </xs:choice>
         </xs:extension>
       </xs:complexContent>
     </xs:complexType>
   </xs:element>
   
-  <xs:group name="AgentControlUI.ControlInterface.StructureSection.FormElements">
+  <xs:group name="AgentControlUI.GUI.StructureSection.FormElements">
     <xs:sequence>
       <xs:element ref="aors:fieldset"/>
     </xs:sequence>
@@ -483,23 +488,23 @@
 
   <!-- formctrl -->
 
-  <xs:group name="AgentControlUI.ControlInterface.StructuredSection.FormctrlElements">
+  <xs:group name="AgentControlUI.GUI.StructuredSection.FormctrlElements">
     <xs:choice>
-      <xs:group ref="aors:AgentControlUI.ControlInterface.StructureSection.FormctrlElements-label"/>
-      <xs:group ref="aors:AgentControlUI.ControlInterface.StructureSection.FormctrlElements.label"/>
+      <xs:group ref="aors:AgentControlUI.GUI.StructureSection.FormctrlElements-label"/>
+      <xs:group ref="aors:AgentControlUI.GUI.StructureSection.FormctrlElements.label"/>
     </xs:choice>
   </xs:group>
 
   <xs:element name="textfield">
     <xs:complexType>
       <xs:complexContent>
-        <xs:extension base="aors:AgentControlUI.ControlInterface.StructureSection.EmptyElement.type">
-          <xs:attributeGroup ref="aors:AgentControlUI.ControlInterface.StructureSection.FormfieldAttributes.name"/>
-          <xs:attributeGroup ref="aors:AgentControlUI.ControlInterface.StructureSection.FormfieldAttributes.property"/>
-          <xs:attributeGroup ref="aors:AgentControlUI.ControlInterface.StructureSection.FormfieldAttributes.initialValue"/>
-          <xs:attributeGroup ref="aors:AgentControlUI.ControlInterface.StructureSection.FormfieldAttributes.readonly"/>
-          <xs:attributeGroup ref="aors:AgentControlUI.ControlInterface.StructureSection.FormfieldAttributes.size"/>
-          <xs:attributeGroup ref="aors:AgentControlUI.ControlInterface.StructureSection.FormfieldAttributes.type"/>
+        <xs:extension base="aors:AgentControlUI.GUI.StructureSection.EmptyElement.type">
+          <xs:attributeGroup ref="aors:AgentControlUI.GUI.StructureSection.FormfieldAttributes.name"/>
+          <xs:attributeGroup ref="aors:AgentControlUI.GUI.StructureSection.FormfieldAttributes.property"/>
+          <xs:attributeGroup ref="aors:AgentControlUI.GUI.StructureSection.FormfieldAttributes.initialValue"/>
+          <xs:attributeGroup ref="aors:AgentControlUI.GUI.StructureSection.FormfieldAttributes.readonly"/>
+          <xs:attributeGroup ref="aors:AgentControlUI.GUI.StructureSection.FormfieldAttributes.size"/>
+          <xs:attributeGroup ref="aors:AgentControlUI.GUI.StructureSection.FormfieldAttributes.type"/>
         </xs:extension>
       </xs:complexContent>
     </xs:complexType>
@@ -507,11 +512,11 @@
   <xs:element name="checkbox">
     <xs:complexType>
       <xs:complexContent>
-        <xs:extension base="aors:AgentControlUI.ControlInterface.StructureSection.EmptyElement.type">
-          <xs:attributeGroup ref="aors:AgentControlUI.ControlInterface.StructureSection.FormfieldAttributes.name"/>
-          <xs:attributeGroup ref="aors:AgentControlUI.ControlInterface.StructureSection.FormfieldAttributes.property"/>
-          <xs:attributeGroup ref="aors:AgentControlUI.ControlInterface.StructureSection.FormfieldAttributes.checked"/>
-          <xs:attributeGroup ref="aors:AgentControlUI.ControlInterface.StructureSection.FormfieldAttributes.value"/>
+        <xs:extension base="aors:AgentControlUI.GUI.StructureSection.EmptyElement.type">
+          <xs:attributeGroup ref="aors:AgentControlUI.GUI.StructureSection.FormfieldAttributes.name"/>
+          <xs:attributeGroup ref="aors:AgentControlUI.GUI.StructureSection.FormfieldAttributes.property"/>
+          <xs:attributeGroup ref="aors:AgentControlUI.GUI.StructureSection.FormfieldAttributes.checked"/>
+          <xs:attributeGroup ref="aors:AgentControlUI.GUI.StructureSection.FormfieldAttributes.value"/>
           <xs:attribute name="type" type="aors:PrimitiveDataType" fixed="Boolean" use="required"/>
         </xs:extension>
       </xs:complexContent>
@@ -520,12 +525,12 @@
   <xs:element name="radiobutton">
     <xs:complexType>
       <xs:complexContent>
-        <xs:extension base="aors:AgentControlUI.ControlInterface.StructureSection.EmptyElement.type">
-          <xs:attributeGroup ref="aors:AgentControlUI.ControlInterface.StructureSection.FormfieldAttributes.name"/>
-          <xs:attributeGroup ref="aors:AgentControlUI.ControlInterface.StructureSection.FormfieldAttributes.property"/>
-          <xs:attributeGroup ref="aors:AgentControlUI.ControlInterface.StructureSection.FormfieldAttributes.checked"/>
-          <xs:attributeGroup ref="aors:AgentControlUI.ControlInterface.StructureSection.FormfieldAttributes.value"/>
-          <xs:attributeGroup ref="aors:AgentControlUI.ControlInterface.StructureSection.FormfieldAttributes.type"/>          
+        <xs:extension base="aors:AgentControlUI.GUI.StructureSection.EmptyElement.type">
+          <xs:attributeGroup ref="aors:AgentControlUI.GUI.StructureSection.FormfieldAttributes.name"/>
+          <xs:attributeGroup ref="aors:AgentControlUI.GUI.StructureSection.FormfieldAttributes.property"/>
+          <xs:attributeGroup ref="aors:AgentControlUI.GUI.StructureSection.FormfieldAttributes.checked"/>
+          <xs:attributeGroup ref="aors:AgentControlUI.GUI.StructureSection.FormfieldAttributes.value"/>
+          <xs:attributeGroup ref="aors:AgentControlUI.GUI.StructureSection.FormfieldAttributes.type"/>          
         </xs:extension>
       </xs:complexContent>
     </xs:complexType>
@@ -533,12 +538,12 @@
   <xs:element name="textarea">
     <xs:complexType>
       <xs:complexContent mixed="true">
-        <xs:extension base="aors:AgentControlUI.ControlInterface.StructureSection.EmptyElement.type">
-          <xs:attributeGroup ref="aors:AgentControlUI.ControlInterface.StructureSection.FormfieldAttributes.name"/>
-          <xs:attributeGroup ref="aors:AgentControlUI.ControlInterface.StructureSection.FormfieldAttributes.property"/>
-          <xs:attributeGroup ref="aors:AgentControlUI.ControlInterface.StructureSection.FormfieldAttributes.readonly"/>
-          <xs:attributeGroup ref="aors:AgentControlUI.ControlInterface.StructureSection.FormfieldAttributes.cols"/>
-          <xs:attributeGroup ref="aors:AgentControlUI.ControlInterface.StructureSection.FormfieldAttributes.rows"/>
+        <xs:extension base="aors:AgentControlUI.GUI.StructureSection.EmptyElement.type">
+          <xs:attributeGroup ref="aors:AgentControlUI.GUI.StructureSection.FormfieldAttributes.name"/>
+          <xs:attributeGroup ref="aors:AgentControlUI.GUI.StructureSection.FormfieldAttributes.property"/>
+          <xs:attributeGroup ref="aors:AgentControlUI.GUI.StructureSection.FormfieldAttributes.readonly"/>
+          <xs:attributeGroup ref="aors:AgentControlUI.GUI.StructureSection.FormfieldAttributes.cols"/>
+          <xs:attributeGroup ref="aors:AgentControlUI.GUI.StructureSection.FormfieldAttributes.rows"/>
           <xs:attribute name="type" type="aors:PrimitiveDataType" fixed="String" use="required"/>
         </xs:extension>
       </xs:complexContent>
@@ -547,24 +552,24 @@
   <xs:element name="select">
     <xs:complexType mixed="true">
       <xs:complexContent>
-        <xs:extension base="aors:AgentControlUI.ControlInterface.StructureSection.EmptyElement.type">
+        <xs:extension base="aors:AgentControlUI.GUI.StructureSection.EmptyElement.type">
           <xs:sequence>
             <xs:element name="option">
               <xs:complexType>
                 <xs:complexContent>
-                  <xs:extension base="aors:AgentControlUI.ControlInterface.StructureSection.EmptyElement.type">
-                    <xs:attributeGroup ref="aors:AgentControlUI.ControlInterface.StructureSection.FormfieldAttributes.label"/>
-                    <xs:attributeGroup ref="aors:AgentControlUI.ControlInterface.StructureSection.FormfieldAttributes.value"/>
+                  <xs:extension base="aors:AgentControlUI.GUI.StructureSection.EmptyElement.type">
+                    <xs:attributeGroup ref="aors:AgentControlUI.GUI.StructureSection.FormfieldAttributes.label"/>
+                    <xs:attributeGroup ref="aors:AgentControlUI.GUI.StructureSection.FormfieldAttributes.value"/>
                   </xs:extension>
                 </xs:complexContent>
               </xs:complexType>
             </xs:element>
           </xs:sequence>
-          <xs:attributeGroup ref="aors:AgentControlUI.ControlInterface.StructureSection.FormfieldAttributes.name"/>
-          <xs:attributeGroup ref="aors:AgentControlUI.ControlInterface.StructureSection.FormfieldAttributes.property"/>
-          <xs:attributeGroup ref="aors:AgentControlUI.ControlInterface.StructureSection.FormfieldAttributes.readonly"/>
-          <xs:attributeGroup ref="aors:AgentControlUI.ControlInterface.StructureSection.FormfieldAttributes.size"/>
-          <xs:attributeGroup ref="aors:AgentControlUI.ControlInterface.StructureSection.FormfieldAttributes.type"/> 
+          <xs:attributeGroup ref="aors:AgentControlUI.GUI.StructureSection.FormfieldAttributes.name"/>
+          <xs:attributeGroup ref="aors:AgentControlUI.GUI.StructureSection.FormfieldAttributes.property"/>
+          <xs:attributeGroup ref="aors:AgentControlUI.GUI.StructureSection.FormfieldAttributes.readonly"/>
+          <xs:attributeGroup ref="aors:AgentControlUI.GUI.StructureSection.FormfieldAttributes.size"/>
+          <xs:attributeGroup ref="aors:AgentControlUI.GUI.StructureSection.FormfieldAttributes.type"/> 
         </xs:extension>
       </xs:complexContent>
     </xs:complexType>
@@ -572,33 +577,33 @@
   <!--xs:element name="dialog">
     <xs:complexType>
       <xs:complexContent mixed="true">
-        <xs:extension base="aors:AgentControlUI.ControlInterface.StructuredSection.ButtonElement.type">
+        <xs:extension base="aors:AgentControlUI.GUI.StructuredSection.ButtonElement.type">
           <xs:choice minOccurs="0" maxOccurs="unbounded">
-            <xs:group ref="aors:AgentControlUI.ControlInterface.SructuredSection.FlowElements"/>
+            <xs:group ref="aors:AgentControlUI.GUI.SructuredSection.FlowElements"/>
           </xs:choice>
         </xs:extension>
       </xs:complexContent>
     </xs:complexType>
   </xs:element-->
-  <xs:element name="button" type="aors:AgentControlUI.ControlInterface.StructuredSection.ButtonElement.type"/>
+  <xs:element name="button" type="aors:AgentControlUI.GUI.StructuredSection.ButtonElement.type"/>
   <xs:element name="slider">
     <xs:complexType>
       <xs:complexContent>
-        <xs:extension base="aors:AgentControlUI.ControlInterface.StructureSection.EmptyElement.type">
-          <xs:attributeGroup ref="aors:AgentControlUI.ControlInterface.StructureSection.FormfieldAttributes.name"/>
-          <xs:attributeGroup ref="aors:AgentControlUI.ControlInterface.StructureSection.FormfieldAttributes.property"/>
-          <xs:attributeGroup ref="aors:AgentControlUI.ControlInterface.StructureSection.FormfieldAttributes.minValue"/>
-          <xs:attributeGroup ref="aors:AgentControlUI.ControlInterface.StructureSection.FormfieldAttributes.maxValue"/>
-          <xs:attributeGroup ref="aors:AgentControlUI.ControlInterface.StructureSection.FormfieldAttributes.integerInitialValue"/>
-          <xs:attributeGroup ref="aors:AgentControlUI.ControlInterface.StructureSection.FormfieldAttributes.labels"/>
+        <xs:extension base="aors:AgentControlUI.GUI.StructureSection.EmptyElement.type">
+          <xs:attributeGroup ref="aors:AgentControlUI.GUI.StructureSection.FormfieldAttributes.name"/>
+          <xs:attributeGroup ref="aors:AgentControlUI.GUI.StructureSection.FormfieldAttributes.property"/>
+          <xs:attributeGroup ref="aors:AgentControlUI.GUI.StructureSection.FormfieldAttributes.minValue"/>
+          <xs:attributeGroup ref="aors:AgentControlUI.GUI.StructureSection.FormfieldAttributes.maxValue"/>
+          <xs:attributeGroup ref="aors:AgentControlUI.GUI.StructureSection.FormfieldAttributes.integerInitialValue"/>
+          <xs:attributeGroup ref="aors:AgentControlUI.GUI.StructureSection.FormfieldAttributes.labels"/>
           <xs:attribute name="type" type="aors:PrimitiveDataType" fixed="Integer" use="required"/>
         </xs:extension>
       </xs:complexContent>
     </xs:complexType>
   </xs:element>
-  <!--xs:element name="visualization" type="aors:AgentControlUI.ControlInterface.StructureSection.EmptyElement.type"/-->
+  <!--xs:element name="visualization" type="aors:AgentControlUI.GUI.StructureSection.EmptyElement.type"/-->
   
-  <xs:group name="AgentControlUI.ControlInterface.StructureSection.FormctrlElements-label">
+  <xs:group name="AgentControlUI.GUI.StructureSection.FormctrlElements-label">
     <xs:choice>
       <xs:element ref="aors:textfield"/>
       <xs:element ref="aors:checkbox"/>
@@ -612,144 +617,136 @@
     </xs:choice>
   </xs:group>
 
-  <xs:complexType name="AgentControlUI.ControlInterface.StructuredSection.ButtonElement.type">
+  <xs:complexType name="AgentControlUI.GUI.StructuredSection.ButtonElement.type">
     <xs:complexContent>
-      <xs:extension base="aors:AgentControlUI.ControlInterface.StructureSection.ButtonElement.type0">
-        <xs:attributeGroup ref="aors:AgentControlUI.ControlInterface.StructureSection.FormfieldAttributes.mandatoryname"/>
+      <xs:extension base="aors:AgentControlUI.GUI.StructureSection.ButtonElement.type0">
+        <xs:attributeGroup ref="aors:AgentControlUI.GUI.StructureSection.FormfieldAttributes.mandatoryname"/>
       </xs:extension>
     </xs:complexContent>
   </xs:complexType>
-  <xs:complexType name="AgentControlUI.ControlInterface.StructureSection.ButtonElement.type0">
+  <xs:complexType name="AgentControlUI.GUI.StructureSection.ButtonElement.type0">
     <xs:complexContent>
-      <xs:restriction base="aors:AgentControlUI.ControlInterface.StructureSection.EmptyElement.type">
+      <xs:restriction base="aors:AgentControlUI.GUI.StructureSection.EmptyElement.type">
         <xs:attribute name="title" type="xs:string" use="required"/>
       </xs:restriction>
     </xs:complexContent>
   </xs:complexType>
 
-  <xs:attributeGroup name="AgentControlUI.ControlInterface.StructureSection.FormfieldAttributes.name">
+  <xs:attributeGroup name="AgentControlUI.GUI.StructureSection.FormfieldAttributes.name">
     <xs:attribute name="name" type="aors:CanonicalName" use="optional"/>
   </xs:attributeGroup>
-  <xs:attributeGroup name="AgentControlUI.ControlInterface.StructureSection.FormfieldAttributes.mandatoryname">
+  <xs:attributeGroup name="AgentControlUI.GUI.StructureSection.FormfieldAttributes.mandatoryname">
     <xs:attribute name="name" type="aors:CanonicalName" use="required"/>
   </xs:attributeGroup>
-  <xs:attributeGroup name="AgentControlUI.ControlInterface.StructureSection.FormfieldAttributes.property">
+  <xs:attributeGroup name="AgentControlUI.GUI.StructureSection.FormfieldAttributes.property">
     <xs:attribute name="property" type="xs:string" use="optional"/>
   </xs:attributeGroup>
-  <xs:attributeGroup name="AgentControlUI.ControlInterface.StructureSection.FormfieldAttributes.initialValue">
+  <xs:attributeGroup name="AgentControlUI.GUI.StructureSection.FormfieldAttributes.initialValue">
     <xs:attribute name="initialValue" type="xs:string" use="optional"/>
   </xs:attributeGroup>
-  <xs:attributeGroup name="AgentControlUI.ControlInterface.StructureSection.FormfieldAttributes.value">
+  <xs:attributeGroup name="AgentControlUI.GUI.StructureSection.FormfieldAttributes.value">
     <xs:attribute name="value" type="xs:string" use="required"/>
   </xs:attributeGroup>
-  <xs:attributeGroup name="AgentControlUI.ControlInterface.StructureSection.FormfieldAttributes.readonly">
+  <xs:attributeGroup name="AgentControlUI.GUI.StructureSection.FormfieldAttributes.readonly">
     <xs:attribute name="readonly" type="xs:boolean" default="false" use="optional"/>
   </xs:attributeGroup>
-  <xs:attributeGroup name="AgentControlUI.ControlInterface.StructureSection.FormfieldAttributes.checked">
+  <xs:attributeGroup name="AgentControlUI.GUI.StructureSection.FormfieldAttributes.checked">
     <xs:attribute name="checked" type="xs:boolean" default="false" use="optional"/>
   </xs:attributeGroup>
-  <xs:attributeGroup name="AgentControlUI.ControlInterface.StructureSection.FormfieldAttributes.cols">
+  <xs:attributeGroup name="AgentControlUI.GUI.StructureSection.FormfieldAttributes.cols">
     <xs:attribute name="cols" type="xs:nonNegativeInteger" use="required"/>
   </xs:attributeGroup>
-  <xs:attributeGroup name="AgentControlUI.ControlInterface.StructureSection.FormfieldAttributes.rows">
+  <xs:attributeGroup name="AgentControlUI.GUI.StructureSection.FormfieldAttributes.rows">
     <xs:attribute name="rows" type="xs:nonNegativeInteger" use="required"/>
   </xs:attributeGroup>
-  <xs:attributeGroup name="AgentControlUI.ControlInterface.StructureSection.FormfieldAttributes.size">
+  <xs:attributeGroup name="AgentControlUI.GUI.StructureSection.FormfieldAttributes.size">
     <xs:attribute name="size" type="xs:nonNegativeInteger" use="optional"/>
   </xs:attributeGroup>
-  <xs:attributeGroup name="AgentControlUI.ControlInterface.StructureSection.FormfieldAttributes.minValue">
+  <xs:attributeGroup name="AgentControlUI.GUI.StructureSection.FormfieldAttributes.minValue">
     <xs:attribute name="minValue" type="xs:integer" use="required"/>
   </xs:attributeGroup>
-  <xs:attributeGroup name="AgentControlUI.ControlInterface.StructureSection.FormfieldAttributes.maxValue">
+  <xs:attributeGroup name="AgentControlUI.GUI.StructureSection.FormfieldAttributes.maxValue">
     <xs:attribute name="maxValue" type="xs:integer" use="required"/>
   </xs:attributeGroup>
-  <xs:attributeGroup name="AgentControlUI.ControlInterface.StructureSection.FormfieldAttributes.integerInitialValue">
+  <xs:attributeGroup name="AgentControlUI.GUI.StructureSection.FormfieldAttributes.integerInitialValue">
     <xs:attribute name="initialValue" type="xs:integer" use="optional"/>
   </xs:attributeGroup>
-  <xs:attributeGroup name="AgentControlUI.ControlInterface.StructureSection.FormfieldAttributes.label">
+  <xs:attributeGroup name="AgentControlUI.GUI.StructureSection.FormfieldAttributes.label">
     <xs:attribute name="label" type="xs:nonNegativeInteger" use="optional"/>
   </xs:attributeGroup>
-  <xs:attributeGroup name="AgentControlUI.ControlInterface.StructureSection.FormfieldAttributes.labels">
+  <xs:attributeGroup name="AgentControlUI.GUI.StructureSection.FormfieldAttributes.labels">
     <xs:attribute name="labels" type="xs:boolean" use="optional"/>
   </xs:attributeGroup>
-  <xs:attributeGroup name="AgentControlUI.ControlInterface.StructureSection.FormfieldAttributes.type">
+  <xs:attributeGroup name="AgentControlUI.GUI.StructureSection.FormfieldAttributes.type">
     <xs:attribute name="type" type="aors:PrimitiveDataType" use="required"/>
   </xs:attributeGroup>
 
   <xs:element name="label">
     <xs:complexType mixed="true">
       <xs:complexContent>
-        <xs:extension base="aors:AgentControlUI.ControlInterface.StructureSection.EmptyElement.type">
+        <xs:extension base="aors:AgentControlUI.GUI.StructureSection.EmptyElement.type">
           <xs:sequence>
-            <xs:group ref="aors:AgentControlUI.ControlInterface.StructureSection.InlineElements-label" minOccurs="0" maxOccurs="unbounded"/>
+            <xs:group ref="aors:AgentControlUI.GUI.StructureSection.InlineElements-label" minOccurs="0" maxOccurs="unbounded"/>
           </xs:sequence>
         </xs:extension>
       </xs:complexContent>
     </xs:complexType>
   </xs:element>
   
-  <xs:group name="AgentControlUI.ControlInterface.StructureSection.FormctrlElements.label">
+  <xs:group name="AgentControlUI.GUI.StructureSection.FormctrlElements.label">
     <xs:sequence>
       <xs:element ref="aors:label"/>
     </xs:sequence>
   </xs:group>
 
-  <!--########################-->
-  <!--### InteractionRules ###-->
-  <!--########################-->
+  <!--#####################################-->
+  <!--### User-Interface-Event-Listener ###-->
+  <!--#####################################-->
 
-  <xs:complexType name="AgentControlUI.ControlRules.type">
-    <xs:sequence maxOccurs="unbounded">
-      <xs:element name="UserInterfaceEventListener">
+  <xs:complexType name="AgentControlUI.UserInterfaceEventListener.type">
+    <xs:sequence>
+      <xs:element name="WHEN">
         <xs:complexType>
-          <xs:sequence>
-            <xs:element name="WHEN">
+          <xs:choice maxOccurs="unbounded">
+            <xs:element ref="aors:KeyboardEvent"/>
+            <xs:element name="MouseEvent">
               <xs:complexType>
                 <xs:complexContent>
-                  <xs:extension base="aors:UserInterfaceEventListenerTriggeringEvent.type0">
-                    <xs:choice>
-                      <xs:element name="MouseEvent">
-                        <xs:complexType>
-                          <xs:complexContent>
-                            <xs:restriction base="aors:MouseEvent.type">
-                              <xs:attribute name="targetType" type="aors:CanonicalName" use="prohibited"/>
-                              <xs:attribute name="targetIdRef" type="xs:long" use="prohibited"/>
-                              <xs:attribute name="targetName" type="xs:string" use="required"/>
-                              <xs:attribute name="mouseEventType" type="aors:MouseEventType.type" use="required"/>
-                              <xs:attribute name="eventVariable" type="aors:CanonicalName" use="prohibited"/>                          
-                            </xs:restriction>
-                          </xs:complexContent>
-                        </xs:complexType>
-                      </xs:element>                  
-                    </xs:choice>
-                  </xs:extension>
+                  <xs:restriction base="aors:MouseEvent.type">
+                    <xs:attribute name="targetType" type="aors:CanonicalName" use="prohibited"/>
+                    <xs:attribute name="targetIdRef" type="xs:long" use="prohibited"/>
+                    <xs:attribute name="targetName" type="xs:string" use="required"/>
+                    <xs:attribute name="mouseEventType" type="aors:MouseEventType.type" use="required"/>
+                    <xs:attribute name="eventVariable" type="aors:CanonicalName" use="prohibited"/>                          
+                  </xs:restriction>
                 </xs:complexContent>
               </xs:complexType>
             </xs:element>
-            <xs:element name="DO">
+          </xs:choice>
+        </xs:complexType>
+      </xs:element>
+      <xs:element name="DO">
+        <xs:complexType>
+          <!--xs:choice maxOccurs="unbounded">
+            <xs:element name="SCHEDULE-EVT" type="aors:UserInterfaceEventListenerResultingEvent.type"/>
+            </xs:choice-->
+          <xs:sequence>
+            <xs:element ref="aors:UPDATE-AGT" minOccurs="0" maxOccurs="1"/>
+            <xs:element name="SCHEDULE-EVT" minOccurs="0" maxOccurs="1">
               <xs:complexType>
                 <xs:choice maxOccurs="unbounded">
-                  <xs:element name="SCHEDULE-EVT" type="aors:UserInterfaceEventListenerResultingEvent.type"/>
+                  <xs:element ref="aors:ActionEventExpr"/>
+                  <xs:element ref="aors:OutMessageEventExpr"/>
                 </xs:choice>
               </xs:complexType>
             </xs:element>            
           </xs:sequence>
-          <xs:attribute name="name" type="aors:CanonicalName" use="required"/>
-          <xs:attribute name="interfaceVariable" type="aors:CanonicalName" use="optional"/>
-          <xs:attributeGroup ref="aors:ActionRuleEvaluation.attributes"/>
         </xs:complexType>
-      </xs:element>
+      </xs:element>            
     </xs:sequence>
-  </xs:complexType>
-  
-  <xs:complexType name="UserInterfaceEventListenerTriggeringEvent.type0">
-    <xs:complexContent>
-      <xs:restriction base="aors:UserInterfaceEventListenerTriggeringEvent.type">
-        <xs:choice maxOccurs="unbounded">
-          <xs:element ref="aors:KeyboardEvent"/>          
-          <xs:element ref="aors:MouseEvent" minOccurs="0" maxOccurs="0"/>
-        </xs:choice>
-      </xs:restriction>
-    </xs:complexContent>
+    <xs:attribute name="name" type="aors:CanonicalName" use="required"/>
+    <xs:attribute name="agentVariable" type="aors:CanonicalName" use="optional"/>
+    <xs:attribute name="guiVariable" type="aors:CanonicalName" use="optional"/>
+    <xs:attributeGroup ref="aors:ActionRuleEvaluation.attributes"/>
   </xs:complexType>
 </xs:schema>
