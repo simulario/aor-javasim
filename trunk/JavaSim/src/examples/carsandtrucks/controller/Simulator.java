@@ -254,4 +254,19 @@ public class Simulator extends AbstractSimulator {
   public void setActivityFactory() {
     // TODO Auto-generated method stub
   }
+
+  /**
+   * Usage:
+   *
+   *
+   * Comments: Overrides method {@code initGlobalVariables} from super class
+   * 
+   *
+   * 
+   */
+  @Override
+  protected void initGlobalVariables() {
+    // TODO Auto-generated method stub
+    
+  }
 }

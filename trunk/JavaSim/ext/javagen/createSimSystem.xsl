@@ -128,6 +128,10 @@
                 </xsl:otherwise>
               </xsl:choose>
               </xsl:variable> -->
+            
+            <xsl:apply-templates select="aorsml:SimulationModel" mode="createSimSystem.method.initGlobals">
+              <xsl:with-param name="indent" select="$indent + 1"/>
+            </xsl:apply-templates>
 
             <!-- createEnvironmentSimulator -->
             <xsl:apply-templates select="aorsml:SimulationModel" mode="createSimSystem.method.createEnvironment">
@@ -783,6 +787,24 @@
 
   </xsl:template>
 
+  <xsl:template match="aorsml:SimulationModel" mode="createSimSystem.method.initGlobals">
+    <xsl:param name="indent" required="yes"/>
+
+    <xsl:call-template name="java:method">
+      <xsl:with-param name="indent" select="$indent"/>
+      <xsl:with-param name="modifier" select="'protected'"/>
+      <xsl:with-param name="name" select="'initGlobalVariables'"/>
+      <xsl:with-param name="content">
+
+        <xsl:apply-templates select="//aorsml:InitialState/aorsml:GlobalVariable" mode="shared.updateGlobalVariable">
+          <xsl:with-param name="indent" select="$indent + 1"/>
+        </xsl:apply-templates>
+
+      </xsl:with-param>
+    </xsl:call-template>
+
+  </xsl:template>
+
   <!-- createEnvironmentSimulator  -->
   <xsl:template match="aorsml:SimulationModel" mode="createSimSystem.method.createEnvironment">
     <xsl:param name="indent" required="yes"/>
@@ -807,12 +829,12 @@
       <xsl:with-param name="name" select="'createEnvironment'"/>
       <xsl:with-param name="content">
 
-        <xsl:apply-templates select="//aorsml:InitialState/aorsml:GlobalVariable" mode="shared.updateGlobalVariable">
+        <!--xsl:apply-templates select="//aorsml:InitialState/aorsml:GlobalVariable" mode="shared.updateGlobalVariable">
           <xsl:with-param name="indent" select="$indent + 1"/>
         </xsl:apply-templates>
         <xsl:if test="fn:exists(//aorsml:InitialState/aorsml:GlobalVariable)">
           <xsl:call-template name="java:newLine"/>
-        </xsl:if>
+        </xsl:if-->
 
         <xsl:variable name="envSimVarName" select="'envSim'"/>
 

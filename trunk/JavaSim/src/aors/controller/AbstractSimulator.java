@@ -387,28 +387,31 @@ public abstract class AbstractSimulator implements AgentSimulatorListener {
 
     // 02 call in created simulator
     this.createSimModel();
+    
+    // 03 init the globals
+    this.initGlobalVariables();
 
     this.dataBus.notifySimulationScenario(this.scenarioInfos,
         this.generalSimulationParameters, this.simModel.getModelParamMap());
 
-    // 03 call in created simulator
+    // 04 call in created simulator
     this.generalSpaceModel = this.createSpaceModel();
 
-    // 04 call in created simulator
+    // 05 call in created simulator
     this.createInitialEvents();
 
     this.envSim = new EnvironmentSimulator(dataBus, physim);
     this.envSim.setEventsList(this.environmentEvents);
     this.envSim.initialize();
-
-    // 05 call in created simulator
-    this.createEnvironment();
+    
     // 06 call in created simulator
+    this.createEnvironment();
+    // 07 call in created simulator
     this.setActivityFactory();
 
     // logger.notifyInitialisation();
 
-    // 07 call in created simulator
+    // 08 call in created simulator
     this.createAgentSubjects();
 
     // set the base URI value for agent subjects RDF manager
@@ -429,11 +432,11 @@ public abstract class AbstractSimulator implements AgentSimulatorListener {
      * physim.setAgentSubjects(agentSubjectsTemp);
      */
 
-    // 08 call in created simulator
+    // 09 call in created simulator
     this.executeInitializeRules();
 
     // set the statistic informations
-    // 09 call in created simulator
+    // 10 call in created simulator
     this.statistics = this.createStatistic();
 
     // create the initial state
@@ -480,6 +483,8 @@ public abstract class AbstractSimulator implements AgentSimulatorListener {
   protected abstract GeneralSpaceModel createSpaceModel();
 
   protected abstract GeneralStatistics createStatistic();
+  
+  protected abstract void initGlobalVariables();
 
   /**
    * Usage: it is implemented in the main class of each simulation
