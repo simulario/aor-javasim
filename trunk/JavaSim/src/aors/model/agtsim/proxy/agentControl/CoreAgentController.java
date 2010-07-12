@@ -1,29 +1,52 @@
 package aors.model.agtsim.proxy.agentControl;
 
-import aors.util.Pair;
+import aors.model.agtsim.ReactionRule;
+import aors.model.envevt.PerceptionEvent;
+import aors.model.intevt.InternalEvent;
+import java.util.List;
 import java.util.Map;
-import java.util.Set;
 
 /**
- * 
+ * Interface for the agent controller. Its used by the agent subject (mvc model).
  * @author Thomas Grundmann
  */
 public interface CoreAgentController {
 
-	public void setModuleAgentController(ModuleAgentController moduleAgentController);
+	/**
+	 * Upates the list of perception events.
+	 * @param perceptionEvents
+	 */
+	public void setNewPerceptionEvents(List<PerceptionEvent> perceptionEvents);
 
-	public Long getAgentId();
-	public String getAgentName();
-	public String getAgentType();
+	/**
+	 * Replaces a perception event with its subjective representation.
+	 * @param perceptionEvent
+	 * @param actualPerceptionEvent
+	 */
+	public void replacePerceptionEventWithActualPerceptionEvent(
+		PerceptionEvent perceptionEvent, InternalEvent actualPerceptionEvent);
 
-	public Set<Pair<String, String>> getKeyEvents();
-	public Map<String, Set<Pair<String, String>>> getMouseEvents();
+	/**
+	 * Updates the belief property values.
+	 * @param beliefProperties
+	 */
+	public void setBeliefProperties(Map<String, Object> beliefProperties);
 
-	public void setAgentIsControlled(boolean agentIsControlled);
+	/**
+	 * Checks if a given reaction rule is suspended.
+	 * @param reactionRule
+	 * @return <code>true</code> if the rule is suspended
+	 */
+	public boolean ruleIsSuspended(ReactionRule reactionRule);
 
-	public void processInternalEvent(String eventName, Map<String, String> eventData);
+	/**
+	 * Causes the controller to update the view using its representations for the
+	 * belief properties and perception events.
+	 */
+	public void updateView();
 
-	public Set<String> getUILanguages();
-
-	public String getDefaultUILanguage();
+		/**
+	 * Performs the user's actions.
+	 */
+	public void performUserActions();
 }

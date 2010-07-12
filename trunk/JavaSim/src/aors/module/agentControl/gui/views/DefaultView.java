@@ -1,7 +1,8 @@
 package aors.module.agentControl.gui.views;
 
+import aors.module.agentControl.gui.GUIComponent;
 import java.awt.FlowLayout;
-import javax.swing.JComponent;
+import java.awt.LayoutManager;
 import javax.swing.JLabel;
 import javax.swing.JPanel;
 
@@ -11,17 +12,43 @@ import javax.swing.JPanel;
  */
 public class DefaultView implements View {
   private static final long serialVersionUID = 1L;
-	private JPanel guiComponent;
- 
+
+	/**
+	 * The views gui component.
+	 */
+	private SimplePanel guiComponent;
+
+	/**
+	 * Instantiates the view.
+	 */
   public DefaultView() {
-		guiComponent = new JPanel(new FlowLayout());
-    guiComponent.setAlignmentX(JPanel.CENTER_ALIGNMENT);
-    guiComponent.setAlignmentY(JPanel.CENTER_ALIGNMENT);
-    guiComponent.add(new JLabel("There is no agent that can be controlled!"));
+		this.guiComponent = new SimplePanel(new FlowLayout());
+    this.guiComponent.setAlignmentX(JPanel.CENTER_ALIGNMENT);
+    this.guiComponent.setAlignmentY(JPanel.CENTER_ALIGNMENT);
+    this.guiComponent.add(new JLabel("There is no agent that can be controlled!"));
   }
 
+	/**
+	 * Returns the view's gui component.
+	 * @return the gui component
+	 */
 	@Override
-	public JComponent getGUIComponent() {
+	public GUIComponent getGUIComponent() {
 		return this.guiComponent;
+	}
+
+	/**
+	 * Represents a {@link JPanel} as a {@link GUIComponent}.
+	 */
+	private class SimplePanel extends JPanel implements GUIComponent {
+		private final static long serialVersionUID = -1;
+
+		/**
+		 * Instantiates the panel.
+		 * @param layoutManager
+		 */
+		SimplePanel(LayoutManager layoutManager) {
+			super(layoutManager);
+		}
 	}
 }
