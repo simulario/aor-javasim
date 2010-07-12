@@ -30,8 +30,10 @@ package aors.controller;
 
 import java.lang.reflect.Field;
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
+import java.util.Set;
 import java.util.concurrent.BrokenBarrierException;
 import java.util.concurrent.CyclicBarrier;
 import java.util.concurrent.ExecutorService;
@@ -44,9 +46,11 @@ import aors.GeneralSpaceModel;
 import aors.ScenarioInfos;
 import aors.data.DataBus;
 import aors.data.DataBusInterface;
-import aors.data.java.ObjektDestroyEventListener;
-import aors.data.java.ObjektInitEvent;
-import aors.data.java.ObjektInitEventListener;
+import aors.data.evt.ControllerEvent;
+import aors.data.evt.EventTypeEnum;
+import aors.data.evt.sim.ObjektDestroyEventListener;
+import aors.data.evt.sim.ObjektInitEvent;
+import aors.data.evt.sim.ObjektInitEventListener;
 import aors.logger.model.AgentSimulatorStep;
 import aors.model.agtsim.AgentSubject;
 import aors.model.agtsim.sim.AgentSimulator;
@@ -62,8 +66,6 @@ import aors.model.envsim.EnvironmentSimulator;
 import aors.physim.PhysicsSimulator;
 import aors.statistics.GeneralStatistics;
 import aors.util.JsonData;
-import java.util.HashSet;
-import java.util.Set;
 
 /**
  * AbstractSimulator
@@ -387,10 +389,11 @@ public abstract class AbstractSimulator implements AgentSimulatorListener {
 
     // 02 call in created simulator
     this.createSimModel();
-    
+
     // 03 init the globals
     this.initGlobalVariables();
-    // TODO: fire event here
+    this.dataBus.notifyEvent(new ControllerEvent(
+        EventTypeEnum.GlobalVariableInitialized, this));
 
     this.dataBus.notifySimulationScenario(this.scenarioInfos,
         this.generalSimulationParameters, this.simModel.getModelParamMap());
@@ -404,9 +407,12 @@ public abstract class AbstractSimulator implements AgentSimulatorListener {
     this.envSim = new EnvironmentSimulator(dataBus, physim);
     this.envSim.setEventsList(this.environmentEvents);
     this.envSim.initialize();
-    
+
     // 06 call in created simulator
     this.createEnvironment();
+    this.dataBus.notifyEvent(new ControllerEvent(
+        EventTypeEnum.EnvironmentInitialized, this));
+
     // 07 call in created simulator
     this.setActivityFactory();
 
@@ -484,7 +490,7 @@ public abstract class AbstractSimulator implements AgentSimulatorListener {
   protected abstract GeneralSpaceModel createSpaceModel();
 
   protected abstract GeneralStatistics createStatistic();
-  
+
   protected abstract void initGlobalVariables();
 
   /**

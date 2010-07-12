@@ -10,13 +10,14 @@ import aors.GeneralSpaceModel;
 import aors.ScenarioInfos;
 import aors.controller.InitialState;
 import aors.controller.SimulationDescription;
-import aors.data.java.CollectionEventListener;
-import aors.data.java.CollectionInitEventListener;
-import aors.data.java.ObjektDestroyEventListener;
-import aors.data.java.ObjektInitEventListener;
-import aors.data.java.SimulationEvent;
-import aors.data.java.SimulationEventListener;
-import aors.data.java.SimulationStepEventListener;
+import aors.data.evt.ControllerEventListener;
+import aors.data.evt.sim.CollectionEventListener;
+import aors.data.evt.sim.CollectionInitEventListener;
+import aors.data.evt.sim.ObjektDestroyEventListener;
+import aors.data.evt.sim.ObjektInitEventListener;
+import aors.data.evt.sim.SimulationEvent;
+import aors.data.evt.sim.SimulationEventListener;
+import aors.data.evt.sim.SimulationStepEventListener;
 import aors.logger.model.AgentSimulatorStep;
 import aors.model.envevt.ActivityEndEvent;
 import aors.model.envevt.EnvironmentEvent;
@@ -38,7 +39,8 @@ import aors.util.JsonData;
 
 public interface DataBusInterface extends CollectionEventListener,
     PropertyChangeListener, ObjektInitEventListener,
-    CollectionInitEventListener, ObjektDestroyEventListener {
+    CollectionInitEventListener, ObjektDestroyEventListener,
+    ControllerEventListener {
 
   public int getLoggerType();
 
@@ -176,4 +178,20 @@ public interface DataBusInterface extends CollectionEventListener,
    *          the module event listener object to remove
    */
   public void removeModuleEventListener(ModuleEventListener moduleEventListener);
+
+  /**
+   * Add a new listener for ControllerEvent(s)
+   * 
+   * @param controllerEventListener the listener to add
+   */
+  public void addControllerEventListener(
+      ControllerEventListener controllerEventListener);
+
+  /**
+   * Remove an listener for ControllerEvent(s)
+   * 
+   * @param controllerEventListener the listener to remove
+   */
+  public void removeControllerEventListener(
+      ControllerEventListener controllerEventListener);
 }

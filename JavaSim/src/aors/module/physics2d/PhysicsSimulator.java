@@ -8,9 +8,9 @@ import java.util.List;
 
 import aors.GeneralSpaceModel;
 import aors.data.DataBus;
-import aors.data.java.ObjektDestroyEvent;
-import aors.data.java.ObjektInitEvent;
-import aors.data.java.SimulationStepEvent;
+import aors.data.evt.sim.ObjektDestroyEvent;
+import aors.data.evt.sim.ObjektInitEvent;
+import aors.data.evt.sim.SimulationStepEvent;
 import aors.logger.model.SimulationParameters;
 import aors.model.envevt.EnvironmentEvent;
 import aors.model.envsim.EnvironmentRule;

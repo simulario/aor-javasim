@@ -7,7 +7,7 @@ import java.util.List;
 import java.util.Map;
 
 import aors.controller.InitialState;
-import aors.data.java.SimulationStepEvent;
+import aors.data.evt.sim.SimulationStepEvent;
 import aors.module.statistics.gui.ComponentTranslator;
 import aors.statistics.AbstractStatisticsVariable.AggregFunEnumLit;
 import aors.statistics.AbstractStatisticsVariable.StatVarDataSourceEnumLit;

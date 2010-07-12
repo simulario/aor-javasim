@@ -5,7 +5,7 @@ package aors.space;
 
 import java.beans.PropertyChangeListener;
 
-import aors.data.java.ObjektInitEventListener;
+import aors.data.evt.sim.ObjektInitEventListener;
 
 /**
  * An interface for a 2-dimensional gridCell

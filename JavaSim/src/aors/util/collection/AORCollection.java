@@ -7,11 +7,11 @@ import java.util.ArrayList;
 import java.util.LinkedList;
 import java.util.List;
 
-import aors.data.java.CollectionEvent;
-import aors.data.java.CollectionEventListener;
-import aors.data.java.CollectionInitEvent;
-import aors.data.java.CollectionInitEventListener;
-import aors.data.java.CollectionEvent.CollectionAction;
+import aors.data.evt.sim.CollectionEvent;
+import aors.data.evt.sim.CollectionEventListener;
+import aors.data.evt.sim.CollectionInitEvent;
+import aors.data.evt.sim.CollectionInitEventListener;
+import aors.data.evt.sim.CollectionEvent.CollectionAction;
 import aors.model.Entity;
 import aors.model.envsim.Objekt;
 import aors.util.Random;

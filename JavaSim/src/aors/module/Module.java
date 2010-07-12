@@ -23,10 +23,11 @@ package aors.module;
 
 import java.io.File;
 
-import aors.data.java.ObjektDestroyEventListener;
-import aors.data.java.ObjektInitEventListener;
-import aors.data.java.SimulationEventListener;
-import aors.data.java.SimulationStepEventListener;
+import aors.data.evt.ControllerEventListener;
+import aors.data.evt.sim.ObjektDestroyEventListener;
+import aors.data.evt.sim.ObjektInitEventListener;
+import aors.data.evt.sim.SimulationEventListener;
+import aors.data.evt.sim.SimulationStepEventListener;
 
 /**
  * Module - This interface has to be implemented by any plug-in/module that is
@@ -39,7 +40,7 @@ import aors.data.java.SimulationStepEventListener;
 
 public interface Module extends SimulationStepEventListener,
     SimulationEventListener, ObjektDestroyEventListener,
-    ObjektInitEventListener {
+    ObjektInitEventListener, ControllerEventListener {
 
   /** the path to the module temporarily directory */
   public static final String TEMP_DIR = System.getProperty("java.io.tmpdir")

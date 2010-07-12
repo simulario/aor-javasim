@@ -2,10 +2,11 @@ package aors.module.agentControl;
 
 import aors.controller.InitialState;
 import aors.controller.SimulationDescription;
-import aors.data.java.ObjektDestroyEvent;
-import aors.data.java.ObjektInitEvent;
-import aors.data.java.SimulationEvent;
-import aors.data.java.SimulationStepEvent;
+import aors.data.evt.ControllerEvent;
+import aors.data.evt.sim.ObjektDestroyEvent;
+import aors.data.evt.sim.ObjektInitEvent;
+import aors.data.evt.sim.SimulationEvent;
+import aors.data.evt.sim.SimulationStepEvent;
 import aors.model.agtsim.proxy.agentControl.AgentControlBroker;
 import aors.model.agtsim.proxy.agentControl.AgentControlListener;
 import aors.model.agtsim.proxy.agentControl.CoreAgentController;
@@ -228,4 +229,10 @@ public class ModuleController implements Module, AgentControlListener {
 
 	@Override
 	public void simulationStepEnd(SimulationStepEvent simulationStepEvent) {}
+
+  @Override
+  public void notifyEvent(ControllerEvent event) {
+    // TODO Auto-generated method stub
+    
+  }
 }

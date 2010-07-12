@@ -32,8 +32,8 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Map;
 
-import aors.data.java.ObjektInitEvent;
-import aors.data.java.ObjektInitEventListener;
+import aors.data.evt.sim.ObjektInitEvent;
+import aors.data.evt.sim.ObjektInitEventListener;
 import aors.model.envsim.Physical;
 import aors.space.AbstractCell;
 import aors.space.Space;

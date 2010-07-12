@@ -12,18 +12,20 @@ import aors.GeneralSpaceModel;
 import aors.ScenarioInfos;
 import aors.controller.InitialState;
 import aors.controller.SimulationDescription;
-import aors.data.java.CollectionEvent;
-import aors.data.java.CollectionEventListener;
-import aors.data.java.CollectionInitEvent;
-import aors.data.java.CollectionInitEventListener;
-import aors.data.java.ObjektDestroyEvent;
-import aors.data.java.ObjektDestroyEventListener;
-import aors.data.java.ObjektInitEvent;
-import aors.data.java.ObjektInitEventListener;
-import aors.data.java.SimulationEvent;
-import aors.data.java.SimulationEventListener;
-import aors.data.java.SimulationStepEvent;
-import aors.data.java.SimulationStepEventListener;
+import aors.data.evt.ControllerEvent;
+import aors.data.evt.ControllerEventListener;
+import aors.data.evt.sim.CollectionEvent;
+import aors.data.evt.sim.CollectionEventListener;
+import aors.data.evt.sim.CollectionInitEvent;
+import aors.data.evt.sim.CollectionInitEventListener;
+import aors.data.evt.sim.ObjektDestroyEvent;
+import aors.data.evt.sim.ObjektDestroyEventListener;
+import aors.data.evt.sim.ObjektInitEvent;
+import aors.data.evt.sim.ObjektInitEventListener;
+import aors.data.evt.sim.SimulationEvent;
+import aors.data.evt.sim.SimulationEventListener;
+import aors.data.evt.sim.SimulationStepEvent;
+import aors.data.evt.sim.SimulationStepEventListener;
 import aors.data.logger.Logger;
 import aors.data.logger.MemoryLogger;
 import aors.data.logger.SimObserver;
@@ -83,6 +85,8 @@ public class DataBus implements DataBusInterface {
   private List<ObjektDestroyEventListener> objDestroyListener = new ArrayList<ObjektDestroyEventListener>();
 
   private List<ModuleEventListener> moduleEventListeners = new ArrayList<ModuleEventListener>();
+
+  private List<ControllerEventListener> controllerEventListeners = new ArrayList<ControllerEventListener>();
 
   private boolean debug = false;
 
@@ -308,6 +312,18 @@ public class DataBus implements DataBusInterface {
   @Override
   public void removeModuleEventListener(ModuleEventListener moduleEventListener) {
     this.moduleEventListeners.remove(moduleEventListener);
+  }
+
+  @Override
+  public void addControllerEventListener(
+      ControllerEventListener controllerEventListener) {
+    this.controllerEventListeners.add(controllerEventListener);
+  }
+
+  @Override
+  public void removeControllerEventListener(
+      ControllerEventListener controllerEventListener) {
+    this.controllerEventListeners.remove(controllerEventListener);
   }
 
   /**
@@ -662,5 +678,13 @@ public class DataBus implements DataBusInterface {
           .simulationDomOnlyInitialization(simulationDescription);
     }
 
+  }
+
+  @Override
+  public void notifyEvent(ControllerEvent event) {
+    // announce all listeners that a ControllerEvent occurred
+    for (ControllerEventListener controllerEventListener : this.controllerEventListeners) {
+      controllerEventListener.notifyEvent(event);
+    }
   }
 }
