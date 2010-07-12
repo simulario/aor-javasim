@@ -6,7 +6,7 @@
   scenarioTitle="A truck and two cars moving on a circular track with one speed
   limit sign for all and one speed limit sign only for trucks">
 
-  <SimulationParameters simulationSteps="30000" stepDuration="100" timeUnit="ms" stepTimeDelay="30"/>
+  <SimulationParameters simulationSteps="30000" stepDuration="100" timeUnit="ms" stepTimeDelay="3000"/>
 
   <SimulationModel modelName="CarsAndTrucksOnCircularTrack" modelTitle="Cars and trucks moving on a circular track with uniform velocity" autoKinematics="true">
     <documentation>
@@ -26,7 +26,7 @@
     <EntityTypes>
 
       <ActionEventType name="Accelerate">
-        <Attribute name="velocity" type="Integer"/>        
+        <Attribute name="velocity" type="Integer"/>
       </ActionEventType>
 
       <!-- Vehicle speed up event -->
@@ -66,6 +66,12 @@
               vehicle.getMyVelocity() < vehicle.getSpeedLimit()
             ]]>
           </IF>
+          <IF language="JavaScript">
+            <![CDATA[
+              this.vehicle.getSpeedLimit() == 0 ||
+              this.vehicle.getMyVelocity() < this.vehicle.getSpeedLimit()
+            ]]>
+          </IF>
           <THEN>
             <SCHEDULE-EVT>
               <ActionEventExpr actionEventType="SpeedUp">
@@ -88,6 +94,7 @@
             <UPDATE-AGT>
               <SelfBeliefSlot property="speedLimit">
                 <ValueExpr language="Java">((SpeedLimitSign)e.getPerceivedPhysicalObject()).getAdmMaxVelocity()</ValueExpr>
+                <ValueExpr language="JavaScript">this.e.getPerceivedPhysicalObject().getAdmMaxVelocity()</ValueExpr>
               </SelfBeliefSlot>
             </UPDATE-AGT>
           </DO>
@@ -101,6 +108,12 @@
               vehicle.getMyVelocity() > vehicle.getSpeedLimit()
             ]]>
           </IF>
+          <IF language="JavaScript">
+            <![CDATA[
+              this.vehicle.getSpeedLimit() > 0 &&
+              this.vehicle.getMyVelocity() > this.vehicle.getSpeedLimit()
+            ]]>
+          </IF>
           <THEN>
             <SCHEDULE-EVT>
               <ActionEventExpr actionEventType="SlowDown">
@@ -108,6 +121,11 @@
                   <ValueExpr language="Java">
                     <![CDATA[
                       vehicle.getMyVelocity() - vehicle.getSpeedLimit()
+                    ]]>                    
+                  </ValueExpr>
+                  <ValueExpr language="JavaScript">
+                    <![CDATA[
+                      this.vehicle.getMyVelocity() - this.vehicle.getSpeedLimit()
                     ]]>                    
                   </ValueExpr>
                 </Slot>
@@ -128,17 +146,25 @@
             </UPDATE-AGT>
           </DO>
         </ReactionRule>
+        
+        <ActionRule actionEventType="Accelerate"/>
                 
-        <ActionRule actionEventType="SlowDown" eventVariable="e" agentVariable="vehicle" inheritanceMethod="disjunctive">
+        <ActionRule actionEventType="SlowDown" eventVariable="e" agentVariable="vehicle" inheritanceMethod="conjunctive">
           <IF language="Java">
             <![CDATA[
               (vehicle.getMyVelocity() - e.getVelocity()) >= 0
+            ]]>
+          </IF>
+          <IF language="JavaScript">
+            <![CDATA[
+              (this.vehicle.getMyVelocity() - this.e.getVelocity()) >= 0
             ]]>
           </IF>
           <THEN>
             <UPDATE-AGT>
               <SelfBeliefSlot property="myVelocity">
                 <ValueExpr language="Java">vehicle.getMyVelocity() - e.getVelocity()</ValueExpr>
+                <ValueExpr language="JavaScript">this.vehicle.getMyVelocity() - this.e.getVelocity()</ValueExpr>
               </SelfBeliefSlot>
             </UPDATE-AGT>
           </THEN>
@@ -146,26 +172,31 @@
             <UPDATE-EVT>
               <Slot property="velocity">
                 <ValueExpr language="Java">vehicle.getMyVelocity()</ValueExpr>
+                <ValueExpr language="JavaScript">this.vehicle.getMyVelocity()</ValueExpr>
               </Slot>
             </UPDATE-EVT>
             <UPDATE-AGT>
-              <SelfBeliefSlot property="myVelocity">
-                <ValueExpr language="Java">0</ValueExpr>
-              </SelfBeliefSlot>
+              <SelfBeliefSlot property="myVelocity" value="0"/>
             </UPDATE-AGT>
           </ELSE>
         </ActionRule>
         
-        <ActionRule actionEventType="SpeedUp" eventVariable="e" agentVariable="vehicle" inheritanceMethod="disjunctive">
+        <ActionRule actionEventType="SpeedUp" eventVariable="e" agentVariable="vehicle" inheritanceMethod="conjunctive">
           <IF language="Java">
             <![CDATA[
               (vehicle.getMyVelocity() + e.getVelocity()) <= vehicle.getMaxVelocity()
+            ]]>
+          </IF>
+          <IF language="JavaScript">
+            <![CDATA[
+              (this.vehicle.getMyVelocity() + this.e.getVelocity()) <= this.vehicle.getMaxVelocity()
             ]]>
           </IF>
           <THEN>
             <UPDATE-AGT>
               <SelfBeliefSlot property="myVelocity">
                 <ValueExpr language="Java">vehicle.getMyVelocity() + e.getVelocity()</ValueExpr>
+                <ValueExpr language="JavaScript">this.vehicle.getMyVelocity() + this.e.getVelocity()</ValueExpr>
               </SelfBeliefSlot>
             </UPDATE-AGT>
           </THEN>
@@ -173,11 +204,13 @@
             <UPDATE-EVT>
               <Slot property="velocity">
                 <ValueExpr language="Java">vehicle.getMaxVelocity() - vehicle.getMyVelocity()</ValueExpr>
+                <ValueExpr language="JavaScript">this.vehicle.getMaxVelocity() - this.vehicle.getMyVelocity()</ValueExpr>
               </Slot>
             </UPDATE-EVT>
             <UPDATE-AGT>
               <SelfBeliefSlot property="myVelocity">
                 <ValueExpr language="Java">vehicle.getMaxVelocity()</ValueExpr>
+                <ValueExpr language="JavaScript">this.vehicle.getMaxVelocity()</ValueExpr>
               </SelfBeliefSlot>
             </UPDATE-AGT>
           </ELSE>
@@ -209,6 +242,7 @@
             <UPDATE-AGT>
               <SelfBeliefSlot property="speedLimit">
                 <ValueExpr language="Java">((TruckSpeedLimitSign)e.getPerceivedPhysicalObject()).getAdmMaxVelocity()</ValueExpr>
+                <ValueExpr language="JavaScript">this.e.getPerceivedPhysicalObject().getAdmMaxVelocity()</ValueExpr>
               </SelfBeliefSlot>
             </UPDATE-AGT>
           </DO>
@@ -228,12 +262,14 @@
         <WHEN eventType="SlowDown" eventVariable="e"/>
         <FOR objectType="Vehicle" objectVariable="vehicle">
           <ObjectRef language="Java">e.getActor()</ObjectRef>
+          <ObjectRef language="JavaScript">this.e.getActor()</ObjectRef>
         </FOR>
         <DO>
           <UPDATE-ENV>
             <UpdateObject objectVariable="vehicle">
               <Slot property="vx">
                 <ValueExpr language="Java">vehicle.getVx() - e.getVelocity()</ValueExpr>
+                <ValueExpr language="JavaScript">this.vehicle.getVx() - this.e.getVelocity()</ValueExpr>
               </Slot>
             </UpdateObject>
           </UPDATE-ENV>
@@ -250,12 +286,14 @@
         <WHEN eventType="SpeedUp" eventVariable="e"/>
         <FOR objectType="Vehicle" objectVariable="vehicle">
           <ObjectRef language="Java">e.getActor()</ObjectRef>
+          <ObjectRef language="JavaScript">this.e.getActor()</ObjectRef>
         </FOR>
         <DO>
           <UPDATE-ENV>
             <UpdateObject objectVariable="vehicle">
               <Slot property="vx">
                 <ValueExpr language="Java">vehicle.getVx() + e.getVelocity()</ValueExpr>
+                <ValueExpr language="JavaScript">this.vehicle.getVx() + this.e.getVelocity()</ValueExpr>
               </Slot>
             </UpdateObject>
           </UPDATE-ENV>
@@ -350,8 +388,8 @@
         </EventAppearance>
       </Views>
       <AgentControlUI>
-        <ControllableAgentType type="Car" controllableAgents="1 4 5 6 7" suspendRules="SpeedUp_Rule SlowDown_Rule">
-          <ControlInterface>
+        <ControllableAgentType type="Vehicle" controllableAgents="1 3" suspendRules="SpeedUp_Rule SlowDown_Rule">
+          <GUI>
             <Style type="text/css">
               <![CDATA[
                Structure {
@@ -469,7 +507,7 @@
               <ul>
                 <li>
                   <div>
-                    <label>Geschwindigkeit ändern um</label>
+                    <label>Geschwindigkeit aendern um</label>
                     <slider property="__speed" minValue="0" maxValue="10" initialValue="5" type="Integer"/>
                     <textfield property="__speed" initialValue="5" type="Integer"  name="speed"/>
                   </div>
@@ -480,35 +518,39 @@
                 </li>
               </ul>
             </Structure>
-          </ControlInterface>
-          <ControlRules>
-            <UserInterfaceEventListener name="SpeedUp" interfaceVariable="gui">
-              <WHEN>
-                <KeyboardEvent keyIdentifier="Up"/>
-                <MouseEvent mouseEventType="click" targetName="SpeedUp"/>
-              </WHEN>
-              <DO>
-                <SCHEDULE-EVT actionType="SpeedUp">
+          </GUI>
+          <UserInterfaceEventListener name="SpeedUp" guiVariable="gui">
+            <WHEN>
+              <KeyboardEvent keyIdentifier="Up"/>
+              <MouseEvent mouseEventType="click" targetName="SpeedUp"/>
+            </WHEN>
+            <DO>
+              <SCHEDULE-EVT>
+                <ActionEventExpr actionEventType="SpeedUp">
                   <Slot property="velocity">
                     <ValueExpr language="Java">gui.getSpeed()</ValueExpr>
+                    <ValueExpr language="JavaScript">this.gui.getSpeed()</ValueExpr>
                   </Slot>
-                </SCHEDULE-EVT>
-              </DO>
-            </UserInterfaceEventListener>
-            <UserInterfaceEventListener name="SlowDown" interfaceVariable="gui" actionRuleEvaluation="until-1st-fail">
-              <WHEN>
-                <KeyboardEvent keyIdentifier="Down"/>
-                <MouseEvent mouseEventType="click" targetName="SlowDown"/>
-              </WHEN>
-              <DO>
-                <SCHEDULE-EVT actionType="SlowDown">
+                </ActionEventExpr>
+              </SCHEDULE-EVT>
+            </DO>
+          </UserInterfaceEventListener>
+          <UserInterfaceEventListener name="SlowDown" guiVariable="gui" actionRuleEvaluation="until-1st-fail">
+            <WHEN>
+              <KeyboardEvent keyIdentifier="Down"/>
+              <MouseEvent mouseEventType="click" targetName="SlowDown"/>
+            </WHEN>
+            <DO>
+              <SCHEDULE-EVT>
+                <ActionEventExpr actionEventType="SlowDown">
                   <Slot property="velocity">
                     <ValueExpr language="Java">gui.getSpeed()</ValueExpr>
+                    <ValueExpr language="JavaScript">this.gui.getSpeed()</ValueExpr>
                   </Slot>
-                </SCHEDULE-EVT>
-              </DO>
-            </UserInterfaceEventListener>
-          </ControlRules>
+                </ActionEventExpr>
+              </SCHEDULE-EVT>
+            </DO>
+          </UserInterfaceEventListener>
         </ControllableAgentType>
       </AgentControlUI>
     </AnimationUI>
