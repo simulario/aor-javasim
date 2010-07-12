@@ -279,6 +279,9 @@ public abstract class AbstractSimulator implements AgentSimulatorListener {
    */
   private int threadPoolSize = 0;
 
+	/**
+	 * Set of controlled agent simulators.
+	 */
   private Set<AgentSimulator> controlledAgentSimulators;
 
   /**

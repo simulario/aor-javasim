@@ -51,9 +51,8 @@ import aors.model.agtsim.beliefs.ERDFBeliefEntityManagerImpl;
 import aors.model.agtsim.jaxb.JaxbLogGenerator;
 import aors.model.agtsim.json.JsonLogGenerator;
 import aors.model.agtsim.proxy.agentControl.AgentControlBroker;
+import aors.model.agtsim.proxy.agentControl.AgentControlInitializer;
 import aors.model.agtsim.proxy.agentControl.CoreAgentController;
-import aors.model.agtsim.proxy.agentControl.ModuleAgentController;
-import aors.util.Pair;
 import aors.model.agtsim.sim.AgentSimulator;
 import aors.model.envevt.ActionEvent;
 import aors.model.envevt.InMessageEvent;
@@ -64,9 +63,6 @@ import aors.model.intevt.PeriodicTimeEvent;
 import aors.query.sparql.QueryEngine;
 import aors.util.Constants;
 import aors.util.JsonData;
-import java.util.Arrays;
-import java.util.HashSet;
-import java.util.Set;
 
 /**
  * AgentSubject
@@ -148,11 +144,22 @@ public abstract class AgentSubject extends Entity implements Rollbackable {
    */
   private List<ActionEvent> resultingActionEvents;
 
-  private AgentController controller;
-
+	/**
+	 * The subject's agent simulator
+	 */
   private AgentSimulator simulator;
 
-  /**
+	/**
+	 * The core agent controller that belongs to this agent subject.
+	 */
+  private CoreAgentController coreAgentController;
+
+	/**
+	 * The agent control initializer for this agent subject.
+	 */
+	private AgentControlInitializer agentControlInitializer;
+
+	/**
    * 
    * Comments: Create a new {@code AgentSubject}. This constructor is to be
    * called ONLY by the {@code SimulationEngine} Usage:
@@ -170,7 +177,8 @@ public abstract class AgentSubject extends Entity implements Rollbackable {
     if ("".equals(name)) {
       this.setName(getClass().getSimpleName() + "_" + id);
     }
-    this.controller = null;
+    this.coreAgentController = null;
+		this.agentControlInitializer = null;
   }
 
   /**
@@ -184,7 +192,8 @@ public abstract class AgentSubject extends Entity implements Rollbackable {
     if ("".equals(getName())) {
       this.setName(getClass().getSimpleName() + "_" + id);
     }
-    this.controller = null;
+    this.coreAgentController = null;
+		this.agentControlInitializer = null;
   }
 
   public boolean isLogGenerationEnabled() {
@@ -1074,8 +1083,8 @@ public abstract class AgentSubject extends Entity implements Rollbackable {
    *          New perception events
    */
   public void setNewEvents(List<PerceptionEvent> perceptionEvents) {
-    if (this.controller != null) {
-      this.controller.setNewPerceptionEvents(perceptionEvents);
+    if (this.coreAgentController != null) {
+      this.coreAgentController.setNewPerceptionEvents(perceptionEvents);
     }
     this.perceptionEvents = perceptionEvents;
   } // setNewEvents
@@ -1126,6 +1135,9 @@ public abstract class AgentSubject extends Entity implements Rollbackable {
 
     this.internalEvents.addAll(this.newInternalEvents);
     this.newInternalEvents.clear();
+		if(this.coreAgentController != null) {
+			this.coreAgentController.setBeliefProperties(this.getBeliefProperties());
+		}
   } // run
 
   /**
@@ -1191,6 +1203,9 @@ public abstract class AgentSubject extends Entity implements Rollbackable {
 
         if (event != null) {
           this.internalEvents.add(event);
+					if(this.coreAgentController != null) {
+						this.coreAgentController.replacePerceptionEventWithActualPerceptionEvent(perceptionEvent, event);
+					}
         }
         isProceeded = true;
       }
@@ -1367,7 +1382,7 @@ public abstract class AgentSubject extends Entity implements Rollbackable {
     List<ActionEvent> actions = new ArrayList<ActionEvent>();
 
     // executes the rule if and only if the rule is not suspended
-    if (this.controller == null || !this.controller.ruleIsSuspended(rule)) {
+    if (this.coreAgentController == null || !this.coreAgentController.ruleIsSuspended(rule)) {
 
       // execute the rule - conditions are checked inside the rule
       rule.execute();
@@ -1461,228 +1476,146 @@ public abstract class AgentSubject extends Entity implements Rollbackable {
     this.simulator = simulator;
   }
 
-  public AgentController getAgentController() {
-    return this.controller;
+	/**
+	 * Returns the subject's agent controller.
+	 * @return the agent controller
+	 */
+  public CoreAgentController getCoreAgentController() {
+    return this.coreAgentController;
   }
+	
+	/**
+	 * Sets the subject's control initializer and registers it with the agent
+	 * control broker. If another initializer was set before, it will be
+	 * unregistered from the broker previously.
+	 * @param agentControlInitializer
+	 */
+	public void setAgentControlInitializer(AgentControlInitializer
+		agentControlInitializer) {
+		if(agentControlInitializer.agentIsControllable()) {
+			if(this.agentControlInitializer != null) {
+				AgentControlBroker.getInstance().unregisterAgentControlInitializer(
+					this.agentControlInitializer);
+			}
+			this.agentControlInitializer = agentControlInitializer;
+			AgentControlBroker.getInstance().registerAgentControInitializer(
+				this.agentControlInitializer);
+		}
+	}
 
-  protected void setController(AgentController controller) {
-    this.controller = controller;
-  }
+	/**
+	 * Returns the subject's control initializer.
+	 * @return the agent control initializer
+	 */
+	public AgentControlInitializer getAgentControlInitializer() {
+		return this.agentControlInitializer;
+	}
 
-  public Map<String, Object> getBeliefProperties() {
+	/**
+	 * Returns a map of the subjects beliefs.
+	 * @return the map
+	 */
+  protected Map<String, Object> getBeliefProperties() {
     return new HashMap<String, Object>();
   }
 
+	/**
+	 * Returns <code>true</code> if the agent is controllable.
+	 * @return <code>true</code> if the agent is controllable
+	 */
   public boolean isControllable() {
-    return this.controller != null;
+    return this.coreAgentController != null;
   }
 
+	/**
+	 * Returns <code>true</code> if the agent is controlled.
+	 * @return <code>true</code> if the agent is controlled
+	 */
   public boolean isControlled() {
-    return this.isControllable() && this.controller.agentIsControlled();
+    return this.isControllable() && this.coreAgentController != null;
   }
-
   
 	/**
-	 * This class represents the core part of the agent controller. To have access
-	 * to some private methods and field of the agent subject it is designed as an
-	 * inner class of agent subject.
+	 * This facade provides access to teh agent subject's (private)
+	 * functionalities for the core agent controller.
 	 * @author Thomas Grundmann
 	 */
-	public static abstract class AgentController implements CoreAgentController {
+	public class AgentSubjectFacade {
 
 		/**
-		 * Reference to its enclosing agent subject
-		 */
-    private AgentSubject agentSubject;
-
-		/**
-		 * Reference to its counterpart in the agent control module.
-		 */
-		private ModuleAgentController moduleAgentController;
-
-		/**
-		 * Indicates if the agent that belogs to this controller is controlled by an
+		 * Indicates if the agent that belogs to this subject is controlled by an
 		 * user.
 		 */
     protected boolean agentIsControlled;
-
-		/**
-		 * Set of rule name for the rules that are suspended if the agent is
-		 * controlled by an user.
-		 */
-		protected Set<String> suspendedRules;
-
-		/**
-		 * Set of key events on that the agent control gui reacts.
-		 * This set is filled by the concrete agent controller that is generated by
-		 * the code generation.
-		 */
-		private Set<Pair<String, String>> keyEvents;
-
-		/**
-		 * Set of mouse events on that the agent control gui reacts.
-		 * This set is filled by the concrete agent controller that is generated by
-		 * the code generation.
-		 */
-		private Map<String, Set<Pair<String, String>>> mouseEvents;
-
-		private Set<String> UILanguages;
-
-		private String defaultUILanguage;
 
 		/*******************/
 		/*** constructor ***/
 		/*******************/
 
+    public AgentSubjectFacade() {}
+
 		/**
-		 * Instantiates the abstract part of the core side agent conroller.
-		 * When this part is instantiated the {@link AgentControlBroker} will notify
-		 * the agent control module about this new controller if and only if the
-		 * agent's id is contains in the array of controllable agents or if the
-		 * array is empty.
-		 * @param agentSubject
-		 * @param controllableAgents
+		 * Returns the agent subject's id.
+		 * @return the id
 		 */
-    protected AgentController(AgentSubject agentSubject,
-			Long[] controllableAgents) {
-      this.agentSubject = agentSubject;
-      this.moduleAgentController = null;
-			this.agentIsControlled = false;
-			this.suspendedRules = new HashSet<String>();
-			this.keyEvents = new HashSet<Pair<String, String>>();
-			this.mouseEvents = new HashMap<String, Set<Pair<String, String>>>();
-			this.UILanguages = new HashSet<String>();
-			this.defaultUILanguage = null;
-			if((controllableAgents == null) || (controllableAgents.length == 0) ||
-				(Arrays.binarySearch(controllableAgents, this.getAgentId()) >= 0)) {
-				AgentControlBroker.getInstance().agentControllerInitialized(this);
-			}
-    }
-
-		/***********************************************************/
-		/*** implementation of the CoreAgentController interface ***/
-		/***********************************************************/
-
-		@Override
-		public void setModuleAgentController(ModuleAgentController moduleAgentController) {
-			this.moduleAgentController = moduleAgentController;
-		}
-
-		@Override
 		public final Long getAgentId() {
-			if(this.agentSubject != null) {
-				return this.agentSubject.getId();
-			}
-			return null;
+			return AgentSubject.this.getId();
 		}
 
-		@Override
+		/**
+		 * Returns the agent subject's name.
+		 * @return the name
+		 */
 		public final String getAgentName() {
-			if(this.agentSubject != null) {
-				return this.agentSubject.getName();
-			}
-			return null;
+			return AgentSubject.this.getName();
 		}
 
-		@Override
+		/**
+		 * Returns the agent subject's type.
+		 * @return the type
+		 */
 		public final String getAgentType() {
-			if(this.agentSubject != null) {
-				return this.agentSubject.getType();
-			}
-			return null;
+			return AgentSubject.this.getType();
 		}
 
-		@Override
-		public Set<Pair<String, String>> getKeyEvents() {
-			return this.keyEvents;
-		}
+		/**
+		 * Sets the agent's controlled state.
+		 * @param agentIsControlled
+		 */
+    public void setAgentIsControlled() {
+			AgentSubject.this.simulator.setAgentIsControlled();
+	  }
 
-		@Override
-		public Map<String, Set<Pair<String, String>>> getMouseEvents() {
-			return this.mouseEvents;
-		}
-
-		@Override
-    public void setAgentIsControlled(boolean agentIsControlled) {
-			this.agentIsControlled = agentIsControlled;
-			if (this.agentSubject.simulator != null) {
-				this.agentSubject.simulator.setAgentIsControlled();
-			}
-    }
-
-		@Override
-		public void processInternalEvent(String eventName, Map<String, String> eventData) {
-      this.agentSubject.processInternalEvent(this.createEvent(eventName, eventData));
-    }
-
-		/*****************************************************/
-		/*** methods that are just used by core components ***/
-		/*****************************************************/
-
+		/**
+		 * Checks if the agent is controlled.
+		 * @return <code>true</code> if the agent is controlled
+		 */
 		public boolean agentIsControlled() {
       return this.agentIsControlled;
     }
 
-		public boolean ruleIsSuspended(ReactionRule reactionRule) {
-			return this.agentIsControlled && this.suspendedRules.contains(
-				reactionRule.getName());
-		}
-
-		public void setNewPerceptionEvents(List<PerceptionEvent> perceptionEvents) {
-			if(this.moduleAgentController != null) {
-				this.moduleAgentController.setNewPerceptionEvents(perceptionEvents);
-			}
-		}
-
-    public void performUserActions() {
-			if(this.moduleAgentController != null) {
-				this.moduleAgentController.performUserActions();
-			}
-		}
-
-		public void updateView() {
-			if(this.moduleAgentController != null) {
-				this.moduleAgentController.updateView(this.agentSubject.getBeliefProperties());
-			}
-		}
-
-		@Override
-		public Set<String> getUILanguages() {
-			return this.UILanguages;
-		}
-
-		@Override
-		public String getDefaultUILanguage() {
-			return this.defaultUILanguage;
-		}
-
-		/************************************************************************/
-		/*** methods that are just used by the concrete core agent controller ***/
-		/************************************************************************/
-
-		protected long getCurrentSimulationStep() {
-      return this.agentSubject.currentSimulationStep;
+		/**
+		 * Returns the current simulation step.
+		 * @return the current simulation step
+		 */
+		public long getCurrentSimulationStep() {
+      return AgentSubject.this.currentSimulationStep;
     }
 
-		protected void addKeyEvent(String keyName, String action) {
-			this.keyEvents.add(new Pair<String, String>(keyName, action));
+		/**
+		 * Processes an internal event.
+		 * @param internalEvent
+		 */
+		public void processInternalEvent(InternalEvent internalEvent) {
+			AgentSubject.this.processInternalEvent(internalEvent);
 		}
 
-		protected void addMouseEvent(String sender, String eventType, String action) {
-			if(!this.mouseEvents.containsKey(sender)) {
-				this.mouseEvents.put(sender, new HashSet<Pair<String, String>>());
-			}
-			this.mouseEvents.get(sender).add(new Pair<String, String>(eventType, action));
-		}
-
-		protected abstract InternalEvent createEvent(	String eventName,
-			Map<String, String> eventData);
-
-		protected void addUILanguage(String language) {
-			this.UILanguages.add(language);
-			if(this.defaultUILanguage == null) {
-				this.defaultUILanguage = language;
-			}
+		/**
+		 * Sets the subject's core agent controller.
+		 * @param coreAgentController
+		 */
+		public void setCoreAgentController(CoreAgentController coreAgentController) {
+			AgentSubject.this.coreAgentController = coreAgentController;
 		}
 	}
 }

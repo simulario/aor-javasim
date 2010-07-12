@@ -1,16 +1,19 @@
 package aors.module.agentControl.gui;
 
-import aors.model.agtsim.proxy.agentControl.CoreAgentController;
+import aors.model.agtsim.proxy.agentControl.AgentControlInitializer;
 import aors.module.GUIModule;
 import aors.module.Module;
-import aors.module.agentControl.AgentController;
 import aors.module.agentControl.ModuleController;
+import aors.module.agentControl.controller.AgentControllerFactory;
+import aors.module.agentControl.controller.SimpleAgentControllerFactory;
+import aors.module.agentControl.gui.renderer.RendererFactory;
+import aors.module.agentControl.gui.renderer.flyingsaucer.FlyingSaucerRendererFactory;
 import aors.module.agentControl.gui.views.ControlView;
 import aors.module.agentControl.gui.views.DefaultView;
 import aors.module.agentControl.gui.views.SelectionView;
 import aors.module.agentControl.gui.views.View;
-import java.io.FileNotFoundException;
 import java.util.Map;
+import javax.swing.JComponent;
 import javax.swing.JScrollPane;
 
 /**
@@ -48,11 +51,19 @@ public class GUIController extends JScrollPane implements GUIModule {
 	private ControlView controlView;
 
 	/**
-	 * The agent controller for the controlled agent.
+	 * Then controll view's language
 	 */
-	private AgentController controlledAgentController;
-
 	private String controlViewLanguage;
+
+	/**
+	 * The agent control initializer for the controlled agent.
+	 */
+	private AgentControlInitializer controlledAgentControlInitializer;
+
+	/**
+	 * The factory to create a controller for the controlled agent.
+	 */
+	private AgentControllerFactory agentControllerFactory;
 
 	/*******************************************************/
 	/*** Constructor and methods inherite from GUIModule ***/
@@ -65,11 +76,17 @@ public class GUIController extends JScrollPane implements GUIModule {
 	public GUIController(ModuleController moduleController) {
     super();
 		this.moduleController = moduleController;
-		this.setHorizontalScrollBarPolicy(HORIZONTAL_SCROLLBAR_AS_NEEDED);
-    this.setVerticalScrollBarPolicy(VERTICAL_SCROLLBAR_AS_NEEDED);
+		this.agentControllerFactory = new SimpleAgentControllerFactory();
+		this.setHorizontalScrollBarPolicy(JScrollPane.HORIZONTAL_SCROLLBAR_AS_NEEDED);
+    this.setVerticalScrollBarPolicy(JScrollPane.VERTICAL_SCROLLBAR_AS_NEEDED);
+		RendererFactory.setInstance(new FlyingSaucerRendererFactory());
 		reset();
 	}
 
+	/**
+	 * Return the module controller.
+	 * @return the module controller
+	 */
   @Override
   public Module getBaseComponent() {
     return this.moduleController;
@@ -84,7 +101,7 @@ public class GUIController extends JScrollPane implements GUIModule {
 	 * controller.
 	 */
 	public void reset() {
-		this.controlledAgentController = null;
+		this.controlledAgentControlInitializer = null;
 
 		this.defaultView = new DefaultView();
 		this.selectionView = null;
@@ -110,7 +127,7 @@ public class GUIController extends JScrollPane implements GUIModule {
 		}
 		
 		// if there is no controlled agent, show selection view
-		if(this.controlledAgentController == null) {
+		if(this.controlledAgentControlInitializer == null) {
 			this.showSelectionView();
 			return;
 		}
@@ -137,23 +154,23 @@ public class GUIController extends JScrollPane implements GUIModule {
 
 		// creates the new selection view
 		if(this.moduleController != null) {
-			Map<Long, CoreAgentController> agentControllers =
-				moduleController.getAgentControllers();
-			if(agentControllers != null && !agentControllers.isEmpty()) {
-				this.selectionView = new SelectionView(this, agentControllers);
+			Map<Long, AgentControlInitializer> agentControlInitializers =
+				this.moduleController.getAgentControlInitializers();
+			if(agentControlInitializers != null && !agentControlInitializers.isEmpty()) {
+				this.selectionView = new SelectionView(this, agentControlInitializers);
 			}
 		}
 
 		// if the selection view is available, set it as the current one
 		if(this.selectionView != null) {
-			this.currentView = selectionView;
+			this.currentView = this.selectionView;
 			this.setViewportView();
 			return;
 		}
 
 		//if the current view is null, set the default view
 		if(this.currentView == null) {
-			showDefaultView();
+			this.showDefaultView();
 			return;
 		}
 
@@ -170,11 +187,10 @@ public class GUIController extends JScrollPane implements GUIModule {
 
 		// creates a new control view if necessary
 		if(this.controlView == null) {
-			try {
-				this.controlView = new ControlView(this.controlledAgentController,
-					this.moduleController.getProjectPath(), this.controlViewLanguage);
-			} catch(FileNotFoundException e) {
-			}
+			this.controlView = new ControlView(this.controlledAgentControlInitializer,
+				this.agentControllerFactory.createController(
+				this.controlledAgentControlInitializer),
+				this.moduleController.getProjectPath(), this.controlViewLanguage);
 		}
 
 		// if the control view is available, show it
@@ -186,7 +202,7 @@ public class GUIController extends JScrollPane implements GUIModule {
 
 		//if the current view is null, set the default view
 		if(this.currentView == null) {
-			showDefaultView();
+			this.showDefaultView();
 			return;
 		}
 
@@ -198,7 +214,9 @@ public class GUIController extends JScrollPane implements GUIModule {
 	 * will be shown.
 	 */
 	private void setViewportView() {
-		this.setViewportView(currentView.getGUIComponent());
+		if(this.currentView.getGUIComponent() instanceof JComponent) {
+			this.setViewportView((JComponent)this.currentView.getGUIComponent());
+		}
 	}
 
 	/**
@@ -219,10 +237,10 @@ public class GUIController extends JScrollPane implements GUIModule {
 	 */
 	public void setControlledAgentController(long id, String lang) {
 		if(this.moduleController != null) {
-			Map<Long, CoreAgentController> agentControllers =	this.moduleController.
-				getAgentControllers();
-			if(agentControllers != null) {
-				this.controlledAgentController = new AgentController(agentControllers.get(id));
+			Map<Long, AgentControlInitializer> agentControlInitializers =	this.moduleController.
+				getAgentControlInitializers();
+			if(agentControlInitializers != null) {
+				this.controlledAgentControlInitializer = agentControlInitializers.get(id);
 				this.controlViewLanguage = lang;
 				this.showControlView();
 			}

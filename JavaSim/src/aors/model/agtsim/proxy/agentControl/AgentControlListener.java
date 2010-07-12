@@ -7,8 +7,16 @@ package aors.model.agtsim.proxy.agentControl;
 public interface AgentControlListener {
 
 	/**
-	 * Notifies the listener about a new initialized {@link CoreAgentController}.
-	 * @param agentController
+	 * Registers an agent control initializer.
+	 * @param agentControlInitializer
 	 */
-	public void agentControllerInitialized(CoreAgentController agentController);
+	public void registerAgentControInitializer(AgentControlInitializer
+		agentControlInitializer);
+
+	/**
+	 * Unregisters an agent control initializer.
+	 * @param agentControlInitializer
+	 */
+	public void unregisterAgentControlInitializer(AgentControlInitializer
+		agentControlInitializer);
 }

@@ -1,63 +1,125 @@
 package aors.module.agentControl.gui.views;
 
-import aors.module.agentControl.AgentController;
-import aors.module.agentControl.gui.interaction.EventMediator;
+import aors.model.Event;
+import aors.model.agtsim.proxy.agentControl.AgentControlInitializer;
+import aors.module.agentControl.controller.ModuleAgentController;
+import aors.module.agentControl.gui.GUIComponent;
 import aors.util.Pair;
 import aors.module.agentControl.gui.interaction.Sender;
-import aors.module.agentControl.gui.renderer.AORSPanel;
-import aors.module.agentControl.gui.renderer.AORSReplacedElementFactory;
+import aors.module.agentControl.gui.renderer.Renderer;
+import aors.module.agentControl.gui.renderer.RendererFactory;
 import java.beans.PropertyChangeEvent;
 import java.io.File;
-import java.io.FileNotFoundException;
+import java.io.IOException;
+import java.util.Map;
 import java.util.Set;
+import org.jdom.JDOMException;
+import org.jdom.input.SAXBuilder;
+import org.jdom.output.DOMOutputter;
 
-public class ControlView extends InteractiveView<AORSPanel> {
+/**
+ * View to control an agent.
+ * @author Thomas Grundmann
+ */
+public class ControlView extends InteractiveView {
 
   private static final long serialVersionUID = 1L;
 	
-	private AgentController agentController;
+	/**
+	 * The agent controller to that the view belogs.
+	 */
+	private ModuleAgentController agentController;
 
-  public ControlView(AgentController agentController,
-		String projectPath, String lang) throws FileNotFoundException {
-		super(new AORSPanel());
+	private Map<String, Set<Pair<String, String>>> mouseEvents;
 
-		this.eventMediator = new EventMediator(this);
+	/**
+	 * Initializes and creates the view for the given agent controller.
+	 * @param agentControlInitializer
+	 * @param agentController
+	 * @param projectPath
+	 * @param lang
+	 */
+  public ControlView(AgentControlInitializer agentControlInitializer,
+		ModuleAgentController agentController, String projectPath, String lang) {
+		super();
+
+		// connects controller with view
 		this.agentController = agentController;
 		this.agentController.setControlView(this);
 
-		this.addKeyListeners(this.agentController.getKeyEvents());
+		this.mouseEvents = agentControlInitializer.getMouseEvents();
 
+		// create the view's content
+		this.guiComponent = this.createContent(
+			agentControlInitializer.getAgentType(), projectPath, lang);
+
+		// adds the key listeners
+		this.addKeyListeners(agentControlInitializer.getKeyEvents());
+	}
+
+	/**
+	 * Creates the view's content.
+	 * @param agentType
+	 * @param projectPath
+	 * @param lang
+	 */
+	private GUIComponent createContent(String agentType, String projectPath,
+		String lang) {
+
+		// constructs path to the view data
 		String sep = File.separator;
-		String type = this.agentController.getAgentType();
-		if(type.endsWith("AgentSubject")) {
-			type = type.substring(0, type.lastIndexOf("AgentSubject"));
+		if(agentType.endsWith("AgentSubject")) {
+			agentType = agentType.substring(0, agentType.lastIndexOf("AgentSubject"));
 		}
 		String guiPath = projectPath + sep + "src" + sep + "interaction" +
-			sep + "agentcontrol" + sep + type + "_" + lang + ".gui";
+			sep + "agentcontrol" + sep + agentType + "_" + lang + ".gui";
 
-		this.getGUIComponent().getSharedContext().setReplacedElementFactory(
-			new AORSReplacedElementFactory(this.eventMediator));
-		this.getGUIComponent().setDocument(new File(guiPath).toURI().toString());
+		// renders the view
+		Renderer renderer = RendererFactory.getInstance().createRenderer();
+		try {
+			File document = new File(guiPath);
+			renderer.doRender(new DOMOutputter().output(new SAXBuilder()
+				.build(document)),document.toURI().toString(), this.getEventMediator());
+		} catch(JDOMException e) {
+			e.printStackTrace();
+		} catch(IOException e) {
+			e.printStackTrace();
+		}
+		return renderer.getGUIComponent();
 	}
 
+	/**
+	 * Returns the set of mouseevents for a sender.
+	 * @param senderName
+	 * @return the set of mouse events
+	 */
 	@Override
 	protected Set<Pair<String, String>> getMouseEvents(String senderName) {
-		return this.agentController.getMouseEvents().get(senderName);
+		return this.mouseEvents.get(senderName);
 	}
 
+	/**
+	 * Notifies the view wether to update the gui with new data or to add a new
+	 * iteraction event to the controller.
+	 * @param evt
+	 */
 	@Override
 	public void propertyChange(PropertyChangeEvent evt) {
 
 		// data from gui components to controller
 		if(evt != null && Sender.SEND_PROPERTY_NAME.equals(evt.getPropertyName()) &&
 			evt.getNewValue() instanceof Sender.ValueMap) {
-			this.agentController.addUserInteractionEvent((Sender.ValueMap)evt.getNewValue());
+			this.agentController.addUserAction((Sender.ValueMap)evt.getNewValue());
 			return;
 		}
 
 		// data from controller to gui components
 		if(evt != null && evt.getSource().equals(this.agentController)) {
-			this.eventMediator.propertyChange(evt);
+			if(evt.getNewValue() instanceof Event) {
+				System.out.println(evt.getNewValue());
+				return;
+			}
+			this.getEventMediator().propertyChange(evt);
 		}
 	}
 }

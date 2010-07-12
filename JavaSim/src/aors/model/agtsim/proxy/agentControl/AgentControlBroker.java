@@ -64,13 +64,27 @@ public class AgentControlBroker implements AgentControlListener {
 
 	/**
 	 * Notifies the registered {@link AgentControlListener}s about the
-	 * instantiation of a new {@link CoreAgentController}.
-	 * @param agentController
+	 * instantiation of a new {@link AgentControlInitializer}.
+	 * @param agentControlInitializer
 	 */
 	@Override
-	public void agentControllerInitialized(CoreAgentController agentController) {
+	public void registerAgentControInitializer(AgentControlInitializer
+		agentControlInitializer) {
 		for(AgentControlListener agentControlListener : this.agentControlListeners) {
-			agentControlListener.agentControllerInitialized(agentController);
+			agentControlListener.registerAgentControInitializer(agentControlInitializer);
+		}
+	}
+
+	/**
+	 * Notifies the registered {@link AgentControlListener}s about the
+	 * removal of a {@link AgentControlInitializer}.
+	 * @param agentControlInitializer
+	 */
+	@Override
+	public void unregisterAgentControlInitializer(AgentControlInitializer
+		agentControlInitializer) {
+		for(AgentControlListener agentControlListener : this.agentControlListeners) {
+			agentControlListener.unregisterAgentControlInitializer(agentControlInitializer);
 		}
 	}
 }

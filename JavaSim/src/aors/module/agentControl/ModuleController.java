@@ -8,8 +8,8 @@ import aors.data.evt.sim.ObjektInitEvent;
 import aors.data.evt.sim.SimulationEvent;
 import aors.data.evt.sim.SimulationStepEvent;
 import aors.model.agtsim.proxy.agentControl.AgentControlBroker;
+import aors.model.agtsim.proxy.agentControl.AgentControlInitializer;
 import aors.model.agtsim.proxy.agentControl.AgentControlListener;
-import aors.model.agtsim.proxy.agentControl.CoreAgentController;
 import aors.model.envevt.EnvironmentEvent;
 import aors.module.Module;
 import aors.module.agentControl.gui.GUIController;
@@ -44,10 +44,9 @@ public class ModuleController implements Module, AgentControlListener {
 	private boolean initIdentifier;
 	
 	/**
-	 * This map stores all agent controllers, that were initialized during the
-	 * current simulation.
+	 * This map stores the current simulation's agent control initializers.
 	 */
-	private Map<Boolean, Map<Long, CoreAgentController>> agentControllers;
+	private Map<Boolean, Map<Long, AgentControlInitializer>> agentControlInitializers;
 
 	/*******************/
 	/*** constructor ***/
@@ -61,8 +60,11 @@ public class ModuleController implements Module, AgentControlListener {
 		this.projectPath = null;
 		this.guiController = new GUIController(this);
 		this.initIdentifier = true;
-		this.agentControllers = new HashMap<Boolean, Map<Long,
-			CoreAgentController>>();
+		this.agentControlInitializers = new HashMap<Boolean, Map<Long,
+			AgentControlInitializer>>();
+
+//		// instructs the controller factory to produce simple agent controllers
+//		AbstractAgentControllerFactory.setInstance(new SimpleAgentControllerFactory());
 
 		// registers itself at the agent control broker
 		AgentControlBroker.getInstance().addAgentControlListener(this);
@@ -136,7 +138,7 @@ public class ModuleController implements Module, AgentControlListener {
 		 * class in a following initialization phase.
 		 */
 		this.initIdentifier = !this.initIdentifier;
-		this.agentControllers.remove(this.initIdentifier);
+		this.agentControlInitializers.remove(this.initIdentifier);
 	}
 
 	/**
@@ -166,7 +168,7 @@ public class ModuleController implements Module, AgentControlListener {
 		/* With the end of the simulation we no longer need the registered agent
 		 * controllers so we can remove then values.
 		 */
-		this.agentControllers.remove(this.initIdentifier);
+		this.agentControlInitializers.remove(this.initIdentifier);
 
 		/* Notifies the gui that it should reset, because the current simulation
 		 * has ended.
@@ -179,25 +181,38 @@ public class ModuleController implements Module, AgentControlListener {
 	/**********************************************************************/
 
 	/**
-	 * Registers an agent controller with this class.
-	 * @param agentController
+	 * Registers an agent control initializer.
+	 * @param agentControlInitializer
 	 */
 	@Override
-	public void agentControllerInitialized(CoreAgentController agentController) {
-		if(!this.agentControllers.containsKey(this.initIdentifier)) {
-			this.agentControllers.put(this.initIdentifier,
-				new HashMap<Long, CoreAgentController>());
+	public void registerAgentControInitializer(AgentControlInitializer
+		agentControlInitializer) {
+		if(!this.agentControlInitializers.containsKey(this.initIdentifier)) {
+			this.agentControlInitializers.put(this.initIdentifier,
+				new HashMap<Long, AgentControlInitializer>());
 		}
-		this.agentControllers.get(this.initIdentifier).put(
-			agentController.getAgentId(), agentController);
+		this.agentControlInitializers.get(this.initIdentifier).put(
+			agentControlInitializer.getAgentId(), agentControlInitializer);
 	}
 
 	/**
-	 * Return all registered agent controllers identified by their agent's id.
-	 * @return the map of agent controllers
+	 * Unregisters an agent control initializer.
+	 * @param agentControlInitializer
 	 */
-	public Map<Long, CoreAgentController>	getAgentControllers() {
-		return this.agentControllers.get(this.initIdentifier);
+	@Override
+	public void unregisterAgentControlInitializer(AgentControlInitializer
+		agentControlInitializer) {
+		this.agentControlInitializers.get(this.initIdentifier).remove(
+			agentControlInitializer.getAgentId());
+	}
+
+	/**
+	 * Return all registered agent control initializers identified by their
+	 * agent's id.
+	 * @return the map of agent control initializers
+	 */
+	public Map<Long, AgentControlInitializer>	getAgentControlInitializers() {
+		return this.agentControlInitializers.get(this.initIdentifier);
 	}
 
 	/********************************************/

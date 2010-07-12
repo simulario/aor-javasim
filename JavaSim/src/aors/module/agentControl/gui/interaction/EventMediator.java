@@ -7,33 +7,55 @@ import java.util.HashSet;
 import java.util.Hashtable;
 import java.util.Map;
 import java.util.Set;
-import javax.swing.JComponent;
 
+/**
+ * This class is responsible for the communication between gui components.
+ * @author Thomas Grundmann
+ */
 public class EventMediator implements PropertyChangeListener {
 
+	/**
+	 * Map of receiver components per receiver element.
+	 */
   private Map<String, Set<Receiver>> receivers;
-  private Map<String, Sender> senders;
-	private InteractiveView<? extends JComponent> interactiveView;
 
-	public EventMediator() {
+	/**
+	 * Map of sender components.
+	 */
+  private Map<String, Sender> senders;
+
+	/**
+	 * The interactive view that is the host of the gui.
+	 */
+	private InteractiveView interactiveView;
+
+	/**
+	 * Initializes the class.
+	 * @param interactiveView
+	 */
+	public EventMediator(InteractiveView interactiveView) {
 		this.receivers = new Hashtable<String, Set<Receiver>>();
     this.senders = new Hashtable<String, Sender>();
-	}
-
-	public EventMediator(InteractiveView<? extends JComponent> interactiveView) {
-    this();
 		this.interactiveView = interactiveView;
-		this.addReceiver(Sender.SEND_PROPERTY_NAME, this.interactiveView, null);
+		if(this.interactiveView != null) {
+			this.addReceiver(Sender.SEND_PROPERTY_NAME, this.interactiveView, null);
+		}
 	}
 
+	/**
+	 * Notifes all receivers for a given property if this property changes.
+	 * @param evt
+	 */
 	@Override
   public void propertyChange(PropertyChangeEvent evt) {
+
+		// receives a sender request
 		if(Sender.SEND_PROPERTY_NAME.equals(evt.getPropertyName())) {
 
 			// get all values from the gui
 			Sender.ValueMap valuesToSend = new Sender.ValueMap();
 			valuesToSend.put(Sender.SEND_PROPERTY_NAME, evt.getNewValue().toString());
-			for(String valueName : senders.keySet()) {
+			for(String valueName : this.senders.keySet()) {
 				valuesToSend.put(valueName, senders.get(valueName).getValue());
 			}
 
@@ -42,9 +64,10 @@ public class EventMediator implements PropertyChangeListener {
 				valuesToSend);
 		}
 
-    if(receivers != null) {
-      if(receivers.get(evt.getPropertyName()) != null) {
-        for(Receiver receiver : receivers.get(evt.getPropertyName())) {
+		// propagate the event to all receivers for the specified property
+    if(this.receivers != null) {
+      if(this.receivers.get(evt.getPropertyName()) != null) {
+        for(Receiver receiver : this.receivers.get(evt.getPropertyName())) {
           if(!receiver.equals(evt.getSource())) {
             receiver.propertyChange(evt);
           }
@@ -53,24 +76,34 @@ public class EventMediator implements PropertyChangeListener {
     }
   }
 
+	/**
+	 * Adds a receiver for the given property with the give initial value.
+	 * @param property
+	 * @param receiver
+	 * @param initialValue
+	 */
   public void addReceiver(String property, Receiver receiver,
 		String initialValue) {
     if(property != null && property.length()>0) {
-
-			//receiver aufnehmen
-			if(!receivers.containsKey(property)) {
-        receivers.put(property, new HashSet<Receiver>());
+			if(!this.receivers.containsKey(property)) {
+       this.receivers.put(property, new HashSet<Receiver>());
       }
-      receivers.get(property).add(receiver);
+      this.receivers.get(property).add(receiver);
     }
   }
 
+	/**
+	 * Adds a sender for the given property.
+	 * @param property
+	 * @param sender
+	 * @return <code>true</code> if the sender was added
+	 */
   public boolean addSender(String property, Sender sender) {
     if(property != null && property.length()>0) {
       if(!senders.containsKey(property)) {
         senders.put(property, sender);
-				if(interactiveView != null) {
-					interactiveView.addMouseListener(property, sender);
+				if(this.interactiveView != null) {
+					this.interactiveView.addMouseListeners(property, sender);
 				}
         return true;
       }

@@ -131,8 +131,14 @@ public class DefaultAgentSimulator implements AgentSimulator,
 
   private AgentObject agentObject;
 
+	/**
+	 * Reference to the abstract simulator running this simulator.
+	 */
 	private AbstractSimulator abstractSimulator;
-	
+
+	/**
+	 * Time when the step current step ends.
+	 */
 	private long stepEndTime;
 
 	/**
@@ -462,7 +468,7 @@ public class DefaultAgentSimulator implements AgentSimulator,
         this.agentSubject.setCurrentSimulationStep(this.currentSimulationStep);
         this.agentSubject.run();
 				if(this.agentIsControlled()) {
-					this.agentSubject.getAgentController().updateView();
+					this.agentSubject.getCoreAgentController().updateView();
 
 					// wait for ActionEvents response from AgentController
 					synchronized (this) {
@@ -475,7 +481,7 @@ public class DefaultAgentSimulator implements AgentSimulator,
 						} catch (IllegalArgumentException e) {
 						}
 					}
-					this.agentSubject.getAgentController().performUserActions();
+					this.agentSubject.getCoreAgentController().performUserActions();
 				}
 
         // TODO: review this:
