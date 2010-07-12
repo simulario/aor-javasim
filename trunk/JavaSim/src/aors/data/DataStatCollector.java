@@ -10,10 +10,10 @@ import java.util.Map;
 
 import org.json.simple.JSONValue;
 
-import aors.data.java.ObjektDestroyEvent;
-import aors.data.java.ObjektDestroyEventListener;
-import aors.data.java.ObjektInitEvent;
-import aors.data.java.ObjektInitEventListener;
+import aors.data.evt.sim.ObjektDestroyEvent;
+import aors.data.evt.sim.ObjektDestroyEventListener;
+import aors.data.evt.sim.ObjektInitEvent;
+import aors.data.evt.sim.ObjektInitEventListener;
 import aors.model.agtsim.AgentSubject;
 import aors.model.envsim.AgentObject;
 import aors.model.envsim.Objekt;

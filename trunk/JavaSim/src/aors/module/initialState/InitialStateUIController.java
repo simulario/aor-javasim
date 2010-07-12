@@ -25,10 +25,11 @@ import javax.swing.SwingUtilities;
 import javax.swing.table.DefaultTableModel;
 import org.w3c.dom.Document;
 import aors.controller.SimulationDescription;
-import aors.data.java.ObjektDestroyEvent;
-import aors.data.java.ObjektInitEvent;
-import aors.data.java.SimulationEvent;
-import aors.data.java.SimulationStepEvent;
+import aors.data.evt.ControllerEvent;
+import aors.data.evt.sim.ObjektDestroyEvent;
+import aors.data.evt.sim.ObjektInitEvent;
+import aors.data.evt.sim.SimulationEvent;
+import aors.data.evt.sim.SimulationStepEvent;
 import aors.model.envevt.EnvironmentEvent;
 import aors.module.Module;
 import aors.controller.InitialState;
@@ -435,6 +436,12 @@ public class InitialStateUIController implements Module, ActionListener {
   public void objektInitEvent(ObjektInitEvent objInitEvent) {
     // TODO Auto-generated method stub
 
+  }
+
+  @Override
+  public void notifyEvent(ControllerEvent event) {
+    // TODO Auto-generated method stub
+    
   }
 
 }

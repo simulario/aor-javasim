@@ -8,7 +8,7 @@ import java.util.Map;
 import aors.GeneralSimulationParameters;
 import aors.GeneralSpaceModel;
 import aors.ScenarioInfos;
-import aors.data.java.ObjektInitEvent;
+import aors.data.evt.sim.ObjektInitEvent;
 import aors.logger.model.AgentSimulatorStep;
 import aors.model.envevt.ActivityEndEvent;
 import aors.model.envevt.EnvironmentEvent;

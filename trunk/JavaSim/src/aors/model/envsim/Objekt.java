@@ -12,7 +12,7 @@ import java.util.Set;
 
 import aors.InheritedProperty;
 import aors.controller.AbstractSimulator;
-import aors.data.java.ObjektInitEventListener;
+import aors.data.evt.sim.ObjektInitEventListener;
 import aors.model.Entity;
 import aors.model.envevt.activity.Activity;
 

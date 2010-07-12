@@ -388,6 +388,9 @@ public class SimulationManager {
 
 			// the module is a listener for object/agent creation events
 			this.dataBus.addObjektInitEventListener(module);
+			
+		// the module is a listener for ControllerEvents
+      this.dataBus.addControllerEventListener(module);
 
 			// get the module tab title from the property file
 			if(module.getGUIComponent() != null && moduleProperties.getProperty(GUIModule.PROP_GUI_TITLE) != null) {

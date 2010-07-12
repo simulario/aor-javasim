@@ -10,10 +10,11 @@ import aors.GeneralSpaceModel;
 import aors.controller.InitialState;
 import aors.controller.SimulationDescription;
 import aors.data.DataBus;
-import aors.data.java.ObjektDestroyEvent;
-import aors.data.java.ObjektInitEvent;
-import aors.data.java.SimulationEvent;
-import aors.data.java.SimulationStepEvent;
+import aors.data.evt.ControllerEvent;
+import aors.data.evt.sim.ObjektDestroyEvent;
+import aors.data.evt.sim.ObjektInitEvent;
+import aors.data.evt.sim.SimulationEvent;
+import aors.data.evt.sim.SimulationStepEvent;
 import aors.model.envevt.EnvironmentEvent;
 import aors.module.Module;
 import aors.module.evt.ModuleEvent;
@@ -325,5 +326,10 @@ public class Visualization implements Module {
     }
     // notify listeners about the event
     this.dataBus.notifyModuleEvent(moduleEvent);
+  }
+
+  @Override
+  public void notifyEvent(ControllerEvent event) {
+    // nothing to do here
   }
 }

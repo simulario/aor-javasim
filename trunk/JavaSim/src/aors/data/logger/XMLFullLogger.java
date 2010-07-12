@@ -18,7 +18,7 @@ import aors.GeneralSimulationParameters;
 import aors.GeneralSpaceModel;
 import aors.ScenarioInfos;
 import aors.controller.AbstractSimulator;
-import aors.data.java.CollectionInitEvent;
+import aors.data.evt.sim.CollectionInitEvent;
 import aors.logger.model.AgentSimulatorStep;
 import aors.logger.model.CollectionType;
 import aors.logger.model.Collections;

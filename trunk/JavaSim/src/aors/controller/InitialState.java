@@ -33,7 +33,7 @@ import javax.naming.NameNotFoundException;
 import aors.GeneralSpaceModel;
 import aors.data.DataBus;
 import aors.data.DataBusInterface;
-import aors.data.java.SimulationStepEvent;
+import aors.data.evt.sim.SimulationStepEvent;
 import aors.model.agtsim.AgentSubject;
 import aors.model.envevt.EnvironmentEvent;
 import aors.model.envsim.AgentObject;

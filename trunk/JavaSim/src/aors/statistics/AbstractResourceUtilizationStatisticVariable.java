@@ -30,8 +30,8 @@ package aors.statistics;
 
 import java.util.List;
 
-import aors.data.java.ObjektDestroyEvent;
-import aors.data.java.ObjektDestroyEventListener;
+import aors.data.evt.sim.ObjektDestroyEvent;
+import aors.data.evt.sim.ObjektDestroyEventListener;
 import aors.model.envsim.Objekt;
 
 /**
