@@ -390,6 +390,7 @@ public abstract class AbstractSimulator implements AgentSimulatorListener {
     
     // 03 init the globals
     this.initGlobalVariables();
+    // TODO: fire event here
 
     this.dataBus.notifySimulationScenario(this.scenarioInfos,
         this.generalSimulationParameters, this.simModel.getModelParamMap());
