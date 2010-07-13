@@ -51,6 +51,9 @@
   
   <!-- NEW -->
   <xsl:param name="core.package.util.wrapper" select="fn:concat($core.package.util, '.wrapper')"/>
+  
+  <xsl:param name="core.package.data.evt" select="fn:concat($core.package.data, '.evt')"/>
+  <xsl:param name="core.package.data.evt.sim" select="fn:concat($core.package.data.evt, '.sim')"/>
 
   <xsl:param name="logger.package.logger" select="fn:concat($core.package.data, '.logger')"/>
   <xsl:param name="logger.package.logger.java" select="fn:concat($core.package.data, '.java')"/>
@@ -209,10 +212,10 @@
   <xsl:param name="logger.package.loggerDefaultImpl" select="fn:concat($logger.package.logger, '.', $logger.class.loggerDefaultImpl)"/>
 
   <xsl:param name="logger.class.objInitEvent" as="xs:string">ObjektInitEvent</xsl:param>
-  <xsl:param name="logger.package.objInitEvent" select="fn:concat($logger.package.logger.java, '.', $logger.class.objInitEvent)"/>
+  <xsl:param name="logger.package.objInitEvent" select="fn:concat($core.package.data.evt.sim, '.', $logger.class.objInitEvent)"/>
 
   <xsl:param name="logger.class.objInitEventListener" as="xs:string">ObjektInitEventListener</xsl:param>
-  <xsl:param name="logger.package.objInitEventListener" select="fn:concat($logger.package.logger.java, '.', $logger.class.objInitEventListener)"/>
+  <xsl:param name="logger.package.objInitEventListener" select="fn:concat($core.package.data.evt.sim, '.', $logger.class.objInitEventListener)"/>
 
   <xsl:param name="data.class.dataBus" as="xs:string">DataBus</xsl:param>
   <xsl:param name="data.package.dataBus" select="fn:concat($core.package.data, '.', $data.class.dataBus)"/>
