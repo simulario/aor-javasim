@@ -379,12 +379,14 @@ public class InitialStateUITab extends JScrollPane implements GUIModule {
 			             
 			               HashSet<String> tempEnumSet = enumMap.get(tempPropertyType);
 			               enumMap.put(newTempPropertyType, tempEnumSet);
+			               processPropertyTypeMap(propertyTypeMap,newTempPropertyType,tempType);
 			            
 			            }else{
 			              
 			              //process minvalue and maxvalue if possible
 			              Vector<Integer> tempValueRange = minMaxRangeMap.get(tempPropertyType);
 			              minMaxRangeMap.put(newTempPropertyType, tempValueRange);
+			              processPropertyTypeMap(propertyTypeMap,newTempPropertyType,tempType);
 			                         
 			        }
 			     }
@@ -2858,23 +2860,33 @@ public class InitialStateUITab extends JScrollPane implements GUIModule {
  
   public void processTableRenderer() {
 
-    prepareProcessJSliderRender();
-    prepareProcessJComboBoxRender();
-    processRanVarTableRender();
-    processValueExprTableRender();
+    prepareProcessJComboBoxAndJSliderRender(minMaxPropertyTypeMap,"JSlider");
+    prepareProcessJComboBoxAndJSliderRender(enumPropertyTypeMap,"JComboBox");
+    processValueExprAndRanVarTableRender(valueExprTypePropertyMap,"ValueExpr");
+    processValueExprAndRanVarTableRender(ranTypePropertyMap,"RandomVariable");
 
   }
 
   //prepare to process JSlider rendering for minValue and maxValue 
-  public void prepareProcessJSliderRender() {
+  public void prepareProcessJComboBoxAndJSliderRender
+  (HashMap<String, HashSet<String>> propertyTypeMap, String rendererType) {
 
     Set<String> tableTypeKeySet = tableType.keySet();
     for (Iterator<String> it = tableTypeKeySet.iterator(); it.hasNext();) {
 
       String tempType = it.next();
-      if (minMaxPropertyTypeMap.keySet().contains(tempType)) {
-        JTable table = tableType.get(tempType);
-        processJSliderRender(table, tempType);
+      if (propertyTypeMap.keySet().contains(tempType)) {
+    	  
+    	JTable table = tableType.get(tempType);
+    	  
+    	if(rendererType.equals("JSlider")){  
+        
+    		 processJComboBoxAndJSlider(null,minMaxRangeMap,table,tempType,"JSlider");
+            
+    	}else{
+    		
+    	    processJComboBoxAndJSlider(enumMap,null,table,tempType,"JComboBox");	
+    	}
       }
     }
 
@@ -2892,9 +2904,18 @@ public class InitialStateUITab extends JScrollPane implements GUIModule {
           String objectEventType = objectEventTypes.next();
           String eventType = objectEventType.substring(objectType.length());
 
-          if (minMaxPropertyTypeMap.keySet().contains(eventType)) {
-            JTable table = tableType.get(objectEventType);
-            processJSliderRender(table, eventType);
+          if (propertyTypeMap.keySet().contains(eventType)) {
+            
+        	  JTable table = tableType.get(objectEventType);
+        	  
+        	  if(rendererType.equals("JSlider")){  
+        	        
+         		 processJComboBoxAndJSlider(null,minMaxRangeMap,table,eventType,"JSlider");
+                 
+         	}else{
+         		
+         	     processJComboBoxAndJSlider(enumMap,null,table,eventType,"JComboBox");	
+         	}
           }
         }
 
@@ -2903,144 +2924,116 @@ public class InitialStateUITab extends JScrollPane implements GUIModule {
     }
   }
 
-  //prepare to process JComboBox rendering with enumeration value 
-  public void prepareProcessJComboBoxRender() {
-
-    Set<String> objectObjectEventKeySet = objectObjectEventMap.keySet();
-    Collection<HashSet<String>> objectObjectEventValueSet = objectObjectEventMap
-        .values();
-    HashSet<String> allObjectEvent = new HashSet<String>();
-
-    for (Iterator<HashSet<String>> it = objectObjectEventValueSet.iterator(); it
-        .hasNext();) {
-      HashSet<String> tempSet = it.next();
-      allObjectEvent.addAll(tempSet);
-    }
-
-    Set<String> tableTypeKeySet = tableType.keySet();
-    for (Iterator<String> tableTypeKeys = tableTypeKeySet.iterator(); tableTypeKeys
-        .hasNext();) {
-
-      String tableTypeKey = tableTypeKeys.next();
-      //process ObjectEvent types table or BeliefEntity types table
-      if (allObjectEvent.contains(tableTypeKey)) {
-
-        for (Iterator<String> keys = objectObjectEventKeySet.iterator(); keys
-            .hasNext();) {
-
-          String tempObjectType = keys.next();
-          if (objectObjectEventMap.get(tempObjectType).contains(tableTypeKey)) {
-
-            String userInterfaceType = tableTypeKey.substring(tempObjectType
-                .length());
-            JTable table = tableType.get(tableTypeKey);
-            processJComboBoxRender(table, userInterfaceType);
-
-          }
-        }
-      } else {
-
-    	// process other type tables  
-        JTable table = tableType.get(tableTypeKey);
-        processJComboBoxRender(table, tableTypeKey);
-
-      }
-
-    }
-  }
+ 
+ 
 
   /*in this method we will check whether a table contains value 
   with enumeration value,if so, we will use JComboBox to render 
   the correspondent cell*/
-  public void processJComboBoxRender(JTable table, String type) {
+  public void  processJComboBoxAndJSlider(
+		 HashMap<String, HashSet<String>> comboBoxValueMap,
+		 HashMap<String, Vector<Integer>> sliderValueMap,
+		 JTable table, String type, String rendererType) {
 
-    Set<String> enumPropertySet = enumMap.keySet();
+	Set<String> constrainPropertyTypeSet;
+	
+	if(comboBoxValueMap != null){
+		
+	   constrainPropertyTypeSet = comboBoxValueMap.keySet();	
+	}else{
+		
+	   constrainPropertyTypeSet = sliderValueMap.keySet();	
+	}
+	  
+	   
     HashSet<String> tempContent = userInterfaceMap.get(type);
     DefaultTableModel model = (DefaultTableModel) table.getModel();
+    
+    String[] valuesComboBox = null;
+    int maxValue = 0;
+    int minValue = 0;
+    
+    
     Iterator<String> labelKeys = tempContent.iterator();
     while (labelKeys.hasNext()) {
+      
       String labelKey = labelKeys.next();
       String propertyType = labelKey.substring(0, (labelKey.length()- 2));
       //test if this property has enumeration value within given type
-      if (enumPropertySet.contains(propertyType)) {
-        HashSet<String> tempRange = enumMap.get(propertyType);
-        String[] valuesComboBox = new String[tempRange.size()];
-        int k = 0;
+      if (constrainPropertyTypeSet.contains(propertyType)) {
+        
+    	if(rendererType.equals("JSlider")){
+    		
+    		Vector<Integer> tempRange = sliderValueMap.get(propertyType);
+            maxValue = tempRange.get(1);
+            minValue = tempRange.get(0);	
+          		
+    		
+    		
+    	}else{
+    	  
+    	  HashSet<String> tempRange = comboBoxValueMap.get(propertyType);
+          valuesComboBox = new String[tempRange.size()];
+          int k = 0;
         //transfer the enumeration value into array, prepare for rendering 
-        for (Iterator<String> it = tempRange.iterator(); it.hasNext();) {
+          for (Iterator<String> it = tempRange.iterator(); it.hasNext();) {
           String tempString = it.next();
           valuesComboBox[k] = tempString;
           k++;
-        }
-
+          }
+    	}
+    	
+    	
         String constrainTableHeadName = labelMap.get(labelKey);
+        
+        
         for (int i = 0; i < model.getColumnCount(); i++) {
+          
           String tableHeadName = model.getColumnName(i);
           // if enumeration property matches the correspondent table column 
           if (constrainTableHeadName.equals(tableHeadName)) {
-            TableColumn rendererComboBoxColumn = table.getColumnModel()
+            
+        	TableColumn rendererColumn = table.getColumnModel()
                 .getColumn(i);
+            
+            if(rendererType.equals("JSlider")){
+            	
+            	 rendererColumn.setCellEditor(new JSliderTableEditor(minValue,maxValue));  	
+            	
+            }else{
+            
             //set the cell renderer for the correspondent column
-            rendererComboBoxColumn.setCellRenderer(new ComboBoxRenderer(
+            rendererColumn.setCellRenderer(new ComboBoxRenderer(
                 valuesComboBox));
             //set the cell editor for the correspondent column
-            rendererComboBoxColumn.setCellEditor(new ComboBoxEditor(
+            rendererColumn.setCellEditor(new ComboBoxEditor(
                 valuesComboBox));
+            }
           }
         }
       }
     }
   }
 
-  /*in this method we will check whether a table contain the cell with 
-  minValue and maxValue, if so, we will use JSlider to render them*/
-  public void processJSliderRender(JTable table, String type) {
-
-    HashSet<String> tempConstrainSet = minMaxPropertyTypeMap.get(type);
-    HashSet<String> tempContent = userInterfaceMap.get(type);
-    DefaultTableModel model = (DefaultTableModel) table.getModel();
-    Iterator<String> labelKeys = tempContent.iterator();
-    while (labelKeys.hasNext()) {
-      String labelKey = labelKeys.next();
-      String property = labelKey.substring(0, (labelKey.length()
-          - type.length() - 2));
-      if (tempConstrainSet.contains(property)) {
-        Vector<Integer> tempRange = minMaxRangeMap.get(property+type);
-
-        int maxValue = tempRange.get(1);
-        int minVlaue = tempRange.get(0);
-
-        String constrainTableHeadName = labelMap.get(labelKey);
-        for (int i = 0; i < model.getColumnCount(); i++) {
-          String tableHeadName = model.getColumnName(i);
-          if (constrainTableHeadName.equals(tableHeadName)) {
-            TableColumn rendererSliderColumn = table.getColumnModel()
-                .getColumn(i);
-            rendererSliderColumn.setCellEditor(new JSliderTableEditor(minVlaue,
-                maxValue));
-
-          }
-        }
-      }
-    }
-  }
+ 
 
   /*in this method we will check whether a table contain the cell with 
   ValueExpr, if so, we will use JButton to render them*/
-  public void processValueExprTableRender() {
+  public void processValueExprAndRanVarTableRender(
+		      HashMap<String, HashSet<String>> typePropertyMap, String rendererType) {
 
     for (Iterator<String> it = tableType.keySet().iterator(); it.hasNext();) {
 
       String tempType = it.next();
-      if (valueExprTypePropertyMap.containsKey(tempType)) {
+      
+      if (typePropertyMap.containsKey(tempType)) {
 
         String selectedObjectType = null;
         String selectedEventType = null;
         String selectedLanType = null;
 
-        JTable vTable = tableType.get(tempType);
-        HashSet<String> tempPropertySet = valueExprTypePropertyMap
-            .get(tempType);
+        JTable processTable = tableType.get(tempType);
+        HashSet<String> tempPropertySet = typePropertyMap.get(tempType);
         Collection<HashSet<String>> tempTypeCollection = objectObjectEventMap
             .values();
 
@@ -3068,21 +3061,40 @@ public class InitialStateUITab extends JScrollPane implements GUIModule {
         }
 
         ExprValueButtonEditor buttonEditor = null;
+        ButtonEditor ranVarButtonEditor = null;
 
         if (selectedObjectType == null) {
+        	
+         if(rendererType.equals("ValueExpr")){	
 
-          buttonEditor = new ExprValueButtonEditor(new JCheckBox(), vTable,
+          buttonEditor = new ExprValueButtonEditor(new JCheckBox(), processTable,
               tempType, valueExprTypePropertyMap,
               valueExprPropertyContainerMap, lanType, labelMap, null);
+         }else{
+        	 
+          ranVarButtonEditor = new ButtonEditor(new JCheckBox(), processTable, tempType,
+                  ranTypePropertyMap, ranVarPropertyContainerMap, lanType,
+                  labelMap, null); 
+         }
 
           selectedLanType = tempType;
 
         } else {
+        	
+        	
+          if(rendererType.equals("ValueExpr")){		
 
-          buttonEditor = new ExprValueButtonEditor(new JCheckBox(), vTable,
+              buttonEditor = new ExprValueButtonEditor(new JCheckBox(), processTable,
               selectedEventType, valueExprTypePropertyMap,
               valueExprPropertyContainerMap, lanType, labelMap,
               selectedObjectType);
+          }else{
+        	  
+        	  ranVarButtonEditor =  new ButtonEditor(new JCheckBox(), processTable,
+                      selectedEventType, ranTypePropertyMap,
+                      ranVarPropertyContainerMap, lanType, labelMap, selectedObjectType);
+        	  
+          }
 
           selectedLanType = selectedEventType;
 
@@ -3091,9 +3103,9 @@ public class InitialStateUITab extends JScrollPane implements GUIModule {
         HashSet<String> tempLanSet = lanType.get(selectedLanType);
         String tempLabel = null;
 
-        for (int j = 0; j < vTable.getColumnCount(); j++) {
+        for (int j = 0; j < processTable.getColumnCount(); j++) {
 
-          String colHeadValue = (String) vTable.getColumnModel().getColumn(j)
+          String colHeadValue = (String) processTable.getColumnModel().getColumn(j)
               .getHeaderValue();
 
           for (Iterator<String> tempProperties = tempPropertySet.iterator(); tempProperties
@@ -3115,11 +3127,20 @@ public class InitialStateUITab extends JScrollPane implements GUIModule {
               }
 
               if (labelMap.get(tempLabel).equals(colHeadValue)) {
+            	  
+            	if(rendererType.equals("ValueExpr")){	  
 
-                vTable.getColumn(colHeadValue).setCellRenderer(
+                processTable.getColumn(colHeadValue).setCellRenderer(
                     new ButtonRenderer());
-                vTable.getColumn(colHeadValue).setCellEditor(buttonEditor);
-
+                processTable.getColumn(colHeadValue).setCellEditor(buttonEditor);
+               
+            	}else{
+            		
+            	processTable.getColumn(colHeadValue).setCellRenderer(
+                             new ButtonRenderer());
+                processTable.getColumn(colHeadValue).setCellEditor(ranVarButtonEditor);	
+            		
+            	}
               }
             }
           }
@@ -3131,106 +3152,7 @@ public class InitialStateUITab extends JScrollPane implements GUIModule {
 
   }
 
-  /*in this method we will check whether a table contain the cell with 
-  RandomVariable, if so, we will use JButton to render them*/
-  public void processRanVarTableRender() {
-
-    for (Iterator<String> it = tableType.keySet().iterator(); it.hasNext();) {
-
-      String tempType = it.next();
-      if (ranTypePropertyMap.containsKey(tempType)) {
-
-        String selectedObjectType = null;
-        String selectedEventType = null;
-        String selectedLanType = null;
-
-        JTable rTable = tableType.get(tempType);
-        HashSet<String> tempPropertySet = ranTypePropertyMap.get(tempType);
-        Collection<HashSet<String>> tempTypeCollection = objectObjectEventMap.values();
-        //process objectEventType
-        for (Iterator<HashSet<String>> tempTypeSets = tempTypeCollection
-            .iterator(); tempTypeSets.hasNext();) {
-
-          HashSet<String> tempTypeSet = tempTypeSets.next();
-
-          if (tempTypeSet.contains(tempType)) {
-
-            for (Iterator<String> keys = objectObjectEventMap.keySet()
-                .iterator(); keys.hasNext();) {
-
-              String objectType = keys.next();
-
-              if (objectObjectEventMap.get(objectType).equals(tempTypeSet)) {
-
-                selectedObjectType = objectType;
-                selectedEventType = tempType.substring(objectType.length());
-
-              }
-            }
-          }
-        }
-
-        ButtonEditor buttonEditor = null;
-
-        if (selectedObjectType == null) {
-
-          buttonEditor = new ButtonEditor(new JCheckBox(), rTable, tempType,
-              ranTypePropertyMap, ranVarPropertyContainerMap, lanType,
-              labelMap, null);
-
-          selectedLanType = tempType;
-
-        } else {
-
-          buttonEditor = new ButtonEditor(new JCheckBox(), rTable,
-              selectedEventType, ranTypePropertyMap,
-              ranVarPropertyContainerMap, lanType, labelMap, selectedObjectType);
-
-          selectedLanType = selectedEventType;
-        }
-
-        HashSet<String> tempLanSet = lanType.get(selectedLanType);
-        String tempLabel = null;
-
-        for (int j = 0; j < rTable.getColumnCount(); j++) {
-
-          String colHeadValue = (String) rTable.getColumnModel().getColumn(j)
-              .getHeaderValue();
-
-          for (Iterator<String> tempProperties = tempPropertySet.iterator(); tempProperties
-              .hasNext();) {
-
-            String tempProperty = tempProperties.next();
-
-            for (Iterator<String> lans = tempLanSet.iterator(); lans.hasNext();) {
-
-              String tempLan = lans.next();
-
-              if (selectedObjectType != null) {
-
-                tempLabel = tempProperty + selectedEventType + tempLan;
-
-              } else {
-
-                tempLabel = tempProperty + tempType + tempLan;
-              }
-              //match the correct column name  
-              if (labelMap.get(tempLabel).equals(colHeadValue)) {
-                //set cell renderer
-                rTable.getColumn(colHeadValue).setCellRenderer(
-                    new ButtonRenderer());
-                //set cell editor
-                rTable.getColumn(colHeadValue).setCellEditor(buttonEditor);
-
-              }
-            }
-          }
-        }
-
-      }
-
-    }
-  }
+ 
 
   public HashMap<String, HashSet<String>> getUserInterfaceMap() {
 
