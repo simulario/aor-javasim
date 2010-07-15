@@ -29,10 +29,10 @@
                 <GridCellProperty type="Integer" name="status"/>
                 
                 <!-- Temporary cell status -->
-                <GridCellProperty type="Integer" name="tmpStatus"/>
+                <GridCellProperty type="Integer" name="nextStatus"/>
                 
                 <!-- Determines the status of a cell specified by its coordinates -->
-                <GridCellFunction name="checkCellStatus" resultType="Integer">
+                <GridCellFunction name="cellStatus" resultType="Integer">
                     <Parameter name="x" type="int"/>
                     <Parameter name="y" type="int"/>
                     
@@ -44,126 +44,25 @@
                 </GridCellFunction>
                 
                 <!-- Determines the number of active neighbors in a cells direct neighborhood -->
-                <GridCellFunction name="checkNeighborhood" resultType="Integer">
-                    <Body language="Java">
-                        <![CDATA[                    
-                            int x = (int) this.getPosX();
-                            int y = (int) this.getPosY();
-                            int xMax = (int) Simulator.spaceModel.getXMax();
-                            int yMax = (int) Simulator.spaceModel.getYMax();
-                            int activeNeighbors = 0;
-
-                            if (x > 1 && x < xMax) {
-                                // Cell is not on any border
-                                if (y > 1 && y < yMax) {
-                                    activeNeighbors += this.checkCellStatus(x-1, y+1);
-                                    activeNeighbors += this.checkCellStatus(x, y+1);
-                                    activeNeighbors += this.checkCellStatus(x+1, y+1);
-                                    activeNeighbors += this.checkCellStatus(x+1, y);
-                                    activeNeighbors += this.checkCellStatus(x+1, y-1);
-                                    activeNeighbors += this.checkCellStatus(x, y-1);
-                                    activeNeighbors += this.checkCellStatus(x-1, y-1);
-                                    activeNeighbors += this.checkCellStatus(x-1, y);
-                                    
-                                    return activeNeighbors;
-                                }
-                                
-                                // Cell is on the top border
-                                else if (y == yMax) {
-                                    activeNeighbors += this.checkCellStatus(x+1, y);
-                                    activeNeighbors += this.checkCellStatus(x+1, y-1);
-                                    activeNeighbors += this.checkCellStatus(x, y-1);
-                                    activeNeighbors += this.checkCellStatus(x-1, y-1);
-                                    activeNeighbors += this.checkCellStatus(x-1, y);
-                                    
-                                    return activeNeighbors;
-                                }
-                                
-                                // Cell is on the bottom border
-                                else if (y == 1) {
-                                    activeNeighbors += this.checkCellStatus(x-1, y+1);
-                                    activeNeighbors += this.checkCellStatus(x, y+1);
-                                    activeNeighbors += this.checkCellStatus(x+1, y+1);
-                                    activeNeighbors += this.checkCellStatus(x+1, y);
-                                    activeNeighbors += this.checkCellStatus(x-1, y);
-                                    
-                                    return activeNeighbors;
-                                }
-                                
-                                else {
-                                    return activeNeighbors;
-                                }
-                            }
-                            
-                            else {
-                                // Cell is on the top left corner
-                                if (x == 1 && y == yMax) {
-                                    activeNeighbors += this.checkCellStatus(x+1, y);
-                                    activeNeighbors += this.checkCellStatus(x+1, y-1);
-                                    activeNeighbors += this.checkCellStatus(x, y-1);
-                                    
-                                    return activeNeighbors;
-                                }
-                                
-                                // Cell is on the top right corner
-                                else if (x == xMax && y == yMax) {
-                                    activeNeighbors += this.checkCellStatus(x, y-1);
-                                    activeNeighbors += this.checkCellStatus(x-1, y-1);
-                                    activeNeighbors += this.checkCellStatus(x-1, y);
-                                    
-                                    return activeNeighbors;
-                                }
-                                
-                                // Cell is on the bottom right corner
-                                else if (x == xMax && y == 1) {
-                                    activeNeighbors += this.checkCellStatus(x-1, y+1);
-                                    activeNeighbors += this.checkCellStatus(x, y+1);
-                                    activeNeighbors += this.checkCellStatus(x-1, y);
-                                    
-                                    return activeNeighbors;
-                                }
-                                
-                                // Cell is on the bottom left corner
-                                else if (x == 1 && y == 1) {
-                                    activeNeighbors += this.checkCellStatus(x, y+1);
-                                    activeNeighbors += this.checkCellStatus(x+1, y+1);
-                                    activeNeighbors += this.checkCellStatus(x+1, y);
-                                    
-                                    return activeNeighbors;
-                                }
-                                
-                                // Cell is on the left border
-                                else if (x == 1) {
-                                    activeNeighbors += this.checkCellStatus(x, y+1);
-                                    activeNeighbors += this.checkCellStatus(x+1, y+1);
-                                    activeNeighbors += this.checkCellStatus(x+1, y);
-                                    activeNeighbors += this.checkCellStatus(x+1, y-1);
-                                    activeNeighbors += this.checkCellStatus(x, y-1);
-                                    
-                                    return activeNeighbors;
-                                }
-                                
-                                // Cell is on the right border
-                                else if (x == xMax) {
-                                    activeNeighbors += this.checkCellStatus(x-1, y+1);
-                                    activeNeighbors += this.checkCellStatus(x, y+1);
-                                    activeNeighbors += this.checkCellStatus(x, y-1);
-                                    activeNeighbors += this.checkCellStatus(x-1, y-1);
-                                    activeNeighbors += this.checkCellStatus(x-1, y);
-                                    
-                                    return activeNeighbors;
-                                }
-                                
-                                else {
-                                    return activeNeighbors;
-                                }
-                            }
-                        ]]>
-                    </Body>
+                <GridCellFunction name="activeNeighbors" resultType="Integer">
+                	<Body language="Java"><![CDATA[
+int activeNeighborsCount = 0;
+int posX = (int) this.getPosX();
+int posY = (int) this.getPosY();
+int xMax = (int) Simulator.spaceModel.getXMax();
+int yMax = (int) Simulator.spaceModel.getYMax();
+for (int x = posX-1; x <= posX+1; x++)
+	for (int y = posY-1; y <= posY+1; y++)
+		if (x >= 1 && x <= xMax && y >= 1 && y <= yMax 
+				&& !(x == posX && y == posY)) {
+			activeNeighborsCount += this.cellStatus(x,y);
+		}
+return activeNeighborsCount; 
+                  ]]></Body>
                 </GridCellFunction>
                 
                 <!-- Determines the new status of a cell with respect to its active neighbors -->
-                <GridCellFunction name="determineNewCellStatus" resultType="Integer">
+                <GridCellFunction name="newCellStatus" resultType="Integer">
                     <Body language="Java">
                         <![CDATA[                    
                             if (this.getStatus() == 0 && this.getActiveNeighbors() == 3)
@@ -189,20 +88,17 @@
                 <DO>
                     <UPDATE-ENV>
                         <UpdateGridCells gridCellVariable="gc">
-                            <Code language="Java">
-                                <![CDATA[                    
-                                    gc.setActiveNeighbors(gc.checkNeighborhood());
-                                    gc.setTmpStatus(gc.determineNewCellStatus());
-                                ]]>
-                            </Code>
-                        </UpdateGridCells>
-                        
-                        <UpdateGridCells gridCellVariable="cell">
-                            <Code language="Java">
-                                <![CDATA[                    
-                                    cell.setStatus(cell.getTmpStatus());
-                                ]]>
-                            </Code>
+                        	<Slot property="activeNeighbors">
+                        		<ValueExpr language="Java">gc.activeNeighbors()</ValueExpr>
+                        	</Slot>
+                        	<Slot property="nextStatus">
+                        		<ValueExpr language="Java">gc.newCellStatus()</ValueExpr>
+                        	</Slot>
+                        </UpdateGridCells>                        
+                        <UpdateGridCells gridCellVariable="c">
+                        	<Slot property="status">
+                        		<ValueExpr language="Java">c.getNextStatus()</ValueExpr>
+                        	</Slot>
                         </UpdateGridCells>
                     </UPDATE-ENV>
                 </DO>
