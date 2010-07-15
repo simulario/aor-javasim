@@ -156,6 +156,7 @@ public class InitialStateUIController implements Module, ActionListener {
 
 	    Vector<Vector<Object>> tempData = (Vector<Vector<Object>>) model
 	        .getDataVector();
+	    //get the correct row number
 	    int cRow = processCRow(table.getSelectedRow(), tempData);
 
 	    if (!(tempData.isEmpty())) {
@@ -195,16 +196,18 @@ public class InitialStateUIController implements Module, ActionListener {
 	    } else {
 	      flag = true;
 	    }
-
+        //at least there are two rows in the table
+	    //the deletion operation will be performed
 	    if (flag & (tempData.size() > 1)) {
 
 	      HashSet<String> tempLanSet = tabScroll.getLanType().get(type);
 	      String tempKey = typeTransfer(objectType, type);
-
+	      
+          //to process deletion operation for RandomVariable
 	      processCopyAndDelete(tabScroll.getRanTypePropertyMap(), tempKey,
 	          tempLanSet, "delete", cRow,
 	          tabScroll.getRanVarPropertyContainerMap(), null);
-
+	     //to process deletion operation for ValueExpr
 	      processCopyAndDelete(tabScroll.getValueExprTypePropertyMap(), tempKey,
 	          tempLanSet, "delete", cRow, null, tabScroll
 	              .getValueExprPropertyContainerMap());
@@ -221,7 +224,7 @@ public class InitialStateUIController implements Module, ActionListener {
 	      HashMap<String, Vector<ValueExprPropertyContainer>> vContainerMap) {
 
 	    String tempLabel = null;
-
+        //if an entity type contains RandomVariable or ValueExpr
 	    if (tempMap.containsKey(tempKey)) {
 
 	      HashSet<String> tempPropertySet = tempMap.get(tempKey);
@@ -239,12 +242,12 @@ public class InitialStateUIController implements Module, ActionListener {
 
 	            String tempLan = lans.next();
 	            tempLabel = tempProperty + type + tempLan;
-
+                //if we match the column that contains RandomVariable or ValueExpr
 	            if (tabScroll.getLabelMap().get(tempLabel).equals(colHeadValue)) {
 
-	              if (action.equals("copy")) {
+	              if (action.equals("copy")) {// process copy
 
-	                if (rContainerMap != null) {
+	                if (rContainerMap != null) {//process RandomVariable
 
 	                  Vector<RanVarPropertyContainer> tempContainers = rContainerMap
 	                      .get(tempProperty + tempKey);
@@ -253,7 +256,7 @@ public class InitialStateUIController implements Module, ActionListener {
 	                  tempContainers.add(cRow, tempContainer);
 	                  rContainerMap.put(tempProperty + tempKey, tempContainers);
 
-	                } else if (vContainerMap != null) {
+	                } else if (vContainerMap != null) {//process ValueExpr
 
 	                  Vector<ValueExprPropertyContainer> tempContainers = vContainerMap
 	                      .get(tempProperty + tempKey);
@@ -264,16 +267,16 @@ public class InitialStateUIController implements Module, ActionListener {
 
 	                }
 
-	              } else if (action.equals("delete")) {
+	              } else if (action.equals("delete")) {//process deletion
 
-	                if (rContainerMap != null) {
+	                if (rContainerMap != null) {//process RandomVariable
 
 	                  Vector<RanVarPropertyContainer> tempContainers = rContainerMap
 	                      .get(tempProperty + tempKey);
 	                  tempContainers.remove(cRow);
 	                  rContainerMap.put(tempProperty + tempKey, tempContainers);
 
-	                } else if (vContainerMap != null) {
+	                } else if (vContainerMap != null) {//process ValueExpr
 
 	                  Vector<ValueExprPropertyContainer> tempContainers = vContainerMap
 	                      .get(tempProperty + tempKey);
@@ -317,12 +320,12 @@ public class InitialStateUIController implements Module, ActionListener {
 		     Vector<Object> tempRow = null;
 		     
 		     
-		     if(create){
+		     if(create){//process creation 
 		       
 		       tempRow = tempData.elementAt(cRow);
 		       tempRow = (Vector<Object>)tempRow.clone();
 		       
-		     }else{
+		     }else{//process edition
 		       
 		       tempRow = tempData.elementAt(cRow);
 		     
@@ -333,20 +336,20 @@ public class InitialStateUIController implements Module, ActionListener {
 		        
 		         if((tempRow.get(i).getClass().getName()).equals("java.lang.Boolean")){
 		           
-		           booleanPosition.add(i);
+		           booleanPosition.add(i);//record the position for boolean value
 		           
 		         }else if((tempRow.get(i).getClass().getName()).equals("java.lang.Integer")){
 		           
-		           integerPosition.add(i);   
+		           integerPosition.add(i); //record the position for int value  
 		         }
 		         
 		           if(create){
 		             
-		             tempRow.set(i, "");
+		             tempRow.set(i, "");//get a empty row and prepare for creation
 		             
 		           }else{
 		         
-		             tempRow.set(i, String.valueOf(tempRow.get(i)));
+		             tempRow.set(i, String.valueOf(tempRow.get(i)));// get the edition row
 		          
 		           }
 		           
@@ -364,12 +367,14 @@ public class InitialStateUIController implements Module, ActionListener {
 		     JDialog editJDialog  = null;
 		     
 		     if(create){
-		        
+		       
+		       //create a pop-up window for creation  
 		       editJDialog = new EditJDialog(frame, true, table, tempRow,
 		                                           tempData, model, cRow,constrainMap,
 		                                           tabScroll,type,objectType,true);
 		     }else{
 		       
+		       //create a pop-up window for edition	 
 		       editJDialog = new EditJDialog(frame, true, table, tempRow,
 		                                            tempData, model, cRow,constrainMap,
 		                                            tabScroll,type,objectType,false);
@@ -416,7 +421,7 @@ public class InitialStateUIController implements Module, ActionListener {
   
 
   
-  private Document dom;   //Dom of the scenario.xml file
+  private Document dom;   //DOM of the scenario.xml file
   private JTable table;   // table container to hold the content of each entity
   private DefaultTableModel model;
   private File scenario;  // the scenario.xml file
@@ -465,17 +470,17 @@ class EditJDialog extends JDialog {
 	      setLocation(p.x + parentSize.width / 4, p.y + parentSize.height / 4);
 	    }
 
-	    this.owner = owner;
-	    this.type = type;
-	    this.table = table;
-	    this.row = row;
-	    this.model = model;
-	    this.cRow = cRow;
-	    this.rowData = rowData;
-	    this.constrainMap = constrainMap;
+	    this.owner = owner;//parent frame
+	    this.type = type;//entity type
+	    this.table = table;//selected table
+	    this.row = row;//selected row 
+	    this.model = model;// table model
+	    this.cRow = cRow;//selected row number 
+	    this.rowData = rowData;//data of the selected table
+	    this.constrainMap = constrainMap;//mapping for constrain(Boolean,Integer)
 	    this.initialStateUITab = initialStateUITab;
 	    this.objectType = objectType;
-	    this.createNew = createNew;
+	    this.createNew = createNew;//if true, it is for creation. otherwise it is for edition
 
 	    add(createContentPanel(), BorderLayout.CENTER);
 	    add(createButtonPanel(), BorderLayout.SOUTH);
@@ -496,6 +501,7 @@ class EditJDialog extends JDialog {
 	    label = new JLabel[row.size()];
 	    field = new Object[row.size()];
 
+	    //process the row that does not contain RandomVariable or ValueExpr
 	    if (!ranTypePropertyMap.containsKey(type)
 	        & !valueExprPropertyMap.containsKey(type)) {
 
@@ -509,7 +515,7 @@ class EditJDialog extends JDialog {
 
 	      }
 	    } else {
-
+ 
 	      out: for (int i = 0; i < row.size(); i++) {
 
 	        String columnName = (String) table.getColumnModel().getColumn(i)
@@ -518,7 +524,7 @@ class EditJDialog extends JDialog {
 	        contentPanel.add(label[i]);
 	        // System.out.println("The columnName: => " + columnName);
 
-	        if (ranTypePropertyMap.containsKey(type)) {
+	        if (ranTypePropertyMap.containsKey(type)) {//process RandomVariable
 
 	          HashSet<String> tempPropertySet = ranTypePropertyMap.get(type);
 
@@ -554,7 +560,7 @@ class EditJDialog extends JDialog {
 	            }
 	          }
 	        }
-	        if (valueExprPropertyMap.containsKey(type)) {
+	        if (valueExprPropertyMap.containsKey(type)) {//process ValueExpr
 
 	          HashSet<String> tempPropertySet = valueExprPropertyMap.get(type);
 
@@ -615,20 +621,20 @@ class EditJDialog extends JDialog {
 	        Vector<Object> insertEditRow = new Vector<Object>();
 
 	        for (int i = 0; i < field.length; i++) {
-
+                  //if this is a JTextField
 	          if (!(field[i].getClass().getName()).equals("javax.swing.JButton")) {
-
+                    
+	        	  
+	        	//test whether the content of the field is empty or null
 	            if (((JTextField) field[i]).getText().equals("")
 	                || ((JTextField) field[i]).getText() == null) {
 
-	              
-	              JOptionPane.showMessageDialog(null,
-	                  "Please fill in the field with the content,now it is empty!");
-	              
-	              ((JTextField) field[i]).setText("!empty!");
-	              
-	              return;
-	            } else if (constrainMap.get("boolean").contains(i)) {
+	                 JOptionPane.showMessageDialog(null,
+	                  "Please fill in the field with concrete content,now it is empty!");
+	                 ((JTextField) field[i]).setText("!empty!");
+	                 return;
+	            } 
+	            else if (constrainMap.get("boolean").contains(i)) {
 
 	              booleanPosition = constrainMap.get("boolean");
 	              for (Iterator<Integer> it = booleanPosition.iterator(); it
@@ -637,7 +643,7 @@ class EditJDialog extends JDialog {
 	                int position = it.next();
 
 	                if (position == i) {
-	                  
+	                  //if the content of field is neither true nor false
 	                  if (!((JTextField) field[i]).getText().equals("true")
 	                      & (!((JTextField) field[i]).getText().equals("false"))) {
 
@@ -678,9 +684,10 @@ class EditJDialog extends JDialog {
 	                      String lan = lans.next();
 	                      String labelKey = propertyType + lan;
 	                      
+	                      //if the label matches the property 
 	                      if (initialStateUITab.getLabelMap().get(labelKey).equals(
 	                          label[i].getText())) {
-
+                            //get the minValue and maxValue
 	                        Vector<Integer> tempValueRange = initialStateUITab
 	                            .getConstrainNameMapRange().get(propertyType);
 	                        int minValue = tempValueRange.get(0);
@@ -750,13 +757,13 @@ class EditJDialog extends JDialog {
 	               
 	                insertEditRow.addElement(((JTextField) field[i]).getText());
 
-	              } else {
+	              } else {//this field contains a enumeration value
 
 	                HashSet<String> tempEnumContent = initialStateUITab
 	                    .getEnumMap().get(propertyType);
 
 	                
-
+                    //if the value of the field is correct
 	                if (tempEnumContent.contains(((JTextField) field[i]).getText()
 	                    .trim())) {
 
@@ -782,16 +789,18 @@ class EditJDialog extends JDialog {
 	          }
 	        }
 	        if (cRow < 0) {
-	          cRow = 0;
+	            cRow = 0;
 	        }
 	        if (cRow > rowData.size()) {
-	          cRow = rowData.size();
+	            cRow = rowData.size();
 	        }
 
 	        if (!createNew) {
+	        	
 	          model.insertRow(cRow, insertEditRow);
 
 	          boolean flag;
+	          
 	          if (cRow < 0 || cRow > rowData.size()) {
 	            flag = false;
 	          } else {

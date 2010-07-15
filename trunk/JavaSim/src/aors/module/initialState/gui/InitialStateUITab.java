@@ -2881,7 +2881,7 @@ public class InitialStateUITab extends JScrollPane implements GUIModule {
     	  
     	if(rendererType.equals("JSlider")){  
         
-    		 processJComboBoxAndJSlider(null,minMaxRangeMap,table,tempType,"JSlider");
+    		processJComboBoxAndJSlider(null,minMaxRangeMap,table,tempType,"JSlider");
             
     	}else{
     		
