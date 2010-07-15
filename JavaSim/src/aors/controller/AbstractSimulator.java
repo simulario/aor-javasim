@@ -708,10 +708,11 @@ public abstract class AbstractSimulator implements AgentSimulatorListener {
 
     // if some statechanges from PI-Agents
     this.dataBus.notifyAgentSimulatorsResultingStateChanges();
-    this.dataBus.notifySimStepEnd();
 
     long stepProcessingTime = System.currentTimeMillis() - stepStartTime;
     this.delayStepToReachDefinedStepDelay(stepProcessingTime);
+    
+    this.dataBus.notifySimStepEnd();
 
     // this.computeStatisticsVariables(true);
     this.stepRunning = false;
