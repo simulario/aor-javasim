@@ -52,9 +52,6 @@ public class Cell implements SpaceComponent {
   // Map of object positions
   private Map<Integer, double[]> positionMap = new HashMap<Integer, double[]>();
 
-  // keeps the TesseltedPolygon reference for drawing this cell
-  TessellatedPolygon cellTessellator = null;
-
   /**
    * Increases the number of objects inside of the cell by one.
    */
@@ -209,37 +206,34 @@ public class Cell implements SpaceComponent {
 
   @Override
   public void display(GL2 gl, GLU glu) {
-    // initialize the cell tessellator (only first time)
-    if (this.cellTessellator == null) {
-      cellTessellator = new TessellatedPolygon();
-      cellTessellator.init(gl, glu);
-    }
+    TessellatedPolygon cell = new TessellatedPolygon();
+    cell.init(gl, glu);
 
     // Apply the border color
     applyContourColor(outerContour, borderColor);
     applyContourColor(innerContour, borderColor);
 
     // Draw the border
-    cellTessellator.beginPolygon();
-    cellTessellator.setWindingRule(GLU.GLU_TESS_WINDING_ODD);
-    cellTessellator.beginContour();
-    cellTessellator.renderContour(outerContour);
-    cellTessellator.endContour();
-    cellTessellator.beginContour();
-    cellTessellator.renderContour(innerContour);
-    cellTessellator.endContour();
-    cellTessellator.endPolygon();
+    cell.beginPolygon();
+    cell.setWindingRule(GLU.GLU_TESS_WINDING_ODD);
+    cell.beginContour();
+    cell.renderContour(outerContour);
+    cell.endContour();
+    cell.beginContour();
+    cell.renderContour(innerContour);
+    cell.endContour();
+    cell.endPolygon();
 
     // Apply the cell color
     applyContourColor(innerContour, color);
 
     // Draw the interior
-    cellTessellator.beginPolygon();
-    cellTessellator.beginContour();
-    cellTessellator.renderContour(innerContour);
-    cellTessellator.endContour();
-    cellTessellator.endPolygon();
-    cellTessellator.end();
+    cell.beginPolygon();
+    cell.beginContour();
+    cell.renderContour(innerContour);
+    cell.endContour();
+    cell.endPolygon();
+    cell.end();
   }
 
   @Override
