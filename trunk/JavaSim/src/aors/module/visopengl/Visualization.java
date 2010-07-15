@@ -12,7 +12,6 @@ import org.w3c.dom.Node;
 import aors.GeneralSpaceModel;
 import aors.controller.InitialState;
 import aors.controller.SimulationDescription;
-import aors.data.DataBus;
 import aors.data.evt.ControllerEvent;
 import aors.data.evt.sim.ObjektDestroyEvent;
 import aors.data.evt.sim.ObjektInitEvent;
@@ -21,7 +20,6 @@ import aors.data.evt.sim.SimulationStepEvent;
 import aors.logger.model.SimulationStep;
 import aors.model.envevt.EnvironmentEvent;
 import aors.module.Module;
-import aors.module.evt.ModuleEvent;
 import aors.module.visopengl.engine.Engine;
 import aors.module.visopengl.engine.UpdateManager;
 import aors.module.visopengl.gui.DescriptionPanel;
@@ -59,6 +57,9 @@ public class Visualization implements Module {
   // XML document reader
   private XMLReader reader;
 
+  // the view definition XML DOM nodes
+  Map<String, Node> views = null;
+
   // Project directory
   private File projectDirectory;
 
@@ -70,9 +71,6 @@ public class Visualization implements Module {
 
   // Current simulation step
   private long currentSimulationStep;
-
-  // keep an instance of the data-bus object from initial state
-  private DataBus dataBus = null;
 
   // the time collector for one second
   private long oneSecondTime = 0;
@@ -121,6 +119,11 @@ public class Visualization implements Module {
 
   @Override
   public void simulationStepStart(long stepNumber) {
+    // module is inactive
+    if (!this.isModulEnabled()) {
+      return;
+    }
+    
     // get the sim start time
     simStepStartTime = (new Date()).getTime();
 
@@ -130,6 +133,21 @@ public class Visualization implements Module {
   @Override
   public void simulationDomOnlyInitialization(
       SimulationDescription simulationDescription) {
+
+    // module is inactive
+    if (!this.isModulEnabled()) {
+      return;
+    }
+
+    // Create an XML document reader
+    reader = new XMLReader(simulationDescription.getDom(), projectDirectory);
+
+    // read views
+    this.views = reader.readViews();
+
+    // update manager knows now the view nodes definitions
+    uptManager.reset();
+    uptManager.setViewNodeMap(views);
   }
 
   @Override
@@ -166,10 +184,6 @@ public class Visualization implements Module {
       return;
     }
 
-    // Create an XML document reader
-    reader = new XMLReader(initialState.getSimulationDescription().getDom(),
-        projectDirectory);
-
     // Try to create and initialize the space model
     SpaceModel sm = null;
     SpaceView sw = null;
@@ -182,8 +196,6 @@ public class Visualization implements Module {
       sm = new TwoDimSpaceModel();
       sw = reader.getSpaceView(sm.getSpaceType());
       sm.setSpaceView(sw);
-
-      // System.out.println("No space model defined, using default one.");
     }
 
     else {
@@ -201,11 +213,13 @@ public class Visualization implements Module {
       sm = SpaceModel.createSpaceModel(gsm, reader);
     }
 
-    // Set up the update manager
-    uptManager.reset();
-    Map<String, Node> views = reader.readViews();
+    // for any reason, there are no views (should be already created while are
+    // created on notification of DOM initialization).
+    if (this.views == null) {
+      this.views = reader.readViews();
+    }
 
-    if ((views == null || views.size() < 1)
+    if ((this.views == null || this.views.size() < 1)
         && (sm.getSpaceView().getPropertyMaps() == null || sm.getSpaceView()
             .getPropertyMaps().size() < 1)) {
       sm = null;
@@ -221,7 +235,7 @@ public class Visualization implements Module {
     }
 
     uptManager.setSpaceModel(sm);
-    uptManager.setViewNodeMap(views);
+    uptManager.setViewNodeMap(this.views);
     uptManager.initializeObjects(initialState, reader);
 
     // Set up the engine
@@ -230,9 +244,6 @@ public class Visualization implements Module {
     engine.setVisPanel(gui.getContent().getVisualizationPanel());
     engine.setObjMap(uptManager.getObjMap());
     engine.setViewMap(uptManager.getViewMap());
-
-    // store the data-bus
-    this.dataBus = initialState.getDatabus();
   }
 
   @Override
@@ -318,22 +329,6 @@ public class Visualization implements Module {
         .isSelected();
 
     return enabled && this.defaultActivation;
-  }
-
-  /**
-   * Send module event to the module event listeners.
-   * 
-   * @param moduleEvent
-   *          the event to be sent to listeners
-   */
-  public void notifyVisualizationModuleEvent(ModuleEvent moduleEvent) {
-    if (this.dataBus == null) {
-      System.out
-          .println("Visualization: Warning! Visualization module can't send module events!");
-      return;
-    }
-    // notify listeners about the event
-    this.dataBus.notifyModuleEvent(moduleEvent);
   }
 
   @Override
