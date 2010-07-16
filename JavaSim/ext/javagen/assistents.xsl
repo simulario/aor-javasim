@@ -65,7 +65,7 @@
       select="fn:concat(jw:lowerWord(jw:lowerWord($collectionNode/@itemType)), $collection.class.aORCollection, $collectionNode/@name, $collectionNode/@id)"
     />
   </xsl:function>
-  
+
   <xsl:function name="jw:createInternalVarName" as="xs:string">
     <xsl:param name="varName"/>
     <xsl:value-of select="fn:concat($createdVariablesNamePrefix, $varName)"/>
@@ -231,7 +231,7 @@
   <xsl:template
     match="aorsml:GridCellProperty |  aorsml:ReferenceProperty | 
     aorsml:EnumerationProperty | aorsml:ComplexDataProperty  | aorsml:BeliefAttribute | 
-    aorsml:BeliefReferenceProperty | aorsml:GlobalVariable | aorsml:SelfBeliefReferenceProperty"
+    aorsml:BeliefReferenceProperty | aorsml:SelfBeliefReferenceProperty"
     mode="assistents.setVariableMethod">
     <xsl:param name="indent" required="yes"/>
     <xsl:param name="static" select="false()"/>
@@ -270,7 +270,7 @@
 
   </xsl:template>
 
-  <xsl:template match="aorsml:SelfBeliefAttribute | aorsml:Attribute" mode="assistents.setVariableMethod">
+  <xsl:template match="aorsml:SelfBeliefAttribute | aorsml:Attribute | aorsml:GlobalVariable" mode="assistents.setVariableMethod">
     <xsl:param name="indent" required="yes"/>
     <xsl:param name="static" select="false()"/>
     <xsl:param name="staticClassName" select="''"/>
@@ -280,7 +280,7 @@
     <xsl:variable name="constrainContent">
       <xsl:if test="@minValue or @maxValue">
         <xsl:choose>
-          <xsl:when test="@type eq 'Integer' or @type eq 'Float'">
+          <xsl:when test="(@type|@dataType) eq 'Integer' or (@type|@dataType) eq 'Float'">
 
             <xsl:if test="@minValue">
 
@@ -288,7 +288,7 @@
                 <xsl:with-param name="indent" select="$indent + 1"/>
                 <xsl:with-param name="condition">
                   <xsl:choose>
-                    <xsl:when test="@type eq 'Integer' or @type eq 'Float'">
+                    <xsl:when test="(@type|@dataType) eq 'Integer' or (@type|@dataType) eq 'Float'">
 
                       <xsl:call-template name="java:boolExpr">
                         <xsl:with-param name="value1" select="@name"/>
@@ -337,7 +337,7 @@
                 <xsl:with-param name="indent" select="$indent + 1"/>
                 <xsl:with-param name="condition">
                   <xsl:choose>
-                    <xsl:when test="@type eq 'Integer' or @type eq 'Float'">
+                    <xsl:when test="(@type|@dataType) eq 'Integer' or (@type|@dataType) eq 'Float'">
 
                       <xsl:call-template name="java:boolExpr">
                         <xsl:with-param name="value1" select="@name"/>
@@ -423,6 +423,51 @@
       <xsl:with-param name="constrainContent" select="$constrainContent"/>
       <xsl:with-param name="extraContent" select="$extraContent"/>
     </xsl:call-template>
+
+    <xsl:apply-templates select=".[@minValue or @maxValue]" mode="assistents.createGettersForMinMaxInformations">
+      <xsl:with-param name="indent" select="$indent"/>
+    </xsl:apply-templates>
+
+  </xsl:template>
+
+  <xsl:template match="aorsml:SelfBeliefAttribute | aorsml:Attribute | aorsml:GlobalVariable" mode="assistents.createGettersForMinMaxInformations">
+    <xsl:param name="indent" as="xs:integer" required="yes"/>
+
+    <xsl:if test="@minValue">
+
+      <xsl:call-template name="java:method">
+        <xsl:with-param name="indent" select="$indent"/>
+        <xsl:with-param name="modifier" select="'public'"/>
+        <xsl:with-param name="static" select="true()"/>
+        <xsl:with-param name="type" select="@type | @dataType "/>
+        <xsl:with-param name="name" select="fn:concat('get__', jw:upperWord(@name), 'Min')"/>
+        <xsl:with-param name="content">
+          <xsl:call-template name="java:return">
+            <xsl:with-param name="indent" select="$indent + 1"/>
+            <xsl:with-param name="value" select="@minValue"/>
+          </xsl:call-template>
+        </xsl:with-param>
+      </xsl:call-template>
+
+    </xsl:if>
+
+    <xsl:if test="@maxValue">
+
+      <xsl:call-template name="java:method">
+        <xsl:with-param name="indent" select="$indent"/>
+        <xsl:with-param name="modifier" select="'public'"/>
+        <xsl:with-param name="static" select="true()"/>
+        <xsl:with-param name="type" select="@type | @dataType "/>
+        <xsl:with-param name="name" select="fn:concat('get__', jw:upperWord(@name), 'Max')"/>
+        <xsl:with-param name="content">
+          <xsl:call-template name="java:return">
+            <xsl:with-param name="indent" select="$indent + 1"/>
+            <xsl:with-param name="value" select="@maxValue"/>
+          </xsl:call-template>
+        </xsl:with-param>
+      </xsl:call-template>
+
+    </xsl:if>
 
   </xsl:template>
 
