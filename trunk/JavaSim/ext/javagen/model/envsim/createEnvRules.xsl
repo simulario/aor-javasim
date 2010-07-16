@@ -1230,7 +1230,6 @@
   <xsl:template match="aorsml:UpdateGridCells" mode="createEnvironmentRules.method.stateEffects.content">
     <xsl:param name="indent" as="xs:integer" required="yes"/>
 
-
     <xsl:variable name="gridCellVarName"
       select="if (@gridCellVariable) then @gridCellVariable else fn:concat($createdVariablesNamePrefix, 'simGridCell_', position())"/>
 
@@ -1277,13 +1276,25 @@
     <xsl:variable name="colCounter" select="'i'"/>
     <xsl:variable name="rowCounter" select="'j'"/>
     <xsl:call-template name="java:newLine"/>
-    <xsl:call-template name="java:newObject">
-      <xsl:with-param name="indent" select="$indent"/>
-      <xsl:with-param name="class" select="fn:concat($sim.class.simSpaceModel, '.', $sim.class.simGridCell)"/>
-      <xsl:with-param name="varName" select="$gridCellVarName"/>
-      <xsl:with-param name="withDeclaration" select="false()"/>
-    </xsl:call-template>
 
+    <xsl:choose>
+      <xsl:when test="not(exists(preceding-sibling::aorsml:UpdateGridCells[@gridCellVariable = current()/@gridCellVariable]))">
+        <xsl:call-template name="java:newObject">
+          <xsl:with-param name="indent" select="$indent"/>
+          <xsl:with-param name="class" select="fn:concat($sim.class.simSpaceModel, '.', $sim.class.simGridCell)"/>
+          <xsl:with-param name="varName" select="$gridCellVarName"/>
+          <xsl:with-param name="withDeclaration" select="false()"/>
+        </xsl:call-template>
+      </xsl:when>
+      <xsl:otherwise>
+        <xsl:call-template name="java:variable">
+          <xsl:with-param name="indent" select="$indent"/>
+          <xsl:with-param name="name" select="$gridCellVarName"/>
+          <xsl:with-param name="value" select="'null'"/>
+        </xsl:call-template>
+      </xsl:otherwise>
+    </xsl:choose>    
+    
     <xsl:choose>
 
       <xsl:when test="fn:exists(aorsml:SelectionCondition[@language eq $output.language])">
