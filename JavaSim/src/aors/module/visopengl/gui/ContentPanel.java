@@ -5,6 +5,8 @@ import java.awt.Dimension;
 
 import javax.swing.JPanel;
 
+import aors.module.visopengl.Visualization;
+
 /**
  * Panel containing all GUI elements.
  * 
@@ -20,7 +22,7 @@ public class ContentPanel extends JPanel {
   private DrawingPanel drawingPanel = new DrawingPanel();
 
   // Panel containing visualization information and settings
-  private VisualizationPanel visPanel = new VisualizationPanel();
+  private VisualizationPanel visPanel;
 
   // Panel containing information about the space model
   private SpaceModelPanel spacePanel = new SpaceModelPanel();
@@ -31,7 +33,8 @@ public class ContentPanel extends JPanel {
   /*
    * Creates the GUI's panel that contains all other GUI elements.
    */
-  public ContentPanel() {
+  public ContentPanel(Visualization visController) {
+    visPanel = new VisualizationPanel(visController);
     setLayout(new BorderLayout());
     setPreferredSize(new Dimension(0, 0));
 
@@ -73,4 +76,12 @@ public class ContentPanel extends JPanel {
     this.descriptionPanel.setDescriptionData(description);
   }
 
+  /**
+   * This method refresh the GUI. That implies updating all language dependent
+   * messages/labels used.
+   */
+  public void refreshGUI() {
+    this.spacePanel.refreshGUI();
+    this.visPanel.refreshGUI();
+  }
 }
