@@ -1,12 +1,22 @@
 package aors.module.visopengl.gui;
 
-import java.awt.Dimension;
 import java.awt.FlowLayout;
+import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
+import java.io.File;
+import java.util.HashMap;
+import java.util.Locale;
+import java.util.Map;
 
 import javax.swing.JCheckBox;
+import javax.swing.JComboBox;
 import javax.swing.JLabel;
 import javax.swing.JPanel;
 import javax.swing.border.EtchedBorder;
+
+import aors.module.visopengl.Visualization;
+import aors.module.visopengl.lang.LanguageManager;
+import aors.util.jar.JarUtil;
 
 /**
  * Panel containing information and settings affecting the visualization.
@@ -20,38 +30,142 @@ public class VisualizationPanel extends JPanel {
   private static final long serialVersionUID = -8747483004958627070L;
 
   // Frame rate label
-  private final JLabel frameRate = new JLabel("FPS: 0");
+  private JLabel frameRateLabel;
 
   // Simulation step label
-  private final JLabel simStep = new JLabel("Step: 0");
+  private JLabel simStepLabel;
 
   // Object ID label
-  private final JLabel objectID = new JLabel("Object: none");
+  private JLabel objectIDLabel;
 
-  private final JCheckBox enableVisThread = new JCheckBox(
-      "Enable visualization", true);
+  // check-box for enable/disable visualization
+  private JCheckBox enableVisThread;
+
+  // combo box for language selection
+  private final JComboBox languageSelectionBox;
+
+  // associated label for language selection combo-box.
+  private JLabel languageSelectionBoxLabel;
+
+  // the controller reference
+  private final Visualization controller;
+
+  // FPS rate
+  private int fps = 0;
+
+  // simulation step
+  private long simStep = 0;
+
+  // selected object ID
+  private long objectID = 0;
+
+  // language map (keys = lang code, value = lang name)
+  private Map<String, String> languages = new HashMap<String, String>();
 
   /**
    * Creates a panel containing information and settings affecting the
    * visualization.
    */
-  public VisualizationPanel() {
+  public VisualizationPanel(Visualization visController) {
+    this.controller = visController;
+
     setLayout(new FlowLayout(FlowLayout.LEADING, 20, 0));
     this.setBorder(new EtchedBorder());
 
-    // Set component dimensions
-    frameRate.setPreferredSize(new Dimension(100, 25));
-    simStep.setPreferredSize(new Dimension(100, 25));
-    objectID.setPreferredSize(new Dimension(100, 25));
+    // create GUI components
+    this.frameRateLabel = new JLabel(LanguageManager
+        .getMessage("frameRate_LABEL"));
+    this.updateFrameRateLabel(0);
+
+    this.simStepLabel = new JLabel(LanguageManager.getMessage("simStep_LABEL"));
+    this.updateSimStepLabel(0);
+
+    this.objectIDLabel = new JLabel(LanguageManager
+        .getMessage("objectID_LABEL"));
+    updateObjectIDLabel(0);
+
+    this.enableVisThread = new JCheckBox(LanguageManager
+        .getMessage("enableVisualization_LABEL"), true);
+
+    this.languageSelectionBoxLabel = new JLabel(LanguageManager
+        .getMessage("languageSelectionBox_LABEL"));
 
     // Don't draw a focus border around the check box if it is selected
     enableVisThread.setFocusPainted(false);
 
+    // create languages stuff
+    this.languages = createSupportedLanguages();
+    languageSelectionBox = new JComboBox(getLanguagesNames());
+    languageSelectionBox.addActionListener(new ActionListener() {
+      public void actionPerformed(ActionEvent e) {
+        String selectedLang = (String) ((JComboBox) e.getSource())
+            .getSelectedItem();
+        String langCode = languages.get(selectedLang);
+        controller.notifyLanguageChange(langCode, "");
+      }
+    });
+
     // Add components to the panel
-    add(frameRate);
-    add(simStep);
-    add(objectID);
+    add(frameRateLabel);
+    add(simStepLabel);
+    add(objectIDLabel);
     add(enableVisThread);
+    add(languageSelectionBoxLabel);
+    add(languageSelectionBox);
+  }
+
+  /**
+   * take care of creating all languages based on existing translation files
+   */
+  private Map<String, String> createSupportedLanguages() {
+    File langFolder = new File(JarUtil.TMP_DIR + File.separator
+        + Visualization.localTmpPath);
+    String regex = "(translation)((_[a-z]{2})?)((_[A-Z]{2})?)(.properties)";
+    Map<String, String> result = new HashMap<String, String>();
+
+    int nmrOfLang = langFolder.list().length;
+    for (int i = 0; i < nmrOfLang; i++) {
+      String fileName = langFolder.listFiles()[i].getName();
+      if (fileName.endsWith("properties")) {
+        if (fileName.matches(regex)) {
+          String parts[] = fileName.split("_");
+          Locale locale;
+          if (parts.length == 1) {
+            locale = new Locale("en", "Default");
+            Locale.setDefault(locale);
+          } else if (parts.length == 2) {
+            locale = new Locale(parts[1].split("\\.")[0]);
+            // set English as default Locale
+            if (locale.getLanguage().equalsIgnoreCase("en")) {
+              Locale.setDefault(locale);
+            }
+          } else {
+            locale = new Locale(parts[1], parts[2].split("\\.")[0]);
+          }
+          result.put(locale.getDisplayLanguage(), locale.getLanguage());
+        }
+      }
+    }
+
+    return result;
+  }
+
+  /**
+   * Create the languages name list that will be displayed in the combo box for
+   * language selection
+   * 
+   * @return the array with language names
+   */
+  private String[] getLanguagesNames() {
+    Object[] keySet = this.languages.keySet().toArray();
+    int n = this.languages.keySet().size();
+    String[] result = new String[n];
+
+    for (int i = 0; i < n; i++) {
+      result[i] = (String) keySet[i];
+    }
+
+    return result;
   }
 
   /**
@@ -61,7 +175,9 @@ public class VisualizationPanel extends JPanel {
    *          Current frame rate.
    */
   public void updateFrameRateLabel(int fps) {
-    frameRate.setText("FPS: " + fps);
+    this.fps = fps;
+    frameRateLabel.setText(LanguageManager.getMessage("frameRate_LABEL") + " "
+        + this.fps);
   }
 
   /**
@@ -71,7 +187,9 @@ public class VisualizationPanel extends JPanel {
    *          Step that is currently displayed.
    */
   public void updateSimStepLabel(long step) {
-    simStep.setText("Step: " + step);
+    this.simStep = step;
+    simStepLabel.setText(LanguageManager.getMessage("simStep_LABEL") + " "
+        + this.simStep);
   }
 
   /**
@@ -80,8 +198,10 @@ public class VisualizationPanel extends JPanel {
    * @param id
    *          ID of a selected object.
    */
-  public void updateObjectIDLabel(int id) {
-    objectID.setText("Object: " + id);
+  public void updateObjectIDLabel(long id) {
+    this.objectID = id;
+    objectIDLabel.setText(LanguageManager.getMessage("objectID_LABEL") + " "
+        + this.objectID);
   }
 
   public JCheckBox getEnableVisThread() {
@@ -90,5 +210,19 @@ public class VisualizationPanel extends JPanel {
 
   public void setEnabledOnOffFeature(boolean enable) {
     this.enableVisThread.setEnabled(enable);
+  }
+
+  /**
+   * This method refresh this GUI component. That implies updating all language
+   * dependent messages/labels used.
+   */
+  public void refreshGUI() {
+    updateFrameRateLabel(this.fps);
+    updateSimStepLabel(this.simStep);
+    updateObjectIDLabel(this.objectID);
+    this.languageSelectionBoxLabel.setText(LanguageManager
+        .getMessage("languageSelectionBox_LABEL"));
+    this.enableVisThread.setText(LanguageManager
+        .getMessage("enableVisualization_LABEL"));
   }
 }

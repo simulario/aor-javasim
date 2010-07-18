@@ -26,6 +26,7 @@ import aors.module.visopengl.gui.DescriptionPanel;
 import aors.module.visopengl.gui.GUIComponent;
 import aors.module.visopengl.gui.SpaceModelPanel;
 import aors.module.visopengl.gui.VisualizationPanel;
+import aors.module.visopengl.lang.LanguageManager;
 import aors.module.visopengl.shape.View;
 import aors.module.visopengl.space.model.SpaceModel;
 import aors.module.visopengl.space.model.TwoDimSpaceModel;
@@ -40,6 +41,8 @@ import aors.module.visopengl.xml.XMLReader;
  * 
  */
 public class Visualization implements Module {
+  // module temporarily folder
+  public static final String localTmpPath = "visOpenGL";
 
   // GUI component
   private GUIComponent gui = new GUIComponent(this);
@@ -123,7 +126,7 @@ public class Visualization implements Module {
     if (!this.isModulEnabled()) {
       return;
     }
-    
+
     // get the sim start time
     simStepStartTime = (new Date()).getTime();
 
@@ -265,11 +268,6 @@ public class Visualization implements Module {
   public void simulationStarted() {
     // disable the on/off feature
     this.engine.getVisPanel().setEnabledOnOffFeature(false);
-
-    // module is inactive
-    if (!this.isModulEnabled()) {
-      return;
-    }
   }
 
   @Override
@@ -334,5 +332,27 @@ public class Visualization implements Module {
   @Override
   public void notifyEvent(ControllerEvent event) {
     // nothing to do here
+  }
+
+  /**
+   * Got notification about language change, so refresh the GUI.
+   * 
+   * @param languageCode
+   *          the new language code
+   * @param country
+   *          the country for this language
+   */
+  public void notifyLanguageChange(String languageCode, String country) {
+    LanguageManager.changeLanguage(languageCode, country);
+    
+    gui.getContent().refreshGUI();
+
+    // update canvas - problems with SWING GUI updates...
+    canvas.invalidate();
+    canvas.repaint();
+
+   canvas.display();
+   canvas.requestFocus();
+
   }
 }

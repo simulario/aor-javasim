@@ -7,6 +7,7 @@ import javax.swing.JScrollPane;
 
 import aors.module.GUIModule;
 import aors.module.Module;
+import aors.module.visopengl.Visualization;
 import aors.util.jar.JarUtil;
 
 /**
@@ -38,7 +39,7 @@ public class GUIComponent extends JScrollPane implements GUIModule {
     initJOGL();
 
     // Create the content panel (always do this after JOGL was initialized)
-    content = new ContentPanel();
+    content = new ContentPanel((Visualization)this.baseComponent);
   }
 
   /**
@@ -47,10 +48,9 @@ public class GUIComponent extends JScrollPane implements GUIModule {
    * @author Mircea Diaconescu
    */
   private void initJOGL() {
-    String localTmpPath = "visOpenGL";
-
+    String localTmpPath = Visualization.localTmpPath;
     String jarPath = System.getProperty("user.dir") + File.separator
-        + "modules" + File.separator + "visOpenGLModule.jar";
+        + "modules" + File.separator + "visOpenGLModule_";
 
     // Win32 libraries
     String[] libsWin = { "gluegen-rt.dll", "jogl_gl2.dll",
@@ -69,12 +69,23 @@ public class GUIComponent extends JScrollPane implements GUIModule {
     String[] libs = null;
 
     // Get the working operating system and use the correct libraries
-    if (JarUtil.isWindows())
+    if (JarUtil.isWindows()) {
       libs = libsWin;
-    else if (JarUtil.isUnix())
+      jarPath += "win";
+    } else if (JarUtil.isUnix()) {
       libs = libsUnix;
-    else if (JarUtil.isMac())
+      jarPath += "linux";
+    } else if (JarUtil.isMac()) {
       libs = libsMac;
+      jarPath += "mac";
+    }
+
+    // add last part of the file name, depending on the OS Bits version
+    if (System.getProperty("os.arch").indexOf("64") != -1) {
+      jarPath += "64.jar";
+    } else {
+      jarPath += "32.jar";
+    }
 
     if (libs != null) {
       // Extract native libraries
@@ -96,6 +107,9 @@ public class GUIComponent extends JScrollPane implements GUIModule {
       JarUtil.extractFileFromJar(jarPath, localTmpPath, "lib",
           "nativewindow.jar");
       JarUtil.extractFileFromJar(jarPath, localTmpPath, "lib", "newt.jar");
+
+      // extract the lang files
+      JarUtil.extractFilesListFromJar(jarPath, localTmpPath, "resources");
     } catch (IOException e) {
       e.printStackTrace();
     }
@@ -108,6 +122,8 @@ public class GUIComponent extends JScrollPane implements GUIModule {
     JarUtil.loadJar(localTmpPath, "newt.jar");
   }
 
+
+
   @Override
   public Module getBaseComponent() {
     return baseComponent;
@@ -116,5 +132,4 @@ public class GUIComponent extends JScrollPane implements GUIModule {
   public ContentPanel getContent() {
     return content;
   }
-
 }

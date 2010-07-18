@@ -8,6 +8,7 @@ import javax.swing.JPanel;
 import aors.GeneralSpaceModel.Geometry;
 import aors.GeneralSpaceModel.SpaceType;
 import aors.GeneralSpaceModel.SpatialDistanceUnit;
+import aors.module.visopengl.lang.LanguageManager;
 
 /**
  * Panel containing information about the space model.
@@ -21,20 +22,28 @@ public class SpaceModelPanel extends JPanel {
   private static final long serialVersionUID = 8825082104734239414L;
 
   // Space type label
-  JLabel spaceType = new JLabel("Type:");
+  private JLabel spaceTypeLabel = new JLabel("Type:");
 
   // Geometry label
-  JLabel geometry = new JLabel("Geometry:");
+  private JLabel geometryLabel = new JLabel("Geometry:");
 
   // Spatial distance unit label
-  JLabel distanceUnit = new JLabel("Distance Unit:");
+  private JLabel distanceUnitLabel = new JLabel("Distance Unit:");
 
   // Multiplicity label
-  JLabel multiplicity = new JLabel("Multiplicity:");
+  private JLabel multiplicityLabel = new JLabel("Multiplicity:");
 
   // Dimension labels
-  JLabel xMax = new JLabel("xMax:");
-  JLabel yMax = new JLabel("yMax:");
+  private JLabel xMaxLabel = new JLabel("xMax:");
+  private JLabel yMaxLabel = new JLabel("yMax:");
+
+  // properties of the space shown in this panel
+  private SpaceType spaceType;
+  private Geometry geometry;
+  SpatialDistanceUnit distanceUnit;
+  int multiplicity = 1;
+  double xMax = 0;
+  double yMax = 0;
 
   /**
    * Creates a panel containing information about the space model.
@@ -43,12 +52,12 @@ public class SpaceModelPanel extends JPanel {
     setLayout(new FlowLayout(FlowLayout.LEADING, 20, 5));
 
     // Add components to the panel
-    add(spaceType);
-    add(geometry);
-    add(distanceUnit);
-    add(multiplicity);
-    add(xMax);
-    add(yMax);
+    add(spaceTypeLabel);
+    add(geometryLabel);
+    add(distanceUnitLabel);
+    add(multiplicityLabel);
+    add(xMaxLabel);
+    add(yMaxLabel);
   }
 
   /**
@@ -58,7 +67,9 @@ public class SpaceModelPanel extends JPanel {
    *          Type of the space model.
    */
   public void updateSpaceTypeLabel(SpaceType type) {
-    spaceType.setText("Type: " + type.toString());
+    this.spaceType = type;
+    spaceTypeLabel.setText(LanguageManager.getMessage("spaceType_LABEL") + ": "
+        + type.toString());
   }
 
   /**
@@ -68,7 +79,9 @@ public class SpaceModelPanel extends JPanel {
    *          Type of geometry.
    */
   public void updateGeometryLabel(Geometry type) {
-    geometry.setText("Geometry: " + type.toString());
+    this.geometry = type;
+    geometryLabel.setText(LanguageManager.getMessage("geometry_LABEL") + ": "
+        + type.toString());
   }
 
   /**
@@ -78,7 +91,9 @@ public class SpaceModelPanel extends JPanel {
    *          Distance unit.
    */
   public void updateDistanceUnitLabel(SpatialDistanceUnit unit) {
-    distanceUnit.setText("Distance Unit: " + unit.toString());
+    this.distanceUnit = unit;
+    distanceUnitLabel.setText(LanguageManager.getMessage("distanceUnit_LABEL")
+        + ": " + unit.toString());
   }
 
   /**
@@ -88,7 +103,9 @@ public class SpaceModelPanel extends JPanel {
    *          Spaces multiplicity.
    */
   public void updateMultiplicityLabel(int value) {
-    multiplicity.setText("Multiplicity: " + value);
+    this.multiplicity = value;
+    multiplicityLabel.setText(LanguageManager.getMessage("multiplicity_LABEL")
+        + ": " + value);
   }
 
   /**
@@ -98,7 +115,8 @@ public class SpaceModelPanel extends JPanel {
    *          Horizontal dimension of the space.
    */
   public void updateXMaxLabel(double value) {
-    xMax.setText("xMax: " + value);
+    this.xMax = value;
+    xMaxLabel.setText(LanguageManager.getMessage("xMax_LABEL") + ": " + value);
   }
 
   /**
@@ -108,7 +126,20 @@ public class SpaceModelPanel extends JPanel {
    *          Vertical dimension of the space.
    */
   public void updateYMaxLabel(double value) {
-    yMax.setText("yMax: " + value);
+    this.yMax = value;
+    yMaxLabel.setText(LanguageManager.getMessage("yMax_LABEL") + ": " + value);
   }
 
+  /**
+   * This method refresh this GUI component. That implies updating all language
+   * dependent messages/labels used.
+   */
+  public void refreshGUI() {
+    this.updateSpaceTypeLabel(this.spaceType);
+    this.updateGeometryLabel(this.geometry);
+    this.updateDistanceUnitLabel(this.distanceUnit);
+    this.updateMultiplicityLabel(this.multiplicity);
+    this.updateXMaxLabel(this.xMax);
+    this.updateYMaxLabel(this.yMax);
+  }
 }
