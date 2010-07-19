@@ -190,6 +190,10 @@ public class Visualization implements Module {
       return;
     }
 
+    // Create an XML document reader
+    reader = new XMLReader(initialState.getSimulationDescription().getDom(),
+        projectDirectory);
+
     // Try to create and initialize the space model
     SpaceModel sm = null;
     SpaceView sw = null;
@@ -222,7 +226,7 @@ public class Visualization implements Module {
 
     // for any reason, there are no views (should be already created while are
     // created on notification of DOM initialization).
-    if (this.views == null) {
+    if (this.views == null || this.views.size() < 1) {
       this.views = reader.readViews();
     }
 
@@ -231,7 +235,10 @@ public class Visualization implements Module {
             .getPropertyMaps().size() < 1)) {
       sm = null;
       DescriptionPanel descPanel = new DescriptionPanel();
-      descPanel.setDescriptionData(reader.getSimulationDescriptionInfo());
+      String description = reader.getSimulationDescriptionInfo();
+      if (description != null && description.trim().length() > 0) {
+        descPanel.setDescriptionData(reader.getSimulationDescriptionInfo());
+      }
       gui.setViewportView(descPanel);
       this.defaultActivation = false;
     } else {
