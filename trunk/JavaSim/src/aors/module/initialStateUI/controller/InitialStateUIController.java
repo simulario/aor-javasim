@@ -118,9 +118,8 @@ public class InitialStateUIController implements Module {
 
 		if (initializedAtStartup == true) {
 			this.initialStateUIEditedInformation = null;
-			
+
 			this.GUIComponent.updateListsPanel();
-			
 
 		}
 
@@ -431,12 +430,10 @@ public class InitialStateUIController implements Module {
 				.getAttributeNode(XMLConstants.SLIDER_STEP_SIZE);
 
 		if (sliderStepSizeAttribute != null) {
-			String nmrOfInstancesString = sliderStepSizeAttribute.getValue();
-			int decimalIndex = nmrOfInstancesString.indexOf(".");
-			nmrOfInstancesString = nmrOfInstancesString.substring(0,
-					decimalIndex);
+			String sliderStepSizeString = sliderStepSizeAttribute.getValue();
 
-			sliderStepSize = Long.parseLong(nmrOfInstancesString);
+			sliderStepSize = new Double((Double
+					.parseDouble(sliderStepSizeString))).longValue();
 		} else {
 			sliderStepSize = InitialStateUIProperty.No_Slider_Step_Size_Provided;
 		}
@@ -483,11 +480,9 @@ public class InitialStateUIController implements Module {
 
 		if (inputFieldLengthAttribute != null) {
 			String nmrOfInstancesString = inputFieldLengthAttribute.getValue();
-			int decimalIndex = nmrOfInstancesString.indexOf(".");
-			nmrOfInstancesString = nmrOfInstancesString.substring(0,
-					decimalIndex);
 
-			inputFieldLength = Long.parseLong(nmrOfInstancesString);
+			inputFieldLength = new Double(Double
+					.parseDouble(nmrOfInstancesString)).longValue();
 		} else {
 			inputFieldLength = InitialStateUIProperty.Unbounded_Field_Length;
 		}
