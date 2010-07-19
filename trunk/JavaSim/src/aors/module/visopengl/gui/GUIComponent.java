@@ -39,7 +39,7 @@ public class GUIComponent extends JScrollPane implements GUIModule {
     initJOGL();
 
     // Create the content panel (always do this after JOGL was initialized)
-    content = new ContentPanel((Visualization)this.baseComponent);
+    content = new ContentPanel();
   }
 
   /**

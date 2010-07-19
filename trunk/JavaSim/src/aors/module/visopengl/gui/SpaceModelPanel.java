@@ -22,20 +22,20 @@ public class SpaceModelPanel extends JPanel {
   private static final long serialVersionUID = 8825082104734239414L;
 
   // Space type label
-  private JLabel spaceTypeLabel = new JLabel("Type:");
+  private JLabel spaceTypeLabel = new JLabel();
 
   // Geometry label
-  private JLabel geometryLabel = new JLabel("Geometry:");
+  private JLabel geometryLabel = new JLabel();
 
   // Spatial distance unit label
-  private JLabel distanceUnitLabel = new JLabel("Distance Unit:");
+  private JLabel distanceUnitLabel = new JLabel();
 
   // Multiplicity label
-  private JLabel multiplicityLabel = new JLabel("Multiplicity:");
+  private JLabel multiplicityLabel = new JLabel();
 
   // Dimension labels
-  private JLabel xMaxLabel = new JLabel("xMax:");
-  private JLabel yMaxLabel = new JLabel("yMax:");
+  private JLabel xMaxLabel = new JLabel();
+  private JLabel yMaxLabel = new JLabel();
 
   // properties of the space shown in this panel
   private SpaceType spaceType;
@@ -50,6 +50,8 @@ public class SpaceModelPanel extends JPanel {
    */
   public SpaceModelPanel() {
     setLayout(new FlowLayout(FlowLayout.LEADING, 20, 5));
+    
+    this.refreshGUI();
 
     // Add components to the panel
     add(spaceTypeLabel);
@@ -68,6 +70,9 @@ public class SpaceModelPanel extends JPanel {
    */
   public void updateSpaceTypeLabel(SpaceType type) {
     this.spaceType = type;
+    if(this.spaceType == null) {
+      return;
+    }
     spaceTypeLabel.setText(LanguageManager.getMessage("spaceType_LABEL") + ": "
         + type.toString());
   }
@@ -80,6 +85,9 @@ public class SpaceModelPanel extends JPanel {
    */
   public void updateGeometryLabel(Geometry type) {
     this.geometry = type;
+    if(this.geometry == null) {
+      return;
+    }
     geometryLabel.setText(LanguageManager.getMessage("geometry_LABEL") + ": "
         + type.toString());
   }
@@ -92,6 +100,9 @@ public class SpaceModelPanel extends JPanel {
    */
   public void updateDistanceUnitLabel(SpatialDistanceUnit unit) {
     this.distanceUnit = unit;
+    if(this.distanceUnit == null) {
+      return;
+    }
     distanceUnitLabel.setText(LanguageManager.getMessage("distanceUnit_LABEL")
         + ": " + unit.toString());
   }

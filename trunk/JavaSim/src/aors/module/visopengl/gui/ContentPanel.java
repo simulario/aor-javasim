@@ -5,8 +5,6 @@ import java.awt.Dimension;
 
 import javax.swing.JPanel;
 
-import aors.module.visopengl.Visualization;
-
 /**
  * Panel containing all GUI elements.
  * 
@@ -22,7 +20,7 @@ public class ContentPanel extends JPanel {
   private DrawingPanel drawingPanel = new DrawingPanel();
 
   // Panel containing visualization information and settings
-  private VisualizationPanel visPanel;
+  private VisualizationPanel visPanel = new VisualizationPanel();
 
   // Panel containing information about the space model
   private SpaceModelPanel spacePanel = new SpaceModelPanel();
@@ -33,8 +31,7 @@ public class ContentPanel extends JPanel {
   /*
    * Creates the GUI's panel that contains all other GUI elements.
    */
-  public ContentPanel(Visualization visController) {
-    visPanel = new VisualizationPanel(visController);
+  public ContentPanel() {
     setLayout(new BorderLayout());
     setPreferredSize(new Dimension(0, 0));
 
