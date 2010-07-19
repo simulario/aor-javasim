@@ -131,42 +131,47 @@ public class DefaultAgentSimulator implements AgentSimulator,
 
   private AgentObject agentObject;
 
-	/**
-	 * Reference to the abstract simulator running this simulator.
-	 */
-	private AbstractSimulator abstractSimulator;
+  /**
+   * Reference to the abstract simulator running this simulator.
+   */
+  private AbstractSimulator abstractSimulator;
 
-	/**
-	 * Time when the step current step ends.
-	 */
-	private long stepEndTime;
+  /**
+   * Time when the step current step ends.
+   */
+  private long stepEndTime;
 
-	/**
+  /**
    * Creates a new DefaultAgentSimulator instance.
    * 
    * @param agentSubject
    * @param listener
    *          a listener to send ActionEvents to
    * @param pcl
-	 * @param abstractSimulator
+   * @param abstractSimulator
    */
   public DefaultAgentSimulator(AgentSubject agentSubject,
       AgentSimulatorListener listener, PropertyChangeListener pcl,
-			AbstractSimulator abstractSimulator) {
-		this.abstractSimulator = abstractSimulator;
+      AbstractSimulator abstractSimulator) {
+    this.abstractSimulator = abstractSimulator;
     this.agentSubject = agentSubject;
     this.agentSubject.addPropertyChangeListener(this);
-		this.agentSubject.setAgentSimulator(this);
+    this.agentSubject.setAgentSimulator(this);
     this.actionEventsListener = listener;
     this.propertyChangeListener = pcl;
     this.running = true;
     this.initializeAgentMemory();
-		this.stepEndTime = 0;
+    this.stepEndTime = 0;
   } // DefaultAgentSimulator
 
   @Override
   public void setSimClassLoader(ClassLoader simClassLoader) {
     this.simClassLoader = simClassLoader;
+  }
+
+  @Override
+  public AgentSubject getAgentSubject() {
+    return this.agentSubject;
   }
 
   /**
@@ -175,12 +180,12 @@ public class DefaultAgentSimulator implements AgentSimulator,
    */
   @Override
   public void propertyChange(PropertyChangeEvent evt) {
-		if(evt != null && "isControlled".equals(evt.getPropertyName())) {
-			return;
-		}
+    if (evt != null && "isControlled".equals(evt.getPropertyName())) {
+      return;
+    }
     if (this.propertyChangeListener != null) {
       this.propertyChangeListener.propertyChange(evt);
-		}
+    }
   }
 
   /**
@@ -273,9 +278,9 @@ public class DefaultAgentSimulator implements AgentSimulator,
   public String getUserName() {
     if (isAgentSubjectProxySet()) {
       return this.agentSubjectProxy.getUserName();
-    } else if(agentIsControlled()) {
-			return "local user";
-		}
+    } else if (agentIsControlled()) {
+      return "local user";
+    }
     return "";
   }
 
@@ -332,72 +337,74 @@ public class DefaultAgentSimulator implements AgentSimulator,
     return this.agentTimeout;
   }
 
-	@Override
-	public Map<String, Map<String, String>> getSubjectProperties() {
-		Map<String, Map<String, String>> res = new HashMap<String, Map<String, String>>();
-		Class<? extends AgentSubject> c = this.agentSubject.getClass();
-		//c is a real subclass of AgentSubject
-		if(!AgentSubject.class.getName().equals(c.getName())) {
-			res.putAll(getFields(c));
-		}
-		return res;
-	} // getSubjectProperties
+  @Override
+  public Map<String, Map<String, String>> getSubjectProperties() {
+    Map<String, Map<String, String>> res = new HashMap<String, Map<String, String>>();
+    Class<? extends AgentSubject> c = this.agentSubject.getClass();
+    // c is a real subclass of AgentSubject
+    if (!AgentSubject.class.getName().equals(c.getName())) {
+      res.putAll(getFields(c));
+    }
+    return res;
+  } // getSubjectProperties
 
-	@SuppressWarnings("unchecked")
-	private Map<String, Map<String, String>> getFields(Class<? extends AgentSubject> c) {
-		Map<String, Map<String, String>> res = new HashMap<String, Map<String, String>>();
+  @SuppressWarnings("unchecked")
+  private Map<String, Map<String, String>> getFields(
+      Class<? extends AgentSubject> c) {
+    Map<String, Map<String, String>> res = new HashMap<String, Map<String, String>>();
 
-		if(debug) {
-			System.out.println("Class name: " + c.getSimpleName());
-		}
+    if (debug) {
+      System.out.println("Class name: " + c.getSimpleName());
+    }
 
-		Field[] fields = c.getDeclaredFields();
-		if(debug) {
-			System.out.println("Fields: ");
-		}
-		for(Field f : fields) {
-			String fName = f.getName();
-			if(!fName.equals("MEMORY_SIZE")) {
-				if(debug) {
-					System.out.println(fName);
-				}
-				try {
-					Map<String, String> r = new HashMap<String, String>();
+    Field[] fields = c.getDeclaredFields();
+    if (debug) {
+      System.out.println("Fields: ");
+    }
+    for (Field f : fields) {
+      String fName = f.getName();
+      if (!fName.equals("MEMORY_SIZE")) {
+        if (debug) {
+          System.out.println(fName);
+        }
+        try {
+          Map<String, String> r = new HashMap<String, String>();
 
-					String mName = "set" + fName.substring(0, 1).toUpperCase() + fName.substring(1);
-					String gName = "get" + fName.substring(0, 1).toUpperCase() + fName.substring(1);
-					Method method = c.getMethod(gName, new Class[0]);
-					Object fValue = method.invoke(this.agentSubject, new Object[0]);
-					r.put("method", mName);
-					r.put("value", fValue.toString());
-					res.put(fName, r);
+          String mName = "set" + fName.substring(0, 1).toUpperCase()
+              + fName.substring(1);
+          String gName = "get" + fName.substring(0, 1).toUpperCase()
+              + fName.substring(1);
+          Method method = c.getMethod(gName, new Class[0]);
+          Object fValue = method.invoke(this.agentSubject, new Object[0]);
+          r.put("method", mName);
+          r.put("value", fValue.toString());
+          res.put(fName, r);
 
-				} catch(IllegalArgumentException e) {
-					System.out.println(e);
-				} catch(IllegalAccessException e) {
-					System.out.println(e);
-				} catch(SecurityException e) {
-					System.out.println(e);
-				} catch(NoSuchMethodException e) {
-					System.out.println(e);
-				} catch(InvocationTargetException e) {
-					System.out.println(e);
-				}
-			}
-		}
+        } catch (IllegalArgumentException e) {
+          System.out.println(e);
+        } catch (IllegalAccessException e) {
+          System.out.println(e);
+        } catch (SecurityException e) {
+          System.out.println(e);
+        } catch (NoSuchMethodException e) {
+          System.out.println(e);
+        } catch (InvocationTargetException e) {
+          System.out.println(e);
+        }
+      }
+    }
 
-		Class s = c.getSuperclass();
+    Class s = c.getSuperclass();
 
-		// because c is a real subclass of AgentSubject it is ensured that s is
-		// a real subclass too or AgentSubject; if it is AgentSubject, we are
-		// finished
-		if(!AgentSubject.class.getName().equals(s.getName())) {
-			res.putAll(getFields(s));
-		}
+    // because c is a real subclass of AgentSubject it is ensured that s is
+    // a real subclass too or AgentSubject; if it is AgentSubject, we are
+    // finished
+    if (!AgentSubject.class.getName().equals(s.getName())) {
+      res.putAll(getFields(s));
+    }
 
-		return res;
-	} // getFields
-
+    return res;
+  } // getFields
 
   /**
    * Send a list of actions and the agent log to the actionEventsListener.
@@ -467,22 +474,22 @@ public class DefaultAgentSimulator implements AgentSimulator,
         this.agentSubject.setNewEvents(this.perceptionEvents);
         this.agentSubject.setCurrentSimulationStep(this.currentSimulationStep);
         this.agentSubject.run();
-				if(this.agentIsControlled()) {
-					this.agentSubject.getCoreAgentController().updateView();
+        if (this.agentIsControlled()) {
+          this.agentSubject.getCoreAgentController().updateView();
 
-					// wait for ActionEvents response from AgentController
-					synchronized (this) {
-						try {
-							if((this.stepEndTime - System.currentTimeMillis()) > 0
-								&& !stepCompleted) {
-								wait(this.stepEndTime - System.currentTimeMillis());
-							}
-						} catch (InterruptedException e) {
-						} catch (IllegalArgumentException e) {
-						}
-					}
-					this.agentSubject.getCoreAgentController().performUserActions();
-				}
+          // wait for ActionEvents response from AgentController
+          synchronized (this) {
+            try {
+              if ((this.stepEndTime - System.currentTimeMillis()) > 0
+                  && !stepCompleted) {
+                wait(this.stepEndTime - System.currentTimeMillis());
+              }
+            } catch (InterruptedException e) {
+            } catch (IllegalArgumentException e) {
+            }
+          }
+          this.agentSubject.getCoreAgentController().performUserActions();
+        }
 
         // TODO: review this:
         if (this.agentSubject.isLogGenerationEnabled()
@@ -514,7 +521,7 @@ public class DefaultAgentSimulator implements AgentSimulator,
         // wake up the current thread so that it can complete
         notify();
       }
-		}
+    }
   }
 
   @Override
@@ -528,7 +535,7 @@ public class DefaultAgentSimulator implements AgentSimulator,
     }
   }
 
-	@Override
+  @Override
   public void notifyRemoval() {
     // TODO create a last log for the removed AgentSubject?
     this.running = false;
@@ -539,22 +546,22 @@ public class DefaultAgentSimulator implements AgentSimulator,
     }
   }
 
-	@Override
-	public boolean agentIsControlled() {
-		return this.agentSubject.isControlled();
-	}
+  @Override
+  public boolean agentIsControlled() {
+    return this.agentSubject.isControlled();
+  }
 
-	@Override
-	public boolean agentIsControllable() {
-		return this.agentSubject.isControllable();
-	}
+  @Override
+  public boolean agentIsControllable() {
+    return this.agentSubject.isControllable();
+  }
 
-	@Override
-	public void setAgentIsControlled() {
-		this.abstractSimulator.setAgentIsControlled(this);
-	}
+  @Override
+  public void setAgentIsControlled() {
+    this.abstractSimulator.setAgentIsControlled(this);
+  }
 
-	public void setStepEndTime(long stepEndTime) {
-		this.stepEndTime = stepEndTime;
-	}
+  public void setStepEndTime(long stepEndTime) {
+    this.stepEndTime = stepEndTime;
+  }
 }

@@ -35,6 +35,7 @@ import aors.data.DataBus;
 import aors.data.DataBusInterface;
 import aors.data.evt.sim.SimulationStepEvent;
 import aors.model.agtsim.AgentSubject;
+import aors.model.agtsim.sim.AgentSimulator;
 import aors.model.envevt.EnvironmentEvent;
 import aors.model.envsim.AgentObject;
 import aors.model.envsim.Objekt;
@@ -138,6 +139,29 @@ public class InitialState {
       return this.aorObjectsByType.get(type.getSimpleName());
     }
     return new ArrayList<Objekt>();
+  }
+
+  /**
+   * Get an agent subject for the given ID.
+   * 
+   * @param id
+   *          the Id of the AgentSubject
+   * @return the agent object for the given ID or null if an agent subject is
+   *         not found for that ID
+   */
+  public AgentSubject getAgentSubjectById(long id) {
+    List<AgentSimulator> agtSimulators = this.simulator.getAgentSimulators();
+    AgentSubject agentSubject = null;
+
+    // find the right agent subject.
+    for (AgentSimulator agtSim : agtSimulators) {
+      if(agtSim.getAgentId() == id) {
+        agentSubject = agtSim.getAgentSubject();
+        break;
+      }
+    }
+
+    return agentSubject;
   }
 
   /**
