@@ -155,8 +155,11 @@ public class Visualization implements Module {
 
   @Override
   public void simulationEnded() {
-    // disable the on/off feature
+    // enable the on/off feature
     this.engine.getVisPanel().setEnabledOnOffFeature(true);
+
+    // enable the language selection box
+    this.engine.getVisPanel().setEnabledLanguageSelection(true);
 
     // module is inactive
     if (!this.isModulEnabled()) {
@@ -204,6 +207,7 @@ public class Visualization implements Module {
     else {
       // Update the space model panel
       SpaceModelPanel panel = gui.getContent().getSpaceModelPanel();
+      gui.getContent().getSpaceModelPanel().setVisible(true);
       GeneralSpaceModel gsm = initialState.getSpaceModel();
       panel.updateSpaceTypeLabel(gsm.getSpaceType());
       panel.updateGeometryLabel(gsm.getGeometry());
@@ -268,6 +272,9 @@ public class Visualization implements Module {
   public void simulationStarted() {
     // disable the on/off feature
     this.engine.getVisPanel().setEnabledOnOffFeature(false);
+
+    // disable the language selection box
+    this.engine.getVisPanel().setEnabledLanguageSelection(false);
   }
 
   @Override
@@ -344,15 +351,16 @@ public class Visualization implements Module {
    */
   public void notifyLanguageChange(String languageCode, String country) {
     LanguageManager.changeLanguage(languageCode, country);
-    
+
+    gui.getContent().setDescriptionData(reader.getSimulationDescriptionInfo());
     gui.getContent().refreshGUI();
 
     // update canvas - problems with SWING GUI updates...
     canvas.invalidate();
     canvas.repaint();
 
-   canvas.display();
-   canvas.requestFocus();
+    canvas.display();
+    canvas.requestFocus();
 
   }
 }

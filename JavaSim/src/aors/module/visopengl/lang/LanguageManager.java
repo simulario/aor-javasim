@@ -87,4 +87,13 @@ public class LanguageManager {
       ex.printStackTrace();
     }
   }
+
+  /**
+   * Get the current used language code
+   * 
+   * @return ISO 639 code for language
+   */
+  public static String getCurrentLanguageCode() {
+    return currentLocale.getLanguage();
+  }
 }

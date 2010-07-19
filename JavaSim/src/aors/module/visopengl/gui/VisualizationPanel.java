@@ -47,9 +47,6 @@ public class VisualizationPanel extends JPanel {
   // associated label for language selection combo-box.
   private JLabel languageSelectionBoxLabel;
 
-  // the controller reference
-  private final Visualization controller;
-
   // FPS rate
   private int fps = 0;
 
@@ -66,29 +63,26 @@ public class VisualizationPanel extends JPanel {
    * Creates a panel containing information and settings affecting the
    * visualization.
    */
-  public VisualizationPanel(Visualization visController) {
-    this.controller = visController;
-
+  public VisualizationPanel() {
     setLayout(new FlowLayout(FlowLayout.LEADING, 20, 0));
     this.setBorder(new EtchedBorder());
 
     // create GUI components
-    this.frameRateLabel = new JLabel(LanguageManager
-        .getMessage("frameRate_LABEL"));
+    this.frameRateLabel = new JLabel();
     this.updateFrameRateLabel(0);
 
-    this.simStepLabel = new JLabel(LanguageManager.getMessage("simStep_LABEL"));
+    this.simStepLabel = new JLabel();
     this.updateSimStepLabel(0);
 
-    this.objectIDLabel = new JLabel(LanguageManager
-        .getMessage("objectID_LABEL"));
+    this.objectIDLabel = new JLabel();
     updateObjectIDLabel(0);
 
     this.enableVisThread = new JCheckBox(LanguageManager
         .getMessage("enableVisualization_LABEL"), true);
 
     this.languageSelectionBoxLabel = new JLabel(LanguageManager
-        .getMessage("languageSelectionBox_LABEL"));
+        .getMessage("languageSelectionBox_LABEL")
+        + ":");
 
     // Don't draw a focus border around the check box if it is selected
     enableVisThread.setFocusPainted(false);
@@ -96,12 +90,23 @@ public class VisualizationPanel extends JPanel {
     // create languages stuff
     this.languages = createSupportedLanguages();
     languageSelectionBox = new JComboBox(getLanguagesNames());
+    languageSelectionBox.setLightWeightPopupEnabled(false);
+    for (int i = 0; i < languages.size(); i++) {
+      if (languages.get(((String) languageSelectionBox.getItemAt(i))).equals(
+          LanguageManager.getCurrentLanguageCode())) {
+        
+        languageSelectionBox.setSelectedIndex(i);
+        break;
+      }
+    }
     languageSelectionBox.addActionListener(new ActionListener() {
       public void actionPerformed(ActionEvent e) {
         String selectedLang = (String) ((JComboBox) e.getSource())
             .getSelectedItem();
         String langCode = languages.get(selectedLang);
-        controller.notifyLanguageChange(langCode, "");
+        Visualization visController = ((Visualization) ((GUIComponent) (getParent()
+            .getParent().getParent())).getBaseComponent());
+        visController.notifyLanguageChange(langCode, "");
       }
     });
 
@@ -165,6 +170,17 @@ public class VisualizationPanel extends JPanel {
       result[i] = (String) keySet[i];
     }
 
+    // order alphabetically
+    for (int i = 0; i < n; i++) {
+      for (int j = 0; j < i; j++) {
+        if (result[i].compareTo(result[j]) <= 0) {
+          String temp = result[i];
+          result[i] = result[j];
+          result[j] = temp;
+        }
+      }
+    }
+
     return result;
   }
 
@@ -176,7 +192,7 @@ public class VisualizationPanel extends JPanel {
    */
   public void updateFrameRateLabel(int fps) {
     this.fps = fps;
-    frameRateLabel.setText(LanguageManager.getMessage("frameRate_LABEL") + " "
+    frameRateLabel.setText(LanguageManager.getMessage("frameRate_LABEL") + ": "
         + this.fps);
   }
 
@@ -188,7 +204,7 @@ public class VisualizationPanel extends JPanel {
    */
   public void updateSimStepLabel(long step) {
     this.simStep = step;
-    simStepLabel.setText(LanguageManager.getMessage("simStep_LABEL") + " "
+    simStepLabel.setText(LanguageManager.getMessage("simStep_LABEL") + ": "
         + this.simStep);
   }
 
@@ -200,7 +216,7 @@ public class VisualizationPanel extends JPanel {
    */
   public void updateObjectIDLabel(long id) {
     this.objectID = id;
-    objectIDLabel.setText(LanguageManager.getMessage("objectID_LABEL") + " "
+    objectIDLabel.setText(LanguageManager.getMessage("objectID_LABEL") + ": "
         + this.objectID);
   }
 
@@ -208,8 +224,27 @@ public class VisualizationPanel extends JPanel {
     return enableVisThread;
   }
 
+  /**
+   * Enable/Disable the check-box which allows activating or disabling the
+   * visualization module.
+   * 
+   * @param enable
+   *          true = enable, false = disable
+   */
   public void setEnabledOnOffFeature(boolean enable) {
     this.enableVisThread.setEnabled(enable);
+  }
+
+  /**
+   * Enable/Disable the language selection box which allows to choose a language
+   * that will be used for visualization module.
+   * 
+   * @param enable
+   *          true = enable, false = disable
+   */
+  public void setEnabledLanguageSelection(boolean enable) {
+    this.languageSelectionBox.setEnabled(enable);
+    this.languageSelectionBoxLabel.setEnabled(enable);
   }
 
   /**
@@ -217,11 +252,29 @@ public class VisualizationPanel extends JPanel {
    * dependent messages/labels used.
    */
   public void refreshGUI() {
+    
+    this.languages = createSupportedLanguages();
+    languageSelectionBox.removeAllItems();
+    String[] langNames = this.getLanguagesNames();
+    for(int i=0;i<langNames.length;i++) {
+      languageSelectionBox.addItem(langNames[i]);
+    }
+    languageSelectionBox.setLightWeightPopupEnabled(false);
+    for (int i = 0; i < languages.size(); i++) {
+      if (languages.get(((String) languageSelectionBox.getItemAt(i))).equals(
+          LanguageManager.getCurrentLanguageCode())) {
+
+        languageSelectionBox.setSelectedIndex(i);
+        break;
+      }
+    }
+    
     updateFrameRateLabel(this.fps);
     updateSimStepLabel(this.simStep);
     updateObjectIDLabel(this.objectID);
     this.languageSelectionBoxLabel.setText(LanguageManager
-        .getMessage("languageSelectionBox_LABEL"));
+        .getMessage("languageSelectionBox_LABEL")
+        + ":");
     this.enableVisThread.setText(LanguageManager
         .getMessage("enableVisualization_LABEL"));
   }
