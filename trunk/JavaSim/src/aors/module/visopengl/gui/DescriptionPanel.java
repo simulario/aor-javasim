@@ -5,6 +5,8 @@ import javax.swing.JPanel;
 import javax.swing.JScrollPane;
 import javax.swing.border.EtchedBorder;
 
+import aors.module.visopengl.lang.LanguageManager;
+
 /**
  * Panel containing information about the space model.
  * 
@@ -35,11 +37,10 @@ public class DescriptionPanel extends JScrollPane {
     containerPanel.setBorder(new EtchedBorder());
 
     this.getViewport().add(containerPanel);
-    this
-        .setDescriptionData("<html><br/><br/><br/><center><b>"
-            + "No description is available!"
-            + "<br/>Visualization module is inactive due to missing views definitions.</center>"
-            + "</b></html>");
+    this.setDescriptionData("<br/><br/><br/><center><b>"
+        + LanguageManager.getMessage("messageNoDescription") + "<br/>"
+        + LanguageManager.getMessage("messageNoViews")
+        + "</center></b>");
   }
 
   /**
