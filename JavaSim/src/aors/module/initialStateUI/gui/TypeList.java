@@ -49,8 +49,12 @@ public class TypeList implements ListSelectionListener {
 			typesListModel.addElement(typesListIterator.next());
 		}
 
-		setTypesList(new JList(typesListModel));
-
+		if (listType.equals(ListType.GLOBAL_VARIABLE_LIST)) {
+			setTypesList(new GlobalVariablesJList(initialStateUI,
+					typesListModel));
+		} else {
+			setTypesList(new JList(typesListModel));
+		}
 		this.typesList.setVisibleRowCount(4);
 
 		this.typesList.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);

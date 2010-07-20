@@ -7,6 +7,7 @@ import java.util.HashMap;
 
 import javax.swing.JButton;
 import javax.swing.JComboBox;
+import javax.swing.JLabel;
 import javax.swing.JPanel;
 import javax.swing.border.EtchedBorder;
 
@@ -17,6 +18,7 @@ import aors.module.initialStateUI.controller.InitialStateUIType;
 
 public class InitialStateUIBottomPanel implements ActionListener {
 
+	public static final String AGENT_SUBJECT = "(*) - Property of the Subjective part of the Agent ";
 	private InitialStateUI initialStateUI;
 	private JPanel bottomPanel;
 	private JButton saveToXMLButton;
@@ -26,6 +28,7 @@ public class InitialStateUIBottomPanel implements ActionListener {
 	private JButton deleteInstanceButton;
 	private JComboBox languageComboBox;
 	private String selectedLanguageType;
+	private JLabel agentSubjectLabel;
 
 	private HashMap<String, HashMap<String, String>> buttonsTextHashMap;
 
@@ -72,6 +75,7 @@ public class InitialStateUIBottomPanel implements ActionListener {
 		copyInstanceButton = new JButton();
 		newInstanceButton = new JButton();
 		deleteInstanceButton = new JButton();
+		agentSubjectLabel = new JLabel(InitialStateUIBottomPanel.AGENT_SUBJECT);
 
 		copyInstanceButton.addActionListener(this);
 		copyInstanceButton.setEnabled(false);
@@ -97,6 +101,7 @@ public class InitialStateUIBottomPanel implements ActionListener {
 		bottomPanel.add(deleteInstanceButton);
 		bottomPanel.add(saveToXMLButton);
 		bottomPanel.add(saveAstoXMLButton);
+		bottomPanel.add(agentSubjectLabel);
 
 	}
 

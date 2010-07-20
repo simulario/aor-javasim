@@ -1113,7 +1113,7 @@ public class InitialStateUIController implements Module {
 				String selectedLanguageType = this.GUIComponent
 						.getInitialStateUIBottomPanel()
 						.getSelectedLanguageType();
-				this.getGlobalVariableNames(this.initialStateUIHashMap
+				this.getGlobalVariableNamesHints(this.initialStateUIHashMap
 						.getTypeStructure(typeName), selectedLanguageType);
 				break;
 			}
@@ -1123,20 +1123,27 @@ public class InitialStateUIController implements Module {
 
 	}
 
-	private void getGlobalVariableNames(InitialStateUIType initialStateUIType,
-			String selectedLanguageType) {
+	private void getGlobalVariableNamesHints(
+			InitialStateUIType initialStateUIType, String selectedLanguageType) {
 		this.globalVariables = new ArrayList<String>();
 		ArrayList<String> globalVariables = this.getGlobalVariables();
 		HashMap<String, InitialStateUIProperty> propertiesInfoHashMap = initialStateUIType
 				.getPropertiesInfoHashMap();
+		ArrayList<String> globalVariableHints = new ArrayList<String>();
 		String propertyLabel;
+		String propertyHint;
 		for (InitialStateUIProperty initialStateUIProperty : propertiesInfoHashMap
 				.values()) {
 			propertyLabel = getPropertyLabel(initialStateUIProperty,
 					selectedLanguageType);
 			globalVariables.add(propertyLabel);
+			propertyHint = getPropertyHint(initialStateUIProperty,
+					selectedLanguageType);
+			globalVariableHints.add(propertyHint);
 
 		}
+
+		this.GUIComponent.setGlobalVariableHints(globalVariableHints);
 
 	}
 
@@ -1333,6 +1340,7 @@ public class InitialStateUIController implements Module {
 				.add(PropertyNameConstants.INSTANCE_HASH_MAP_KEY);
 
 		initialStatePropertiesNamesList.add(PropertyNameConstants.TYPE_NAME);
+
 		initialStatePropertiesNamesList.add(PropertyNameConstants.INSTANCE_ID);
 
 		initialStatePropertiesNamesList
@@ -1386,10 +1394,11 @@ public class InitialStateUIController implements Module {
 				.getinitialStateUIController().getInitialStateHashMap()
 				.getTypeStructure(selectedType);
 
-		ArrayList<String> propertiesTypeTableColumnList = initialStateUI
+		ArrayList<String> propertiesNamesList = initialStateUI
 				.getInitialStatePropertiesNamesList();
-		ArrayList<Object> propertiesTypeTableDataList = initialStateUI
+		ArrayList<Object> propertiesDataList = initialStateUI
 				.getInitialStatePropertiesData();
+
 		InitialStateUIPropertyValue initialStateUIPropertyValue;
 		HashMap<String, InitialStateUIPropertyValue> propertiesValuesHashMap;
 		long currentKey;
@@ -1407,13 +1416,14 @@ public class InitialStateUIController implements Module {
 
 			System.out.println(propertyName);
 
-			if (!propertiesTypeTableColumnList.contains(propertyName)) {
+			if (!propertiesNamesList.contains(propertyName)) {
 
-				propertiesTypeTableColumnList.add((String) propertyName);
+				propertiesNamesList.add((String) propertyName);
+
 				initialStateUIPropertyValue = propertiesValuesHashMap
 						.get(propertyName);
 
-				propertiesTypeTableDataList.add(initialStateUIPropertyValue
+				propertiesDataList.add(initialStateUIPropertyValue
 						.getPropertyValue());
 			} else if (currentKey != previousKey) {
 				if (!((String) propertyName)
@@ -1423,7 +1433,7 @@ public class InitialStateUIController implements Module {
 					initialStateUIPropertyValue = propertiesValuesHashMap
 							.get(propertyName);
 
-					propertiesTypeTableDataList.add(initialStateUIPropertyValue
+					propertiesDataList.add(initialStateUIPropertyValue
 							.getPropertyValue());
 				}
 			}
@@ -1432,23 +1442,66 @@ public class InitialStateUIController implements Module {
 
 	}
 
-	public void editPropertiesNamesForLanguageChosen(String selectedLanguage) {
+	public void editPropertiesNamesHints(String selectedLanguage) {
 		ArrayList<InitialStateUIProperty> selectedTypePropertiesList = this.GUIComponent
 				.getSelectedTypePropertiesList();
 		ArrayList<String> initialStatePropertiesNamesList = new ArrayList<String>();
+
+		ArrayList<String> initialStatePropertiesHintsList = new ArrayList<String>();
 		String propertyLabel;
+		String propertyHint;
 		for (InitialStateUIProperty initialStateUIProperty : selectedTypePropertiesList) {
 
 			propertyLabel = getPropertyLabel(initialStateUIProperty,
 					selectedLanguage);
+			if (initialStateUIProperty.getAgentType() != null) {
+				if (initialStateUIProperty.getAgentType().equals(
+						AgentType.Subjective)) {
+					propertyLabel = propertyLabel + "(*)";
+				}
+			}
 
 			initialStatePropertiesNamesList.add(propertyLabel);
+			propertyHint = getPropertyHint(initialStateUIProperty,
+					selectedLanguage);
+			initialStatePropertiesHintsList.add(propertyHint);
 
 		}
 
 		this.GUIComponent
 				.setInitialStatePropertiesNamesList(initialStatePropertiesNamesList);
+		this.GUIComponent
+				.setInitialStatePropertiesHintsList(initialStatePropertiesHintsList);
 
+	}
+
+	private String getPropertyHint(
+			InitialStateUIProperty initialStateUIProperty,
+			String selectedLanguage) {
+		String propertyHint;
+		HashMap<String, String> languagePropertyLabelHintHashMap = initialStateUIProperty
+				.getLanguagePropertyHintTextHashMap();
+		if (languagePropertyLabelHintHashMap != null) {
+
+			if (languagePropertyLabelHintHashMap.containsKey(selectedLanguage)) {
+				propertyHint = languagePropertyLabelHintHashMap
+						.get(selectedLanguage);
+			} else {
+				if (languagePropertyLabelHintHashMap
+						.containsKey(InitialStateUIProperty.No_Lang_Attr_Given)) {
+					propertyHint = languagePropertyLabelHintHashMap
+							.get(InitialStateUIProperty.No_Lang_Attr_Given);
+				} else {
+					propertyHint = InitialStateUIProperty.NO_HINT_PROVIDED;
+				}
+
+			}
+
+		} else {
+			propertyHint = InitialStateUIProperty.NO_HINT_PROVIDED;
+		}
+
+		return propertyHint;
 	}
 
 	private String getPropertyLabel(
@@ -2314,7 +2367,7 @@ public class InitialStateUIController implements Module {
 
 		InitialStateUIType initialStateUIType = this.initialStateUIHashMap
 				.getTypeStructure(CategoryType.Global.name());
-		this.getGlobalVariableNames(initialStateUIType, selectedLanguage);
+		this.getGlobalVariableNamesHints(initialStateUIType, selectedLanguage);
 
 	}
 

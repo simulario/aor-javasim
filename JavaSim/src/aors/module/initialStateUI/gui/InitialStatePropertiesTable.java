@@ -1,6 +1,7 @@
 package aors.module.initialStateUI.gui;
 
 import java.awt.Dimension;
+import java.awt.event.MouseEvent;
 import java.util.ArrayList;
 
 import javax.swing.JTable;
@@ -8,6 +9,7 @@ import javax.swing.ListSelectionModel;
 import javax.swing.event.ListSelectionEvent;
 import javax.swing.event.ListSelectionListener;
 import javax.swing.table.DefaultTableModel;
+import javax.swing.table.JTableHeader;
 
 import aors.module.initialStateUI.controller.InitialStateUIController;
 import aors.module.initialStateUI.controller.InitialStateUIProperty;
@@ -31,8 +33,8 @@ public class InitialStatePropertiesTable implements ListSelectionListener {
 		this.initialStateUI = initialStateUI;
 		this.initialStatePropertiesTableModel = new InitialStatePropertiesTableModel(
 				initialStateUI, selectedTypeLanguage);
-		initialStatePropertiesTable = new JTable(
-				this.initialStatePropertiesTableModel);
+		initialStatePropertiesTable = new propertiesTable(
+				this.initialStatePropertiesTableModel, initialStateUI);
 
 		initialStatePropertiesTable.getSelectionModel()
 				.addListSelectionListener(this);
@@ -89,6 +91,64 @@ public class InitialStatePropertiesTable implements ListSelectionListener {
 	 */
 	public InitialStatePropertiesTableModel getInitialStatePropertiesTableModel() {
 		return initialStatePropertiesTableModel;
+	}
+
+}
+
+class propertiesTable extends JTable {
+
+	/**
+	 * 
+	 */
+	private static final long serialVersionUID = 1L;
+	private InitialStateUI initialStateUI;
+
+	public propertiesTable(
+			InitialStatePropertiesTableModel initialStatePropertiesTableModel,
+			InitialStateUI initialStateUI)
+
+	{
+		this.initialStateUI = initialStateUI;
+		this.setModel(initialStatePropertiesTableModel);
+
+	}
+
+	protected JTableHeader createDefaultTableHeader() {
+		return new JTableHeader(columnModel) {
+			/**
+			 * 
+			 */
+			private static final long serialVersionUID = 1L;
+
+			public String getToolTipText(MouseEvent e) {
+				java.awt.Point p = e.getPoint();
+				int index = columnModel.getColumnIndexAtX(p.x);
+
+				int hintIndex = index + 1;
+				// hintList also contains instanceHAshMapKey which is not
+				// displayed in table
+
+				String hint = getInitialStateUI()
+						.getInitialStatePropertiesHintsList().get(hintIndex);
+
+				return hint;
+			}
+		};
+	}
+
+	/**
+	 * @param initialStateUI
+	 *            the initialStateUI to set
+	 */
+	public void setInitialStateUI(InitialStateUI initialStateUI) {
+		this.initialStateUI = initialStateUI;
+	}
+
+	/**
+	 * @return the initialStateUI
+	 */
+	public InitialStateUI getInitialStateUI() {
+		return initialStateUI;
 	}
 
 }
@@ -173,6 +233,7 @@ class InitialStatePropertiesTableModel extends DefaultTableModel {
 		// displayed
 		for (int i = 1; i < initialStatePropertiesNamesList.size(); i++) {
 			propertiesLabels[i - 1] = initialStatePropertiesNamesList.get(i);
+
 		}
 
 	}

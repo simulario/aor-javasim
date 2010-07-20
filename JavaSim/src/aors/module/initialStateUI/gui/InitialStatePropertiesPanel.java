@@ -36,16 +36,13 @@ public class InitialStatePropertiesPanel extends JPanel implements
 
 	private static final long serialVersionUID = 1L;
 
+	public static final Integer GLOBALS_PANEL_INDEX = 0;
+
 	private JLabel[][] propertyLabels;
 	private JComponent[][] inputFields;
 	private JPanel[][] cellPanels;
 	private InstancePanel[] instancesPanels;
 	private InitialStateUI initialStateUI;
-
-	private ArrayList<InitialStateUIProperty> selectedTypePropertiesList;
-	private ArrayList<String> initialStatePropertiesNamesList;
-
-	private ArrayList<Object> initialStatePropertiesData;
 
 	private int selectedPanelIndex;
 
@@ -53,12 +50,6 @@ public class InitialStatePropertiesPanel extends JPanel implements
 			int noOfInstancePanels, String selectedLanguage) {
 
 		this.initialStateUI = initialStateUI;
-		this.selectedTypePropertiesList = initialStateUI
-				.getSelectedTypePropertiesList();
-		getPropertiesNamesForInitialStatePropertiesPanel(selectedLanguage);
-
-		this.initialStatePropertiesData = this.initialStateUI
-				.getInitialStatePropertiesData();
 
 		this.setLayout(new GridLayout(noOfInstancePanels, 1));
 		propertyLabels = new JLabel[noOfInstancePanels][];
@@ -82,13 +73,6 @@ public class InitialStatePropertiesPanel extends JPanel implements
 
 	}
 
-	private void getPropertiesNamesForInitialStatePropertiesPanel(
-			String selectedLanguage) {
-		this.initialStatePropertiesNamesList = this.initialStateUI
-				.getInitialStatePropertiesNamesList();
-
-	}
-
 	private void initializePanelControls(int instancePanelNo) {
 
 		if (this.initialStateUI.getSelectedListType() == ListType.GLOBAL_VARIABLE_LIST) {
@@ -103,8 +87,15 @@ public class InitialStatePropertiesPanel extends JPanel implements
 		InstancePanel instancePanel = instancesPanels[instancePanelNo];
 
 		instancePanel.setLayout(new FlowLayout());
-
-		int noOfProperties = this.initialStatePropertiesNamesList.size();
+		ArrayList<String> initialStatePropertiesNamesList = this.initialStateUI
+				.getInitialStatePropertiesNamesList();
+		ArrayList<InitialStateUIProperty> selectedTypePropertiesList = this.initialStateUI
+				.getSelectedTypePropertiesList();
+		ArrayList<Object> initialStatePropertiesData = this.initialStateUI
+				.getInitialStatePropertiesData();
+		ArrayList<String> initialStatePropertiesHintsList = this.initialStateUI
+				.getInitialStatePropertiesHintsList();
+		int noOfProperties = initialStatePropertiesNamesList.size();
 
 		JLabel[] instanceLabels;
 		JComponent[] instanceInputFields;
@@ -112,9 +103,10 @@ public class InitialStatePropertiesPanel extends JPanel implements
 
 		InitialStateUIProperty initialStateUIProperty;
 		Object propertyValue;
+		String propertyHint;
 
 		int noOfFields = noOfProperties - 1; // Instance HashMap key
-		// shoud not be
+		// should not be
 		// displayed
 		instanceLabels = new JLabel[noOfFields];
 		instanceInputFields = new JComponent[noOfFields];
@@ -141,7 +133,14 @@ public class InitialStatePropertiesPanel extends JPanel implements
 		int fieldIndex;
 		for (int i = 0; i < noOfProperties; i++) {
 			if (i != (PropertyIndexConstants.INSTANCE_HASH_MAP_KEY)) {
-				jlabel = new JLabel(this.initialStatePropertiesNamesList.get(i));
+
+				initialStateUIProperty = selectedTypePropertiesList.get(i);
+
+				propertyHint = initialStatePropertiesHintsList.get(i);
+				jlabel = new JLabel(initializePropertyLabel(
+						initialStateUIProperty, i));
+
+				jlabel.setToolTipText(propertyHint);
 
 				// Since fields displayed is one less than
 				// noofProperties(InstancesHashMapKey is not displayed)
@@ -153,13 +152,11 @@ public class InitialStatePropertiesPanel extends JPanel implements
 
 				instanceCellPanels[fieldIndex].add(jlabel);
 
-				initialStateUIProperty = selectedTypePropertiesList.get(i);
-
-				propertyValue = this.initialStatePropertiesData.get(i
+				propertyValue = initialStatePropertiesData.get(i
 						+ propertiesValuesOffest);
 
 				jComponent = initializeInputField(jComponent, propertyValue,
-						initialStateUIProperty);
+						initialStateUIProperty, propertyHint);
 
 				instanceInputFields[fieldIndex] = jComponent;
 
@@ -173,7 +170,7 @@ public class InitialStatePropertiesPanel extends JPanel implements
 				checkInputFieldEditablity(initialStateUIProperty, jComponent);
 			} else {
 
-				Long instanceHashMapKey = (Long) this.initialStatePropertiesData
+				Long instanceHashMapKey = (Long) initialStatePropertiesData
 						.get(i + propertiesValuesOffest);
 				instancePanel.setInstancePanelKey(instanceHashMapKey);
 
@@ -182,7 +179,29 @@ public class InitialStatePropertiesPanel extends JPanel implements
 
 	}
 
+	private String initializePropertyLabel(
+			InitialStateUIProperty initialStateUIProperty, int index) {
+		String propertyLabel = null;
+
+		ArrayList<String> initialStatePropertiesNamesList = this.initialStateUI
+				.getInitialStatePropertiesNamesList();
+
+		propertyLabel = initialStatePropertiesNamesList.get(index);
+
+		return propertyLabel;
+	}
+
 	private void initializePanelControlsGlobals(int instancePanelNo) {
+
+		ArrayList<String> initialStatePropertiesNamesList = this.initialStateUI
+				.getInitialStatePropertiesNamesList();
+		ArrayList<InitialStateUIProperty> selectedTypePropertiesList = this.initialStateUI
+				.getSelectedTypePropertiesList();
+		ArrayList<Object> initialStatePropertiesData = this.initialStateUI
+				.getInitialStatePropertiesData();
+		ArrayList<String> initialStatePropertiesHintsList = this.initialStateUI
+				.getInitialStatePropertiesHintsList();
+
 		InstancePanel instancePanel = instancesPanels[instancePanelNo];
 
 		instancePanel.setLayout(new FlowLayout());
@@ -193,6 +212,7 @@ public class InitialStatePropertiesPanel extends JPanel implements
 
 		InitialStateUIProperty initialStateUIProperty;
 		Object propertyValue;
+		String propertyHint;
 
 		instanceLabels = new JLabel[1];
 		instanceInputFields = new JComponent[1];
@@ -203,26 +223,29 @@ public class InitialStatePropertiesPanel extends JPanel implements
 		JLabel jlabel;
 
 		JComponent jComponent = null;
+		int globalVariableIndex = InitialStatePropertiesPanel.GLOBALS_PANEL_INDEX;
+		propertyHint = initialStatePropertiesHintsList.get(globalVariableIndex);
+		jlabel = new JLabel(initialStatePropertiesNamesList
+				.get(globalVariableIndex));
+		jlabel.setToolTipText(propertyHint);
+		instanceLabels[globalVariableIndex] = jlabel;
+		instanceCellPanels[globalVariableIndex] = new JPanel();
 
-		jlabel = new JLabel(this.initialStatePropertiesNamesList.get(0));
+		instanceCellPanels[globalVariableIndex].add(jlabel);
 
-		instanceLabels[0] = jlabel;
-		instanceCellPanels[0] = new JPanel();
+		initialStateUIProperty = selectedTypePropertiesList
+				.get(globalVariableIndex);
 
-		instanceCellPanels[0].add(jlabel);
-
-		initialStateUIProperty = selectedTypePropertiesList.get(0);
-
-		propertyValue = this.initialStatePropertiesData.get(0);
+		propertyValue = initialStatePropertiesData.get(globalVariableIndex);
 
 		jComponent = initializeInputField(jComponent, propertyValue,
-				initialStateUIProperty);
+				initialStateUIProperty, propertyHint);
 
-		instanceInputFields[0] = jComponent;
+		instanceInputFields[globalVariableIndex] = jComponent;
 
-		instanceCellPanels[0].add(jComponent);
+		instanceCellPanels[globalVariableIndex].add(jComponent);
 
-		instancePanel.add(instanceCellPanels[0]);
+		instancePanel.add(instanceCellPanels[globalVariableIndex]);
 
 	}
 
@@ -260,9 +283,11 @@ public class InitialStatePropertiesPanel extends JPanel implements
 	}
 
 	private JComponent initializeInputField(JComponent jComponent,
-			Object propertyValue, InitialStateUIProperty initialStateUIProperty) {
+			Object propertyValue,
+			InitialStateUIProperty initialStateUIProperty, String propertyHint) {
 
 		Long inputFieldLength;
+
 		if (propertyValue != null) {
 			if (propertyValue.getClass().equals(Boolean.class)) {
 
@@ -313,6 +338,7 @@ public class InitialStatePropertiesPanel extends JPanel implements
 			// ((JTextField) jComponent).addKeyListener(this);
 
 		}
+		jComponent.setToolTipText(propertyHint);
 		return jComponent;
 
 	}
@@ -345,22 +371,6 @@ public class InitialStatePropertiesPanel extends JPanel implements
 	 */
 	public InitialStateUI getInitialStateUI() {
 		return initialStateUI;
-	}
-
-	/**
-	 * @param selectedTypePropertiesList
-	 *            the selectedTypePropertiesList to set
-	 */
-	public void setSelectedTypePropertiesList(
-			ArrayList<InitialStateUIProperty> selectedTypePropertiesList) {
-		this.selectedTypePropertiesList = selectedTypePropertiesList;
-	}
-
-	/**
-	 * @return the selectedTypePropertiesList
-	 */
-	public ArrayList<InitialStateUIProperty> getSelectedTypePropertiesList() {
-		return selectedTypePropertiesList;
 	}
 
 	/**
@@ -494,7 +504,14 @@ public class InitialStatePropertiesPanel extends JPanel implements
 			int inputFieldIndex) {
 		InstancePanel instancePanel = instancesPanels[instancePanelIndex];
 
-		int noOfProperties = this.initialStatePropertiesNamesList.size();
+		ArrayList<String> initialStatePropertiesNamesList = this.initialStateUI
+				.getInitialStatePropertiesNamesList();
+		ArrayList<InitialStateUIProperty> selectedTypePropertiesList = this.initialStateUI
+				.getSelectedTypePropertiesList();
+		ArrayList<Object> initialStatePropertiesData = this.initialStateUI
+				.getInitialStatePropertiesData();
+
+		int noOfProperties = initialStatePropertiesNamesList.size();
 
 		String typeName = null;
 		Long instanceID = null;
@@ -531,9 +548,9 @@ public class InitialStatePropertiesPanel extends JPanel implements
 
 		initialStatePropertiesDataIndex = (instancePanelIndex * noOfProperties)
 				+ propertyIndex;
-		String changedPropertyName = this.selectedTypePropertiesList.get(
+		String changedPropertyName = selectedTypePropertiesList.get(
 				propertyIndex).getPropertyName();
-		String changedPropertyLabel = this.initialStatePropertiesNamesList
+		String changedPropertyLabel = initialStatePropertiesNamesList
 				.get(propertyIndex);
 
 		JComponent jComponent = inputFields[instancePanelIndex][inputFieldIndex];
@@ -541,7 +558,7 @@ public class InitialStatePropertiesPanel extends JPanel implements
 
 		boolean flagError = false;
 		Object oldValue;
-		oldValue = this.initialStatePropertiesData
+		oldValue = initialStatePropertiesData
 				.get(initialStatePropertiesDataIndex);
 
 		flagError = checkForEmptyInput(jComponent, oldValue);
@@ -554,8 +571,8 @@ public class InitialStatePropertiesPanel extends JPanel implements
 					propertyValueClass, changedPropertyLabel);
 
 			if (changedPropertyValue != null) {
-				this.initialStatePropertiesData.set(
-						initialStatePropertiesDataIndex, changedPropertyValue);
+				initialStatePropertiesData.set(initialStatePropertiesDataIndex,
+						changedPropertyValue);
 
 				InitialStateUIController initialStateUIController = this
 						.getInitialStateUI().getinitialStateUIController();
@@ -626,38 +643,6 @@ public class InitialStatePropertiesPanel extends JPanel implements
 		}
 		return propertyValue;
 
-	}
-
-	/**
-	 * @return the initialStatePropertiesData
-	 */
-	public ArrayList<Object> getInitialStatePropertiesData() {
-		return initialStatePropertiesData;
-	}
-
-	/**
-	 * @param initialStatePropertiesData
-	 *            the initialStatePropertiesData to set
-	 */
-	public void setInitialStatePropertiesData(
-			ArrayList<Object> initialStatePropertiesData) {
-		this.initialStatePropertiesData = initialStatePropertiesData;
-	}
-
-	/**
-	 * @return the initialStatePropertiesNamesList
-	 */
-	public ArrayList<String> getInitialStatePropertiesNamesList() {
-		return initialStatePropertiesNamesList;
-	}
-
-	/**
-	 * @param initialStatePropertiesNamesList
-	 *            the initialStatePropertiesNamesList to set
-	 */
-	public void setInitialStatePropertiesNamesList(
-			ArrayList<String> initialStatePropertiesNamesList) {
-		this.initialStatePropertiesNamesList = initialStatePropertiesNamesList;
 	}
 
 	@Override
