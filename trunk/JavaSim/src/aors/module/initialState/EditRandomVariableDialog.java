@@ -29,31 +29,34 @@ import aors.module.initialState.gui.RanVarPropertyContainer;
 public class EditRandomVariableDialog extends JDialog implements RanVarConstant{
 	
 	 
-    private static final long serialVersionUID = -1611854728481662291L;
-    private JPanel contentPanel;
-	  private JComboBox ranTypesBox;
-	  private String  selectedType;
-	  private String  selectedLan;
-	  private Vector<String> lanContainer = null;
+      private static final long serialVersionUID = -1611854728481662291L;
+      
+      
+      private JPanel contentPanel; //used to contain probability distribution type ComboBox, and correspondent label and field for the variable
+	  private JComboBox ranTypesBox;//ComboBox for the probability distribution type
+	  private String  selectedType;//the probability distribution type selected by user
+	  private String  selectedLan;//the programming language selected by user
+	  private Vector<String> lanContainer = null;//the container for the programming language 
       private InitialStateUITab initialStateUITab;
-	  private int cRow;
-	  private String type;
-	  private String property;
-	  private HashMap<String,JLabel> rLabelMap = new HashMap<String,JLabel>();
-	  private HashMap<String,JTextField> rFieldMap = new HashMap<String,JTextField>();
-	  private boolean createNew;
+	  private int cRow;//the selected row number in the table 
+	  private String type;//the entity type
+	  private String property;//the property of the Slot
+	  private HashMap<String,JLabel> rLabelMap = new HashMap<String,JLabel>();//label mapping
+	  private HashMap<String,JTextField> rFieldMap = new HashMap<String,JTextField>();//field mapping
+	  private boolean createNew;//used to distinguish between edition and creation
 	  private RanVarPropertyContainer newContainer,oldContainer;
-	  private String objectType;
+	  private String objectType;//used for objectEvent type
 	  private String tempRContainerKey;
 	  
 	  
 	  
 	  public EditRandomVariableDialog(
-			        Frame frame, String title, boolean modal, 
-              int cRow, String type, String property,
-              InitialStateUITab initialStateUITab,
-              boolean createNew,
-              String objectType
+			  
+			 Frame frame, String title, boolean modal, 
+             int cRow, String type, String property,
+             InitialStateUITab initialStateUITab,
+             boolean createNew,
+             String objectType
 	  )
 	  
 	  {
@@ -118,28 +121,28 @@ public class EditRandomVariableDialog extends JDialog implements RanVarConstant{
 		HashMap<String,HashSet<String>> editLanMap = oldContainer.getRanVarLanMap();
 		HashMap<String,String> editValueMap = oldContainer.getRanVarValueMap();
 		
-		if(!createNew){
+		if(!createNew){//this is edition 
 		  
 		  if(editLanMap==null){
 		    
-		    process(editPropertyMap,editValueMap,null);
+		    process(editPropertyMap,editValueMap,null);//without language choice 
 		  
 		  }else{
 		
-			  process(editPropertyMap,editValueMap,editLanMap);
+			process(editPropertyMap,editValueMap,editLanMap);//with language choice
 		  
 		  }
 		  
-		}else{
+		}else{// this is creation 
 		  
 		  HashMap<String,HashSet<String>> newPropertyMap = new HashMap<String,HashSet<String>>();
 		  HashMap<String,String> newValueMap = new HashMap<String,String>();
 		  
 		  for(Iterator<String> it = editPropertyMap.keySet().iterator(); it.hasNext();){
         
-		    String tempProperty = it.next();
-        HashSet<String> tempVariables =  editPropertyMap.get(tempProperty);
-        newPropertyMap.put(tempProperty, tempVariables);
+		  String tempProperty = it.next();
+          HashSet<String> tempVariables =  editPropertyMap.get(tempProperty);
+          newPropertyMap.put(tempProperty, tempVariables);
         
      }
 		  
@@ -152,14 +155,14 @@ public class EditRandomVariableDialog extends JDialog implements RanVarConstant{
      }
 		  
 		  
-      if(editLanMap==null){
+      if(editLanMap==null){//without language choice 
 			
         newContainer = new RanVarPropertyContainer(selectedType,newPropertyMap,newValueMap);
         tempContainers.add(cRow+1,newContainer);
         process(newPropertyMap,newValueMap,null);
         
         
-      }else{
+      }else{//with language choice 
         
         HashMap<String,HashSet<String>> newLanMap = new HashMap<String,HashSet<String>>();
         HashSet<String> newLanContainer = new HashSet<String>();
@@ -191,7 +194,7 @@ public class EditRandomVariableDialog extends JDialog implements RanVarConstant{
 			                  final HashMap<String,HashSet<String>> tempLanMap){
 		  
 		  
-	    contentPanel = new JPanel();
+	      contentPanel = new JPanel();
 		  contentPanel.setLayout(new BoxLayout(contentPanel,BoxLayout.Y_AXIS));
 		  
 		  //final Vector<String> tempLanContainer = null;
@@ -205,7 +208,7 @@ public class EditRandomVariableDialog extends JDialog implements RanVarConstant{
 		  }
 		  		  
 		 
-		  
+		  //initialize the label mapping and field mapping 
 		  for(int i=0; i<ranTypeArr.length; i++){
 			   
 			  for(int k=0; k<ranExprProperty[i].length; k++){
@@ -215,18 +218,18 @@ public class EditRandomVariableDialog extends JDialog implements RanVarConstant{
 			      if(lanContainer == null){
 			        
 			        JLabel tempLabel = new JLabel(ranProperty[i][k]);
-	            JTextField tempField = new JTextField(15);
+	                JTextField tempField = new JTextField(15);
 			        
 			         tempKey = property+tempRContainerKey+ranTypeArr[i]+ranProperty[i][k];
 			         if(selectedType.equals(ranTypeArr[i])){
 			           
 			           String tempContent = tempValueMap.get(tempKey);
-                 tempField.setText(tempContent);
+                       tempField.setText(tempContent);
 			           
 			         }
 			         
 			            rLabelMap.put(tempKey, tempLabel);
-                  rFieldMap.put(tempKey, tempField);
+                        rFieldMap.put(tempKey, tempField);
 			        
 			      }else{
 			      
@@ -261,7 +264,7 @@ public class EditRandomVariableDialog extends JDialog implements RanVarConstant{
 			
 			
 			
-			Vector<String> tempProperties = transferContainer(tempPropertyMap.get(property+tempRContainerKey+selectedType));
+		Vector<String> tempProperties = transferContainer(tempPropertyMap.get(property+tempRContainerKey+selectedType));
 			
 			JPanel initialPanel = new JPanel();
 			initialPanel.setLayout(new GridLayout(0,2,6,0));
@@ -295,7 +298,7 @@ public class EditRandomVariableDialog extends JDialog implements RanVarConstant{
 			  
 			  lanTypesBox.addItemListener(new ItemListener(){
 	        
-	        @Override
+	        //process for language choice 
 	        public void itemStateChanged(ItemEvent e) {
 	          
 	          if(ItemEvent.SELECTED == e.getStateChange()){
@@ -343,15 +346,15 @@ public class EditRandomVariableDialog extends JDialog implements RanVarConstant{
 			
 			ranTypesBox.addItemListener(new ItemListener(){
 				
-				@Override
-				public void itemStateChanged(ItemEvent e) {
-					
-					if(ItemEvent.SELECTED == e.getStateChange()){
+			//process to change probability distribution type 	
+			public void itemStateChanged(ItemEvent e) {
+				
+			 if(ItemEvent.SELECTED == e.getStateChange()){
 						
-						contentPanel.removeAll();
-						selectedType = (String)e.getItem();
-				    ranTypesBox.setSelectedItem(selectedType);
-			    	contentPanel.add(ranTypesBox);
+				contentPanel.removeAll();
+				selectedType = (String)e.getItem();
+			    ranTypesBox.setSelectedItem(selectedType);
+			   	contentPanel.add(ranTypesBox);
 			    		
 			    		for(int j=0; j<ranTypeArr.length; j++){
 			    			
@@ -396,7 +399,7 @@ public class EditRandomVariableDialog extends JDialog implements RanVarConstant{
 			
 			okButton.addActionListener(new ActionListener(){
 
-				@Override
+				// process the reaction for OK  button
 				public void actionPerformed(ActionEvent e) {
 					
 					
