@@ -4,7 +4,7 @@ import java.util.HashMap;
 
 public class InitialStateUIProperty {
 	public static final Long Unbounded_Field_Length = new Long(-1);
-	public static final Long No_Slider_Step_Size_Provided = new Long(1);
+	public static final Double No_Slider_Step_Size_Provided = new Double(1.0);
 	public static final String No_Widget_Provided = "";
 	public static final boolean No_Read_Only_Provided = false;
 	public static final String No_Lang_Attr_Given = "default";
@@ -16,7 +16,7 @@ public class InitialStateUIProperty {
 	// variable attribute in case of global variable
 	private String propertyName;
 
-	private Long sliderStepSize;
+	private Double sliderStepSize;
 
 	private String widget;
 	private Boolean readonly;
@@ -213,14 +213,14 @@ public class InitialStateUIProperty {
 	 * @param sliderStepSize
 	 *            the sliderStepSize to set
 	 */
-	public void setSliderStepSize(Long sliderStepSize) {
+	public void setSliderStepSize(Double sliderStepSize) {
 		this.sliderStepSize = sliderStepSize;
 	}
 
 	/**
 	 * @return the sliderStepSize
 	 */
-	public Long getSliderStepSize() {
+	public Double getSliderStepSize() {
 		return sliderStepSize;
 	}
 

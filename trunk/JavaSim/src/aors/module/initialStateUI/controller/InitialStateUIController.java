@@ -109,7 +109,6 @@ public class InitialStateUIController implements Module {
 
 			this.initialStateUIEditedInformation
 					.processInitialStateUIEditedInformation();
-			this.initialStateUIEditedInformation = null;
 
 		}
 
@@ -117,7 +116,6 @@ public class InitialStateUIController implements Module {
 		this.GetTypeNamesFromInitialStateUIHashMap();
 
 		if (initializedAtStartup == true) {
-			this.initialStateUIEditedInformation = null;
 
 			this.GUIComponent.updateListsPanel();
 
@@ -373,7 +371,7 @@ public class InitialStateUIController implements Module {
 		Long inputFieldLength;
 		Boolean readOnly;
 		String widget;
-		Long sliderStepSize;
+		Double sliderStepSize;
 
 		propertyName = initializePropertyName(propertyElement, categoryType);
 		inputFieldLength = initializeInputFieldLength(propertyElement);
@@ -422,9 +420,9 @@ public class InitialStateUIController implements Module {
 		return propertyName;
 	}
 
-	private Long initializeSliderStepSize(Element propertyElement) {
+	private Double initializeSliderStepSize(Element propertyElement) {
 
-		Long sliderStepSize;
+		Double sliderStepSize;
 
 		Attr sliderStepSizeAttribute = propertyElement
 				.getAttributeNode(XMLConstants.SLIDER_STEP_SIZE);
@@ -433,7 +431,7 @@ public class InitialStateUIController implements Module {
 			String sliderStepSizeString = sliderStepSizeAttribute.getValue();
 
 			sliderStepSize = new Double((Double
-					.parseDouble(sliderStepSizeString))).longValue();
+					.parseDouble(sliderStepSizeString)));
 		} else {
 			sliderStepSize = InitialStateUIProperty.No_Slider_Step_Size_Provided;
 		}
