@@ -14,6 +14,9 @@ import javax.swing.JLabel;
 
 import aors.module.initialState.gui.InitialStateUITab;
 
+
+//This class used to change all labels and hints
+//for all entity using label with field style(form)
 public class FieldsLanguageBoxHandler implements ActionListener {
 
   public FieldsLanguageBoxHandler(
@@ -22,11 +25,13 @@ public class FieldsLanguageBoxHandler implements ActionListener {
       HashMap<String, HashSet<String>> userInterfaceMap,
       HashMap<String, HashSet<String>> objectObjectEventMap,
       Vector<JButton> buttons) {
-
+	  
+	//mapping between an entity type and its instance of class FieldsEdit
+	//used to edit the content of the entity 
     this.fieldsTypeMap = fieldsTypeMap;
-    this.labelMap = labelMap;
-    this.hintMap = hintMap;
-    this.userInterfaceMap = userInterfaceMap;
+    this.labelMap = labelMap;//used to change the correspondent label
+    this.hintMap = hintMap;// used to change the correspondent hint for the label
+    this.userInterfaceMap = userInterfaceMap;//mapping between an entity type and its labelKey set
     this.objectObjectEventMap = objectObjectEventMap;
 
     this.buttons = buttons;
@@ -60,6 +65,7 @@ public class FieldsLanguageBoxHandler implements ActionListener {
 
   }
 
+  //process button label
   public void processButton(String lan) {
 
     Vector<String> tempLan = buttonLanMap.get(lan);
@@ -81,7 +87,8 @@ public class FieldsLanguageBoxHandler implements ActionListener {
     }
 
   }
-
+ 
+  //process label for field
   public void processFields(String lan) {
 
     Collection<HashSet<String>> objectObjectEventSets = objectObjectEventMap

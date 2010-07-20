@@ -26,26 +26,25 @@ import aors.module.initialState.gui.ValueExprPropertyContainer;
 
 public class EditValueExprDialog extends JDialog{
 	
-	  /**
-	 * 
-	 */
-	private static final long serialVersionUID = 1L;
-	private JPanel contentPanel;
-	  private JComboBox ranTypesBox;
-	  private String  selectedLan;
-	  private InitialStateUITab initialStateUITab;
-	  private int cRow;
-	  private String type;
-	  private String property;
-	  private HashMap<String,JTextField> rFieldMap = new HashMap<String,JTextField>();
-	  private boolean createNew;
-	  private ValueExprPropertyContainer newContainer;
+	 
+	  private static final long serialVersionUID = 1L;
+	  private JPanel contentPanel;//used to contain language choice ComboBox and correspondent field
+	  private JComboBox ranTypesBox;//language choice ComboBox
+	  private String  selectedLan;//the selected programming language
+	  private InitialStateUITab initialStateUITab;//
+	  private int cRow;//the selected row number 
+	  private String type;//the entity type
+	  private String property;//the property of element Slot that contains ValueExpr sub element
+	  private HashMap<String,JTextField> rFieldMap = new HashMap<String,JTextField>();//field mapping
+	  private boolean createNew;//used to determine creation or edition 
+	  private ValueExprPropertyContainer newContainer;//the container of ValueExprs for each slot element 
 	  private String objectType;
 	  private String tempVContainerKey;
 	  
 	   
 	  public EditValueExprDialog(
-			        Frame frame, String title, boolean modal, 
+			  
+			  Frame frame, String title, boolean modal, 
               int cRow, String type, String property,
               InitialStateUITab initialStateUITab,
               boolean createNew,
@@ -88,19 +87,21 @@ public class EditValueExprDialog extends JDialog{
 	     tempVContainerKey = type;
 	    
 	  }
-		  
-		Vector<ValueExprPropertyContainer> tempContainers = initialStateUITab.getValueExprPropertyContainerMap().get(property+tempVContainerKey);
+		//get all containers that hold whole column of ValueExpr   
+		Vector<ValueExprPropertyContainer> tempContainers = 
+		initialStateUITab.getValueExprPropertyContainerMap().get(property+tempVContainerKey);
+		//get the selected container with the help of selected row number
 		ValueExprPropertyContainer tempContainer = tempContainers.get(cRow);
 		
 		//String editPropertyType = tempContainer.getPropertyType();
 		HashMap<String,HashSet<String>> editPropertyMap = tempContainer.getValueExprPropertyMap();
 		HashMap<String,String> editValueMap = tempContainer.getValueExprValueMap();
 		
-		if(!createNew){
+		if(!createNew){//process edition 
 		
 			process(editPropertyMap,editValueMap);
 		
-		}else{
+		}else{// process creation
 			
 		
 			HashMap<String,HashSet<String>> newPropertyMap = new HashMap<String,HashSet<String>>();
