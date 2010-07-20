@@ -90,6 +90,9 @@ public class CreateObjektPanel implements ActionListener, KeyListener {
 		ArrayList<InitialStateUIProperty> selectedTypePropertiesList = this.initialStateUI
 				.getSelectedTypePropertiesList();
 
+		ArrayList<String> initialStatePropertiesHintsList = this.initialStateUI
+				.getInitialStatePropertiesHintsList();
+
 		int labelListLength = propertiesNames.size() - 2;
 		// typeName Property
 		// InstanceHashMapKey
@@ -97,52 +100,65 @@ public class CreateObjektPanel implements ActionListener, KeyListener {
 		// in create
 		// Instance form
 
+		String propertyHint;
 		topPanel.setLayout(new GridLayout(labelListLength, 2));
 		JLabel jlabel;
 		InitialStateUIProperty initialStateUIProperty;
 		JComponent jComponent;
-		Long inputFieldLength;
 		for (int i = 0; i < labelListLength; i++) {
 
-			jlabel = new JLabel((String) propertiesNames.get(i + 2));
+			int propertyIndex = i + 2;
 			// For
 			// leaving
 			// out
 			// typeName,InstanceHashMapKey
 			// Property
+
+			propertyHint = initialStatePropertiesHintsList.get(propertyIndex);
+			jlabel = new JLabel(propertiesNames.get(propertyIndex));
+			jlabel.setToolTipText(propertyHint);
+
 			labelList.add(jlabel);
 			topPanel.add(jlabel);
 
-			initialStateUIProperty = selectedTypePropertiesList.get(i + 2); // For
-			// leaving
-			// out
-			// typeName,,InstanceHashMapKey
-			// Property
+			initialStateUIProperty = selectedTypePropertiesList
+					.get(propertyIndex);
 
-			if (initialStateUIProperty.getPropertyClass().equals(boolean.class)) {
-
-				jComponent = new JCheckBox();
-
-			} else {
-
-				inputFieldLength = initialStateUIProperty.getInputFieldLength();
-				if (inputFieldLength != null
-						&& inputFieldLength != InitialStateUIProperty.Unbounded_Field_Length) {
-					jComponent = new JTextField(inputFieldLength.intValue());
-					// ((JTextField) jComponent).addKeyListener(this);
-
-				} else
-
-					jComponent = new JTextField(10); // Default Length taken
-				// is 10
-			}
+			jComponent = initalizeInputField(initialStateUIProperty,
+					propertyHint);
 
 			inputFieldsList.add(jComponent);
 			topPanel.add(jComponent);
 		}
 	}
 
-	
+	private JComponent initalizeInputField(
+			InitialStateUIProperty initialStateUIProperty, String propertyHint) {
+		JComponent jComponent;
+		if (initialStateUIProperty.getPropertyClass().equals(boolean.class)) {
+
+			jComponent = new JCheckBox();
+
+		} else {
+
+			Long inputFieldLength = initialStateUIProperty
+					.getInputFieldLength();
+			if (inputFieldLength != null
+					&& inputFieldLength != InitialStateUIProperty.Unbounded_Field_Length) {
+				jComponent = new JTextField(inputFieldLength.intValue());
+				// ((JTextField) jComponent).addKeyListener(this);
+
+			} else
+
+				jComponent = new JTextField(10); // Default Length taken
+			// is 10
+		}
+
+		jComponent.setToolTipText(propertyHint);
+		return jComponent;
+
+	}
+
 	private void initializeCreateObjektFrame() {
 		createObjektFrame = new JFrame("Create Instance");
 		JFrame.setDefaultLookAndFeelDecorated(true);

@@ -137,8 +137,7 @@ public class InitialStatePropertiesPanel extends JPanel implements
 				initialStateUIProperty = selectedTypePropertiesList.get(i);
 
 				propertyHint = initialStatePropertiesHintsList.get(i);
-				jlabel = new JLabel(initializePropertyLabel(
-						initialStateUIProperty, i));
+				jlabel = new JLabel(initializePropertyLabel(i));
 
 				jlabel.setToolTipText(propertyHint);
 
@@ -179,8 +178,7 @@ public class InitialStatePropertiesPanel extends JPanel implements
 
 	}
 
-	private String initializePropertyLabel(
-			InitialStateUIProperty initialStateUIProperty, int index) {
+	private String initializePropertyLabel(int index) {
 		String propertyLabel = null;
 
 		ArrayList<String> initialStatePropertiesNamesList = this.initialStateUI
