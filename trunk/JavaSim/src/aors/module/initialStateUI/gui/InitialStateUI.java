@@ -7,7 +7,6 @@ import java.awt.event.ActionListener;
 import java.util.ArrayList;
 import java.util.HashMap;
 
-import javax.swing.JButton;
 import javax.swing.JList;
 import javax.swing.JOptionPane;
 import javax.swing.JPanel;
@@ -33,9 +32,7 @@ public class InitialStateUI extends JScrollPane implements GUIModule,
 
 	public static final Integer PANEL_GUI_LIMIT = 3;
 	private InitialStateUIController initialstateUIcontroller;
-	// private ObjectTypeList objectTypeList;
-	// private EventTypeList eventTypeList;
-	// private AgentTypeList agentTypeList;
+
 	private InitialStatePropertiesTable initialStatePropertiesTable;
 	private InitialStatePropertiesPanel initialStatePropertiesPanel;
 	private CreateObjektPanel createObjektPanel;
@@ -44,10 +41,12 @@ public class InitialStateUI extends JScrollPane implements GUIModule,
 
 	private ArrayList<InitialStateUIProperty> selectedTypePropertiesList;
 	private ArrayList<String> initialStatePropertiesNamesList;
+	private ArrayList<String> initialStatePropertiesHintsList;
 
 	private ArrayList<Object> initialStatePropertiesData;
 
 	private ArrayList<TypeList> typeLists;
+	private ArrayList<String> globalVariableHints;
 	private ListType selectedListType;
 	private InitialStatePropertiesGUIType initialStatePropertiesGUIType;
 
@@ -76,16 +75,11 @@ public class InitialStateUI extends JScrollPane implements GUIModule,
 
 	private JScrollPane bottomPanelScrollPanel;
 
-	private JButton initialStateUISaveButton;
-
 	public InitialStateUI(InitialStateUIController initialstateUIcontroller) {
 
 		// set the core component
 		this.setinitialStateUIController(initialstateUIcontroller);
 
-		initialStateUISaveButton = new JButton("SAVE");
-		initialStateUISaveButton.setVisible(false);
-		this.initialStateUISaveButton.addActionListener(this);
 		initialStatePropertiesJScrollPane = new JScrollPane();
 
 		// create the content panel
@@ -161,10 +155,6 @@ public class InitialStateUI extends JScrollPane implements GUIModule,
 
 	@Override
 	public void actionPerformed(ActionEvent arg0) {
-
-		if (arg0.getSource() == initialStateUISaveButton) {
-			System.out.println("SAVE");
-		}
 
 	}
 
@@ -331,6 +321,10 @@ public class InitialStateUI extends JScrollPane implements GUIModule,
 
 			initialStateUIController
 					.getPropertiesListForSelectedType(selectedType);
+			this.getinitialStateUIController()
+					.editPropertiesNamesHints(
+							this.getInitialStateUIBottomPanel()
+									.getSelectedLanguageType());
 			selectGUIType();
 		} else {
 			this.initialStatePropertiesNamesList = new ArrayList<String>();
@@ -342,6 +336,11 @@ public class InitialStateUI extends JScrollPane implements GUIModule,
 			initialStatePropertiesData = new ArrayList<Object>();
 			initialStatePropertiesData.add(initialStateUIProperty
 					.getPropertyValue());
+
+			this.getinitialStateUIController()
+					.editPropertiesNamesHints(
+							this.getInitialStateUIBottomPanel()
+									.getSelectedLanguageType());
 			populateInitialStatePropertiesPanel(InitialStateUIType.NO_INSTANCES_EXIST);
 			this.initialStatePropertiesGUIType = InitialStatePropertiesGUIType.PANEL;
 		}
@@ -533,16 +532,15 @@ public class InitialStateUI extends JScrollPane implements GUIModule,
 		InstancePanel selectedPanel = initialStatePropertiesPanel
 				.getInstancesPanelList()[selectedPanelIndex];
 
-		int noOfProperties = initialStatePropertiesPanel
-				.getInitialStatePropertiesNamesList().size();
+		int noOfProperties = this.getInitialStatePropertiesNamesList().size();
 
 		int typeNameIndex = selectedPanelIndex * noOfProperties
 				+ PropertyIndexConstants.TYPE_NAME_INPUT_FIELD_INDEX;
 
 		Long selectedInstanceID = selectedPanel.getInstancePanelKey();
 
-		String selectedType = (String) initialStatePropertiesPanel
-				.getInitialStatePropertiesData().get(typeNameIndex);
+		String selectedType = (String) this.getInitialStatePropertiesData()
+				.get(typeNameIndex);
 		validateInstanceCopy(selectedType, selectedInstanceID);
 
 	}
@@ -645,14 +643,13 @@ public class InitialStateUI extends JScrollPane implements GUIModule,
 		InstancePanel selectedPanel = initialStatePropertiesPanel
 				.getInstancesPanelList()[selectedPanelIndex];
 
-		int noOfProperties = initialStatePropertiesPanel
-				.getInitialStatePropertiesNamesList().size();
+		int noOfProperties = this.getInitialStatePropertiesNamesList().size();
 
 		int typeNameIndex = selectedPanelIndex * noOfProperties
 				+ PropertyIndexConstants.TYPE_NAME_INPUT_FIELD_INDEX;
 		Long selectedInstanceID = selectedPanel.getInstancePanelKey();
-		String selectedType = (String) initialStatePropertiesPanel
-				.getInitialStatePropertiesData().get(typeNameIndex);
+		String selectedType = (String) this.getInitialStatePropertiesData()
+				.get(typeNameIndex);
 		this.initialstateUIcontroller.deleteInitialStateUIInstance(
 				selectedInstanceID, selectedType);
 
@@ -863,8 +860,9 @@ public class InitialStateUI extends JScrollPane implements GUIModule,
 		case EVENT_LIST:
 		case OBJECT_LIST: {
 
-			this.getinitialStateUIController()
-					.editPropertiesNamesForLanguageChosen(selectedLanguage);
+			this
+					.getinitialStateUIController()
+					.editPropertiesNamesHints(selectedLanguage);
 			selectGUIType();
 			break;
 
@@ -894,6 +892,37 @@ public class InitialStateUI extends JScrollPane implements GUIModule,
 					this.getTypeLists().get(i).getTypesListScrollPane());
 		}
 
+	}
+
+	/**
+	 * @param initialStatePropertiesHintsList
+	 *            the initialStatePropertiesHintsList to set
+	 */
+	public void setInitialStatePropertiesHintsList(
+			ArrayList<String> initialStatePropertiesHintsList) {
+		this.initialStatePropertiesHintsList = initialStatePropertiesHintsList;
+	}
+
+	/**
+	 * @return the initialStatePropertiesHintsList
+	 */
+	public ArrayList<String> getInitialStatePropertiesHintsList() {
+		return initialStatePropertiesHintsList;
+	}
+
+	/**
+	 * @param globalVariableHints
+	 *            the globalVariableHints to set
+	 */
+	public void setGlobalVariableHints(ArrayList<String> globalVariableHints) {
+		this.globalVariableHints = globalVariableHints;
+	}
+
+	/**
+	 * @return the globalVariableHints
+	 */
+	public ArrayList<String> getGlobalVariableHints() {
+		return globalVariableHints;
 	}
 
 }

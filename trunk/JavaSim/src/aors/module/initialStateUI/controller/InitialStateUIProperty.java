@@ -10,6 +10,7 @@ public class InitialStateUIProperty {
 	public static final String No_Lang_Attr_Given = "default";
 	public static final String ENGLISH_LANG = "en";
 	public static final String DEUTSCH_LANG = "de";
+	public static final String NO_HINT_PROVIDED = "";
 
 	private Long inputFieldLength;
 
