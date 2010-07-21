@@ -47,13 +47,14 @@ public class CreateObjektPanel implements ActionListener, KeyListener {
 		createObjektFrame.add(topPanel, BorderLayout.CENTER);
 		createObjektFrame.add(bottomPanel, BorderLayout.SOUTH);
 
+		createObjektFrame.pack();
+
 	}
 
 	private void initializeBottomPanel() {
 		bottomPanel = new JPanel();
 		bottomPanel.setBorder(new EtchedBorder());
-		topPanel.setSize(this.createObjektFrame.getWidth(),
-				(int) ((this.createObjektFrame.getHeight()) * (0.8)));
+
 		initializeBottomPanelControls();
 
 	}
@@ -74,8 +75,7 @@ public class CreateObjektPanel implements ActionListener, KeyListener {
 	private void initializeTopPanel() {
 		topPanel = new JPanel();
 		topPanel.setBorder(new EtchedBorder());
-		topPanel.setSize(this.createObjektFrame.getWidth(),
-				(int) ((this.createObjektFrame.getHeight()) * (0.8)));
+
 		initializeTopPanelControls();
 
 	}
@@ -102,8 +102,11 @@ public class CreateObjektPanel implements ActionListener, KeyListener {
 		// Instance form
 
 		String propertyHint;
-		topPanel.setLayout(new GridLayout(labelListLength, 2));
+		GridLayout gridLayout = new GridLayout(labelListLength, 3);
+
+		topPanel.setLayout(gridLayout);
 		JLabel jlabel;
+		JLabel unitJLabel = null;
 		String unitLabel;
 		String propertyLabel;
 		InitialStateUIProperty initialStateUIProperty;
@@ -119,13 +122,22 @@ public class CreateObjektPanel implements ActionListener, KeyListener {
 
 			initialStateUIProperty = selectedTypePropertiesList
 					.get(propertyIndex);
+
 			unitLabel = this.initialStateUI.getinitialStateUIController()
 					.getPropertyUnitLabel(initialStateUIProperty);
+
 			propertyLabel = propertiesNames.get(propertyIndex);
 
+			propertyLabel = "    " + propertyLabel + ": ";
+
 			if (unitLabel != null) {
-				propertyLabel = propertyLabel + "(" + unitLabel + ")";
+
+				unitLabel = "  " + unitLabel;
+				unitJLabel = new JLabel(unitLabel);
+			} else {
+				unitJLabel = new JLabel("");
 			}
+
 			jlabel = new JLabel(propertyLabel);
 			propertyHint = initialStatePropertiesHintsList.get(propertyIndex);
 
@@ -139,6 +151,8 @@ public class CreateObjektPanel implements ActionListener, KeyListener {
 
 			inputFieldsList.add(jComponent);
 			topPanel.add(jComponent);
+
+			topPanel.add(unitJLabel);
 			jComponent = null;
 		}
 	}
@@ -188,27 +202,6 @@ public class CreateObjektPanel implements ActionListener, KeyListener {
 		return jComponent;
 	}
 
-	/*
-	 * JComponent jComponent; if
-	 * (initialStateUIProperty.getPropertyClass().equals(boolean.class)) {
-	 * 
-	 * jComponent = new JCheckBox();
-	 * 
-	 * } else {
-	 * 
-	 * Long inputFieldLength = initialStateUIProperty .getInputFieldLength(); if
-	 * (inputFieldLength != null && inputFieldLength !=
-	 * InitialStateUIProperty.Unbounded_Field_Length) { jComponent = new
-	 * JTextField(inputFieldLength.intValue()); // ((JTextField)
-	 * jComponent).addKeyListener(this);
-	 * 
-	 * } else
-	 * 
-	 * jComponent = new JTextField(10); // Default Length taken // is 10 }
-	 * 
-	 * jComponent.setToolTipText(propertyHint); return jComponent;
-	 */
-
 	private JComponent initializeSlider(JComponent jComponent,
 			InitialStateUIProperty initialStateUIProperty,
 			Object propertyValue, InputFieldSliderType inputFieldSliderType) {
@@ -246,12 +239,10 @@ public class CreateObjektPanel implements ActionListener, KeyListener {
 		Dimension parentSize = initialStateUI.getSize();
 		Point p = initialStateUI.getLocation();
 
-		createObjektFrame.setLocation(p.x + parentSize.width / 4, p.y
-				+ parentSize.height / 4);
+		createObjektFrame.setLocation(p.x + parentSize.width / 2, p.y
+				+ parentSize.height / 2);
 
 		createObjektFrame.setVisible(true);
-		// newInstanceFrame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
-		createObjektFrame.setSize(parentSize.width / 3, parentSize.height / 3);
 
 	}
 
