@@ -11,6 +11,7 @@ public class InitialStateUIProperty {
 	public static final String ENGLISH_LANG = "en";
 	public static final String DEUTSCH_LANG = "de";
 	public static final String NO_HINT_PROVIDED = "";
+	public static final String SLIDER_WIDGET = "Slider";
 
 	private Long inputFieldLength;
 
@@ -36,6 +37,12 @@ public class InitialStateUIProperty {
 	 * Only for Agents
 	 */
 	private AgentType agentType;
+
+	/*
+	 * Only for Properties having long or double property Class
+	 */
+	private Object propertyMin;
+	private Object propertyMax;
 
 	private boolean propertyValid = true;
 
@@ -238,6 +245,36 @@ public class InitialStateUIProperty {
 	 */
 	public AgentType getAgentType() {
 		return agentType;
+	}
+
+	/**
+	 * @param propertyMin
+	 *            the propertyMin to set
+	 */
+	public void setPropertyMin(Object propertyMin) {
+		this.propertyMin = propertyMin;
+	}
+
+	/**
+	 * @return the propertyMin
+	 */
+	public Object getPropertyMin() {
+		return propertyMin;
+	}
+
+	/**
+	 * @param propertyMax
+	 *            the propertyMax to set
+	 */
+	public void setPropertyMax(Object propertyMax) {
+		this.propertyMax = propertyMax;
+	}
+
+	/**
+	 * @return the propertyMax
+	 */
+	public Object getPropertyMax() {
+		return propertyMax;
 	}
 
 }

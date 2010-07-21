@@ -33,7 +33,7 @@ public class InitialStateUI extends JScrollPane implements GUIModule,
 	public static final Integer PANEL_GUI_LIMIT = 3;
 	private InitialStateUIController initialstateUIcontroller;
 
-	private InitialStatePropertiesTable initialStatePropertiesTable;
+	private InitialStatePropertiesTable initialStatePropertiesTableview;
 	private InitialStatePropertiesPanel initialStatePropertiesPanel;
 	private CreateObjektPanel createObjektPanel;
 
@@ -77,58 +77,68 @@ public class InitialStateUI extends JScrollPane implements GUIModule,
 
 	public InitialStateUI(InitialStateUIController initialstateUIcontroller) {
 
-		// set the core component
-		this.setinitialStateUIController(initialstateUIcontroller);
+		initializeGUI(initialstateUIcontroller);
 
-		initialStatePropertiesJScrollPane = new JScrollPane();
+	}
 
-		// create the content panel
-		this.contentPanel = new JPanel();
-		this.contentPanel.setLayout(new BorderLayout());
+	public void initializeGUI(InitialStateUIController initialstateUIcontroller) {
 
-		// create the center panel
+		if (this.contentPanel != null)
+			;
+		else {
+			// set the core component
+			this.setinitialStateUIController(initialstateUIcontroller);
 
-		this.centerPanel = new JPanel();
+			initialStatePropertiesJScrollPane = new JScrollPane();
 
-		this.centerPanel.setBorder(new EtchedBorder());
-		this.centerPanel.setLayout(new BorderLayout());
+			// create the content panel
+			this.contentPanel = new JPanel();
+			this.contentPanel.setLayout(new BorderLayout());
 
-		// create the lists panel
+			// create the center panel
 
-		initializeListsPanel();
+			this.centerPanel = new JPanel();
 
-		// create the propertiesTable Panel
-		this.initialStatePropertiesMainPanel = new JPanel();
+			this.centerPanel.setBorder(new EtchedBorder());
+			this.centerPanel.setLayout(new BorderLayout());
 
-		this.initialStatePropertiesMainPanel.setLayout(new BorderLayout());
+			// create the lists panel
 
-		// adding to propertiesTable Panel
-		this.initialStatePropertiesMainPanel.add(BorderLayout.CENTER,
-				initialStatePropertiesJScrollPane);
+			initializeListsPanel();
 
-		// adding to center panel
-		this.centerPanel.add(BorderLayout.NORTH,
-				this.initialStatePropertiesMainPanel);
+			// create the propertiesTable Panel
+			this.initialStatePropertiesMainPanel = new JPanel();
 
-		// create the topPanel
-		this.topPanel = new JPanel();
+			this.initialStatePropertiesMainPanel.setLayout(new BorderLayout());
 
-		this.topPanel.setBorder(new EtchedBorder());
-		this.topPanel.setLayout(new BorderLayout());
-		this.topPanel.add(this.listsPanel, BorderLayout.CENTER);
+			// adding to propertiesTable Panel
+			this.initialStatePropertiesMainPanel.add(BorderLayout.CENTER,
+					initialStatePropertiesJScrollPane);
 
-		// Create the bottom Panel
+			// adding to center panel
+			this.centerPanel.add(BorderLayout.NORTH,
+					this.initialStatePropertiesMainPanel);
 
-		this.initialStateUIBottomPanel = new InitialStateUIBottomPanel();
-		bottomPanelScrollPanel = new JScrollPane(this.initialStateUIBottomPanel
-				.getBottomPanel());
+			// create the topPanel
+			this.topPanel = new JPanel();
 
-		// add panels to InitialStateUI
-		this.setViewportView(this.contentPanel);
-		this.contentPanel.add(BorderLayout.NORTH, topPanel);
-		this.contentPanel.add(BorderLayout.CENTER, centerPanel);
-		this.contentPanel.add(BorderLayout.SOUTH, this.bottomPanelScrollPanel);
+			this.topPanel.setBorder(new EtchedBorder());
+			this.topPanel.setLayout(new BorderLayout());
+			this.topPanel.add(this.listsPanel, BorderLayout.CENTER);
 
+			// Create the bottom Panel
+
+			this.initialStateUIBottomPanel = new InitialStateUIBottomPanel();
+			bottomPanelScrollPanel = new JScrollPane(
+					this.initialStateUIBottomPanel.getBottomPanel());
+
+			// add panels to InitialStateUI
+			this.setViewportView(this.contentPanel);
+			this.contentPanel.add(BorderLayout.NORTH, topPanel);
+			this.contentPanel.add(BorderLayout.CENTER, centerPanel);
+			this.contentPanel.add(BorderLayout.SOUTH,
+					this.bottomPanelScrollPanel);
+		}
 	}
 
 	public void initializeListsPanel() {
@@ -321,10 +331,9 @@ public class InitialStateUI extends JScrollPane implements GUIModule,
 
 			initialStateUIController
 					.getPropertiesListForSelectedType(selectedType);
-			this.getinitialStateUIController()
-					.editPropertiesNamesHints(
-							this.getInitialStateUIBottomPanel()
-									.getSelectedLanguageType());
+			this.getinitialStateUIController().editPropertiesNamesHints(
+					this.getInitialStateUIBottomPanel()
+							.getSelectedLanguageType());
 			selectGUIType();
 		} else {
 			this.initialStatePropertiesNamesList = new ArrayList<String>();
@@ -337,10 +346,9 @@ public class InitialStateUI extends JScrollPane implements GUIModule,
 			initialStatePropertiesData.add(initialStateUIProperty
 					.getPropertyValue());
 
-			this.getinitialStateUIController()
-					.editPropertiesNamesHints(
-							this.getInitialStateUIBottomPanel()
-									.getSelectedLanguageType());
+			this.getinitialStateUIController().editPropertiesNamesHints(
+					this.getInitialStateUIBottomPanel()
+							.getSelectedLanguageType());
 			populateInitialStatePropertiesPanel(InitialStateUIType.NO_INSTANCES_EXIST);
 			this.initialStatePropertiesGUIType = InitialStatePropertiesGUIType.PANEL;
 		}
@@ -425,11 +433,12 @@ public class InitialStateUI extends JScrollPane implements GUIModule,
 		String selectedLanguage = this.initialStateUIBottomPanel
 				.getSelectedLanguageType();
 
-		this.setInitialStatePropertiesTable(new InitialStatePropertiesTable(
-				this, selectedLanguage));
+		this
+				.setInitialStatePropertiesTableView(new InitialStatePropertiesTable(
+						this, selectedLanguage));
 
 		initialStatePropertiesJScrollPane.setViewportView(this
-				.getInitialStatePropertiesTable()
+				.getInitialStatePropertiesTableView()
 				.getInitialStatePropertiesTable());
 
 		initialStatePropertiesJScrollPane.updateUI();
@@ -442,13 +451,13 @@ public class InitialStateUI extends JScrollPane implements GUIModule,
 
 	}
 
-	public void setInitialStatePropertiesTable(
+	public void setInitialStatePropertiesTableView(
 			InitialStatePropertiesTable propertiesTypeTableClass) {
-		this.initialStatePropertiesTable = propertiesTypeTableClass;
+		this.initialStatePropertiesTableview = propertiesTypeTableClass;
 	}
 
-	public InitialStatePropertiesTable getInitialStatePropertiesTable() {
-		return initialStatePropertiesTable;
+	public InitialStatePropertiesTable getInitialStatePropertiesTableView() {
+		return initialStatePropertiesTableview;
 	}
 
 	public void setListsPanel(JPanel listsPanel) {
@@ -548,7 +557,7 @@ public class InitialStateUI extends JScrollPane implements GUIModule,
 	public void copyInstanceInTableView() {
 
 		InitialStatePropertiesTable initialStatePropertiesTable = this
-				.getInitialStatePropertiesTable();
+				.getInitialStatePropertiesTableView();
 
 		int propertiesTableSelectedIndex = initialStatePropertiesTable
 				.getInitialStatePropertiesTable().getSelectionModel()
@@ -658,7 +667,7 @@ public class InitialStateUI extends JScrollPane implements GUIModule,
 	}
 
 	private void deleteInstanceInTable() {
-		int propertiesTableSelectedIndex = initialStatePropertiesTable
+		int propertiesTableSelectedIndex = initialStatePropertiesTableview
 				.getInitialStatePropertiesTable().getSelectionModel()
 				.getLeadSelectionIndex();
 		int noOfProperties = this.initialStatePropertiesNamesList.size();
@@ -671,7 +680,7 @@ public class InitialStateUI extends JScrollPane implements GUIModule,
 				.get(instanceKeyOffset);
 
 		// At 0th position in the JTable typeNAme is present
-		String selectedType = (String) initialStatePropertiesTable
+		String selectedType = (String) initialStatePropertiesTableview
 				.getInitialStatePropertiesTable().getValueAt(
 						propertiesTableSelectedIndex, 0);
 
@@ -860,9 +869,8 @@ public class InitialStateUI extends JScrollPane implements GUIModule,
 		case EVENT_LIST:
 		case OBJECT_LIST: {
 
-			this
-					.getinitialStateUIController()
-					.editPropertiesNamesHints(selectedLanguage);
+			this.getinitialStateUIController().editPropertiesNamesHints(
+					selectedLanguage);
 			selectGUIType();
 			break;
 
@@ -881,15 +889,28 @@ public class InitialStateUI extends JScrollPane implements GUIModule,
 					.setSelectedIndex(selectedIndex);
 
 			this.getPropertiesData();
+
 		}
 
 		}
 	}
 
 	public void updateListsPanel() {
-		for (int i = 0; i < this.getTypeLists().size(); i++) {
-			this.getListsPanel().remove(
-					this.getTypeLists().get(i).getTypesListScrollPane());
+
+		if (this.getTypeLists() != null) {
+			for (int i = 0; i < this.getTypeLists().size(); i++) {
+				this.getListsPanel().remove(
+						this.getTypeLists().get(i).getTypesListScrollPane());
+
+			}
+			initialStatePropertiesJScrollPane.updateUI();
+
+			this.centerPanel.updateUI();
+
+			this.contentPanel.updateUI();
+
+			this.updateUI();
+
 		}
 
 	}

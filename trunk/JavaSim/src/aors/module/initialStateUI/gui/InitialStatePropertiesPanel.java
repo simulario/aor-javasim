@@ -19,6 +19,8 @@ import javax.swing.JOptionPane;
 import javax.swing.JPanel;
 import javax.swing.JTextField;
 import javax.swing.border.EtchedBorder;
+import javax.swing.event.ChangeEvent;
+import javax.swing.event.ChangeListener;
 import javax.swing.text.JTextComponent;
 
 import aors.module.initialStateUI.controller.CategoryType;
@@ -28,7 +30,7 @@ import aors.module.initialStateUI.controller.PropertyNameConstants;
 import aors.module.initialStateUI.controller.UpdateType;
 
 public class InitialStatePropertiesPanel extends JPanel implements
-		MouseListener, ActionListener, KeyListener {
+		MouseListener, ActionListener, KeyListener, ChangeListener {
 
 	/**
 	 * 
@@ -167,6 +169,7 @@ public class InitialStatePropertiesPanel extends JPanel implements
 				 * TypeName , Instance ID and read Only fields are not editable
 				 */
 				checkInputFieldEditablity(initialStateUIProperty, jComponent);
+				jComponent = null;
 			} else {
 
 				Long instanceHashMapKey = (Long) initialStatePropertiesData
@@ -242,6 +245,7 @@ public class InitialStatePropertiesPanel extends JPanel implements
 		instanceInputFields[globalVariableIndex] = jComponent;
 
 		instanceCellPanels[globalVariableIndex].add(jComponent);
+		jComponent = null;
 
 		instancePanel.add(instanceCellPanels[globalVariableIndex]);
 
@@ -284,34 +288,44 @@ public class InitialStatePropertiesPanel extends JPanel implements
 			Object propertyValue,
 			InitialStateUIProperty initialStateUIProperty, String propertyHint) {
 
-		Long inputFieldLength;
+		Class<?> propertyClass = initialStateUIProperty.getPropertyClass();
 
-		if (propertyValue != null) {
-			if (propertyValue.getClass().equals(Boolean.class)) {
+		if (initialStateUIProperty.getWidget().equals(
+				InitialStateUIProperty.SLIDER_WIDGET)) {
+			if (propertyClass.equals(long.class)) {
 
-				jComponent = new JCheckBox();
+				jComponent = initializeSlider(jComponent,
+						initialStateUIProperty, propertyValue,
+						InputFieldSliderType.Long);
 
+			} else if (propertyClass.equals(double.class)) {
+				jComponent = initializeSlider(jComponent,
+						initialStateUIProperty, propertyValue,
+						InputFieldSliderType.Double);
+
+			}
+
+		}
+
+		if (propertyClass.equals(boolean.class)) {
+
+			jComponent = new JCheckBox();
+
+			if (propertyValue != null) {
 				((JCheckBox) jComponent).setSelected((Boolean) propertyValue);
-				((AbstractButton) jComponent).addActionListener(this);
+			}
+			((AbstractButton) jComponent).addActionListener(this);
 
-			} else {
+		} else {
 
-				inputFieldLength = initialStateUIProperty.getInputFieldLength();
-				if (inputFieldLength != null
-						&& inputFieldLength != InitialStateUIProperty.Unbounded_Field_Length) {
-					jComponent = new JTextField();
+			if (jComponent != null)
+				;
 
-					// ((JTextField) jComponent).setColumns(inputFieldLength);
+			else {
 
-				} else {
-					jComponent = new JTextField();
-					// ((JTextField) jComponent).setColumns(20);
-				}
+				jComponent = new JTextField();
 
 				((JTextField) jComponent).addActionListener(this);
-
-				// ((JTextField) jComponent).addKeyListener(this);
-				// inputFieldLength = ((JTextField) jComponent).getColumns();
 
 				if (!propertyValue.toString().equalsIgnoreCase("")) {
 					((JTextField) jComponent).setText(propertyValue.toString());
@@ -319,26 +333,40 @@ public class InitialStatePropertiesPanel extends JPanel implements
 					((JTextField) jComponent).setColumns(10);
 				}
 
-				/*
-				 * if (propertyValue.toString().length() > inputFieldLength) {
-				 * 
-				 * ((JTextField) jComponent).setText(propertyValue.toString()
-				 * .substring(0, inputFieldLength)); } else { ((JTextField)
-				 * jComponent).setText(propertyValue.toString()); }
-				 */
 			}
-
-		} else {
-			jComponent = new JTextField();
-			// ((JTextField) jComponent).setColumns(20);
-
-			((JTextField) jComponent).addActionListener(this);
-			// ((JTextField) jComponent).addKeyListener(this);
-
 		}
+
 		jComponent.setToolTipText(propertyHint);
 		return jComponent;
 
+	}
+
+	private JComponent initializeSlider(JComponent jComponent,
+			InitialStateUIProperty initialStateUIProperty,
+			Object propertyValue, InputFieldSliderType inputFieldSliderType) {
+
+		switch (inputFieldSliderType) {
+		case Long: {
+			jComponent = new InputFieldSlider((Long) initialStateUIProperty
+					.getPropertyMin(), (Long) initialStateUIProperty
+					.getPropertyMax(), new Long(initialStateUIProperty
+					.getSliderStepSize().longValue()), (Long) propertyValue,
+					this);
+			break;
+
+		}
+		case Double: {
+			jComponent = new InputFieldSlider((Double) initialStateUIProperty
+					.getPropertyMin(), (Double) initialStateUIProperty
+					.getPropertyMax(), new Double(initialStateUIProperty
+					.getSliderStepSize()), (Double) propertyValue, this);
+
+		}
+		}
+
+		((InputFieldSlider) jComponent).getPropertyValueSlider()
+				.addChangeListener(this);
+		return jComponent;
 	}
 
 	/**
@@ -475,11 +503,19 @@ public class InitialStatePropertiesPanel extends JPanel implements
 
 	@Override
 	public void actionPerformed(ActionEvent e) {
+
+		JComponent jComponent = (JComponent) e.getSource();
+
+		updateValue(jComponent);
+
+	}
+
+	public void updateValue(JComponent jComponent) {
 		for (int instancePanelIndex = 0; instancePanelIndex < instancesPanels.length; instancePanelIndex++) {
 
 			for (int inputFieldIndex = 0; inputFieldIndex < propertyLabels[instancePanelIndex].length; inputFieldIndex++) {
-				if (e.getSource().equals(
-						inputFields[instancePanelIndex][inputFieldIndex])) {
+				if (jComponent
+						.equals(inputFields[instancePanelIndex][inputFieldIndex])) {
 
 					if (!initializeValueUpdate(instancePanelIndex,
 							inputFieldIndex))
@@ -618,17 +654,28 @@ public class InitialStatePropertiesPanel extends JPanel implements
 		Object propertyValue = null;
 
 		try {
-			if (propertyValueClass.equals(Long.class)) {
-				propertyValue = Long.parseLong(((JTextComponent) jComponent)
-						.getText());
-			} else if (propertyValueClass.equals(Double.class)) {
-				propertyValue = Double
-						.parseDouble(((JTextComponent) jComponent).getText());
-			} else if (propertyValueClass.equals(Boolean.class)) {
-				propertyValue = ((JCheckBox) jComponent).isSelected();
 
-			} else {
-				propertyValue = ((JTextComponent) jComponent).getText();
+			if (jComponent instanceof InputFieldSlider) {
+				InputFieldSlider inputFieldSlider = (InputFieldSlider) jComponent;
+
+				propertyValue = inputFieldSlider.getValue();
+
+			}
+
+			else {
+				if (propertyValueClass.equals(Long.class)) {
+					propertyValue = Long
+							.parseLong(((JTextComponent) jComponent).getText());
+				} else if (propertyValueClass.equals(Double.class)) {
+					propertyValue = Double
+							.parseDouble(((JTextComponent) jComponent)
+									.getText());
+				} else if (propertyValueClass.equals(Boolean.class)) {
+					propertyValue = ((JCheckBox) jComponent).isSelected();
+
+				} else {
+					propertyValue = ((JTextComponent) jComponent).getText();
+				}
 			}
 		} catch (NumberFormatException e) {
 			errMsg = "Property : " + changedPropertyLabel + " is of "
@@ -678,6 +725,12 @@ public class InitialStatePropertiesPanel extends JPanel implements
 
 	@Override
 	public void keyTyped(KeyEvent e) {
+		// TODO Auto-generated method stub
+
+	}
+
+	@Override
+	public void stateChanged(ChangeEvent e) {
 		// TODO Auto-generated method stub
 
 	}
