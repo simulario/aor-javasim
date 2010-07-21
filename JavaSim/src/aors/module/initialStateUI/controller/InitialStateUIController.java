@@ -112,16 +112,18 @@ public class InitialStateUIController implements Module {
 
 		}
 
+		this.GUIComponent.updateListsPanel();
+
+		this.GUIComponent.initializeGUI(this);
 		this.getInformationFromUserInterface();
 		this.GetTypeNamesFromInitialStateUIHashMap();
 
 		if (initializedAtStartup == true) {
 
-			this.GUIComponent.updateListsPanel();
-
 		}
 
 		this.initializeTypeLists();
+
 		this.initializedAtStartup = true;
 
 	}
@@ -403,8 +405,110 @@ public class InitialStateUIController implements Module {
 		initializePropertyClass(propertyName, typeName, initialStateUIProperty,
 				categoryType);
 
+		if (initialStateUIProperty.isPropertyValid()) {
+			Class<?> propertyClass = initialStateUIProperty.getPropertyClass();
+			if ((propertyClass.equals(long.class))
+					|| (propertyClass.equals(double.class))) {
+				initializeMaxMinForProperty(initialStateUIProperty,
+						categoryType, typeName);
+			}
+		}
+
 		return initialStateUIProperty;
 
+	}
+
+	private void initializeMaxMinForProperty(
+			InitialStateUIProperty initialStateUIProperty,
+			CategoryType categoryType, String typeName) {
+		String packageAndClassName = null;
+		String propertyName = initialStateUIProperty.getPropertyName();
+
+		packageAndClassName = initializePackageAndClassName(typeName,
+				categoryType, initialStateUIProperty.getAgentType());
+
+		Class<?> typeNameClass = this.initialState
+				.classForName(packageAndClassName);
+
+		String minGetterName = "get" + "__"
+				+ propertyName.substring(0, 1).toUpperCase()
+				+ propertyName.substring(1) + "Min";
+
+		String maxGetterName = "get" + "__"
+				+ propertyName.substring(0, 1).toUpperCase()
+				+ propertyName.substring(1) + "Max";
+
+		Object propertyMinValue;
+		Object propertyMaxValue;
+		propertyMinValue = getValue(typeNameClass, minGetterName,
+				initialStateUIProperty, typeName, PropertyValueType.MIN);
+		propertyMaxValue = getValue(typeNameClass, maxGetterName,
+				initialStateUIProperty, typeName, PropertyValueType.MAX);
+
+		initialStateUIProperty.setPropertyMin(propertyMinValue);
+		initialStateUIProperty.setPropertyMax(propertyMaxValue);
+
+	}
+
+	private Object getValue(Class<?> typeNameClass, String methodGetter,
+			InitialStateUIProperty initialStateUIProperty, String typeName,
+			PropertyValueType propertyValueType) {
+		Method getter = null;
+		Object propertyValue = null;
+		try {
+			getter = typeNameClass.getMethod(methodGetter);
+			try {
+				propertyValue = getter.invoke(typeNameClass);
+			} catch (IllegalAccessException e) {
+
+				e.printStackTrace();
+			} catch (InvocationTargetException e) {
+
+				e.printStackTrace();
+			}
+
+		} catch (SecurityException e) {
+			e.printStackTrace();
+		} catch (NoSuchMethodException e) {
+
+			propertyValue = getDefaultValueForClass(initialStateUIProperty,
+					propertyValueType);
+
+		} catch (IllegalArgumentException e) {
+			e.printStackTrace();
+		}
+		return propertyValue;
+	}
+
+	private Object getDefaultValueForClass(
+			InitialStateUIProperty initialStateUIProperty,
+			PropertyValueType propertyValueType) {
+		Object propertyValue = null;
+		Class<?> propertyClass = initialStateUIProperty.getPropertyClass();
+		if (propertyClass.equals(long.class)) {
+			switch (propertyValueType) {
+			case MIN: {
+				propertyValue = Long.MIN_VALUE;
+				break;
+			}
+			case MAX: {
+				propertyValue = Long.MAX_VALUE;
+				break;
+			}
+			}
+		} else {
+			switch (propertyValueType) {
+			case MIN: {
+				propertyValue = Double.MIN_VALUE;
+				break;
+			}
+			case MAX: {
+				propertyValue = Double.MAX_VALUE;
+				break;
+			}
+			}
+		}
+		return propertyValue;
 	}
 
 	private String initializePropertyName(Element propertyElement,
@@ -2166,6 +2270,10 @@ public class InitialStateUIController implements Module {
 			AgentSubject agentSubject = (AgentSubject) createEntity(
 					packageAndClassName, initialStateUIInstance,
 					initialStateUIType, AgentType.Subjective);
+
+			agentSubject
+					.addInternalEvent(new aors.model.intevt.EachSimulationStep(
+							1));
 			this.initialState.addAgent(agentObject, agentSubject);
 			break;
 
