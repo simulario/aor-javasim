@@ -24,6 +24,7 @@ import javax.swing.border.EtchedBorder;
 import javax.swing.text.JTextComponent;
 
 import aors.module.initialStateUI.controller.InitialStateUIProperty;
+import aors.module.initialStateUI.controller.PropertyNameConstants;
 
 public class CreateObjektPanel implements ActionListener, KeyListener {
 	private JFrame createObjektFrame;
@@ -103,8 +104,10 @@ public class CreateObjektPanel implements ActionListener, KeyListener {
 		String propertyHint;
 		topPanel.setLayout(new GridLayout(labelListLength, 2));
 		JLabel jlabel;
+		String unitLabel;
+		String propertyLabel;
 		InitialStateUIProperty initialStateUIProperty;
-		JComponent jComponent;
+		JComponent jComponent = null;
 		for (int i = 0; i < labelListLength; i++) {
 
 			int propertyIndex = i + 2;
@@ -114,49 +117,127 @@ public class CreateObjektPanel implements ActionListener, KeyListener {
 			// typeName,InstanceHashMapKey
 			// Property
 
+			initialStateUIProperty = selectedTypePropertiesList
+					.get(propertyIndex);
+			unitLabel = this.initialStateUI.getinitialStateUIController()
+					.getPropertyUnitLabel(initialStateUIProperty);
+			propertyLabel = propertiesNames.get(propertyIndex);
+
+			if (unitLabel != null) {
+				propertyLabel = propertyLabel + "(" + unitLabel + ")";
+			}
+			jlabel = new JLabel(propertyLabel);
 			propertyHint = initialStatePropertiesHintsList.get(propertyIndex);
-			jlabel = new JLabel(propertiesNames.get(propertyIndex));
+
 			jlabel.setToolTipText(propertyHint);
 
 			labelList.add(jlabel);
 			topPanel.add(jlabel);
 
-			initialStateUIProperty = selectedTypePropertiesList
-					.get(propertyIndex);
-
 			jComponent = initalizeInputField(initialStateUIProperty,
-					propertyHint);
+					propertyHint, jComponent);
 
 			inputFieldsList.add(jComponent);
 			topPanel.add(jComponent);
+			jComponent = null;
 		}
 	}
 
 	private JComponent initalizeInputField(
-			InitialStateUIProperty initialStateUIProperty, String propertyHint) {
-		JComponent jComponent;
-		if (initialStateUIProperty.getPropertyClass().equals(boolean.class)) {
+
+	InitialStateUIProperty initialStateUIProperty, String propertyHint,
+			JComponent jComponent) {
+
+		Class<?> propertyClass = initialStateUIProperty.getPropertyClass();
+
+		if (initialStateUIProperty.getWidget().equals(
+				InitialStateUIProperty.SLIDER_WIDGET)) {
+			if (propertyClass.equals(long.class)) {
+
+				jComponent = initializeSlider(jComponent,
+						initialStateUIProperty, null, InputFieldSliderType.Long);
+
+			} else if (propertyClass.equals(double.class)) {
+				jComponent = initializeSlider(jComponent,
+						initialStateUIProperty, null,
+						InputFieldSliderType.Double);
+
+			}
+
+		}
+
+		if (propertyClass.equals(boolean.class)) {
 
 			jComponent = new JCheckBox();
 
 		} else {
 
-			Long inputFieldLength = initialStateUIProperty
-					.getInputFieldLength();
-			if (inputFieldLength != null
-					&& inputFieldLength != InitialStateUIProperty.Unbounded_Field_Length) {
-				jComponent = new JTextField(inputFieldLength.intValue());
-				// ((JTextField) jComponent).addKeyListener(this);
+			if (jComponent != null)
+				;
 
-			} else
+			else {
 
-				jComponent = new JTextField(10); // Default Length taken
-			// is 10
+				jComponent = new JTextField();
+
+				((JTextField) jComponent).setColumns(10);
+			}
+
 		}
 
 		jComponent.setToolTipText(propertyHint);
 		return jComponent;
+	}
 
+	/*
+	 * JComponent jComponent; if
+	 * (initialStateUIProperty.getPropertyClass().equals(boolean.class)) {
+	 * 
+	 * jComponent = new JCheckBox();
+	 * 
+	 * } else {
+	 * 
+	 * Long inputFieldLength = initialStateUIProperty .getInputFieldLength(); if
+	 * (inputFieldLength != null && inputFieldLength !=
+	 * InitialStateUIProperty.Unbounded_Field_Length) { jComponent = new
+	 * JTextField(inputFieldLength.intValue()); // ((JTextField)
+	 * jComponent).addKeyListener(this);
+	 * 
+	 * } else
+	 * 
+	 * jComponent = new JTextField(10); // Default Length taken // is 10 }
+	 * 
+	 * jComponent.setToolTipText(propertyHint); return jComponent;
+	 */
+
+	private JComponent initializeSlider(JComponent jComponent,
+			InitialStateUIProperty initialStateUIProperty,
+			Object propertyValue, InputFieldSliderType inputFieldSliderType) {
+
+		if (propertyValue != null)
+			;
+		else {
+			propertyValue = initialStateUIProperty.getPropertyMin();
+		}
+		switch (inputFieldSliderType) {
+		case Long: {
+			jComponent = new InputFieldSlider((Long) initialStateUIProperty
+					.getPropertyMin(), (Long) initialStateUIProperty
+					.getPropertyMax(), new Long(initialStateUIProperty
+					.getSliderStepSize().longValue()), (Long) propertyValue,
+					null);
+			break;
+
+		}
+		case Double: {
+			jComponent = new InputFieldSlider((Double) initialStateUIProperty
+					.getPropertyMin(), (Double) initialStateUIProperty
+					.getPropertyMax(), new Double(initialStateUIProperty
+					.getSliderStepSize()), (Double) propertyValue, null);
+
+		}
+		}
+
+		return jComponent;
 	}
 
 	private void initializeCreateObjektFrame() {
@@ -225,10 +306,6 @@ public class CreateObjektPanel implements ActionListener, KeyListener {
 			// and first index ,thats why they are left out
 			jComponent = inputFieldsList.get(i);
 
-			// TypeName & InstanceHashMap key are the properties at zeroth
-			// and first index ,thats why they are left out
-			Class<?> propertyValueClass = initialStateUIProperty
-					.getPropertyClass();
 			if (jComponent.getClass().equals(JTextField.class)) {
 				String input = ((JTextComponent) jComponent).getText();
 				if (input.equalsIgnoreCase("")) {
@@ -246,7 +323,7 @@ public class CreateObjektPanel implements ActionListener, KeyListener {
 
 			propertyLabel = propertyLabels.get(i + 2);
 			propertyValue = getChangedPropertyValue(jComponent,
-					propertyValueClass, propertyLabel);
+					initialStateUIProperty, propertyLabel);
 
 			if (propertyValue != null) {
 				this.createdInstancePropertiesValues.put(propertyName,
@@ -265,29 +342,48 @@ public class CreateObjektPanel implements ActionListener, KeyListener {
 	}
 
 	private Object getChangedPropertyValue(JComponent jComponent,
-			Class<? extends Object> propertyValueClass, String propertyLabel) {
+			InitialStateUIProperty initialStateUIProperty, String propertyLabel) {
 
 		String errMsg;
-
+		Class<?> propertyClass = initialStateUIProperty.getPropertyClass();
 		Object propertyValue = null;
+		String propertyName = initialStateUIProperty.getPropertyName();
 
 		try {
-			if (propertyValueClass.equals(long.class)) {
-				propertyValue = (Long.parseLong(((JTextComponent) jComponent)
-						.getText()));
+			if (jComponent instanceof InputFieldSlider) {
+				InputFieldSlider inputFieldSlider = (InputFieldSlider) jComponent;
 
-			} else if (propertyValueClass.equals(double.class)) {
-				propertyValue = Double
-						.parseDouble(((JTextComponent) jComponent).getText());
-			} else if (propertyValueClass.equals(boolean.class)) {
-				propertyValue = ((JCheckBox) jComponent).isSelected();
+				propertyValue = inputFieldSlider.getValue();
 
-			} else {
-				propertyValue = ((JTextComponent) jComponent).getText();
+			}
+
+			else {
+				if (propertyClass.equals(long.class)) {
+					propertyValue = (Long
+							.parseLong(((JTextComponent) jComponent).getText()));
+					if (!propertyName.equals(PropertyNameConstants.INSTANCE_ID))
+						propertyValue = InitialStatePropertiesPanel
+								.checkForInputValidity(propertyValue,
+										initialStateUIProperty, propertyLabel);
+
+				} else if (propertyClass.equals(double.class)) {
+					propertyValue = Double
+							.parseDouble(((JTextComponent) jComponent)
+									.getText());
+
+					propertyValue = InitialStatePropertiesPanel
+							.checkForInputValidity(propertyValue,
+									initialStateUIProperty, propertyLabel);
+				} else if (propertyClass.equals(boolean.class)) {
+					propertyValue = ((JCheckBox) jComponent).isSelected();
+
+				} else {
+					propertyValue = ((JTextComponent) jComponent).getText();
+				}
 			}
 		} catch (NumberFormatException e) {
 			errMsg = "Property : " + propertyLabel + " is of "
-					+ propertyValueClass.getSimpleName()
+					+ propertyClass.getSimpleName()
 					+ " type. Please enter the correct type";
 
 			JOptionPane.showMessageDialog(null, errMsg,

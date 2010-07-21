@@ -228,11 +228,24 @@ class InitialStatePropertiesTableModel extends DefaultTableModel {
 			String selectedLanguage) {
 		ArrayList<String> initialStatePropertiesNamesList = initialStateUI
 				.getInitialStatePropertiesNamesList();
+		ArrayList<InitialStateUIProperty> selectedTypePropertiesList = initialStateUI
+				.getSelectedTypePropertiesList();
 		propertiesLabels = new Object[initialStatePropertiesNamesList.size() - 1];
+		String propertyUnitLabel;
+		InitialStateUIProperty initialStateUIProperty;
 		// At 0th Index InstanceHashMApKey is present .That should not be
 		// displayed
 		for (int i = 1; i < initialStatePropertiesNamesList.size(); i++) {
+			initialStateUIProperty = selectedTypePropertiesList.get(i);
+
 			propertiesLabels[i - 1] = initialStatePropertiesNamesList.get(i);
+			propertyUnitLabel = this.initialStateUI
+					.getinitialStateUIController().getPropertyUnitLabel(
+							initialStateUIProperty);
+			if (propertyUnitLabel != null) {
+				propertiesLabels[i - 1] = propertiesLabels[i - 1] + "("
+						+ propertyUnitLabel + ")";
+			}
 
 		}
 
@@ -299,7 +312,7 @@ class InitialStatePropertiesTableModel extends DefaultTableModel {
 	 * Don't need to implement this method unless your table's data can change.
 	 */
 	public void setValueAt(Object value, int row, int col) {
-		propertiesValues[row][col] = value;
+
 		String typeName = (String) propertiesValues[row][0];
 
 		// instanceIDOffset - Offset for Instance Id in PropertiesData ArrayList
@@ -312,21 +325,32 @@ class InitialStatePropertiesTableModel extends DefaultTableModel {
 
 		int propertyIndex = col + 1;
 
+		InitialStateUIProperty initialStateUIProperty = this.selectedTypePropertiesList
+				.get(propertyIndex);
 		// Since PropertiesStructure Contains one more property than Fields
 		// Displayed (InstancesKashMap key)
-		String changedPropertyName = this.selectedTypePropertiesList.get(
-				propertyIndex).getPropertyName();
+		String changedPropertyName = initialStateUIProperty.getPropertyName();
 		Object changedPropertyValue = value;
-		InitialStateUIController initialStateUIController = this
-				.getInitialStateUI().getinitialStateUIController();
+		String propertyLabel = this.getColumnName(col);
 
-		initialStateUIController.updateInitialStateUIHashMap(typeName,
-				instanceID, changedPropertyName, changedPropertyValue);
+		value = InitialStatePropertiesPanel.checkForInputValidity(value,
+				initialStateUIProperty, propertyLabel);
 
-		initialStateUIController.addInitialStateUIEditedInformation(
-				UpdateType.EDIT, typeName, instanceID, changedPropertyName);
+		if (value != null) {
 
-		fireTableCellUpdated(row, col);
+			propertiesValues[row][col] = value;
+			InitialStateUIController initialStateUIController = this
+					.getInitialStateUI().getinitialStateUIController();
+
+			initialStateUIController.updateInitialStateUIHashMap(typeName,
+					instanceID, changedPropertyName, changedPropertyValue);
+
+			initialStateUIController.addInitialStateUIEditedInformation(
+					UpdateType.EDIT, typeName, instanceID, changedPropertyName);
+
+			fireTableCellUpdated(row, col);
+		}
+
 	}
 
 	/**

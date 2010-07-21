@@ -112,19 +112,15 @@ public class InitialStateUIController implements Module {
 
 		}
 
-		this.GUIComponent.updateListsPanel();
+		this.initialStateUIEditedInformation = null;
 
-		this.GUIComponent.initializeGUI(this);
 		this.getInformationFromUserInterface();
 		this.GetTypeNamesFromInitialStateUIHashMap();
 
-		if (initializedAtStartup == true) {
-
+		if (initializedAtStartup == false) {
+			this.initializeTypeLists();
+			this.initializedAtStartup = true;
 		}
-
-		this.initializeTypeLists();
-
-		this.initializedAtStartup = true;
 
 	}
 
@@ -921,17 +917,21 @@ public class InitialStateUIController implements Module {
 			InitialStateUIProperty initialStateUIProperty, Node propertyNode) {
 		Node unitNode = this.simulationDescription.getNode(PX
 				+ XMLConstants.UNIT, propertyNode);
+		Node unitNodeChild = null;
+		Unit unit;
 		if (unitNode != null) {
+
 			NodeList unitQuantityNodes = unitNode.getChildNodes();
 			initialStateUIProperty.setUnit(new Unit());
-			Unit unit = initialStateUIProperty.getUnit();
+			unit = initialStateUIProperty.getUnit();
+			unit.setUnitPresent(true);
 
 			Element unitQuantityElement;
 			String unitQuantityName = new String();
-			for (int i = 0; i < unitQuantityNodes.getLength(); i++)
-
-				if (unitNode instanceof Element) {
-					unitQuantityElement = (Element) unitNode;
+			for (int i = 0; i < unitQuantityNodes.getLength(); i++) {
+				unitNodeChild = unitQuantityNodes.item(i);
+				if (unitNodeChild instanceof Element) {
+					unitQuantityElement = (Element) unitNodeChild;
 					unitQuantityName = unitQuantityElement.getNodeName();
 
 					for (UnitQuantityType unitQuantityType : UnitQuantityType
@@ -940,22 +940,23 @@ public class InitialStateUIController implements Module {
 								unitQuantityName)) {
 							unit.setUnitQuantityType(unitQuantityType);
 							findUnitType(unit, unitQuantityElement);
+							break;
 
 						}
 
 					}
 
 				}
+			}
 		} else {
-			Unit unit = new Unit();
-			unit.setUnitPresent(false);
+			unit = null;
 			initialStateUIProperty.setUnit(unit);
 		}
 
 	}
 
 	private void findUnitType(Unit unit, Element unitQuantityElement) {
-		String unitValue = unitQuantityElement.getNodeValue();
+		String unitValue = unitQuantityElement.getTextContent();
 		switch (unit.getUnitQuantityType()) {
 		case Area: {
 
@@ -966,17 +967,17 @@ public class InitialStateUIController implements Module {
 			}
 
 			if (unitValue.equalsIgnoreCase("ar")) {
-				unit.area = Area.ar;
+				unit.setArea(Area.ar);
 			} else if (unitValue.equalsIgnoreCase("cm")) {
-				unit.area = Area.cmsq;
+				unit.setArea(Area.cmsq);
 			} else if (unitValue.equalsIgnoreCase("ha"))
-				unit.area = Area.ha;
+				unit.setArea(Area.ha);
 			else if (unitValue.equalsIgnoreCase("km"))
-				unit.area = Area.kmsq;
+				unit.setArea(Area.kmsq);
 			else if (unitValue.equalsIgnoreCase("mm"))
-				unit.area = Area.mmsq;
+				unit.setArea(Area.mmsq);
 			else if (unitValue.equalsIgnoreCase("m"))
-				unit.area = Area.msq;
+				unit.setArea(Area.msq);
 
 			break;
 		}
@@ -989,7 +990,7 @@ public class InitialStateUIController implements Module {
 
 			for (Currency currency : Currency.values()) {
 				if (currency.name().equalsIgnoreCase(unitValue)) {
-					unit.currency = currency;
+					unit.setCurrency(currency);
 				}
 			}
 			break;
@@ -997,7 +998,7 @@ public class InitialStateUIController implements Module {
 		case Length: {
 			for (Length length : Length.values()) {
 				if (length.name().equalsIgnoreCase(unitValue)) {
-					unit.length = length;
+					unit.setLength(length);
 				}
 			}
 			break;
@@ -1006,13 +1007,13 @@ public class InitialStateUIController implements Module {
 			// 248 Ascii Value for Degree
 			int degreeIndex = unitValue.indexOf(248);
 			if (degreeIndex != -1) {
-				unit.math = Math.DEGREE;
+				unit.setMath(Math.DEGREE);
 			} else if (unitValue.equalsIgnoreCase("%")) {
-				unit.math = Math.PERCENT;
+				unit.setMath(Math.PERCENT);
 			} else if (unitValue.equalsIgnoreCase("RAD")) {
-				unit.math = Math.RADIAN;
+				unit.setMath(Math.RADIAN);
 			} else
-				unit.math = Math.PERMIL;
+				unit.setMath(Math.PERMIL);
 			break;
 		}
 		case Physics: {
@@ -1021,7 +1022,7 @@ public class InitialStateUIController implements Module {
 					|| (startChar >= 97 && startChar <= 122)) {
 				for (Physics physics : Physics.values()) {
 					if (physics.name().equalsIgnoreCase(unitValue)) {
-						unit.physics = physics;
+						unit.setPhysics(physics);
 					}
 				}
 
@@ -1031,18 +1032,18 @@ public class InitialStateUIController implements Module {
 					char lastChar = unitValue.charAt(degreeIndex + 1);
 					switch (lastChar) {
 					case 'C': {
-						unit.physics = Physics.degC;
+						unit.setPhysics(Physics.degC);
 						break;
 					}
 					case 'F': {
-						unit.physics = Physics.degF;
+						unit.setPhysics(Physics.degF);
 						break;
 					}
 
 					}
 
 				} else {
-					unit.physics = Physics.Ohm;
+					unit.setPhysics(Physics.Ohm);
 				}
 
 			}
@@ -1051,7 +1052,7 @@ public class InitialStateUIController implements Module {
 		case Time: {
 			for (Time time : Time.values()) {
 				if (time.name().equalsIgnoreCase(unitValue)) {
-					unit.time = time;
+					unit.setTime(time);
 				}
 			}
 			break;
@@ -1061,18 +1062,18 @@ public class InitialStateUIController implements Module {
 			if (superScriptIndex != -1) {
 				unitValue = unitValue.substring(0, superScriptIndex);
 				if (unitValue.equalsIgnoreCase("cm")) {
-					unit.volume = Volume.cmcube;
+					unit.setVolume(Volume.cmcube);
 				} else if (unitValue.equalsIgnoreCase("mm")) {
-					unit.volume = Volume.mmcube;
+					unit.setVolume(Volume.mmcube);
 				} else if (unitValue.equalsIgnoreCase("m")) {
-					unit.volume = Volume.mcube;
+					unit.setVolume(Volume.mcube);
 
 				}
 
 			} else {
 				for (Volume volume : Volume.values()) {
 					if (volume.name().equalsIgnoreCase(unitValue)) {
-						unit.volume = volume;
+						unit.setVolume(volume);
 					}
 				}
 			}
@@ -1081,7 +1082,7 @@ public class InitialStateUIController implements Module {
 		case Weight: {
 			for (Weight weight : Weight.values()) {
 				if (weight.name().equalsIgnoreCase(unitValue)) {
-					unit.weight = weight;
+					unit.setWeight(weight);
 				}
 			}
 			break;
@@ -1259,7 +1260,8 @@ public class InitialStateUIController implements Module {
 
 	@Override
 	public void simulationProjectDirectoryChanged(File projectDirectory) {
-		// TODO Auto-generated method stub
+
+		this.GUIComponent.reinitializeUI();
 
 	}
 
@@ -2476,6 +2478,58 @@ public class InitialStateUIController implements Module {
 		InitialStateUIType initialStateUIType = this.initialStateUIHashMap
 				.getTypeStructure(CategoryType.Global.name());
 		this.getGlobalVariableNamesHints(initialStateUIType, selectedLanguage);
+
+	}
+
+	public String getPropertyUnitLabel(
+			InitialStateUIProperty initialStateUIProperty) {
+		Unit unit = initialStateUIProperty.getUnit();
+		String unitLabel = null;
+		if (unit != null) {
+
+			UnitQuantityType unitQuantityType = unit.getUnitQuantityType();
+			switch (unitQuantityType) {
+			case Area: {
+				unitLabel = unit.getArea().name();
+				break;
+			}
+			case Currency: {
+				unitLabel = unit.getCurrency().name();
+				break;
+			}
+			case Length: {
+				unitLabel = unit.getLength().name();
+				break;
+			}
+			case Math: {
+				unitLabel = unit.getMath().name();
+				break;
+			}
+			case Physics: {
+				unitLabel = unit.getPhysics().name();
+				break;
+			}
+			case Time: {
+				unitLabel = unit.getTime().name();
+				break;
+			}
+			case Volume: {
+				unitLabel = unit.getVolume().name();
+				break;
+			}
+			case Weight: {
+				unitLabel = unit.getWeight().name();
+				break;
+			}
+			}
+
+		}
+		return unitLabel;
+	}
+
+	public void reinitialize() {
+		this.initialStateUIEditedInformation = null;
+		this.initializedAtStartup = false;
 
 	}
 
