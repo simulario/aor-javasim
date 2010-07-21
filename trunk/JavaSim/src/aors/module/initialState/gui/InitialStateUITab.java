@@ -2054,6 +2054,7 @@ public class InitialStateUITab extends JScrollPane implements GUIModule {
       ) {
 
         setAttribute((Element) node, tempLabel, tempPropertyValue);
+        
       } else {
 
         processNormalProperty(type, tempLabel, attrNames, node,
@@ -2161,13 +2162,16 @@ public class InitialStateUITab extends JScrollPane implements GUIModule {
                   }
 
                 } else {
+                	
                   setAttribute((Element) subChildren.item(h), "value",
                       tempPropertyValue);
                 }
               }
             } else if (subNodeName.contains("Range")) {
               if (subNodeName.equalsIgnoreCase(tempPropertyName)) {
+            	  
                 subChildren.item(h).setTextContent(tempPropertyValue);
+                
               }
             }
           }

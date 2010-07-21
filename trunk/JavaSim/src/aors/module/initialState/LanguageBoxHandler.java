@@ -19,12 +19,12 @@ public class LanguageBoxHandler implements ActionListener {
       HashMap<String, String> labelMap, HashMap<String, String> hintMap,
       HashMap<String, HashSet<String>> userInterfaceMap, Vector<JButton> buttons) {
 
-    this.type = type;
-    this.table = table;
-    this.labelMap = labelMap;
-    this.hintMap = hintMap;
-    this.userInterfaceMap = userInterfaceMap;
-    this.buttons = buttons;
+    this.type = type;//the entity type
+    this.table = table;//selected table
+    this.labelMap = labelMap;//mapping between labelKey and correspondent label
+    this.hintMap = hintMap;//mapping between hintKey and correspondent hint
+    this.userInterfaceMap = userInterfaceMap;//mapping between an entity type and labelKey set
+    this.buttons = buttons;//buttons container for copy, edit, delete and create
     initialButtonLanMap();
 
   }
@@ -54,8 +54,8 @@ public class LanguageBoxHandler implements ActionListener {
     String lan = (String) source.getSelectedItem();
     System.out.println("The select language is: ===> " + lan);
 
-    processTable(lan);
-    processButton(lan);
+    processTable(lan);//process table column name language and hint conversion
+    processButton(lan);//process button label language conversion
 
   }
 
@@ -66,7 +66,8 @@ public class LanguageBoxHandler implements ActionListener {
     for (int i = 0; i < table.getColumnCount(); i++) {
       String tableHeadName = (String) table.getColumnModel().getColumn(i)
           .getHeaderValue();
-
+      //id, idRef, rangeStartID and rangeEndID are special table column
+      //the table column name of them will be preserved
       if (tableHeadName.equalsIgnoreCase("id")
           | tableHeadName.equalsIgnoreCase("idRef")
           | tableHeadName.equalsIgnoreCase("rangeStartID")
@@ -81,25 +82,30 @@ public class LanguageBoxHandler implements ActionListener {
         while (it.hasNext()) {
           String tempLabel = it.next();
           String tempTableHeadName = labelMap.get(tempLabel);
-
+          //match correspondent table column name
           if (tempTableHeadName.equals(tableHeadName)) {
 
-            String newLabel = tempLabel.substring(0, (tempLabel.length() - 2))
-                + lan;
+            String newLabel = tempLabel.substring(0, (tempLabel.length() - 2)) + lan;
             String newTableHeadName = labelMap.get(newLabel);
+            
+            //if the user does not set correspondent column name label 
+            //then we will not change the column name
             if (newTableHeadName == null) {
-              newTableHeadName = tableHeadName;
-              table.getColumnModel().getColumn(i).setHeaderValue(
+              
+            	newTableHeadName = tableHeadName;
+                table.getColumnModel().getColumn(i).setHeaderValue(
                   newTableHeadName);
 
             } else {
 
-              table.getColumnModel().getColumn(i).setHeaderValue(
+                table.getColumnModel().getColumn(i).setHeaderValue(
                   newTableHeadName);
+                
             }
 
             String newTableHeadHint = hintMap.get(newLabel);
-
+            //if the user does not provide correspondent hint
+            //then we will advise him to add correspondent into it 
             if (newTableHeadHint == null) {
 
               newTableHeadHint = "Please add corresponding label and hint";
@@ -108,6 +114,7 @@ public class LanguageBoxHandler implements ActionListener {
             } else {
 
               tableHeadHintVector.addElement(newTableHeadHint);
+              
             }
           }
         }
@@ -117,6 +124,7 @@ public class LanguageBoxHandler implements ActionListener {
 
     JTableHeader header = table.getTableHeader();
     ColumnHeaderToolTips tips = new ColumnHeaderToolTips();
+    
     int k = 0;
     for (int c = 0; c < table.getColumnCount(); c++) {
       TableColumn col = table.getColumnModel().getColumn(c);
