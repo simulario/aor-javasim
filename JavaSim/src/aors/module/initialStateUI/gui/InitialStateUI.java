@@ -83,62 +83,58 @@ public class InitialStateUI extends JScrollPane implements GUIModule,
 
 	public void initializeGUI(InitialStateUIController initialstateUIcontroller) {
 
-		if (this.contentPanel != null)
-			;
-		else {
-			// set the core component
-			this.setinitialStateUIController(initialstateUIcontroller);
+		// set the core component
+		this.setinitialStateUIController(initialstateUIcontroller);
 
-			initialStatePropertiesJScrollPane = new JScrollPane();
+		initialStatePropertiesJScrollPane = new JScrollPane();
 
-			// create the content panel
-			this.contentPanel = new JPanel();
-			this.contentPanel.setLayout(new BorderLayout());
+		// create the content panel
+		this.contentPanel = new JPanel();
+		this.contentPanel.setLayout(new BorderLayout());
 
-			// create the center panel
+		// create the center panel
 
-			this.centerPanel = new JPanel();
+		this.centerPanel = new JPanel();
 
-			this.centerPanel.setBorder(new EtchedBorder());
-			this.centerPanel.setLayout(new BorderLayout());
+		this.centerPanel.setBorder(new EtchedBorder());
+		this.centerPanel.setLayout(new BorderLayout());
 
-			// create the lists panel
+		// create the lists panel
 
-			initializeListsPanel();
+		initializeListsPanel();
 
-			// create the propertiesTable Panel
-			this.initialStatePropertiesMainPanel = new JPanel();
+		// create the propertiesTable Panel
+		this.initialStatePropertiesMainPanel = new JPanel();
 
-			this.initialStatePropertiesMainPanel.setLayout(new BorderLayout());
+		this.initialStatePropertiesMainPanel.setLayout(new BorderLayout());
 
-			// adding to propertiesTable Panel
-			this.initialStatePropertiesMainPanel.add(BorderLayout.CENTER,
-					initialStatePropertiesJScrollPane);
+		// adding to propertiesTable Panel
+		this.initialStatePropertiesMainPanel.add(BorderLayout.CENTER,
+				initialStatePropertiesJScrollPane);
 
-			// adding to center panel
-			this.centerPanel.add(BorderLayout.NORTH,
-					this.initialStatePropertiesMainPanel);
+		// adding to center panel
+		this.centerPanel.add(BorderLayout.NORTH,
+				this.initialStatePropertiesMainPanel);
 
-			// create the topPanel
-			this.topPanel = new JPanel();
+		// create the topPanel
+		this.topPanel = new JPanel();
 
-			this.topPanel.setBorder(new EtchedBorder());
-			this.topPanel.setLayout(new BorderLayout());
-			this.topPanel.add(this.listsPanel, BorderLayout.CENTER);
+		this.topPanel.setBorder(new EtchedBorder());
+		this.topPanel.setLayout(new BorderLayout());
+		this.topPanel.add(this.listsPanel, BorderLayout.CENTER);
 
-			// Create the bottom Panel
+		// Create the bottom Panel
 
-			this.initialStateUIBottomPanel = new InitialStateUIBottomPanel();
-			bottomPanelScrollPanel = new JScrollPane(
-					this.initialStateUIBottomPanel.getBottomPanel());
+		this.initialStateUIBottomPanel = new InitialStateUIBottomPanel();
+		bottomPanelScrollPanel = new JScrollPane(this.initialStateUIBottomPanel
+				.getBottomPanel());
 
-			// add panels to InitialStateUI
-			this.setViewportView(this.contentPanel);
-			this.contentPanel.add(BorderLayout.NORTH, topPanel);
-			this.contentPanel.add(BorderLayout.CENTER, centerPanel);
-			this.contentPanel.add(BorderLayout.SOUTH,
-					this.bottomPanelScrollPanel);
-		}
+		// add panels to InitialStateUI
+		this.setViewportView(this.contentPanel);
+		this.contentPanel.add(BorderLayout.NORTH, topPanel);
+		this.contentPanel.add(BorderLayout.CENTER, centerPanel);
+		this.contentPanel.add(BorderLayout.SOUTH, this.bottomPanelScrollPanel);
+
 	}
 
 	public void initializeListsPanel() {
@@ -944,6 +940,16 @@ public class InitialStateUI extends JScrollPane implements GUIModule,
 	 */
 	public ArrayList<String> getGlobalVariableHints() {
 		return globalVariableHints;
+	}
+
+	public void reinitializeUI() {
+		this.contentPanel.removeAll();
+
+		this.contentPanel.updateUI();
+		initializeGUI(this.initialstateUIcontroller);
+		
+		this.initialstateUIcontroller.reinitialize();
+		
 	}
 
 }

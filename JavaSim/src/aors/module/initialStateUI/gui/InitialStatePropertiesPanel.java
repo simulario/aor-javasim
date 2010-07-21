@@ -117,6 +117,7 @@ public class InitialStatePropertiesPanel extends JPanel implements
 		this.inputFields[instancePanelNo] = instanceInputFields;
 		this.cellPanels[instancePanelNo] = instanceCellPanels;
 		JLabel jlabel;
+		JLabel unitLabel = null;
 
 		JComponent jComponent = null;
 
@@ -163,6 +164,12 @@ public class InitialStatePropertiesPanel extends JPanel implements
 
 				instanceCellPanels[fieldIndex].add(jComponent);
 
+				unitLabel = initializeUnitLabel(initialStateUIProperty,
+						unitLabel);
+
+				if (unitLabel != null) {
+					instanceCellPanels[fieldIndex].add(unitLabel);
+				}
 				instancePanel.add(instanceCellPanels[fieldIndex]);
 
 				/*
@@ -179,6 +186,22 @@ public class InitialStatePropertiesPanel extends JPanel implements
 			}
 		}
 
+	}
+
+	private JLabel initializeUnitLabel(
+			InitialStateUIProperty initialStateUIProperty, JLabel unitJLabel) {
+
+		String unitLabel;
+		unitLabel = this.initialStateUI.getinitialStateUIController()
+				.getPropertyUnitLabel(initialStateUIProperty);
+
+		if (unitLabel != null) {
+			unitJLabel = new JLabel(unitLabel);
+
+		} else {
+			return null;
+		}
+		return unitJLabel;
 	}
 
 	private String initializePropertyLabel(int index) {
@@ -222,6 +245,7 @@ public class InitialStatePropertiesPanel extends JPanel implements
 		this.inputFields[instancePanelNo] = instanceInputFields;
 		this.cellPanels[instancePanelNo] = instanceCellPanels;
 		JLabel jlabel;
+		JLabel unitLabel = null;
 
 		JComponent jComponent = null;
 		int globalVariableIndex = InitialStatePropertiesPanel.GLOBALS_PANEL_INDEX;
@@ -246,6 +270,14 @@ public class InitialStatePropertiesPanel extends JPanel implements
 
 		instanceCellPanels[globalVariableIndex].add(jComponent);
 		jComponent = null;
+		
+		
+		unitLabel = initializeUnitLabel(initialStateUIProperty,
+				unitLabel);
+
+		if (unitLabel != null) {
+			instanceCellPanels[globalVariableIndex].add(unitLabel);
+		}
 
 		instancePanel.add(instanceCellPanels[globalVariableIndex]);
 
@@ -284,7 +316,7 @@ public class InitialStatePropertiesPanel extends JPanel implements
 
 	}
 
-	private JComponent initializeInputField(JComponent jComponent,
+	public JComponent initializeInputField(JComponent jComponent,
 			Object propertyValue,
 			InitialStateUIProperty initialStateUIProperty, String propertyHint) {
 
@@ -345,6 +377,11 @@ public class InitialStatePropertiesPanel extends JPanel implements
 			InitialStateUIProperty initialStateUIProperty,
 			Object propertyValue, InputFieldSliderType inputFieldSliderType) {
 
+		if (propertyValue != null)
+			;
+		else {
+			propertyValue = initialStateUIProperty.getPropertyMin();
+		}
 		switch (inputFieldSliderType) {
 		case Long: {
 			jComponent = new InputFieldSlider((Long) initialStateUIProperty
@@ -579,11 +616,12 @@ public class InitialStatePropertiesPanel extends JPanel implements
 
 		}
 		}
+		InitialStateUIProperty initialStateUIProperty;
 
 		initialStatePropertiesDataIndex = (instancePanelIndex * noOfProperties)
 				+ propertyIndex;
-		String changedPropertyName = selectedTypePropertiesList.get(
-				propertyIndex).getPropertyName();
+		initialStateUIProperty = selectedTypePropertiesList.get(propertyIndex);
+		String changedPropertyName = initialStateUIProperty.getPropertyName();
 		String changedPropertyLabel = initialStatePropertiesNamesList
 				.get(propertyIndex);
 
@@ -598,11 +636,9 @@ public class InitialStatePropertiesPanel extends JPanel implements
 		flagError = checkForEmptyInput(jComponent, oldValue);
 
 		if (!flagError) {
-			Class<? extends Object> propertyValueClass = initialStatePropertiesData
-					.get(initialStatePropertiesDataIndex).getClass();
 
 			changedPropertyValue = getChangedPropertyValue(jComponent,
-					propertyValueClass, changedPropertyLabel);
+					initialStateUIProperty, changedPropertyLabel);
 
 			if (changedPropertyValue != null) {
 				initialStatePropertiesData.set(initialStatePropertiesDataIndex,
@@ -647,12 +683,14 @@ public class InitialStatePropertiesPanel extends JPanel implements
 	}
 
 	private Object getChangedPropertyValue(JComponent jComponent,
-			Class<? extends Object> propertyValueClass,
+			InitialStateUIProperty initialStateUIProperty,
 			String changedPropertyLabel) {
 
 		String errMsg;
 		Object propertyValue = null;
 
+		Class<?> propertyClass = initialStateUIProperty.getPropertyClass();
+		String propertyName = initialStateUIProperty.getPropertyName();
 		try {
 
 			if (jComponent instanceof InputFieldSlider) {
@@ -663,14 +701,21 @@ public class InitialStatePropertiesPanel extends JPanel implements
 			}
 
 			else {
-				if (propertyValueClass.equals(Long.class)) {
+				if (propertyClass.equals(long.class)) {
 					propertyValue = Long
 							.parseLong(((JTextComponent) jComponent).getText());
-				} else if (propertyValueClass.equals(Double.class)) {
+					if (!propertyName.equals(PropertyNameConstants.INSTANCE_ID))
+						propertyValue = checkForInputValidity(propertyValue,
+								initialStateUIProperty, changedPropertyLabel);
+
+				} else if (propertyClass.equals(double.class)) {
 					propertyValue = Double
 							.parseDouble(((JTextComponent) jComponent)
 									.getText());
-				} else if (propertyValueClass.equals(Boolean.class)) {
+
+					propertyValue = checkForInputValidity(propertyValue,
+							initialStateUIProperty, changedPropertyLabel);
+				} else if (propertyClass.equals(boolean.class)) {
 					propertyValue = ((JCheckBox) jComponent).isSelected();
 
 				} else {
@@ -679,7 +724,7 @@ public class InitialStatePropertiesPanel extends JPanel implements
 			}
 		} catch (NumberFormatException e) {
 			errMsg = "Property : " + changedPropertyLabel + " is of "
-					+ propertyValueClass.getSimpleName()
+					+ propertyClass.getSimpleName()
 					+ " type. Please enter the correct type";
 
 			JOptionPane.showMessageDialog(null, errMsg,
@@ -687,6 +732,52 @@ public class InitialStatePropertiesPanel extends JPanel implements
 
 		}
 		return propertyValue;
+
+	}
+
+	public static Object checkForInputValidity(Object propertyValue,
+			InitialStateUIProperty initialStateUIProperty, String propertyLabel) {
+
+		Class<?> propertyClass = initialStateUIProperty.getPropertyClass();
+
+		if (propertyClass.equals(long.class)) {
+			long minValue = (Long) initialStateUIProperty.getPropertyMin();
+			long maxValue = (Long) initialStateUIProperty.getPropertyMax();
+			long value = (Long) propertyValue;
+			if ((minValue <= value) && (value <= maxValue)) {
+				return propertyValue;
+			} else {
+
+				promptInvalidInput(minValue, maxValue, propertyLabel);
+				return null;
+			}
+		} else if (propertyClass.equals(double.class)) {
+
+			double minValue = (Double) initialStateUIProperty.getPropertyMin();
+			double maxValue = (Double) initialStateUIProperty.getPropertyMax();
+			double value = (Double) propertyValue;
+			if ((minValue <= value) && (value <= maxValue)) {
+				return propertyValue;
+			} else {
+				promptInvalidInput(minValue, maxValue, propertyLabel);
+				return null;
+			}
+
+		}
+
+		return null;
+	}
+
+	public static void promptInvalidInput(Object minValue, Object maxValue,
+			String propertyLabel) {
+
+		String errMsg = "Property - " + propertyLabel + ": "
+				+ MessageBoxConstants.INPUT_FIELD_OUT_OF_LIMIT + " " + minValue
+				+ " & " + maxValue;
+		JOptionPane
+				.showMessageDialog(null, errMsg,
+						MessageBoxConstants.TITLE_EDIT,
+						JOptionPane.ERROR_MESSAGE, null);
 
 	}
 

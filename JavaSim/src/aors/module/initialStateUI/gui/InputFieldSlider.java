@@ -26,7 +26,10 @@ public class InputFieldSlider extends JPanel implements ChangeListener {
 	private JLabel propertyValueLabel;
 	private JSlider propertyValueSlider;
 	private InputFieldSliderType inputFieldSliderType;
-	private InitialStatePropertiesPanel initialStatePropertiesPanel;
+	private InitialStatePropertiesPanel initialStatePropertiesPanel; // Null for
+	// object
+	// Creation
+	// Panel
 	private Object value;
 	private Long multipyingFactor; // Only for double case
 
@@ -65,6 +68,7 @@ public class InputFieldSlider extends JPanel implements ChangeListener {
 	}
 
 	private void populateInputFieldSlider() {
+		propertyValueSlider.setSnapToTicks(true);
 		propertyValueSlider.setPaintTicks(true);
 		propertyValueSlider.setPaintLabels(true);
 		propertyValueSlider.setBorder(BorderFactory.createEmptyBorder(0, 0, 10,
@@ -101,6 +105,7 @@ public class InputFieldSlider extends JPanel implements ChangeListener {
 		// Create the slider.
 		propertyValueSlider = new JSlider(JSlider.HORIZONTAL, minSliderValue,
 				maxSliderValue, sliderInitialValue);
+		// propertyValueSlider.set
 
 		setInputFieldSliderType(InputFieldSliderType.Double);
 
@@ -179,7 +184,8 @@ public class InputFieldSlider extends JPanel implements ChangeListener {
 			}
 			propertyValueLabel.setText(this.value.toString());
 
-			initialStatePropertiesPanel.updateValue(this);
+			if (initialStatePropertiesPanel != null)
+				initialStatePropertiesPanel.updateValue(this);
 
 		}
 	}
