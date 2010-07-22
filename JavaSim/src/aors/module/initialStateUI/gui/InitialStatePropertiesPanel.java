@@ -556,7 +556,12 @@ public class InitialStatePropertiesPanel extends JPanel implements
 
 					if (!initializeValueUpdate(instancePanelIndex,
 							inputFieldIndex))
-						;
+					{
+						this.inputFields[instancePanelIndex][inputFieldIndex]
+						     								.setBorder(new EtchedBorder());
+						
+					}
+						
 					else {
 						this.inputFields[instancePanelIndex][inputFieldIndex]
 								.setBorder(new EtchedBorder(Color.RED,
