@@ -25,7 +25,7 @@ public class InitialStateUIProperty {
 	private HashMap<String, String> languagePropertyLabelTextHashMap;
 	private HashMap<String, String> languagePropertyHintTextHashMap;
 	private Class<?> propertyClass;
-	private Unit unit;
+	private String unit;
 
 	/*
 	 * Only for Global Variables ,as there are no instances,So single property
@@ -143,14 +143,14 @@ public class InitialStateUIProperty {
 	 * @param unit
 	 *            the unit to set
 	 */
-	public void setUnit(Unit unit) {
+	public void setUnit(String unit) {
 		this.unit = unit;
 	}
 
 	/**
 	 * @return the unit
 	 */
-	public Unit getUnit() {
+	public String getUnit() {
 		return unit;
 	}
 
