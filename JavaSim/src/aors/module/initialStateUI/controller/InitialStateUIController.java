@@ -1011,7 +1011,7 @@ public class InitialStateUIController implements Module {
 			} else if (unitValue.equalsIgnoreCase("%")) {
 				unit.setMath(Math.PERCENT);
 			} else if (unitValue.equalsIgnoreCase("RAD")) {
-				unit.setMath(Math.RADIAN);
+				unit.setMath(Math.RAD);
 			} else
 				unit.setMath(Math.PERMIL);
 			break;
