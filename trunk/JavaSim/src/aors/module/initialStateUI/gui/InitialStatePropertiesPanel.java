@@ -777,8 +777,8 @@ public class InitialStatePropertiesPanel extends JPanel implements
 			String propertyLabel) {
 
 		String errMsg = "Property - " + propertyLabel + ": "
-				+ MessageBoxConstants.INPUT_FIELD_OUT_OF_LIMIT + " " + minValue
-				+ " & " + maxValue;
+				+ MessageBoxConstants.INPUT_FIELD_OUT_OF_LIMIT + "from " + minValue
+				+ " to " + maxValue;
 		JOptionPane
 				.showMessageDialog(null, errMsg,
 						MessageBoxConstants.TITLE_EDIT,

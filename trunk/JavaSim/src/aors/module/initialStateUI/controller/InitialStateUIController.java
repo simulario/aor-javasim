@@ -484,7 +484,7 @@ public class InitialStateUIController implements Module {
 		if (propertyClass.equals(long.class)) {
 			switch (propertyValueType) {
 			case MIN: {
-				propertyValue = Long.MIN_VALUE;
+				propertyValue = Long.MAX_VALUE * (-1);
 				break;
 			}
 			case MAX: {
@@ -495,7 +495,7 @@ public class InitialStateUIController implements Module {
 		} else {
 			switch (propertyValueType) {
 			case MIN: {
-				propertyValue = Double.MIN_VALUE;
+				propertyValue = Double.MAX_VALUE * (-1);
 				break;
 			}
 			case MAX: {
@@ -918,175 +918,25 @@ public class InitialStateUIController implements Module {
 		Node unitNode = this.simulationDescription.getNode(PX
 				+ XMLConstants.UNIT, propertyNode);
 		Node unitNodeChild = null;
-		Unit unit;
+		String unit;
 		if (unitNode != null) {
 
-			NodeList unitQuantityNodes = unitNode.getChildNodes();
-			initialStateUIProperty.setUnit(new Unit());
-			unit = initialStateUIProperty.getUnit();
-			unit.setUnitPresent(true);
+			NodeList unitChildNodes = unitNode.getChildNodes();
 
-			Element unitQuantityElement;
-			String unitQuantityName = new String();
-			for (int i = 0; i < unitQuantityNodes.getLength(); i++) {
-				unitNodeChild = unitQuantityNodes.item(i);
+			Element unitChildElement;
+			for (int i = 0; i < unitChildNodes.getLength(); i++) {
+				unitNodeChild = unitChildNodes.item(i);
 				if (unitNodeChild instanceof Element) {
-					unitQuantityElement = (Element) unitNodeChild;
-					unitQuantityName = unitQuantityElement.getNodeName();
+					unitChildElement = (Element) unitNodeChild;
 
-					for (UnitQuantityType unitQuantityType : UnitQuantityType
-							.values()) {
-						if (unitQuantityType.name().equalsIgnoreCase(
-								unitQuantityName)) {
-							unit.setUnitQuantityType(unitQuantityType);
-							findUnitType(unit, unitQuantityElement);
-							break;
-
-						}
-
-					}
+					unit = unitChildElement.getTextContent();
+					initialStateUIProperty.setUnit(unit);
 
 				}
 			}
 		} else {
 			unit = null;
 			initialStateUIProperty.setUnit(unit);
-		}
-
-	}
-
-	private void findUnitType(Unit unit, Element unitQuantityElement) {
-		String unitValue = unitQuantityElement.getTextContent();
-		switch (unit.getUnitQuantityType()) {
-		case Area: {
-
-			int superScriptIndex = unitValue.indexOf(253);
-			if (superScriptIndex != -1) {
-				unitValue = unitValue.substring(0, superScriptIndex);
-
-			}
-
-			if (unitValue.equalsIgnoreCase("ar")) {
-				unit.setArea(Area.ar);
-			} else if (unitValue.equalsIgnoreCase("cm")) {
-				unit.setArea(Area.cmsq);
-			} else if (unitValue.equalsIgnoreCase("ha"))
-				unit.setArea(Area.ha);
-			else if (unitValue.equalsIgnoreCase("km"))
-				unit.setArea(Area.kmsq);
-			else if (unitValue.equalsIgnoreCase("mm"))
-				unit.setArea(Area.mmsq);
-			else if (unitValue.equalsIgnoreCase("m"))
-				unit.setArea(Area.msq);
-
-			break;
-		}
-
-		case Currency: {
-			int leftParenIndex = unitValue.indexOf('(');
-			if (leftParenIndex != -1) {
-				unitValue = unitValue.substring(0, leftParenIndex);
-			}
-
-			for (Currency currency : Currency.values()) {
-				if (currency.name().equalsIgnoreCase(unitValue)) {
-					unit.setCurrency(currency);
-				}
-			}
-			break;
-		}
-		case Length: {
-			for (Length length : Length.values()) {
-				if (length.name().equalsIgnoreCase(unitValue)) {
-					unit.setLength(length);
-				}
-			}
-			break;
-		}
-		case Math: {
-			// 248 Ascii Value for Degree
-			int degreeIndex = unitValue.indexOf(248);
-			if (degreeIndex != -1) {
-				unit.setMath(Math.DEGREE);
-			} else if (unitValue.equalsIgnoreCase("%")) {
-				unit.setMath(Math.PERCENT);
-			} else if (unitValue.equalsIgnoreCase("RAD")) {
-				unit.setMath(Math.RAD);
-			} else
-				unit.setMath(Math.PERMIL);
-			break;
-		}
-		case Physics: {
-			int startChar = unitValue.charAt(0);
-			if ((startChar >= 65 && startChar <= 90)
-					|| (startChar >= 97 && startChar <= 122)) {
-				for (Physics physics : Physics.values()) {
-					if (physics.name().equalsIgnoreCase(unitValue)) {
-						unit.setPhysics(physics);
-					}
-				}
-
-			} else {
-				int degreeIndex = unitValue.indexOf(248);
-				if (degreeIndex != -1) {
-					char lastChar = unitValue.charAt(degreeIndex + 1);
-					switch (lastChar) {
-					case 'C': {
-						unit.setPhysics(Physics.degC);
-						break;
-					}
-					case 'F': {
-						unit.setPhysics(Physics.degF);
-						break;
-					}
-
-					}
-
-				} else {
-					unit.setPhysics(Physics.Ohm);
-				}
-
-			}
-			break;
-		}
-		case Time: {
-			for (Time time : Time.values()) {
-				if (time.name().equalsIgnoreCase(unitValue)) {
-					unit.setTime(time);
-				}
-			}
-			break;
-		}
-		case Volume: {
-			int superScriptIndex = unitValue.indexOf(252);
-			if (superScriptIndex != -1) {
-				unitValue = unitValue.substring(0, superScriptIndex);
-				if (unitValue.equalsIgnoreCase("cm")) {
-					unit.setVolume(Volume.cmcube);
-				} else if (unitValue.equalsIgnoreCase("mm")) {
-					unit.setVolume(Volume.mmcube);
-				} else if (unitValue.equalsIgnoreCase("m")) {
-					unit.setVolume(Volume.mcube);
-
-				}
-
-			} else {
-				for (Volume volume : Volume.values()) {
-					if (volume.name().equalsIgnoreCase(unitValue)) {
-						unit.setVolume(volume);
-					}
-				}
-			}
-			break;
-		}
-		case Weight: {
-			for (Weight weight : Weight.values()) {
-				if (weight.name().equalsIgnoreCase(unitValue)) {
-					unit.setWeight(weight);
-				}
-			}
-			break;
-		}
 		}
 
 	}
@@ -2483,48 +2333,9 @@ public class InitialStateUIController implements Module {
 
 	public String getPropertyUnitLabel(
 			InitialStateUIProperty initialStateUIProperty) {
-		Unit unit = initialStateUIProperty.getUnit();
-		String unitLabel = null;
-		if (unit != null) {
 
-			UnitQuantityType unitQuantityType = unit.getUnitQuantityType();
-			switch (unitQuantityType) {
-			case Area: {
-				unitLabel = unit.getArea().name();
-				break;
-			}
-			case Currency: {
-				unitLabel = unit.getCurrency().name();
-				break;
-			}
-			case Length: {
-				unitLabel = unit.getLength().name();
-				break;
-			}
-			case Math: {
-				unitLabel = unit.getMath().name();
-				break;
-			}
-			case Physics: {
-				unitLabel = unit.getPhysics().name();
-				break;
-			}
-			case Time: {
-				unitLabel = unit.getTime().name();
-				break;
-			}
-			case Volume: {
-				unitLabel = unit.getVolume().name();
-				break;
-			}
-			case Weight: {
-				unitLabel = unit.getWeight().name();
-				break;
-			}
-			}
+		return initialStateUIProperty.getUnit();
 
-		}
-		return unitLabel;
 	}
 
 	public void reinitialize() {
