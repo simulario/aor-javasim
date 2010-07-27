@@ -4,6 +4,7 @@
  xsi:schemaLocation="http://aor-simulation.org ../../../../../../AOR-JSim-Complete/AORSL/AORSL_0-8-4.xsd"
  xmlns:dc="http://purl.org/dc/elements/1.1/"
  xmlns="http://aor-simulation.org"
+ xmlns:aors="http://aor-simulation.org"
  version="0.8.4"
  scenarioName="GunShot">
   <SimulationParameters simulationSteps="3000" timeUnit="ms" stepTimeDelay="5"/>
@@ -28,13 +29,26 @@
     </Statistics>
 
     <Globals>
-      <GlobalVariable name="simluationSlowDownRatio" dataType="Float"/>
+      <GlobalVariable name="simluationSlowDownRatio" dataType="Float" minValue="1" maxValue="5"/>
       <GlobalVariable name="gravitation" dataType="Float"/>
       <GlobalVariable name="shotAngle" dataType="Float"/>
       <GlobalVariable name="startVelocity" dataType="Float"/>
       <GlobalVariable name="gunRectRadius" dataType="Float"/>
       <GlobalVariable name="gunRectCenterX" dataType="Float"/>
       <GlobalVariable name="gunRectCenterY" dataType="Float"/>
+      <GlobalFunction name="getShotAngleInRadians" resultType="double">
+        <Body language="Java">
+          <![CDATA[
+            return (Global.getShotAngle() * Math.PI) / 180;
+          ]]>
+        </Body>
+        <Body language="JavaScript">
+          <![CDATA[
+            return (gunshot.controller.Global.getShotAngle() * Math.PI) / 180;
+          ]]>
+        </Body>
+      </GlobalFunction>
+      
     </Globals>
 
 
@@ -67,12 +81,12 @@
               <PhysicalObject type="Bullet" id="2">
                 <Slot property="distance" value="0"/>
                 <Slot property="x">
-                  <ValueExpr language="Java"><![CDATA[Global.getGunRectCenterX() + Global.getGunRectRadius() * Math.cos(Global.getShotAngle())]]></ValueExpr>
-                  <ValueExpr language="JavaScript"><![CDATA[gunshot.controller.Global.getGunRectCenterX() + gunshot.controller.Global.getGunRectRadius() * Math.cos(gunshot.controller.Global.getShotAngle())]]></ValueExpr>
+                  <ValueExpr language="Java"><![CDATA[Global.getGunRectCenterX() + Global.getGunRectRadius() * Math.cos(Global.getShotAngleInRadians())]]></ValueExpr>
+                  <ValueExpr language="JavaScript"><![CDATA[gunshot.controller.Global.getGunRectCenterX() + gunshot.controller.Global.getGunRectRadius() * Math.cos(gunshot.controller.Global.getShotAngleInRadians())]]></ValueExpr>
                 </Slot>
                 <Slot property="y">
-                  <ValueExpr language="Java"><![CDATA[Global.getGunRectCenterY() + Global.getGunRectRadius() * Math.sin(Global.getShotAngle())]]></ValueExpr>
-                  <ValueExpr language="JavaScript"><![CDATA[gunshot.controller.Global.getGunRectCenterY() + gunshot.controller.Global.getGunRectRadius() * Math.sin(gunshot.controller.Global.getShotAngle())]]></ValueExpr>
+                  <ValueExpr language="Java"><![CDATA[Global.getGunRectCenterY() + Global.getGunRectRadius() * Math.sin(Global.getShotAngleInRadians())]]></ValueExpr>
+                  <ValueExpr language="JavaScript"><![CDATA[gunshot.controller.Global.getGunRectCenterY() + gunshot.controller.Global.getGunRectRadius() * Math.sin(gunshot.controller.Global.getShotAngleInRadians())]]></ValueExpr>
                 </Slot>
                 <Slot property="vx" value="100"/>
                 <Slot property="width" value="300"/>
@@ -103,20 +117,20 @@
               </Slot>
               <Slot property="x">
                 <ValueExpr language="Java">
-                  <![CDATA[Global.getGunRectCenterX() + Global.getGunRectRadius() * Math.cos(Global.getShotAngle()) + Global.getStartVelocity() *  Math.cos(Global.getShotAngle()) * currentTime]]>
+                  <![CDATA[Global.getGunRectCenterX() + Global.getGunRectRadius() * Math.cos(Global.getShotAngleInRadians()) + Global.getStartVelocity() *  Math.cos(Global.getShotAngleInRadians()) * currentTime]]>
                 </ValueExpr>
 
                 <ValueExpr language="JavaScript">
-                  <![CDATA[gunshot.controller.Global.getGunRectCenterX() + gunshot.controller.Global.getGunRectRadius() * Math.cos(gunshot.controller.Global.getShotAngle()) + gunshot.controller.Global.getStartVelocity() *  Math.cos(gunshot.controller.Global.getShotAngle()) * this.currentTime]]>
+                  <![CDATA[gunshot.controller.Global.getGunRectCenterX() + gunshot.controller.Global.getGunRectRadius() * Math.cos(gunshot.controller.Global.getShotAngleInRadians()) + gunshot.controller.Global.getStartVelocity() *  Math.cos(gunshot.controller.Global.getShotAngleInRadians()) * this.currentTime]]>
                 </ValueExpr>
               </Slot>
               <Slot property="y">
                 <ValueExpr language="Java">
-                  <![CDATA[Global.getGunRectCenterY() + Global.getGunRectRadius() * Math.sin(Global.getShotAngle()) + Global.getStartVelocity() *  Math.sin(Global.getShotAngle()) * currentTime - (Global.getGravitation() / 2.0f) * currentTime * currentTime]]>
+                  <![CDATA[Global.getGunRectCenterY() + Global.getGunRectRadius() * Math.sin(Global.getShotAngleInRadians()) + Global.getStartVelocity() *  Math.sin(Global.getShotAngleInRadians()) * currentTime - (Global.getGravitation() / 2.0f) * currentTime * currentTime]]>
                 </ValueExpr>
 
                 <ValueExpr language="JavaScript">
-                  <![CDATA[gunshot.controller.Global.getGunRectCenterY() + gunshot.controller.Global.getGunRectRadius() * Math.sin(gunshot.controller.Global.getShotAngle()) + gunshot.controller.Global.getStartVelocity() *  Math.sin(gunshot.controller.Global.getShotAngle()) * this.currentTime - (gunshot.controller.Global.getGravitation() / 2.0) * this.currentTime * this.currentTime]]>
+                  <![CDATA[gunshot.controller.Global.getGunRectCenterY() + gunshot.controller.Global.getGunRectRadius() * Math.sin(gunshot.controller.Global.getShotAngleInRadians()) + gunshot.controller.Global.getStartVelocity() *  Math.sin(gunshot.controller.Global.getShotAngleInRadians()) * this.currentTime - (gunshot.controller.Global.getGravitation() / 2.0) * this.currentTime * this.currentTime]]>
                 </ValueExpr>
               </Slot>
             </UpdateObject>
@@ -234,10 +248,7 @@
   <InitialState>
     <GlobalVariable name="startVelocity" value="240"/>
     <GlobalVariable name="simluationSlowDownRatio" value="3"/>
-    <GlobalVariable name="shotAngle">
-      <ValueExpr language="Java">Math.PI/4.0f</ValueExpr>
-      <ValueExpr language="JavaScript">Math.PI/4.0</ValueExpr>
-    </GlobalVariable>
+    <GlobalVariable name="shotAngle" value="45"/>
     <GlobalVariable name="gunRectRadius" value="750"/>
     <GlobalVariable name="gunRectCenterX" value="750"/>
     <GlobalVariable name="gunRectCenterY" value="570"/>
@@ -246,24 +257,24 @@
     
     <PhysicalObject type="Gun" id="1" x="750" y="570" width="1500" height="1140">
       <Slot property="rotZ">
-        <ValueExpr language="Java"><![CDATA[Global.getShotAngle() * 180/Math.PI]]></ValueExpr>
-        <ValueExpr language="JavaScript"><![CDATA[gunshot.controller.Global.getShotAngle() * 180/Math.PI]]></ValueExpr>
+        <ValueExpr language="Java"><![CDATA[Global.getShotAngle()]]></ValueExpr>
+        <ValueExpr language="JavaScript"><![CDATA[gunshot.controller.Global.getShotAngle()]]></ValueExpr>
       </Slot>
     </PhysicalObject>
 
     <PhysicalObject type="HorizontalBar" id="100" x="7500" y="4500" z="1" width="15000" height="150"/>
     <PhysicalObject type="HorizontalSlider" id="101" y="4500" z="2" width="75" height="300">
       <Slot property="x">
-        <ValueExpr language="Java"><![CDATA[Global.getGunRectCenterX() + Global.getGunRectRadius() * Math.cos(Global.getShotAngle())]]></ValueExpr>
-        <ValueExpr language="JavaScript"><![CDATA[gunshot.controller.Global.getGunRectCenterX() + gunshot.controller.Global.getGunRectRadius() * Math.cos(gunshot.controller.Global.getShotAngle())]]></ValueExpr>
+        <ValueExpr language="Java"><![CDATA[Global.getGunRectCenterX() + Global.getGunRectRadius() * Math.cos(Global.getShotAngleInRadians())]]></ValueExpr>
+        <ValueExpr language="JavaScript"><![CDATA[gunshot.controller.Global.getGunRectCenterX() + gunshot.controller.Global.getGunRectRadius() * Math.cos(gunshot.controller.Global.getShotAngleInRadians())]]></ValueExpr>
       </Slot>
     </PhysicalObject>
 
     <PhysicalObject type="VerticalBar" id="200" x="14500" z="1" y="2500" width="150" height="5000"/>
     <PhysicalObject type="VerticalSlider" id="201" x="14500" z="2" width="300" height="75">
       <Slot property="y">
-        <ValueExpr language="Java"><![CDATA[Global.getGunRectCenterY() + Global.getGunRectRadius() * Math.sin(Global.getShotAngle())]]></ValueExpr>
-        <ValueExpr language="JavaScript"><![CDATA[gunshot.controller.Global.getGunRectCenterY() + gunshot.controller.Global.getGunRectRadius() * Math.sin(gunshot.controller.Global.getShotAngle())]]></ValueExpr>
+        <ValueExpr language="Java"><![CDATA[Global.getGunRectCenterY() + Global.getGunRectRadius() * Math.sin(Global.getShotAngleInRadians())]]></ValueExpr>
+        <ValueExpr language="JavaScript"><![CDATA[gunshot.controller.Global.getGunRectCenterY() + gunshot.controller.Global.getGunRectRadius() * Math.sin(gunshot.controller.Global.getShotAngleInRadians())]]></ValueExpr>
       </Slot>
     </PhysicalObject>
 
@@ -275,13 +286,28 @@
 
   <UserInterface>
     <InitialStateUI>
-      <GlobalVariableUI variable="startVelocity" inputFieldLength="3">
+      
+      <GlobalVariableUI variable="simluationSlowDownRatio" widget="Slider" sliderStepSize="1">
+        <Label>
+          <Text>Slow Down Ratio</Text>
+          <Text xml:lang="de">Verlangsamen Verhältnis</Text>
+          <Text xml:lang="en">Slow Down Ratio</Text>
+        </Label>
+        <Hint>
+          <Text>The ratio for slowing down the simulation</Text>
+          <Text xml:lang="de">Das Verhältnis zur Verlangsamung der Simulation</Text>
+          <Text xml:lang="en">The ratio for slowing down the simulation</Text>
+        </Hint>
+      </GlobalVariableUI>
+      
+      <GlobalVariableUI variable="startVelocity" widget="Slider" sliderStepSize="5">
         <Label>
           <Text>Velocity</Text>
           <Text xml:lang="de">Geschwindigkeit</Text>
           <Text xml:lang="en">Velocity</Text>
         </Label>
         <Hint>
+          <Text>The shoot velocity of the bullet</Text>
           <Text xml:lang="de">Das Shooting Geschwindigkeit der Kugel</Text>
           <Text xml:lang="en">The shoot velocity of the bullet</Text>
         </Hint>
@@ -296,6 +322,7 @@
           <Text xml:lang="en">Gravitation</Text>
         </Label>
         <Hint>
+          <Text>The gravitation in the environment</Text>
           <Text xml:lang="de">Die Gravitation in die Umwelt</Text>
           <Text xml:lang="en">The gravitation in the environment</Text>
         </Hint>
@@ -310,29 +337,20 @@
           <Text xml:lang="en">Shot Angle</Text>
         </Label>
         <Hint>
+          <Text>The shot angle for the bullet</Text>
           <Text xml:lang="de">Der Schuss Winkel für die Kugel</Text>
           <Text xml:lang="en">The shot angle for the bullet</Text>
         </Hint>
         <Unit>
-          <Math>RAD</Math>
+          <Math>°</Math>
         </Unit>
       </GlobalVariableUI>
       
     </InitialStateUI>
-    <StatisticsUI>
-      <StatisticsVariableUI variable="height">
-        <Label>
-          <Text xml:lang="en">height</Text>
-        </Label>
-        <Hint>
-          <Text xml:lang="en">bla</Text>
-        </Hint>
-      </StatisticsVariableUI>
-    </StatisticsUI>
     
     <AnimationUI>
       <Views>
-        <SpaceView canvasColor="grey">
+        <SpaceView canvasColorRGB="220 220 220">
           <TwoDimensionalSpaceView2D backgroundColor="lightgrey"/>
         </SpaceView>
 
