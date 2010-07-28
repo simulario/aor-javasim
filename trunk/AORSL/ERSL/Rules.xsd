@@ -26,14 +26,6 @@
 	<!-- ==================================================================== -->
 		<xs:complexType/>
 	</xs:element>
-  <!-- ==================================================================== -->
-	<xs:element name="Condition" type="ers:Condition.type"/>
-	<!-- ==================================================================== -->
-	<xs:complexType name="Condition.type">
-    <xs:complexContent>
-      <xs:extension base="ers:OpaqueExpression"/>
-    </xs:complexContent>
-  </xs:complexType>
 	<xs:element name="IF" type="ers:Condition.type"/>
 	<xs:element name="ELSE-IF" type="ers:Condition.type"/>
 	<!-- =================================================================== -->
@@ -92,7 +84,7 @@
 				<xs:element ref="ers:UpdateObject" minOccurs="0" maxOccurs="unbounded"/>
 				<xs:element ref="ers:UpdateObjects" minOccurs="0" maxOccurs="unbounded"/>
 				<xs:element ref="ers:UpdateGridCell" minOccurs="0" maxOccurs="unbounded"/>
-				<xs:element ref="ers:UpdateGridCells" minOccurs="0" maxOccurs="unbounded"/>
+				<xs:element ref="ers:ForEachGridCell" minOccurs="0" maxOccurs="unbounded"/>
 			</xs:sequence>
 			<xs:attribute name="name" type="ers:CanonicalName" use="required"/>
 		</xs:complexType>
@@ -112,7 +104,11 @@
 		</xs:choice>
 		<xs:attribute name="dataVariable" type="ers:CanonicalName" use="optional"/>
 		<xs:attribute name="dataType" type="ers:PrimitiveDataType" use="optional"/>
-		<xs:attribute name="refDataType" type="ers:CanonicalName" use="optional"/>
+		<xs:attribute name="refDataType" type="ers:CanonicalName" use="optional">
+			<xs:annotation>
+				<xs:documentation>A reference datatype (i.e. a class or array type). </xs:documentation>
+			</xs:annotation>			
+		</xs:attribute>
 		<xs:attribute name="objectVariable" type="ers:CanonicalName" use="optional"/>
 		<xs:attribute name="objectType" type="ers:CanonicalName" use="optional"/>
 		<xs:attribute name="objectIdRef" type="xs:long" use="optional">
@@ -151,7 +147,11 @@
 		</xs:sequence>
 		<xs:attribute name="variable" type="ers:CanonicalName" use="required"/>
 		<xs:attribute name="dataType" type="ers:PrimitiveDataType" use="optional"/>
-		<xs:attribute name="refDataType" type="ers:CanonicalName" use="optional"/>
+		<xs:attribute name="refDataType" type="ers:CanonicalName" use="optional">
+			<xs:annotation>
+				<xs:documentation>A class or array type.</xs:documentation>
+			</xs:annotation>							
+		</xs:attribute>
 	</xs:complexType>
 	<!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->
 	<xs:complexType name="FOR-ObjectVariable.type">
@@ -214,7 +214,7 @@
 				<xs:element ref="ers:RemoveObjectFromCollection"/>
 				<xs:element ref="ers:UpdateObject"/>
 				<xs:element ref="ers:UpdateGridCell"/>
-				<xs:element ref="ers:UpdateGridCells"/>
+				<xs:element ref="ers:ForEachGridCell"/>
 				<xs:element ref="ers:AddObjectToCollection"/>
 				<xs:element ref="ers:UpdateStatisticsVariable"/>
 				<xs:element ref="ers:Create"/>
@@ -281,11 +281,11 @@
 		</xs:complexType>
 	</xs:element>
 	<!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->
-	<xs:element name="UpdateGridCells">
+	<xs:element name="ForEachGridCell">
 		<!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->
 		<xs:complexType>
 			<xs:sequence>
-				<xs:element ref="ers:SelectionCondition" minOccurs="0" maxOccurs="unbounded"/>
+				<xs:element ref="ers:Selection" minOccurs="0"/>
 				<xs:choice>
 					<xs:element ref="ers:Code" minOccurs="0" maxOccurs="unbounded"/>
 					<xs:element ref="ers:Increment" minOccurs="0" maxOccurs="unbounded"/>
@@ -298,6 +298,7 @@
 			<xs:attribute name="endX" type="xs:nonNegativeInteger" use="optional"/>
 			<xs:attribute name="startY" type="xs:nonNegativeInteger" use="optional"/>
 			<xs:attribute name="endY" type="xs:nonNegativeInteger" use="optional"/>
+			<xs:attribute name="selectionList" type="ers:PathName" use="optional"/>
 		</xs:complexType>
 	</xs:element>
 	<!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->
