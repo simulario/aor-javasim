@@ -53,6 +53,8 @@ public class InitialStateUIController implements Module {
 
 	private final String INITIALSTATEUI = "/" + PX + "SimulationScenario/" + PX
 			+ "UserInterface/" + PX + "InitialStateUI";
+	
+	private boolean hasUI;
 
 	public InitialStateUIController() {
 
@@ -99,6 +101,10 @@ public class InitialStateUIController implements Module {
 
 	@Override
 	public void simulationInitialize(InitialState initialState) {
+		if(!this.hasUI) {
+			return;
+		}
+
 		// Document dom = initialState.getSimulationDescription().getDom();
 
 		this.simulationDescription = initialState.getSimulationDescription();
@@ -1110,6 +1116,9 @@ public class InitialStateUIController implements Module {
 
 	@Override
 	public void simulationProjectDirectoryChanged(File projectDirectory) {
+		if(!this.hasUI) {
+			return;
+		}
 
 		this.GUIComponent.reinitializeUI();
 
@@ -1182,6 +1191,8 @@ public class InitialStateUIController implements Module {
 	public void setSimulationDescription(
 			SimulationDescription simulationDescription) {
 		this.simulationDescription = simulationDescription;
+
+		this.hasUI = simulationDescription.getNode(INITIALSTATEUI) != null;
 	}
 
 	/**
@@ -1901,6 +1912,9 @@ public class InitialStateUIController implements Module {
 	}
 
 	public void updateObjekt(ObjektUpdate objektUpdate) {
+		if(!this.hasUI) {
+			return;
+		}
 
 		String typeName = objektUpdate.getTypeName();
 		Long instanceID = objektUpdate.getInstanceID();
