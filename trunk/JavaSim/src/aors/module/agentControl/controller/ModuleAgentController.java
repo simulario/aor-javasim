@@ -11,6 +11,11 @@ import java.util.Map;
 public interface ModuleAgentController {
 
 	/**
+	 * Property name to indicate the end of a step's perceptions.
+	 */
+	public final static String END_OF_PERCEPTIONS = "__endOfPerceptions";
+
+	/**
 	 * Sets the controller's control view.
 	 * @param controlView
 	 */

@@ -38,7 +38,7 @@ public class EventMediator implements PropertyChangeListener {
     this.senders = new Hashtable<String, Sender>();
 		this.interactiveView = interactiveView;
 		if(this.interactiveView != null) {
-			this.addReceiver(Sender.SEND_PROPERTY_NAME, this.interactiveView, null);
+			this.addReceiver(Sender.SEND_PROPERTY_NAME, this.interactiveView,	null);
 		}
 	}
 
@@ -48,9 +48,10 @@ public class EventMediator implements PropertyChangeListener {
 	 */
 	@Override
   public void propertyChange(PropertyChangeEvent evt) {
+		String propertyName = evt.getPropertyName();
 
 		// receives a sender request
-		if(Sender.SEND_PROPERTY_NAME.equals(evt.getPropertyName())) {
+		if(Sender.SEND_PROPERTY_NAME.equals(propertyName)) {
 
 			// get all values from the gui
 			Sender.ValueMap valuesToSend = new Sender.ValueMap();
@@ -66,9 +67,9 @@ public class EventMediator implements PropertyChangeListener {
 
 		// propagate the event to all receivers for the specified property
     if(this.receivers != null) {
-      if(this.receivers.get(evt.getPropertyName()) != null) {
-        for(Receiver receiver : this.receivers.get(evt.getPropertyName())) {
-          if(!receiver.equals(evt.getSource())) {
+      if(this.receivers.get(propertyName) != null) {
+        for(Receiver receiver : this.receivers.get(propertyName)) {
+      if(!receiver.equals(evt.getSource())) {
             receiver.propertyChange(evt);
           }
         }

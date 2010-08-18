@@ -1,4 +1,4 @@
-package aors.model.agtsim.proxy.agentControl;
+package aors.model.agtsim.agentControl;
 
 /**
  * A listener for initializations of new {@link CoreAgentController}s.
@@ -10,7 +10,7 @@ public interface AgentControlListener {
 	 * Registers an agent control initializer.
 	 * @param agentControlInitializer
 	 */
-	public void registerAgentControInitializer(AgentControlInitializer
+	public void registerAgentControlInitializer(AgentControlInitializer
 		agentControlInitializer);
 
 	/**

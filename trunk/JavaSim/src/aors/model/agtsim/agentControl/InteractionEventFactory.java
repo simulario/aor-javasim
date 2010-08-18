@@ -1,4 +1,4 @@
-package aors.model.agtsim.proxy.agentControl;
+package aors.model.agtsim.agentControl;
 
 import aors.model.intevt.InternalEvent;
 import java.util.Map;

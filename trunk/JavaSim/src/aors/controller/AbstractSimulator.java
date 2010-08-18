@@ -557,7 +557,7 @@ public abstract class AbstractSimulator implements AgentSimulatorListener {
     externalCount = 0;
     for (AgentSimulator agentSimulator : agentSimulators) {
 
-      if (agentSimulator.agentIsControllable()) {
+			if (agentSimulator.agentIsControllable()) {
         /*
          * if an agent is controllable, always run in multithreading mode to
          * support CyclicBarrier and AgentSimulator synchronization
@@ -1254,8 +1254,9 @@ public abstract class AbstractSimulator implements AgentSimulatorListener {
   }
 
   private void markAsControlled(AgentSimulator agentSimulator) {
-    this.controlledAgentSimulators.add(agentSimulator);
-    this.externalCount++;
+    if(this.controlledAgentSimulators.add(agentSimulator)) {
+	    this.externalCount++;
+		}
   }
 
   private void markAsNotControlled(AgentSimulator agentSimulator) {
@@ -1264,8 +1265,9 @@ public abstract class AbstractSimulator implements AgentSimulatorListener {
     }
   }
 
-  public void setAgentIsControlled(AgentSimulator agentSimulator) {
-    if (agentSimulator.agentIsControlled()) {
+  public void setAgentIsControlled(AgentSimulator agentSimulator, boolean
+		isControlled) {
+    if (isControlled) {
       this.markAsControlled(agentSimulator);
     } else {
       this.markAsNotControlled(agentSimulator);

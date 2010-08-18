@@ -28,6 +28,9 @@
  **************************************************************************************************************/
 package aors.model;
 
+import java.util.HashMap;
+import java.util.Map;
+
 /**
  * Entity
  * 
@@ -168,4 +171,12 @@ public class Entity implements Cloneable {
     }
     return o;
   }
+
+	public Map<String, Object> getProperties() {
+		HashMap<String, Object> properties = new HashMap<String, Object>();
+		properties.put("id", this.id);
+		properties.put("name", this.name);
+		properties.put("type", this.aorEntityType);
+		return properties;
+	}
 }

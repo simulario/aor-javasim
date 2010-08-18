@@ -44,8 +44,8 @@ import aors.logger.model.AgentSimulatorStep;
 import aors.model.agtsim.ActualPerceptionRule;
 import aors.model.agtsim.AgentMemory;
 import aors.model.agtsim.AgentSubject;
-import aors.model.agtsim.proxy.agentcontrol_old.AgentSimulatorFacade;
-import aors.model.agtsim.proxy.agentcontrol_old.AgentSubjectProxy;
+import aors.model.agtsim.proxy.agentControl.AgentSimulatorFacade;
+import aors.model.agtsim.proxy.agentControl.AgentSubjectProxy;
 import aors.model.envevt.ActionEvent;
 import aors.model.envevt.InMessageEvent;
 import aors.model.envevt.OutMessageEvent;
@@ -278,9 +278,9 @@ public class DefaultAgentSimulator implements AgentSimulator,
   public String getUserName() {
     if (isAgentSubjectProxySet()) {
       return this.agentSubjectProxy.getUserName();
-    } else if (agentIsControlled()) {
-      return "local user";
-    }
+    } else if(this.agentSubject.isControlled()) {
+			return "local user";
+		}
     return "";
   }
 
@@ -474,22 +474,22 @@ public class DefaultAgentSimulator implements AgentSimulator,
         this.agentSubject.setNewEvents(this.perceptionEvents);
         this.agentSubject.setCurrentSimulationStep(this.currentSimulationStep);
         this.agentSubject.run();
-        if (this.agentIsControlled()) {
-          this.agentSubject.getCoreAgentController().updateView();
+				if(this.agentSubject.isControlled()) {
+					this.agentSubject.updateView();
 
-          // wait for ActionEvents response from AgentController
-          synchronized (this) {
-            try {
-              if ((this.stepEndTime - System.currentTimeMillis()) > 0
-                  && !stepCompleted) {
-                wait(this.stepEndTime - System.currentTimeMillis());
-              }
-            } catch (InterruptedException e) {
-            } catch (IllegalArgumentException e) {
-            }
-          }
-          this.agentSubject.getCoreAgentController().performUserActions();
-        }
+					// wait for ActionEvents response from AgentController
+					synchronized (this) {
+						try {
+							if((this.stepEndTime - System.currentTimeMillis()) > 0
+								&& !stepCompleted) {
+								wait(this.stepEndTime - System.currentTimeMillis());
+							}
+						} catch (InterruptedException e) {
+						} catch (IllegalArgumentException e) {
+						}
+					}
+					this.agentSubject.performUserActions();
+				}
 
         // TODO: review this:
         if (this.agentSubject.isLogGenerationEnabled()
@@ -556,10 +556,10 @@ public class DefaultAgentSimulator implements AgentSimulator,
     return this.agentSubject.isControllable();
   }
 
-  @Override
-  public void setAgentIsControlled() {
-    this.abstractSimulator.setAgentIsControlled(this);
-  }
+	@Override
+	public void setAgentIsControlled(boolean isControlled) {
+		this.abstractSimulator.setAgentIsControlled(this, isControlled);
+	}
 
   public void setStepEndTime(long stepEndTime) {
     this.stepEndTime = stepEndTime;

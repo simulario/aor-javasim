@@ -1,7 +1,8 @@
 package aors.module.agentControl.gui.views;
 
-import aors.model.agtsim.proxy.agentControl.AgentControlInitializer;
-import aors.module.agentControl.gui.GUIController;
+import aors.model.agtsim.AgentSubject.AgentSubjectFacade;
+import aors.model.agtsim.agentControl.AgentControlInitializer;
+import aors.module.agentControl.gui.GUIManager;
 import aors.util.Pair;
 import aors.model.dataTypes.AORSInteger;
 import aors.model.dataTypes.AORSString;
@@ -30,20 +31,17 @@ public class SelectionView extends InteractiveView {
 	/**
 	 * The gui controller to that the view belogs.
 	 */
-	private GUIController guiController;
+	private GUIManager guiManager;
 
 	/**
 	 * Initializes and creates the view for the given agent controllers.
-	 * @param guiController
+	 * @param guiManager
 	 * @param agentControlInitializers
 	 */
-	public SelectionView(GUIController guiController, Map<Long,
+	public SelectionView(GUIManager guiManager, Map<Long,
 		AgentControlInitializer> agentControlInitializers) {
 		super();
-		this.guiController = guiController;
-
-		// register the view as receiver for the agent selection
-		this.getEventMediator().addReceiver("controlledAgentId", this, null);
+		this.guiManager = guiManager;
 
 		// create the view's content
 		this.guiComponent = createContent(agentControlInitializers);
@@ -115,8 +113,10 @@ public class SelectionView extends InteractiveView {
 
 		// creates a row for each controllable agent
 		AgentControlInitializer agentControlInitializer;
+		AgentSubjectFacade agentSubjectFacade;
 		for(long agentId : agentControlInitializers.keySet()) {
 			agentControlInitializer = agentControlInitializers.get(agentId);
+			agentSubjectFacade = agentControlInitializer.getAgentSubjectFacade();
 
 			String defaultLanguage = agentControlInitializer.getDefaultUILanguage();
 
@@ -129,8 +129,8 @@ public class SelectionView extends InteractiveView {
 
 			dataRow.addContent(new Element("td").addContent(button).
 				setAttribute((Attribute)style.clone()));
-			dataRow.addContent(new Element("td").addContent(agentControlInitializer.getAgentName()).
-				setAttribute((Attribute)style.clone()));
+			dataRow.addContent(new Element("td").addContent(agentSubjectFacade.
+				getAgentName()).setAttribute((Attribute)style.clone()));
 			dataRow.addContent(new Element("td").addContent(
 				new Element("textfield").setAttribute("name", "id" + agentId).
 				setAttribute("initialValue", String.valueOf(agentId)).
@@ -138,7 +138,8 @@ public class SelectionView extends InteractiveView {
 				"display: inline-block;").setAttribute("type", "Integer")).
 				setAttribute((Attribute)style.clone()));
 			dataRow.addContent(new Element("td").addContent(
-				agentControlInitializer.getAgentType()).setAttribute((Attribute)style.clone()));
+				agentSubjectFacade.getAgentType()).setAttribute((Attribute)style.
+				clone()));
 
 			Element langSelection = new Element("select");
 			langSelection.setAttribute("name", "lang" + agentId).
@@ -156,6 +157,11 @@ public class SelectionView extends InteractiveView {
 
 			table.addContent(dataRow);
 		}
+
+//		//test
+//		body.addContent(new Element("updateableArea").setAttribute(Receiver.RECEIVER_ATTRIBUTE,
+//			"ua").setAttribute("style", "display: block; width: 100px; height: 100px;" +
+//			" overflow: scroll; background-color: red; border: 1px solid black;"));
 
 		// renders the document
 		Renderer renderer = RendererFactory.getInstance().createRenderer();
@@ -194,9 +200,34 @@ public class SelectionView extends InteractiveView {
 			evt.getNewValue() instanceof Sender.ValueMap) {
 			Sender.ValueMap values = (Sender.ValueMap)evt.getNewValue();
 			String senderSuffix = values.get(Sender.SEND_PROPERTY_NAME).substring(6);
-			this.guiController.setControlledAgentController(
+			this.guiManager.setControlledAgentControlInitializer(
 				AORSInteger.valueOf(values.get("id" + senderSuffix)),
 				AORSString.valueOf(values.get("lang" + senderSuffix)));
 		}
+
+//		System.out.println("SelectionView.propertyChange: " + evt);
+//
+//		if(evt != null && Sender.SEND_PROPERTY_NAME.equals(evt.getPropertyName()) &&
+//			evt.getNewValue() instanceof Sender.ValueMap) {
+//			Sender.ValueMap values = (Sender.ValueMap)evt.getNewValue();
+//			String senderSuffix = values.get(Sender.SEND_PROPERTY_NAME).substring(6);
+//
+//			// body that contains the content
+//			Element body = new Element("p").setText("id = " + AORSInteger.valueOf(
+//				values.get("id" + senderSuffix)) + " lang = " + AORSString.valueOf(
+//				values.get("lang" + senderSuffix)));
+//
+//			// renders the document
+//			Renderer renderer = RendererFactory.getInstance().createRenderer();
+//			try {
+//				renderer.doRender(new DOMOutputter().output(new Document().
+//					setRootElement(body)), null, this.getEventMediator());
+//			} catch(JDOMException e) {
+//				e.printStackTrace();
+//			}
+//
+//			this.getEventMediator().propertyChange(new PropertyChangeEvent(this,
+//				"ua", null, renderer.getGUIComponent()));
+//		}
 	}
 }

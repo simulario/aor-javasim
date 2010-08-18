@@ -29,6 +29,7 @@ public abstract class RendererFactory implements AbstractRendererFactory {
 	 * Instantiates the factory with no parameters.
 	 * @return the instance
 	 */
+	@Override
 	public AbstractRendererFactory instantiate() {
 		return getInstance();
 	}

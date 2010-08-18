@@ -3,9 +3,9 @@ package aors.module.agentControl.controller;
 import aors.model.Event;
 import aors.model.agtsim.AgentSubject.AgentSubjectFacade;
 import aors.model.agtsim.ReactionRule;
-import aors.model.agtsim.proxy.agentControl.AgentControlBroker;
-import aors.model.agtsim.proxy.agentControl.AgentControlInitializer;
-import aors.model.agtsim.proxy.agentControl.InteractionEventFactory;
+import aors.model.agtsim.agentControl.AgentControlBroker;
+import aors.model.agtsim.agentControl.AgentControlInitializer;
+import aors.model.agtsim.agentControl.InteractionEventFactory;
 import aors.model.envevt.PerceptionEvent;
 import aors.model.intevt.InternalEvent;
 import aors.module.agentControl.gui.interaction.Sender;
@@ -108,15 +108,15 @@ public class SimpleAgentControllerFactory implements AgentControllerFactory {
 		public SimpleAgentControllerImpl(AgentControlInitializer initializer) {
 			this.perceptionEvents = new ArrayList<Event>();
 			this.beliefProperties = new HashMap<String, Object>();
-			this.suspendedRules = initializer.getSuspendedRules();
-			this.controlView = null;
 			this.userActions = new ArrayList<Pair<String, Map<String, String>>>();
+			this.controlView = null;
+			this.agentIsControlled = true;
+
 			this.interactionEventFactory = initializer.getInteractionEventFactory();
+			this.suspendedRules = initializer.getSuspendedRules();
 			this.agentSubjectFacade = initializer.getAgentSubjectFacade();
 			this.agentSubjectFacade.setCoreAgentController(this);
-			this.agentIsControlled = true;
-			AgentControlBroker.getInstance().unregisterAgentControlInitializer(initializer);
-    }
+		}
 
 		/***********************************************************/
 		/*** implementation of the CoreAgentController interface ***/
@@ -179,8 +179,6 @@ public class SimpleAgentControllerFactory implements AgentControllerFactory {
 		/**
 		 * Updates the view with the newest values for the agent's belief properties
 		 * and its current perceptions.
-		 * @param beliefProperties
-		 * @param perceptionEvents
 		 */
 		@Override
 		public void updateView() {
@@ -202,6 +200,11 @@ public class SimpleAgentControllerFactory implements AgentControllerFactory {
 							perceptionEvent.getType(), null, perceptionEvent));
 					}
 					this.perceptionEvents.clear();
+
+					// property change to indicate that the end of the percepetion list is
+					// reached
+					this.controlView.propertyChange(new PropertyChangeEvent(this,
+						ModuleAgentController.END_OF_PERCEPTIONS, null, null));
 				}
 			}
 		}

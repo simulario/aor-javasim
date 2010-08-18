@@ -1,4 +1,4 @@
-package aors.model.agtsim.proxy.agentControl;
+package aors.model.agtsim.agentControl;
 
 import java.util.HashSet;
 import java.util.Set;
@@ -68,10 +68,10 @@ public class AgentControlBroker implements AgentControlListener {
 	 * @param agentControlInitializer
 	 */
 	@Override
-	public void registerAgentControInitializer(AgentControlInitializer
+	public void registerAgentControlInitializer(AgentControlInitializer
 		agentControlInitializer) {
 		for(AgentControlListener agentControlListener : this.agentControlListeners) {
-			agentControlListener.registerAgentControInitializer(agentControlInitializer);
+			agentControlListener.registerAgentControlInitializer(agentControlInitializer);
 		}
 	}
 

@@ -31,8 +31,8 @@ package aors.model.agtsim.sim;
 import java.beans.PropertyChangeListener;
 import java.util.List;
 
+import aors.model.agtsim.proxy.agentControl.AgentSubjectProxy;
 import aors.model.agtsim.AgentSubject;
-import aors.model.agtsim.proxy.agentcontrol_old.AgentSubjectProxy;
 import aors.model.envevt.PerceptionEvent;
 import aors.model.envsim.AgentObject;
 
@@ -178,11 +178,12 @@ public interface AgentSimulator extends Runnable, PropertyChangeListener {
    */
   public boolean agentIsControlled();
 
-  /**
-   * Sets the agents control state. If an agent is controlled is determined by
-   * the agent's subject.
-   */
-  public void setAgentIsControlled();
+	/**
+	 * Sets the agents control state. If an agent is controlled is determined by
+	 * the agent's subject.
+	 * @param isControlled
+	 */
+	public void setAgentIsControlled(boolean isControlled);
 
   /**
    * Sets the time until the current step has to be finished.

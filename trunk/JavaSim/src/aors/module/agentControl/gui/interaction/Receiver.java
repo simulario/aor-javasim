@@ -10,7 +10,7 @@ import java.beans.PropertyChangeListener;
 public interface Receiver extends PropertyChangeListener {
 
 	/**
-	 * The gui components attribute that holds the name of the property whose
+	 * The gui component's attribute that holds the name of the property whose
 	 * value is received by the component.
 	 */
 	public final static String RECEIVER_ATTRIBUTE = "property";
