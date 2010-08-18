@@ -50,9 +50,10 @@ import aors.model.agtsim.beliefs.ERDFBeliefEntityManager;
 import aors.model.agtsim.beliefs.ERDFBeliefEntityManagerImpl;
 import aors.model.agtsim.jaxb.JaxbLogGenerator;
 import aors.model.agtsim.json.JsonLogGenerator;
-import aors.model.agtsim.proxy.agentControl.AgentControlBroker;
-import aors.model.agtsim.proxy.agentControl.AgentControlInitializer;
-import aors.model.agtsim.proxy.agentControl.CoreAgentController;
+import aors.model.agtsim.agentControl.AgentControlBroker;
+import aors.model.agtsim.agentControl.AgentControlInitializer;
+import aors.model.agtsim.agentControl.Controllable;
+import aors.model.agtsim.agentControl.CoreAgentController;
 import aors.model.agtsim.sim.AgentSimulator;
 import aors.model.envevt.ActionEvent;
 import aors.model.envevt.InMessageEvent;
@@ -71,7 +72,8 @@ import aors.util.JsonData;
  * @since May 25, 2008
  * @version $Revision$
  */
-public abstract class AgentSubject extends Entity implements Rollbackable {
+public abstract class AgentSubject extends Entity implements Rollbackable,
+	Controllable {
 
   protected final PropertyChangeSupport propertyChangeSupport = new PropertyChangeSupport(
       this);
@@ -155,9 +157,9 @@ public abstract class AgentSubject extends Entity implements Rollbackable {
   private CoreAgentController coreAgentController;
 
 	/**
-	 * The agent control initializer for this agent subject.
+	 * The facade for this agent subject.
 	 */
-	private AgentControlInitializer agentControlInitializer;
+	private AgentSubjectFacade agentSubjectFacade;
 
 	/**
    * 
@@ -178,7 +180,7 @@ public abstract class AgentSubject extends Entity implements Rollbackable {
       this.setName(getClass().getSimpleName() + "_" + id);
     }
     this.coreAgentController = null;
-		this.agentControlInitializer = null;
+		this.agentSubjectFacade = null;
   }
 
   /**
@@ -193,7 +195,7 @@ public abstract class AgentSubject extends Entity implements Rollbackable {
       this.setName(getClass().getSimpleName() + "_" + id);
     }
     this.coreAgentController = null;
-		this.agentControlInitializer = null;
+		this.agentSubjectFacade = null;
   }
 
   public boolean isLogGenerationEnabled() {
@@ -268,8 +270,9 @@ public abstract class AgentSubject extends Entity implements Rollbackable {
    *          new internal event
    */
   public void addInternalEvent(InternalEvent internalEvent) {
-    if (internalEvent instanceof InternalEvent)
-      this.internalEvents.add(internalEvent);
+    if (internalEvent instanceof InternalEvent) {
+			this.internalEvents.add(internalEvent);
+		}
   } // addInternalEvent
 
   /**
@@ -344,13 +347,10 @@ public abstract class AgentSubject extends Entity implements Rollbackable {
   public boolean existsEventMemory(String query, String eventType,
       String pattern, Object... values) {
     boolean result = this.existsEventMemory(query, eventType);
-    if (!result)
-      return false;
-
-    if (this.getFirstIndexWith(pattern, values) > -1)
-      return true;
-    else
-      return false;
+    if (!result) {
+			return false;
+		}
+		return this.getFirstIndexWith(pattern, values) > -1;
   }
 
   /**
@@ -476,8 +476,6 @@ public abstract class AgentSubject extends Entity implements Rollbackable {
    *          the ID of the belief entity
    * @param propName
    *          the property of the belief entity
-   * @param value
-   *          the value of the property
    */
   public void removeBeliefEntityTriple(long id, String propName) {
     this.beliefEntitiesManager.removeBeliefEntityTriple(id, propName);
@@ -492,6 +490,7 @@ public abstract class AgentSubject extends Entity implements Rollbackable {
    * @param queryString
    *          The string containing the query
    * @return A hash map with all solutions.
+	 * @throws NoClassDefFoundError
    */
   public List<HashMap<String, String>> executeQuery(String queryLanguage,
       String queryString) throws NoClassDefFoundError {
@@ -519,7 +518,7 @@ public abstract class AgentSubject extends Entity implements Rollbackable {
   /**
    * Add a belief to the agent beliefs list
    * 
-   * @param belief
+   * @param beliefEntity
    *          the belief to be added to agent belief list
    * @return true
    */
@@ -530,7 +529,7 @@ public abstract class AgentSubject extends Entity implements Rollbackable {
   /**
    * Return the belief in the given position in the list
    * 
-   * @param i
+   * @param position
    *          the position in list
    * @return the belief
    */
@@ -1143,9 +1142,8 @@ public abstract class AgentSubject extends Entity implements Rollbackable {
   /**
    * Store the PerceptionEvents in the Memory if exists.
    * 
-   * @param ArrayList
-   *          of perceptionEvents
-   * @param currentSimulationStep
+   * @param perceptionEvents
+   *          List of perceptionEvents
    */
   protected void storeMemories(List<PerceptionEvent> perceptionEvents) {
     if (this.agentMemory != null) {// if an agentMemory is set
@@ -1181,7 +1179,7 @@ public abstract class AgentSubject extends Entity implements Rollbackable {
    * 
    * @param perceptionEvent
    */
-  public boolean processActualPerception(PerceptionEvent perceptionEvent) {
+  private boolean processActualPerception(PerceptionEvent perceptionEvent) {
 
     String perceptionEventSimpleName;
     String actPercRuleTriggeringEventSimpleName;
@@ -1264,13 +1262,14 @@ public abstract class AgentSubject extends Entity implements Rollbackable {
       // the correct MessageType to trigger this rule
       boolean skipRule = false;
       if (InMessageEvent.class.isInstance(perceptionEvent)
-          && reactionRule.getMessageType() != ""
+          && !("".equals(reactionRule.getMessageType()))
           && !(((InMessageEvent) perceptionEvent).getMessage()).getClass()
-              .getSimpleName().equals(reactionRule.getMessageType()))
-        skipRule = true;
+              .getSimpleName().equals(reactionRule.getMessageType())) {
+				skipRule = true;
+			}
 
       if (!skipRule
-          && perceptionEventSimpleName
+				&& perceptionEventSimpleName
               .equals(agentRuleTriggeringEventSimpleName)) {
         // event matching was performed and concrete instance is set to
         // the rule
@@ -1439,14 +1438,16 @@ public abstract class AgentSubject extends Entity implements Rollbackable {
    * @return JsonData encapsulated log information
    */
   public JsonData getStepLog() {
-    if (this.isLogGenerationEnabled())
-      return this.jsonGen.getJson();
+    if (this.isLogGenerationEnabled()) {
+			return this.jsonGen.getJson();
+		}
     return null;
   } // getStepLog
 
   public AgentSimulatorStep getJaxbStepLog() {
-    if (this.isJaxbLogGenerationEnabled())
-      return this.jaxbLogGenerator.getAgentSimulatorStep();
+    if (this.isJaxbLogGenerationEnabled()) {
+			return this.jaxbLogGenerator.getAgentSimulatorStep();
+		}
     return null;
   }
 
@@ -1477,38 +1478,17 @@ public abstract class AgentSubject extends Entity implements Rollbackable {
   }
 
 	/**
-	 * Returns the subject's agent controller.
-	 * @return the agent controller
-	 */
-  public CoreAgentController getCoreAgentController() {
-    return this.coreAgentController;
-  }
-	
-	/**
-	 * Sets the subject's control initializer and registers it with the agent
-	 * control broker. If another initializer was set before, it will be
-	 * unregistered from the broker previously.
+	 * Initializes the agent subject facade if the agent is controllable.
+	 * Uses an agent control initializer.
 	 * @param agentControlInitializer
 	 */
-	public void setAgentControlInitializer(AgentControlInitializer
+	protected void initAgentSubjectFacade(AgentControlInitializer
 		agentControlInitializer) {
-		if(agentControlInitializer.agentIsControllable()) {
-			if(this.agentControlInitializer != null) {
-				AgentControlBroker.getInstance().unregisterAgentControlInitializer(
-					this.agentControlInitializer);
-			}
-			this.agentControlInitializer = agentControlInitializer;
-			AgentControlBroker.getInstance().registerAgentControInitializer(
-				this.agentControlInitializer);
+		if(agentControlInitializer.isAgentControllable(this.getId()) &&
+			this.agentSubjectFacade == null) {
+			this.agentSubjectFacade =
+				this.new AgentSubjectFacade(agentControlInitializer);
 		}
-	}
-
-	/**
-	 * Returns the subject's control initializer.
-	 * @return the agent control initializer
-	 */
-	public AgentControlInitializer getAgentControlInitializer() {
-		return this.agentControlInitializer;
 	}
 
 	/**
@@ -1519,46 +1499,79 @@ public abstract class AgentSubject extends Entity implements Rollbackable {
     return new HashMap<String, Object>();
   }
 
+	/****************************************************/
+	/*** Implementation of the Controllable interface ***/
+	/****************************************************/
+
 	/**
 	 * Returns <code>true</code> if the agent is controllable.
 	 * @return <code>true</code> if the agent is controllable
 	 */
+	@Override
   public boolean isControllable() {
-    return this.coreAgentController != null;
+    return this.agentSubjectFacade != null;
   }
 
 	/**
 	 * Returns <code>true</code> if the agent is controlled.
 	 * @return <code>true</code> if the agent is controlled
 	 */
+	@Override
   public boolean isControlled() {
     return this.isControllable() && this.coreAgentController != null;
   }
-  
+
+	@Override
+	public void updateView() {
+		this.coreAgentController.updateView();
+	}
+
+	@Override
+	public void performUserActions() {
+		this.coreAgentController.performUserActions();
+	}
+
+	/*****************************************************************/
+	/*** Facade for agent control components to access the subject ***/
+	/*****************************************************************/
+
 	/**
-	 * This facade provides access to teh agent subject's (private)
-	 * functionalities for the core agent controller.
+	 * This facade provides access to the agent subject's (private)
+	 * functionalities for the agent control components.
 	 * @author Thomas Grundmann
 	 */
 	public class AgentSubjectFacade {
 
-		/**
-		 * Indicates if the agent that belogs to this subject is controlled by an
-		 * user.
-		 */
-    protected boolean agentIsControlled;
+		AgentControlInitializer agentControlInitializer;
 
 		/*******************/
 		/*** constructor ***/
 		/*******************/
 
-    public AgentSubjectFacade() {}
+		/**
+		 * Instantiates the agent control facade.
+		 * @param agentControlInitializer
+		 */
+    public AgentSubjectFacade(AgentControlInitializer agentControlInitializer) {
+			this.agentControlInitializer = agentControlInitializer;
+			this.agentControlInitializer.init(this);
+			AgentControlBroker.getInstance().registerAgentControlInitializer(
+				this.agentControlInitializer);
+		}
+
+		/**
+		 * Returns the agent subject.
+		 * @return the agent subject
+		 */
+		public AgentSubject getAgentSubject() {
+			return AgentSubject.this;
+		}
 
 		/**
 		 * Returns the agent subject's id.
 		 * @return the id
 		 */
-		public final Long getAgentId() {
+		public Long getAgentId() {
 			return AgentSubject.this.getId();
 		}
 
@@ -1566,7 +1579,7 @@ public abstract class AgentSubject extends Entity implements Rollbackable {
 		 * Returns the agent subject's name.
 		 * @return the name
 		 */
-		public final String getAgentName() {
+		public String getAgentName() {
 			return AgentSubject.this.getName();
 		}
 
@@ -1574,25 +1587,9 @@ public abstract class AgentSubject extends Entity implements Rollbackable {
 		 * Returns the agent subject's type.
 		 * @return the type
 		 */
-		public final String getAgentType() {
+		public String getAgentType() {
 			return AgentSubject.this.getType();
 		}
-
-		/**
-		 * Sets the agent's controlled state.
-		 * @param agentIsControlled
-		 */
-    public void setAgentIsControlled() {
-			AgentSubject.this.simulator.setAgentIsControlled();
-	  }
-
-		/**
-		 * Checks if the agent is controlled.
-		 * @return <code>true</code> if the agent is controlled
-		 */
-		public boolean agentIsControlled() {
-      return this.agentIsControlled;
-    }
 
 		/**
 		 * Returns the current simulation step.
@@ -1612,10 +1609,33 @@ public abstract class AgentSubject extends Entity implements Rollbackable {
 
 		/**
 		 * Sets the subject's core agent controller.
+		 * From this point in time the agent is controlled.
 		 * @param coreAgentController
 		 */
 		public void setCoreAgentController(CoreAgentController coreAgentController) {
-			AgentSubject.this.coreAgentController = coreAgentController;
+			if(coreAgentController != null) {
+				AgentControlBroker.getInstance().unregisterAgentControlInitializer(
+					this.agentControlInitializer);
+				AgentSubject.this.coreAgentController = coreAgentController;
+				AgentSubject.this.simulator.setAgentIsControlled(true);
+				AgentSubject.this.reactionRules.addAll(this.agentControlInitializer.
+					getAgentControlRules());
+			}
+		}
+
+		/**
+		 * Removes the subject's core agent controller.
+		 * From this point in time the agent is no longer controlled.
+		 */
+		public void unsetCoreAgentController() {
+			if(AgentSubject.this.coreAgentController != null) {
+				AgentSubject.this.coreAgentController = null;
+				AgentSubject.this.simulator.setAgentIsControlled(false);
+				AgentControlBroker.getInstance().registerAgentControlInitializer(
+					agentControlInitializer);
+				AgentSubject.this.reactionRules.removeAll(this.agentControlInitializer.
+					getAgentControlRules());
+			}
 		}
 	}
 }

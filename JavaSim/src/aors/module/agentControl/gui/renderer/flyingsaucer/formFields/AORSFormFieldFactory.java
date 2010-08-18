@@ -16,7 +16,7 @@ public class AORSFormFieldFactory {
 		BlockBox box, EventMediator mediator) {
 		Element e = box.getElement();
     String typeKey = e.getNodeName();
-    if (typeKey.equals("button")) {
+    if(typeKey.equals("button")) {
       return new ButtonField(e, form, context, box, mediator);
     }
     if(typeKey.equals("checkbox")) {
@@ -27,18 +27,22 @@ public class AORSFormFieldFactory {
     if(typeKey.equals("radiobutton")) {
       return new RadioButtonField(e, form, context, box, mediator);
     }
-    if (typeKey.equals("select")) {
+    if(typeKey.equals("select")) {
       return new SelectField(e, form, context, box, mediator);
     }
-    if (typeKey.equals("slider")) {
+    if(typeKey.equals("slider")) {
       return new SliderField(e, form, context, box, mediator);
     }
-    if (typeKey.equals("textarea")) {
+    if(typeKey.equals("textarea")) {
       return new TextAreaField(e, form, context, box, mediator);
     }
-    if (typeKey.equals("textfield")) {
+    if(typeKey.equals("textfield")) {
       return new TextField(e, form, context, box, mediator);
     }
+
+		if(typeKey.equals("updateableArea")) {
+			return new UpdateableArea(e, form, context, box, mediator);
+		}
     return FormFieldFactory.create(form, context, box);
   }
 }

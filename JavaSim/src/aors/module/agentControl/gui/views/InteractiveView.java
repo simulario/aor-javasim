@@ -226,7 +226,10 @@ public abstract class InteractiveView implements View,
 
 		// adds the listeners
 		for(Pair<String, String> keyEvent : keyEvents) {
-			final int keyCode = keyCodes.get(keyEvent.value1);
+			String[] pressedKeys = keyEvent.value1.split("_");
+			final int keyCode = keyCodes.get(pressedKeys[0]);
+			final boolean shiftPressed = Boolean.valueOf(pressedKeys[1]);
+			final boolean conrolPressed = Boolean.valueOf(pressedKeys[2]);
 			final String action = keyEvent.value2;
 
 			this.addKeyListener(new KeyListener() {
@@ -236,7 +239,8 @@ public abstract class InteractiveView implements View,
 
 				@Override
 				public void keyPressed(KeyEvent e) {
-					if(e.getKeyCode() == keyCode) {
+					if(e.getKeyCode() == keyCode && (e.isShiftDown() == shiftPressed) &&
+						(e.isControlDown() == conrolPressed)) {
 						InteractiveView.this.eventMediator.propertyChange(
 							new PropertyChangeEvent(InteractiveView.this,
 							Sender.SEND_PROPERTY_NAME, null, action));

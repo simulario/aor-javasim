@@ -1,6 +1,6 @@
 package aors.module.agentControl.gui;
 
-import aors.model.agtsim.proxy.agentControl.AgentControlInitializer;
+import aors.model.agtsim.agentControl.AgentControlInitializer;
 import aors.module.GUIModule;
 import aors.module.Module;
 import aors.module.agentControl.ModuleController;
@@ -21,7 +21,7 @@ import javax.swing.JScrollPane;
  * module's controller but for the entire gui it has the role of a controller.
  * @author Thomas Grundmann
  */
-public class GUIController extends JScrollPane implements GUIModule {
+public class GUIManager extends JScrollPane implements GUIModule {
 
   private final static long serialVersionUID = 1L;
 
@@ -73,7 +73,7 @@ public class GUIController extends JScrollPane implements GUIModule {
 	 * Instantiates the class.
 	 * @param moduleController
 	 */
-	public GUIController(ModuleController moduleController) {
+	public GUIManager(ModuleController moduleController) {
     super();
 		this.moduleController = moduleController;
 		this.agentControllerFactory = new SimpleAgentControllerFactory();
@@ -230,15 +230,15 @@ public class GUIController extends JScrollPane implements GUIModule {
 	}
 
 	/**
-	 * Sets the controlled agent's controller based on the agent's id and shows
+	 * Sets the controlled agent's initializer based on the agent's id and shows
 	 * the corresponding control view.
 	 * @param id
 	 * @param lang
 	 */
-	public void setControlledAgentController(long id, String lang) {
+	public void setControlledAgentControlInitializer(long id, String lang) {
 		if(this.moduleController != null) {
-			Map<Long, AgentControlInitializer> agentControlInitializers =	this.moduleController.
-				getAgentControlInitializers();
+			Map<Long, AgentControlInitializer> agentControlInitializers =
+				this.moduleController.getAgentControlInitializers();
 			if(agentControlInitializers != null) {
 				this.controlledAgentControlInitializer = agentControlInitializers.get(id);
 				this.controlViewLanguage = lang;

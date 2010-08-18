@@ -61,14 +61,16 @@ class CheckBoxField extends InputField<JCheckBox> implements Receiver {
 
 	@Override
 	protected void registerWithMediator() {
-    mediator.addReceiver(getAttribute(Receiver.RECEIVER_ATTRIBUTE), this, this.getValue());
+    mediator.addReceiver(getAttribute(Receiver.RECEIVER_ATTRIBUTE), this,
+			this.getValue());
     mediator.addSender(getAttribute(Sender.SENDER_ATTRIBUTE), this);
 		this.getComponent().addActionListener(new ActionListener() {
 
       @Override
       public void actionPerformed(ActionEvent e) {
         mediator.propertyChange(new PropertyChangeEvent(CheckBoxField.this,
-          getAttribute(Receiver.RECEIVER_ATTRIBUTE), null, CheckBoxField.this.getValue()));
+          getAttribute(Receiver.RECEIVER_ATTRIBUTE), null, CheckBoxField.this.
+					getValue()));
       }
     });
 	}

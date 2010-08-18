@@ -7,12 +7,12 @@ import aors.data.evt.sim.ObjektDestroyEvent;
 import aors.data.evt.sim.ObjektInitEvent;
 import aors.data.evt.sim.SimulationEvent;
 import aors.data.evt.sim.SimulationStepEvent;
-import aors.model.agtsim.proxy.agentControl.AgentControlBroker;
-import aors.model.agtsim.proxy.agentControl.AgentControlInitializer;
-import aors.model.agtsim.proxy.agentControl.AgentControlListener;
+import aors.model.agtsim.agentControl.AgentControlBroker;
+import aors.model.agtsim.agentControl.AgentControlInitializer;
+import aors.model.agtsim.agentControl.AgentControlListener;
 import aors.model.envevt.EnvironmentEvent;
 import aors.module.Module;
-import aors.module.agentControl.gui.GUIController;
+import aors.module.agentControl.gui.GUIManager;
 import java.io.File;
 import java.util.HashMap;
 import java.util.Map;
@@ -33,7 +33,7 @@ public class ModuleController implements Module, AgentControlListener {
 	/**
 	 * Reference to the base class of the module's gui.
 	 */
-	private GUIController guiController;
+	private GUIManager guiManager;
 
 	/**
 	 * This variable is a switch to solve the multiple initializiation problem.
@@ -58,7 +58,7 @@ public class ModuleController implements Module, AgentControlListener {
 	 */
 	public ModuleController() {
 		this.projectPath = null;
-		this.guiController = new GUIController(this);
+		this.guiManager = new GUIManager(this);
 		this.initIdentifier = true;
 		this.agentControlInitializers = new HashMap<Boolean, Map<Long,
 			AgentControlInitializer>>();
@@ -89,8 +89,8 @@ public class ModuleController implements Module, AgentControlListener {
 	 * @return the module's gui component
 	 */
 	@Override
-	public GUIController getGUIComponent() {
-		return this.guiController;
+	public GUIManager getGUIComponent() {
+		return this.guiManager;
 	}
 
 	/**
@@ -156,7 +156,7 @@ public class ModuleController implements Module, AgentControlListener {
 		/* Notifies the gui that it should update, because a new simulation has
 		 * started.
 		 */
-		this.guiController.update();
+		this.guiManager.update();
 	}
 
 	/**
@@ -173,7 +173,7 @@ public class ModuleController implements Module, AgentControlListener {
 		/* Notifies the gui that it should reset, because the current simulation
 		 * has ended.
 		 */
-		this.guiController.reset();
+		this.guiManager.reset();
 	}
 
 	/**********************************************************************/
@@ -185,14 +185,15 @@ public class ModuleController implements Module, AgentControlListener {
 	 * @param agentControlInitializer
 	 */
 	@Override
-	public void registerAgentControInitializer(AgentControlInitializer
+	public void registerAgentControlInitializer(AgentControlInitializer
 		agentControlInitializer) {
 		if(!this.agentControlInitializers.containsKey(this.initIdentifier)) {
 			this.agentControlInitializers.put(this.initIdentifier,
 				new HashMap<Long, AgentControlInitializer>());
 		}
 		this.agentControlInitializers.get(this.initIdentifier).put(
-			agentControlInitializer.getAgentId(), agentControlInitializer);
+			agentControlInitializer.getAgentSubjectFacade().getAgentId(),
+			agentControlInitializer);
 	}
 
 	/**
@@ -203,7 +204,7 @@ public class ModuleController implements Module, AgentControlListener {
 	public void unregisterAgentControlInitializer(AgentControlInitializer
 		agentControlInitializer) {
 		this.agentControlInitializers.get(this.initIdentifier).remove(
-			agentControlInitializer.getAgentId());
+			agentControlInitializer.getAgentSubjectFacade().getAgentId());
 	}
 
 	/**

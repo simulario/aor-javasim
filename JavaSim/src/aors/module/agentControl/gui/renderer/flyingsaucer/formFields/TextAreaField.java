@@ -196,7 +196,8 @@ class TextAreaField extends FormField<JComponent> implements Receiver {
 			this._textarea.setText(evt.getNewValue().toString());
 		}
 	}
-@Override
+
+	@Override
 	protected void registerWithMediator() {
 		mediator.addReceiver(getAttribute(Receiver.RECEIVER_ATTRIBUTE), this,
 			this.getValue());

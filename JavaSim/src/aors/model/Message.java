@@ -28,6 +28,7 @@
  **************************************************************************************************************/
 package aors.model;
 
+import java.util.Map;
 import java.util.UUID;
 
 /**
@@ -84,4 +85,10 @@ public abstract class Message extends Entity {
     return messageIdentity;
   }
 
+		@Override
+	public Map<String, Object> getProperties() {
+		Map<String, Object> properties = super.getProperties();
+		properties.put("messageIdentity", this.messageIdentity);
+		return properties;
+	}
 }

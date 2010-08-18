@@ -1,4 +1,4 @@
-package aors.model.agtsim.proxy.agentcontrol_old;
+package aors.model.agtsim.proxy.agentControl;
 
 /**
  * AgentSubjectProxy acts as a proxy between a controlled AgentSimulator and the

@@ -150,8 +150,9 @@ public class AORSForm extends XhtmlForm {
 			nodeName.equals("select") ||
 			nodeName.equals("slider") ||
 			nodeName.equals("textarea") ||
-			nodeName.equals("textfield");
+			nodeName.equals("textfield") ||
 //			|| nodeName.equals("visualization");
+			nodeName.equals("updateableArea");
 	}
 
 //	@Override
