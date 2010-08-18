@@ -11,13 +11,14 @@ import java.util.ArrayList;
 import java.util.List;
 import javax.swing.JComponent;
 import javax.swing.JPanel;
+import javax.swing.JScrollPane;
 import org.w3c.dom.Element;
 import org.xhtmlrenderer.layout.LayoutContext;
 import org.xhtmlrenderer.render.BlockBox;
 import org.xhtmlrenderer.simple.FSScrollPane;
 import org.xhtmlrenderer.simple.extend.form.FormFieldState;
 
-class UpdateableArea extends FormField<FSScrollPane> implements Receiver {
+class UpdateableArea extends FormField<JScrollPane> implements Receiver {
 
 	private boolean updated = false;
 	private List<JComponent> content;
@@ -30,8 +31,9 @@ class UpdateableArea extends FormField<FSScrollPane> implements Receiver {
 		BlockBox box, EventMediator mediator) {
 		super(e, form, context, box, mediator);
 		this.content = new ArrayList<JComponent>();
-		this.panel = new JPanel(new GridLayout());
+		this.panel = new JPanel(new GridLayout(0, 1));
 		this.panel.setBackground(UpdateableArea.TRANSPARENT);
+		this.panel.setOpaque(false);
 	}
 
 	@Override
@@ -47,13 +49,13 @@ class UpdateableArea extends FormField<FSScrollPane> implements Receiver {
 	}
 
 	@Override
-	protected FSScrollPane create2() {
-		FSScrollPane scrollpane = new FSScrollPane();
+	protected JScrollPane create2() {
+		JScrollPane scrollpane = new JScrollPane();
 		applyComponentStyle(scrollpane);
 		return scrollpane;
 	}
 
-	protected void applyComponentStyle(FSScrollPane scrollpane) {
+	protected void applyComponentStyle(JScrollPane scrollpane) {
 		super.applyComponentStyle(scrollpane);
 		if(!updated) {
 			scrollpane.setHorizontalScrollBarPolicy(
@@ -63,11 +65,10 @@ class UpdateableArea extends FormField<FSScrollPane> implements Receiver {
 		}
 		this.setSize(scrollpane);
 		scrollpane.setBorder(null);
-//		scrollpane.setBackground(TRANSPARENT);
 		scrollpane.setOpaque(false);
 	}
 
-	private void setSize(FSScrollPane scrollpane) {
+	private void setSize(JScrollPane scrollpane) {
 		this.intrinsicWidth = 0;
 		this.intrinsicHeight = 0;
 		if(this.updated) {
@@ -102,6 +103,7 @@ class UpdateableArea extends FormField<FSScrollPane> implements Receiver {
 				this.panel.add(component);
 			}
 			super.applyComponentStyle(panel);
+			this.getComponent().getViewport().setOpaque(false);
 			this.getComponent().setViewportView(UpdateableArea.DUMMY);
 			this.getComponent().setViewportView(panel);
 			this.content.clear();
