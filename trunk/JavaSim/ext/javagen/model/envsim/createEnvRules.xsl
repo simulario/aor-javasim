@@ -1319,7 +1319,7 @@
             <xsl:with-param name="name" select="$selectedCellsArrayVarName"/>
           </xsl:call-template>
 
-          <xsl:apply-templates select=".." mode="createEnvironmentRules.method.stateEffects.createRuleGridLoop">
+          <xsl:apply-templates select="../.." mode="createEnvironmentRules.method.stateEffects.createRuleGridLoop">
             <xsl:with-param name="indent" select="$indent"/>
             <xsl:with-param name="colCounter" select="$colCounter"/>
             <xsl:with-param name="rowCounter" select="$rowCounter"/>
