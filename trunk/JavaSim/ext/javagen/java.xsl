@@ -29,11 +29,24 @@
             <xsl:text>long</xsl:text>
           </xsl:when>
           <xsl:otherwise>
-            <xsl:value-of select="$xmlType"/>
+            <xsl:value-of select="jw:setFullQualifiedName($xmlType)"/>
           </xsl:otherwise>
         </xsl:choose>
       </xsl:when>
     </xsl:choose>
+  </xsl:function>
+  
+  <xsl:function name="jw:setFullQualifiedName">
+    <xsl:param name="class" as="xs:string"/>
+    <xsl:choose>
+      <xsl:when test="$class = $sim.class.simGridCell">
+        <xsl:value-of select="$sim.package.simGridCell"/>
+      </xsl:when>
+      <xsl:otherwise>
+        <xsl:value-of select="$class"/>
+      </xsl:otherwise>
+    </xsl:choose>
+    
   </xsl:function>
 
   <!-- TODO: to complete -->
@@ -742,6 +755,7 @@
     <xsl:param name="variableName" required="yes"/>
     <xsl:param name="returnType" as="xs:string" select="''"/>
     <xsl:param name="static" select="false()"/>
+    <xsl:param name="staticClassName" select="''"/>
     <xsl:param name="extraContent"/>
     <xsl:call-template name="java:method">
       <xsl:with-param name="indent" select="$indent"/>
@@ -764,7 +778,7 @@
           <xsl:with-param name="value">
             <xsl:choose>
               <xsl:when test="$static">
-                <xsl:value-of select="$variableName"/>
+                <xsl:value-of select="if ($staticClassName != '') then fn:concat($staticClassName, '.', $variableName) else $variableName"/>
               </xsl:when>
               <xsl:otherwise>
                 <xsl:call-template name="java:varByDotNotation">

@@ -173,7 +173,7 @@
       <xsl:with-param name="content">
 
         <!-- achieve the order -->
-        <xsl:apply-templates select="aorsml:UpdateObject | aorsml:UpdateGridCell | aorsml:UpdateGridCells"
+        <xsl:apply-templates select="aorsml:UpdateObject | aorsml:UpdateGridCell | aorsml:ForEachGridCell"
           mode="createEnvironmentRules.method.stateEffects.content">
           <xsl:with-param name="indent" select="$indent + 1"/>
           <xsl:with-param name="spaceReservationSystem" select="true()" tunnel="yes"/>

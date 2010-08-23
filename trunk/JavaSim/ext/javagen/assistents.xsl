@@ -209,7 +209,7 @@
   <xsl:template
     match="aorsml:SelfBeliefAttribute | aorsml:Attribute | aorsml:GridCellProperty |  aorsml:ReferenceProperty | 
      aorsml:EnumerationProperty | aorsml:ComplexDataProperty  | aorsml:BeliefAttribute | 
-     aorsml:BeliefReferenceProperty | aorsml:GlobalVariable | aorsml:SelfBeliefReferenceProperty"
+     aorsml:BeliefReferenceProperty | aorsml:SelfBeliefReferenceProperty"
     mode="assistents.getVariableMethod">
     <xsl:param name="indent" select="0"/>
     <xsl:param name="static" as="xs:boolean" select="false()"/>
@@ -224,6 +224,36 @@
         <xsl:with-param name="extraContent" select="$extraContent"/>
       </xsl:call-template>
     </xsl:if>
+
+  </xsl:template>
+
+  <xsl:template match="aorsml:GlobalVariable" mode="assistents.getVariableMethod">
+    <xsl:param name="indent" select="0"/>
+    <xsl:param name="static" as="xs:boolean" select="false()"/>
+    <xsl:param name="staticClassName" as="xs:string" select="''"/>
+    <xsl:param name="extraContent"/>
+
+    <xsl:choose>
+      <xsl:when test="@upperMultiplicity eq 'unbounded'">
+        <xsl:call-template name="java:createGetter">
+          <xsl:with-param name="indent" select="$indent"/>
+          <xsl:with-param name="static" select="$static"/>
+          <xsl:with-param name="staticClassName" select="$staticClassName"/>
+          <xsl:with-param name="variableType" select="fn:concat('java.util.List&lt;', jw:mappeDataType(@dataType | @refDataType), '&gt;')"/>
+          <xsl:with-param name="variableName" select="@name"/>
+          <xsl:with-param name="extraContent" select="$extraContent"/>
+        </xsl:call-template>
+      </xsl:when>
+      <xsl:otherwise>
+        <xsl:call-template name="java:createGetter">
+          <xsl:with-param name="indent" select="$indent"/>
+          <xsl:with-param name="static" select="$static"/>
+          <xsl:with-param name="variableType" select="jw:mappeDataType(@dataType | @refDataType)"/>
+          <xsl:with-param name="variableName" select="@name"/>
+          <xsl:with-param name="extraContent" select="$extraContent"/>
+        </xsl:call-template>
+      </xsl:otherwise>
+    </xsl:choose>
 
   </xsl:template>
 
@@ -399,7 +429,7 @@
       <xsl:with-param name="variableType">
         <xsl:choose>
           <xsl:when test="@upperMultiplicity eq 'unbounded'">
-            <xsl:value-of select="fn:concat('List&lt;', jw:upperWord(jw:mappeDataType(@type)), '&gt;')"/>
+            <xsl:value-of select="fn:concat('java.util.List&lt;', jw:mappeDataType(@type | @dataType | @refDataType), '&gt;')"/>
           </xsl:when>
           <xsl:otherwise>
             <xsl:value-of select="@type | @dataType | @refDataType"/>
