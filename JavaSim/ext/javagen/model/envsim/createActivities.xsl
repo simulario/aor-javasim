@@ -596,7 +596,7 @@
           select="aorsml:ActivityStartEffect/aorsml:UpdateObject | 
                   aorsml:ActivityStartEffect/aorsml:UpdateStatisticsVariable |
                   aorsml:ActivityStartEffect/aorsml:UpdateGridCell | 
-                  aorsml:ActivityStartEffect/aorsml:UpdateGridCells | 
+                  aorsml:ActivityStartEffect/aorsml:ForEachGridCell | 
                   aorsml:ActivityStartEffect/aorsml:AddObjectToCollection | 
                   aorsml:ActivityStartEffect/aorsml:UpdateActor |
                   aorsml:UPDATE-ENV/aorsml:IncrementGlobalVariable |
@@ -637,7 +637,7 @@
           select="aorsml:ActivityEndEffect/aorsml:UpdateObject | 
           aorsml:ActivityEndEffect/aorsml:UpdateStatisticsVariable |
           aorsml:ActivityEndEffect/aorsml:UpdateGridCell | 
-          aorsml:ActivityEndEffect/aorsml:UpdateGridCells | 
+          aorsml:ActivityEndEffect/aorsml:ForEachGridCell | 
           aorsml:ActivityEndEffect/aorsml:AddObjectToCollection | 
           aorsml:ActivityEndEffect/aorsml:UpdateActor"
           mode="createActivties.method.executeEffects">
@@ -670,7 +670,7 @@
 
   <!-- is it used for the additional (activity-)element UpdateActor-->
   <xsl:template
-    match="aorsml:UpdateObject | aorsml:UpdateStatisticsVariable | aorsml:UpdateGridCell | aorsml:UpdateGridCells |aorsml:AddObjectToCollection | 
+    match="aorsml:UpdateObject | aorsml:UpdateStatisticsVariable | aorsml:UpdateGridCell | aorsml:ForEachGridCell |aorsml:AddObjectToCollection | 
                    aorsml:UpdateActor | aorsml:UpdateStatisticsVariable | aorsml:IncrementGlobalVariable"
     mode="createActivties.method.executeEffects">
     <xsl:param name="indent" required="yes" as="xs:integer"/>

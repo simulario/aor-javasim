@@ -59,7 +59,7 @@
             <xsl:call-template name="java:newLine"/>
 
             <!-- static setter -->
-            <xsl:apply-templates select="aorsml:GlobalVariable" mode="assistents.setVariableMethod">
+            <xsl:apply-templates select="aorsml:GlobalVariable[not(@upperMultiplicity = 'unbounded')]" mode="assistents.setVariableMethod">
               <xsl:with-param name="indent" select="$indent + 1"/>
               <xsl:with-param name="static" select="true()"/>
               <xsl:with-param name="staticClassName" select="$sim.class.simGlobal"/>
@@ -93,14 +93,32 @@
 
     <xsl:choose>
       <xsl:when test="@upperMultiplicity eq 'unbounded'">
-        <!-- currently unused -->
+
+        <xsl:call-template name="java:variable">
+          <xsl:with-param name="indent" select="$indent"/>
+          <xsl:with-param name="static" select="true()"/>
+          <xsl:with-param name="modifier" select="'public'"/>
+          <xsl:with-param name="type" select="fn:concat('java.util.List&lt;', jw:mappeDataType(@dataType | @refDataType), '&gt;')"/>
+          <xsl:with-param name="name" select="@name"/>
+          <xsl:with-param name="value">
+            
+            <xsl:call-template name="java:newObject">
+              <xsl:with-param name="inLine" select="true()"/>
+              <xsl:with-param name="class" select="'java.util.ArrayList'"/>
+              <xsl:with-param name="generic" select="jw:mappeDataType(@dataType | @refDataType)"/>
+              <xsl:with-param name="onlyInitialization" select="true()"/>
+            </xsl:call-template>
+            
+          </xsl:with-param>
+        </xsl:call-template>   
+        
       </xsl:when>
       <xsl:otherwise>
 
         <xsl:call-template name="java:variable">
           <xsl:with-param name="indent" select="$indent"/>
           <xsl:with-param name="static" select="true()"/>
-          <xsl:with-param name="modifier" select="'private'"/>
+          <xsl:with-param name="modifier" select="'public'"/>
           <xsl:with-param name="type">
             <xsl:choose>
               <xsl:when test="@dataType">

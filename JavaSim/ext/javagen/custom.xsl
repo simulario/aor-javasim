@@ -349,7 +349,9 @@
   <xsl:param name="sim.class.simulatorMain" as="xs:string">Simulator</xsl:param>
   <xsl:param name="sim.class.simParams" as="xs:string">SimParameter</xsl:param>
   <xsl:param name="sim.class.simSpaceModel" as="xs:string">SpaceModel</xsl:param>
+  <xsl:param name="sim.package.simSpaceModel" as="xs:string" select="fn:concat($sim.package.controller, '.', $sim.class.simSpaceModel)"/>
   <xsl:param name="sim.class.simGridCell" as="xs:string">SimGridCell</xsl:param>
+  <xsl:param name="sim.package.simGridCell" as="xs:string" select="fn:concat($sim.package.simSpaceModel, '.', $sim.class.simGridCell)"/>
   <xsl:param name="sim.class.simStatistics" as="xs:string">SimStatistics</xsl:param>
   <xsl:param name="sim.class.simStatistics.Variable">StatisticsVariable</xsl:param>
   <xsl:param name="sim.class.simStatistics.Variable.PropertyIterator">PropertyIterator</xsl:param>
