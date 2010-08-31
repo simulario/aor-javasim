@@ -1,12 +1,12 @@
 <?xml version="1.0"?>
 <?xml-stylesheet type="text/xsl" href="prettyprint.xsl"?>
 <SimulationScenario xmlns="http://aor-simulation.org" xmlns:aors="http://aor-simulation.org" xmlns:dc="http://purl.org/dc/elements/1.1/"
-  xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://aor-simulation.org ../../AORSL/AORSL_0-8-4.xsd" version="0.8.4"
+  xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://aor-simulation.org ../../../AORSL/AORSL_0-8-4.xsd" version="0.8.4"
   scenarioName="CarsAndTrucksOnCircularTrack_2Cars_1Truck"
   scenarioTitle="A truck and two cars moving on a circular track with one speed
   limit sign for all and one speed limit sign only for trucks">
 
-  <SimulationParameters simulationSteps="30000" stepDuration="100" timeUnit="ms" stepTimeDelay="3000"/>
+  <SimulationParameters simulationSteps="30000" stepDuration="100" timeUnit="ms" stepTimeDelay="30"/>
 
   <SimulationModel modelName="CarsAndTrucksOnCircularTrack" modelTitle="Cars and trucks moving on a circular track with uniform velocity" autoKinematics="true">
     <documentation>
@@ -30,12 +30,10 @@
       </ActionEventType>
 
       <!-- Vehicle speed up event -->
-      <ActionEventType name="SpeedUp" superType="Accelerate">
-      </ActionEventType>
+      <ActionEventType name="SpeedUp" superType="Accelerate"> </ActionEventType>
 
       <!-- Vehicle slow down event -->
-      <ActionEventType name="SlowDown" superType="Accelerate">
-      </ActionEventType>
+      <ActionEventType name="SlowDown" superType="Accelerate"> </ActionEventType>
 
       <PhysicalObjectType name="SpeedLimitSign">
         <Attribute name="admMaxVelocity" type="Integer"/>
@@ -49,10 +47,11 @@
 
       <!-- ========================== The vehicle agent ====================== -->
       <PhysicalAgentType name="Vehicle" autoPerception="true" memorySize="0">
+        <Attribute type="Boolean" name="booleanTest"/>
         <SelfBeliefAttribute name="maxVelocity" type="Integer"/>
         <SelfBeliefAttribute name="speedLimit" type="Integer" initialValue="0"/>
         <SelfBeliefAttribute name="myVelocity" type="Integer" initialValue="0"/>
-        
+
         <ReactionRule name="SpeedUp_Rule" agentVariable="vehicle" useActionRules="true" actionRuleEvaluation="all-or-nothing">
           <documentation>
             <dc:description>
@@ -80,7 +79,7 @@
             </SCHEDULE-EVT>
           </THEN>
         </ReactionRule>
-        
+
         <ReactionRule name="SpeedLimitStart_Rule" agentVariable="vehicle" useActionRules="true">
           <documentation>
             <dc:description>
@@ -99,7 +98,7 @@
             </UPDATE-AGT>
           </DO>
         </ReactionRule>
-        
+
         <ReactionRule name="SlowDown_Rule" agentVariable="vehicle" useActionRules="true" actionRuleEvaluation="as-much-as-possible">
           <ON-EACH-SIMULATION-STEP/>
           <IF language="Java">
@@ -121,12 +120,12 @@
                   <ValueExpr language="Java">
                     <![CDATA[
                       vehicle.getMyVelocity() - vehicle.getSpeedLimit()
-                    ]]>                    
+                    ]]>
                   </ValueExpr>
                   <ValueExpr language="JavaScript">
                     <![CDATA[
                       this.vehicle.getMyVelocity() - this.vehicle.getSpeedLimit()
-                    ]]>                    
+                    ]]>
                   </ValueExpr>
                 </Slot>
               </ActionEventExpr>
@@ -146,9 +145,9 @@
             </UPDATE-AGT>
           </DO>
         </ReactionRule>
-        
+
         <ActionRule actionEventType="Accelerate"/>
-                
+
         <ActionRule actionEventType="SlowDown" eventVariable="e" agentVariable="vehicle" inheritanceMethod="conjunctive">
           <IF language="Java">
             <![CDATA[
@@ -180,7 +179,7 @@
             </UPDATE-AGT>
           </ELSE>
         </ActionRule>
-        
+
         <ActionRule actionEventType="SpeedUp" eventVariable="e" agentVariable="vehicle" inheritanceMethod="conjunctive">
           <IF language="Java">
             <![CDATA[
@@ -214,13 +213,13 @@
               </SelfBeliefSlot>
             </UPDATE-AGT>
           </ELSE>
-        </ActionRule>        
+        </ActionRule>
       </PhysicalAgentType>
 
       <!-- ========================== The car agent ====================== -->
       <PhysicalAgentType name="Car" superType="Vehicle" autoPerception="true">
         <InitialAttributeValue attribute="perceptionRadius" value="50"/>
-        <InitialAttributeValue attribute="width" value="10"/>        
+        <InitialAttributeValue attribute="width" value="10"/>
       </PhysicalAgentType>
 
       <!-- ========================= The agent Truck ======================= -->
@@ -314,13 +313,23 @@
       <Slot property="width" value="180"/>
       <SelfBeliefSlot property="maxVelocity" value="120"/>
     </PhysicalAgent>
-
+    
     <PhysicalAgent type="Truck" name="Truck1" id="3" x="0" vx="0">
       <Slot property="width" value="230"/>
       <Slot property="height" value="230"/>
       <SelfBeliefSlot property="maxVelocity" value="100"/>
     </PhysicalAgent>
 
+    <PhysicalAgent type="Car" name="Car3" id="4" x="500" vx="0">
+      <Slot property="width" value="180"/>
+      <SelfBeliefSlot property="maxVelocity" value="120"/>
+    </PhysicalAgent>
+    
+    <PhysicalAgent type="Car" name="Car4" id="5" x="500" vx="0">
+      <Slot property="width" value="180"/>
+      <SelfBeliefSlot property="maxVelocity" value="120"/>
+    </PhysicalAgent>
+    
     <PhysicalObject type="SpeedLimitSign" name="SpeedLimitSign1" id="101" x="6000">
       <Slot property="admMaxVelocity" value="70"/>
       <Slot property="width" value="150"/>
@@ -377,7 +386,7 @@
           </PhysicalShape2D>
         </PhysicalObjectView>
 
-        <EventAppearance eventType="SlowDown" duration="600">
+        <!--EventAppearance eventType="SlowDown" duration="600">
           <MidiSound instrumentNo="2" noteSequence="7/200 8/200 9/200"/>
           <MidiSound instrumentNo="17" noteSequence="2/150 4/150 6/150 8/150"/>
         </EventAppearance>
@@ -385,144 +394,456 @@
         <EventAppearance eventType="SpeedUp" duration="100">
           <MidiSound instrumentNo="6" noteSequence="7/200 8/200 9/200"/>
           <MidiSound instrumentNo="21" noteSequence="2/150 4/150 6/150 8/150"/>
-        </EventAppearance>
+        </EventAppearance-->
       </Views>
       <AgentControlUI>
         <ControllableAgentType type="Vehicle" controllableAgents="1 3" suspendRules="SpeedUp_Rule SlowDown_Rule">
-          <GUI>
+          <GUI defaultLanguage="en">
             <Style type="text/css">
               <![CDATA[
-               Structure {
-                 /*	position:fixed;
-                 	top:0;
-                 	bottom:0;
-                 	width:100%;
-                 */	background-color:#EEEEEE;
-               }
+form.__Structure {
+  display: block;
+  position: fixed;
+  margin: 0;
+  padding: 0;
+  border: none;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background-color: silver;
+}
 
-                 div#visualization {
-                 	position: fixed;
-                 	top: 0;
-                 	left: 0;
-                 	width: 60%;
-                 	bottom: 0;
-                 	background-color: blue;
-                 }
+div#documentBody {
+  position: relative;
+  display: block;
+  width: 55em;
+  height: 27.5em;
+  margin: 10px auto;
+  border: 1px solid black;
+  background-color: #CAE1FF;
+}
 
-                 visualization {
-                 	display: block;
-                 	position: absolute;
-                 	top: 0;
-                 	height: 100%;
-                 	left: 0;
-                 	width: 100%;
-                 	border: 1px solid black;
-                 	background-color: yellow;
-                 }
+div#perceptions {
+  position: relative;
+  width: 100%;
+  height: 50%;
+  display: block;
+}
 
-                 div#properties {
-                 	position: fixed;
-                 	top: 0;
-                 	right: 0;
-                 	width: 40%;
-                 	bottom: 0;
-                 }
+h1 {
+  display:block;
+  width: 100%;
+  margin: 0;
+  padding: 0;
+  font-family: 'Verdana' 'Arial' 'Helvetica' 'sans-serif';
+  font-size: 1.5em;
+  font-weight: bold;
+  text-align: center;
+  text-decoration: underline;
+  overflow: hidden;
+}
 
-                 div#properties > * {
-                 	margin: 5px;
-                 }
+/********************/
+/*** trafficsigns ***/
+/********************/
 
-                 ul {
-                 	display: block;
-                 	margin: 0;
-                 	padding: 0;
-                 }
+div#trafficsigns {
+  display: block;
+  position: absolute;
+  top: 5%;
+  right: 1.25%;
+  width: 25%;
+  height: 188%;
+  background-color: white;
+  border: 0.125em solid blue;
+}
 
-                 li {
-                 	position: relative;
-                 	display: block;
-                 	margin: 5px;
-                 }
+div#trafficsigns h1 {
+  height: 10%;
+}
 
-                 label {
-                 	display: inline-block;
-                 	width: 30%;
-                 }
+*.__perceptionlist.trafficsigns {
+  display: block;
+  width: 90%;
+  height: 87%;
+  margin: 0 auto;
+}
 
-                 textfield, slider {
-                 	display: inline-block;
-                 	width: 60%;
-                 	height: 1em;
-                 }
-	             ]]>
-            </Style>
-            <Structure xml:lang="en">
-							<h1>Properties</h1>
-							<ul>
-								<li>
-									<label>speedLimit</label>
-									<textfield property="speedLimit" readonly="true" type="Integer"/>
-								</li>
-								<li>
-									<label>maxVelocity</label>
-									<textfield property="maxVelocity" readonly="true" type="Integer"/>
-								</li>
-								<li>
-									<label>myVelocity</label>
-									<textfield property="myVelocity" readonly="true" type="Integer"/>
-								</li>
-							</ul>
-							<h1>Actions</h1>
-							<ul>
-								<li>
-									<div>
-										<label>modifySpeedBy</label>
-										<slider property="__speed" minValue="0" maxValue="10" initialValue="5" type="Integer"/>
-										<textfield property="__speed" initialValue="5" type="Integer"  name="speed"/>
-									</div>
-									<div>
-										<button title="speedUp" name="SpeedUp"/>
-										<button title="slowDown" name="SlowDown"/>
-									</div>
-								</li>
-							</ul>
-            </Structure>
-            <Structure xml:lang="de">
-              <h1>Eigenschaften</h1>
-              <ul>
-                <li>
-                  <label>Geschwindigkeitsbgrenzung</label>
-                  <textfield property="speedLimit" readonly="true" type="Integer"/>
-                </li>
-                <li>
-                  <label>Maximalgeschwindigkeit</label>
-                  <textfield property="maxVelocity" readonly="true" type="Integer"/>
-                </li>
-                <li>
-                  <label>aktuelle Geschwindigkeit</label>
-                  <textfield property="myVelocity" readonly="true" type="Integer"/>
-                </li>
-              </ul>
-              <h1>Handlungen</h1>
-              <ul>
-                <li>
-                  <div>
-                    <label>Geschwindigkeit aendern um</label>
-                    <slider property="__speed" minValue="0" maxValue="10" initialValue="5" type="Integer"/>
-                    <textfield property="__speed" initialValue="5" type="Integer"  name="speed"/>
+*.__perception.trafficsign {
+  display: block;
+  background-repeat: no-repeat;
+  background-position: center top;
+  text-align: center;
+}
+
+*.__perception.trafficsign textfield {
+  display: inline-block;
+  border: 1px solid transparent;
+	background-color: white;
+  font-weight: bold;
+  font-size: 400%;
+  width: 1em;
+  margin: 0.7em auto 0;
+}
+
+/****************/
+/*** vehicles ***/
+/****************/
+
+div#vehicles {
+  display: block;
+  position: absolute;
+  top: 5%;
+  right: 27.5%;
+  width: 44.5%;
+  height: 114.7%;
+  background-color: white;
+  border: 0.125em solid blue;
+}
+
+div#vehicles h1 {
+  height: 16.5644%;
+}
+
+*.__perceptionlist.vehicles {
+  display: block;
+  width: 93.8888%;
+  height: 78.4534%;
+  margin: 0 auto;
+  padding: 0;
+  background-color: white;
+}
+
+*.__perception.vehicle {
+  display: block;
+  background-color: white;
+  width: 21.5em;
+}
+
+*.__perception.vehicle dl {
+  display: block;
+  position: relative;
+  height: 5.5em;
+  margin: 0 0 0.5em 0;
+  padding: 0.5em 0 0 9.25em;
+  background-repeat: no-repeat;
+  background-position: 1em 0.15em;
+  border: 0.125em solid blue;
+  background-color: #E0E8FF;
+}
+
+*.__perception.vehicle dt {
+  height: 1em;
+  margin: 0.15em 0 0;
+  padding: 0;
+  width: 5em;
+  float: left;
+  clear: both;
+}
+
+*.__perception.vehicle dd {
+  margin: 0.125em 0 0;
+  padding: 0;
+}
+
+*.__perception.vehicle textfield {
+  display: inline-block;
+  border: 1px solid #C0C8FF;
+  background-color: #F0F8FF;
+  margin: 0;
+  padding: 0;
+  width: 5em;
+  height: 1em;
+}
+
+/******************/
+/*** properties ***/
+/******************/
+
+div#properties {
+  display: block;
+  position: absolute;
+  top: 2.5%;
+  left: 1.25%;
+  height:57.35%;
+  width: 25%;
+  background-color: white;
+  /* The image is based on the image: http://upload.wikimedia.org/wikipedia/commons/3/34/Ford_Mondeo_MK3_ST220_-_Tachometer_(light).jpg */
+  background-image: url('Tachometer.png');
+  background-repeat: no-repeat;
+  background-position: center 2.6124em;
+  border: 0.125em solid blue;
+}
+
+div#properties h1 {
+  height: 16.5644%;
+}
+
+div#properties table {
+  width: 6em;
+  margin: 7.75em auto 0;
+  border-collapse: collapse;
+}
+
+div#properties tr {
+  margin: 0;
+  padding: 0;
+}
+
+div#properties td, div#properties th {
+  margin: 0;
+  padding: 0;
+  text-align: center;
+  vertical-algin: center;
+  background-color: #E0E8FF;
+}
+
+div#properties textfield {
+  display: inline-block;
+  width: 2em;
+  height: 1em;
+  border: 1px solid transparent;
+  padding: 0;
+  background: #E0E8FF;
+}
+
+/***************/
+/*** actions ***/
+/***************/
+
+div#actions {
+  display: block;
+  position: absolute;
+  bottom: 2.5%;
+  left: 1.25%;
+  width: 70.75%;
+  height: 33.7682%;
+  border: 0.125em solid blue;
+  background-color: white;
+}
+
+div#actions h1 {
+  height: 27.0264%;
+}
+
+div#actions div {
+  display: block;
+  width: 96.4981%;
+  height: 64.4792%;
+  margin: 0 auto;
+}
+
+div#actions p {
+  margin: 0 0 1.2em 0;
+  padding: 0;
+  text-align: center;
+}
+
+div#actions table {
+  margin: 0;
+  padding: 0;  
+  width: 100%;
+  border-collapse: collapse;
+}
+
+div#actions th, div#actions td {
+  text-align: center;
+}
+
+div#actions textfield, div#actions slider {
+  display: inline-block;
+  width: 13em;
+}
+
+div#actions button {
+  display: inline-block;
+  width: 13em;
+}
+            ]]>
+            </Style>            
+            <Structure>
+              <div id="documentBody">
+                <div id="perceptions">
+                  <div id="trafficsigns">
+                    <h1>
+                      <multilingualContent xml:lang="en">Trafficsigns</multilingualContent>
+                      <multilingualContent xml:lang="de">Verkehrschilder</multilingualContent>
+                    </h1>
+                    <perceptionlist class="trafficsigns">
+                      <!--
+                        The image is based on the image:
+                        http://upload.wikimedia.org/wikipedia/commons/b/bc/Zeichen_250.svg
+                      -->
+                      <perception entityType="SpeedLimitSign" class="trafficsign" style="background-image: url('SpeedLimitSign.png');">
+                        <textfield property="admMaxVelocity" readonly="true" type="Integer"/>
+                      </perception>
+                      <!--
+                        The image is based on the images:
+                        http://upload.wikimedia.org/wikipedia/commons/b/bc/Zeichen_250.svg
+                        http://upload.wikimedia.org/wikipedia/commons/8/84/Sinnbild_LKW.svg
+                      -->
+                      <perception entityType="TruckSpeedLimitSign" class="trafficsign" style="background-image: url('TruckSpeedLimitSign.png');">
+                        <textfield property="admMaxVelocity" readonly="true" type="Integer"/>
+                      </perception>
+                      <!--
+                        The image is based on the image:
+                        http://upload.wikimedia.org/wikipedia/commons/0/03/Zeichen_282.svg
+                      -->
+                      <perception entityType="SpeedLimitCancelationSign" class="trafficsign" style="background-image: url('SpeedLimitCancelationSign.png');"/>
+                    </perceptionlist>
                   </div>
-                  <div>
-                    <button title="Beschleunigen" name="SpeedUp"/>
-                    <button title="Verlangsamen" name="SlowDown"/>
+                  <div id="vehicles">
+                    <h1>
+                      <multilingualContent xml:lang="en">Vehicles</multilingualContent>
+                      <multilingualContent xml:lang="de">Fahrzeuge</multilingualContent>
+                    </h1>
+                    <perceptionlist class="vehicles">
+                      <perception entityType="Car" class="vehicle">
+                        <!--
+                          The image is based on the image:
+                          http://www.fuchs-oil.de/piktogramme.html?&no_cache=1&tx_mmdamfilelist_pi1[pointer]=0&tx_mmdamfilelist_pi1[showUid]=2303
+                        -->
+                        <dl style="background-image: url('PKW.png');">
+                          <dt>
+                            <label>
+                              <multilingualContent xml:lang="en">ID:</multilingualContent>
+                            </label>                              
+                          </dt>
+                          <dd>
+                            <textfield property="id" readonly="true" type="Integer"/>
+                          </dd>
+                          <dt>
+                            <label>
+                              <multilingualContent xml:lang="en">Name:</multilingualContent>
+                            </label>
+                          </dt>
+                          <dd>
+                            <textfield property="name" readonly="true" type="String"/>
+                          </dd>
+                          <dt>
+                            <label>
+                              <multilingualContent xml:lang="en">Velocity:</multilingualContent>
+                              <multilingualContent xml:lang="de">Geschwindigkeit:</multilingualContent>
+                            </label>
+                          </dt>
+                          <dd>
+                            <textfield property="vx" readonly="true" type="Integer"/>
+                          </dd>                            
+                        </dl>
+                      </perception>
+                      <perception entityType="Truck" class="vehicle">
+                        <!--
+                          The image is based on the image:
+                          http://www.fuchs-oil.de/piktogramme.html?&no_cache=1&tx_mmdamfilelist_pi1[pointer]=0&tx_mmdamfilelist_pi1[showUid]=2310                        -->
+                        <dl style="background-image: url('LKW.png');">
+                          <dt>
+                            <label>
+                              <multilingualContent xml:lang="en">ID:</multilingualContent>
+                            </label>                              
+                          </dt>
+                          <dd>
+                            <textfield property="id" readonly="true" type="Integer"/>
+                          </dd>
+                          <dt>
+                            <label>
+                              <multilingualContent xml:lang="en">Name:</multilingualContent>
+                            </label>
+                          </dt>
+                          <dd>
+                            <textfield property="name" readonly="true" type="String"/>
+                          </dd>
+                          <dt>
+                            <label>
+                              <multilingualContent xml:lang="en">Velocity:</multilingualContent>
+                              <multilingualContent xml:lang="de">Geschwindigkeit:</multilingualContent>
+                            </label>
+                          </dt>
+                          <dd>
+                            <textfield property="vx" readonly="true" type="Integer"/>
+                          </dd>                            
+                        </dl>
+                      </perception>
+                    </perceptionlist>
                   </div>
-                </li>
-              </ul>
+                </div>
+                
+                <div id="properties">
+                  <h1>
+                    <multilingualContent xml:lang="en">Velocity</multilingualContent>
+                    <multilingualContent xml:lang="de">Geschwindigkeit</multilingualContent>
+                  </h1>
+                  <table>
+                    <tr>
+                      <th>
+                        <multilingualContent xml:lang="en">curr.:</multilingualContent>
+                        <multilingualContent xml:lang="de">akt.:</multilingualContent>
+                      </th>
+                      <th>
+                        <multilingualContent xml:lang="en">max.:</multilingualContent>
+                      </th>
+                    </tr>
+                    <tr>
+                      <td>
+                        <textfield property="myVelocity" readonly="true" type="Integer"/>                        
+                      </td>
+                      <td>
+                        <textfield property="maxVelocity" readonly="true" type="Integer"/>                        
+                      </td>
+                    </tr>
+                  </table>
+                </div>
+                
+                <div id="actions">
+                  <h1>
+                    <multilingualContent xml:lang="en">Velocity modification</multilingualContent>
+                    <multilingualContent xml:lang="de">Geschwindigkeitsveränderung</multilingualContent>                    
+                  </h1>
+                  <div>
+                    <p>
+                      <multilingualContent xml:lang="en">Please enter the value by which you want to increase or reduce your vehicle's velocity.</multilingualContent>
+                      <multilingualContent xml:lang="de">Bitte geben Sie den Wert an, um den Sie die Geschwindigkeit ihres Fahrzeuges erhöhen oder reduzieren wollen.</multilingualContent>
+                    </p>
+                    <table>
+                      <tr>
+                        <th rowspan="2">
+                          <label>
+                            <multilingualContent xml:lang="en">Modify velocity by:</multilingualContent>
+                            <multilingualContent xml:lang="de">Geschwindigkeit ändern um:</multilingualContent>
+                          </label>
+                        </th>
+                        <td>
+                          <textfield group="speedModification" initialValue="5" type="Integer" name="speed"/>
+                        </td>
+                        <td>
+                          <button name="speedUp">
+                            <title xml:lang="en">speed up</title>
+                            <title xml:lang="de">beschleunigen</title>
+                          </button>
+                        </td>
+                      </tr>
+                      <tr>
+                        <td>
+                          <slider group="speedModification" minValue="0" maxValue="10" initialValue="5" type="Integer"/>
+                        </td>
+                        <td>
+                          <button name="slowDown">
+                            <title xml:lang="en">slow down</title>
+                            <title xml:lang="de">verlangsamen</title>
+                          </button>
+                        </td>
+                      </tr>                      
+                    </table>
+                  </div>
+                </div>
+              </div>
             </Structure>
           </GUI>
+
           <UserInterfaceEventListener name="SpeedUp" guiVariable="gui">
             <WHEN>
               <KeyboardEvent keyIdentifier="Up"/>
-              <MouseEvent mouseEventType="click" targetName="SpeedUp"/>
+              <MouseEvent mouseEventType="click" targetName="speedUp"/>
             </WHEN>
             <DO>
               <SCHEDULE-EVT>
@@ -538,7 +859,7 @@
           <UserInterfaceEventListener name="SlowDown" guiVariable="gui" actionRuleEvaluation="until-1st-fail">
             <WHEN>
               <KeyboardEvent keyIdentifier="Down"/>
-              <MouseEvent mouseEventType="click" targetName="SlowDown"/>
+              <MouseEvent mouseEventType="click" targetName="slowDown"/>
             </WHEN>
             <DO>
               <SCHEDULE-EVT>
