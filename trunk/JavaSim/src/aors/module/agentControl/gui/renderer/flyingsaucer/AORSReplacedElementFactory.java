@@ -41,8 +41,8 @@ public class AORSReplacedElementFactory extends SwingReplacedElementFactory {
     this.setFormSubmissionListener(this.formSubmissionListener);
 	}
 
-  @Override
   //needs to be overridden so that the new created componets can be used
+  @Override
   public ReplacedElement createReplacedElement(LayoutContext context,
     BlockBox box, UserAgentCallback uac, int cssWidth, int cssHeight) {
     Element e = box.getElement();

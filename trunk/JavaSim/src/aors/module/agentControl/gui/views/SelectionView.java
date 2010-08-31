@@ -135,8 +135,8 @@ public class SelectionView extends InteractiveView {
 				new Element("textfield").setAttribute("name", "id" + agentId).
 				setAttribute("initialValue", String.valueOf(agentId)).
 				setAttribute("readonly", "true").setAttribute("style",
-				"display: inline-block;").setAttribute("type", "Integer")).
-				setAttribute((Attribute)style.clone()));
+				"display: inline-block; width: 2em; margin: 0 5px;").setAttribute(
+				"type", "Integer")).setAttribute((Attribute)style.clone()));
 			dataRow.addContent(new Element("td").addContent(
 				agentSubjectFacade.getAgentType()).setAttribute((Attribute)style.
 				clone()));
@@ -157,12 +157,7 @@ public class SelectionView extends InteractiveView {
 
 			table.addContent(dataRow);
 		}
-
-//		//test
-//		body.addContent(new Element("updateableArea").setAttribute(Receiver.RECEIVER_ATTRIBUTE,
-//			"ua").setAttribute("style", "display: block; width: 100px; height: 100px;" +
-//			" overflow: scroll; background-color: red; border: 1px solid black;"));
-
+		
 		// renders the document
 		Renderer renderer = RendererFactory.getInstance().createRenderer();
 		try {
