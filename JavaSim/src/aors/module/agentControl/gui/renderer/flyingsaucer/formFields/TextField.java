@@ -41,7 +41,6 @@ class TextField extends InputField<JTextField> implements Receiver {
       //override getColumnWidth to base on 'o' instead of 'm'.
       //more like other browsers
       int columnWidth = 0;
-
       @Override
       protected int getColumnWidth() {
         if(columnWidth == 0) {
@@ -96,19 +95,19 @@ class TextField extends InputField<JTextField> implements Receiver {
 
     int top = 2;
 		if(paddingTop != null) {
-			Math.max(top, paddingTop.intValue());
+			top = Math.max(top, paddingTop.intValue());
 		}
     int left = 3;
 		if(paddingLeft != null) {
-			Math.max(left, paddingLeft.intValue());
+			left = Math.max(left, paddingLeft.intValue());
 		}
     int bottom = 2;
 		if(paddingBottom != null) {
-			Math.max(bottom, paddingBottom.intValue());
+			bottom = Math.max(bottom, paddingBottom.intValue());
 		}
     int right = 3;
 		if(paddingRight != null) {
-			Math.max(right, paddingRight.intValue());
+			right = Math.max(right, paddingRight.intValue());
 		}
 
     //if a border is set or a background color is set, then use a special

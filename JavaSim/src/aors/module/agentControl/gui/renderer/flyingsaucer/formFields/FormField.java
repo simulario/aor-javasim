@@ -4,6 +4,7 @@ import aors.module.agentControl.gui.GUIComponent;
 import aors.module.agentControl.gui.interaction.EventMediator;
 import aors.module.agentControl.gui.interaction.Sender;
 import aors.module.agentControl.gui.renderer.flyingsaucer.AORSForm;
+import java.awt.Color;
 import java.awt.event.KeyListener;
 import java.awt.event.MouseListener;
 import javax.swing.JComponent;
@@ -17,6 +18,8 @@ abstract class FormField<T extends JComponent>
 	private T _component;
 	private boolean flag = false;
 	protected EventMediator mediator;
+
+	protected final static Color TRANSPARENT = new Color(0, 0, 0, 0);
 
 	public FormField(Element e, AORSForm form, LayoutContext context,
 		BlockBox box, EventMediator mediator) {

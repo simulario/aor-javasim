@@ -4,13 +4,13 @@ import aors.module.agentControl.gui.interaction.EventMediator;
 import aors.module.agentControl.gui.interaction.Receiver;
 import aors.module.agentControl.gui.interaction.Sender;
 import aors.module.agentControl.gui.renderer.flyingsaucer.AORSForm;
+import java.awt.Dimension;
 import java.beans.PropertyChangeEvent;
 import javax.swing.JSlider;
 import javax.swing.event.ChangeEvent;
 import javax.swing.event.ChangeListener;
 import org.w3c.dom.Element;
 import org.xhtmlrenderer.css.constants.CSSName;
-import org.xhtmlrenderer.css.style.CalculatedStyle;
 import org.xhtmlrenderer.css.style.FSDerivedValue;
 import org.xhtmlrenderer.css.style.derived.LengthValue;
 import org.xhtmlrenderer.layout.LayoutContext;
@@ -55,13 +55,23 @@ class SliderField extends InputField<JSlider> implements Receiver {
 
    protected void applyComponentStyle(JSlider slider) {
     super.applyComponentStyle(slider);
-		CalculatedStyle style = getBox().getStyle();
-		FSDerivedValue widthValue = style.valueByName(CSSName.WIDTH);
+		
+		if("transparent".equals(getStyle().valueByName(CSSName.BACKGROUND_COLOR).
+			asString())) {
+			slider.setBackground(FormField.TRANSPARENT);
+			slider.setOpaque(false);
+		}
+
+		Dimension preferredSize = slider.getPreferredSize();
+
+		intrinsicWidth = preferredSize.width;
+		FSDerivedValue widthValue = getStyle().valueByName(CSSName.WIDTH);
 		if(widthValue instanceof LengthValue) {
 			intrinsicWidth = new Integer(getBox().getContentWidth());
 		}
 
-		FSDerivedValue heightValue = style.valueByName(CSSName.HEIGHT);
+		intrinsicHeight = preferredSize.height;
+		FSDerivedValue heightValue = getStyle().valueByName(CSSName.HEIGHT);
 		if(heightValue instanceof LengthValue) {
 			intrinsicHeight = new Integer(getBox().getHeight());
 		}

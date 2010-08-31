@@ -28,9 +28,9 @@ import org.jdom.Attribute;
 import org.jdom.Document;
 import org.jdom.Element;
 import org.jdom.JDOMException;
-import org.jdom.filter.ElementFilter;
 import org.jdom.input.SAXBuilder;
 import org.jdom.output.DOMOutputter;
+import org.jdom.xpath.XPath;
 
 /**
  * View to control an agent.
@@ -147,89 +147,65 @@ public class ControlView extends InteractiveView {
 			return this.renderer.getGUIComponent();
 		}
 
-		// intermediate map for later replacements
-		Map<Element, Element> perceptionlistsToBeReplaced = new HashMap<Element,
-			Element>();
-
 		// gets the perception lists and puts them with their perceptions into the
 		// perceptions perceptionlistsToBeReplaced
-		@SuppressWarnings("unchecked")
-		Iterator<Element> perceptionlists = domDocument.getDescendants(
-			new ElementFilter("perceptionlist"));
-		int perceptionlistCount = 0;
-		while(perceptionlists.hasNext()) {
-			Element perceptionlist = perceptionlists.next();
-
-			// calculets the perception list's name and adds it to the set of
-			// perception list names
-			perceptionlistCount++;
-			String perceptionlistName = "__perceptionlist" + perceptionlistCount;
-			this.perceptionlistNames.add(perceptionlistName);
-
-			// creates a div element that replaces the perceptionlist element
-			Element div = new Element("div");
-
-			// copies all attributes, adds a class identifying the div as a
-			// perceptionlist and sets the RECEIVER_ATTRIBUTE
+		Iterator<Element> perceptionlists = null;
+		try {
 			@SuppressWarnings("unchecked")
-			List<Attribute> attributes = perceptionlist.getAttributes();
-			for(Attribute attribute : attributes) {
-				div.setAttribute((Attribute)attribute.clone());
-			}
-			Attribute classAttribute = div.getAttribute("class");
-			if(classAttribute == null) {
-				classAttribute = new Attribute("class", "");
-				div.setAttribute(classAttribute);
-			}
-			classAttribute.setValue(classAttribute.getValue().concat(
-				" __perceptionlist").trim());
-			div.setAttribute(Receiver.RECEIVER_ATTRIBUTE, perceptionlistName);
-
-			// put the perceptionlist and its replacement in the intermediate map
-			perceptionlistsToBeReplaced.put(perceptionlist, div);
-
-			// gets the perceptionlist's perceptions and put them into the perceptions
-			// map
-			@SuppressWarnings("unchecked")
-			List<Element> perceptionEntries = perceptionlist.removeContent(
-				new ElementFilter("perception"));
-			for(Element perception : perceptionEntries) {
-
-				// renames the perception element and adds a class identifying it as
-				// a perception
-				perception.setName("div");
-				classAttribute = perception.getAttribute("class");
-				if(classAttribute == null) {
-					classAttribute = new Attribute("class", "");
-				}
-				classAttribute.setValue(classAttribute.getValue().concat(
-					" __perception").trim());
-
-				// removes the entityType attribute, sets the RECEIVER_ATTRIBUTE
-				// pointing to its perceptionlist and adds the element to the
-				// perceptions map
-				String perceivedEntityName = perception.getAttributeValue("entityType");
-				perception.removeAttribute("entityType");
-				perception.setAttribute(Receiver.RECEIVER_ATTRIBUTE,
-					perceptionlistName);
-				if(!this.perceptions.containsKey(perceivedEntityName)) {
-					this.perceptions.put(perceivedEntityName, new HashSet<Element>());
-				}
-				this.perceptions.get(perceivedEntityName).add(perception);
-			}
-
+			List<Element> perceptionlistsList = XPath.selectNodes(domDocument,
+				"//div[contains(concat(' ',@class,' '), ' __perceptionlist ')]");
+			perceptionlists = perceptionlistsList.iterator();
+		} catch(JDOMException exeption) {
+			//do nothing
 		}
+		if(perceptionlists != null) {
+			int perceptionlistCount = 0;
+			while(perceptionlists.hasNext()) {
+				Element perceptionlist = perceptionlists.next();
 
-		// replaces perceptionlist element with its div version
-		for(Element perceptionlistToBeModified : perceptionlistsToBeReplaced.
-			keySet()) {
+				// calculets the perception list's name and adds it to the set of
+				// perception list names
+				perceptionlistCount++;
+				String perceptionlistName = "__perceptionlist" + perceptionlistCount;
+				this.perceptionlistNames.add(perceptionlistName);
 
-			// replaces the perceptionlist with its div
-			Element parent = perceptionlistToBeModified.getParentElement();
-			int index = parent.indexOf(perceptionlistToBeModified);
-			parent.removeContent(index);
-			parent.addContent(index, perceptionlistsToBeReplaced.get(
-				perceptionlistToBeModified));
+				perceptionlist.setAttribute(Receiver.RECEIVER_ATTRIBUTE,
+					perceptionlistName);
+
+				// gets the perceptionlist's perceptions and put them into the
+				// perceptions map
+				Iterator<Element> perceptionEntries = null;
+				try {
+					@SuppressWarnings("unchecked")
+					List<Element> perceptionEntriesList = XPath.selectNodes(perceptionlist,
+						"div[contains(concat(' ',@class,' '), ' __perception ')]");
+					perceptionEntries = perceptionEntriesList.iterator();
+				} catch(JDOMException exeption) {
+					//do nothing
+				}
+				if(perceptionEntries != null) {
+					Element perception = null;
+					while(perceptionEntries.hasNext()) {
+						perception = perceptionEntries.next();
+
+						// removes the perception from the perceptionlist's content
+						perceptionlist.removeContent(perception);
+
+						// removes the entityType attribute, sets the RECEIVER_ATTRIBUTE
+						// pointing to its perceptionlist and adds the element to the
+						// perceptions map
+						String perceivedEntityName = perception.getAttributeValue(
+							"entityType");
+						perception.removeAttribute("entityType");
+						perception.setAttribute(Receiver.RECEIVER_ATTRIBUTE,
+							perceptionlistName);
+						if(!this.perceptions.containsKey(perceivedEntityName)) {
+							this.perceptions.put(perceivedEntityName, new HashSet<Element>());
+						}
+						this.perceptions.get(perceivedEntityName).add(perception);
+					}
+				}
+			}
 		}
 
 		// renders the view
@@ -307,11 +283,15 @@ public class ControlView extends InteractiveView {
 				entity = ((InMessageEvent)event).getMessage();
 			}
 
+			// no gui data for the perception available. skip the processing.
+			if(this.perceptions.get(entity.getType()) == null) {
+				return;
+			}
 			// create the gui fragments and puts them into the perceived entities map
 			// if the entity is perceived the first time
 			if(!perceivedEntities.containsKey(entity.getId())) {
 				perceivedEntities.put(entity.getId(), this.createGUIFragment(entity));
-			} 
+			}
 
 			// gets the gui components for the entity
 			Pair<EventMediator, Map<String, GUIComponent>> guiPair =

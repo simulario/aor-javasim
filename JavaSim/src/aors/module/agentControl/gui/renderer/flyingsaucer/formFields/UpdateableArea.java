@@ -4,35 +4,32 @@ import aors.module.agentControl.controller.ModuleAgentController;
 import aors.module.agentControl.gui.interaction.EventMediator;
 import aors.module.agentControl.gui.interaction.Receiver;
 import aors.module.agentControl.gui.renderer.flyingsaucer.AORSForm;
-import java.awt.Color;
+import java.awt.Dimension;
 import java.awt.GridLayout;
 import java.beans.PropertyChangeEvent;
 import java.util.ArrayList;
 import java.util.List;
 import javax.swing.JComponent;
 import javax.swing.JPanel;
-import javax.swing.JScrollPane;
 import org.w3c.dom.Element;
 import org.xhtmlrenderer.layout.LayoutContext;
 import org.xhtmlrenderer.render.BlockBox;
 import org.xhtmlrenderer.simple.FSScrollPane;
 import org.xhtmlrenderer.simple.extend.form.FormFieldState;
 
-class UpdateableArea extends FormField<JScrollPane> implements Receiver {
+class UpdateableArea extends FormField<FSScrollPane> implements Receiver {
 
 	private boolean updated = false;
 	private List<JComponent> content;
 	private JPanel panel;
 	private final static JPanel DUMMY = new JPanel();
-	private final static Color TRANSPARENT = new Color(0, 0, 0, 0);
-
 
 	public UpdateableArea(Element e, AORSForm form, LayoutContext context,
 		BlockBox box, EventMediator mediator) {
 		super(e, form, context, box, mediator);
 		this.content = new ArrayList<JComponent>();
 		this.panel = new JPanel(new GridLayout(0, 1));
-		this.panel.setBackground(UpdateableArea.TRANSPARENT);
+		this.panel.setBackground(FormField.TRANSPARENT);
 		this.panel.setOpaque(false);
 	}
 
@@ -49,13 +46,13 @@ class UpdateableArea extends FormField<JScrollPane> implements Receiver {
 	}
 
 	@Override
-	protected JScrollPane create2() {
-		JScrollPane scrollpane = new JScrollPane();
+	protected FSScrollPane create2() {
+		FSScrollPane scrollpane = new FSScrollPane();
 		applyComponentStyle(scrollpane);
 		return scrollpane;
 	}
 
-	protected void applyComponentStyle(JScrollPane scrollpane) {
+	protected void applyComponentStyle(FSScrollPane scrollpane) {
 		super.applyComponentStyle(scrollpane);
 		if(!updated) {
 			scrollpane.setHorizontalScrollBarPolicy(
@@ -68,14 +65,14 @@ class UpdateableArea extends FormField<JScrollPane> implements Receiver {
 		scrollpane.setOpaque(false);
 	}
 
-	private void setSize(JScrollPane scrollpane) {
+	private void setSize(FSScrollPane scrollpane) {
 		this.intrinsicWidth = 0;
 		this.intrinsicHeight = 0;
 		if(this.updated) {
 			this.intrinsicWidth = this.getBox().getContainingBlock().getContentWidth();
 			this.intrinsicHeight = this.getBox().getContainingBlock().getHeight();
 		}
-		scrollpane.setSize(intrinsicWidth, intrinsicHeight);
+		scrollpane.setSize(this.intrinsicWidth, this.intrinsicHeight);
 	}
 
 	@Override
@@ -98,11 +95,11 @@ class UpdateableArea extends FormField<JScrollPane> implements Receiver {
 			this.updated = !this.content.isEmpty();
 			this.setSize(this.getComponent());
 			for(JComponent component : this.content) {
-				component.setBackground(UpdateableArea.TRANSPARENT);
+				component.setBackground(FormField.TRANSPARENT);
 				component.setVisible(true);
 				this.panel.add(component);
 			}
-			super.applyComponentStyle(panel);
+			super.applyComponentStyle(this.panel);
 			this.getComponent().getViewport().setOpaque(false);
 			this.getComponent().setViewportView(UpdateableArea.DUMMY);
 			this.getComponent().setViewportView(panel);
