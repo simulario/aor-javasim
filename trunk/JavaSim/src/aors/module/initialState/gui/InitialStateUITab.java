@@ -1,5 +1,9 @@
 package aors.module.initialState.gui;
 
+/*
+ * @author Suikang Du 0.8
+ */
+
 import java.awt.BorderLayout;
 import java.awt.Color;
 import java.awt.Dimension;
