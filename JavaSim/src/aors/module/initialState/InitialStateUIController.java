@@ -1,5 +1,9 @@
 package aors.module.initialState;
 
+/*
+ * @author Suikang Du
+ */
+
 import java.awt.BorderLayout;
 import java.awt.Dimension;
 import java.awt.FlowLayout;
