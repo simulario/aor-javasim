@@ -4,11 +4,15 @@
   targetNamespace="http://aor-simulation.org" elementFormDefault="qualified" attributeFormDefault="unqualified">
   <!-- =================================================================== -->
   <xs:include schemaLocation="ERSL/EntityTypes.xsd"/>
-  <xs:include schemaLocation="AgentRules.xsd"/>
+  <xs:include schemaLocation="ActionRules.xsd"/>
   <!-- =================================================================== -->
   <!-- *** AgentType *** -->
   <!-- =================================================================== -->
   <xs:element name="AgentType" type="aors:AgentType.type" substitutionGroup="ers:ObjectType">
+    <xs:unique name="UniqueOutMessageActionRule">
+      <xs:selector xpath="aors:OutMessageActionRule"/>
+      <xs:field xpath="@messageType"/>
+    </xs:unique>
     <xs:key name="AgentType-PropertyKey">
       <xs:selector xpath="aors:Attribute | aors:ReferenceProperty"/>
       <xs:field xpath="@name"/>
@@ -20,6 +24,7 @@
         <xs:sequence>
           <xs:group ref="aors:AgentType.elements"/>
           <xs:element ref="aors:CommunicationRule" minOccurs="0" maxOccurs="unbounded"/>
+          <xs:element ref="aors:OutMessageActionRule" minOccurs="0" maxOccurs="unbounded"/>          
         </xs:sequence>
         <xs:attributeGroup ref="aors:AgentType.attributes"/>
       </xs:extension>
@@ -57,6 +62,10 @@
       <xs:selector xpath="aors:ActionRule"/>
       <xs:field xpath="@actionEventType"/>
     </xs:unique>
+    <xs:unique name="UniqueOutMessageActionRule2">
+      <xs:selector xpath="aors:OutMessageActionRule"/>
+      <xs:field xpath="@messageType"/>
+    </xs:unique>    
     <xs:key name="PhysicalAgentType-PropertyKey">
       <xs:selector xpath="aors:Attribute | aors:ReferenceProperty"/>
       <xs:field xpath="@name"/>
@@ -82,6 +91,7 @@
           <xs:element ref="aors:ActualPerceptionEventType" minOccurs="0" maxOccurs="unbounded"/>
           <xs:element ref="aors:ActualPerceptionRule" minOccurs="0" maxOccurs="unbounded"/>
           <xs:element ref="aors:ReactionRule" minOccurs="0" maxOccurs="unbounded"/>
+          <xs:element ref="aors:AbstractActionRule" minOccurs="0" maxOccurs="unbounded"/>
         </xs:sequence>
         <xs:attribute name="autoPerception" type="xs:boolean" use="optional" default="false"/>
         <xs:attributeGroup ref="aors:AgentType.attributes"/>
