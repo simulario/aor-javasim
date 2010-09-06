@@ -33,13 +33,8 @@
 			<!-- durchschnittliche Zeit für die bearbeitung eines Requests -->
 			<Variable name="cumulativeDurationTime" dataType="Integer" />
 			<Variable name="durationTime" dataType="Float" />
-			
-			<!-- for test -->
-			<Variable name="test" dataType="Integer">
-				<Source>
-					<ObjectProperty property="countCustomers" objectType="TravelInfoService" objectIdRef="1"/>
-				</Source>
-			</Variable>
+
+			<!-- cancel -->
 			<Variable name="cancel" dataType="Integer">
 				<Source>
 					<ObjectProperty property="countCanceledReservations" objectType="RestaurantInfoService" objectIdRef="4"/>
@@ -298,10 +293,8 @@
 					<!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->
 					<documentation>
 						<description>
-							* Anfrage vom Kunden (Customer erhalten)
-							* Parameter: Postleitzahl (Dummy)
-							* -> Update TravelInfo Variablen
-							* -> Nachricht an Wetter- und MapDienst
+							* Anfrage vom Kunden (Customer erhalten), mit Parameter PLZ
+							* sendet Nachricht an Wetter- und MapDienst
 						</description>
 					</documentation>
 					<WHEN eventType="InMessageEvent" messageType="GetTravelInfo" messageVariable="mes" eventVariable="evt"/>
@@ -341,7 +334,7 @@
 					</documentation>
 					
 					<WHEN eventType="InMessageEvent" messageType="GetWeatherInfoResponse" messageVariable="mes" eventVariable="evt"/>
-					<IF language="Java"><![CDATA[mes.getWeatherInfoResponseData() == "sunny" ]]></IF>
+					<IF language="Java"><![CDATA[(mes.getWeatherInfoResponseData()).equals("sunny")]]></IF>
 
 					<THEN>
 						<UPDATE-AGT>
@@ -359,7 +352,6 @@
 							<OutMessageEventExpr messageType="GetOpenAirRestaurantInfo" receiverIdRefs="4">
 								<Slot property="openAirRestaurantInfo">
 									<ValueExpr language="Java">
-										<!-- mes.getZipCode()  -->
 										<![CDATA[
 											tis.getCustomerList().getCustomerRecordFromListWithId((int)mes.getCustId()).getTravelInfo()
 										]]>
@@ -390,7 +382,6 @@
 							<OutMessageEventExpr messageType="GetFastFoodRestaurantInfo" receiverIdRefs="4">
 								<Slot property="fastFoodRestaurantInfo">
 									<ValueExpr language="Java">
-										<!-- mes.getZipCode() -->
 										<![CDATA[
 											tis.getCustomerList().getCustomerRecordFromListWithId((int)mes.getCustId()).getTravelInfo()
 										]]>
@@ -570,11 +561,11 @@
 					<Body language="Java">
 						<![CDATA[ 
 							int rand = Random.uniformInt(1,5);
-							if (rand == 1) return "[OA] El Torro (Cottbus)";
-							if (rand == 2) return "[OA] Steakhaus Asado (Cottbus)";
-							if (rand == 3) return "[OA] El Mundo (Cottbus)";
-							if (rand == 4) return "[OA] Steakhaus Maredo (Berlin)";
-							if (rand == 5) return "[OA] Ratsstube (Rüdesheim am Rhein)";
+							if (rand == 1) return "[OA] El Toro";
+							if (rand == 2) return "[OA] Steakhaus Asado";
+							if (rand == 3) return "[OA] El Mundo";
+							if (rand == 4) return "[OA] Steakhaus Maredo";
+							if (rand == 5) return "[OA] Ratsstube";
 							return "error: no Open-Air Restaurants found!";
 						]]>
 					</Body>
@@ -593,8 +584,8 @@
 							if (rand == 1) return "[FF] McDonalds";
 							if (rand == 2) return "[FF] Burger King";
 							if (rand == 3) return "[FF] Subway";
-							if (rand == 4) return "[FF] Efes Döner (Cottbus)";
-							if (rand == 5) return "[FF] Nordsee (Cottbus)";
+							if (rand == 4) return "[FF] Efes Doener";
+							if (rand == 5) return "[FF] Nordsee";
 							return "error: no fast Food Restaurants found!";
 						]]>
 					</Body>
@@ -712,7 +703,7 @@
 			<EnvironmentRule name="EndTravelInfoService_Rule">
 				<!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->
 				<documentation>
-					<description>...</description>
+					<description>Service wird beendet</description>
 				</documentation>
 				
 				<WHEN eventType="OutMessageEvent" messageType="GetTravelInfoResponse" messageVariable="mes" eventVariable="evt"/>
@@ -854,10 +845,10 @@
 	<InitialState>
 	<!-- =================================================== -->
 		<!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->
-		<Agent type="TravelInfoService" name="TravelIS" id="1" />
+		<Agent type="TravelInfoService" name="TravelIS" id="1"/>
 				
 		<!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->
-		<Agent type="WeatherInfoService" name="WeatherIS" id="3">
+		<Agent type="WeatherInfoService" name="WeatherIS" id="3" >
 			<Slot property="minProcessingTime" value="1" />
 			<Slot property="maxProcessingTime" value="3" />
 		</Agent>		
@@ -884,138 +875,98 @@
 			<!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->
 			<StatisticsVariableUI variable="countCustomers">
 				<Label>
-					<Text xml:lang="en">[ok] Number of Customers</Text>
-					<Text xml:lang="de">[ok] Anzahl der Kunden</Text>
+					<Text xml:lang="en">Number of customers</Text>
+					<Text xml:lang="de"> Anzahl der Kunden</Text>
 				</Label>
 				<Hint>
-					<Text xml:lang="en">[ok] Number of Customers use the Service</Text>
-					<Text xml:lang="de">[ok] Anzahl der Kunden die den TravelInfoService nutzen</Text>
-				</Hint>
-			</StatisticsVariableUI>
-
-			<!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->
-			<StatisticsVariableUI variable="test">
-				<Label>
-					<Text xml:lang="en">(im Test) Anzahl Kunden über TIS-Attribut (Alternative 2)</Text>
-					<Text xml:lang="de">(im Test) Anzahl Kunden über TIS-Attribut (Alternative 2)</Text>
-				</Label>
-				<Hint>
-					<Text xml:lang="en">(im Test) Kunden die den TravelInfoService nutzen</Text>
-					<Text xml:lang="de">(im Test) Kunden die den TravelInfoService nutzen</Text>
+					<Text xml:lang="en">Number of Customers use the Service</Text>
+					<Text xml:lang="de">Anzahl der Kunden die den Dienst nutzen</Text>
 				</Hint>
 			</StatisticsVariableUI>
 
 			<!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->
 			<StatisticsVariableUI variable="countCustomerRequests">
 				<Label>
-					<Text xml:lang="en">[ok] Sum of the (customer-) requests to the Service</Text>
-					<Text xml:lang="de">[ok] Summe der (Kunden-) Anfragen an den Service</Text>
+					<Text xml:lang="en">Sum of the (customer-) requests to the Service</Text>
+					<Text xml:lang="de">Summe der (Kunden-) Anfragen an den Service</Text>
 				</Label>
 				<Hint>
-					<Text xml:lang="en">[ok] Sum of the (customer-) requests to the Service</Text>
-					<Text xml:lang="de">[ok] Alle Anfragen der Kunden an den TravelInfoService</Text>
+					<Text xml:lang="en">Sum of the (customer-) requests to the Service</Text>
+					<Text xml:lang="de">Alle Anfragen der Kunden an den TravelInfoService</Text>
 				</Hint>
-			</StatisticsVariableUI>			
+			</StatisticsVariableUI>	
 
 			<!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->
 			<StatisticsVariableUI variable="averageRequestsForCustomer">
 				<Label>
-					<Text xml:lang="en">[ok] Average number of requests per customer to the service</Text>
-					<Text xml:lang="de">[ok] Durchschnittliche Anzahl an Anfragen pro Kunde an den Service</Text>
+					<Text xml:lang="en">Average number of requests per customer</Text>
+					<Text xml:lang="de">Durchschnittliche Anzahl an Anfragen pro Kunde an den Service</Text>
 				</Label>
 				<Hint>
-					<Text xml:lang="en">[ok] Average number of requests per client to the service</Text>
-					<Text xml:lang="de">[ok] Durchschnittliche Anzahl an Anfragen pro Kunde an den Service</Text>
+					<Text xml:lang="en">Average number of requests per customer</Text>
+					<Text xml:lang="de">Durchschnittliche Anzahl an Anfragen pro Kunde an den Service</Text>
 				</Hint>
 				<Format decimalPlaces="2"/>
 			</StatisticsVariableUI>
 
-			
 			<!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->
 			<StatisticsVariableUI variable="durationTime">
 				<Label>
-					<Text xml:lang="en">(im Test) Test: durchschnittliche Laufzeit der Anfragen (in Simulationsschritten)</Text>
-					<Text xml:lang="de">(im Test) Test: durchschnittliche Laufzeit der Anfragen (in Simulationsschritten)</Text>
+					<Text xml:lang="en">average duration of requests</Text>
+					<Text xml:lang="de">durchschnittliche Laufzeit der Anfragen (in Simulationsschritten)</Text>
 				</Label>
 				<Hint>
-					<Text xml:lang="en">Test: durchschnittliche Laufzeit (in Simulationsschritten)</Text>
+					<Text xml:lang="en">average duration of requests</Text>
 					<Text xml:lang="de">Test: durchschnittliche Laufzeit (in Simulationsschritten)</Text>
 				</Hint>
-			</StatisticsVariableUI>			
-
+			</StatisticsVariableUI>	
+			
 			<!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->
 			<StatisticsVariableUI variable="cancel">
 				<Label>
-					<Text xml:lang="en">(im Test) Sum of canceled reservations</Text>
-					<Text xml:lang="de">(im Test) Anzahl der Restaurantreservierungen die storniert wurden</Text>
+					<Text xml:lang="en">Sum of canceled reservations</Text>
+					<Text xml:lang="de">Anzahl der Restaurantreservierungen die storniert wurden</Text>
 				</Label>
 				<Hint>
-					<Text xml:lang="en">Test: Sum of canceled reservations</Text>
-					<Text xml:lang="de">Test: Anzahl der Restaurantreservierungen die storniert wurden</Text>
+					<Text xml:lang="en">Sum of canceled reservations</Text>
+					<Text xml:lang="de">Anzahl der Restaurantreservierungen die storniert wurden</Text>
 				</Hint>
 			</StatisticsVariableUI>
 			
 			<StatisticsVariableUI variable="percentage">
 				<Label>
-					<Text xml:lang="en">(im Test) prozentualer Anteil stornierter Anfragen</Text>
-					<Text xml:lang="de">(im Test) prozentualer Anteil stornierter Anfragen</Text>
+					<Text xml:lang="en">percentage of canceled reservations</Text>
+					<Text xml:lang="de">prozentualer Anteil stornierter Anfragen</Text>
 				</Label>
 				<Hint>
-					<Text xml:lang="en">Test: prozentualer Anteil stornierter Anfragen</Text>
-					<Text xml:lang="de">Test: prozentualer Anteil stornierter Anfragen</Text>
+					<Text xml:lang="en">percentage of canceled reservations</Text>
+					<Text xml:lang="de">prozentualer Anteil stornierter Anfragen</Text>
 				</Hint>
 				<Format decimalPlaces="2">
 					<Math>%</Math>
 				</Format>
 			</StatisticsVariableUI>
-			
-			
 		</StatisticsUI>
 		<!-- =================================================== -->
 		<AnimationUI>
 			<Views>
-				<!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->
 				<SpaceView>
-					<TwoDimensionalSpaceView2D backgroundColor="darkgrey"/>
+					<TwoDimensionalSpaceView2D backgroundColor="darkgrey"></TwoDimensionalSpaceView2D>
 				</SpaceView>
-
-				<!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->
+				
 				<ObjectView objectIdRef="1" displayName="true">
-					<Shape2D x="100px" y="350px">
-						<Rectangle width="75" height="400" fill="lightgrey" stroke="black" strokeWidth="2"/>
+					<Shape2D x="100" y="350">
+						<Rectangle width="75" height="400" fill="lightgrey" stroke="black" strokeWidth="2"></Rectangle>
 					</Shape2D>
 					<DisplayInfo property="countCustomers" content="customers (total)" />
-					
-					<EmbeddedView offsetX="0px" offsetY="-200px" label="customers currently use the Service">
+					<EmbeddedShape2D offsetX="0px" offsetY="-200px" label="customes currently use these service">
 						<Shape2D>
 							<Rectangle positioning="LeftBottom" fill="blue" width="25" stroke="black" strokeWidth="2">
 								<ShapePropertyMap shapeProperty="height" property="listLength" mapType="polynomial" a0="1" a1="3"/>
 							</Rectangle>
 						</Shape2D>
-					</EmbeddedView>
+					</EmbeddedShape2D>
 				</ObjectView>
-
-				<!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->
-				<!-- funktioniert nicht?!
-				<ObjectView objectType="TravelInfoService" objectIdRef="1">
-					<Shape2D x="100px" y="500px">
-						<Square width="20" fill="yellow" stroke="black" strokeWidth="1" />
-					</Shape2D>
-					<DisplayInfo property="test" content="customers (all)"/>
-				</ObjectView>
-				-->
-				 
-				<!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->
-				<!--
-				<ObjectView objectType="TravelInfoService" objectIdRef="1">
-					<Shape2D x="400px" y="200px">
-						<Rectangle positioning="LeftCenter" fill="blue" height="25" width="1" stroke="black" strokeWidth="2">
-							<ShapePropertyMap shapeProperty="width" property="listLength" mapType="polynomial" a1="3"/>
-						</Rectangle>
-					</Shape2D>
-					<DisplayInfo content="customers currently use the TravelInfoService" property="listLength"/>
-				</ObjectView>
-				-->
 			</Views>
 		</AnimationUI>
 	</UserInterface>
