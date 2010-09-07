@@ -79,12 +79,12 @@ return count;
 					</h:ol>
 					</description></documentation>
 					<Body language="Java"><![CDATA[
-int count = this.numberOfLivingNeighbors();
+long count = this.numberOfLivingNeighbors();
 if (!this.isAlive()) {
 	if (count == 3) return 1; 
   else return 0;
   }
-if (this.isAlive()) {
+else {
 	if (count == 2 || count == 3) return 1;
   else return 0;
   }
@@ -95,7 +95,7 @@ if (!this.isAlive()) {
 	if (count == 3) return 1; 
   else return 0;
   }
-if (this.isAlive()) {
+else {
 	if (count == 2 || count == 3) return 1;
   else return 0;
   }
@@ -111,7 +111,7 @@ if (this.isAlive()) {
 				<ON-EACH-SIMULATION-STEP/>
 				<DO>
 					<UPDATE-ENV>
-						<ForEachGridCell gridCellVariable="gc" selectionList="Globals.listOfLivingCells">							
+						<ForEachGridCell gridCellVariable="gc" selectionList="Global.listOfLivingCells">							
 							<Code language="Java"><![CDATA[
 // reset nextStatus to unknown for all cells in the neighborhood
 int posX = (int) gc.getPosX();
@@ -137,14 +137,14 @@ for (var x = posX-1; x <= posX+1; x++)
 							]]></Code>			
 						</ForEachGridCell>
 
-						<ForEachGridCell gridCellVariable="gc" selectionList="Globals.listOfLivingCells">
+						<ForEachGridCell gridCellVariable="gc" selectionList="Global.listOfLivingCells">
 							<Code language="Java"><![CDATA[
 // compute nextStatus avoiding repeated computations
 int posX = (int) gc.getPosX();
 int posY = (int) gc.getPosY();
 int xMax = (int) Simulator.spaceModel.getXMax();
 int yMax = (int) Simulator.spaceModel.getYMax();
-SimGridCell nc;
+controller.SpaceModel.SimGridCell nc;
 for (int x = posX-1; x <= posX+1; x++)
 	for (int y = posY-1; y <= posY+1; y++)
 		if (x >= 1 && x <= xMax && y >= 1 && y <= yMax ) {
@@ -168,22 +168,22 @@ for (var x = posX-1; x <= posX+1; x++)
 								]]></Code>			
 							</ForEachGridCell>
 
-						<ForEachGridCell gridCellVariable="gc" selectionList="Globals.listOfLivingCells">
+						<ForEachGridCell gridCellVariable="gc" selectionList="Global.listOfLivingCells">
 							<Code language="Java"><![CDATA[
 // assign new alive values from nextStatus and rebuild list of living cells
 int posX = (int) gc.getPosX();
 int posY = (int) gc.getPosY();
 int xMax = (int) Simulator.spaceModel.getXMax();
 int yMax = (int) Simulator.spaceModel.getYMax();
-SimGridCell nc;
-Globals.listOfLivingCells.clear();
+controller.SpaceModel.SimGridCell nc;
+Global.listOfLivingCells.clear();
 for (int x = posX-1; x <= posX+1; x++)
 	for (int y = posY-1; y <= posY+1; y++)
 		if (x >= 1 && x <= xMax && y >= 1 && y <= yMax ) {
-			nc = gameoflife.controller.Simulator.spaceModel.getGridCell(x,y);
+			nc = Simulator.spaceModel.getGridCell(x,y);
 			if (nc.getNextStatus() == 1) {
 				nc.setAlive(true);
-				Globals.listOfLivingCells.add( nc);
+				Global.listOfLivingCells.add( nc);
 			}
 			else nc.setAlive(false);
 		}
@@ -283,17 +283,17 @@ for (int x = posX-1; x <= posX+1; x++)
 		</GridCells>
 		<InitializationRule name="Ir1">
 			<ForEachGridCell gridCellVariable="gc">
-				<Selection copyToList="Globals.listOfLivingCells">
-					<Condition language="Java"> gc.getStatus() == 1 </Condition>
-					<Condition language="JavaScript"> gc.getStatus() == 1 </Condition>
+				<Selection copyToList="Global.listOfLivingCells">
+					<Condition language="Java"> gc.isAlive() </Condition>
+					<Condition language="JavaScript"> gc.isAlive() </Condition>
 				</Selection>
 			</ForEachGridCell>
 		</InitializationRule>
 <!-- 
 		<InitializationRule name="ir2">
-			<FOR-ListItemVariable variable="lgc" listItemType="SimGridCell">
+			<FOR-ListItemVariable variable="lgc" listItemType="controller.SpaceModel.SimGridCell">
 				<ListExpr language="Java">
-					Globals.listOfLivingCells.list
+					Global.listOfLivingCells.list
 				</ListExpr>
 			</FOR-ListItemVariable>
 		</InitializationRule>
