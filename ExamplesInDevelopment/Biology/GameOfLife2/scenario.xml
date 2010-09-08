@@ -28,8 +28,9 @@
 					<h:li>A living cell with more than three living neighbors will die (from over-crowdedness).</h:li>
 				</h:ol></description>
 		</documentation>
-		
+		<!-- =============================== -->
 		<SpaceModel geometry="Euclidean">
+		<!-- =============================== -->
 			<TwoDimensionalGrid xMax="50" yMax="50">
 				<GridCellProperty name="alive" type="Boolean"/>
 				<!-- The cell status for the next step: -1 = dead, 1 = alive, 0 = unknown -->
@@ -103,11 +104,16 @@ else {
 				</GridCellFunction>				
 			</TwoDimensionalGrid>
 		</SpaceModel>
+
 		<Globals>
-			<GlobalVariable name="listOfLivingCells" refDataType="SimGridCell" upperMultiplicity="unbounded"/>
+			<GlobalVariable name="listOfLivingCells" refDataType="SpaceModel.SimGridCell" upperMultiplicity="unbounded"/>
 		</Globals>
+
 		<EnvironmentRules>
+			<!-- =================================================================== -->
 			<EnvironmentRule name="ComputeNextGeneration_EnvRule">
+			<!-- =================================================================== -->
+				
 				<ON-EACH-SIMULATION-STEP/>
 				<DO>
 					<UPDATE-ENV>
@@ -144,7 +150,7 @@ int posX = (int) gc.getPosX();
 int posY = (int) gc.getPosY();
 int xMax = (int) Simulator.spaceModel.getXMax();
 int yMax = (int) Simulator.spaceModel.getYMax();
-controller.SpaceModel.SimGridCell nc;
+SpaceModel.SimGridCell nc;
 for (int x = posX-1; x <= posX+1; x++)
 	for (int y = posY-1; y <= posY+1; y++)
 		if (x >= 1 && x <= xMax && y >= 1 && y <= yMax ) {
@@ -175,7 +181,7 @@ int posX = (int) gc.getPosX();
 int posY = (int) gc.getPosY();
 int xMax = (int) Simulator.spaceModel.getXMax();
 int yMax = (int) Simulator.spaceModel.getYMax();
-controller.SpaceModel.SimGridCell nc;
+SpaceModel.SimGridCell nc;
 Global.listOfLivingCells.clear();
 for (int x = posX-1; x <= posX+1; x++)
 	for (int y = posY-1; y <= posY+1; y++)
@@ -270,6 +276,9 @@ for (int x = posX-1; x <= posX+1; x++)
 				<Slot property="alive" value="true"/>
 			</GridCellSet>
 			
+			<GridCellSet startX="49" endX="50" startY="49" endY="50">
+				<Slot property="nextStatus" value="-1"/>
+			</GridCellSet>
 			<!-- Randomly initialized board -->
 			<!--
 				<GridCellSet startX="1" endX="50" startY="1" endY="50">
@@ -289,15 +298,6 @@ for (int x = posX-1; x <= posX+1; x++)
 				</Selection>
 			</ForEachGridCell>
 		</InitializationRule>
-<!-- 
-		<InitializationRule name="ir2">
-			<FOR-ListItemVariable variable="lgc" listItemType="controller.SpaceModel.SimGridCell">
-				<ListExpr language="Java">
-					Global.listOfLivingCells.list
-				</ListExpr>
-			</FOR-ListItemVariable>
-		</InitializationRule>
--->
 	</InitialState>
 	
 	<UserInterface>
@@ -305,7 +305,8 @@ for (int x = posX-1; x <= posX+1; x++)
 			<Views>
 				<SpaceView canvasColor="darkgrey">
 					<TwoDimensionalGridSpaceView2D stroke="black" strokeWidth="1px">
-						<GridCellPropertyVisualizationMap cellViewProperty="fill" property="alive" mapType="equalityCaseWise" a0="false" v0="white" a1="true" v1="red"/>
+						<!--<GridCellPropertyVisualizationMap cellViewProperty="fill" property="alive" mapType="equalityCaseWise" a0="false" v0="white" a1="true" v1="red"/>-->
+						<GridCellPropertyVisualizationMap cellViewProperty="fill" property="nextStatus" mapType="equalityCaseWise" a0="-1" v0="black" a1="0" v1="white" a2="1" v2="red"/>
 					</TwoDimensionalGridSpaceView2D>
 				</SpaceView>
 			</Views>
