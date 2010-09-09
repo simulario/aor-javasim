@@ -10,10 +10,10 @@
         @last changed by $Author$
 -->
 
-<xsl:stylesheet version="2.0" xmlns:aorsl="http://aor-simulation.org" xmlns:aorsml="http://aor-simulation.org"
-  xmlns:fn="http://www.w3.org/2005/xpath-functions" xmlns:java="http://www.sun.com/java" xmlns:xs="http://www.w3.org/2001/XMLSchema"
-  xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:xsl="http://www.w3.org/1999/XSL/Transform"
-  xsi:schemaLocation="http://aor-simulation.org aorsml.xsd" xmlns:jw="http://www.informatik.tu-cottbus.de/~jwerner/">
+<xsl:stylesheet version="2.0" xmlns:aorsl="http://aor-simulation.org" xmlns:fn="http://www.w3.org/2005/xpath-functions"
+  xmlns:java="http://www.sun.com/java" xmlns:xs="http://www.w3.org/2001/XMLSchema" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+  xmlns:xsl="http://www.w3.org/1999/XSL/Transform" xsi:schemaLocation="http://aor-simulation.org aorsml.xsd"
+  xmlns:jw="http://www.informatik.tu-cottbus.de/~jwerner/">
 
   <!-- return the UWORD with a lower startletter -->
   <xsl:function name="jw:lowerWord">
@@ -72,12 +72,12 @@
   </xsl:function>
 
   <!-- all attributes as param of a class incl. superclassattributes -->
-  <xsl:template match="aorsml:PhysicalObjectType | aorsml:PhysicalAgentType | aorsml:AgentType | aorsml:ObjectType | aorsml:BeliefEntityType"
+  <xsl:template match="aorsl:PhysicalObjectType | aorsl:PhysicalAgentType | aorsl:AgentType | aorsl:ObjectType | aorsl:BeliefEntityType"
     mode="assistents.constructor.allAttributes">
     <xsl:choose>
       <xsl:when test="fn:exists(@superType)">
         <xsl:for-each
-          select="aorsml:Attribute | aorsml:ReferenceProperty | aorsml:ComplexDataProperty | aorsml:EnumerationProperty | aorsml:BeliefAttribute">
+          select="aorsl:Attribute | aorsl:ReferenceProperty | aorsl:ComplexDataProperty | aorsl:EnumerationProperty | aorsl:BeliefAttribute">
 
           <xsl:choose>
             <xsl:when test="@upperMultiplicity eq 'unbounded'">
@@ -97,11 +97,11 @@
 
           </xsl:choose>
         </xsl:for-each>
-        <xsl:apply-templates select="//aorsml:EntityTypes/*[@name = current()/@superType]" mode="assistents.constructor.allAttributes"/>
+        <xsl:apply-templates select="//aorsl:EntityTypes/*[@name = current()/@superType]" mode="assistents.constructor.allAttributes"/>
       </xsl:when>
       <xsl:otherwise>
         <xsl:for-each
-          select="aorsml:Attribute | aorsml:ReferenceProperty | aorsml:ComplexDataProperty | aorsml:EnumerationProperty | aorsml:BeliefAttribute">
+          select="aorsl:Attribute | aorsl:ReferenceProperty | aorsl:ComplexDataProperty | aorsl:EnumerationProperty | aorsl:BeliefAttribute">
 
           <xsl:choose>
             <xsl:when test="@upperMultiplicity eq 'unbounded'">
@@ -126,18 +126,18 @@
   </xsl:template>
 
   <!-- all superclassattributes as variablenames -->
-  <xsl:template match="aorsml:PhysicalObjectType | aorsml:PhysicalAgentType | aorsml:AgentType | aorsml:ObjectType | aorsml:BeliefEntityType"
+  <xsl:template match="aorsl:PhysicalObjectType | aorsl:PhysicalAgentType | aorsl:AgentType | aorsl:ObjectType | aorsl:BeliefEntityType"
     mode="assistents.constructor.allSuperAttributes">
     <xsl:param name="current" select="false()" as="xs:boolean"/>
     <xsl:if test="$current">
       <xsl:for-each
-        select="aorsml:Attribute | aorsml:ReferenceProperty | aorsml:ComplexDataProperty | aorsml:EnumerationProperty | aorsml:BeliefAttribute">
+        select="aorsl:Attribute | aorsl:ReferenceProperty | aorsl:ComplexDataProperty | aorsl:EnumerationProperty | aorsl:BeliefAttribute">
         <xsl:value-of select="@name"/>
       </xsl:for-each>
     </xsl:if>
     <xsl:choose>
       <xsl:when test="fn:exists(@superType)">
-        <xsl:apply-templates select="//aorsml:EntityTypes/*[@name = current()/@superType]" mode="assistents.constructor.allSuperAttributes">
+        <xsl:apply-templates select="//aorsl:EntityTypes/*[@name = current()/@superType]" mode="assistents.constructor.allSuperAttributes">
           <xsl:with-param name="current" select="true()"/>
         </xsl:apply-templates>
       </xsl:when>
@@ -145,19 +145,19 @@
   </xsl:template>
 
   <!-- all selfBeliefAttributes of a class incl. superclassattributes -->
-  <xsl:template match="aorsml:PhysicalAgentType | aorsml:AgentType" mode="assistents.constructor.allSelfBeliefAttributes">
+  <xsl:template match="aorsl:PhysicalAgentType | aorsl:AgentType" mode="assistents.constructor.allSelfBeliefAttributes">
     <xsl:choose>
       <xsl:when test="fn:exists(@superType)">
-        <xsl:for-each select="aorsml:SelfBeliefAttribute">
+        <xsl:for-each select="aorsl:SelfBeliefAttribute">
           <xsl:call-template name="java:createParam">
             <xsl:with-param name="type" select="@type"/>
             <xsl:with-param name="name" select="@name"/>
           </xsl:call-template>
         </xsl:for-each>
-        <xsl:apply-templates select="//aorsml:EntityTypes/*[@name = current()/@superType]" mode="assistents.constructor.allSelfBeliefAttributes"/>
+        <xsl:apply-templates select="//aorsl:EntityTypes/*[@name = current()/@superType]" mode="assistents.constructor.allSelfBeliefAttributes"/>
       </xsl:when>
       <xsl:otherwise>
-        <xsl:for-each select="aorsml:SelfBeliefAttribute">
+        <xsl:for-each select="aorsl:SelfBeliefAttribute">
           <xsl:call-template name="java:createParam">
             <xsl:with-param name="type" select="@type"/>
             <xsl:with-param name="name" select="@name"/>
@@ -168,16 +168,16 @@
   </xsl:template>
 
   <!-- all superclassselfBeliefAttributes as variablenames -->
-  <xsl:template match="aorsml:PhysicalAgentType | aorsml:AgentType" mode="assistents.constructor.allSuperSelfBeliefAttributes">
+  <xsl:template match="aorsl:PhysicalAgentType | aorsl:AgentType" mode="assistents.constructor.allSuperSelfBeliefAttributes">
     <xsl:param name="current" select="false()" as="xs:boolean"/>
     <xsl:if test="$current">
-      <xsl:for-each select="aorsml:SelfBeliefAttribute">
+      <xsl:for-each select="aorsl:SelfBeliefAttribute">
         <xsl:value-of select="@name"/>
       </xsl:for-each>
     </xsl:if>
     <xsl:choose>
       <xsl:when test="fn:exists(@superType)">
-        <xsl:apply-templates select="//aorsml:EntityTypes/*[@name = current()/@superType]" mode="assistents.constructor.allSuperSelfBeliefAttributes">
+        <xsl:apply-templates select="//aorsl:EntityTypes/*[@name = current()/@superType]" mode="assistents.constructor.allSuperSelfBeliefAttributes">
           <xsl:with-param name="current" select="true()"/>
         </xsl:apply-templates>
       </xsl:when>
@@ -185,31 +185,31 @@
   </xsl:template>
 
   <!-- all attributes of a class incl. superclassattributes, but without default attributes like x, perceptionRadius, ... -->
-  <xsl:template match="aorsml:PhysicalObjectType | aorsml:PhysicalAgentType | aorsml:AgentType | aorsml:ObjectType"
+  <xsl:template match="aorsl:PhysicalObjectType | aorsl:PhysicalAgentType | aorsl:AgentType | aorsl:ObjectType"
     mode="assistents.list.allAttributes">
-    <xsl:copy-of select="aorsml:Attribute | aorsml:ReferenceProperty | aorsml:ComplexDataProperty | aorsml:EnumerationProperty"/>
+    <xsl:copy-of select="aorsl:Attribute | aorsl:ReferenceProperty | aorsl:ComplexDataProperty | aorsl:EnumerationProperty"/>
     <xsl:choose>
       <xsl:when test="fn:exists(@superType)">
-        <xsl:apply-templates select="//aorsml:EntityTypes/*[@name = current()/@superType]" mode="assistents.list.allAttributes"/>
+        <xsl:apply-templates select="//aorsl:EntityTypes/*[@name = current()/@superType]" mode="assistents.list.allAttributes"/>
       </xsl:when>
     </xsl:choose>
   </xsl:template>
 
   <!-- all selfBeliefattributes of a class incl. superclassattributes -->
-  <xsl:template match="aorsml:PhysicalAgentType | aorsml:AgentType" mode="assistents.list.allSelfBeliefAttributes">
-    <xsl:copy-of select="aorsml:SelfBeliefAttribute"/>
+  <xsl:template match="aorsl:PhysicalAgentType | aorsl:AgentType" mode="assistents.list.allSelfBeliefAttributes">
+    <xsl:copy-of select="aorsl:SelfBeliefAttribute"/>
     <xsl:choose>
       <xsl:when test="fn:exists(@superType)">
-        <xsl:apply-templates select="//aorsml:EntityTypes/*[@name = current()/@superType]" mode="assistents.list.allSelfBeliefAttributes"/>
+        <xsl:apply-templates select="//aorsl:EntityTypes/*[@name = current()/@superType]" mode="assistents.list.allSelfBeliefAttributes"/>
       </xsl:when>
     </xsl:choose>
   </xsl:template>
 
   <!-- creates getClassVariable methods -->
   <xsl:template
-    match="aorsml:SelfBeliefAttribute | aorsml:Attribute | aorsml:GridCellProperty |  aorsml:ReferenceProperty | 
-     aorsml:EnumerationProperty | aorsml:ComplexDataProperty  | aorsml:BeliefAttribute | 
-     aorsml:BeliefReferenceProperty | aorsml:SelfBeliefReferenceProperty"
+    match="aorsl:SelfBeliefAttribute | aorsl:Attribute | aorsl:GridCellProperty |  aorsl:ReferenceProperty | 
+     aorsl:EnumerationProperty | aorsl:ComplexDataProperty  | aorsl:BeliefAttribute | 
+     aorsl:BeliefReferenceProperty | aorsl:SelfBeliefReferenceProperty"
     mode="assistents.getVariableMethod">
     <xsl:param name="indent" select="0"/>
     <xsl:param name="static" as="xs:boolean" select="false()"/>
@@ -227,7 +227,7 @@
 
   </xsl:template>
 
-  <xsl:template match="aorsml:GlobalVariable" mode="assistents.getVariableMethod">
+  <xsl:template match="aorsl:GlobalVariable" mode="assistents.getVariableMethod">
     <xsl:param name="indent" select="0"/>
     <xsl:param name="static" as="xs:boolean" select="false()"/>
     <xsl:param name="staticClassName" as="xs:string" select="''"/>
@@ -259,9 +259,9 @@
 
   <!--creates setClassVariable methods -->
   <xsl:template
-    match="aorsml:GridCellProperty |  aorsml:ReferenceProperty | 
-    aorsml:EnumerationProperty | aorsml:ComplexDataProperty  | aorsml:BeliefAttribute | 
-    aorsml:BeliefReferenceProperty | aorsml:SelfBeliefReferenceProperty"
+    match="aorsl:GridCellProperty |  aorsl:ReferenceProperty | 
+    aorsl:EnumerationProperty | aorsl:ComplexDataProperty  | aorsl:BeliefAttribute | 
+    aorsl:BeliefReferenceProperty | aorsl:SelfBeliefReferenceProperty"
     mode="assistents.setVariableMethod">
     <xsl:param name="indent" required="yes"/>
     <xsl:param name="static" select="false()"/>
@@ -300,7 +300,7 @@
 
   </xsl:template>
 
-  <xsl:template match="aorsml:SelfBeliefAttribute | aorsml:Attribute | aorsml:GlobalVariable" mode="assistents.setVariableMethod">
+  <xsl:template match="aorsl:SelfBeliefAttribute | aorsl:Attribute | aorsl:GlobalVariable" mode="assistents.setVariableMethod">
     <xsl:param name="indent" required="yes"/>
     <xsl:param name="static" select="false()"/>
     <xsl:param name="staticClassName" select="''"/>
@@ -460,7 +460,7 @@
 
   </xsl:template>
 
-  <xsl:template match="aorsml:SelfBeliefAttribute | aorsml:Attribute | aorsml:GlobalVariable" mode="assistents.createGettersForMinMaxInformations">
+  <xsl:template match="aorsl:SelfBeliefAttribute | aorsl:Attribute | aorsl:GlobalVariable" mode="assistents.createGettersForMinMaxInformations">
     <xsl:param name="indent" as="xs:integer" required="yes"/>
 
     <xsl:if test="@minValue">
@@ -502,7 +502,7 @@
   </xsl:template>
 
   <!-- create a special setter method for predefined properties (mapping to the super.setter)-->
-  <xsl:template match="aorsml:Attribute" mode="assistents.setVariableMethod.predefinedProps">
+  <xsl:template match="aorsl:Attribute" mode="assistents.setVariableMethod.predefinedProps">
     <xsl:param name="indent" required="yes"/>
     <xsl:param name="static" select="false()"/>
     <xsl:param name="staticClassName" select="''"/>
@@ -656,8 +656,8 @@
 
   <!-- creates class variables -->
   <xsl:template
-    match="aorsml:SelfBeliefAttribute | aorsml:Attribute | aorsml:GridCellProperty | aorsml:ReferenceProperty | 
-    aorsml:EnumerationProperty | aorsml:ComplexDataProperty | aorsml:BeliefAttribute | aorsml:SelfBeliefReferenceProperty"
+    match="aorsl:SelfBeliefAttribute | aorsl:Attribute | aorsl:GridCellProperty | aorsl:ReferenceProperty | 
+    aorsl:EnumerationProperty | aorsl:ComplexDataProperty | aorsl:BeliefAttribute | aorsl:SelfBeliefReferenceProperty"
     mode="assistents.classVariable">
     <xsl:param name="indent" required="yes" as="xs:integer"/>
 
@@ -704,7 +704,7 @@
 
   <!-- set initialValue of an attribute -->
   <!-- if it exists and not empty -->
-  <xsl:template match="aorsml:Attribute" mode="assistents.setInitialAttributeValue">
+  <xsl:template match="aorsl:Attribute" mode="assistents.setInitialAttributeValue">
     <xsl:param name="indent" required="yes"/>
     <xsl:param name="asClassVariable" select="false()"/>
     <xsl:if test="@initialValue and @initialValue != ''">
@@ -739,7 +739,7 @@
     </xsl:if>
   </xsl:template>
 
-  <xsl:template match="aorsml:Slot | aorsml:SelfBeliefSlot | aorsml:BeliefSlot" mode="assistents.getSlotValue">
+  <xsl:template match="aorsl:Slot | aorsl:SelfBeliefSlot | aorsl:BeliefSlot" mode="assistents.getSlotValue">
     <xsl:param name="type"/>
     <xsl:choose>
       <!-- the using of xsi:type is depricated -->
@@ -785,21 +785,21 @@
       <!-- its only used for downwards compatible -->
       <xsl:when
         test="((resolve-QName(@xsi:type, .) eq QName('http://aor-simulation.org', 'OpaqueExprSlot')) and 
-        fn:exists(aorsml:ValueExpr[@language = $output.language])) or
-        fn:exists(aorsml:ValueExpr[@language = $output.language])">
-        <xsl:value-of select="fn:normalize-space(aorsml:ValueExpr[@language = $output.language][1])"/>
+        fn:exists(aorsl:ValueExpr[@language = $output.language])) or
+        fn:exists(aorsl:ValueExpr[@language = $output.language])">
+        <xsl:value-of select="fn:normalize-space(aorsl:ValueExpr[@language = $output.language][1])"/>
       </xsl:when>
-      <xsl:when test="fn:exists(aorsml:ValueExpr[@language = $output.language])">
-        <xsl:value-of select="fn:normalize-space(aorsml:ValueExpr[@language = $output.language][1])"/>
+      <xsl:when test="fn:exists(aorsl:ValueExpr[@language = $output.language])">
+        <xsl:value-of select="fn:normalize-space(aorsl:ValueExpr[@language = $output.language][1])"/>
       </xsl:when>
-      <xsl:when test="fn:exists(aorsml:RandomVariable)">
-        <xsl:apply-templates select="aorsml:RandomVariable/aorsml:*" mode="assistents.distribution"/>
+      <xsl:when test="fn:exists(aorsl:RandomVariable)">
+        <xsl:apply-templates select="aorsl:RandomVariable/aorsl:*" mode="assistents.distribution"/>
       </xsl:when>
     </xsl:choose>
   </xsl:template>
 
   <!-- get the enum-value in the form: EnumName.Literal -->
-  <xsl:template match="aorsml:Slot" mode="assistents.getEnumSlotValue">
+  <xsl:template match="aorsl:Slot" mode="assistents.getEnumSlotValue">
     <xsl:param name="enumeration" required="yes"/>
 
     <xsl:variable name="slotValue">
@@ -809,7 +809,7 @@
     <xsl:choose>
       <!-- NOTICE: this is also true if e.g. WORD.WORD.LETTER* -->
       <xsl:when test="fn:matches($slotValue, '\w*\.\w*')">
-        <xsl:variable name="enumLiteral" select="$enumeration/aorsml:EnumerationLiteral[text() eq fn:tokenize($slotValue, '\.')[2]][1]"/>
+        <xsl:variable name="enumLiteral" select="$enumeration/aorsl:EnumerationLiteral[text() eq fn:tokenize($slotValue, '\.')[2]][1]"/>
         <xsl:choose>
           <xsl:when test="$enumLiteral">
             <xsl:value-of select="fn:concat($enumeration/@name, '.', $enumLiteral)"/>
@@ -854,7 +854,7 @@
   <xsl:template match="@initialValue" mode="assistents.getEnumValue">
     <xsl:param name="enumeration" required="yes"/>
 
-    <xsl:variable name="enumLiteral" select="$enumeration/aorsml:EnumerationLiteral[text() eq fn:normalize-space(current())][1]"/>
+    <xsl:variable name="enumLiteral" select="$enumeration/aorsl:EnumerationLiteral[text() eq fn:normalize-space(current())][1]"/>
     <xsl:choose>
       <xsl:when test="$enumLiteral">
         <xsl:value-of select="fn:concat($enumeration/@name, '.', $enumLiteral)"/>
@@ -871,33 +871,33 @@
   </xsl:template>
 
   <!-- for all expressionvalues -->
-  <xsl:template match="aorsml:XCoordinate | aorsml:YCoordinate" mode="assistents.getExpression">
+  <xsl:template match="aorsl:XCoordinate | aorsl:YCoordinate" mode="assistents.getExpression">
     <xsl:value-of select=".[@language eq $output.language]"/>
   </xsl:template>
 
   <!-- calls by objectVariablesDeclaration -->
-  <xsl:template match="aorsml:FOR" mode="assistents.getEntityRef">
+  <xsl:template match="aorsl:FOR" mode="assistents.getEntityRef">
     <xsl:choose>
-      <xsl:when test="fn:exists(aorsml:ObjectIdRef[@language eq $output.language])">
-        <xsl:value-of select="aorsml:ObjectIdRef[@language eq $output.language]"/>
+      <xsl:when test="fn:exists(aorsl:ObjectIdRef[@language eq $output.language])">
+        <xsl:value-of select="aorsl:ObjectIdRef[@language eq $output.language]"/>
       </xsl:when>
       <xsl:when test="fn:exists(@objectIdRef)">
         <xsl:value-of select="@objectIdRef"/>
       </xsl:when>
       <xsl:otherwise>
-        <xsl:value-of select="aorsml:ObjectRef[@language = $output.language]"/>
+        <xsl:value-of select="aorsl:ObjectRef[@language = $output.language]"/>
       </xsl:otherwise>
     </xsl:choose>
   </xsl:template>
 
-  <xsl:template match="aorsml:UpdateObjects | aorsml:PhysicalObjects | aorsml:PhysicalAgents | aorsml:Agents | aorsml:Objects | aorsml:DestroyObjects"
+  <xsl:template match="aorsl:UpdateObjects | aorsl:PhysicalObjects | aorsl:PhysicalAgents | aorsl:Agents | aorsl:Objects | aorsl:DestroyObjects"
     mode="assistents.getStartID">
     <xsl:choose>
       <xsl:when test="fn:exists(@rangeStartID)">
         <xsl:value-of select="@rangeStartID"/>
       </xsl:when>
-      <xsl:when test="fn:exists(aorsml:RangeStartID[@language = $output.language])">
-        <xsl:value-of select="aorsml:RangeStartID[@language = $output.language]"/>
+      <xsl:when test="fn:exists(aorsl:RangeStartID[@language = $output.language])">
+        <xsl:value-of select="aorsl:RangeStartID[@language = $output.language]"/>
       </xsl:when>
       <xsl:otherwise>
         <xsl:message>
@@ -910,14 +910,14 @@
     </xsl:choose>
   </xsl:template>
 
-  <xsl:template match="aorsml:UpdateObjects | aorsml:PhysicalObjects | aorsml:PhysicalAgents | aorsml:Agents | aorsml:Objects | aorsml:DestroyObjects"
+  <xsl:template match="aorsl:UpdateObjects | aorsl:PhysicalObjects | aorsl:PhysicalAgents | aorsl:Agents | aorsl:Objects | aorsl:DestroyObjects"
     mode="assistents.getEndID">
     <xsl:choose>
       <xsl:when test="fn:exists(@rangeEndID)">
         <xsl:value-of select="@rangeEndID"/>
       </xsl:when>
-      <xsl:when test="fn:exists(aorsml:RangeEndID[@language = $output.language])">
-        <xsl:value-of select="aorsml:RangeEndID[@language = $output.language]"/>
+      <xsl:when test="fn:exists(aorsl:RangeEndID[@language = $output.language])">
+        <xsl:value-of select="aorsl:RangeEndID[@language = $output.language]"/>
       </xsl:when>
       <xsl:otherwise>
         <xsl:message>
@@ -972,7 +972,7 @@
 
   </xsl:template>
 
-  <xsl:template match="aorsml:Slot" mode="assistents.setPhysicalObjectProperty">
+  <xsl:template match="aorsl:Slot" mode="assistents.setPhysicalObjectProperty">
     <xsl:param name="indent" required="yes" as="xs:integer"/>
     <xsl:param name="physObjName" required="yes"/>
 
@@ -984,10 +984,10 @@
       <xsl:with-param name="valueType">
         <xsl:choose>
           <xsl:when test="local-name(current()/..) = 'PhysicalAgent' or local-name(current()/..) = 'PhysicalAgentSet'">
-            <xsl:value-of select="//aorsml:PhysicalAgentType[@name=current()/../@type]/aorsml:Attribute[@name=current()/@property]/@type"/>
+            <xsl:value-of select="//aorsl:PhysicalAgentType[@name=current()/../@type]/aorsl:Attribute[@name=current()/@property]/@type"/>
           </xsl:when>
           <xsl:when test="local-name(current()/..) = 'PhysicalObject' or local-name(current()/..) = 'PhysicalObjectSet'">
-            <xsl:value-of select="//aorsml:PhysicalObjectType[@name=current()/../@type]/aorsml:Attribute[@name=current()/@property]/@type"/>
+            <xsl:value-of select="//aorsl:PhysicalObjectType[@name=current()/../@type]/aorsl:Attribute[@name=current()/@property]/@type"/>
           </xsl:when>
           <xsl:otherwise>
             <xsl:message select="'Problem in assistents.setPhysicalObjectProperty'"/>
@@ -999,7 +999,7 @@
 
   </xsl:template>
 
-  <xsl:template match="aorsml:SelfBeliefSlot" mode="assistents.setSelfBeliefProperty">
+  <xsl:template match="aorsl:SelfBeliefSlot" mode="assistents.setSelfBeliefProperty">
     <xsl:param name="indent" required="yes" as="xs:integer"/>
     <xsl:param name="agentName" required="yes"/>
 
@@ -1014,8 +1014,8 @@
           </xsl:when>
           <xsl:otherwise>
             <xsl:choose>
-              <xsl:when test="fn:exists(aorsml:ValueExpr[@language eq $output.language])">
-                <xsl:value-of select="fn:normalize-space(aorsml:ValueExpr[@language eq $output.language])"/>
+              <xsl:when test="fn:exists(aorsl:ValueExpr[@language eq $output.language])">
+                <xsl:value-of select="fn:normalize-space(aorsl:ValueExpr[@language eq $output.language])"/>
               </xsl:when>
               <xsl:otherwise>
                 <xsl:message>No value for SelfBeliefSlot</xsl:message>
@@ -1027,13 +1027,13 @@
 
       </xsl:with-param>
       <xsl:with-param name="valueType">
-        <xsl:value-of select="//aorsml:PhysicalAgentType[@name=current()/../@type]/aorsml:SelfBeliefAttribute[@name=current()/@property]/@type"/>
+        <xsl:value-of select="//aorsl:PhysicalAgentType[@name=current()/../@type]/aorsl:SelfBeliefAttribute[@name=current()/@property]/@type"/>
       </xsl:with-param>
     </xsl:call-template>
 
   </xsl:template>
 
-  <xsl:template match="aorsml:Attribute" mode="assistents.setInheritedProperty">
+  <xsl:template match="aorsl:Attribute" mode="assistents.setInheritedProperty">
     <xsl:param name="indent" as="xs:integer" required="yes"/>
 
     <xsl:choose>
@@ -1063,7 +1063,7 @@
 
   </xsl:template>
 
-  <xsl:template match="aorsml:ReferenceProperty" mode="assistents.setInheritedProperty">
+  <xsl:template match="aorsl:ReferenceProperty" mode="assistents.setInheritedProperty">
     <xsl:param name="indent" as="xs:integer" required="yes"/>
 
     <xsl:choose>
@@ -1093,7 +1093,7 @@
 
   </xsl:template>
 
-  <xsl:template match="aorsml:Increment" mode="assistents.increment">
+  <xsl:template match="aorsl:Increment" mode="assistents.increment">
     <xsl:param name="indent" required="yes" as="xs:integer"/>
     <xsl:param name="objectVariable" required="yes" as="xs:string"/>
     <xsl:call-template name="java:callSetterMethod">
@@ -1111,7 +1111,7 @@
     </xsl:call-template>
   </xsl:template>
 
-  <xsl:template match="aorsml:Decrement" mode="assistents.decrement">
+  <xsl:template match="aorsl:Decrement" mode="assistents.decrement">
     <xsl:param name="indent" required="yes" as="xs:integer"/>
     <xsl:param name="objectVariable" required="yes" as="xs:string"/>
     <xsl:call-template name="java:callSetterMethod">
@@ -1131,16 +1131,16 @@
 
   <!-- get the delay -->
   <xsl:template
-    match="aorsml:OutMessageEventExpr | aorsml:CausedEventExpr | aorsml:PerceptionEventExpr |
-    aorsml:InMessageEventExpr | aorsml:ActionEventExpr | aorsml:ReminderEventExpr | 
-    aorsml:ActivityStartEventExpr | aorsml:ActivityEndEventExpr"
+    match="aorsl:OutMessageEventExpr | aorsl:CausedEventExpr | aorsl:PerceptionEventExpr |
+    aorsl:InMessageEventExpr | aorsl:ActionEventExpr | aorsl:ReminderEventExpr | 
+    aorsl:ActivityStartEventExpr | aorsl:ActivityEndEventExpr"
     mode="assistents.getDelay">
     <xsl:choose>
-      <xsl:when test="fn:exists(aorsml:Delay/aorsml:ValueExpr[@language eq $output.language])">
-        <xsl:value-of select="aorsml:Delay/aorsml:ValueExpr[@language eq $output.language][1]"/>
+      <xsl:when test="fn:exists(aorsl:Delay/aorsl:ValueExpr[@language eq $output.language])">
+        <xsl:value-of select="aorsl:Delay/aorsl:ValueExpr[@language eq $output.language][1]"/>
       </xsl:when>
-      <xsl:when test="fn:exists(aorsml:Delay/aorsml:DiscreteRandomVariable)">
-        <xsl:apply-templates select="aorsml:Delay/aorsml:DiscreteRandomVariable/aorsml:*" mode="assistents.distribution"/>
+      <xsl:when test="fn:exists(aorsl:Delay/aorsl:DiscreteRandomVariable)">
+        <xsl:apply-templates select="aorsl:Delay/aorsl:DiscreteRandomVariable/aorsl:*" mode="assistents.distribution"/>
       </xsl:when>
       <xsl:when test="fn:exists(@delay)">
         <xsl:value-of select="@delay"/>
@@ -1153,7 +1153,7 @@
 
   <!-- get type of variable-->
   <!-- calls by objectVariablesDeclaration -->
-  <xsl:template match="aorsml:FOR" mode="assistents.getVariableType">
+  <xsl:template match="aorsl:FOR" mode="assistents.getVariableType">
 
     <xsl:variable name="objektType" as="xs:string">
       <xsl:choose>
@@ -1163,10 +1163,10 @@
               <xsl:variable name="genericType">
                 <xsl:choose>
                   <xsl:when test="@objectIdRef">
-                    <xsl:value-of select="//aorsml:Collections/aorsml:Collection[@id = current()/@objectIdRef]/@itemType"/>
+                    <xsl:value-of select="//aorsl:Collections/aorsl:Collection[@id = current()/@objectIdRef]/@itemType"/>
                   </xsl:when>
                   <xsl:when test="@objectName">
-                    <xsl:value-of select="//aorsml:Collections/aorsml:Collection[@name = current()/@objectName]/@itemType"/>
+                    <xsl:value-of select="//aorsl:Collections/aorsl:Collection[@name = current()/@objectName]/@itemType"/>
                   </xsl:when>
                 </xsl:choose>
               </xsl:variable>
@@ -1215,7 +1215,7 @@
         <!-- do nothing -->
       </xsl:when>
       <xsl:when test="$objektType != ''">
-        <xsl:if test="not (fn:exists(//aorsml:EntityTypes/*[@name = $objektType]))">
+        <xsl:if test="not (fn:exists(//aorsl:EntityTypes/*[@name = $objektType]))">
           <xsl:message>
             <xsl:text>[ERROR] No associated EntityType found in </xsl:text>
             <xsl:value-of select="fn:concat(local-name(.), ' objectType: [', $objektType, '] in ',local-name(..), ': [', ../@name, ']!')"/>
@@ -1236,7 +1236,7 @@
   </xsl:template>
 
   <!-- set the  InitialAttributeValue for Attributes -->
-  <xsl:template match="aorsml:InitialAttributeValue" mode="assistents.setInitialAttributeValue">
+  <xsl:template match="aorsl:InitialAttributeValue" mode="assistents.setInitialAttributeValue">
 
     <xsl:variable name="type">
       <xsl:apply-templates select=".." mode="assistents.getAttributeType">
@@ -1256,7 +1256,7 @@
   </xsl:template>
 
   <!-- set the  InitialAttributeValue for Enumerations -->
-  <xsl:template match="aorsml:InitialAttributeValue" mode="assistents.setInitialEnumValue">
+  <xsl:template match="aorsl:InitialAttributeValue" mode="assistents.setInitialEnumValue">
     <xsl:param name="enumeration" required="yes"/>
 
     <xsl:variable name="type">
@@ -1267,7 +1267,7 @@
 
     <xsl:choose>
       <xsl:when test="$type eq $enumeration/@name">
-        <xsl:variable name="enumLiteral" select="$enumeration/aorsml:EnumerationLiteral[text() eq fn:normalize-space(current()/@value)][1]"/>
+        <xsl:variable name="enumLiteral" select="$enumeration/aorsl:EnumerationLiteral[text() eq fn:normalize-space(current()/@value)][1]"/>
 
         <xsl:choose>
           <xsl:when test="$enumLiteral">
@@ -1296,7 +1296,7 @@
   </xsl:template>
 
   <!-- set the  InitialAttributeValue for SelfBeliefAttributes -->
-  <xsl:template match="aorsml:InitialAttributeValue" mode="assistents.setInitialSelfBeliefAttributeValue">
+  <xsl:template match="aorsl:InitialAttributeValue" mode="assistents.setInitialSelfBeliefAttributeValue">
 
     <xsl:variable name="type">
       <xsl:apply-templates select=".." mode="assistents.getSelfBeliefAttributeType">
@@ -1316,19 +1316,19 @@
   </xsl:template>
 
   <!-- set defaultAttributes from InitialAttributValue if exists -->
-  <xsl:template match="aorsml:PhysicalObjectType | aorsml:PhysicalAgentType | aorsml:Agent | aorsml:Object" mode="assistents.setInitialAttributeValue">
+  <xsl:template match="aorsl:PhysicalObjectType | aorsl:PhysicalAgentType | aorsl:Agent | aorsl:Object" mode="assistents.setInitialAttributeValue">
     <xsl:param name="indent" as="xs:integer" required="yes"/>
     <xsl:param name="attrName" as="xs:string" required="yes"/>
     <xsl:param name="varName" as="xs:string" required="yes" tunnel="yes"/>
 
     <xsl:choose>
-      <xsl:when test="fn:exists(aorsml:InitialAttributeValue[@attribute eq $attrName])">
+      <xsl:when test="fn:exists(aorsl:InitialAttributeValue[@attribute eq $attrName])">
         <xsl:call-template name="java:callSetterMethod">
           <xsl:with-param name="indent" select="$indent"/>
           <xsl:with-param name="objInstance" select="$varName"/>
           <xsl:with-param name="instVariable" select="$attrName"/>
           <xsl:with-param name="value">
-            <xsl:variable name="initAttrValue" select="aorsml:InitialAttributeValue[@attribute eq $attrName][1]/@value"/>
+            <xsl:variable name="initAttrValue" select="aorsl:InitialAttributeValue[@attribute eq $attrName][1]/@value"/>
             <xsl:choose>
               <xsl:when test="$attrName eq 'materialType'">
                 <xsl:value-of select="concat($core.enum.materialType, '.', $initAttrValue)"/>
@@ -1351,7 +1351,7 @@
       </xsl:when>
 
       <xsl:when test="@superType">
-        <xsl:apply-templates select="//aorsml:EntityTypes/*[@name = current()/@superType]" mode="assistents.setInitialAttributeValue">
+        <xsl:apply-templates select="//aorsl:EntityTypes/*[@name = current()/@superType]" mode="assistents.setInitialAttributeValue">
           <xsl:with-param name="indent" select="$indent"/>
           <xsl:with-param name="attrName" select="$attrName"/>
         </xsl:apply-templates>
@@ -1362,24 +1362,24 @@
   </xsl:template>
 
   <!-- get the type of an InitialAttributeValue from EntityType or from the SuperType -->
-  <xsl:template match="aorsml:PhysicalObjectType | aorsml:PhysicalAgentType | aorsml:ObjectType | aorsml:AgentType" mode="assistents.getAttributeType">
+  <xsl:template match="aorsl:PhysicalObjectType | aorsl:PhysicalAgentType | aorsl:ObjectType | aorsl:AgentType" mode="assistents.getAttributeType">
     <xsl:param name="attributName" as="xs:string" required="yes"/>
 
     <xsl:choose>
-      <xsl:when test="fn:exists(aorsml:Attribute[@name eq $attributName])">
-        <xsl:value-of select="aorsml:Attribute[@name eq $attributName]/@type"/>
+      <xsl:when test="fn:exists(aorsl:Attribute[@name eq $attributName])">
+        <xsl:value-of select="aorsl:Attribute[@name eq $attributName]/@type"/>
       </xsl:when>
-      <xsl:when test="fn:exists(aorsml:ReferenceProperty[@name eq $attributName])">
-        <xsl:value-of select="aorsml:ReferenceProperty[@name eq $attributName]/@type"/>
+      <xsl:when test="fn:exists(aorsl:ReferenceProperty[@name eq $attributName])">
+        <xsl:value-of select="aorsl:ReferenceProperty[@name eq $attributName]/@type"/>
       </xsl:when>
-      <xsl:when test="fn:exists(aorsml:ComplexDataProperty[@name eq $attributName])">
-        <xsl:value-of select="aorsml:ComplexDataProperty[@name eq $attributName]/@type"/>
+      <xsl:when test="fn:exists(aorsl:ComplexDataProperty[@name eq $attributName])">
+        <xsl:value-of select="aorsl:ComplexDataProperty[@name eq $attributName]/@type"/>
       </xsl:when>
-      <xsl:when test="fn:exists(aorsml:EnumerationProperty[@name eq $attributName])">
-        <xsl:value-of select="aorsml:EnumerationProperty[@name eq $attributName]/@type"/>
+      <xsl:when test="fn:exists(aorsl:EnumerationProperty[@name eq $attributName])">
+        <xsl:value-of select="aorsl:EnumerationProperty[@name eq $attributName]/@type"/>
       </xsl:when>
       <xsl:when test="fn:exists(@superType)">
-        <xsl:apply-templates select="//aorsml:EntityTypes/*[@name = current()/@superType]" mode="assistents.getAttributeType">
+        <xsl:apply-templates select="//aorsl:EntityTypes/*[@name = current()/@superType]" mode="assistents.getAttributeType">
           <xsl:with-param name="attributName" select="$attributName"/>
         </xsl:apply-templates>
       </xsl:when>
@@ -1395,15 +1395,15 @@
   </xsl:template>
 
   <!-- get the type of an InitialAttributeValue from EntityType or from the SuperType -->
-  <xsl:template match="aorsml:PhysicalAgentType | aorsml:AgentType" mode="assistents.getSelfBeliefAttributeType">
+  <xsl:template match="aorsl:PhysicalAgentType | aorsl:AgentType" mode="assistents.getSelfBeliefAttributeType">
     <xsl:param name="attributName" as="xs:string" required="yes"/>
 
     <xsl:choose>
-      <xsl:when test="fn:exists(aorsml:SelfBeliefAttribute[@name eq $attributName])">
-        <xsl:value-of select="aorsml:SelfBeliefAttribute[@name eq $attributName]/@type"/>
+      <xsl:when test="fn:exists(aorsl:SelfBeliefAttribute[@name eq $attributName])">
+        <xsl:value-of select="aorsl:SelfBeliefAttribute[@name eq $attributName]/@type"/>
       </xsl:when>
       <xsl:when test="fn:exists(@superType)">
-        <xsl:apply-templates select="//aorsml:EntityTypes/*[@name = current()/@superType]" mode="assistents.getSelfBeliefAttributeType">
+        <xsl:apply-templates select="//aorsl:EntityTypes/*[@name = current()/@superType]" mode="assistents.getSelfBeliefAttributeType">
           <xsl:with-param name="attributName" select="$attributName"/>
         </xsl:apply-templates>
       </xsl:when>
@@ -1419,7 +1419,7 @@
   </xsl:template>
 
   <!-- calls by dataVariableDeclaration -->
-  <xsl:template match="aorsml:FOR" mode="assistents.setDataVariableDeclarationClassVariables">
+  <xsl:template match="aorsl:FOR" mode="assistents.setDataVariableDeclarationClassVariables">
     <xsl:param name="indent" required="yes" as="xs:integer"/>
 
     <xsl:choose>
@@ -1450,10 +1450,10 @@
   </xsl:template>
 
   <!-- calls by dataVariableDeclaration -->
-  <xsl:template match="aorsml:FOR" mode="assistents.setDataVariableDeclaration">
+  <xsl:template match="aorsl:FOR" mode="assistents.setDataVariableDeclaration">
     <xsl:param name="indent" required="yes" as="xs:integer"/>
 
-    <xsl:if test="fn:exists(aorsml:ValueExpr[@language eq $output.language])">
+    <xsl:if test="fn:exists(aorsl:ValueExpr[@language eq $output.language])">
       <xsl:call-template name="java:variable">
         <xsl:with-param name="indent" select="$indent"/>
         <xsl:with-param name="name">
@@ -1462,14 +1462,14 @@
           </xsl:call-template>
         </xsl:with-param>
         <xsl:with-param name="value">
-          <xsl:value-of select="aorsml:ValueExpr[@language eq $output.language]"/>
+          <xsl:value-of select="aorsl:ValueExpr[@language eq $output.language]"/>
         </xsl:with-param>
       </xsl:call-template>
     </xsl:if>
   </xsl:template>
 
   <!-- calls by dataVariableDeclaration -->
-  <xsl:template match="aorsml:FOR" mode="assistents.dataVariableDeclarationcheckNull">
+  <xsl:template match="aorsl:FOR" mode="assistents.dataVariableDeclarationcheckNull">
     <xsl:if test="@refDataType">
       <xsl:call-template name="java:boolExpr">
         <xsl:with-param name="value1">
@@ -1504,7 +1504,7 @@
 
   <!-- get the next continuous DataVariableDeclarations -->
   <!-- calls by dataVariableDeclaration -->
-  <xsl:template match="aorsml:FOR" mode="assistents.getNextDataVariableDeclarations">
+  <xsl:template match="aorsl:FOR" mode="assistents.getNextDataVariableDeclarations">
     <xsl:param name="following-direction" select="true()"/>
     <xsl:copy-of select="."/>
     <xsl:choose>
@@ -1528,12 +1528,12 @@
     <xsl:param name="envEvtVarName" required="yes" as="xs:string"/>
 
     <xsl:choose>
-      <xsl:when test="$eventExpr/aorsml:CorrelationValue[@language eq $output.language]">
+      <xsl:when test="$eventExpr/aorsl:CorrelationValue[@language eq $output.language]">
         <xsl:call-template name="java:callSetterMethod">
           <xsl:with-param name="indent" select="$indent"/>
           <xsl:with-param name="objInstance" select="$envEvtVarName"/>
           <xsl:with-param name="instVariable" select="'correlationValue'"/>
-          <xsl:with-param name="value" select="$eventExpr/aorsml:CorrelationValue[@language eq $output.language][1]"/>
+          <xsl:with-param name="value" select="$eventExpr/aorsl:CorrelationValue[@language eq $output.language][1]"/>
         </xsl:call-template>
       </xsl:when>
       <xsl:when test="$eventExpr/@correlationValue">
@@ -1554,12 +1554,12 @@
     <xsl:param name="envEvtVarName" required="yes" as="xs:string"/>
 
     <xsl:choose>
-      <xsl:when test="$eventExpr/aorsml:EndEventCorrelation[@language eq $output.language][1]">
+      <xsl:when test="$eventExpr/aorsl:EndEventCorrelation[@language eq $output.language][1]">
         <xsl:call-template name="java:callSetterMethod">
           <xsl:with-param name="indent" select="$indent"/>
           <xsl:with-param name="objInstance" select="$envEvtVarName"/>
           <xsl:with-param name="instVariable" select="'correlationValue'"/>
-          <xsl:with-param name="value" select="$eventExpr/aorsml:EndEventCorrelation[@language eq $output.language][1]"/>
+          <xsl:with-param name="value" select="$eventExpr/aorsl:EndEventCorrelation[@language eq $output.language][1]"/>
         </xsl:call-template>
       </xsl:when>
       <xsl:when test="$eventExpr/@endEventCorrelation">
@@ -1580,10 +1580,10 @@
   <!-- this section contains template for EnvironmentRules and InitializationRules -->
 
   <!-- **********************                        EXECUTION                 ************************ -->
-  <xsl:template match="aorsml:EnvironmentRule | aorsml:InitializationRule" mode="assistents.createRule.createEnvInitRuleExec">
+  <xsl:template match="aorsl:EnvironmentRule | aorsl:InitializationRule" mode="assistents.createRule.createEnvInitRuleExec">
     <xsl:param name="indent" required="yes" as="xs:integer"/>
 
-    <xsl:apply-templates select="aorsml:FOR[@objectVariable]" mode="createRules.helper.method.execute.fixedById.setObjVarDeclarationsReceiveOrder">
+    <xsl:apply-templates select="aorsl:FOR[@objectVariable]" mode="createRules.helper.method.execute.fixedById.setObjVarDeclarationsReceiveOrder">
       <xsl:with-param name="indent" select="$indent"/>
     </xsl:apply-templates>
 
@@ -1591,8 +1591,8 @@
 
     <!-- complete entity-Sets -->
     <xsl:variable name="completeObjectSets"
-      select="aorsml:FOR[@objectVariable]
-        [not(fn:exists(@objectIdRef) or  fn:exists(aorsml:ObjectRef) or fn:exists(aorsml:ObjectIdRef) or fn:exists(@objectName)) and 
+      select="aorsl:FOR[@objectVariable]
+        [not(fn:exists(@objectIdRef) or  fn:exists(aorsl:ObjectRef) or fn:exists(aorsl:ObjectIdRef) or fn:exists(@objectName)) and 
           not(fn:exists(@rangeStartID) and fn:exists(@rangeEndID)) and 
           not(@objectType ='Collection')]"/>
 
@@ -1604,7 +1604,7 @@
     </xsl:if>
 
     <!-- objSubSet -->
-    <xsl:variable name="objectSetRange" select="aorsml:FOR[@objectVariable][fn:exists(@rangeStartID) or fn:exists(@rangeEndID)]"/>
+    <xsl:variable name="objectSetRange" select="aorsl:FOR[@objectVariable][fn:exists(@rangeStartID) or fn:exists(@rangeEndID)]"/>
     <xsl:variable name="entitieSeqCount" select="fn:count($objectSetRange) + fn:count($completeObjectSets)"/>
 
     <xsl:choose>
@@ -1612,7 +1612,7 @@
         <xsl:call-template name="java:newLine"/>
 
         <!-- fixed ObjectVariableDeclarations (if there are ObjectVariableDeclarations before the first ) -->
-        <xsl:apply-templates select="($objectSetRange, $completeObjectSets)[1]/preceding-sibling::aorsml:FOR[@dataVariable]"
+        <xsl:apply-templates select="($objectSetRange, $completeObjectSets)[1]/preceding-sibling::aorsl:FOR[@dataVariable]"
           mode="assistents.setDataVariableDeclaration">
           <xsl:with-param name="indent" select="$indent + 1"/>
         </xsl:apply-templates>
@@ -1621,9 +1621,9 @@
 
         <xsl:call-template name="assistents.createRule.createEnvInitRuleExec.nestedLoops">
           <xsl:with-param name="set"
-            select="aorsml:FOR[@objectVariable][not(fn:exists(@objectIdRef) or fn:exists(aorsml:ObjectRef) or fn:exists(aorsml:ObjectIdRef) or 
+            select="aorsl:FOR[@objectVariable][not(fn:exists(@objectIdRef) or fn:exists(aorsl:ObjectRef) or fn:exists(aorsl:ObjectIdRef) or 
             fn:exists(@objectName)) and 
-            not(fn:exists(@rangeStartID) and fn:exists(@rangeEndID)) and not(@objectType ='Collection')]|aorsml:FOR[@objectVariable][fn:exists(@rangeStartID) or fn:exists(@rangeEndID)]"/>
+            not(fn:exists(@rangeStartID) and fn:exists(@rangeEndID)) and not(@objectType ='Collection')]|aorsl:FOR[@objectVariable][fn:exists(@rangeStartID) or fn:exists(@rangeEndID)]"/>
           <xsl:with-param name="iteratorPostfix" select="$iteratorPostfix"/>
           <xsl:with-param name="forEachLoopPostfix" select="$forEachLoopPostfix"/>
           <xsl:with-param name="listPostfix" select="$listPostfix"/>
@@ -1631,7 +1631,7 @@
           <xsl:with-param name="content">
 
             <!-- DataVariableDeclarations -->
-            <xsl:apply-templates select="aorsml:FOR[@dataVariable]" mode="assistents.setDataVariableDeclaration">
+            <xsl:apply-templates select="aorsl:FOR[@dataVariable]" mode="assistents.setDataVariableDeclaration">
               <xsl:with-param name="indent" select="$indent + $entitieSeqCount + 1"/>
             </xsl:apply-templates>
 
@@ -1646,7 +1646,7 @@
       <xsl:otherwise>
 
         <!-- DataVariableDeclarations -->
-        <xsl:apply-templates select="aorsml:FOR[@dataVariable]" mode="assistents.setDataVariableDeclaration">
+        <xsl:apply-templates select="aorsl:FOR[@dataVariable]" mode="assistents.setDataVariableDeclaration">
           <xsl:with-param name="indent" select="$indent + 1"/>
         </xsl:apply-templates>
 
@@ -1701,7 +1701,7 @@
 
           <xsl:variable name="followingDataVariables">
             <xsl:apply-templates
-              select="$forElement/following-sibling::aorsml:FOR[@dataVariable][generate-id(preceding-sibling::aorsml:FOR[@objectVariable][1]) = generate-id($forElement)]"
+              select="$forElement/following-sibling::aorsl:FOR[@dataVariable][generate-id(preceding-sibling::aorsl:FOR[@objectVariable][1]) = generate-id($forElement)]"
               mode="assistents.getNextDataVariableDeclarations"/>
           </xsl:variable>
 
@@ -1711,10 +1711,10 @@
             </xsl:apply-templates>
           </xsl:for-each>
 
-          <xsl:if test="$forElement/aorsml:SelectionCondition[@language eq $output.language]">
+          <xsl:if test="$forElement/aorsl:SelectionCondition[@language eq $output.language]">
             <xsl:call-template name="java:if">
               <xsl:with-param name="indent" select="$nextIndent"/>
-              <xsl:with-param name="condition" select="fn:concat('!(', $forElement/aorsml:SelectionCondition[@language eq $output.language][1], ')')"/>
+              <xsl:with-param name="condition" select="fn:concat('!(', $forElement/aorsl:SelectionCondition[@language eq $output.language][1], ')')"/>
               <xsl:with-param name="thenContent">
                 <xsl:call-template name="java:codeLine">
                   <xsl:with-param name="indent" select="$nextIndent + 1"/>
@@ -1737,22 +1737,22 @@
         <xsl:choose>
           <!-- use java for-each -->
           <xsl:when
-            test="$forElement[not(fn:exists(@objectIdRef) or fn:exists(aorsml:ObjectRef)) and not(fn:exists(@rangeStartID) and fn:exists(@rangeEndID))]">
+            test="$forElement[not(fn:exists(@objectIdRef) or fn:exists(aorsl:ObjectRef)) and not(fn:exists(@rangeStartID) and fn:exists(@rangeEndID))]">
 
             <xsl:call-template name="java:for-each-loop">
               <xsl:with-param name="indent" select="$indent"/>
               <xsl:with-param name="elementType" select="$core.class.object">
                 <!--                <xsl:choose>
-                  <xsl:when test="fn:exists(//aorsml:PhysicalAgentType[@name = $e1/@objectType])">
+                  <xsl:when test="fn:exists(//aorsl:PhysicalAgentType[@name = $e1/@objectType])">
                     <xsl:value-of select="$core.class.physAgentObject"/>
                   </xsl:when>
-                  <xsl:when test="fn:exists(//aorsml:PhysicalObjectType[@name = $e1/@objectType])">
+                  <xsl:when test="fn:exists(//aorsl:PhysicalObjectType[@name = $e1/@objectType])">
                     <xsl:value-of select="$core.class.physicalObjekt"/>
                   </xsl:when>
-                  <xsl:when test="fn:exists(//aorsml:ObjectType[@name = $e1/@objectType])">
+                  <xsl:when test="fn:exists(//aorsl:ObjectType[@name = $e1/@objectType])">
                     <xsl:value-of select="$core.class.object"/>
                   </xsl:when>
-                  <xsl:when test="fn:exists(//aorsml:AgentType[@name = $e1/@objectType])">
+                  <xsl:when test="fn:exists(//aorsl:AgentType[@name = $e1/@objectType])">
                     <xsl:value-of select="$core.class.agentObject"/>
                   </xsl:when>
                   <xsl:otherwise>
@@ -1802,24 +1802,24 @@
 
   <!-- this template is used to receive the order of  FOR-ObjectVariableDeclaration's-->
   <!-- calls by objectVariablesDeclaration -->
-  <xsl:template match="aorsml:FOR" mode="createRules.helper.method.execute.fixedById.setObjVarDeclarationsReceiveOrder">
+  <xsl:template match="aorsl:FOR" mode="createRules.helper.method.execute.fixedById.setObjVarDeclarationsReceiveOrder">
     <xsl:param name="indent" required="yes" as="xs:integer"/>
     <!-- fixed physObj by id-->
-    <xsl:apply-templates select=".[(fn:exists(@objectIdRef) or fn:exists(aorsml:ObjectIdRef)) and not(@objectType ='Collection')]"
+    <xsl:apply-templates select=".[(fn:exists(@objectIdRef) or fn:exists(aorsl:ObjectIdRef)) and not(@objectType ='Collection')]"
       mode="createRules.helper.method.execute.fixedById">
       <xsl:with-param name="indent" select="$indent + 1"/>
     </xsl:apply-templates>
 
     <!-- fixed physObj by ref-->
     <xsl:apply-templates
-      select=".[fn:exists(aorsml:ObjectRef) and not (fn:exists(@objectIdRef) or fn:exists(aorsml:ObjectIdRef)) and not(@objectType ='Collection')]"
+      select=".[fn:exists(aorsl:ObjectRef) and not (fn:exists(@objectIdRef) or fn:exists(aorsl:ObjectIdRef)) and not(@objectType ='Collection')]"
       mode="createRules.helper.method.execute.fixedByRef">
       <xsl:with-param name="indent" select="$indent + 1"/>
     </xsl:apply-templates>
 
     <!-- fixed physObj by name-->
     <xsl:apply-templates
-      select=".[not(fn:exists(@objectIdRef) or fn:exists(aorsml:ObjectRef) or fn:exists(aorsml:ObjectIdRef)) and 
+      select=".[not(fn:exists(@objectIdRef) or fn:exists(aorsl:ObjectRef) or fn:exists(aorsl:ObjectIdRef)) and 
           fn:exists(@objectName) and not(@objectType ='Collection')]"
       mode="createRules.helper.method.execute.fixedByName">
       <xsl:with-param name="indent" select="$indent + 1"/>
@@ -1834,7 +1834,7 @@
 
   <!--sets class variables (ObjectSet)-->
   <!-- calls by objectVariablesDeclaration -->
-  <xsl:template match="aorsml:FOR" mode="createRules.helper.method.execute">
+  <xsl:template match="aorsl:FOR" mode="createRules.helper.method.execute">
     <xsl:param name="indent" required="yes" as="xs:integer"/>
     <xsl:param name="listPostfix" required="yes" as="xs:string"/>
 
@@ -1887,7 +1887,7 @@
 
   <!--sets class variables (if only one specific entity its involved)-->
   <!-- calls by objectVariablesDeclaration -->
-  <xsl:template match="aorsml:FOR" mode="createRules.helper.method.execute.fixedById">
+  <xsl:template match="aorsl:FOR" mode="createRules.helper.method.execute.fixedById">
     <xsl:param name="indent" required="yes" as="xs:integer"/>
 
     <xsl:variable name="objType" as="xs:string">
@@ -1965,7 +1965,7 @@
 
   <!--sets class variables (if only one specific entity its involved)-->
   <!-- calls by objectVariablesDeclaration -->
-  <xsl:template match="aorsml:FOR" mode="createRules.helper.method.execute.fixedByName">
+  <xsl:template match="aorsl:FOR" mode="createRules.helper.method.execute.fixedByName">
     <xsl:param name="indent" required="yes" as="xs:integer"/>
 
     <xsl:variable name="objType" as="xs:string">
@@ -2038,7 +2038,7 @@
   </xsl:template>
 
   <!-- calls by objectVariablesDeclaration -->
-  <xsl:template match="aorsml:FOR" mode="createRules.helper.method.execute.fixedByRef">
+  <xsl:template match="aorsl:FOR" mode="createRules.helper.method.execute.fixedByRef">
     <xsl:param name="indent" required="yes" as="xs:integer"/>
 
     <xsl:variable name="objType">
@@ -2052,14 +2052,14 @@
           <xsl:with-param name="varName" select="@objectVariable"/>
         </xsl:call-template>
       </xsl:with-param>
-      <xsl:with-param name="value" select="aorsml:ObjectRef[@language = $output.language]"/>
+      <xsl:with-param name="value" select="aorsl:ObjectRef[@language = $output.language]"/>
     </xsl:call-template>
 
   </xsl:template>
 
   <!-- set collections -->
   <!-- calls by objectVariablesDeclaration -->
-  <xsl:template match="aorsml:FOR" mode="createRules.helper.method.execute.fixedCollection">
+  <xsl:template match="aorsl:FOR" mode="createRules.helper.method.execute.fixedCollection">
     <xsl:param name="indent" required="yes" as="xs:integer"/>
 
     <xsl:call-template name="java:variable">
@@ -2138,10 +2138,10 @@
           <xsl:with-param name="genericType">
             <xsl:choose>
               <xsl:when test="@objectName">
-                <xsl:value-of select="//aorsml:Collections/aorsml:Collection[@name = current()/@objectName]/@itemType"/>
+                <xsl:value-of select="//aorsl:Collections/aorsl:Collection[@name = current()/@objectName]/@itemType"/>
               </xsl:when>
               <xsl:when test="@objectIdRef">
-                <xsl:value-of select="//aorsml:Collections/aorsml:Collection[@id = current()/@objectIdRef]/@itemType"/>
+                <xsl:value-of select="//aorsl:Collections/aorsl:Collection[@id = current()/@objectIdRef]/@itemType"/>
               </xsl:when>
             </xsl:choose>
           </xsl:with-param>
@@ -2152,7 +2152,7 @@
   </xsl:template>
 
   <!-- calls by objectVariablesDeclaration -->
-  <xsl:template match="aorsml:FOR" mode="createRules.helper.method.execute.setLoopObjectVariable">
+  <xsl:template match="aorsl:FOR" mode="createRules.helper.method.execute.setLoopObjectVariable">
     <xsl:param name="indent" required="yes" as="xs:integer"/>
     <xsl:param name="loopPostfix" required="yes" as="xs:string"/>
     <xsl:param name="subSet" as="xs:boolean" required="yes"/>
@@ -2196,16 +2196,16 @@
               </xsl:with-param>
               <xsl:with-param name="method">
                 <xsl:choose>
-                  <xsl:when test="fn:exists(//aorsml:PhysicalAgentType[@name = current()/@objectType])">
+                  <xsl:when test="fn:exists(//aorsl:PhysicalAgentType[@name = current()/@objectType])">
                     <xsl:value-of select="'getPhysAgentById'"/>
                   </xsl:when>
-                  <xsl:when test="fn:exists(//aorsml:PhysicalObjectType[@name = current()/@objectType])">
+                  <xsl:when test="fn:exists(//aorsl:PhysicalObjectType[@name = current()/@objectType])">
                     <xsl:value-of select="'getPhysicalObjectById'"/>
                   </xsl:when>
-                  <xsl:when test="fn:exists(//aorsml:ObjectType[@name = current()/@objectType])">
+                  <xsl:when test="fn:exists(//aorsl:ObjectType[@name = current()/@objectType])">
                     <xsl:value-of select="'getObjectById'"/>
                   </xsl:when>
-                  <xsl:when test="fn:exists(//aorsml:AgentType[@name = current()/@objectType])">
+                  <xsl:when test="fn:exists(//aorsl:AgentType[@name = current()/@objectType])">
                     <xsl:value-of select="'getAgentById'"/>
                   </xsl:when>
                   <xsl:otherwise>
@@ -2251,7 +2251,7 @@
   </xsl:template>
 
   <!-- calls by objectVariablesDeclaration -->
-  <xsl:template match="aorsml:FOR" mode="createRules.helper.method.execute.setLoopVariableFromSet">
+  <xsl:template match="aorsl:FOR" mode="createRules.helper.method.execute.setLoopVariableFromSet">
     <xsl:param name="indent" required="yes" as="xs:integer"/>
     <xsl:param name="forEachLoopPostfix" required="yes" as="xs:string"/>
 
@@ -2271,7 +2271,7 @@
 
   <!--sets loop variables for a subset-->
   <!-- calls by objectVariablesDeclaration -->
-  <xsl:template match="aorsml:FOR" mode="createRules.helper.method.execute.setLoopVariableSet">
+  <xsl:template match="aorsl:FOR" mode="createRules.helper.method.execute.setLoopVariableSet">
     <xsl:param name="indent" required="yes" as="xs:integer"/>
     <xsl:param name="iteratorPostfix" required="yes" as="xs:string"/>
 
@@ -2311,16 +2311,16 @@
           </xsl:with-param>
           <xsl:with-param name="method">
             <xsl:choose>
-              <xsl:when test="fn:exists(//aorsml:PhysicalAgentType[@name = current()/@objectType])">
+              <xsl:when test="fn:exists(//aorsl:PhysicalAgentType[@name = current()/@objectType])">
                 <xsl:value-of select="'getPhysAgentById'"/>
               </xsl:when>
-              <xsl:when test="fn:exists(//aorsml:PhysicalObjectType[@name = current()/@objectType])">
+              <xsl:when test="fn:exists(//aorsl:PhysicalObjectType[@name = current()/@objectType])">
                 <xsl:value-of select="'getPhysicalObjectById'"/>
               </xsl:when>
-              <xsl:when test="fn:exists(//aorsml:ObjectType[@name = current()/@objectType])">
+              <xsl:when test="fn:exists(//aorsl:ObjectType[@name = current()/@objectType])">
                 <xsl:value-of select="'getObjectById'"/>
               </xsl:when>
-              <xsl:when test="fn:exists(//aorsml:AgentType[@name = current()/@objectType])">
+              <xsl:when test="fn:exists(//aorsl:AgentType[@name = current()/@objectType])">
                 <xsl:value-of select="'getAgentById'"/>
               </xsl:when>
               <xsl:otherwise>
@@ -2344,13 +2344,13 @@
   </xsl:template>
 
   <!-- create the neccessary method-calls -->
-  <xsl:template match="aorsml:EnvironmentRule" mode="createRules.helper.method.execute.setProcessMethods">
+  <xsl:template match="aorsl:EnvironmentRule" mode="createRules.helper.method.execute.setProcessMethods">
     <xsl:param name="indent" required="yes"/>
 
     <!-- select all entities they can be null in the javasimulator (used envSim.getPhysAgentById()/ getObjectsById())-->
     <xsl:variable name="entityList"
-      select="aorsml:FOR[@objectVariable]
-      [fn:exists(@rangeStartID) or fn:exists(@rangeEndID) or fn:exists(@objectIdRef) or fn:exists(aorsml:ObjectRef) or fn:exists(aorsml:ObjectIdRef)]"/>
+      select="aorsl:FOR[@objectVariable]
+      [fn:exists(@rangeStartID) or fn:exists(@rangeEndID) or fn:exists(@objectIdRef) or fn:exists(aorsl:ObjectRef) or fn:exists(aorsl:ObjectIdRef)]"/>
 
     <xsl:call-template name="java:if">
       <xsl:with-param name="indent" select="$indent"/>
@@ -2390,7 +2390,7 @@
 
         <!-- doResulting events -->
         <!-- TODO: delete the second part of expression if the deprecated compatibilty is deleted -->
-        <xsl:if test="fn:exists(aorsml:DO/aorsml:SCHEDULE-EVT) or fn:exists(aorsml:SCHEDULE-EVT)">
+        <xsl:if test="fn:exists(aorsl:DO/aorsl:SCHEDULE-EVT) or fn:exists(aorsl:SCHEDULE-EVT)">
           <xsl:call-template name="java:callMethod">
             <xsl:with-param name="indent" select="$indent + 1"/>
             <xsl:with-param name="objInstance" select="'result'"/>
@@ -2461,7 +2461,7 @@
             </xsl:call-template>
 
             <!-- statistics 
-            <xsl:if test="fn:exists(aorsml:UpdateStatistics)">
+            <xsl:if test="fn:exists(aorsl:UpdateStatistics)">
               <xsl:call-template name="java:callMethod">
                 <xsl:with-param name="indent" select="$indent + 2"/>
                 <xsl:with-param name="objInstance" select="'this'"/>
@@ -2470,7 +2470,7 @@
               </xsl:if>-->
 
             <!-- resulting events -->
-            <xsl:if test="fn:exists(aorsml:THEN/aorsml:SCHEDULE-EVT)">
+            <xsl:if test="fn:exists(aorsl:THEN/aorsl:SCHEDULE-EVT)">
               <xsl:call-template name="java:callMethod">
                 <xsl:with-param name="indent" select="$indent + 2"/>
                 <xsl:with-param name="objInstance" select="'result'"/>
@@ -2496,7 +2496,7 @@
 
           </xsl:with-param>
           <xsl:with-param name="elseContent">
-            <xsl:if test="fn:exists(aorsml:ELSE)">
+            <xsl:if test="fn:exists(aorsl:ELSE)">
               <xsl:call-template name="java:newLine"/>
 
               <!-- statechanges -->
@@ -2507,7 +2507,7 @@
               </xsl:call-template>
 
               <!-- resulting events -->
-              <xsl:if test="fn:exists(aorsml:ELSE/aorsml:SCHEDULE-EVT)">
+              <xsl:if test="fn:exists(aorsl:ELSE/aorsl:SCHEDULE-EVT)">
                 <xsl:call-template name="java:callMethod">
                   <xsl:with-param name="indent" select="$indent + 2"/>
                   <xsl:with-param name="objInstance" select="'result'"/>
@@ -2543,12 +2543,12 @@
   </xsl:template>
 
   <!-- create the neccessary method-calls -->
-  <xsl:template match="aorsml:InitializationRule" mode="createRules.helper.method.execute.setProcessMethods">
+  <xsl:template match="aorsl:InitializationRule" mode="createRules.helper.method.execute.setProcessMethods">
     <xsl:param name="indent" required="yes"/>
 
     <!-- select all entities they can be null in the javasimulator (used envSim.getPhysAgentById()/ getObjectsById())-->
     <xsl:variable name="entityList"
-      select="aorsml:FOR[@objectVariable][fn:exists(@rangeStartID) or fn:exists(@rangeEndID) or fn:exists(@objectIdRef) or fn:exists(aorsml:ObjectRef)]"/>
+      select="aorsl:FOR[@objectVariable][fn:exists(@rangeStartID) or fn:exists(@rangeEndID) or fn:exists(@objectIdRef) or fn:exists(aorsl:ObjectRef)]"/>
 
     <xsl:call-template name="java:if">
       <xsl:with-param name="indent" select="$indent"/>
@@ -2592,7 +2592,7 @@
   <!-- ++++++++++++++++++++++ -->
 
   <!-- init a list with ArrayList-Implementation - used in constructors of objekts -->
-  <xsl:template match="aorsml:Attribute | aorsml:ReferenceProperty | aorsml:ComplexDataProperty" mode="assistent.initList">
+  <xsl:template match="aorsl:Attribute | aorsl:ReferenceProperty | aorsl:ComplexDataProperty" mode="assistent.initList">
     <xsl:param name="indent" required="yes" as="xs:integer"/>
 
     <xsl:call-template name="java:variable">
@@ -2614,7 +2614,7 @@
 
   </xsl:template>
 
-  <xsl:template match="aorsml:Attribute | aorsml:ReferenceProperty | aorsml:ComplexDataProperty" mode="assistents.listMethods">
+  <xsl:template match="aorsl:Attribute | aorsl:ReferenceProperty | aorsl:ComplexDataProperty" mode="assistents.listMethods">
     <xsl:param name="indent" required="yes" as="xs:integer"/>
 
     <!-- <xsl:variable name="methodPrefix" select="fn:concat(jw:upperWord(@name), 'Element')"/> -->
@@ -2653,7 +2653,7 @@
   </xsl:template>
 
   <!-- get#prefix#(int index) -->
-  <xsl:template match="aorsml:Attribute | aorsml:ReferenceProperty | aorsml:ComplexDataProperty" mode="assistents.listMethods.get">
+  <xsl:template match="aorsl:Attribute | aorsl:ReferenceProperty | aorsl:ComplexDataProperty" mode="assistents.listMethods.get">
     <xsl:param name="indent" required="yes" as="xs:integer"/>
     <xsl:param name="methodPrefix" required="yes" as="xs:string"/>
 
@@ -2666,7 +2666,7 @@
   </xsl:template>
 
   <!-- remove#prefix#(int index) -->
-  <xsl:template match="aorsml:Attribute | aorsml:ReferenceProperty | aorsml:ComplexDataProperty" mode="assistents.listMethods.removeByIndex">
+  <xsl:template match="aorsl:Attribute | aorsl:ReferenceProperty | aorsl:ComplexDataProperty" mode="assistents.listMethods.removeByIndex">
     <xsl:param name="indent" required="yes" as="xs:integer"/>
     <xsl:param name="methodPrefix" required="yes" as="xs:string"/>
 
@@ -2679,7 +2679,7 @@
   </xsl:template>
 
   <!-- get(int index) and remove(int index) have a simular structure -->
-  <xsl:template match="aorsml:Attribute | aorsml:ReferenceProperty | aorsml:ComplexDataProperty" mode="assistents.listMethods.getOrRemoveByIndex">
+  <xsl:template match="aorsl:Attribute | aorsl:ReferenceProperty | aorsl:ComplexDataProperty" mode="assistents.listMethods.getOrRemoveByIndex">
     <xsl:param name="indent" required="yes" as="xs:integer"/>
     <xsl:param name="methodPrefix" required="yes" as="xs:string"/>
     <xsl:param name="method" required="yes" as="xs:string"/>
@@ -2771,7 +2771,7 @@
 
 
   <!-- remove#prefix#(Object o) -->
-  <xsl:template match="aorsml:Attribute | aorsml:ReferenceProperty | aorsml:ComplexDataProperty" mode="assistents.listMethods.removeByObj">
+  <xsl:template match="aorsl:Attribute | aorsl:ReferenceProperty | aorsl:ComplexDataProperty" mode="assistents.listMethods.removeByObj">
     <xsl:param name="indent" required="yes" as="xs:integer"/>
     <xsl:param name="methodPrefix" required="yes" as="xs:string"/>
 
@@ -2784,7 +2784,7 @@
   </xsl:template>
 
   <!-- add#prefix#(Object o) -->
-  <xsl:template match="aorsml:Attribute | aorsml:ReferenceProperty | aorsml:ComplexDataProperty" mode="assistents.listMethods.add">
+  <xsl:template match="aorsl:Attribute | aorsl:ReferenceProperty | aorsl:ComplexDataProperty" mode="assistents.listMethods.add">
     <xsl:param name="indent" required="yes" as="xs:integer"/>
     <xsl:param name="methodPrefix" required="yes" as="xs:string"/>
 
@@ -2797,7 +2797,7 @@
   </xsl:template>
 
   <!-- add(Object o) and remove(Object o) have a simular structure -->
-  <xsl:template match="aorsml:Attribute | aorsml:ReferenceProperty | aorsml:ComplexDataProperty" mode="assistents.listMethods.addOrRemoveByObj">
+  <xsl:template match="aorsl:Attribute | aorsl:ReferenceProperty | aorsl:ComplexDataProperty" mode="assistents.listMethods.addOrRemoveByObj">
     <xsl:param name="indent" required="yes" as="xs:integer"/>
     <xsl:param name="methodPrefix" required="yes" as="xs:string"/>
     <xsl:param name="method" required="yes" as="xs:string"/>
@@ -2839,7 +2839,7 @@
   </xsl:template>
 
   <!-- get#prefix#[s]() -->
-  <xsl:template match="aorsml:Attribute | aorsml:ReferenceProperty | aorsml:ComplexDataProperty" mode="assistents.listMethods.getList">
+  <xsl:template match="aorsl:Attribute | aorsl:ReferenceProperty | aorsl:ComplexDataProperty" mode="assistents.listMethods.getList">
     <xsl:param name="indent" required="yes" as="xs:integer"/>
     <xsl:param name="methodPrefix" required="yes" as="xs:string"/>
 
@@ -2869,19 +2869,19 @@
   <!-- create the output for resulting events / messages; surrounded by an java-if. if necessary -->
   <!-- TODO: change all to use this -->
   <xsl:template
-    match="aorsml:OutMessageEventExpr | aorsml:ReminderEventExpr | aorsml:ActionEventExpr |
-    aorsml:CausedEventExpr | aorsml:PerceptionEventExpr | aorsml:InMessageEventExpr | 
-    aorsml:ActivityStartEventExpr | aorsml:ActivityEndEventExpr"
+    match="aorsl:OutMessageEventExpr | aorsl:ReminderEventExpr | aorsl:ActionEventExpr |
+    aorsl:CausedEventExpr | aorsl:PerceptionEventExpr | aorsl:InMessageEventExpr | 
+    aorsl:ActivityStartEventExpr | aorsl:ActivityEndEventExpr"
     mode="assistent.resultingEvent.output">
     <xsl:param name="indent" as="xs:integer" required="yes"/>
     <xsl:param name="output" as="xs:string"/>
 
     <xsl:choose>
-      <xsl:when test="fn:exists(aorsml:Condition[@language eq $output.language])">
+      <xsl:when test="fn:exists(aorsl:Condition[@language eq $output.language])">
 
         <xsl:call-template name="java:if">
           <xsl:with-param name="indent" select="$indent"/>
-          <xsl:with-param name="condition" select="aorsml:Condition[@language eq $output.language][1]"/>
+          <xsl:with-param name="condition" select="aorsl:Condition[@language eq $output.language][1]"/>
 
           <xsl:with-param name="thenContent">
             <xsl:value-of select="$output"/>
@@ -2898,7 +2898,7 @@
   <!--   distributions for Delay, Duration and Periodicity  -->
   <!-- ++++++++++++++++++++++++++++++++++++++++++++++++++++ -->
   <!-- Uniform -->
-  <xsl:template match="aorsml:Uniform | aorsml:UniformInt" mode="assistents.distribution">
+  <xsl:template match="aorsl:Uniform | aorsl:UniformInt" mode="assistents.distribution">
 
     <!-- lowerBound; default is 0 -->
     <xsl:variable name="lowerBound" as="xs:string">
@@ -2906,8 +2906,8 @@
         <xsl:when test="@lowerBound">
           <xsl:value-of select="@lowerBound"/>
         </xsl:when>
-        <xsl:when test="exists(aorsml:LowerBoundExpr[@language eq $output.language])">
-          <xsl:value-of select="aorsml:LowerBoundExpr[@language eq $output.language][1]"/>
+        <xsl:when test="exists(aorsl:LowerBoundExpr[@language eq $output.language])">
+          <xsl:value-of select="aorsl:LowerBoundExpr[@language eq $output.language][1]"/>
         </xsl:when>
         <xsl:otherwise>
           <!-- set the default value 0 -->
@@ -2922,8 +2922,8 @@
         <xsl:when test="@upperBound">
           <xsl:value-of select="@upperBound"/>
         </xsl:when>
-        <xsl:when test="exists(aorsml:UpperBoundExpr[@language eq $output.language])">
-          <xsl:value-of select="aorsml:UpperBoundExpr[@language eq $output.language][1]"/>
+        <xsl:when test="exists(aorsl:UpperBoundExpr[@language eq $output.language])">
+          <xsl:value-of select="aorsl:UpperBoundExpr[@language eq $output.language][1]"/>
         </xsl:when>
         <xsl:otherwise>
           <!-- set the default value 1 -->
@@ -2952,7 +2952,7 @@
   </xsl:template>
 
   <!-- Normal -->
-  <xsl:template match="aorsml:Normal | aorsml:NormalInt" mode="assistents.distribution">
+  <xsl:template match="aorsl:Normal | aorsl:NormalInt" mode="assistents.distribution">
 
     <!-- expectedValue the default is 0 -->
     <xsl:variable name="expectedValue" as="xs:string">
@@ -2960,8 +2960,8 @@
         <xsl:when test="@mean">
           <xsl:value-of select="@mean"/>
         </xsl:when>
-        <xsl:when test="exists(aorsml:MeanExpr[@language eq $output.language])">
-          <xsl:value-of select="aorsml:MeanExpr[@language eq $output.language][1]"/>
+        <xsl:when test="exists(aorsl:MeanExpr[@language eq $output.language])">
+          <xsl:value-of select="aorsl:MeanExpr[@language eq $output.language][1]"/>
         </xsl:when>
         <xsl:otherwise>
           <xsl:value-of select="'0'"/>
@@ -2975,8 +2975,8 @@
         <xsl:when test="@standardDeviation">
           <xsl:value-of select="@standardDeviation"/>
         </xsl:when>
-        <xsl:when test="exists(aorsml:StandardDeviationExpr[@language eq $output.language])">
-          <xsl:value-of select="aorsml:StandardDeviationExpr[@language eq $output.language][1]"/>
+        <xsl:when test="exists(aorsl:StandardDeviationExpr[@language eq $output.language])">
+          <xsl:value-of select="aorsl:StandardDeviationExpr[@language eq $output.language][1]"/>
         </xsl:when>
         <xsl:otherwise>
           <xsl:value-of select="'1'"/>
@@ -3004,7 +3004,7 @@
   </xsl:template>
 
   <!-- Binomial -->
-  <xsl:template match="aorsml:Binomial" mode="assistents.distribution">
+  <xsl:template match="aorsl:Binomial" mode="assistents.distribution">
 
     <!-- n; default is 25 -->
     <xsl:variable name="n" as="xs:string">
@@ -3012,8 +3012,8 @@
         <xsl:when test="@n">
           <xsl:value-of select="@n"/>
         </xsl:when>
-        <xsl:when test="exists(aorsml:N-Expr[@language eq $output.language])">
-          <xsl:value-of select="aorsml:N-Expr[@language eq $output.language][1]"/>
+        <xsl:when test="exists(aorsl:N-Expr[@language eq $output.language])">
+          <xsl:value-of select="aorsl:N-Expr[@language eq $output.language][1]"/>
         </xsl:when>
         <xsl:otherwise>
           <!-- set the default value 25 -->
@@ -3028,8 +3028,8 @@
         <xsl:when test="@p">
           <xsl:value-of select="@p"/>
         </xsl:when>
-        <xsl:when test="exists(aorsml:P-Expr[@language eq $output.language])">
-          <xsl:value-of select="aorsml:P-Expr[@language eq $output.language][1]"/>
+        <xsl:when test="exists(aorsl:P-Expr[@language eq $output.language])">
+          <xsl:value-of select="aorsl:P-Expr[@language eq $output.language][1]"/>
         </xsl:when>
         <xsl:otherwise>
           <!-- set the default value 0.5 -->
@@ -3049,7 +3049,7 @@
   </xsl:template>
 
   <!-- NegBinomial -->
-  <xsl:template match="aorsml:NegBinomial" mode="assistents.distribution">
+  <xsl:template match="aorsl:NegBinomial" mode="assistents.distribution">
 
     <!-- r; default is 25 -->
     <xsl:variable name="r" as="xs:string">
@@ -3057,8 +3057,8 @@
         <xsl:when test="@r">
           <xsl:value-of select="@r"/>
         </xsl:when>
-        <xsl:when test="exists(aorsml:R-Expr[@language eq $output.language])">
-          <xsl:value-of select="aorsml:R-Expr[@language eq $output.language][1]"/>
+        <xsl:when test="exists(aorsl:R-Expr[@language eq $output.language])">
+          <xsl:value-of select="aorsl:R-Expr[@language eq $output.language][1]"/>
         </xsl:when>
         <xsl:otherwise>
           <!-- set the default value ??? -->
@@ -3073,8 +3073,8 @@
         <xsl:when test="@p">
           <xsl:value-of select="@p"/>
         </xsl:when>
-        <xsl:when test="exists(aorsml:P-Expr[@language eq $output.language])">
-          <xsl:value-of select="aorsml:P-Expr[@language eq $output.language][1]"/>
+        <xsl:when test="exists(aorsl:P-Expr[@language eq $output.language])">
+          <xsl:value-of select="aorsl:P-Expr[@language eq $output.language][1]"/>
         </xsl:when>
         <xsl:otherwise>
           <!-- set the default value ..5 -->
@@ -3094,7 +3094,7 @@
   </xsl:template>
 
   <!-- Poisson -->
-  <xsl:template match="aorsml:Poisson" mode="assistents.distribution">
+  <xsl:template match="aorsl:Poisson" mode="assistents.distribution">
 
     <!-- lambda; default is 1.0 -->
     <xsl:variable name="lambda" as="xs:string">
@@ -3102,8 +3102,8 @@
         <xsl:when test="@lambda">
           <xsl:value-of select="@lambda"/>
         </xsl:when>
-        <xsl:when test="exists(aorsml:LambdaExpr[@language eq $output.language])">
-          <xsl:value-of select="aorsml:LambdaExpr[@language eq $output.language][1]"/>
+        <xsl:when test="exists(aorsl:LambdaExpr[@language eq $output.language])">
+          <xsl:value-of select="aorsl:LambdaExpr[@language eq $output.language][1]"/>
         </xsl:when>
         <xsl:otherwise>
           <!-- set the default value 1.0 -->
@@ -3123,7 +3123,7 @@
   </xsl:template>
 
   <!-- Exponential -->
-  <xsl:template match="aorsml:Exponential | aorsml:ExponentialInt" mode="assistents.distribution">
+  <xsl:template match="aorsl:Exponential | aorsl:ExponentialInt" mode="assistents.distribution">
 
     <!-- lambda; default is 1.0 -->
     <xsl:variable name="lambda" as="xs:string">
@@ -3131,8 +3131,8 @@
         <xsl:when test="@lambda">
           <xsl:value-of select="@lambda"/>
         </xsl:when>
-        <xsl:when test="exists(aorsml:LambdaExpr[@language eq $output.language])">
-          <xsl:value-of select="aorsml:LambdaExpr[@language eq $output.language][1]"/>
+        <xsl:when test="exists(aorsl:LambdaExpr[@language eq $output.language])">
+          <xsl:value-of select="aorsl:LambdaExpr[@language eq $output.language][1]"/>
         </xsl:when>
         <xsl:otherwise>
           <!-- set the default value 1.0 -->
@@ -3161,7 +3161,7 @@
   </xsl:template>
 
   <!-- Student_T -->
-  <xsl:template match="aorsml:Student_T" mode="assistents.distribution">
+  <xsl:template match="aorsl:Student_T" mode="assistents.distribution">
 
     <!-- degreesOfFreedom; default is 100 -->
     <xsl:variable name="degreesOfFreedom" as="xs:string">
@@ -3169,8 +3169,8 @@
         <xsl:when test="@degreesOfFreedom">
           <xsl:value-of select="@degreesOfFreedom"/>
         </xsl:when>
-        <xsl:when test="exists(aorsml:DegreesOfFreedomExpr[@language eq $output.language])">
-          <xsl:value-of select="aorsml:DegreesOfFreedomExpr[@language eq $output.language][1]"/>
+        <xsl:when test="exists(aorsl:DegreesOfFreedomExpr[@language eq $output.language])">
+          <xsl:value-of select="aorsl:DegreesOfFreedomExpr[@language eq $output.language][1]"/>
         </xsl:when>
         <xsl:otherwise>
           <!-- set the default value ??? -->
@@ -3190,7 +3190,7 @@
   </xsl:template>
 
   <!-- Logarithmic -->
-  <xsl:template match="aorsml:Logarithmic" mode="assistents.distribution">
+  <xsl:template match="aorsl:Logarithmic" mode="assistents.distribution">
 
     <!-- p; default is .5 -->
     <xsl:variable name="p" as="xs:string">
@@ -3198,8 +3198,8 @@
         <xsl:when test="@p">
           <xsl:value-of select="@p"/>
         </xsl:when>
-        <xsl:when test="exists(aorsml:P-Expr[@language eq $output.language])">
-          <xsl:value-of select="aorsml:P-Expr[@language eq $output.language][1]"/>
+        <xsl:when test="exists(aorsl:P-Expr[@language eq $output.language])">
+          <xsl:value-of select="aorsl:P-Expr[@language eq $output.language][1]"/>
         </xsl:when>
         <xsl:otherwise>
           <!-- set the default value ??? -->
@@ -3219,7 +3219,7 @@
   </xsl:template>
 
   <!-- ChiSquare -->
-  <xsl:template match="aorsml:ChiSquare" mode="assistents.distribution">
+  <xsl:template match="aorsl:ChiSquare" mode="assistents.distribution">
 
     <!-- degreesOfFreedom; default is 5 -->
     <xsl:variable name="degreesOfFreedom" as="xs:string">
@@ -3227,8 +3227,8 @@
         <xsl:when test="@degreesOfFreedom">
           <xsl:value-of select="@degreesOfFreedom"/>
         </xsl:when>
-        <xsl:when test="exists(aorsml:DegreesOfFreedomExpr[@language eq $output.language])">
-          <xsl:value-of select="aorsml:DegreesOfFreedomExpr[@language eq $output.language][1]"/>
+        <xsl:when test="exists(aorsl:DegreesOfFreedomExpr[@language eq $output.language])">
+          <xsl:value-of select="aorsl:DegreesOfFreedomExpr[@language eq $output.language][1]"/>
         </xsl:when>
         <xsl:otherwise>
           <!-- set the default value ??? -->
@@ -3249,7 +3249,7 @@
 
 
   <!-- LogNormal -->
-  <xsl:template match="aorsml:LogNormal | aorsml:LogNormalInt" mode="assistents.distribution">
+  <xsl:template match="aorsl:LogNormal | aorsl:LogNormalInt" mode="assistents.distribution">
 
     <!-- mean the default is 0 -->
     <xsl:variable name="mean" as="xs:string">
@@ -3257,8 +3257,8 @@
         <xsl:when test="@mean">
           <xsl:value-of select="@mean"/>
         </xsl:when>
-        <xsl:when test="exists(aorsml:MeanExpr[@language eq $output.language])">
-          <xsl:value-of select="aorsml:MeanExpr[@language eq $output.language][1]"/>
+        <xsl:when test="exists(aorsl:MeanExpr[@language eq $output.language])">
+          <xsl:value-of select="aorsl:MeanExpr[@language eq $output.language][1]"/>
         </xsl:when>
         <xsl:otherwise>
           <xsl:value-of select="'0'"/>
@@ -3272,8 +3272,8 @@
         <xsl:when test="@standardDeviation">
           <xsl:value-of select="@standardDeviation"/>
         </xsl:when>
-        <xsl:when test="exists(aorsml:StandardDeviationExpr[@language eq $output.language])">
-          <xsl:value-of select="aorsml:StandardDeviationExpr[@language eq $output.language][1]"/>
+        <xsl:when test="exists(aorsl:StandardDeviationExpr[@language eq $output.language])">
+          <xsl:value-of select="aorsl:StandardDeviationExpr[@language eq $output.language][1]"/>
         </xsl:when>
         <xsl:otherwise>
           <xsl:value-of select="'1'"/>
@@ -3301,7 +3301,7 @@
   </xsl:template>
 
   <!-- HyperGeometric -->
-  <xsl:template match="aorsml:HyperGeometric" mode="assistents.distribution">
+  <xsl:template match="aorsl:HyperGeometric" mode="assistents.distribution">
 
     <!-- totalPopulationSize the default is 10 -->
     <xsl:variable name="totalPopulationSize" as="xs:string">
@@ -3309,8 +3309,8 @@
         <xsl:when test="@totalPopulationSize">
           <xsl:value-of select="@totalPopulationSize"/>
         </xsl:when>
-        <xsl:when test="exists(aorsml:TotalPopulationSizeExpr[@language eq $output.language])">
-          <xsl:value-of select="aorsml:TotalPopulationSizeExpr[@language eq $output.language][1]"/>
+        <xsl:when test="exists(aorsl:TotalPopulationSizeExpr[@language eq $output.language])">
+          <xsl:value-of select="aorsl:TotalPopulationSizeExpr[@language eq $output.language][1]"/>
         </xsl:when>
         <xsl:otherwise>
           <xsl:value-of select="'10'"/>
@@ -3324,8 +3324,8 @@
         <xsl:when test="@successPopulationSize">
           <xsl:value-of select="@successPopulationSize"/>
         </xsl:when>
-        <xsl:when test="exists(aorsml:SuccessesPopulationSizeExpr[@language eq $output.language])">
-          <xsl:value-of select="aorsml:SuccessesPopulationSizeExpr[@language eq $output.language][1]"/>
+        <xsl:when test="exists(aorsl:SuccessesPopulationSizeExpr[@language eq $output.language])">
+          <xsl:value-of select="aorsl:SuccessesPopulationSizeExpr[@language eq $output.language][1]"/>
         </xsl:when>
         <xsl:otherwise>
           <xsl:value-of select="'1'"/>
@@ -3339,8 +3339,8 @@
         <xsl:when test="@numberOfDraws">
           <xsl:value-of select="@numberOfDraws"/>
         </xsl:when>
-        <xsl:when test="exists(aorsml:NumberOfDrawsExpr[@language eq $output.language])">
-          <xsl:value-of select="aorsml:NumberOfDrawsExpr[@language eq $output.language][1]"/>
+        <xsl:when test="exists(aorsl:NumberOfDrawsExpr[@language eq $output.language])">
+          <xsl:value-of select="aorsl:NumberOfDrawsExpr[@language eq $output.language][1]"/>
         </xsl:when>
         <xsl:otherwise>
           <xsl:value-of select="'10'"/>
@@ -3359,7 +3359,7 @@
   </xsl:template>
 
   <!-- Gamma -->
-  <xsl:template match="aorsml:Gamma | aorsml:GammaInt" mode="assistents.distribution">
+  <xsl:template match="aorsl:Gamma | aorsl:GammaInt" mode="assistents.distribution">
 
     <!-- shape the default is 1 -->
     <xsl:variable name="shape" as="xs:string">
@@ -3367,8 +3367,8 @@
         <xsl:when test="@shape">
           <xsl:value-of select="@shape"/>
         </xsl:when>
-        <xsl:when test="exists(aorsml:ShapeExpr[@language eq $output.language])">
-          <xsl:value-of select="aorsml:ShapeExpr[@language eq $output.language][1]"/>
+        <xsl:when test="exists(aorsl:ShapeExpr[@language eq $output.language])">
+          <xsl:value-of select="aorsl:ShapeExpr[@language eq $output.language][1]"/>
         </xsl:when>
         <xsl:otherwise>
           <xsl:value-of select="'1'"/>
@@ -3382,8 +3382,8 @@
         <xsl:when test="@rate">
           <xsl:value-of select="@rate"/>
         </xsl:when>
-        <xsl:when test="exists(aorsml:RateExpr[@language eq $output.language])">
-          <xsl:value-of select="aorsml:RateExpr[@language eq $output.language][1]"/>
+        <xsl:when test="exists(aorsl:RateExpr[@language eq $output.language])">
+          <xsl:value-of select="aorsl:RateExpr[@language eq $output.language][1]"/>
         </xsl:when>
         <xsl:otherwise>
           <xsl:value-of select="'1'"/>
@@ -3411,7 +3411,7 @@
   </xsl:template>
 
   <!-- Erlang -->
-  <xsl:template match="aorsml:Erlang | aorsml:ErlangInt" mode="assistents.distribution">
+  <xsl:template match="aorsl:Erlang | aorsl:ErlangInt" mode="assistents.distribution">
 
     <!-- shape the default is 1 -->
     <xsl:variable name="shape" as="xs:string">
@@ -3419,8 +3419,8 @@
         <xsl:when test="@shape">
           <xsl:value-of select="@shape"/>
         </xsl:when>
-        <xsl:when test="exists(aorsml:ShapeExpr[@language eq $output.language])">
-          <xsl:value-of select="aorsml:ShapeExpr[@language eq $output.language][1]"/>
+        <xsl:when test="exists(aorsl:ShapeExpr[@language eq $output.language])">
+          <xsl:value-of select="aorsl:ShapeExpr[@language eq $output.language][1]"/>
         </xsl:when>
         <xsl:otherwise>
           <xsl:value-of select="'1'"/>
@@ -3434,8 +3434,8 @@
         <xsl:when test="@rate">
           <xsl:value-of select="@rate"/>
         </xsl:when>
-        <xsl:when test="exists(aorsml:ShapeExpr[@language eq $output.language])">
-          <xsl:value-of select="aorsml:ShapeExpr[@language eq $output.language][1]"/>
+        <xsl:when test="exists(aorsl:ShapeExpr[@language eq $output.language])">
+          <xsl:value-of select="aorsl:ShapeExpr[@language eq $output.language][1]"/>
         </xsl:when>
         <xsl:otherwise>
           <xsl:value-of select="'1'"/>
@@ -3463,7 +3463,7 @@
   </xsl:template>
 
   <!-- Weibull -->
-  <xsl:template match="aorsml:Weibull | aorsml:WeibullInt" mode="assistents.distribution">
+  <xsl:template match="aorsl:Weibull | aorsl:WeibullInt" mode="assistents.distribution">
 
     <!-- shape the default is 1 -->
     <xsl:variable name="shape" as="xs:string">
@@ -3471,8 +3471,8 @@
         <xsl:when test="@shape">
           <xsl:value-of select="@shape"/>
         </xsl:when>
-        <xsl:when test="exists(aorsml:ShapeExpr[@language eq $output.language])">
-          <xsl:value-of select="aorsml:ShapeExpr[@language eq $output.language][1]"/>
+        <xsl:when test="exists(aorsl:ShapeExpr[@language eq $output.language])">
+          <xsl:value-of select="aorsl:ShapeExpr[@language eq $output.language][1]"/>
         </xsl:when>
         <xsl:otherwise>
           <xsl:value-of select="'1'"/>
@@ -3486,8 +3486,8 @@
         <xsl:when test="@scale">
           <xsl:value-of select="@scale"/>
         </xsl:when>
-        <xsl:when test="exists(aorsml:ScaleExpr[@language eq $output.language])">
-          <xsl:value-of select="aorsml:ScaleExpr[@language eq $output.language][1]"/>
+        <xsl:when test="exists(aorsl:ScaleExpr[@language eq $output.language])">
+          <xsl:value-of select="aorsl:ScaleExpr[@language eq $output.language][1]"/>
         </xsl:when>
         <xsl:otherwise>
           <xsl:value-of select="'1'"/>
@@ -3515,7 +3515,7 @@
   </xsl:template>
 
   <!-- Triangular -->
-  <xsl:template match="aorsml:Triangular | aorsml:TriangularInt" mode="assistents.distribution">
+  <xsl:template match="aorsl:Triangular | aorsl:TriangularInt" mode="assistents.distribution">
 
     <!-- lowerBound the default is 0 -->
     <xsl:variable name="lowerBound" as="xs:string">
@@ -3523,8 +3523,8 @@
         <xsl:when test="@lowerBound">
           <xsl:value-of select="@lowerBound"/>
         </xsl:when>
-        <xsl:when test="exists(aorsml:LowerBoundExpr[@language eq $output.language])">
-          <xsl:value-of select="aorsml:LowerBoundExpr[@language eq $output.language][1]"/>
+        <xsl:when test="exists(aorsl:LowerBoundExpr[@language eq $output.language])">
+          <xsl:value-of select="aorsl:LowerBoundExpr[@language eq $output.language][1]"/>
         </xsl:when>
         <xsl:otherwise>
           <xsl:value-of select="'0'"/>
@@ -3538,8 +3538,8 @@
         <xsl:when test="@upperBound">
           <xsl:value-of select="@upperBound"/>
         </xsl:when>
-        <xsl:when test="exists(aorsml:UpperBoundExpr[@language eq $output.language])">
-          <xsl:value-of select="aorsml:UpperBoundExpr[@language eq $output.language][1]"/>
+        <xsl:when test="exists(aorsl:UpperBoundExpr[@language eq $output.language])">
+          <xsl:value-of select="aorsl:UpperBoundExpr[@language eq $output.language][1]"/>
         </xsl:when>
         <xsl:otherwise>
           <xsl:value-of select="'1'"/>
@@ -3553,8 +3553,8 @@
         <xsl:when test="@mode">
           <xsl:value-of select="@mode"/>
         </xsl:when>
-        <xsl:when test="exists(aorsml:ModeExpr[@language eq $output.language])">
-          <xsl:value-of select="aorsml:ModeExpr[@language eq $output.language][1]"/>
+        <xsl:when test="exists(aorsl:ModeExpr[@language eq $output.language])">
+          <xsl:value-of select="aorsl:ModeExpr[@language eq $output.language][1]"/>
         </xsl:when>
         <xsl:otherwise>
           <xsl:value-of select="'0'"/>
@@ -3582,33 +3582,33 @@
   </xsl:template>
 
   <!-- Periodicity (ExogenousEvent and PeriodicTimeEvent)
-  <xsl:template match="aorsml:Periodicity" mode="assistents.periodicity">
+  <xsl:template match="aorsl:Periodicity" mode="assistents.periodicity">
 
     <xsl:choose>
-      <xsl:when test="fn:exists(aorsml:ValueExpr[@language eq $output.language])">
-        <xsl:value-of select="aorsml:ValueExpr[@language eq $output.language][1]"/>
+      <xsl:when test="fn:exists(aorsl:ValueExpr[@language eq $output.language])">
+        <xsl:value-of select="aorsl:ValueExpr[@language eq $output.language][1]"/>
       </xsl:when>
-      <xsl:when test="fn:exists(aorsml:RandomVariable)">
-        <xsl:apply-templates select="aorsml:RandomVariable/aorsml:*" mode="assistents.distribution"/>
+      <xsl:when test="fn:exists(aorsl:RandomVariable)">
+        <xsl:apply-templates select="aorsl:RandomVariable/aorsl:*" mode="assistents.distribution"/>
       </xsl:when>
 
     </xsl:choose>
     </xsl:template> -->
 
   <!-- Periodicity (ExogenousEvent and PeriodicTimeEvent) -->
-  <xsl:template match="aorsml:ExogenousEventType | aorsml:PeriodicTimeEventType" mode="assistents.periodicity">
+  <xsl:template match="aorsl:ExogenousEventType | aorsl:PeriodicTimeEventType" mode="assistents.periodicity">
 
     <xsl:choose>
       <xsl:when test="@periodicity">
         <xsl:value-of select="@periodicity"/>
       </xsl:when>
-      <xsl:when test="fn:exists(aorsml:Periodicity)">
+      <xsl:when test="fn:exists(aorsl:Periodicity)">
         <xsl:choose>
-          <xsl:when test="fn:exists(aorsml:Periodicity/aorsml:ValueExpr[@language eq $output.language])">
-            <xsl:value-of select="aorsml:Periodicity/aorsml:ValueExpr[@language eq $output.language][1]"/>
+          <xsl:when test="fn:exists(aorsl:Periodicity/aorsl:ValueExpr[@language eq $output.language])">
+            <xsl:value-of select="aorsl:Periodicity/aorsl:ValueExpr[@language eq $output.language][1]"/>
           </xsl:when>
-          <xsl:when test="fn:exists(aorsml:Periodicity/aorsml:DiscreteRandomVariable)">
-            <xsl:apply-templates select="aorsml:Periodicity/aorsml:DiscreteRandomVariable/aorsml:*" mode="assistents.distribution"/>
+          <xsl:when test="fn:exists(aorsl:Periodicity/aorsl:DiscreteRandomVariable)">
+            <xsl:apply-templates select="aorsl:Periodicity/aorsl:DiscreteRandomVariable/aorsl:*" mode="assistents.distribution"/>
           </xsl:when>
           <xsl:otherwise>
             <xsl:value-of select="'0'"/>

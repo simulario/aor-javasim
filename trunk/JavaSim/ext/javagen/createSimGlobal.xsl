@@ -11,7 +11,7 @@
         @last changed by $Author$
 -->
 
-<xsl:stylesheet version="2.0" xmlns:aorsml="http://aor-simulation.org" xmlns:fn="http://www.w3.org/2005/xpath-functions"
+<xsl:stylesheet version="2.0" xmlns:aorsl="http://aor-simulation.org" xmlns:fn="http://www.w3.org/2005/xpath-functions"
   xmlns:java="http://www.sun.com/java" xmlns:xs="http://www.w3.org/2001/XMLSchema" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
   xmlns:xsl="http://www.w3.org/1999/XSL/Transform" xsi:schemaLocation="http://aor-simulation.org aorsml.xsd"
   xmlns:jw="http://www.informatik.tu-cottbus.de/~jwerner/">
@@ -20,15 +20,15 @@
   <!--class-->
   <!--*****-->
   <xsl:template name="createSimulationGlobal">
-    <xsl:apply-templates select="aorsml:SimulationScenario/aorsml:SimulationModel/aorsml:Globals" mode="createSimulationGlobal.createSimulationGlobal">
+    <xsl:apply-templates select="aorsl:SimulationScenario/aorsl:SimulationModel/aorsl:Globals" mode="createSimulationGlobal.createSimulationGlobal">
       <xsl:with-param name="indent" select="0"/>
     </xsl:apply-templates>
   </xsl:template>
 
-  <xsl:template match="aorsml:Globals" mode="createSimulationGlobal.createSimulationGlobal">
+  <xsl:template match="aorsl:Globals" mode="createSimulationGlobal.createSimulationGlobal">
     <xsl:param name="indent" required="yes" as="xs:integer"/>
 
-    <xsl:call-template name="aorsml:classFile">
+    <xsl:call-template name="aorsl:classFile">
       <xsl:with-param name="path" select="$sim.path.controller"/>
       <xsl:with-param name="name" select="$sim.class.simGlobal"/>
 
@@ -39,7 +39,7 @@
 
             <xsl:value-of select="fn:concat($core.package.util, '.*')"/>
             <xsl:value-of select="$util.package.refTypes"/>
-            <xsl:if test="fn:exists(//aorsml:Enumeration) or fn:exists(//aorsml:ComplexDataProperty)">
+            <xsl:if test="fn:exists(//aorsl:Enumeration) or fn:exists(//aorsl:ComplexDataProperty)">
               <xsl:value-of select="fn:concat($sim.package.model.dataTypes, '.*')"/>
             </xsl:if>
 
@@ -53,27 +53,27 @@
           <xsl:with-param name="content">
 
             <!-- set GlobalVariables as public static variables -->
-            <xsl:apply-templates select="aorsml:GlobalVariable" mode="createSimulationGlobal.classVariable">
+            <xsl:apply-templates select="aorsl:GlobalVariable" mode="createSimulationGlobal.classVariable">
               <xsl:with-param name="indent" select="$indent + 1"/>
             </xsl:apply-templates>
             <xsl:call-template name="java:newLine"/>
 
             <!-- static setter -->
-            <xsl:apply-templates select="aorsml:GlobalVariable[not(@upperMultiplicity = 'unbounded')]" mode="assistents.setVariableMethod">
+            <xsl:apply-templates select="aorsl:GlobalVariable[not(@upperMultiplicity = 'unbounded')]" mode="assistents.setVariableMethod">
               <xsl:with-param name="indent" select="$indent + 1"/>
               <xsl:with-param name="static" select="true()"/>
               <xsl:with-param name="staticClassName" select="$sim.class.simGlobal"/>
             </xsl:apply-templates>
 
             <!-- static getter -->
-            <xsl:apply-templates select="aorsml:GlobalVariable" mode="assistents.getVariableMethod">
+            <xsl:apply-templates select="aorsl:GlobalVariable" mode="assistents.getVariableMethod">
               <xsl:with-param name="indent" select="$indent + 1"/>
               <xsl:with-param name="static" select="true()"/>
               <xsl:with-param name="staticClassName" select="$sim.class.simGlobal"/>
             </xsl:apply-templates>
 
             <!-- create GlobalFunctions -->
-            <xsl:apply-templates select="aorsml:GlobalFunction" mode="shared.createFunction">
+            <xsl:apply-templates select="aorsl:GlobalFunction" mode="shared.createFunction">
               <xsl:with-param name="indent" select="$indent + 1"/>
               <xsl:with-param name="static" select="true()"/>
             </xsl:apply-templates>
@@ -88,7 +88,7 @@
 
 
   <!--creates class variables-->
-  <xsl:template match="aorsml:GlobalVariable" mode="createSimulationGlobal.classVariable">
+  <xsl:template match="aorsl:GlobalVariable" mode="createSimulationGlobal.classVariable">
     <xsl:param name="indent" required="yes" as="xs:integer"/>
 
     <xsl:choose>

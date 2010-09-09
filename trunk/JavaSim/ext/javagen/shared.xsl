@@ -11,19 +11,18 @@
         @last changed by $Author$
 -->
 
-<xsl:stylesheet version="2.0" xmlns:aorsl="http://aor-simulation.org" xmlns:aorsml="http://aor-simulation.org"
-  xmlns:fn="http://www.w3.org/2005/xpath-functions" xmlns:java="http://www.sun.com/java" xmlns:xs="http://www.w3.org/2001/XMLSchema"
-  xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:xsl="http://www.w3.org/1999/XSL/Transform"
-  xsi:schemaLocation="http://aor-simulation.org aorsml.xsd" xmlns:jw="http://www.informatik.tu-cottbus.de/~jwerner/"
-  xmlns:generator="http://aor-simulation.org/code-generator" xmlns:allex="http://aor-simulation.org/expression-language/ALLEX"
-  xmlns:cgel="http://aor-simulation.org/code-generator/expression-language/CGEL">
+<xsl:stylesheet version="2.0" xmlns:aorsl="http://aor-simulation.org" xmlns:fn="http://www.w3.org/2005/xpath-functions"
+  xmlns:java="http://www.sun.com/java" xmlns:xs="http://www.w3.org/2001/XMLSchema" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+  xmlns:xsl="http://www.w3.org/1999/XSL/Transform" xsi:schemaLocation="http://aor-simulation.org aorsml.xsd"
+  xmlns:jw="http://www.informatik.tu-cottbus.de/~jwerner/" xmlns:generator="http://aor-simulation.org/code-generator"
+  xmlns:allex="http://aor-simulation.org/expression-language/ALLEX" xmlns:cgel="http://aor-simulation.org/code-generator/expression-language/CGEL">
 
   <!-- it can be used for physObjectcreation in createSimSystem.xsl and for dynamic physObject creation in EnvironmentRules -->
 
   <!-- this template is used to achieve the order of inits -->
   <!-- first is the order of entitytypes, second the order of inits -->
   <xsl:template
-    match="aorsml:PhysicalAgent | aorsml:PhysicalAgents | aorsml:PhysicalObject | aorsml:PhysicalObjects | aorsml:Object | aorsml:Objects | aorsml:Agent | aorsml:Agents"
+    match="aorsl:PhysicalAgent | aorsl:PhysicalAgents | aorsl:PhysicalObject | aorsl:PhysicalObjects | aorsl:Object | aorsl:Objects | aorsl:Agent | aorsl:Agents"
     mode="shared.helper.initAORObjects.manager">
     <xsl:param name="indent" required="yes"/>
     <xsl:param name="className" required="yes"/>
@@ -54,7 +53,7 @@
 
   <!-- set the initial objects (used by initAgents and initObjects) -->
   <xsl:template
-    match="aorsml:PhysicalAgent | aorsml:PhysicalAgents | aorsml:PhysicalObject | aorsml:PhysicalObjects | aorsml:Object | aorsml:Objects | aorsml:Agent | aorsml:Agents"
+    match="aorsl:PhysicalAgent | aorsl:PhysicalAgents | aorsl:PhysicalObject | aorsl:PhysicalObjects | aorsl:Object | aorsl:Objects | aorsl:Agent | aorsl:Agents"
     mode="shared.helper.initAORObjects">
     <xsl:param name="indent" required="yes"/>
     <xsl:param name="className" required="yes"/>
@@ -82,11 +81,11 @@
         <xsl:value-of select="if (@name) then jw:quote(@name) else jw:quote($empty.string.quotation.symbol)"/>
 
         <xsl:variable name="objNode" select="current()"/>
-        <xsl:variable name="dataTypesNode" select="//aorsml:DataTypes"/>
+        <xsl:variable name="dataTypesNode" select="//aorsl:DataTypes"/>
         <xsl:choose>
           <xsl:when test="local-name() = 'PhysicalAgent' or local-name() = 'PhysicalAgents'">
 
-            <xsl:variable name="physAgentNode" select="//aorsml:PhysicalAgentType[@name = current()/@type][1]"/>
+            <xsl:variable name="physAgentNode" select="//aorsl:PhysicalAgentType[@name = current()/@type][1]"/>
 
             <!-- create the constructorlist for PhysicalAgents -->
             <!-- use all attribute from PhysicalAgentTypeInstanzes and SuperTypes, without default attributes-->
@@ -99,7 +98,7 @@
               <xsl:choose>
                 <xsl:when test="local-name() eq 'EnumerationProperty'">
 
-                  <xsl:variable name="enumeration" select="$dataTypesNode/aorsml:Enumeration[@name = current()/@type][1]"/>
+                  <xsl:variable name="enumeration" select="$dataTypesNode/aorsl:Enumeration[@name = current()/@type][1]"/>
                   <xsl:if test="fn:exists($enumeration)">
                     <xsl:call-template name="setEnumInConstructor">
                       <xsl:with-param name="objNode" select="$objNode"/>
@@ -115,23 +114,23 @@
                       <xsl:choose>
                         <!-- depricated -->
                         <xsl:when
-                          test="fn:exists($objNode/aorsml:Slot[resolve-QName(@xsi:type, .) eq QName('http://aor-simulation.org', 'OpaqueExprSlot')][@property eq current()/@name]/aorsml:ValueExpr[@language eq $output.language])">
+                          test="fn:exists($objNode/aorsl:Slot[resolve-QName(@xsi:type, .) eq QName('http://aor-simulation.org', 'OpaqueExprSlot')][@property eq current()/@name]/aorsl:ValueExpr[@language eq $output.language])">
                           <xsl:value-of
-                            select="$objNode/aorsml:Slot[resolve-QName(@xsi:type, .) eq QName('http://aor-simulation.org', 'OpaqueExprSlot')][@property eq current()/@name]/aorsml:ValueExpr[@language eq $output.language][1]"
+                            select="$objNode/aorsl:Slot[resolve-QName(@xsi:type, .) eq QName('http://aor-simulation.org', 'OpaqueExprSlot')][@property eq current()/@name]/aorsl:ValueExpr[@language eq $output.language][1]"
                           />
                         </xsl:when>
                         <!-- new -->
-                        <xsl:when test="fn:exists($objNode/aorsml:Slot[@property eq current()/@name]/aorsml:ValueExpr[@language eq $output.language])">
-                          <xsl:value-of select="$objNode/aorsml:Slot[@property eq current()/@name]/aorsml:ValueExpr[@language eq $output.language][1]"
+                        <xsl:when test="fn:exists($objNode/aorsl:Slot[@property eq current()/@name]/aorsl:ValueExpr[@language eq $output.language])">
+                          <xsl:value-of select="$objNode/aorsl:Slot[@property eq current()/@name]/aorsl:ValueExpr[@language eq $output.language][1]"
                           />
                         </xsl:when>
                         <!-- depricated -->
                         <xsl:when
-                          test="fn:exists($objNode/aorsml:Slot[resolve-QName(@xsi:type, .) eq QName('http://aor-simulation.org', 'SimpleSlot')][@property eq current()/@name])">
+                          test="fn:exists($objNode/aorsl:Slot[resolve-QName(@xsi:type, .) eq QName('http://aor-simulation.org', 'SimpleSlot')][@property eq current()/@name])">
                           <xsl:message>unbounded upperMultiplicity instanced by simpleSlot is not yet implemented</xsl:message>
                         </xsl:when>
                         <!-- new -->
-                        <xsl:when test="fn:exists($objNode/aorsml:Slot[@property eq current()/@name]/@value)">
+                        <xsl:when test="fn:exists($objNode/aorsl:Slot[@property eq current()/@name]/@value)">
                           <xsl:message>unbounded upperMultiplicity instanced by simpleSlot is not yet implemented</xsl:message>
                         </xsl:when>
                         <xsl:otherwise>
@@ -146,13 +145,13 @@
                       </xsl:apply-templates>
 
                       <xsl:choose>
-                        <xsl:when test="fn:exists($objNode/aorsml:Slot[@property = current()/@name])">
-                          <xsl:apply-templates select="$objNode/aorsml:Slot[@property = current()/@name]" mode="assistents.getSlotValue">
+                        <xsl:when test="fn:exists($objNode/aorsl:Slot[@property = current()/@name])">
+                          <xsl:apply-templates select="$objNode/aorsl:Slot[@property = current()/@name]" mode="assistents.getSlotValue">
                             <xsl:with-param name="type" select="@type"/>
                           </xsl:apply-templates>
                         </xsl:when>
-                        <xsl:when test="fn:exists($physAgentNode/aorsml:InitialAttributeValue[@attribute eq current()/@name])">
-                          <xsl:apply-templates select="$physAgentNode/aorsml:InitialAttributeValue[@attribute eq current()/@name][1]"
+                        <xsl:when test="fn:exists($physAgentNode/aorsl:InitialAttributeValue[@attribute eq current()/@name])">
+                          <xsl:apply-templates select="$physAgentNode/aorsl:InitialAttributeValue[@attribute eq current()/@name][1]"
                             mode="assistents.setInitialAttributeValue"/>
                         </xsl:when>
                         <xsl:when test="@initialValue">
@@ -181,7 +180,7 @@
           </xsl:when>
           <xsl:when test="local-name() = 'Agent' or local-name() = 'Agents'">
 
-            <xsl:variable name="agentNode" select="//aorsml:AgentType[@name = current()/@type][1]"/>
+            <xsl:variable name="agentNode" select="//aorsl:AgentType[@name = current()/@type][1]"/>
 
             <!-- create the constructorlist for Agents -->
             <!-- use all attribute from AgentTypeInstanzes and SuperTypes, without default attributes-->
@@ -194,7 +193,7 @@
               <xsl:choose>
                 <xsl:when test="local-name() eq 'EnumerationProperty'">
 
-                  <xsl:variable name="enumeration" select="$dataTypesNode/aorsml:Enumeration[@name = current()/@type][1]"/>
+                  <xsl:variable name="enumeration" select="$dataTypesNode/aorsl:Enumeration[@name = current()/@type][1]"/>
                   <xsl:if test="fn:exists($enumeration)">
                     <xsl:call-template name="setEnumInConstructor">
                       <xsl:with-param name="objNode" select="$objNode"/>
@@ -210,23 +209,23 @@
                       <xsl:choose>
                         <!-- depricated -->
                         <xsl:when
-                          test="fn:exists($objNode/aorsml:Slot[resolve-QName(@xsi:type, .) eq QName('http://aor-simulation.org', 'OpaqueExprSlot')][@property eq current()/@name]/aorsml:ValueExpr[@language eq $output.language])">
+                          test="fn:exists($objNode/aorsl:Slot[resolve-QName(@xsi:type, .) eq QName('http://aor-simulation.org', 'OpaqueExprSlot')][@property eq current()/@name]/aorsl:ValueExpr[@language eq $output.language])">
                           <xsl:value-of
-                            select="$objNode/aorsml:Slot[resolve-QName(@xsi:type, .) eq QName('http://aor-simulation.org', 'OpaqueExprSlot')][@property eq current()/@name]/aorsml:ValueExpr[@language eq $output.language][1]"
+                            select="$objNode/aorsl:Slot[resolve-QName(@xsi:type, .) eq QName('http://aor-simulation.org', 'OpaqueExprSlot')][@property eq current()/@name]/aorsl:ValueExpr[@language eq $output.language][1]"
                           />
                         </xsl:when>
                         <!-- new -->
-                        <xsl:when test="fn:exists($objNode/aorsml:Slot[@property eq current()/@name]/aorsml:ValueExpr[@language eq $output.language])">
-                          <xsl:value-of select="$objNode/aorsml:Slot[@property eq current()/@name]/aorsml:ValueExpr[@language eq $output.language][1]"
+                        <xsl:when test="fn:exists($objNode/aorsl:Slot[@property eq current()/@name]/aorsl:ValueExpr[@language eq $output.language])">
+                          <xsl:value-of select="$objNode/aorsl:Slot[@property eq current()/@name]/aorsl:ValueExpr[@language eq $output.language][1]"
                           />
                         </xsl:when>
                         <!-- depricated -->
                         <xsl:when
-                          test="fn:exists($objNode/aorsml:Slot[resolve-QName(@xsi:type, .) eq QName('http://aor-simulation.org', 'SimpleSlot')][@property eq current()/@name])">
+                          test="fn:exists($objNode/aorsl:Slot[resolve-QName(@xsi:type, .) eq QName('http://aor-simulation.org', 'SimpleSlot')][@property eq current()/@name])">
                           <xsl:message>unbounded upperMultiplicity instanced by simpleSlot is not yet implemented</xsl:message>
                         </xsl:when>
                         <!-- new -->
-                        <xsl:when test="fn:exists($objNode/aorsml:Slot[@property eq current()/@name]/@value)">
+                        <xsl:when test="fn:exists($objNode/aorsl:Slot[@property eq current()/@name]/@value)">
                           <xsl:message>unbounded upperMultiplicity instanced by simpleSlot is not yet implemented</xsl:message>
                         </xsl:when>
                         <xsl:otherwise>
@@ -241,13 +240,13 @@
                       </xsl:apply-templates>
 
                       <xsl:choose>
-                        <xsl:when test="fn:exists($objNode/aorsml:Slot[@property = current()/@name])">
-                          <xsl:apply-templates select="$objNode/aorsml:Slot[@property = current()/@name]" mode="assistents.getSlotValue">
+                        <xsl:when test="fn:exists($objNode/aorsl:Slot[@property = current()/@name])">
+                          <xsl:apply-templates select="$objNode/aorsl:Slot[@property = current()/@name]" mode="assistents.getSlotValue">
                             <xsl:with-param name="type" select="@type"/>
                           </xsl:apply-templates>
                         </xsl:when>
-                        <xsl:when test="fn:exists($agentNode/aorsml:InitialAttributeValue[@attribute eq current()/@name])">
-                          <xsl:apply-templates select="$agentNode/aorsml:InitialAttributeValue[@attribute eq current()/@name][1]"
+                        <xsl:when test="fn:exists($agentNode/aorsl:InitialAttributeValue[@attribute eq current()/@name])">
+                          <xsl:apply-templates select="$agentNode/aorsl:InitialAttributeValue[@attribute eq current()/@name][1]"
                             mode="assistents.setInitialAttributeValue"/>
                         </xsl:when>
                         <xsl:when test="@initialValue">
@@ -257,7 +256,7 @@
                         </xsl:when>
                         <xsl:otherwise>
                           <xsl:if
-                            test="not(root($objNode)//aorsml:DataTypes/aorsml:ComplexDataType[@name eq current()/@type][1]/aorsml:ClassDef[@language eq $output.language])">
+                            test="not(root($objNode)//aorsl:DataTypes/aorsl:ComplexDataType[@name eq current()/@type][1]/aorsl:ClassDef[@language eq $output.language])">
                             <xsl:call-template name="java:setDefaultValue">
                               <xsl:with-param name="type" select="@type"/>
                             </xsl:call-template>
@@ -276,7 +275,7 @@
           </xsl:when>
           <xsl:when test="local-name() = 'PhysicalObject' or local-name() = 'PhysicalObjects'">
 
-            <xsl:variable name="physObjNode" as="node()" select="//aorsml:PhysicalObjectType[@name = current()/@type][1]"/>
+            <xsl:variable name="physObjNode" as="node()" select="//aorsl:PhysicalObjectType[@name = current()/@type][1]"/>
 
             <!-- create the constructorlist for PhysicalObjekts -->
             <xsl:variable name="attributes" as="node()*">
@@ -287,7 +286,7 @@
               <xsl:choose>
                 <xsl:when test="local-name() eq 'EnumerationProperty'">
 
-                  <xsl:variable name="enumeration" select="$dataTypesNode/aorsml:Enumeration[@name = current()/@type][1]"/>
+                  <xsl:variable name="enumeration" select="$dataTypesNode/aorsl:Enumeration[@name = current()/@type][1]"/>
                   <xsl:if test="fn:exists($enumeration)">
                     <xsl:call-template name="setEnumInConstructor">
                       <xsl:with-param name="objNode" select="$objNode"/>
@@ -304,23 +303,23 @@
                       <xsl:choose>
                         <!-- depricated -->
                         <xsl:when
-                          test="fn:exists($objNode/aorsml:Slot[resolve-QName(@xsi:type, .) eq QName('http://aor-simulation.org', 'OpaqueExprSlot')][@property eq current()/@name]/aorsml:ValueExpr[@language eq $output.language])">
+                          test="fn:exists($objNode/aorsl:Slot[resolve-QName(@xsi:type, .) eq QName('http://aor-simulation.org', 'OpaqueExprSlot')][@property eq current()/@name]/aorsl:ValueExpr[@language eq $output.language])">
                           <xsl:value-of
-                            select="$objNode/aorsml:Slot[resolve-QName(@xsi:type, .) eq QName('http://aor-simulation.org', 'OpaqueExprSlot')][@property eq current()/@name]/aorsml:ValueExpr[@language eq $output.language][1]"
+                            select="$objNode/aorsl:Slot[resolve-QName(@xsi:type, .) eq QName('http://aor-simulation.org', 'OpaqueExprSlot')][@property eq current()/@name]/aorsl:ValueExpr[@language eq $output.language][1]"
                           />
                         </xsl:when>
                         <!-- new -->
-                        <xsl:when test="fn:exists($objNode/aorsml:Slot[@property eq current()/@name]/aorsml:ValueExpr[@language eq $output.language])">
-                          <xsl:value-of select="$objNode/aorsml:Slot[@property eq current()/@name]/aorsml:ValueExpr[@language eq $output.language][1]"
+                        <xsl:when test="fn:exists($objNode/aorsl:Slot[@property eq current()/@name]/aorsl:ValueExpr[@language eq $output.language])">
+                          <xsl:value-of select="$objNode/aorsl:Slot[@property eq current()/@name]/aorsl:ValueExpr[@language eq $output.language][1]"
                           />
                         </xsl:when>
                         <!-- depricated -->
                         <xsl:when
-                          test="fn:exists($objNode/aorsml:Slot[resolve-QName(@xsi:type, .) eq QName('http://aor-simulation.org', 'SimpleSlot')][@property eq current()/@name])">
+                          test="fn:exists($objNode/aorsl:Slot[resolve-QName(@xsi:type, .) eq QName('http://aor-simulation.org', 'SimpleSlot')][@property eq current()/@name])">
                           <xsl:message>unbounded upperMultiplicity instanced by simpleSlot is not yet implemented</xsl:message>
                         </xsl:when>
                         <!-- new -->
-                        <xsl:when test="fn:exists($objNode/aorsml:Slot[@property eq current()/@name]/@value)">
+                        <xsl:when test="fn:exists($objNode/aorsl:Slot[@property eq current()/@name]/@value)">
                           <xsl:message>unbounded upperMultiplicity instanced by simpleSlot is not yet implemented</xsl:message>
                         </xsl:when>
                         <xsl:otherwise>
@@ -335,13 +334,13 @@
                       </xsl:apply-templates>
 
                       <xsl:choose>
-                        <xsl:when test="fn:exists($objNode/aorsml:Slot[@property = current()/@name])">
-                          <xsl:apply-templates select="$objNode/aorsml:Slot[@property = current()/@name]" mode="assistents.getSlotValue">
+                        <xsl:when test="fn:exists($objNode/aorsl:Slot[@property = current()/@name])">
+                          <xsl:apply-templates select="$objNode/aorsl:Slot[@property = current()/@name]" mode="assistents.getSlotValue">
                             <xsl:with-param name="type" select="@type"/>
                           </xsl:apply-templates>
                         </xsl:when>
-                        <xsl:when test="fn:exists($physObjNode/aorsml:InitialAttributeValue[@attribute eq current()/@name])">
-                          <xsl:apply-templates select="$physObjNode/aorsml:InitialAttributeValue[@attribute eq current()/@name][1]"
+                        <xsl:when test="fn:exists($physObjNode/aorsl:InitialAttributeValue[@attribute eq current()/@name])">
+                          <xsl:apply-templates select="$physObjNode/aorsl:InitialAttributeValue[@attribute eq current()/@name][1]"
                             mode="assistents.setInitialAttributeValue"/>
                         </xsl:when>
                         <xsl:when test="@initialValue">
@@ -350,7 +349,7 @@
                           </xsl:apply-templates>
                         </xsl:when>
                         <xsl:otherwise>
-                          <xsl:if test="not(aorsml:ClassDef[@language eq $output.language])">
+                          <xsl:if test="not(aorsl:ClassDef[@language eq $output.language])">
                             <xsl:call-template name="java:setDefaultValue">
                               <xsl:with-param name="type" select="@type"/>
                             </xsl:call-template>
@@ -369,7 +368,7 @@
 
           <xsl:when test="local-name() = 'Object' or local-name() = 'Objects'">
 
-            <xsl:variable name="objNodeType" as="node()" select="//aorsml:ObjectType[@name = current()/@type][1]"/>
+            <xsl:variable name="objNodeType" as="node()" select="//aorsl:ObjectType[@name = current()/@type][1]"/>
 
             <!-- create the constructorlist for Objekts -->
             <xsl:variable name="attributes" as="node()*">
@@ -380,7 +379,7 @@
               <xsl:choose>
                 <xsl:when test="local-name() eq 'EnumerationProperty'">
 
-                  <xsl:variable name="enumeration" select="$dataTypesNode/aorsml:Enumeration[@name = current()/@type][1]"/>
+                  <xsl:variable name="enumeration" select="$dataTypesNode/aorsl:Enumeration[@name = current()/@type][1]"/>
                   <xsl:if test="fn:exists($enumeration)">
                     <xsl:call-template name="setEnumInConstructor">
                       <xsl:with-param name="objNode" select="$objNode"/>
@@ -397,23 +396,23 @@
                       <xsl:choose>
                         <!-- depricated -->
                         <xsl:when
-                          test="fn:exists($objNode/aorsml:Slot[resolve-QName(@xsi:type, .) eq QName('http://aor-simulation.org', 'OpaqueExprSlot')][@property eq current()/@name]/aorsml:ValueExpr[@language eq $output.language])">
+                          test="fn:exists($objNode/aorsl:Slot[resolve-QName(@xsi:type, .) eq QName('http://aor-simulation.org', 'OpaqueExprSlot')][@property eq current()/@name]/aorsl:ValueExpr[@language eq $output.language])">
                           <xsl:value-of
-                            select="$objNode/aorsml:Slot[resolve-QName(@xsi:type, .) eq QName('http://aor-simulation.org', 'OpaqueExprSlot')][@property eq current()/@name]/aorsml:ValueExpr[@language eq $output.language][1]"
+                            select="$objNode/aorsl:Slot[resolve-QName(@xsi:type, .) eq QName('http://aor-simulation.org', 'OpaqueExprSlot')][@property eq current()/@name]/aorsl:ValueExpr[@language eq $output.language][1]"
                           />
                         </xsl:when>
                         <!-- new -->
-                        <xsl:when test="fn:exists($objNode/aorsml:Slot[@property eq current()/@name]/aorsml:ValueExpr[@language eq $output.language])">
-                          <xsl:value-of select="$objNode/aorsml:Slot[@property eq current()/@name]/aorsml:ValueExpr[@language eq $output.language][1]"
+                        <xsl:when test="fn:exists($objNode/aorsl:Slot[@property eq current()/@name]/aorsl:ValueExpr[@language eq $output.language])">
+                          <xsl:value-of select="$objNode/aorsl:Slot[@property eq current()/@name]/aorsl:ValueExpr[@language eq $output.language][1]"
                           />
                         </xsl:when>
                         <!-- depricated -->
                         <xsl:when
-                          test="fn:exists($objNode/aorsml:Slot[resolve-QName(@xsi:type, .) eq QName('http://aor-simulation.org', 'SimpleSlot')][@property eq current()/@name])">
+                          test="fn:exists($objNode/aorsl:Slot[resolve-QName(@xsi:type, .) eq QName('http://aor-simulation.org', 'SimpleSlot')][@property eq current()/@name])">
                           <xsl:message>unbounded upperMultiplicity instanced by simpleSlot is not yet implemented</xsl:message>
                         </xsl:when>
                         <!-- new -->
-                        <xsl:when test="fn:exists($objNode/aorsml:Slot[@property eq current()/@name]/@value)">
+                        <xsl:when test="fn:exists($objNode/aorsl:Slot[@property eq current()/@name]/@value)">
                           <xsl:message>unbounded upperMultiplicity instanced by simpleSlot is not yet implemented</xsl:message>
                         </xsl:when>
                         <xsl:otherwise>
@@ -428,13 +427,13 @@
                       </xsl:apply-templates>
 
                       <xsl:choose>
-                        <xsl:when test="fn:exists($objNode/aorsml:Slot[@property = current()/@name])">
-                          <xsl:apply-templates select="$objNode/aorsml:Slot[@property = current()/@name]" mode="assistents.getSlotValue">
+                        <xsl:when test="fn:exists($objNode/aorsl:Slot[@property = current()/@name])">
+                          <xsl:apply-templates select="$objNode/aorsl:Slot[@property = current()/@name]" mode="assistents.getSlotValue">
                             <xsl:with-param name="type" select="@type"/>
                           </xsl:apply-templates>
                         </xsl:when>
-                        <xsl:when test="fn:exists($objNodeType/aorsml:InitialAttributeValue[@attribute eq current()/@name])">
-                          <xsl:apply-templates select="$objNodeType/aorsml:InitialAttributeValue[@attribute eq current()/@name][1]"
+                        <xsl:when test="fn:exists($objNodeType/aorsl:InitialAttributeValue[@attribute eq current()/@name])">
+                          <xsl:apply-templates select="$objNodeType/aorsl:InitialAttributeValue[@attribute eq current()/@name][1]"
                             mode="assistents.setInitialAttributeValue"/>
                         </xsl:when>
                         <xsl:when test="@initialValue">
@@ -443,7 +442,7 @@
                           </xsl:apply-templates>
                         </xsl:when>
                         <xsl:otherwise>
-                          <xsl:if test="not(aorsml:ClassDef[@language eq $output.language])">
+                          <xsl:if test="not(aorsl:ClassDef[@language eq $output.language])">
                             <xsl:call-template name="java:setDefaultValue">
                               <xsl:with-param name="type" select="@type"/>
                             </xsl:call-template>
@@ -493,7 +492,7 @@
       <xsl:with-param name="varName" select="$varName" tunnel="yes"/>
     </xsl:apply-templates>
 
-    <xsl:for-each select="aorsml:Slot">
+    <xsl:for-each select="aorsl:Slot">
       <xsl:variable name="slot" select="."/>
       <xsl:for-each select="$physObjAttrList">
         <xsl:if test=". = $slot/@property">
@@ -577,15 +576,15 @@
 
   </xsl:template>
 
-  <xsl:template match="aorsml:ComplexDataProperty" mode="shared.helper.initAORObjects.ComplexDataProperty">
+  <xsl:template match="aorsl:ComplexDataProperty" mode="shared.helper.initAORObjects.ComplexDataProperty">
     <xsl:param name="objNode" required="yes"/>
 
-    <xsl:variable name="complexDataType" select="root($objNode)//aorsml:DataTypes/aorsml:ComplexDataType[@name eq current()/@type][1]"/>
+    <xsl:variable name="complexDataType" select="root($objNode)//aorsl:DataTypes/aorsl:ComplexDataType[@name eq current()/@type][1]"/>
     <xsl:choose>
       <xsl:when test="fn:exists($complexDataType)">
 
         <xsl:choose>
-          <xsl:when test="fn:exists($complexDataType/aorsml:ClassDef[@language eq $output.language])">
+          <xsl:when test="fn:exists($complexDataType/aorsl:ClassDef[@language eq $output.language])">
             <xsl:call-template name="java:newObject">
               <xsl:with-param name="inLine" select="true()"/>
               <xsl:with-param name="isVariable" select="true()"/>
@@ -600,16 +599,16 @@
   </xsl:template>
 
   <!-- get the value that have to use for init -->
-  <xsl:template match="aorsml:Object | aorsml:PhysicalObject | aorsml:PhysicalAgent" mode="shared.helper.initObj.initData">
+  <xsl:template match="aorsl:Object | aorsl:PhysicalObject | aorsl:PhysicalAgent" mode="shared.helper.initObj.initData">
     <xsl:param name="property" required="yes"/>
     <xsl:choose>
-      <xsl:when test="fn:exists(aorsml:Slot[@property = current()/@name])">
-        <xsl:apply-templates select="aorsml:Slot[@property = current()/@name]" mode="assistents.getSlotValue">
+      <xsl:when test="fn:exists(aorsl:Slot[@property = current()/@name])">
+        <xsl:apply-templates select="aorsl:Slot[@property = current()/@name]" mode="assistents.getSlotValue">
           <xsl:with-param name="type" select="@type"/>
         </xsl:apply-templates>
       </xsl:when>
-      <xsl:when test="fn:exists($property/parent::node()/aorsml:InitialAttributeValue[@attribute eq current()/@name])">
-        <xsl:apply-templates select="$property/parent::node()/aorsml:InitialAttributeValue[@attribute eq current()/@name][1]"
+      <xsl:when test="fn:exists($property/parent::node()/aorsl:InitialAttributeValue[@attribute eq current()/@name])">
+        <xsl:apply-templates select="$property/parent::node()/aorsl:InitialAttributeValue[@attribute eq current()/@name][1]"
           mode="assistents.setInitialAttributeValue"/>
       </xsl:when>
       <xsl:when test="$property/@initialValue">
@@ -631,13 +630,13 @@
     <xsl:param name="enumeration"/>
     <xsl:param name="objTypeNode"/>
     <xsl:choose>
-      <xsl:when test="fn:exists($objNode/aorsml:Slot[@property = current()/@name])">
-        <xsl:apply-templates select="$objNode/aorsml:Slot[@property = current()/@name][1]" mode="assistents.getEnumSlotValue">
+      <xsl:when test="fn:exists($objNode/aorsl:Slot[@property = current()/@name])">
+        <xsl:apply-templates select="$objNode/aorsl:Slot[@property = current()/@name][1]" mode="assistents.getEnumSlotValue">
           <xsl:with-param name="enumeration" select="$enumeration"/>
         </xsl:apply-templates>
       </xsl:when>
-      <xsl:when test="fn:exists($objTypeNode/aorsml:InitialAttributeValue[@attribute eq current()/@name])">
-        <xsl:apply-templates select="$objTypeNode/aorsml:InitialAttributeValue[@attribute eq current()/@name][1]"
+      <xsl:when test="fn:exists($objTypeNode/aorsl:InitialAttributeValue[@attribute eq current()/@name])">
+        <xsl:apply-templates select="$objTypeNode/aorsl:InitialAttributeValue[@attribute eq current()/@name][1]"
           mode="assistents.setInitialEnumValue">
           <xsl:with-param name="enumeration" select="$enumeration"/>
         </xsl:apply-templates>
@@ -690,7 +689,7 @@
             <xsl:with-param name="args" as="xs:string*">
               <xsl:if test="$discreteSpace">
                 <xsl:choose>
-                  <xsl:when test="fn:exists($aorObject/ancestor::aorsml:EnvironmentRule)">
+                  <xsl:when test="fn:exists($aorObject/ancestor::aorsl:EnvironmentRule)">
                     <xsl:value-of select="'true'"/>
                   </xsl:when>
                   <xsl:when test="not(fn:exists($aorObject/@ignorePositionConstraint)) or $aorObject/@ignorePositionConstraint = false()">
@@ -790,7 +789,7 @@
   </xsl:template>
 
   <!-- add to environment with occupancy-check -->
-  <xsl:template match="aorsml:PhysicalAgent | aorsml:PhysicalAgents | aorsml:PhysicalObject | aorsml:PhysicalObjects | aorsml:Object"
+  <xsl:template match="aorsl:PhysicalAgent | aorsl:PhysicalAgents | aorsl:PhysicalObject | aorsl:PhysicalObjects | aorsl:Object"
     mode="shared.helper.initAORObjects.WithOccupanceCheck">
     <xsl:param name="indent" required="yes" as="xs:integer"/>
     <xsl:param name="positionVarName" required="yes" as="xs:string"/>
@@ -866,7 +865,7 @@
   </xsl:template>
 
   <!-- with java-loop for sets -->
-  <xsl:template match="aorsml:PhysicalAgents | aorsml:PhysicalObjects | aorsml:Agents | aorsml:Objects" mode="shared.helper.initAORObjectsSet">
+  <xsl:template match="aorsl:PhysicalAgents | aorsl:PhysicalObjects | aorsl:Agents | aorsl:Objects" mode="shared.helper.initAORObjectsSet">
     <xsl:param name="indent" required="yes"/>
     <xsl:param name="className" required="yes"/>
     <xsl:param name="varName" required="yes"/>
@@ -1019,7 +1018,7 @@
     <xsl:param name="varName" as="xs:string" required="yes"/>
     <xsl:param name="type" as="xs:string" required="yes"/>
 
-    <xsl:variable name="collectionNode" select="//aorsml:Collections/aorsml:Collection[@name = current()][1]"/>
+    <xsl:variable name="collectionNode" select="//aorsl:Collections/aorsl:Collection[@name = current()][1]"/>
 
     <xsl:choose>
       <xsl:when test="fn:exists($collectionNode)">
@@ -1050,7 +1049,7 @@
   </xsl:template>
 
   <!-- create an PhysicalAgentSubject with all selbeliefattributes in the constructor -->
-  <xsl:template match="aorsml:PhysicalAgent | aorsml:PhysicalAgents | aorsml:Agent | aorsml:Agents" mode="shared.helper.initAgentSubject">
+  <xsl:template match="aorsl:PhysicalAgent | aorsl:PhysicalAgents | aorsl:Agent | aorsl:Agents" mode="shared.helper.initAgentSubject">
     <xsl:param name="indent" required="yes"/>
     <xsl:param name="className" required="yes"/>
     <xsl:param name="varName" required="yes"/>
@@ -1086,7 +1085,7 @@
         <xsl:choose>
           <xsl:when test="local-name() = 'PhysicalAgent' or local-name() = 'PhysicalAgents'">
 
-            <xsl:variable name="physAgentNode" as="node()" select="//aorsml:PhysicalAgentType[@name = current()/@type][1]"/>
+            <xsl:variable name="physAgentNode" as="node()" select="//aorsl:PhysicalAgentType[@name = current()/@type][1]"/>
 
             <!-- create the constructorlist for PhysicalAgents -->
             <!-- use all selfBeliefAttributes from PhysicalAgentType and SuperType -->
@@ -1095,13 +1094,13 @@
             </xsl:variable>
             <xsl:for-each select="$attributes">
               <xsl:choose>
-                <xsl:when test="fn:exists($objNode/aorsml:SelfBeliefSlot[@property = current()/@name])">
-                  <xsl:apply-templates select="$objNode/aorsml:SelfBeliefSlot[@property = current()/@name]" mode="assistents.getSlotValue">
+                <xsl:when test="fn:exists($objNode/aorsl:SelfBeliefSlot[@property = current()/@name])">
+                  <xsl:apply-templates select="$objNode/aorsl:SelfBeliefSlot[@property = current()/@name]" mode="assistents.getSlotValue">
                     <xsl:with-param name="type" select="@type"/>
                   </xsl:apply-templates>
                 </xsl:when>
-                <xsl:when test="fn:exists($physAgentNode/aorsml:InitialAttributeValue[@attribute eq current()/@name])">
-                  <xsl:apply-templates select="$physAgentNode/aorsml:InitialAttributeValue[@attribute eq current()/@name][1]"
+                <xsl:when test="fn:exists($physAgentNode/aorsl:InitialAttributeValue[@attribute eq current()/@name])">
+                  <xsl:apply-templates select="$physAgentNode/aorsl:InitialAttributeValue[@attribute eq current()/@name][1]"
                     mode="assistents.setInitialAttributeValue"/>
                 </xsl:when>
                 <xsl:when test="@initialValue">
@@ -1123,7 +1122,7 @@
 
             <!-- create the constructorlist for Agents -->
             <!-- use all selfBeliefAttributes from AgentType and SuperType -->
-            <xsl:variable name="agentNode" as="node()" select="//aorsml:AgentType[@name = current()/@type][1]"/>
+            <xsl:variable name="agentNode" as="node()" select="//aorsl:AgentType[@name = current()/@type][1]"/>
 
             <!-- create the constructorlist for PhysicalAgents -->
             <!-- use all attribute from PhysicalAgentType and SuperTypes-->
@@ -1133,13 +1132,13 @@
 
             <xsl:for-each select="$attributes">
               <xsl:choose>
-                <xsl:when test="fn:exists($objNode/aorsml:SelfBeliefSlot[@property = current()/@name])">
-                  <xsl:apply-templates select="$objNode/aorsml:SelfBeliefSlot[@property = current()/@name]" mode="assistents.getSlotValue">
+                <xsl:when test="fn:exists($objNode/aorsl:SelfBeliefSlot[@property = current()/@name])">
+                  <xsl:apply-templates select="$objNode/aorsl:SelfBeliefSlot[@property = current()/@name]" mode="assistents.getSlotValue">
                     <xsl:with-param name="type" select="@type"/>
                   </xsl:apply-templates>
                 </xsl:when>
-                <xsl:when test="fn:exists($agentNode/aorsml:InitialAttributeValue[@attribute eq current()/@name])">
-                  <xsl:apply-templates select="$agentNode/aorsml:InitialAttributeValue[@attribute eq current()/@name][1]"
+                <xsl:when test="fn:exists($agentNode/aorsl:InitialAttributeValue[@attribute eq current()/@name])">
+                  <xsl:apply-templates select="$agentNode/aorsl:InitialAttributeValue[@attribute eq current()/@name][1]"
                     mode="assistents.setInitialAttributeValue"/>
                 </xsl:when>
                 <xsl:when test="@initialValue">
@@ -1163,21 +1162,21 @@
     </xsl:call-template>
 
     <!-- set the beliefEntities -->
-    <xsl:apply-templates select="aorsml:BeliefEntity" mode="shared.helper.initAgentSubject.initBeliefEntitiy">
+    <xsl:apply-templates select="aorsl:BeliefEntity" mode="shared.helper.initAgentSubject.initBeliefEntitiy">
       <xsl:with-param name="indent" select="$indent"/>
       <xsl:with-param name="varName" select="$varName"/>
       <xsl:with-param name="agendType" select="@type"/>
     </xsl:apply-templates>
 
     <!-- set the periodicTimeEvents -->
-    <xsl:apply-templates select="aorsml:PeriodicTimeEvent" mode="shared.helper.initAgentSubject.PeriodicTimeEvent">
+    <xsl:apply-templates select="aorsl:PeriodicTimeEvent" mode="shared.helper.initAgentSubject.PeriodicTimeEvent">
       <xsl:with-param name="indent" select="$indent"/>
       <xsl:with-param name="objPosition" select="position()"/>
       <xsl:with-param name="objNode" select="."/>
       <xsl:with-param name="varName" select="$varName"/>
     </xsl:apply-templates>
 
-    <xsl:apply-templates select="aorsml:ReminderEvent" mode="shared.helper.initAgentSubject.ReminderEvent">
+    <xsl:apply-templates select="aorsl:ReminderEvent" mode="shared.helper.initAgentSubject.ReminderEvent">
       <xsl:with-param name="indent" select="$indent"/>
       <xsl:with-param name="objPosition" select="position()"/>
       <xsl:with-param name="objNode" select="."/>
@@ -1185,7 +1184,7 @@
     </xsl:apply-templates>
 
     <!-- set a OnEveryStepIntEvent -->
-    <xsl:apply-templates select="//aorsml:PhysicalAgentType[@name = current()/@type][1]"
+    <xsl:apply-templates select="//aorsl:PhysicalAgentType[@name = current()/@type][1]"
       mode="shared.helper.initAgentSubject.addON-EACH-SIMULATION-STEP">
       <xsl:with-param name="indent" select="$indent"/>
       <xsl:with-param name="varName" select="$varName"/>
@@ -1205,7 +1204,7 @@
 
   </xsl:template>
 
-  <xsl:template match="aorsml:PeriodicTimeEvent" mode="shared.helper.initAgentSubject.PeriodicTimeEvent">
+  <xsl:template match="aorsl:PeriodicTimeEvent" mode="shared.helper.initAgentSubject.PeriodicTimeEvent">
     <xsl:param name="indent" as="xs:integer" required="yes"/>
     <xsl:param name="objPosition" as="xs:integer" required="yes"/>
     <xsl:param name="objNode" as="element()" required="yes"/>
@@ -1235,8 +1234,8 @@
                   <xsl:text> + </xsl:text>
                 </xsl:if>
                 <xsl:choose>
-                  <xsl:when test="fn:exists(aorsml:OccurrenceTime[@language eq $output.language])">
-                    <xsl:value-of select="aorsml:OccurrenceTime[@language eq $output.language]"/>
+                  <xsl:when test="fn:exists(aorsl:OccurrenceTime[@language eq $output.language])">
+                    <xsl:value-of select="aorsl:OccurrenceTime[@language eq $output.language]"/>
                   </xsl:when>
                   <xsl:otherwise>
                     <xsl:value-of select="@occurrenceTime"/>
@@ -1259,7 +1258,7 @@
 
   </xsl:template>
 
-  <xsl:template match="aorsml:ReminderEvent" mode="shared.helper.initAgentSubject.ReminderEvent">
+  <xsl:template match="aorsl:ReminderEvent" mode="shared.helper.initAgentSubject.ReminderEvent">
     <xsl:param name="indent" as="xs:integer" required="yes"/>
     <xsl:param name="objPosition" as="xs:integer" required="yes"/>
     <xsl:param name="objNode" as="element()" required="yes"/>
@@ -1278,8 +1277,8 @@
         <xsl:text> + </xsl:text>
       </xsl:if>
       <xsl:choose>
-        <xsl:when test="fn:exists(aorsml:OccurrenceTime[@language eq $output.language])">
-          <xsl:value-of select="aorsml:OccurrenceTime[@language eq $output.language]"/>
+        <xsl:when test="fn:exists(aorsl:OccurrenceTime[@language eq $output.language])">
+          <xsl:value-of select="aorsl:OccurrenceTime[@language eq $output.language]"/>
         </xsl:when>
         <xsl:otherwise>
           <xsl:value-of select="@occurrenceTime"/>
@@ -1289,8 +1288,8 @@
 
     <xsl:variable name="reminderMsg">
       <xsl:choose>
-        <xsl:when test="fn:exists(aorsml:ReminderMsg[@language eq $output.language])">
-          <xsl:value-of select="aorsml:ReminderMsg[@language eq $output.language][1]"/>
+        <xsl:when test="fn:exists(aorsl:ReminderMsg[@language eq $output.language])">
+          <xsl:value-of select="aorsl:ReminderMsg[@language eq $output.language][1]"/>
         </xsl:when>
         <xsl:when test="@reminderMsg">
           <xsl:value-of select="jw:quote(@reminderMsg)"/>
@@ -1307,7 +1306,7 @@
       <xsl:with-param name="varName" select="$reminderEvtVarName"/>
       <xsl:with-param name="args" as="xs:string*" select="($occurrenceTime, $reminderMsg)"/>
     </xsl:call-template>
-    
+
     <!-- add it to InternalEventList -->
     <xsl:call-template name="java:callMethod">
       <xsl:with-param name="indent" select="$indent"/>
@@ -1319,13 +1318,13 @@
   </xsl:template>
 
   <!-- BeliefEntities -->
-  <xsl:template match="aorsml:BeliefEntity" mode="shared.helper.initAgentSubject.initBeliefEntitiy">
+  <xsl:template match="aorsl:BeliefEntity" mode="shared.helper.initAgentSubject.initBeliefEntitiy">
     <xsl:param name="indent" as="xs:integer" required="yes"/>
     <xsl:param name="varName" as="xs:string" required="yes"/>
     <xsl:param name="agendType" as="xs:string" required="yes"/>
 
     <xsl:variable name="entityTypeNode" as="node()">
-      <xsl:apply-templates select="//aorsml:EntityTypes/*[@name eq $agendType]"
+      <xsl:apply-templates select="//aorsl:EntityTypes/*[@name eq $agendType]"
         mode="shared.helper.initAgentSubject.initBeliefEntitiy.getBeliefEntityType">
         <xsl:with-param name="entityType" select="@type"/>
       </xsl:apply-templates>
@@ -1348,8 +1347,8 @@
                 <xsl:when test="@idRef">
                   <xsl:value-of select="@idRef"/>
                 </xsl:when>
-                <xsl:when test="fn:exists(aorsml:IdRef[@language eq $output.language])">
-                  <xsl:value-of select="aorsml:IdRef[@language eq $output.language]"/>
+                <xsl:when test="fn:exists(aorsl:IdRef[@language eq $output.language])">
+                  <xsl:value-of select="aorsl:IdRef[@language eq $output.language]"/>
                 </xsl:when>
                 <xsl:otherwise>
                   <xsl:message>
@@ -1364,24 +1363,24 @@
               <xsl:choose>
                 <!-- depricated -->
                 <xsl:when
-                  test="fn:exists(aorsml:BeliefSlot[resolve-QName(@xsi:type, .) eq QName('http://aor-simulation.org', 'OpaqueExprSlot')]
-                  [@property eq 'name' and fn:exists(aorsml:ValueExpr[@language eq $output.language])])">
+                  test="fn:exists(aorsl:BeliefSlot[resolve-QName(@xsi:type, .) eq QName('http://aor-simulation.org', 'OpaqueExprSlot')]
+                  [@property eq 'name' and fn:exists(aorsl:ValueExpr[@language eq $output.language])])">
                   <xsl:value-of
-                    select="aorsml:BeliefSlot[@property eq 'name' and @xsi:type eq 'aors:OpaqueExprSlot']/aorsml:ValueExpr[@language eq $output.language]"
+                    select="aorsl:BeliefSlot[@property eq 'name' and @xsi:type eq 'aors:OpaqueExprSlot']/aorsl:ValueExpr[@language eq $output.language]"
                   />
                 </xsl:when>
                 <!-- new -->
-                <xsl:when test="fn:exists(aorsml:BeliefSlot[@property eq 'name' and fn:exists(aorsml:ValueExpr[@language eq $output.language])])">
-                  <xsl:value-of select="aorsml:BeliefSlot/aorsml:ValueExpr[@language eq $output.language][1]"/>
+                <xsl:when test="fn:exists(aorsl:BeliefSlot[@property eq 'name' and fn:exists(aorsl:ValueExpr[@language eq $output.language])])">
+                  <xsl:value-of select="aorsl:BeliefSlot/aorsl:ValueExpr[@language eq $output.language][1]"/>
                 </xsl:when>
                 <!-- depricated -->
                 <xsl:when
-                  test="fn:exists(aorsml:BeliefSlot[resolve-QName(@xsi:type, .) eq QName('http://aor-simulation.org', 'SimpleSlot')][@property eq 'name'])">
-                  <xsl:value-of select="jw:quote(aorsml:BeliefSlot[@property eq 'name' and @xsi:type = 'aors:SimpleSlot'][1]/@value)"/>
+                  test="fn:exists(aorsl:BeliefSlot[resolve-QName(@xsi:type, .) eq QName('http://aor-simulation.org', 'SimpleSlot')][@property eq 'name'])">
+                  <xsl:value-of select="jw:quote(aorsl:BeliefSlot[@property eq 'name' and @xsi:type = 'aors:SimpleSlot'][1]/@value)"/>
                 </xsl:when>
                 <!-- new -->
-                <xsl:when test="fn:exists(aorsml:BeliefSlot[@property eq 'name']/@value)">
-                  <xsl:value-of select="jw:quote(aorsml:BeliefSlot[@property eq 'name'][1]/@value)"/>
+                <xsl:when test="fn:exists(aorsl:BeliefSlot[@property eq 'name']/@value)">
+                  <xsl:value-of select="jw:quote(aorsl:BeliefSlot[@property eq 'name'][1]/@value)"/>
                 </xsl:when>
                 <xsl:otherwise>
                   <xsl:value-of select="'&quot;&quot;'"/>
@@ -1391,10 +1390,10 @@
               <xsl:variable name="currentBeliefNode" as="node()" select="."/>
 
               <!-- create the constructorlist for BeliefEntities -->
-              <xsl:for-each select="$entityTypeNode/aorsml:BeliefAttribute | $entityTypeNode/aorsml:BeliefReferenceProperty">
+              <xsl:for-each select="$entityTypeNode/aorsl:BeliefAttribute | $entityTypeNode/aorsl:BeliefReferenceProperty">
                 <xsl:choose>
-                  <xsl:when test="fn:exists($currentBeliefNode/aorsml:BeliefSlot[@property = current()/@name])">
-                    <xsl:apply-templates select="$currentBeliefNode/aorsml:BeliefSlot[@property = current()/@name]" mode="assistents.getSlotValue">
+                  <xsl:when test="fn:exists($currentBeliefNode/aorsl:BeliefSlot[@property = current()/@name])">
+                    <xsl:apply-templates select="$currentBeliefNode/aorsl:BeliefSlot[@property = current()/@name]" mode="assistents.getSlotValue">
                       <xsl:with-param name="type" select="@type"/>
                     </xsl:apply-templates>
                   </xsl:when>
@@ -1420,15 +1419,15 @@
 
   </xsl:template>
 
-  <xsl:template match="aorsml:AgentType | aorsml:PhysicalAgentType" mode="shared.helper.initAgentSubject.initBeliefEntitiy.getBeliefEntityType">
+  <xsl:template match="aorsl:AgentType | aorsl:PhysicalAgentType" mode="shared.helper.initAgentSubject.initBeliefEntitiy.getBeliefEntityType">
     <xsl:param name="entityType" as="xs:string" required="yes"/>
 
     <xsl:choose>
-      <xsl:when test="fn:exists(aorsml:BeliefEntityType[@name eq $entityType])">
-        <xsl:copy-of select="aorsml:BeliefEntityType[@name eq $entityType]"/>
+      <xsl:when test="fn:exists(aorsl:BeliefEntityType[@name eq $entityType])">
+        <xsl:copy-of select="aorsl:BeliefEntityType[@name eq $entityType]"/>
       </xsl:when>
       <xsl:when test="fn:exists(@superType)">
-        <xsl:apply-templates select="//aorsml:EntityTypes/aorsml:*[@name eq current()/@superType]"
+        <xsl:apply-templates select="//aorsl:EntityTypes/aorsl:*[@name eq current()/@superType]"
           mode="shared.helper.initAgentSubject.initBeliefEntitiy.getBeliefEntityType">
           <xsl:with-param name="entityType" select="$entityType"/>
         </xsl:apply-templates>
@@ -1439,13 +1438,13 @@
 
 
   <!-- if one of the internal rules is triggered by an ON-EACH-SIMULATION-STEP, add this event to the internal eventlist-->
-  <xsl:template match="aorsml:AgentType | aorsml:PhysicalAgentType" mode="shared.helper.initAgentSubject.addON-EACH-SIMULATION-STEP">
+  <xsl:template match="aorsl:AgentType | aorsl:PhysicalAgentType" mode="shared.helper.initAgentSubject.addON-EACH-SIMULATION-STEP">
     <xsl:param name="indent" as="xs:integer" required="yes"/>
     <xsl:param name="varName" as="xs:string" required="yes"/>
     <xsl:param name="getTriggeredTimeForDynamicCreatedAgentsWithOnEachStepEvents" as="xs:string" select="''" tunnel="yes"/>
 
     <xsl:choose>
-      <xsl:when test="fn:exists(aorsml:*/aorsml:ON-EACH-SIMULATION-STEP)">
+      <xsl:when test="fn:exists(aorsl:*/aorsl:ON-EACH-SIMULATION-STEP)">
         <!-- add it to InternalEventList -->
         <xsl:call-template name="java:callMethod">
           <xsl:with-param name="indent" select="$indent"/>
@@ -1473,7 +1472,7 @@
       </xsl:when>
       <xsl:when test="fn:exists(@superType)">
 
-        <xsl:apply-templates select="//aorsml:EntityTypes/aorsml:*[@name eq current()/@superType]"
+        <xsl:apply-templates select="//aorsl:EntityTypes/aorsl:*[@name eq current()/@superType]"
           mode="shared.helper.initAgentSubject.addON-EACH-SIMULATION-STEP">
           <xsl:with-param name="indent" select="$indent"/>
           <xsl:with-param name="varName" select="$varName"/>
@@ -1485,7 +1484,7 @@
   </xsl:template>
 
   <!-- create an PhysicalAgentSubject with all selbeliefattributes in the constructor -->
-  <xsl:template match="aorsml:PhysicalAgents | aorsml:Agents" mode="shared.helper.initAgentSubjectSet">
+  <xsl:template match="aorsl:PhysicalAgents | aorsl:Agents" mode="shared.helper.initAgentSubjectSet">
     <xsl:param name="indent" required="yes"/>
     <xsl:param name="className" required="yes"/>
     <xsl:param name="varName" required="yes"/>
@@ -1523,7 +1522,7 @@
   </xsl:template>
 
   <!-- NOTICE: the methodparameter will be not mapped (to simple datatypes) -->
-  <xsl:template match="aorsml:Function | aorsml:SubjectiveFunction | aorsml:GlobalFunction | aorsml:GridCellFunction" mode="shared.createFunction">
+  <xsl:template match="aorsl:Function | aorsl:SubjectiveFunction | aorsl:GlobalFunction | aorsl:GridCellFunction" mode="shared.createFunction">
     <xsl:param name="indent" as="xs:integer" required="yes"/>
     <xsl:param name="static" select="false()"/>
 
@@ -1534,7 +1533,7 @@
       <xsl:with-param name="type" select="@resultType"/>
       <xsl:with-param name="name" select="@name"/>
       <xsl:with-param name="parameterList" as="xs:string*">
-        <xsl:for-each select="aorsml:Parameter">
+        <xsl:for-each select="aorsl:Parameter">
           <xsl:call-template name="java:createParam">
             <xsl:with-param name="type" select="@type"/>
             <xsl:with-param name="name" select="@name"/>
@@ -1547,8 +1546,8 @@
           <xsl:with-param name="size" select="$indent + 1"/>
         </xsl:call-template>
         <xsl:choose>
-          <xsl:when test="fn:exists(aorsml:Body[@language = $output.language])">
-            <xsl:value-of select="aorsml:Body[@language = $output.language]"/>
+          <xsl:when test="fn:exists(aorsl:Body[@language = $output.language])">
+            <xsl:value-of select="aorsl:Body[@language = $output.language]"/>
           </xsl:when>
           <xsl:otherwise>
             <xsl:message>No Body for created function available.</xsl:message>
@@ -1560,7 +1559,7 @@
   </xsl:template>
 
   <!-- set the description -->
-  <xsl:template match="aorsml:documentation" mode="shared.setDocumentation">
+  <xsl:template match="aorsl:documentation" mode="shared.setDocumentation">
     <xsl:param name="indent" required="yes" as="xs:integer"/>
 
     <!-- TODO: implement this -->
@@ -1568,7 +1567,7 @@
   </xsl:template>
 
   <!-- create the method getMessageType() for rules -->
-  <xsl:template match="aorsml:ReactionRule | aorsml:CommunicationRule | aorsml:ActualPerceptionRule" mode="shared.method.getMessageType">
+  <xsl:template match="aorsl:ReactionRule | aorsl:CommunicationRule | aorsl:ActualPerceptionRule" mode="shared.method.getMessageType">
     <xsl:param name="indent" required="yes" as="xs:integer"/>
 
     <xsl:call-template name="java:method">
@@ -1582,8 +1581,8 @@
           <xsl:with-param name="indent" select="$indent + 1"/>
           <xsl:with-param name="value">
             <xsl:choose>
-              <xsl:when test="fn:exists(aorsml:WHEN/@messageType)">
-                <xsl:value-of select="jw:quote(aorsml:WHEN/@messageType)"/>
+              <xsl:when test="fn:exists(aorsl:WHEN/@messageType)">
+                <xsl:value-of select="jw:quote(aorsl:WHEN/@messageType)"/>
               </xsl:when>
               <xsl:otherwise>
                 <xsl:value-of select="jw:quote($empty.string.quotation.symbol)"/>
@@ -1597,7 +1596,7 @@
 
   </xsl:template>
 
-  <xsl:template match="aorsml:EnvironmentRule" mode="shared.method.getMessageType">
+  <xsl:template match="aorsl:EnvironmentRule" mode="shared.method.getMessageType">
     <xsl:param name="indent" required="yes" as="xs:integer"/>
 
     <xsl:call-template name="java:method">
@@ -1611,8 +1610,8 @@
           <xsl:with-param name="indent" select="$indent + 1"/>
           <xsl:with-param name="value">
             <xsl:choose>
-              <xsl:when test="fn:exists(aorsml:WHEN/@messageType)">
-                <xsl:value-of select="jw:quote(aorsml:WHEN/@messageType)"/>
+              <xsl:when test="fn:exists(aorsl:WHEN/@messageType)">
+                <xsl:value-of select="jw:quote(aorsl:WHEN/@messageType)"/>
               </xsl:when>
               <xsl:otherwise>
                 <xsl:value-of select="jw:quote($empty.string.quotation.symbol)"/>
@@ -1626,7 +1625,7 @@
 
   </xsl:template>
 
-  <xsl:template match="aorsml:UpdateStatisticsVariable" mode="shared.helper.updateStatistics">
+  <xsl:template match="aorsl:UpdateStatisticsVariable" mode="shared.helper.updateStatistics">
     <xsl:param name="indent" required="yes" as="xs:integer"/>
 
     <xsl:call-template name="java:callSetterMethod">
@@ -1638,32 +1637,32 @@
         </xsl:call-template>
       </xsl:with-param>
       <xsl:with-param name="instVariable" select="'value'"/>
-      <xsl:with-param name="value" select="fn:normalize-space(aorsml:ValueExpr[@language = $output.language])"/>
+      <xsl:with-param name="value" select="fn:normalize-space(aorsl:ValueExpr[@language = $output.language])"/>
     </xsl:call-template>
 
   </xsl:template>
 
-  <!-- set here the initialValues from aorsml:InitialValue there be a default value for objects/agents -->
+  <!-- set here the initialValues from aorsl:InitialValue there be a default value for objects/agents -->
   <xsl:template
-    match="aorsml:PhysicalAgent | aorsml:PhysicalObject | aorsml:PhysicalAgents | aorsml:PhysicalObjects | aorsml:Object | aorsml:Objects | aorsml:Agent | aorsml:Agents"
+    match="aorsl:PhysicalAgent | aorsl:PhysicalObject | aorsl:PhysicalAgents | aorsl:PhysicalObjects | aorsl:Object | aorsl:Objects | aorsl:Agent | aorsl:Agents"
     mode="shared.helper.setInitialAttributes">
     <xsl:param name="indent" as="xs:integer" required="yes"/>
 
     <xsl:variable name="contextNode" select="."/>
     <xsl:variable name="typeNode">
       <xsl:choose>
-        <xsl:when test="fn:exists(//aorsml:PhysicalObjectType[@name = current()/@type])">
-          <xsl:copy-of select="//aorsml:PhysicalObjectType[@name = current()/@type]"/>
+        <xsl:when test="fn:exists(//aorsl:PhysicalObjectType[@name = current()/@type])">
+          <xsl:copy-of select="//aorsl:PhysicalObjectType[@name = current()/@type]"/>
         </xsl:when>
-        <xsl:when test="fn:exists(//aorsml:PhysicalAgentType[@name = current()/@type])">
-          <xsl:copy-of select="//aorsml:PhysicalAgentType[@name = current()/@type]"/>
+        <xsl:when test="fn:exists(//aorsl:PhysicalAgentType[@name = current()/@type])">
+          <xsl:copy-of select="//aorsl:PhysicalAgentType[@name = current()/@type]"/>
         </xsl:when>
         <!-- without effect, only for the check of existenz -->
-        <xsl:when test="fn:exists(//aorsml:AgentType[@name = current()/@type])">
-          <xsl:copy-of select="//aorsml:AgentType[@name = current()/@type]"/>
+        <xsl:when test="fn:exists(//aorsl:AgentType[@name = current()/@type])">
+          <xsl:copy-of select="//aorsl:AgentType[@name = current()/@type]"/>
         </xsl:when>
-        <xsl:when test="fn:exists(//aorsml:ObjectType[@name = current()/@type])">
-          <xsl:copy-of select="//aorsml:ObjectType[@name = current()/@type]"/>
+        <xsl:when test="fn:exists(//aorsl:ObjectType[@name = current()/@type])">
+          <xsl:copy-of select="//aorsl:ObjectType[@name = current()/@type]"/>
         </xsl:when>
         <xsl:otherwise>
           <xsl:message>
@@ -1680,7 +1679,7 @@
     <xsl:if test="fn:exists($typeNode)">
       <xsl:if test="local-name() = 'PhysicalAgent' or local-name() = 'PhysicalAgents'">
         <xsl:for-each select="$physAgentObjAttrList">
-          <xsl:if test="not ($contextNode/@*[name() = current()]) and not (fn:exists($contextNode/aorsml:Slot[@property = .]))">
+          <xsl:if test="not ($contextNode/@*[name() = current()]) and not (fn:exists($contextNode/aorsl:Slot[@property = .]))">
             <xsl:apply-templates select="$typeNode" mode="assistents.setInitialAttributeValue">
               <xsl:with-param name="indent" select="$indent"/>
               <xsl:with-param name="attrName" select="."/>
@@ -1693,7 +1692,7 @@
         test="local-name() = 'PhysicalAgent' or local-name() = 'PhysicalAgents' or
         local-name() = 'PhysicalObject' or local-name() = 'PhysicalObjects'">
         <xsl:for-each select="$physObjAttrList">
-          <xsl:if test="not ($contextNode/@*[name() = current()]) and not (fn:exists($contextNode/aorsml:Slot[@property = .]))">
+          <xsl:if test="not ($contextNode/@*[name() = current()]) and not (fn:exists($contextNode/aorsl:Slot[@property = .]))">
             <xsl:apply-templates select="$typeNode" mode="assistents.setInitialAttributeValue">
               <xsl:with-param name="indent" select="$indent"/>
               <xsl:with-param name="attrName" select="."/>
@@ -1706,7 +1705,7 @@
 
   </xsl:template>
 
-  <xsl:template match="aorsml:BeliefEntityType" mode="shared.methods.ceateBeliefTypes">
+  <xsl:template match="aorsl:BeliefEntityType" mode="shared.methods.ceateBeliefTypes">
     <xsl:param name="indent" as="xs:integer" required="yes"/>
 
     <!-- create belief method with parameter only the Id of the belief -->
@@ -1761,7 +1760,7 @@
               <xsl:with-param name="inLine" select="true()"/>
               <xsl:with-param name="class" select="@name"/>
               <xsl:with-param name="onlyInitialization" select="true()"/>
-              <xsl:with-param name="args" as="xs:string*" select="('id', 'name', aorsml:BeliefAttribute/@name | aorsml:BeliefReferenceProperty/@name)"
+              <xsl:with-param name="args" as="xs:string*" select="('id', 'name', aorsl:BeliefAttribute/@name | aorsl:BeliefReferenceProperty/@name)"
               > </xsl:with-param>
             </xsl:call-template>
           </xsl:with-param>
@@ -1871,7 +1870,7 @@
   <!-- ***************************************** -->
   <!--      templates for global variables          -->
   <!-- ***************************************** -->
-  <xsl:template match="aorsml:IncrementGlobalVariable" mode="shared.incrementGlobalVariable">
+  <xsl:template match="aorsl:IncrementGlobalVariable" mode="shared.incrementGlobalVariable">
     <xsl:param name="indent" required="yes" as="xs:integer"/>
 
     <xsl:call-template name="java:callSetterMethod">
@@ -1890,22 +1889,22 @@
 
   </xsl:template>
 
-  <xsl:template match="aorsml:UpdateGlobalVariable | aorsml:GlobalVariable" mode="shared.updateGlobalVariable">
+  <xsl:template match="aorsl:UpdateGlobalVariable | aorsl:GlobalVariable" mode="shared.updateGlobalVariable">
     <xsl:param name="indent" required="yes" as="xs:integer"/>
 
-    <xsl:if test="@value or fn:exists(aorsml:ValueExpr[@language eq $output.language])">
+    <xsl:if test="@value or fn:exists(aorsl:ValueExpr[@language eq $output.language])">
       <xsl:call-template name="java:callSetterMethod">
         <xsl:with-param name="indent" select="$indent"/>
         <xsl:with-param name="objInstance" select="$sim.class.simGlobal"/>
         <xsl:with-param name="instVariable" select="@name"/>
         <xsl:with-param name="value">
           <xsl:choose>
-            <xsl:when test="fn:exists(aorsml:ValueExpr[@language eq $output.language])">
-              <xsl:value-of select="aorsml:ValueExpr[@language eq $output.language][1]"/>
+            <xsl:when test="fn:exists(aorsl:ValueExpr[@language eq $output.language])">
+              <xsl:value-of select="aorsl:ValueExpr[@language eq $output.language][1]"/>
             </xsl:when>
             <xsl:when test="@value">
               <xsl:choose>
-                <xsl:when test="//aorsml:Globals/aorsml:GlobalVariable[@name eq current()/@name]/@dataType eq 'String'">
+                <xsl:when test="//aorsl:Globals/aorsl:GlobalVariable[@name eq current()/@name]/@dataType eq 'String'">
                   <xsl:value-of select="jw:quote(@value)"/>
                 </xsl:when>
                 <xsl:otherwise>
@@ -1921,7 +1920,7 @@
   </xsl:template>
 
 
-  <xsl:template match="aorsml:FOR-ListItemVariable" mode="shared.FOR-ListItemVariable.classVariable">
+  <xsl:template match="aorsl:FOR-ListItemVariable" mode="shared.FOR-ListItemVariable.classVariable">
     <xsl:param name="indent" as="xs:integer" required="yes"/>
 
     <xsl:call-template name="java:variable">

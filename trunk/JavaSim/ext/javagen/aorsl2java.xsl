@@ -10,7 +10,7 @@
         @last changed by $Author$
 -->
 
-<xsl:stylesheet version="2.0" xmlns:aorsml="http://aor-simulation.org" xmlns:fn="http://www.w3.org/2005/xpath-functions"
+<xsl:stylesheet version="2.0" xmlns:aorsl="http://aor-simulation.org" xmlns:fn="http://www.w3.org/2005/xpath-functions"
   xmlns:xs="http://www.w3.org/2001/XMLSchema" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:xsl="http://www.w3.org/1999/XSL/Transform"
   xsi:schemaLocation="http://aor-simulation.org aorsml.xsd">
 
@@ -65,7 +65,7 @@
     <!-- it is used to desid which getRandomPosition() - version is called in shared.helper.initAORObjects  -->
     <xsl:variable name="discreteSpace" as="xs:boolean">
       <xsl:choose>
-        <xsl:when test="ends-with(local-name(//aorsml:SimulationModel/aorsml:SpaceModel/aorsml:*), 'Grid')">
+        <xsl:when test="ends-with(local-name(//aorsl:SimulationModel/aorsl:SpaceModel/aorsl:*), 'Grid')">
           <xsl:value-of select="true()"/>
         </xsl:when>
         <xsl:otherwise>

@@ -10,22 +10,22 @@
         @last changed by $Author$
 -->
 
-<xsl:stylesheet version="2.0" xmlns:aorsml="http://aor-simulation.org" xmlns:fn="http://www.w3.org/2005/xpath-functions"
+<xsl:stylesheet version="2.0" xmlns:aorsl="http://aor-simulation.org" xmlns:fn="http://www.w3.org/2005/xpath-functions"
   xmlns:java="http://www.sun.com/java" xmlns:xs="http://www.w3.org/2001/XMLSchema" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
   xmlns:xsl="http://www.w3.org/1999/XSL/Transform" xsi:schemaLocation="http://aor-simulation.org aorsml.xsd"
   xmlns:jw="http://www.informatik.tu-cottbus.de/~jwerner/">
 
   <!--creates class-->
-  <xsl:template match="aorsml:PhysicalAgentType" mode="createAgents.createAgent">
+  <xsl:template match="aorsl:PhysicalAgentType" mode="createAgents.createAgent">
     <xsl:param name="indent" required="yes" as="xs:integer"/>
 
     <xsl:variable name="className" select="jw:upperWord(@name)"/>
     <xsl:variable name="isInSimpleTwoDimensionalGrid" as="xs:boolean">
       <xsl:choose>
-        <xsl:when test="(//aorsml:SpaceModel/@dimensions eq '2') and (//aorsml:SpaceModel/@discrete eq 'true')">
+        <xsl:when test="(//aorsl:SpaceModel/@dimensions eq '2') and (//aorsl:SpaceModel/@discrete eq 'true')">
           <xsl:value-of select="true()"/>
         </xsl:when>
-        <xsl:when test="fn:exists(//aorsml:SpaceModel/aorsml:TwoDimensionalGrid)">
+        <xsl:when test="fn:exists(//aorsl:SpaceModel/aorsl:TwoDimensionalGrid)">
           <xsl:value-of select="true()"/>
         </xsl:when>
         <xsl:otherwise>
@@ -34,7 +34,7 @@
       </xsl:choose>
     </xsl:variable>
 
-    <xsl:call-template name="aorsml:classFile">
+    <xsl:call-template name="aorsl:classFile">
       <xsl:with-param name="path" select="$sim.path.model.envsimulator"/>
       <xsl:with-param name="name" select="$className"/>
 
@@ -44,7 +44,7 @@
           <xsl:with-param name="importList" as="xs:string*">
             <xsl:value-of select="$core.package.physAgentObject"/>
 
-            <xsl:if test="fn:exists(aorsml:Attribute | aorsml:ReferenceProperty | aorsml:ComplexDataProperty | aorsml:EnumerationProperty)">
+            <xsl:if test="fn:exists(aorsl:Attribute | aorsl:ReferenceProperty | aorsl:ComplexDataProperty | aorsl:EnumerationProperty)">
               <xsl:value-of select="'java.beans.PropertyChangeEvent'"/>
             </xsl:if>
 
@@ -63,7 +63,7 @@
 
             <!-- classVariables -->
             <xsl:apply-templates
-              select="aorsml:Attribute[not(matches(lower-case(@name), $physObjPattern))] | aorsml:ReferenceProperty | aorsml:ComplexDataProperty | aorsml:EnumerationProperty"
+              select="aorsl:Attribute[not(matches(lower-case(@name), $physObjPattern))] | aorsl:ReferenceProperty | aorsl:ComplexDataProperty | aorsl:EnumerationProperty"
               mode="assistents.classVariable">
               <xsl:with-param name="indent" select="$indent + 1"/>
             </xsl:apply-templates>
@@ -105,8 +105,8 @@
 
             <!-- setters -->
             <xsl:for-each
-              select="aorsml:Attribute[not(matches(lower-case(@name), $physObjPattern))] | aorsml:ReferenceProperty | 
-                                                   aorsml:ComplexDataProperty | aorsml:EnumerationProperty">
+              select="aorsl:Attribute[not(matches(lower-case(@name), $physObjPattern))] | aorsl:ReferenceProperty | 
+                                                   aorsl:ComplexDataProperty | aorsl:EnumerationProperty">
               <xsl:apply-templates select="." mode="assistents.setVariableMethod">
                 <xsl:with-param name="indent" select="$indent + 1"/>
                 <xsl:with-param name="changeCheck" select="true()"/>
@@ -144,7 +144,7 @@
             </xsl:for-each>
 
             <!-- setters for predifined properties with constrain-attributes-->
-            <xsl:for-each select="aorsml:Attribute[matches(lower-case(@name), $physObjPattern)][@minValue or @maxValue]">
+            <xsl:for-each select="aorsl:Attribute[matches(lower-case(@name), $physObjPattern)][@minValue or @maxValue]">
               <xsl:apply-templates select="." mode="assistents.setVariableMethod.predefinedProps">
                 <xsl:with-param name="indent" select="$indent + 1"/>
               </xsl:apply-templates>
@@ -159,23 +159,23 @@
 
             <!-- getters -->
             <xsl:apply-templates
-              select="aorsml:Attribute[not(matches(lower-case(@name), $physObjPattern))] | aorsml:ReferenceProperty | 
-                                                                 aorsml:ComplexDataProperty | aorsml:EnumerationProperty"
+              select="aorsl:Attribute[not(matches(lower-case(@name), $physObjPattern))] | aorsl:ReferenceProperty | 
+                                                                 aorsl:ComplexDataProperty | aorsl:EnumerationProperty"
               mode="assistents.getVariableMethod">
               <xsl:with-param name="indent" select="$indent + 1"/>
             </xsl:apply-templates>
 
             <!-- get(int index), remove(int index), remove(Object o), add(Object o) for Properties with @upperMultiplicity eq 'unbounded' -->
             <xsl:apply-templates
-              select="aorsml:Attribute[@upperMultiplicity eq 'unbounded'] | 
-                             aorsml:ReferenceProperty[@upperMultiplicity eq 'unbounded'] | 
-                             aorsml:ComplexDataProperty[@upperMultiplicity eq 'unbounded']"
+              select="aorsl:Attribute[@upperMultiplicity eq 'unbounded'] | 
+                             aorsl:ReferenceProperty[@upperMultiplicity eq 'unbounded'] | 
+                             aorsl:ComplexDataProperty[@upperMultiplicity eq 'unbounded']"
               mode="assistents.listMethods">
               <xsl:with-param name="indent" select="$indent + 1"/>
             </xsl:apply-templates>
 
             <!-- functions -->
-            <xsl:apply-templates select="aorsml:Function" mode="shared.createFunction">
+            <xsl:apply-templates select="aorsl:Function" mode="shared.createFunction">
               <xsl:with-param name="indent" select="$indent + 1"/>
             </xsl:apply-templates>
 
@@ -186,7 +186,7 @@
   </xsl:template>
 
   <!-- creates constructor -->
-  <xsl:template match="aorsml:PhysicalAgentType" mode="createAgents.constructor">
+  <xsl:template match="aorsl:PhysicalAgentType" mode="createAgents.constructor">
     <xsl:param name="indent" required="yes"/>
     <xsl:param name="className" required="yes" as="xs:string"/>
     <xsl:param name="isInSimpleTwoDimensionalGrid" as="xs:boolean" select="false()"/>
@@ -228,7 +228,7 @@
         </xsl:call-template>
         <xsl:call-template name="java:newLine"/>
 
-        <xsl:for-each select="aorsml:Attribute | aorsml:ReferenceProperty | aorsml:ComplexDataProperty | aorsml:EnumerationProperty">
+        <xsl:for-each select="aorsl:Attribute | aorsl:ReferenceProperty | aorsl:ComplexDataProperty | aorsl:EnumerationProperty">
 
           <xsl:if test="@upperMultiplicity eq 'unbounded'">
             <xsl:apply-templates select="." mode="assistent.initList">
@@ -279,7 +279,7 @@
         <xsl:call-template name="java:newLine"/>
 
         <!-- set all attributvalues from constructor -->
-        <xsl:for-each select="aorsml:Attribute | aorsml:ReferenceProperty | aorsml:ComplexDataProperty | aorsml:EnumerationProperty">
+        <xsl:for-each select="aorsl:Attribute | aorsl:ReferenceProperty | aorsl:ComplexDataProperty | aorsl:EnumerationProperty">
 
           <!-- init the lists for upperMultiplicity -->
           <xsl:if test="@upperMultiplicity eq 'unbounded'">
@@ -313,13 +313,13 @@
   </xsl:template>
 
   <!-- set the @autoPerception from PhysicalAgentType or from superType -->
-  <xsl:template match="aorsml:PhysicalAgentType" mode="createAgents.isAutoPerception">
+  <xsl:template match="aorsl:PhysicalAgentType" mode="createAgents.isAutoPerception">
     <xsl:choose>
       <xsl:when test="fn:exists(@autoPerception)">
         <xsl:value-of select="@autoPerception"/>
       </xsl:when>
       <xsl:when test="fn:exists(@superType)">
-        <xsl:apply-templates select="../aorsml:PhysicalAgentType[@name eq current()/@superType]" mode="createAgents.isAutoPerception"/>
+        <xsl:apply-templates select="../aorsl:PhysicalAgentType[@name eq current()/@superType]" mode="createAgents.isAutoPerception"/>
       </xsl:when>
       <xsl:otherwise>
         <xsl:value-of select="'false'"/>
@@ -329,13 +329,13 @@
 
 
   <!-- set the @idPerceivable from PhysicalAgentType or from superType -->
-  <xsl:template match="aorsml:PhysicalAgentType" mode="createAgents.isIdPerceivable">
+  <xsl:template match="aorsl:PhysicalAgentType" mode="createAgents.isIdPerceivable">
     <xsl:choose>
       <xsl:when test="fn:exists(@idPerceivable)">
         <xsl:value-of select="@idPerceivable"/>
       </xsl:when>
       <xsl:when test="fn:exists(@superType)">
-        <xsl:apply-templates select="../aorsml:PhysicalAgentType[@name eq current()/@superType]" mode="createAgents.isIdPerceivable"/>
+        <xsl:apply-templates select="../aorsl:PhysicalAgentType[@name eq current()/@superType]" mode="createAgents.isIdPerceivable"/>
       </xsl:when>
       <xsl:otherwise>
         <xsl:value-of select="'false'"/>

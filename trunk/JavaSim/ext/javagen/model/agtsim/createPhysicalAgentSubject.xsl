@@ -10,13 +10,13 @@
   @last changed by $Author$
 -->
 
-<xsl:stylesheet version="2.0" xmlns:aorsml="http://aor-simulation.org" xmlns:fn="http://www.w3.org/2005/xpath-functions"
+<xsl:stylesheet version="2.0" xmlns:aorsl="http://aor-simulation.org" xmlns:fn="http://www.w3.org/2005/xpath-functions"
   xmlns:java="http://www.sun.com/java" xmlns:xs="http://www.w3.org/2001/XMLSchema" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
   xmlns:xsl="http://www.w3.org/1999/XSL/Transform" xsi:schemaLocation="http://aor-simulation.org aorsml.xsd"
   xmlns:jw="http://www.informatik.tu-cottbus.de/~jwerner/">
 
   <!--creates class-->
-  <xsl:template match="aorsml:PhysicalAgentType" mode="createPhysicalAgentSubjects.createPhysicalAgentSubject">
+  <xsl:template match="aorsl:PhysicalAgentType" mode="createPhysicalAgentSubjects.createPhysicalAgentSubject">
     <xsl:param name="indent" required="yes" as="xs:integer"/>
 
     <xsl:variable name="className" select="jw:upperWord(fn:concat(@name, $prefix.agentSubject))"/>
@@ -26,7 +26,7 @@
       <xsl:apply-templates select="." mode="createAgentSubjects.checkPIAgent"/>
     </xsl:variable>
 
-    <xsl:call-template name="aorsml:classFile">
+    <xsl:call-template name="aorsl:classFile">
       <xsl:with-param name="path" select="$sim.path.model.agentsimulator"/>
       <xsl:with-param name="name" select="$className"/>
 
@@ -41,18 +41,18 @@
             <xsl:value-of select="fn:concat($core.package.model.intEvent, '.*')"/>
             <xsl:value-of select="fn:concat($core.package.model.envSim, '.*')"/>
 
-            <xsl:if test="fn:exists(aorsml:ReactionRule/aorsml:SCHEDULE-EVT/aorsml:ActionEventExpr)">
+            <xsl:if test="fn:exists(aorsl:ReactionRule/aorsl:SCHEDULE-EVT/aorsl:ActionEventExpr)">
               <xsl:value-of select="$core.package.physAgentObject"/>
             </xsl:if>
             <xsl:if
-              test="fn:exists(//aorsml:SimulationModel/aorsml:EntityTypes/aorsml:CausedEventType) or 
-              fn:exists(//aorsml:SimulationModel/aorsml:EntityTypes/aorsml:PerceptionEventType) or 
-              fn:exists(//aorsml:SimulationModel/aorsml:EntityTypes/aorsml:ExogenousEventType) or 
-              fn:exists(//aorsml:SimulationModel/aorsml:EntityTypes/aorsml:ActionEventType)">
+              test="fn:exists(//aorsl:SimulationModel/aorsl:EntityTypes/aorsl:CausedEventType) or 
+              fn:exists(//aorsl:SimulationModel/aorsl:EntityTypes/aorsl:PerceptionEventType) or 
+              fn:exists(//aorsl:SimulationModel/aorsl:EntityTypes/aorsl:ExogenousEventType) or 
+              fn:exists(//aorsl:SimulationModel/aorsl:EntityTypes/aorsl:ActionEventType)">
               <xsl:value-of select="fn:concat($sim.package.model.envevent, '.*')"/>
             </xsl:if>
             <xsl:value-of select="fn:concat($sim.package.model.envsimulator, '.*')"/>
-            <xsl:if test="$isPIAgent and fn:exists(aorsml:Attribute)">
+            <xsl:if test="$isPIAgent and fn:exists(aorsl:Attribute)">
               <xsl:value-of select="fn:concat($sim.package.model.envsimulator, '.' , jw:upperWord(@name))"/>
             </xsl:if>
 
@@ -73,7 +73,7 @@
           <xsl:with-param name="content">
 
             <!-- set SelfbeliefAttributes as classvariables -->
-            <xsl:apply-templates select="aorsml:SelfBeliefAttribute | aorsml:SelfBeliefReferenceProperty" mode="assistents.classVariable">
+            <xsl:apply-templates select="aorsl:SelfBeliefAttribute | aorsl:SelfBeliefReferenceProperty" mode="assistents.classVariable">
               <xsl:with-param name="indent" select="$indent + 1"/>
             </xsl:apply-templates>
             <xsl:call-template name="java:newLine"/>
@@ -100,7 +100,7 @@
             </xsl:apply-templates>
 
             <!-- setter -->
-            <xsl:for-each select="aorsml:SelfBeliefAttribute | aorsml:SelfBeliefReferenceProperty">
+            <xsl:for-each select="aorsl:SelfBeliefAttribute | aorsl:SelfBeliefReferenceProperty">
               <xsl:apply-templates select="." mode="assistents.setVariableMethod">
                 <xsl:with-param name="indent" select="$indent + 1"/>
                 <xsl:with-param name="changeCheck" select="true()"/>
@@ -138,7 +138,7 @@
             </xsl:for-each>
 
             <!-- getter -->
-            <xsl:apply-templates select="aorsml:SelfBeliefAttribute | aorsml:SelfBeliefReferenceProperty" mode="assistents.getVariableMethod">
+            <xsl:apply-templates select="aorsl:SelfBeliefAttribute | aorsl:SelfBeliefReferenceProperty" mode="assistents.getVariableMethod">
               <xsl:with-param name="indent" select="$indent + 1"/>
             </xsl:apply-templates>
 
@@ -159,60 +159,60 @@
             </xsl:if>
 
             <!-- creates for BeliefTypes -->
-            <xsl:apply-templates select="aorsml:BeliefEntityType" mode="shared.methods.ceateBeliefTypes">
+            <xsl:apply-templates select="aorsl:BeliefEntityType" mode="shared.methods.ceateBeliefTypes">
               <xsl:with-param name="indent" select="$indent + 1"/>
             </xsl:apply-templates>
 
             <!-- functions -->
             <!-- as a simplification, we assume, if we have only <Functions>, then we use all of them in Objects and Subjects -->
             <xsl:choose>
-              <xsl:when test="fn:exists(aorsml:SubjectiveFunction)">
-                <xsl:apply-templates select="aorsml:SubjectiveFunction" mode="shared.createFunction">
+              <xsl:when test="fn:exists(aorsl:SubjectiveFunction)">
+                <xsl:apply-templates select="aorsl:SubjectiveFunction" mode="shared.createFunction">
                   <xsl:with-param name="indent" select="$indent + 1"/>
                 </xsl:apply-templates>
               </xsl:when>
               <xsl:otherwise>
-                <xsl:apply-templates select="aorsml:Function" mode="shared.createFunction">
+                <xsl:apply-templates select="aorsl:Function" mode="shared.createFunction">
                   <xsl:with-param name="indent" select="$indent + 1"/>
                 </xsl:apply-templates>
               </xsl:otherwise>
             </xsl:choose>
 
             <!-- AgentRules -->
-            <xsl:apply-templates select="aorsml:ReactionRule" mode="createAgentRules.createAgentRule">
+            <xsl:apply-templates select="aorsl:ReactionRule" mode="createAgentRules.createAgentRule">
               <xsl:with-param name="indent" select="$indent + 1"/>
               <xsl:with-param name="agentType" select="."/>
               <xsl:with-param name="isPIAgent" select="$isPIAgent"/>
             </xsl:apply-templates>
 
             <!-- ActualPerceptionRules -->
-            <xsl:apply-templates select="aorsml:ActualPerceptionRule" mode="createActualPerceptionRules.createActualPerceptionRule">
+            <xsl:apply-templates select="aorsl:ActualPerceptionRule" mode="createActualPerceptionRules.createActualPerceptionRule">
               <xsl:with-param name="indent" select="$indent + 1"/>
               <xsl:with-param name="agentType" select="."/>
             </xsl:apply-templates>
 
             <!-- ActualPerceptionEvent -->
-            <xsl:apply-templates select="aorsml:ActualPerceptionEventType" mode="createActualPerceptionEvents.createActualPerceptionEvent">
+            <xsl:apply-templates select="aorsl:ActualPerceptionEventType" mode="createActualPerceptionEvents.createActualPerceptionEvent">
               <xsl:with-param name="indent" select="$indent + 1"/>
             </xsl:apply-templates>
 
             <!-- PeriodicTimeEvent -->
-            <xsl:apply-templates select="aorsml:PeriodicTimeEventType" mode="createPeriodicTimeEvents.createPeriodicTimeEvent">
+            <xsl:apply-templates select="aorsl:PeriodicTimeEventType" mode="createPeriodicTimeEvents.createPeriodicTimeEvent">
               <xsl:with-param name="indent" select="$indent + 1"/>
             </xsl:apply-templates>
 
             <!-- TimeEventType -->
-            <xsl:apply-templates select="aorsml:TimeEventType" mode="createTimeEventTypes.createTimeEventType">
+            <xsl:apply-templates select="aorsl:TimeEventType" mode="createTimeEventTypes.createTimeEventType">
               <xsl:with-param name="indent" select="$indent + 1"/>
             </xsl:apply-templates>
 
             <!-- ActualInMessageEventType -->
-            <xsl:apply-templates select="aorsml:ActualInMessageEventType" mode="createActualInMessageEventTypes.createActualInMessageEventType">
+            <xsl:apply-templates select="aorsl:ActualInMessageEventType" mode="createActualInMessageEventTypes.createActualInMessageEventType">
               <xsl:with-param name="indent" select="$indent + 1"/>
             </xsl:apply-templates>
 
             <!-- BeliefEntityType -->
-            <xsl:apply-templates select="aorsml:BeliefEntityType" mode="createBeliefEntityTypes.createBeliefEntityType">
+            <xsl:apply-templates select="aorsl:BeliefEntityType" mode="createBeliefEntityTypes.createBeliefEntityType">
               <xsl:with-param name="indent" select="$indent + 1"/>
             </xsl:apply-templates>
 
@@ -224,7 +224,7 @@
   </xsl:template>
 
   <!-- creates constructor -->
-  <xsl:template match="aorsml:PhysicalAgentType" mode="createPhysicalAgentSubjects.constructor">
+  <xsl:template match="aorsl:PhysicalAgentType" mode="createPhysicalAgentSubjects.constructor">
     <xsl:param name="indent" required="yes"/>
     <xsl:param name="className" required="yes" as="xs:string"/>
     <xsl:param name="agentSubjectListener" as="xs:boolean" select="true()"/>
@@ -267,7 +267,7 @@
         <xsl:call-template name="java:newLine"/>
 
         <!-- instanciate reference self beliefs from this class -->
-        <xsl:for-each select="aorsml:SelfBeliefReferenceProperty">
+        <xsl:for-each select="aorsl:SelfBeliefReferenceProperty">
           <xsl:call-template name="java:newObject">
             <xsl:with-param name="indent" select="$indent + 1"/>
             <xsl:with-param name="class" select="@type"/>
@@ -277,7 +277,7 @@
         </xsl:for-each>
 
         <!-- set all attributvalues from this class -->
-        <xsl:for-each select="aorsml:SelfBeliefAttribute">
+        <xsl:for-each select="aorsl:SelfBeliefAttribute">
           <xsl:call-template name="java:callSetterMethod">
             <xsl:with-param name="indent" select="$indent + 1"/>
             <xsl:with-param name="objInstance" select="'this'"/>
@@ -304,7 +304,7 @@
         </xsl:if>
 
         <xsl:variable name="actPercrulesListVarName" select="'actualPercRules'"/>
-        <xsl:if test="fn:exists(aorsml:ActualPerceptionRule) and not (fn:exists(@superType))">
+        <xsl:if test="fn:exists(aorsl:ActualPerceptionRule) and not (fn:exists(@superType))">
           <!-- instantiate a new ArrayList for actualPerceptionRules -->
           <xsl:call-template name="java:newArrayListObject">
             <xsl:with-param name="indent" select="$indent + 1"/>
@@ -319,7 +319,7 @@
           </xsl:call-template>
         </xsl:if>
 
-        <xsl:for-each select="aorsml:ReactionRule, aorsml:ActualPerceptionRule">
+        <xsl:for-each select="aorsl:ReactionRule, aorsl:ActualPerceptionRule">
 
           <xsl:call-template name="java:newLine"/>
           <xsl:call-template name="java:newObject">
@@ -357,7 +357,7 @@
         </xsl:for-each>
 
         <!-- create periodictimeevents
-        <xsl:apply-templates select="aorsml:PeriodicTimeEventType" mode="createAgentSubjects.constructor.helper.createPeriodicTimeEventType">
+        <xsl:apply-templates select="aorsl:PeriodicTimeEventType" mode="createAgentSubjects.constructor.helper.createPeriodicTimeEventType">
           <xsl:with-param name="indent" select="$indent + 1"/>
           </xsl:apply-templates>  -->
 
@@ -366,7 +366,7 @@
 
   </xsl:template>
 
-  <!--xsl:template match="aorsml:PeriodicTimeEventType" mode="createPhysicalAgentSubjects.constructor.helper.createPeriodicTimeEventType">
+  <!--xsl:template match="aorsl:PeriodicTimeEventType" mode="createPhysicalAgentSubjects.constructor.helper.createPeriodicTimeEventType">
     <xsl:param name="indent" required="yes" as="xs:integer"/>
 
     <xsl:call-template name="java:newLine"/>
@@ -405,7 +405,7 @@
   </xsl:template-->
 
   <!-- getters and setters for pi-agent -->
-  <xsl:template match="aorsml:PhysicalAgentType" mode="createPhysicalAgentSubjects.pi-agents.getters">
+  <xsl:template match="aorsl:PhysicalAgentType" mode="createPhysicalAgentSubjects.pi-agents.getters">
     <xsl:param name="indent" as="xs:integer" required="yes"/>
 
     <xsl:for-each select="$physObjAttrList, $physAgentObjAttrList">
@@ -462,7 +462,7 @@
 
   </xsl:template>
 
-  <xsl:template match="aorsml:PhysicalAgentType" mode="createPhysicalAgentSubjects.pi-agents.setters">
+  <xsl:template match="aorsl:PhysicalAgentType" mode="createPhysicalAgentSubjects.pi-agents.setters">
     <xsl:param name="indent" as="xs:integer" required="yes"/>
 
     <xsl:variable name="agentObjectClassName" select="jw:upperWord(@name)"/>
@@ -527,13 +527,13 @@
   </xsl:template>
 
   <!-- set the @memorySize from PhysicalAgentType or from superType -->
-  <xsl:template match="aorsml:PhysicalAgentType" mode="createPhysicalAgentSubjects.setMomerySize">
+  <xsl:template match="aorsl:PhysicalAgentType" mode="createPhysicalAgentSubjects.setMomerySize">
     <xsl:choose>
       <xsl:when test="fn:exists(@memorySize)">
         <xsl:value-of select="@memorySize"/>
       </xsl:when>
-      <xsl:when test="fn:exists(@superType) and fn:exists(../aorsml:PhysicalAgentType[@name eq current()/@superType])">
-        <xsl:apply-templates select="../aorsml:PhysicalAgentType[@name eq current()/@superType]" mode="createPhysicalAgentSubjects.setMomerySize"/>
+      <xsl:when test="fn:exists(@superType) and fn:exists(../aorsl:PhysicalAgentType[@name eq current()/@superType])">
+        <xsl:apply-templates select="../aorsl:PhysicalAgentType[@name eq current()/@superType]" mode="createPhysicalAgentSubjects.setMomerySize"/>
       </xsl:when>
       <xsl:otherwise>
         <xsl:value-of select="'0'"/>

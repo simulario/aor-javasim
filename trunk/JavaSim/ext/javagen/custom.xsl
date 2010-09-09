@@ -9,7 +9,7 @@
     @license:  GNU General Public License version 2 or higher
     @last changed by $Author$
 -->
-<xsl:stylesheet xmlns:xsl="http://www.w3.org/1999/XSL/Transform" version="2.0" xmlns:aorsml="http://aor-simulation.org"
+<xsl:stylesheet xmlns:xsl="http://www.w3.org/1999/XSL/Transform" version="2.0" xmlns:aorsl="http://aor-simulation.org"
   xmlns:fn="http://www.w3.org/2005/xpath-functions" xmlns:xs="http://www.w3.org/2001/XMLSchema" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
   xsi:schemaLocation="http://aor-simulation.org aorsml.xsd">
 
@@ -333,7 +333,7 @@
   <xsl:param name="util.package.refTypes" as="xs:string" select="fn:concat($core.package.util.refTypes, '.*')"/>
 
   <!-- created classnames/packages/path -->
-  <xsl:param name="sim.package" select="fn:lower-case(aorsml:SimulationScenario/@scenarioName)"/>
+  <xsl:param name="sim.package" select="fn:lower-case(aorsl:SimulationScenario/@scenarioName)"/>
 
   <!-- insert here the package-node for the created simulation -->
   <xsl:param name="sim.package.node" select="$core.package.root"/>
@@ -407,7 +407,7 @@
   <xsl:variable name="defaultImports" as="xs:string*">
     <xsl:value-of select="fn:concat($core.package.util, '.*')"/>
     <xsl:value-of select="$util.package.refTypes"/>
-    <xsl:if test="fn:exists(//aorsml:Enumeration) or fn:exists(//aorsml:ComplexDataProperty)">
+    <xsl:if test="fn:exists(//aorsl:Enumeration) or fn:exists(//aorsl:ComplexDataProperty)">
       <xsl:value-of select="fn:concat($sim.package.model.dataTypes, '.*')"/>
     </xsl:if>
     <xsl:value-of select="fn:concat($sim.package.model.envsimulator, '.*')"/>

@@ -11,11 +11,11 @@
         @last changed by $Author$
 -->
 
-<xsl:stylesheet version="2.0" xmlns:aorsml="http://aor-simulation.org" xmlns:fn="http://www.w3.org/2005/xpath-functions" xmlns:java="http://www.sun.com/java"
+<xsl:stylesheet version="2.0" xmlns:aorsl="http://aor-simulation.org" xmlns:fn="http://www.w3.org/2005/xpath-functions" xmlns:java="http://www.sun.com/java"
   xmlns:xs="http://www.w3.org/2001/XMLSchema" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:xsl="http://www.w3.org/1999/XSL/Transform"
   xsi:schemaLocation="http://aor-simulation.org aorsml.xsd" xmlns:jw="http://www.informatik.tu-cottbus.de/~jwerner/">
 
-  <xsl:template match="aorsml:TimeEventType" mode="createTimeEvents.createTimeEvent">
+  <xsl:template match="aorsl:TimeEventType" mode="createTimeEvents.createTimeEvent">
     <xsl:param name="indent" required="yes" as="xs:integer"/>
 
     <xsl:call-template name="java:class">
@@ -25,7 +25,7 @@
       <xsl:with-param name="extends" select="if (fn:exists(@superType)) then @superType else $core.class.timeEvent"/>
       <xsl:with-param name="content">
 
-        <xsl:apply-templates select="aorsml:Attribute" mode="assistents.classVariable">
+        <xsl:apply-templates select="aorsl:Attribute" mode="assistents.classVariable">
           <xsl:with-param name="indent" select="$indent + 1"/>
         </xsl:apply-templates>
         <xsl:call-template name="java:newLine"/>
@@ -36,17 +36,17 @@
         </xsl:apply-templates>
         
         <!-- setter -->
-        <xsl:apply-templates select="aorsml:Attribute" mode="assistents.setVariableMethod">
+        <xsl:apply-templates select="aorsl:Attribute" mode="assistents.setVariableMethod">
           <xsl:with-param name="indent" select="$indent + 1"/>
         </xsl:apply-templates>
         
         <!-- getter -->
-        <xsl:apply-templates select="aorsml:Attribute" mode="assistents.getVariableMethod">
+        <xsl:apply-templates select="aorsl:Attribute" mode="assistents.getVariableMethod">
           <xsl:with-param name="indent" select="$indent + 1"/>
         </xsl:apply-templates>
         
         <!-- functions -->
-        <xsl:apply-templates select="aorsml:Function" mode="shared.createFunction">
+        <xsl:apply-templates select="aorsl:Function" mode="shared.createFunction">
           <xsl:with-param name="indent" select="$indent + 1"/>
         </xsl:apply-templates>
 
@@ -56,7 +56,7 @@
 
   <!-- constructors -->
   <!-- creates constructor -->
-  <xsl:template match="aorsml:TimeEventType" mode="createTimeEvents.constructor">
+  <xsl:template match="aorsl:TimeEventType" mode="createTimeEvents.constructor">
     <xsl:param name="indent" required="yes"/>
 
     <!-- empty constructor -->

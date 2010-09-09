@@ -11,17 +11,17 @@
   @last changed by $Author$
 -->
 
-<xsl:stylesheet version="2.0" xmlns:aorsml="http://aor-simulation.org" xmlns:fn="http://www.w3.org/2005/xpath-functions"
+<xsl:stylesheet version="2.0" xmlns:aorsl="http://aor-simulation.org" xmlns:fn="http://www.w3.org/2005/xpath-functions"
   xmlns:java="http://www.sun.com/java" xmlns:xs="http://www.w3.org/2001/XMLSchema" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
   xmlns:xsl="http://www.w3.org/1999/XSL/Transform" xsi:schemaLocation="http://aor-simulation.org aorsml.xsd"
   xmlns:jw="http://www.informatik.tu-cottbus.de/~jwerner/">
 
-  <xsl:template match="aorsml:ActivityType" mode="createActivties.createActivity">
+  <xsl:template match="aorsl:ActivityType" mode="createActivties.createActivity">
     <xsl:param name="indent" select="0" as="xs:integer"/>
 
     <xsl:variable name="className" select="jw:upperWord(@name)"/>
 
-    <xsl:call-template name="aorsml:classFile">
+    <xsl:call-template name="aorsl:classFile">
       <xsl:with-param name="path" select="$sim.path.model.envsimulator"/>
       <xsl:with-param name="name" select="$className"/>
 
@@ -35,23 +35,23 @@
               test="(@startEventType or @endEventType and
                                 (@startEventType != $core.class.activityStartEvent) and 
                                 (@endEventType != $core.class.activityEndEvent)) or 
-                                fn:exists(aorsml:SuccessorActivityType[@activityName != $core.class.activityStartEvent])">
+                                fn:exists(aorsl:SuccessorActivityType[@activityName != $core.class.activityStartEvent])">
               <xsl:value-of select="fn:concat($sim.package.model.envevent, '.*')"/>
             </xsl:if>
             <xsl:value-of select="fn:concat($core.package.model.envSim, '.*')"/>
             <xsl:call-template name="setDefaultJavaImports"/>
 
             <xsl:if
-              test="fn:exists(aorsml:FOR[@objectVariable][@objectType = 'Collection']) or 
-                    fn:exists(aorsml:ActivityStartEffect/aorsml:AddObjectToCollection) or
-                    fn:exists(aorsml:ActivityEndEffect/aorsml:AddObjectToCollection)">
+              test="fn:exists(aorsl:FOR[@objectVariable][@objectType = 'Collection']) or 
+                    fn:exists(aorsl:ActivityStartEffect/aorsl:AddObjectToCollection) or
+                    fn:exists(aorsl:ActivityEndEffect/aorsl:AddObjectToCollection)">
               <xsl:value-of select="$collection.package.aORCollection"/>
             </xsl:if>
 
           </xsl:with-param>
         </xsl:call-template>
 
-        <xsl:call-template name="aorsml:class">
+        <xsl:call-template name="aorsl:class">
           <xsl:with-param name="indent" select="$indent"/>
           <xsl:with-param name="modifier" select="'public'"/>
           <xsl:with-param name="name" select="$className"/>
@@ -84,7 +84,7 @@
             </xsl:if>
 
             <!-- set involved entitys as classvariable -->
-            <xsl:for-each select="aorsml:FOR[@objectVariable]">
+            <xsl:for-each select="aorsl:FOR[@objectVariable]">
 
               <xsl:variable name="objectType">
                 <xsl:apply-templates select="." mode="assistents.getVariableType"/>
@@ -100,12 +100,12 @@
             </xsl:for-each>
 
             <!-- set the DataVariableDeclaration as classvaraibles -->
-            <xsl:apply-templates select="aorsml:FOR[@dataVariable]" mode="assistents.setDataVariableDeclarationClassVariables">
+            <xsl:apply-templates select="aorsl:FOR[@dataVariable]" mode="assistents.setDataVariableDeclarationClassVariables">
               <xsl:with-param name="indent" select="$indent"/>
             </xsl:apply-templates>
 
             <!-- set the ressourcereferences as classVariable -->
-            <xsl:for-each select="aorsml:ResourceIdRef[@resourceVariable] | aorsml:ResourceRef[@resourceVariable]">
+            <xsl:for-each select="aorsl:ResourceIdRef[@resourceVariable] | aorsl:ResourceRef[@resourceVariable]">
               <xsl:if test="@type">
                 <xsl:call-template name="java:variable">
                   <xsl:with-param name="indent" select="$indent + 1"/>
@@ -134,7 +134,7 @@
             </xsl:apply-templates>
 
             <!-- setters -->
-            <xsl:for-each select="aorsml:Attribute | aorsml:ReferenceProperty | aorsml:ComplexDataProperty | aorsml:EnumerationProperty">
+            <xsl:for-each select="aorsl:Attribute | aorsl:ReferenceProperty | aorsl:ComplexDataProperty | aorsl:EnumerationProperty">
               <xsl:apply-templates select="." mode="assistents.setVariableMethod">
                 <xsl:with-param name="indent" select="$indent + 1"/>
                 <xsl:with-param name="changeCheck" select="true()"/>
@@ -142,7 +142,7 @@
             </xsl:for-each>
 
             <!-- getters -->
-            <xsl:apply-templates select="aorsml:Attribute | aorsml:ReferenceProperty | aorsml:ComplexDataProperty | aorsml:EnumerationProperty"
+            <xsl:apply-templates select="aorsl:Attribute | aorsl:ReferenceProperty | aorsl:ComplexDataProperty | aorsl:EnumerationProperty"
               mode="assistents.getVariableMethod">
               <xsl:with-param name="indent" select="$indent + 1"/>
             </xsl:apply-templates>
@@ -191,7 +191,7 @@
             </xsl:apply-templates>
 
             <!-- functions -->
-            <xsl:apply-templates select="aorsml:Function" mode="shared.createFunction">
+            <xsl:apply-templates select="aorsl:Function" mode="shared.createFunction">
               <xsl:with-param name="indent" select="$indent + 1"/>
             </xsl:apply-templates>
 
@@ -203,7 +203,7 @@
   </xsl:template>
 
   <!-- constructor -->
-  <xsl:template match="aorsml:ActivityType" mode="createActivties.constructor">
+  <xsl:template match="aorsl:ActivityType" mode="createActivties.constructor">
     <xsl:param name="indent" required="yes" as="xs:integer"/>
     <xsl:param name="className" required="yes" as="xs:string"/>
 
@@ -213,9 +213,9 @@
       <xsl:with-param name="annotation">
         <xsl:if
           test="$suppressWarnings and 
-                    (fn:exists(aorsml:FOR[@objectVariable][@objectType = 'Collection']) or 
-                    fn:exists(aorsml:ActivityStartEffect/aorsml:AddObjectToCollection) or
-                    fn:exists(aorsml:ActivityEndEffect/aorsml:AddObjectToCollection))">
+                    (fn:exists(aorsl:FOR[@objectVariable][@objectType = 'Collection']) or 
+                    fn:exists(aorsl:ActivityStartEffect/aorsl:AddObjectToCollection) or
+                    fn:exists(aorsl:ActivityEndEffect/aorsl:AddObjectToCollection))">
           <xsl:call-template name="getAnnotationSuppressWarnings.unchecked"/>
         </xsl:if>
       </xsl:with-param>
@@ -255,7 +255,7 @@
   </xsl:template>
 
   <!-- getActivityStartEventSimpleName() -->
-  <xsl:template match="aorsml:ActivityType" mode="createActivties.method.getActivityStartEventSimpleName">
+  <xsl:template match="aorsl:ActivityType" mode="createActivties.method.getActivityStartEventSimpleName">
     <xsl:param name="indent" required="yes" as="xs:integer"/>
 
     <xsl:call-template name="java:method">
@@ -287,7 +287,7 @@
 
 
   <!-- getActivityEndEventSimpleNameList() -->
-  <xsl:template match="aorsml:ActivityType" mode="createActivties.method.getActivityEndEventSimpleNameList">
+  <xsl:template match="aorsl:ActivityType" mode="createActivties.method.getActivityEndEventSimpleNameList">
     <xsl:param name="indent" required="yes" as="xs:integer"/>
 
     <xsl:call-template name="java:method">
@@ -316,7 +316,7 @@
           </xsl:if>
         </xsl:for-each>
 
-        <xsl:if test="fn:exists(aorsml:Duration) or @duration">
+        <xsl:if test="fn:exists(aorsl:Duration) or @duration">
           <xsl:call-template name="java:callMethod">
             <xsl:with-param name="indent" select="$indent + 1"/>
             <xsl:with-param name="objInstance" select="$resultListVarName"/>
@@ -337,7 +337,7 @@
 
 
   <!-- executeStartEffects() -->
-  <xsl:template match="aorsml:ActivityType" mode="createActivties.method.executeStartEffects">
+  <xsl:template match="aorsl:ActivityType" mode="createActivties.method.executeStartEffects">
     <xsl:param name="indent" required="yes" as="xs:integer"/>
 
     <xsl:call-template name="java:method">
@@ -347,15 +347,15 @@
       <xsl:with-param name="content">
 
         <!-- set the actor if there is  -->
-        <xsl:if test="fn:exists(@actorIdRef) or fn:exists(aorsml:ActorIdRef) or fn:exists(aorsml:ActorRef)">
+        <xsl:if test="fn:exists(@actorIdRef) or fn:exists(aorsl:ActorIdRef) or fn:exists(aorsl:ActorRef)">
           <xsl:call-template name="java:callMethod">
             <xsl:with-param name="indent" select="$indent + 1"/>
             <xsl:with-param name="method" select="'setActor'"/>
             <xsl:with-param name="args" as="xs:string*">
               <xsl:choose>
-                <!-- this.setActor(aorsml:ActorRef); -->
-                <xsl:when test="fn:exists(aorsml:ActorRef[@language eq $output.language])">
-                  <xsl:value-of select="aorsml:ActorRef[@language eq $output.language][1]"/>
+                <!-- this.setActor(aorsl:ActorRef); -->
+                <xsl:when test="fn:exists(aorsl:ActorRef[@language eq $output.language])">
+                  <xsl:value-of select="aorsl:ActorRef[@language eq $output.language][1]"/>
                 </xsl:when>
                 <xsl:otherwise>
                   <!-- this.setActor(this.getEnvironmentSimulator().getActivityActorById(ActorIdRef or @actorIdRef)); -->
@@ -370,8 +370,8 @@
                     <xsl:with-param name="method" select="'getActivityActorById'"/>
                     <xsl:with-param name="args">
                       <xsl:choose>
-                        <xsl:when test="fn:exists(aorsml:ActorIdRef[@language eq $output.language])">
-                          <xsl:value-of select="aorsml:ActorIdRef[@language eq $output.language]"/>
+                        <xsl:when test="fn:exists(aorsl:ActorIdRef[@language eq $output.language])">
+                          <xsl:value-of select="aorsl:ActorIdRef[@language eq $output.language]"/>
                         </xsl:when>
                         <xsl:otherwise>
                           <xsl:value-of select="@actorIdRef"/>
@@ -457,7 +457,7 @@
 
         <!-- *********** Resources **************** -->
         <!-- set the resources -->
-        <xsl:for-each select="aorsml:ResourceIdRef[@language eq $output.language]">
+        <xsl:for-each select="aorsl:ResourceIdRef[@language eq $output.language]">
 
           <xsl:variable name="resourceType" as="xs:string">
             <xsl:choose>
@@ -551,7 +551,7 @@
 
         </xsl:for-each>
 
-        <xsl:for-each select="aorsml:ResourceRef[@language eq $output.language]">
+        <xsl:for-each select="aorsl:ResourceRef[@language eq $output.language]">
 
           <xsl:if test="@resourceVariable and @type">
 
@@ -593,14 +593,14 @@
         <!-- ~~~~~~~~~~~ resourceS ~~~~~~~~~~~~~~~ -->
 
         <xsl:apply-templates
-          select="aorsml:ActivityStartEffect/aorsml:UpdateObject | 
-                  aorsml:ActivityStartEffect/aorsml:UpdateStatisticsVariable |
-                  aorsml:ActivityStartEffect/aorsml:UpdateGridCell | 
-                  aorsml:ActivityStartEffect/aorsml:ForEachGridCell | 
-                  aorsml:ActivityStartEffect/aorsml:AddObjectToCollection | 
-                  aorsml:ActivityStartEffect/aorsml:UpdateActor |
-                  aorsml:UPDATE-ENV/aorsml:IncrementGlobalVariable |
-                  aorsml:UPDATE-ENV/aorsml:UpdateGlobalVariable"
+          select="aorsl:ActivityStartEffect/aorsl:UpdateObject | 
+                  aorsl:ActivityStartEffect/aorsl:UpdateStatisticsVariable |
+                  aorsl:ActivityStartEffect/aorsl:UpdateGridCell | 
+                  aorsl:ActivityStartEffect/aorsl:ForEachGridCell | 
+                  aorsl:ActivityStartEffect/aorsl:AddObjectToCollection | 
+                  aorsl:ActivityStartEffect/aorsl:UpdateActor |
+                  aorsl:UPDATE-ENV/aorsl:IncrementGlobalVariable |
+                  aorsl:UPDATE-ENV/aorsl:UpdateGlobalVariable"
           mode="createActivties.method.executeEffects">
           <xsl:with-param name="indent" select="$indent"/>
           <!-- spaceReservationSystem works only in the initial phase, but we have to set the 'spaceReservationSystem'
@@ -609,7 +609,7 @@
           <xsl:with-param name="spaceReservationSystem" select="false()" tunnel="yes"/>
         </xsl:apply-templates>
 
-        <xsl:apply-templates select="aorsml:ActivityStartEffect/aorsml:UpdateObjects" mode="createEnvironmentRules.helper.method.stateEffects">
+        <xsl:apply-templates select="aorsl:ActivityStartEffect/aorsl:UpdateObjects" mode="createEnvironmentRules.helper.method.stateEffects">
           <xsl:with-param name="indent" select="$indent + 1"/>
         </xsl:apply-templates>
 
@@ -619,7 +619,7 @@
   </xsl:template>
 
   <!-- executeEndEffects() -->
-  <xsl:template match="aorsml:ActivityType" mode="createActivties.method.executeEndEffects">
+  <xsl:template match="aorsl:ActivityType" mode="createActivties.method.executeEndEffects">
     <xsl:param name="indent" required="yes" as="xs:integer"/>
     <xsl:param name="endEventVarName" required="yes" as="xs:string"/>
 
@@ -634,12 +634,12 @@
         </xsl:apply-templates>
 
         <xsl:apply-templates
-          select="aorsml:ActivityEndEffect/aorsml:UpdateObject | 
-          aorsml:ActivityEndEffect/aorsml:UpdateStatisticsVariable |
-          aorsml:ActivityEndEffect/aorsml:UpdateGridCell | 
-          aorsml:ActivityEndEffect/aorsml:ForEachGridCell | 
-          aorsml:ActivityEndEffect/aorsml:AddObjectToCollection | 
-          aorsml:ActivityEndEffect/aorsml:UpdateActor"
+          select="aorsl:ActivityEndEffect/aorsl:UpdateObject | 
+          aorsl:ActivityEndEffect/aorsl:UpdateStatisticsVariable |
+          aorsl:ActivityEndEffect/aorsl:UpdateGridCell | 
+          aorsl:ActivityEndEffect/aorsl:ForEachGridCell | 
+          aorsl:ActivityEndEffect/aorsl:AddObjectToCollection | 
+          aorsl:ActivityEndEffect/aorsl:UpdateActor"
           mode="createActivties.method.executeEffects">
           <xsl:with-param name="indent" select="$indent"/>
           <!-- spaceReservationSystem works only in the initial phase, but we have to set the 'spaceReservationSystem'
@@ -648,7 +648,7 @@
           <xsl:with-param name="spaceReservationSystem" select="false()" tunnel="yes"/>
         </xsl:apply-templates>
 
-        <xsl:apply-templates select="aorsml:ActivityEndEffect/aorsml:UpdateObjects" mode="createEnvironmentRules.helper.method.stateEffects">
+        <xsl:apply-templates select="aorsl:ActivityEndEffect/aorsl:UpdateObjects" mode="createEnvironmentRules.helper.method.stateEffects">
           <xsl:with-param name="indent" select="$indent + 1"/>
         </xsl:apply-templates>
 
@@ -670,8 +670,8 @@
 
   <!-- is it used for the additional (activity-)element UpdateActor-->
   <xsl:template
-    match="aorsml:UpdateObject | aorsml:UpdateStatisticsVariable | aorsml:UpdateGridCell | aorsml:ForEachGridCell |aorsml:AddObjectToCollection | 
-                   aorsml:UpdateActor | aorsml:UpdateStatisticsVariable | aorsml:IncrementGlobalVariable"
+    match="aorsl:UpdateObject | aorsl:UpdateStatisticsVariable | aorsl:UpdateGridCell | aorsl:ForEachGridCell |aorsl:AddObjectToCollection | 
+                   aorsl:UpdateActor | aorsl:UpdateStatisticsVariable | aorsl:IncrementGlobalVariable"
     mode="createActivties.method.executeEffects">
     <xsl:param name="indent" required="yes" as="xs:integer"/>
 
@@ -717,7 +717,7 @@
 
   <!-- getActivityEndEvent() -->
   <!-- create an activityEndEvent with delay = duration (if duration is exists)-->
-  <xsl:template match="aorsml:ActivityType" mode="createActivties.method.getActivityEndEvent">
+  <xsl:template match="aorsl:ActivityType" mode="createActivties.method.getActivityEndEvent">
     <xsl:param name="indent" required="yes" as="xs:integer"/>
 
     <xsl:variable name="occurenceTimeVarName" select="'occurenceTime'"/>
@@ -740,7 +740,7 @@
 
         <xsl:choose>
 
-          <xsl:when test="fn:exists(aorsml:Duration) or @duration">
+          <xsl:when test="fn:exists(aorsl:Duration) or @duration">
 
             <xsl:variable name="actEndEvtVarName" select="fn:concat('__', jw:lowerWord($core.class.activityEndEvent))"/>
             <xsl:call-template name="java:newObject">
@@ -796,10 +796,10 @@
 
   </xsl:template>
 
-  <xsl:template match="aorsml:ActivityType" mode="createActivties.method.getActivityEndEvent.duration">
+  <xsl:template match="aorsl:ActivityType" mode="createActivties.method.getActivityEndEvent.duration">
     <xsl:param name="indent" required="yes" as="xs:integer"/>
 
-    <xsl:if test="fn:exists(aorsml:Duration) or fn:exists(@duration)">
+    <xsl:if test="fn:exists(aorsl:Duration) or fn:exists(@duration)">
       <!-- set duration -->
       <xsl:call-template name="java:callSetterMethod">
         <xsl:with-param name="indent" select="$indent"/>
@@ -811,12 +811,12 @@
               <xsl:value-of select="@duration"/>
             </xsl:when>
 
-            <xsl:when test="fn:exists(aorsml:Duration/aorsml:ValueExpr[@language eq $output.language])">
-              <xsl:value-of select="aorsml:Duration/aorsml:ValueExpr[@language eq $output.language][1]"/>
+            <xsl:when test="fn:exists(aorsl:Duration/aorsl:ValueExpr[@language eq $output.language])">
+              <xsl:value-of select="aorsl:Duration/aorsl:ValueExpr[@language eq $output.language][1]"/>
             </xsl:when>
 
-            <xsl:when test="exists(aorsml:Duration/aorsml:DiscreteRandomVariable)">
-              <xsl:apply-templates select="aorsml:Duration/aorsml:DiscreteRandomVariable/aorsml:*" mode="assistents.distribution"/>
+            <xsl:when test="exists(aorsl:Duration/aorsl:DiscreteRandomVariable)">
+              <xsl:apply-templates select="aorsl:Duration/aorsl:DiscreteRandomVariable/aorsl:*" mode="assistents.distribution"/>
             </xsl:when>
 
           </xsl:choose>
@@ -828,7 +828,7 @@
 
 
   <!-- getSuccessorActivityStartEvents() -->
-  <xsl:template match="aorsml:ActivityType" mode="createActivties.method.getSuccessorActivityStartEvents">
+  <xsl:template match="aorsl:ActivityType" mode="createActivties.method.getSuccessorActivityStartEvents">
     <xsl:param name="indent" required="yes" as="xs:integer"/>
 
     <xsl:variable name="occurenceTimeVarName" select="'occurenceTime'"/>
@@ -854,7 +854,7 @@
         </xsl:call-template>
         <xsl:call-template name="java:newLine"/>
 
-        <xsl:apply-templates select="aorsml:SuccessorActivityType" mode="createActivties.helper.method.getSuccessorActivityStartEvents.nextActivity">
+        <xsl:apply-templates select="aorsl:SuccessorActivityType" mode="createActivties.helper.method.getSuccessorActivityStartEvents.nextActivity">
           <xsl:with-param name="indent" select="$indent"/>
           <xsl:with-param name="resultListVarName" select="$resultListVarName"/>
           <xsl:with-param name="occurenceTimeVarName" select="$occurenceTimeVarName"/>
@@ -870,12 +870,12 @@
 
   </xsl:template>
 
-  <xsl:template match="aorsml:SuccessorActivityType" mode="createActivties.helper.method.getSuccessorActivityStartEvents.nextActivity">
+  <xsl:template match="aorsl:SuccessorActivityType" mode="createActivties.helper.method.getSuccessorActivityStartEvents.nextActivity">
     <xsl:param name="indent" required="yes" as="xs:integer"/>
     <xsl:param name="resultListVarName" required="yes" as="xs:string"/>
     <xsl:param name="occurenceTimeVarName" required="yes" as="xs:string"/>
 
-    <xsl:variable name="nextActivity" select="//aorsml:EntityTypes/aorsml:ActivityType[@name eq current()/@activityName][1]"/>
+    <xsl:variable name="nextActivity" select="//aorsl:EntityTypes/aorsl:ActivityType[@name eq current()/@activityName][1]"/>
 
     <xsl:choose>
       <xsl:when test="fn:exists($nextActivity)">
@@ -884,7 +884,7 @@
 
         <xsl:choose>
           <xsl:when
-            test="not($nextActivity/@startEventType) or ($nextActivity/@startEventType and //aorsml:EntityTypes/aorsml:ActionEventType[@name eq $nextActivity/@startEventType])">
+            test="not($nextActivity/@startEventType) or ($nextActivity/@startEventType and //aorsl:EntityTypes/aorsl:ActionEventType[@name eq $nextActivity/@startEventType])">
 
             <xsl:call-template name="java:newObject">
               <xsl:with-param name="indent" select="$indent + 1"/>
@@ -894,8 +894,8 @@
                 <xsl:value-of select="jw:quote(@activityName)"/>
                 <xsl:variable name="duration">
                   <xsl:choose>
-                    <xsl:when test="fn:exists(aorsml:Delay[@language eq $output.language])">
-                      <xsl:value-of select="aorsml:Delay[@language eq $output.language][1]"/>
+                    <xsl:when test="fn:exists(aorsl:Delay[@language eq $output.language])">
+                      <xsl:value-of select="aorsl:Delay[@language eq $output.language][1]"/>
                     </xsl:when>
                     <xsl:when test="fn:exists(@delay)">
                       <xsl:value-of select="@delay"/>
@@ -916,8 +916,8 @@
               <xsl:with-param name="instVariable" select="'correlationValue'"/>
               <xsl:with-param name="value">
                 <xsl:choose>
-                  <xsl:when test="fn:exists(aorsml:StartEventCorrelationProperty[@language eq $output.language])">
-                    <xsl:value-of select="aorsml:StartEventCorrelationProperty[@language eq $output.language][1]"/>
+                  <xsl:when test="fn:exists(aorsl:StartEventCorrelationProperty[@language eq $output.language])">
+                    <xsl:value-of select="aorsl:StartEventCorrelationProperty[@language eq $output.language][1]"/>
                   </xsl:when>
                   <xsl:otherwise>
                     <xsl:call-template name="java:callGetterMethod">
@@ -940,8 +940,8 @@
               <xsl:with-param name="args">
                 <xsl:variable name="duration">
                   <xsl:choose>
-                    <xsl:when test="fn:exists(aorsml:Delay[@language eq $output.language])">
-                      <xsl:value-of select="aorsml:Delay[@language eq $output.language][1]"/>
+                    <xsl:when test="fn:exists(aorsl:Delay[@language eq $output.language])">
+                      <xsl:value-of select="aorsl:Delay[@language eq $output.language][1]"/>
                     </xsl:when>
                     <xsl:when test="fn:exists(@delay)">
                       <xsl:value-of select="@delay"/>
@@ -956,7 +956,7 @@
               </xsl:with-param>
             </xsl:call-template>
 
-            <xsl:for-each select="aorsml:Slot">
+            <xsl:for-each select="aorsl:Slot">
               <xsl:call-template name="java:callSetterMethod">
                 <xsl:with-param name="indent" select="$indent + 1"/>
                 <xsl:with-param name="objInstance" select="$eventVarName"/>
@@ -992,7 +992,7 @@
 
 
   <!-- setCurrentEndEvent() -->
-  <xsl:template match="aorsml:ActivityType" mode="createActivties.method.setCurrentEndEvent">
+  <xsl:template match="aorsl:ActivityType" mode="createActivties.method.setCurrentEndEvent">
     <xsl:param name="indent" required="yes" as="xs:integer"/>
     <xsl:param name="endEventVarName" required="yes" as="xs:string"/>
 
@@ -1039,7 +1039,7 @@
   </xsl:template>
 
   <!-- setStartEvent() -->
-  <xsl:template match="aorsml:ActivityType" mode="createActivties.method.setStartEvent">
+  <xsl:template match="aorsl:ActivityType" mode="createActivties.method.setStartEvent">
     <xsl:param name="indent" required="yes" as="xs:integer"/>
     <xsl:param name="startEventVarName" required="yes" as="xs:string"/>
 
@@ -1083,7 +1083,7 @@
 
   </xsl:template>
 
-  <xsl:template match="aorsml:UpdateActor" mode="createActivties.helper.method.executeEffects.UpdateActorObject">
+  <xsl:template match="aorsl:UpdateActor" mode="createActivties.helper.method.executeEffects.UpdateActorObject">
     <xsl:param name="indent" required="yes" as="xs:integer"/>
 
     <!-- UpdateActor -->
@@ -1140,7 +1140,7 @@
           </xsl:with-param>
         </xsl:call-template>
 
-        <xsl:for-each select="aorsml:Slot">
+        <xsl:for-each select="aorsl:Slot">
           <xsl:call-template name="java:callSetterMethod">
             <xsl:with-param name="indent" select="$indent + 1"/>
             <xsl:with-param name="objInstance" select="$varName"/>
@@ -1156,29 +1156,29 @@
 
   </xsl:template>
 
-  <xsl:template match="aorsml:ActivityType" mode="createActivties.setVariables">
+  <xsl:template match="aorsl:ActivityType" mode="createActivties.setVariables">
     <xsl:param name="indent" as="xs:integer" required="yes"/>
 
     <!-- set the variables -->
     <!-- fixed Obj by id-->
     <xsl:apply-templates
-      select="aorsml:FOR[@objectVariable][(fn:exists(@objectIdRef) or fn:exists(aorsml:ObjectIdRef)) and not(@objectType ='Collection')]"
+      select="aorsl:FOR[@objectVariable][(fn:exists(@objectIdRef) or fn:exists(aorsl:ObjectIdRef)) and not(@objectType ='Collection')]"
       mode="createRules.helper.method.execute.fixedById">
       <xsl:with-param name="indent" select="$indent + 1"/>
     </xsl:apply-templates>
 
     <!-- fixed Obj by ref-->
     <xsl:apply-templates
-      select="aorsml:FOR[@objectVariable][fn:exists(aorsml:ObjectRef) and not (fn:exists(@objectIdRef) or fn:exists(aorsml:ObjectIdRef) ) and not(@objectType ='Collection')]"
+      select="aorsl:FOR[@objectVariable][fn:exists(aorsl:ObjectRef) and not (fn:exists(@objectIdRef) or fn:exists(aorsl:ObjectIdRef) ) and not(@objectType ='Collection')]"
       mode="createRules.helper.method.execute.fixedByRef">
       <xsl:with-param name="indent" select="$indent + 1"/>
     </xsl:apply-templates>
 
-    <xsl:apply-templates select="aorsml:FOR[@dataVariable]" mode="assistents.setDataVariableDeclaration">
+    <xsl:apply-templates select="aorsl:FOR[@dataVariable]" mode="assistents.setDataVariableDeclaration">
       <xsl:with-param name="indent" select="$indent + 1"/>
     </xsl:apply-templates>
 
-    <xsl:apply-templates select="aorsml:FOR[@objectVariable][@objectType = 'Collection']" mode="createRules.helper.method.execute.fixedCollection">
+    <xsl:apply-templates select="aorsl:FOR[@objectVariable][@objectType = 'Collection']" mode="createRules.helper.method.execute.fixedCollection">
       <xsl:with-param name="indent" select="$indent + 1"/>
     </xsl:apply-templates>
 

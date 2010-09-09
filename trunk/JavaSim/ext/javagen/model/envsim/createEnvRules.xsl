@@ -10,7 +10,7 @@
         @last changed by $Author$
 -->
 
-<xsl:stylesheet version="2.0" xmlns:aorsml="http://aor-simulation.org" xmlns:fn="http://www.w3.org/2005/xpath-functions"
+<xsl:stylesheet version="2.0" xmlns:aorsl="http://aor-simulation.org" xmlns:fn="http://www.w3.org/2005/xpath-functions"
   xmlns:java="http://www.sun.com/java" xmlns:xs="http://www.w3.org/2001/XMLSchema" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
   xmlns:xsl="http://www.w3.org/1999/XSL/Transform" xsi:schemaLocation="http://aor-simulation.org aorsml.xsd"
   xmlns:jw="http://www.informatik.tu-cottbus.de/~jwerner/">
@@ -18,14 +18,14 @@
   <!--xsl:import href="../../java.xsl"/-->
 
   <!--creates class-->
-  <xsl:template match="aorsml:EnvironmentRule" mode="createEnvironmentRules.createEnvRule">
+  <xsl:template match="aorsl:EnvironmentRule" mode="createEnvironmentRules.createEnvRule">
     <xsl:param name="indent" required="yes" as="xs:integer"/>
 
     <!-- set values for optional attributes -->
     <xsl:variable name="eventVariable">
       <xsl:choose>
-        <xsl:when test="fn:exists(aorsml:WHEN/@eventVariable)">
-          <xsl:value-of select="aorsml:WHEN/@eventVariable"/>
+        <xsl:when test="fn:exists(aorsl:WHEN/@eventVariable)">
+          <xsl:value-of select="aorsl:WHEN/@eventVariable"/>
         </xsl:when>
         <xsl:otherwise>
           <xsl:value-of select="'triggeringEvent'"/>
@@ -33,9 +33,9 @@
       </xsl:choose>
     </xsl:variable>
 
-    <xsl:apply-templates select="aorsml:WHEN" mode="createEnvironmentRules.checkAttributes"/>
+    <xsl:apply-templates select="aorsl:WHEN" mode="createEnvironmentRules.checkAttributes"/>
 
-    <xsl:call-template name="aorsml:classFile">
+    <xsl:call-template name="aorsl:classFile">
       <xsl:with-param name="path" select="$sim.path.model.envsimulator"/>
       <xsl:with-param name="name" select="@name"/>
 
@@ -48,29 +48,29 @@
             <xsl:value-of select="fn:concat($core.package.model.envSim, '.*')"/>
 
             <xsl:if
-              test="fn:exists(//aorsml:SimulationModel/aorsml:EntityTypes/aorsml:CausedEventType) or 
-              fn:exists(//aorsml:SimulationModel/aorsml:EntityTypes/aorsml:PerceptionEventType) or 
-              fn:exists(//aorsml:SimulationModel/aorsml:EntityTypes/aorsml:ExogenousEventType) or 
-              fn:exists(//aorsml:SimulationModel/aorsml:EntityTypes/aorsml:ActionEventType)">
+              test="fn:exists(//aorsl:SimulationModel/aorsl:EntityTypes/aorsl:CausedEventType) or 
+              fn:exists(//aorsl:SimulationModel/aorsl:EntityTypes/aorsl:PerceptionEventType) or 
+              fn:exists(//aorsl:SimulationModel/aorsl:EntityTypes/aorsl:ExogenousEventType) or 
+              fn:exists(//aorsl:SimulationModel/aorsl:EntityTypes/aorsl:ActionEventType)">
               <xsl:value-of select="fn:concat($sim.package.model.envevent, '.*')"/>
             </xsl:if>
 
             <xsl:if
-              test="fn:exists(aorsml:UPDATE-ENV/aorsml:Create/aorsml:PhysicalAgent) or 
-              fn:exists(aorsml:UPDATE-ENV/aorsml:Create/aorsml:Agent) or 
-              fn:exists(aorsml:*/aorsml:UPDATE-ENV/aorsml:Create/aorsml:PhysicalAgent) or 
-              fn:exists(aorsml:*/aorsml:UPDATE-ENV/aorsml:Create/aorsml:Agent)">
+              test="fn:exists(aorsl:UPDATE-ENV/aorsl:Create/aorsl:PhysicalAgent) or 
+              fn:exists(aorsl:UPDATE-ENV/aorsl:Create/aorsl:Agent) or 
+              fn:exists(aorsl:*/aorsl:UPDATE-ENV/aorsl:Create/aorsl:PhysicalAgent) or 
+              fn:exists(aorsl:*/aorsl:UPDATE-ENV/aorsl:Create/aorsl:Agent)">
               <xsl:value-of select="fn:concat($sim.package.model.agentsimulator, '.*')"/>
             </xsl:if>
 
             <xsl:if
-              test="fn:exists(aorsml:FOR[@objectVariable][@objectType = 'Collection']) or 
-                        fn:exists(aorsml:UPDATE-ENV/aorsml:RemoveObjectFromCollection) or 
-                        fn:exists(aorsml:UPDATE-ENV/aorsml:Create/*/@addToCollection) or 
-                        fn:exists(aorsml:UPDATE-ENV/aorsml:AddObjectToCollection) or
-                        fn:exists(aorsml:*/aorsml:UPDATE-ENV/aorsml:RemoveObjectFromCollection) or 
-                        fn:exists(aorsml:*/aorsml:UPDATE-ENV/aorsml:Create/*/@addToCollection) or 
-                        fn:exists(aorsml:*/aorsml:UPDATE-ENV/aorsml:AddObjectToCollection)">
+              test="fn:exists(aorsl:FOR[@objectVariable][@objectType = 'Collection']) or 
+                        fn:exists(aorsl:UPDATE-ENV/aorsl:RemoveObjectFromCollection) or 
+                        fn:exists(aorsl:UPDATE-ENV/aorsl:Create/*/@addToCollection) or 
+                        fn:exists(aorsl:UPDATE-ENV/aorsl:AddObjectToCollection) or
+                        fn:exists(aorsl:*/aorsl:UPDATE-ENV/aorsl:RemoveObjectFromCollection) or 
+                        fn:exists(aorsl:*/aorsl:UPDATE-ENV/aorsl:Create/*/@addToCollection) or 
+                        fn:exists(aorsl:*/aorsl:UPDATE-ENV/aorsl:AddObjectToCollection)">
               <xsl:value-of select="$collection.package.aORCollection"/>
             </xsl:if>
 
@@ -91,10 +91,10 @@
               <xsl:with-param name="modifier" select="'private'"/>
               <xsl:with-param name="type">
                 <xsl:choose>
-                  <xsl:when test="aorsml:WHEN/@eventType">
-                    <xsl:value-of select="aorsml:WHEN/@eventType"/>
+                  <xsl:when test="aorsl:WHEN/@eventType">
+                    <xsl:value-of select="aorsl:WHEN/@eventType"/>
                   </xsl:when>
-                  <xsl:when test="aorsml:ON-EACH-SIMULATION-STEP">
+                  <xsl:when test="aorsl:ON-EACH-SIMULATION-STEP">
                     <xsl:value-of select="$core.package.onEveryStepEnvEvent"/>
                   </xsl:when>
                   <xsl:otherwise>
@@ -111,7 +111,7 @@
             <xsl:call-template name="java:newLine"/>
 
             <!-- set involved entitys as classvariable -->
-            <xsl:for-each select="aorsml:FOR[@objectVariable]">
+            <xsl:for-each select="aorsl:FOR[@objectVariable]">
               <xsl:variable name="objectType">
                 <xsl:apply-templates select="." mode="assistents.getVariableType"/>
               </xsl:variable>
@@ -127,33 +127,33 @@
 
             <!-- set the message as classvariable -->
             <xsl:if
-              test="aorsml:WHEN/@eventType eq $core.class.outMessageEvent and 
-              fn:exists(aorsml:WHEN/@messageType) and 
-              fn:exists(aorsml:WHEN/@messageVariable)">
+              test="aorsl:WHEN/@eventType eq $core.class.outMessageEvent and 
+              fn:exists(aorsl:WHEN/@messageType) and 
+              fn:exists(aorsl:WHEN/@messageVariable)">
               <xsl:call-template name="java:variable">
                 <xsl:with-param name="indent" select="$indent + 1"/>
                 <xsl:with-param name="modifier" select="'private'"/>
-                <xsl:with-param name="type" select="aorsml:WHEN/@messageType"/>
-                <xsl:with-param name="name" select="aorsml:WHEN/@messageVariable"/>
+                <xsl:with-param name="type" select="aorsl:WHEN/@messageType"/>
+                <xsl:with-param name="name" select="aorsl:WHEN/@messageVariable"/>
               </xsl:call-template>
             </xsl:if>
 
             <!-- set the DataVariableDeclaration as classvaraibles -->
-            <xsl:apply-templates select="aorsml:FOR[@dataVariable]" mode="assistents.setDataVariableDeclarationClassVariables">
+            <xsl:apply-templates select="aorsl:FOR[@dataVariable]" mode="assistents.setDataVariableDeclarationClassVariables">
               <xsl:with-param name="indent" select="$indent"/>
             </xsl:apply-templates>
 
             <!-- set used collectionitems as classvariable if itemObjectVariable exists -->
             <xsl:apply-templates
-              select="aorsml:UPDATE-ENV/aorsml:RemoveObjectFromCollection[fn:exists(@itemObjectVariable) or fn:exists(@destroyObject)] | 
-                      aorsml:*/aorsml:UPDATE-ENV/aorsml:RemoveObjectFromCollection[fn:exists(@itemObjectVariable) or fn:exists(@destroyObject)]"
+              select="aorsl:UPDATE-ENV/aorsl:RemoveObjectFromCollection[fn:exists(@itemObjectVariable) or fn:exists(@destroyObject)] | 
+                      aorsl:*/aorsl:UPDATE-ENV/aorsl:RemoveObjectFromCollection[fn:exists(@itemObjectVariable) or fn:exists(@destroyObject)]"
               mode="createEnvironmentRules.setGlobalsByCollectionItems">
               <xsl:with-param name="indent" select="$indent + 1"/>
             </xsl:apply-templates>
             <xsl:call-template name="java:newLine"/>
 
             <!-- set to create aor-obj with @objectVariable as classvariable-->
-            <xsl:for-each select="aorsml:UPDATE-ENV/aorsml:Create/*[@objectVariable] | aorsml:*/aorsml:UPDATE-ENV/aorsml:Create/*[@objectVariable]">
+            <xsl:for-each select="aorsl:UPDATE-ENV/aorsl:Create/*[@objectVariable] | aorsl:*/aorsl:UPDATE-ENV/aorsl:Create/*[@objectVariable]">
               <xsl:call-template name="java:variable">
                 <xsl:with-param name="indent" select="$indent + 1"/>
                 <xsl:with-param name="modifier" select="'private'"/>
@@ -221,7 +221,7 @@
   </xsl:template>
 
   <!-- constructor -->
-  <xsl:template match="aorsml:EnvironmentRule" mode="createEnvironmentRules.constructors">
+  <xsl:template match="aorsl:EnvironmentRule" mode="createEnvironmentRules.constructors">
     <xsl:param name="indent" required="yes"/>
     <xsl:param name="eventVariable" required="yes" as="xs:string"/>
 
@@ -252,10 +252,10 @@
           <xsl:with-param name="indent" select="$indent + 1"/>
           <xsl:with-param name="class">
             <xsl:choose>
-              <xsl:when test="aorsml:WHEN/@eventType">
-                <xsl:value-of select="aorsml:WHEN/@eventType"/>
+              <xsl:when test="aorsl:WHEN/@eventType">
+                <xsl:value-of select="aorsl:WHEN/@eventType"/>
               </xsl:when>
-              <xsl:when test="aorsml:ON-EACH-SIMULATION-STEP">
+              <xsl:when test="aorsl:ON-EACH-SIMULATION-STEP">
                 <xsl:value-of select="$core.package.onEveryStepEnvEvent"/>
               </xsl:when>
               <xsl:otherwise>
@@ -274,7 +274,7 @@
           <xsl:with-param name="isVariable" select="true()"/>
           </xsl:call-template>-->
 
-        <xsl:apply-templates select="aorsml:documentation" mode="shared.setDocumentation">
+        <xsl:apply-templates select="aorsl:documentation" mode="shared.setDocumentation">
           <xsl:with-param name="indent" select="$indent + 1"/>
         </xsl:apply-templates>
 
@@ -290,12 +290,12 @@
   <!-- ********************************************************************* -->
   <!-- destroyObjekt() -->
   <!-- ********************************************************************* -->
-  <!-- this method check if an element aorsml:DestroyEntity exists (if true the return true otherwise false)-->
-  <!-- if the element  aorsml:DestroyEntity have the attribute @entity then use the value as the id otherwise
-    use the child aorsml:Entity. If they have an appropriate expression then use the expression as id-value.
+  <!-- this method check if an element aorsl:DestroyEntity exists (if true the return true otherwise false)-->
+  <!-- if the element  aorsl:DestroyEntity have the attribute @entity then use the value as the id otherwise
+    use the child aorsl:Entity. If they have an appropriate expression then use the expression as id-value.
     if there are non of them, then it was non methodcall destroyEntity() created, but the returnvalue is 
     nevertheless false-->
-  <xsl:template match="aorsml:EnvironmentRule" mode="createEnvironmentRules.method.destroyObject">
+  <xsl:template match="aorsl:EnvironmentRule" mode="createEnvironmentRules.method.destroyObject">
     <xsl:param name="indent" required="yes"/>
     <xsl:param name="else" select="false()"/>
 
@@ -305,8 +305,8 @@
       <xsl:with-param name="annotation">
         <xsl:if
           test="$suppressWarnings and 
-          fn:exists(aorsml:DO/aorsml:UPDATE-ENV/aorsml:DestroyObject[@deferred eq 'true' and 
-                        (not (fn:exists(@objectIdRef) or fn:exists(@objectVariable) or fn:exists(aorsml:ObjectRef))) and 
+          fn:exists(aorsl:DO/aorsl:UPDATE-ENV/aorsl:DestroyObject[@deferred eq 'true' and 
+                        (not (fn:exists(@objectIdRef) or fn:exists(@objectVariable) or fn:exists(aorsl:ObjectRef))) and 
                         fn:exists(@removeFromCollection)])">
           <xsl:call-template name="getAnnotationSuppressWarnings.unchecked"/>
         </xsl:if>
@@ -316,24 +316,24 @@
       <xsl:with-param name="name" select="'doDestroyObjekt'"/>
       <xsl:with-param name="content">
 
-        <xsl:if test="fn:not(aorsml:IF)">
-          <xsl:apply-templates select="aorsml:UPDATE-ENV" mode="createEnvironmentRules.method.destroyObject.DoThenElse">
+        <xsl:if test="fn:not(aorsl:IF)">
+          <xsl:apply-templates select="aorsl:UPDATE-ENV" mode="createEnvironmentRules.method.destroyObject.DoThenElse">
             <xsl:with-param name="indent" select="$indent"/>
           </xsl:apply-templates>
         </xsl:if>
 
-        <xsl:apply-templates select="aorsml:DO/aorsml:UPDATE-ENV" mode="createEnvironmentRules.method.destroyObject.DoThenElse">
+        <xsl:apply-templates select="aorsl:DO/aorsl:UPDATE-ENV" mode="createEnvironmentRules.method.destroyObject.DoThenElse">
           <xsl:with-param name="indent" select="$indent"/>
         </xsl:apply-templates>
 
         <xsl:choose>
           <xsl:when
-            test="fn:exists(aorsml:UPDATE-ENV/aorsml:DestroyObject[@deferred eq 'true']) or
-                  fn:exists(aorsml:UPDATE-ENV/aorsml:DestroyObjects[@deferred eq 'true']) or
-                  fn:exists(aorsml:UPDATE-ENV/aorsml:RemoveObjectFromCollection[@destroyObject = true()]) or 
-                  fn:exists(aorsml:DO/aorsml:UPDATE-ENV/aorsml:DestroyObject[@deferred eq 'true']) or
-                  fn:exists(aorsml:DO/aorsml:UPDATE-ENV/aorsml:DestroyObjects[@deferred eq 'true']) or
-                  fn:exists(aorsml:DO/aorsml:UPDATE-ENV/aorsml:RemoveObjectFromCollection[@destroyObject = true()])">
+            test="fn:exists(aorsl:UPDATE-ENV/aorsl:DestroyObject[@deferred eq 'true']) or
+                  fn:exists(aorsl:UPDATE-ENV/aorsl:DestroyObjects[@deferred eq 'true']) or
+                  fn:exists(aorsl:UPDATE-ENV/aorsl:RemoveObjectFromCollection[@destroyObject = true()]) or 
+                  fn:exists(aorsl:DO/aorsl:UPDATE-ENV/aorsl:DestroyObject[@deferred eq 'true']) or
+                  fn:exists(aorsl:DO/aorsl:UPDATE-ENV/aorsl:DestroyObjects[@deferred eq 'true']) or
+                  fn:exists(aorsl:DO/aorsl:UPDATE-ENV/aorsl:RemoveObjectFromCollection[@destroyObject = true()])">
 
             <xsl:call-template name="java:return">
               <xsl:with-param name="indent" select="$indent + 1"/>
@@ -356,11 +356,11 @@
       <xsl:with-param name="annotation">
         <xsl:if
           test="$suppressWarnings and 
-          (fn:exists(aorsml:UPDATE-ENV/aorsml:DestroyObject[@deferred eq 'true' and 
-          (not (fn:exists(@objectIdRef) or fn:exists(@objectVariable) or fn:exists(aorsml:ObjectRef))) and 
+          (fn:exists(aorsl:UPDATE-ENV/aorsl:DestroyObject[@deferred eq 'true' and 
+          (not (fn:exists(@objectIdRef) or fn:exists(@objectVariable) or fn:exists(aorsl:ObjectRef))) and 
           fn:exists(@removeFromCollection)])) or 
-          (fn:exists(aorsml:THEN/aorsml:UPDATE-ENV/aorsml:DestroyObject[@deferred eq 'true' and 
-          (not (fn:exists(@objectIdRef) or fn:exists(@objectVariable) or fn:exists(aorsml:ObjectRef))) and 
+          (fn:exists(aorsl:THEN/aorsl:UPDATE-ENV/aorsl:DestroyObject[@deferred eq 'true' and 
+          (not (fn:exists(@objectIdRef) or fn:exists(@objectVariable) or fn:exists(aorsl:ObjectRef))) and 
           fn:exists(@removeFromCollection)]))">
           <xsl:call-template name="getAnnotationSuppressWarnings.unchecked"/>
         </xsl:if>
@@ -370,21 +370,21 @@
       <xsl:with-param name="name" select="'thenDestroyObjekt'"/>
       <xsl:with-param name="content">
 
-        <xsl:if test="fn:exists(aorsml:IF)">
-          <xsl:apply-templates select="aorsml:UPDATE-ENV" mode="createEnvironmentRules.method.destroyObject.DoThenElse">
+        <xsl:if test="fn:exists(aorsl:IF)">
+          <xsl:apply-templates select="aorsl:UPDATE-ENV" mode="createEnvironmentRules.method.destroyObject.DoThenElse">
             <xsl:with-param name="indent" select="$indent"/>
           </xsl:apply-templates>
         </xsl:if>
 
-        <xsl:apply-templates select="aorsml:THEN/aorsml:UPDATE-ENV" mode="createEnvironmentRules.method.destroyObject.DoThenElse">
+        <xsl:apply-templates select="aorsl:THEN/aorsl:UPDATE-ENV" mode="createEnvironmentRules.method.destroyObject.DoThenElse">
           <xsl:with-param name="indent" select="$indent"/>
         </xsl:apply-templates>
 
         <xsl:choose>
           <xsl:when
-            test="fn:exists(aorsml:UPDATE-ENV/aorsml:DestroyObject[@deferred eq 'true']) or
-                  fn:exists(aorsml:UPDATE-ENV/aorsml:DestroyObjects[@deferred eq 'true']) or
-                  fn:exists(aorsml:UPDATE-ENV/aorsml:RemoveObjectFromCollection[@destroyObject = true()])">
+            test="fn:exists(aorsl:UPDATE-ENV/aorsl:DestroyObject[@deferred eq 'true']) or
+                  fn:exists(aorsl:UPDATE-ENV/aorsl:DestroyObjects[@deferred eq 'true']) or
+                  fn:exists(aorsl:UPDATE-ENV/aorsl:RemoveObjectFromCollection[@destroyObject = true()])">
 
             <xsl:call-template name="java:return">
               <xsl:with-param name="indent" select="$indent + 1"/>
@@ -407,8 +407,8 @@
       <xsl:with-param name="annotation">
         <xsl:if
           test="$suppressWarnings and 
-          fn:exists(aorsml:ELSE/aorsml:UPDATE-ENV/aorsml:DestroyObject[@deferred eq 'true' and 
-          (not (fn:exists(@objectIdRef) or fn:exists(@objectVariable) or fn:exists(aorsml:ObjectRef))) and 
+          fn:exists(aorsl:ELSE/aorsl:UPDATE-ENV/aorsl:DestroyObject[@deferred eq 'true' and 
+          (not (fn:exists(@objectIdRef) or fn:exists(@objectVariable) or fn:exists(aorsl:ObjectRef))) and 
           fn:exists(@removeFromCollection)])">
           <xsl:call-template name="getAnnotationSuppressWarnings.unchecked"/>
         </xsl:if>
@@ -418,15 +418,15 @@
       <xsl:with-param name="name" select="'elseDestroyObjekt'"/>
       <xsl:with-param name="content">
 
-        <xsl:apply-templates select="aorsml:ELSE/aorsml:UPDATE-ENV" mode="createEnvironmentRules.method.destroyObject.DoThenElse">
+        <xsl:apply-templates select="aorsl:ELSE/aorsl:UPDATE-ENV" mode="createEnvironmentRules.method.destroyObject.DoThenElse">
           <xsl:with-param name="indent" select="$indent"/>
         </xsl:apply-templates>
 
         <xsl:choose>
           <xsl:when
-            test="fn:exists(aorsml:ELSE/aorsml:UPDATE-ENV/aorsml:DestroyObject[@deferred eq 'true']) or
-                  fn:exists(aorsml:ELSE/aorsml:UPDATE-ENV/aorsml:DestroyObjects[@deferred eq 'true']) or
-                  fn:exists(aorsml:ELSE/aorsml:UPDATE-ENV/aorsml:RemoveObjectFromCollection[@destroyObject = true()])">
+            test="fn:exists(aorsl:ELSE/aorsl:UPDATE-ENV/aorsl:DestroyObject[@deferred eq 'true']) or
+                  fn:exists(aorsl:ELSE/aorsl:UPDATE-ENV/aorsl:DestroyObjects[@deferred eq 'true']) or
+                  fn:exists(aorsl:ELSE/aorsl:UPDATE-ENV/aorsl:RemoveObjectFromCollection[@destroyObject = true()])">
 
             <xsl:call-template name="java:return">
               <xsl:with-param name="indent" select="$indent + 1"/>
@@ -445,7 +445,7 @@
 
   </xsl:template>
 
-  <xsl:template match="aorsml:UPDATE-ENV" mode="createEnvironmentRules.method.destroyObject.DoThenElse">
+  <xsl:template match="aorsl:UPDATE-ENV" mode="createEnvironmentRules.method.destroyObject.DoThenElse">
     <xsl:param name="indent" required="yes"/>
 
     <!-- only for errormessage -->
@@ -455,20 +455,20 @@
 
     <!-- set the collections for DestroyObject with @removeFromCollection (without other attributes) - DISTINCT -->
     <xsl:for-each
-      select="aorsml:DestroyObject[@deferred eq 'true' and fn:exists(@removeFromCollection) and 
-      not(@removeFromCollection = preceding-sibling::aorsml:DestroyObject[@deferred eq 'true']/@removeFromCollection)]">
+      select="aorsl:DestroyObject[@deferred eq 'true' and fn:exists(@removeFromCollection) and 
+      not(@removeFromCollection = preceding-sibling::aorsl:DestroyObject[@deferred eq 'true']/@removeFromCollection)]">
       <!-- we need the collection only if @removeFromCollection without other attributes or childelements -->
-      <xsl:if test="(not (fn:exists(@objectIdRef) or fn:exists(@objectVariable) or fn:exists(aorsml:ObjectRef)))">
+      <xsl:if test="(not (fn:exists(@objectIdRef) or fn:exists(@objectVariable) or fn:exists(aorsl:ObjectRef)))">
         <xsl:choose>
 
           <!-- check if Collection exists -->
-          <xsl:when test="fn:exists(//aorsml:Collections/aorsml:Collection[@name = current()/@removeFromCollection])">
+          <xsl:when test="fn:exists(//aorsl:Collections/aorsl:Collection[@name = current()/@removeFromCollection])">
             <xsl:call-template name="java:variable">
               <xsl:with-param name="indent" select="$indent + 1"/>
               <xsl:with-param name="type">
                 <xsl:call-template name="java:classWithGenericType">
                   <xsl:with-param name="genericType">
-                    <xsl:value-of select="//aorsml:Collections/aorsml:Collection[@name = current()/@removeFromCollection]/@itemType"/>
+                    <xsl:value-of select="//aorsl:Collections/aorsl:Collection[@name = current()/@removeFromCollection]/@itemType"/>
                   </xsl:with-param>
                   <xsl:with-param name="class" select="$collection.class.aORCollection"/>
                 </xsl:call-template>
@@ -477,7 +477,7 @@
               <xsl:with-param name="castType">
                 <xsl:call-template name="java:classWithGenericType">
                   <xsl:with-param name="genericType">
-                    <xsl:value-of select="//aorsml:Collections/aorsml:Collection[@name = current()/@removeFromCollection]/@itemType"/>
+                    <xsl:value-of select="//aorsl:Collections/aorsl:Collection[@name = current()/@removeFromCollection]/@itemType"/>
                   </xsl:with-param>
                   <xsl:with-param name="class" select="$collection.class.aORCollection"/>
                 </xsl:call-template>
@@ -513,7 +513,7 @@
 
     <!-- it's created if @removeFromCollection (single), also if there is no correspond Collection -->
     <xsl:if
-      test="fn:exists(aorsml:DestroyObject[@deferred eq 'true'][not (fn:exists(@objectIdRef) or fn:exists(@objectVariable) or fn:exists(aorsml:ObjectRef)) 
+      test="fn:exists(aorsl:DestroyObject[@deferred eq 'true'][not (fn:exists(@objectIdRef) or fn:exists(@objectVariable) or fn:exists(aorsl:ObjectRef)) 
       and fn:exists(@removeFromCollection)])">
       <xsl:call-template name="java:newObject">
         <xsl:with-param name="indent" select="$indent + 1"/>
@@ -524,18 +524,18 @@
     </xsl:if>
 
     <!-- DestroyEntity -->
-    <xsl:apply-templates select="aorsml:DestroyObject[@deferred eq 'true']" mode="createEnvironmentRules.helper.method.destroyObject">
+    <xsl:apply-templates select="aorsl:DestroyObject[@deferred eq 'true']" mode="createEnvironmentRules.helper.method.destroyObject">
       <xsl:with-param name="indent" select="$indent + 1"/>
       <xsl:with-param name="objectCollElemVarName" select="$objectCollElemVarName"/>
     </xsl:apply-templates>
 
     <!-- DestroyEntities -->
-    <xsl:apply-templates select="aorsml:DestroyObjects[@deferred eq 'true']" mode="createEnvironmentRules.helper.method.destroyObjects">
+    <xsl:apply-templates select="aorsl:DestroyObjects[@deferred eq 'true']" mode="createEnvironmentRules.helper.method.destroyObjects">
       <xsl:with-param name="indent" select="$indent + 1"/>
     </xsl:apply-templates>
 
     <!-- RemoveObjectFromCollection with @destroyObject=true -->
-    <xsl:apply-templates select="aorsml:RemoveObjectFromCollection[@destroyObject = true()]"
+    <xsl:apply-templates select="aorsl:RemoveObjectFromCollection[@destroyObject = true()]"
       mode="createEnvironmentRules.helper.method.destroyRemoveObjectFromCollection">
       <xsl:with-param name="indent" select="$indent + 1"/>
     </xsl:apply-templates>
@@ -546,13 +546,13 @@
   <!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->
 
   <!-- execute() -->
-  <xsl:template match="aorsml:EnvironmentRule" mode="createEnvironmentRules.method.execute">
+  <xsl:template match="aorsl:EnvironmentRule" mode="createEnvironmentRules.method.execute">
     <xsl:param name="indent" required="yes"/>
 
     <xsl:call-template name="java:method">
       <xsl:with-param name="indent" select="$indent"/>
       <xsl:with-param name="annotation">
-        <xsl:if test="$suppressWarnings and aorsml:FOR[@objectVariable]/@objectType = 'Collection'">
+        <xsl:if test="$suppressWarnings and aorsl:FOR[@objectVariable]/@objectType = 'Collection'">
           <xsl:call-template name="getAnnotationSuppressWarnings.unchecked"/>
         </xsl:if>
       </xsl:with-param>
@@ -572,7 +572,7 @@
         </xsl:call-template>
         <xsl:call-template name="java:newLine"/>
 
-        <xsl:apply-templates select="aorsml:WHEN" mode="createEnvironmentRules.helper.method.execute.checkActivityType">
+        <xsl:apply-templates select="aorsl:WHEN" mode="createEnvironmentRules.helper.method.execute.checkActivityType">
           <xsl:with-param name="indent" select="$indent + 1"/>
           <xsl:with-param name="resultListVar" select="$resultListVar"/>
         </xsl:apply-templates>
@@ -594,7 +594,7 @@
   <!-- ********************************************************************* -->
   <!-- resultingEvents() -->
   <!-- ********************************************************************* -->
-  <xsl:template match="aorsml:EnvironmentRule" mode="createEnvironmentRules.method.resultingEvents">
+  <xsl:template match="aorsl:EnvironmentRule" mode="createEnvironmentRules.method.resultingEvents">
     <xsl:param name="indent" required="yes" as="xs:integer"/>
 
     <!-- Do ResultingEvents   -->
@@ -613,14 +613,14 @@
           <xsl:with-param name="name" select="$resultVar"/>
         </xsl:call-template>
 
-        <xsl:if test="fn:not(aorsml:IF)">
-          <xsl:apply-templates select="aorsml:SCHEDULE-EVT" mode="createEnvironmentRules.method.resultingEvents.DoThenElse">
+        <xsl:if test="fn:not(aorsl:IF)">
+          <xsl:apply-templates select="aorsl:SCHEDULE-EVT" mode="createEnvironmentRules.method.resultingEvents.DoThenElse">
             <xsl:with-param name="indent" select="$indent"/>
             <xsl:with-param name="resultVar" select="$resultVar"/>
           </xsl:apply-templates>
         </xsl:if>
 
-        <xsl:apply-templates select="aorsml:DO/aorsml:SCHEDULE-EVT" mode="createEnvironmentRules.method.resultingEvents.DoThenElse">
+        <xsl:apply-templates select="aorsl:DO/aorsl:SCHEDULE-EVT" mode="createEnvironmentRules.method.resultingEvents.DoThenElse">
           <xsl:with-param name="indent" select="$indent"/>
           <xsl:with-param name="resultVar" select="$resultVar"/>
         </xsl:apply-templates>
@@ -649,14 +649,14 @@
           <xsl:with-param name="name" select="$resultVar"/>
         </xsl:call-template>
 
-        <xsl:if test="fn:exists(aorsml:IF)">
-          <xsl:apply-templates select="aorsml:SCHEDULE-EVT" mode="createEnvironmentRules.method.resultingEvents.DoThenElse">
+        <xsl:if test="fn:exists(aorsl:IF)">
+          <xsl:apply-templates select="aorsl:SCHEDULE-EVT" mode="createEnvironmentRules.method.resultingEvents.DoThenElse">
             <xsl:with-param name="indent" select="$indent"/>
             <xsl:with-param name="resultVar" select="$resultVar"/>
           </xsl:apply-templates>
         </xsl:if>
 
-        <xsl:apply-templates select="aorsml:THEN/aorsml:SCHEDULE-EVT" mode="createEnvironmentRules.method.resultingEvents.DoThenElse">
+        <xsl:apply-templates select="aorsl:THEN/aorsl:SCHEDULE-EVT" mode="createEnvironmentRules.method.resultingEvents.DoThenElse">
           <xsl:with-param name="indent" select="$indent"/>
           <xsl:with-param name="resultVar" select="$resultVar"/>
         </xsl:apply-templates>
@@ -685,7 +685,7 @@
           <xsl:with-param name="name" select="$resultVar"/>
         </xsl:call-template>
 
-        <xsl:apply-templates select="aorsml:ELSE/aorsml:SCHEDULE-EVT" mode="createEnvironmentRules.method.resultingEvents.DoThenElse">
+        <xsl:apply-templates select="aorsl:ELSE/aorsl:SCHEDULE-EVT" mode="createEnvironmentRules.method.resultingEvents.DoThenElse">
           <xsl:with-param name="indent" select="$indent"/>
           <xsl:with-param name="resultVar" select="$resultVar"/>
         </xsl:apply-templates>
@@ -700,31 +700,31 @@
 
   </xsl:template>
 
-  <xsl:template match="aorsml:SCHEDULE-EVT" mode="createEnvironmentRules.method.resultingEvents.DoThenElse">
+  <xsl:template match="aorsl:SCHEDULE-EVT" mode="createEnvironmentRules.method.resultingEvents.DoThenElse">
     <xsl:param name="indent" required="yes" as="xs:integer"/>
     <xsl:param name="resultVar" required="yes" as="xs:string"/>
 
-    <xsl:apply-templates select="aorsml:CausedEventExpr" mode="createEnvironmentRules.helper.method.resultingEvents">
+    <xsl:apply-templates select="aorsl:CausedEventExpr" mode="createEnvironmentRules.helper.method.resultingEvents">
       <xsl:with-param name="indent" select="$indent + 1"/>
       <xsl:with-param name="resultList" select="$resultVar"/>
     </xsl:apply-templates>
 
-    <xsl:apply-templates select="aorsml:PerceptionEventExpr" mode="createEnvironmentRules.helper.method.resultingEvents">
+    <xsl:apply-templates select="aorsl:PerceptionEventExpr" mode="createEnvironmentRules.helper.method.resultingEvents">
       <xsl:with-param name="indent" select="$indent + 1"/>
       <xsl:with-param name="resultList" select="$resultVar"/>
     </xsl:apply-templates>
 
-    <xsl:apply-templates select="aorsml:InMessageEventExpr" mode="createEnvironmentRules.helper.method.resultingEvents">
+    <xsl:apply-templates select="aorsl:InMessageEventExpr" mode="createEnvironmentRules.helper.method.resultingEvents">
       <xsl:with-param name="indent" select="$indent + 1"/>
       <xsl:with-param name="resultList" select="$resultVar"/>
     </xsl:apply-templates>
 
-    <xsl:apply-templates select="aorsml:ActivityStartEventExpr" mode="createEnvironmentRules.helper.method.resultingEvents">
+    <xsl:apply-templates select="aorsl:ActivityStartEventExpr" mode="createEnvironmentRules.helper.method.resultingEvents">
       <xsl:with-param name="indent" select="$indent + 1"/>
       <xsl:with-param name="resultList" select="$resultVar"/>
     </xsl:apply-templates>
 
-    <xsl:apply-templates select="aorsml:ActivityEndEventExpr" mode="createEnvironmentRules.helper.method.resultingEvents">
+    <xsl:apply-templates select="aorsl:ActivityEndEventExpr" mode="createEnvironmentRules.helper.method.resultingEvents">
       <xsl:with-param name="indent" select="$indent + 1"/>
       <xsl:with-param name="resultList" select="$resultVar"/>
     </xsl:apply-templates>
@@ -738,7 +738,7 @@
   <!-- ********************************************************************* -->
   <!-- stateEffects() -->
   <!-- ********************************************************************* -->
-  <xsl:template match="aorsml:EnvironmentRule" mode="createEnvironmentRules.method.stateEffects">
+  <xsl:template match="aorsl:EnvironmentRule" mode="createEnvironmentRules.method.stateEffects">
     <xsl:param name="indent" required="yes"/>
 
     <!-- doStateEffects  -->
@@ -747,12 +747,12 @@
       <xsl:with-param name="annotation">
         <xsl:if
           test="$suppressWarnings and 
-          ((fn:exists(aorsml:UPDATE-ENV/aorsml:RemoveObjectFromCollection) or
-          fn:exists(aorsml:UPDATE-ENV/aorsml:Create/*/@addToCollection)) or
-          fn:exists(aorsml:UPDATE-ENV/aorsml:AddObjectToCollection)) and not(aorsml:IF) or
-          (fn:exists(aorsml:DO/aorsml:UPDATE-ENV/aorsml:RemoveObjectFromCollection) or
-          fn:exists(aorsml:DO/aorsml:UPDATE-ENV/aorsml:Create/*/@addToCollection)) or
-          fn:exists(aorsml:DO/aorsml:UPDATE-ENV/aorsml:AddObjectToCollection)">
+          ((fn:exists(aorsl:UPDATE-ENV/aorsl:RemoveObjectFromCollection) or
+          fn:exists(aorsl:UPDATE-ENV/aorsl:Create/*/@addToCollection)) or
+          fn:exists(aorsl:UPDATE-ENV/aorsl:AddObjectToCollection)) and not(aorsl:IF) or
+          (fn:exists(aorsl:DO/aorsl:UPDATE-ENV/aorsl:RemoveObjectFromCollection) or
+          fn:exists(aorsl:DO/aorsl:UPDATE-ENV/aorsl:Create/*/@addToCollection)) or
+          fn:exists(aorsl:DO/aorsl:UPDATE-ENV/aorsl:AddObjectToCollection)">
           <xsl:call-template name="getAnnotationSuppressWarnings.unchecked"/>
         </xsl:if>
       </xsl:with-param>
@@ -760,12 +760,12 @@
       <xsl:with-param name="name" select="'doStateEffects'"/>
       <xsl:with-param name="content">
 
-        <xsl:if test="fn:exists(aorsml:DO/aorsml:UPDATE-ENV/aorsml:Create/aorsml:*[@hasRandomPosition = true()])">
+        <xsl:if test="fn:exists(aorsl:DO/aorsl:UPDATE-ENV/aorsl:Create/aorsl:*[@hasRandomPosition = true()])">
           <xsl:call-template name="java:newObject">
             <xsl:with-param name="indent" select="$indent + 1"/>
             <xsl:with-param name="class">
               <xsl:choose>
-                <xsl:when test="ends-with(local-name(//aorsml:SimulationModel/aorsml:SpaceModel/aorsml:*), 'Grid')">
+                <xsl:when test="ends-with(local-name(//aorsl:SimulationModel/aorsl:SpaceModel/aorsl:*), 'Grid')">
                   <xsl:value-of select="$space.package.positionData"/>
                 </xsl:when>
                 <xsl:otherwise>
@@ -778,7 +778,7 @@
           </xsl:call-template>
         </xsl:if>
 
-        <xsl:apply-templates select="aorsml:DO/aorsml:UPDATE-ENV" mode="createEnvironmentRules.method.stateEffects.DoThenElse">
+        <xsl:apply-templates select="aorsl:DO/aorsl:UPDATE-ENV" mode="createEnvironmentRules.method.stateEffects.DoThenElse">
           <xsl:with-param name="indent" select="$indent"/>
         </xsl:apply-templates>
 
@@ -791,12 +791,12 @@
       <xsl:with-param name="annotation">
         <xsl:if
           test="$suppressWarnings and 
-          (fn:exists(aorsml:UPDATE-ENV/aorsml:RemoveObjectFromCollection) or
-          fn:exists(aorsml:UPDATE-ENV/aorsml:Create/*/@addToCollection)) or
-          fn:exists(aorsml:UPDATE-ENV/aorsml:AddObjectToCollection) or
-          (fn:exists(aorsml:THEN/aorsml:UPDATE-ENV/aorsml:RemoveObjectFromCollection) or
-          fn:exists(aorsml:THEN/aorsml:UPDATE-ENV/aorsml:Create/*/@addToCollection)) or
-          fn:exists(aorsml:THEN/aorsml:UPDATE-ENV/aorsml:AddObjectToCollection)">
+          (fn:exists(aorsl:UPDATE-ENV/aorsl:RemoveObjectFromCollection) or
+          fn:exists(aorsl:UPDATE-ENV/aorsl:Create/*/@addToCollection)) or
+          fn:exists(aorsl:UPDATE-ENV/aorsl:AddObjectToCollection) or
+          (fn:exists(aorsl:THEN/aorsl:UPDATE-ENV/aorsl:RemoveObjectFromCollection) or
+          fn:exists(aorsl:THEN/aorsl:UPDATE-ENV/aorsl:Create/*/@addToCollection)) or
+          fn:exists(aorsl:THEN/aorsl:UPDATE-ENV/aorsl:AddObjectToCollection)">
           <xsl:call-template name="getAnnotationSuppressWarnings.unchecked"/>
         </xsl:if>
       </xsl:with-param>
@@ -804,12 +804,12 @@
       <xsl:with-param name="name" select="'thenStateEffects'"/>
       <xsl:with-param name="content">
 
-        <xsl:if test="fn:exists(aorsml:THEN/aorsml:UPDATE-ENV/aorsml:Create/aorsml:*[@hasRandomPosition = true()])">
+        <xsl:if test="fn:exists(aorsl:THEN/aorsl:UPDATE-ENV/aorsl:Create/aorsl:*[@hasRandomPosition = true()])">
           <xsl:call-template name="java:newObject">
             <xsl:with-param name="indent" select="$indent + 1"/>
             <xsl:with-param name="class">
               <xsl:choose>
-                <xsl:when test="ends-with(local-name(//aorsml:SimulationModel/aorsml:SpaceModel/aorsml:*), 'Grid')">
+                <xsl:when test="ends-with(local-name(//aorsl:SimulationModel/aorsl:SpaceModel/aorsl:*), 'Grid')">
                   <xsl:value-of select="$space.package.positionData"/>
                 </xsl:when>
                 <xsl:otherwise>
@@ -823,13 +823,13 @@
         </xsl:if>
 
         <!-- deprecated for backwards-compatibility -->
-        <xsl:if test="fn:exists(aorsml:IF)">
-          <xsl:apply-templates select="aorsml:UPDATE-ENV" mode="createEnvironmentRules.method.stateEffects.DoThenElse">
+        <xsl:if test="fn:exists(aorsl:IF)">
+          <xsl:apply-templates select="aorsl:UPDATE-ENV" mode="createEnvironmentRules.method.stateEffects.DoThenElse">
             <xsl:with-param name="indent" select="$indent"/>
           </xsl:apply-templates>
         </xsl:if>
 
-        <xsl:apply-templates select="aorsml:THEN/aorsml:UPDATE-ENV" mode="createEnvironmentRules.method.stateEffects.DoThenElse">
+        <xsl:apply-templates select="aorsl:THEN/aorsl:UPDATE-ENV" mode="createEnvironmentRules.method.stateEffects.DoThenElse">
           <xsl:with-param name="indent" select="$indent"/>
         </xsl:apply-templates>
 
@@ -842,9 +842,9 @@
       <xsl:with-param name="annotation">
         <xsl:if
           test="$suppressWarnings and 
-          (fn:exists(aorsml:ELSE/aorsml:UPDATE-ENV/aorsml:RemoveObjectFromCollection) or
-          fn:exists(aorsml:ELSE/aorsml:UPDATE-ENV/aorsml:Create/*/@addToCollection)) or
-          fn:exists(aorsml:ELSE/aorsml:UPDATE-ENV/aorsml:AddObjectToCollection)">
+          (fn:exists(aorsl:ELSE/aorsl:UPDATE-ENV/aorsl:RemoveObjectFromCollection) or
+          fn:exists(aorsl:ELSE/aorsl:UPDATE-ENV/aorsl:Create/*/@addToCollection)) or
+          fn:exists(aorsl:ELSE/aorsl:UPDATE-ENV/aorsl:AddObjectToCollection)">
           <xsl:call-template name="getAnnotationSuppressWarnings.unchecked"/>
         </xsl:if>
       </xsl:with-param>
@@ -852,12 +852,12 @@
       <xsl:with-param name="name" select="'elseStateEffects'"/>
       <xsl:with-param name="content">
 
-        <xsl:if test="fn:exists(aorsml:ELSE/aorsml:UPDATE-ENV/aorsml:Create/aorsml:*[@hasRandomPosition = true()])">
+        <xsl:if test="fn:exists(aorsl:ELSE/aorsl:UPDATE-ENV/aorsl:Create/aorsl:*[@hasRandomPosition = true()])">
           <xsl:call-template name="java:newObject">
             <xsl:with-param name="indent" select="$indent + 1"/>
             <xsl:with-param name="class">
               <xsl:choose>
-                <xsl:when test="ends-with(local-name(//aorsml:SimulationModel/aorsml:SpaceModel/aorsml:*), 'Grid')">
+                <xsl:when test="ends-with(local-name(//aorsl:SimulationModel/aorsl:SpaceModel/aorsl:*), 'Grid')">
                   <xsl:value-of select="$space.package.positionData"/>
                 </xsl:when>
                 <xsl:otherwise>
@@ -870,7 +870,7 @@
           </xsl:call-template>
         </xsl:if>
 
-        <xsl:apply-templates select="aorsml:ELSE/aorsml:UPDATE-ENV" mode="createEnvironmentRules.method.stateEffects.DoThenElse">
+        <xsl:apply-templates select="aorsl:ELSE/aorsl:UPDATE-ENV" mode="createEnvironmentRules.method.stateEffects.DoThenElse">
           <xsl:with-param name="indent" select="$indent"/>
         </xsl:apply-templates>
 
@@ -879,31 +879,31 @@
 
   </xsl:template>
 
-  <xsl:template match="aorsml:UPDATE-ENV" mode="createEnvironmentRules.method.stateEffects.DoThenElse">
+  <xsl:template match="aorsl:UPDATE-ENV" mode="createEnvironmentRules.method.stateEffects.DoThenElse">
     <xsl:param name="indent" required="yes" as="xs:integer"/>
 
     <!-- create all neccessary collections (excluding if its exists @collectionObjectVariable, because these was defined global from FOR[@objectVariable])-->
     <!--xsl:apply-templates
-      select="aorsml:RemoveObjectFromCollection[(not (fn:exists(@collectionObjectVariable))) and 
-      not(@collectionName = preceding-sibling::aorsml:UPDATE-ENV/aorsml:RemoveObjectFromCollection/@collectionName)]/@collectionName"
+      select="aorsl:RemoveObjectFromCollection[(not (fn:exists(@collectionObjectVariable))) and 
+      not(@collectionName = preceding-sibling::aorsl:UPDATE-ENV/aorsl:RemoveObjectFromCollection/@collectionName)]/@collectionName"
       mode="createEnvironmentRules.helper.method.stateEffects.setCollections">
       <xsl:with-param name="indent" select="$indent"/>
     </xsl:apply-templates-->
 
     <xsl:variable name="root" select="root()"/>
     <xsl:variable name="distinctAddToCollection" as="xs:string*">
-      <xsl:if test="aorsml:Create/aorsml:*/@addToCollection">
-        <xsl:copy-of select="distinct-values(aorsml:Create/aorsml:*/@addToCollection)"/>
+      <xsl:if test="aorsl:Create/aorsl:*/@addToCollection">
+        <xsl:copy-of select="distinct-values(aorsl:Create/aorsl:*/@addToCollection)"/>
       </xsl:if>
     </xsl:variable>
     <xsl:variable name="distinctCollectionName" as="xs:string*">
-      <xsl:if test="aorsml:RemoveObjectFromCollection[(not(fn:exists(@collectionObjectVariable)))]">
-        <xsl:copy-of select="distinct-values(aorsml:RemoveObjectFromCollection[(not(fn:exists(@collectionObjectVariable)))]/@collectionName)"/>
+      <xsl:if test="aorsl:RemoveObjectFromCollection[(not(fn:exists(@collectionObjectVariable)))]">
+        <xsl:copy-of select="distinct-values(aorsl:RemoveObjectFromCollection[(not(fn:exists(@collectionObjectVariable)))]/@collectionName)"/>
       </xsl:if>
     </xsl:variable>
     <xsl:for-each select="($distinctAddToCollection, $distinctCollectionName)">
 
-      <xsl:apply-templates select="$root//aorsml:Collections/aorsml:Collection[@name = current()]"
+      <xsl:apply-templates select="$root//aorsl:Collections/aorsl:Collection[@name = current()]"
         mode="createEnvironmentRules.helper.method.stateEffects.setCollections">
         <xsl:with-param name="indent" select="$indent"/>
       </xsl:apply-templates>
@@ -913,16 +913,16 @@
 
     <!-- achieve the order -->
     <xsl:apply-templates
-      select="aorsml:RemoveObjectFromCollection |
-              aorsml:UpdateObject | 
-              aorsml:UpdateStatisticsVariable |
-              aorsml:Create | 
-              aorsml:DestroyObject[not(@deferred) or @deferred eq 'false'] |
-              aorsml:UpdateGridCell | 
-              aorsml:ForEachGridCell | 
-              aorsml:AddObjectToCollection |
-              aorsml:IncrementGlobalVariable |
-              aorsml:UpdateGlobalVariable"
+      select="aorsl:RemoveObjectFromCollection |
+              aorsl:UpdateObject | 
+              aorsl:UpdateStatisticsVariable |
+              aorsl:Create | 
+              aorsl:DestroyObject[not(@deferred) or @deferred eq 'false'] |
+              aorsl:UpdateGridCell | 
+              aorsl:ForEachGridCell | 
+              aorsl:AddObjectToCollection |
+              aorsl:IncrementGlobalVariable |
+              aorsl:UpdateGlobalVariable"
       mode="createEnvironmentRules.method.stateEffects.content">
       <xsl:with-param name="indent" select="$indent + 1"/>
       <!-- spaceReservationSystem works only in the initial phase, but we have to set the 'spaceReservationSystem'
@@ -932,11 +932,11 @@
     </xsl:apply-templates>
 
     <!--sets state effects-->
-    <xsl:apply-templates select="aorsml:UpdateObjects" mode="createEnvironmentRules.helper.method.stateEffects">
+    <xsl:apply-templates select="aorsl:UpdateObjects" mode="createEnvironmentRules.helper.method.stateEffects">
       <xsl:with-param name="indent" select="$indent + 1"/>
     </xsl:apply-templates>
 
-    <xsl:apply-templates select="aorsml:DestroyObjects[not(@deferred) or @deferred eq 'false']"
+    <xsl:apply-templates select="aorsl:DestroyObjects[not(@deferred) or @deferred eq 'false']"
       mode="createEnvironmentRules.helper.method.destroyObjects">
       <xsl:with-param name="indent" select="$indent + 1"/>
     </xsl:apply-templates>
@@ -946,7 +946,7 @@
   <!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->
   <!-- stateEffects() -->
   <!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->
-  <xsl:template match="aorsml:Collection" mode="createEnvironmentRules.helper.method.stateEffects.setCollections">
+  <xsl:template match="aorsl:Collection" mode="createEnvironmentRules.helper.method.stateEffects.setCollections">
     <xsl:param name="indent" as="xs:integer" required="yes"/>
 
     <xsl:call-template name="java:variable">
@@ -991,7 +991,7 @@
 
   <!-- this forwarding is necessary, because we have toachieve the order of elements in UpdateObjectiveStateExpr (see: createEnvironmentRules.method.stateEffects) -->
   <!-- this template is additional used by createActivities.xsl-->
-  <xsl:template match="aorsml:UpdateStatisticsVariable" mode="createEnvironmentRules.method.stateEffects.content">
+  <xsl:template match="aorsl:UpdateStatisticsVariable" mode="createEnvironmentRules.method.stateEffects.content">
     <xsl:param name="indent" as="xs:integer" required="yes"/>
 
     <xsl:apply-templates select="." mode="shared.helper.updateStatistics">
@@ -1001,7 +1001,7 @@
   </xsl:template>
 
   <!-- this forwarding is necessary, because we have toachieve the order of elements in UpdateObjectiveStateExpr (see: createEnvironmentRules.method.stateEffects) -->
-  <xsl:template match="aorsml:IncrementGlobalVariable" mode="createEnvironmentRules.method.stateEffects.content">
+  <xsl:template match="aorsl:IncrementGlobalVariable" mode="createEnvironmentRules.method.stateEffects.content">
     <xsl:param name="indent" as="xs:integer" required="yes"/>
 
     <xsl:apply-templates select="." mode="shared.incrementGlobalVariable">
@@ -1011,7 +1011,7 @@
   </xsl:template>
 
   <!-- this forwarding is necessary, because we have toachieve the order of elements in UpdateObjectiveStateExpr (see: createEnvironmentRules.method.stateEffects) -->
-  <xsl:template match="aorsml:UpdateGlobalVariable" mode="createEnvironmentRules.method.stateEffects.content">
+  <xsl:template match="aorsl:UpdateGlobalVariable" mode="createEnvironmentRules.method.stateEffects.content">
     <xsl:param name="indent" as="xs:integer" required="yes"/>
 
     <xsl:apply-templates select="." mode="shared.updateGlobalVariable">
@@ -1021,19 +1021,19 @@
   </xsl:template>
 
   <!-- this template is additional used by createActivities.xsl-->
-  <xsl:template match="aorsml:AddObjectToCollection" mode="createEnvironmentRules.method.stateEffects.content">
+  <xsl:template match="aorsl:AddObjectToCollection" mode="createEnvironmentRules.method.stateEffects.content">
     <xsl:param name="indent" as="xs:integer" required="yes"/>
 
     <xsl:variable name="collectionVarName" select="fn:concat('addTocollection_', position())"/>
 
     <xsl:variable name="collectionTypeNode"
-      select="if (@collectionID) then //aorsml:SimulationModel/aorsml:Collections/aorsml:Collection[@id eq current()/@collectionID] else 
-                     if (@collectionName) then //aorsml:SimulationModel/aorsml:Collections/aorsml:Collection[@name eq current()/@collectionName] else ''"/>
+      select="if (@collectionID) then //aorsl:SimulationModel/aorsl:Collections/aorsl:Collection[@id eq current()/@collectionID] else 
+                     if (@collectionName) then //aorsl:SimulationModel/aorsl:Collections/aorsl:Collection[@name eq current()/@collectionName] else ''"/>
 
     <xsl:if test="$collectionTypeNode">
 
       <xsl:variable name="objVarDeclaration"
-        select="ancestor::aorsml:EnvironmentRule/aorsml:FOR[@objectVariable][@objectType eq 'Collection']
+        select="ancestor::aorsl:EnvironmentRule/aorsl:FOR[@objectVariable][@objectType eq 'Collection']
         [@objectName eq $collectionTypeNode/@name or @objectIdRef eq $collectionTypeNode/@id][1]"/>
       <xsl:choose>
         <xsl:when test="fn:exists($objVarDeclaration)">
@@ -1048,8 +1048,8 @@
             <xsl:with-param name="method" select="'addObjekt'"/>
             <xsl:with-param name="args">
               <xsl:choose>
-                <xsl:when test="aorsml:ItemObjectRef[@language eq $output.language]">
-                  <xsl:value-of select="aorsml:ItemObjectRef[@language eq $output.language][1]"/>
+                <xsl:when test="aorsl:ItemObjectRef[@language eq $output.language]">
+                  <xsl:value-of select="aorsl:ItemObjectRef[@language eq $output.language][1]"/>
                 </xsl:when>
                 <xsl:when test="@itemObjectVariable">
                   <xsl:value-of select="@itemObjectVariable"/>
@@ -1057,7 +1057,7 @@
                 <xsl:otherwise>
                   <xsl:message>
                     <xsl:text>[ERROR] No Item to add to a collection in Rule [</xsl:text>
-                    <xsl:value-of select="ancestor::aorsml:EnvironmentRule/@name"/>
+                    <xsl:value-of select="ancestor::aorsl:EnvironmentRule/@name"/>
                     <xsl:text>]!</xsl:text>
                   </xsl:message>
                 </xsl:otherwise>
@@ -1081,7 +1081,7 @@
                 <xsl:otherwise>
                   <xsl:message>
                     <xsl:text>[ERROR] No ItemType found for collection in AddObjectToCollection in Rule [</xsl:text>
-                    <xsl:value-of select="ancestor::aorsml:EnvironmentRule/@name"/>
+                    <xsl:value-of select="ancestor::aorsl:EnvironmentRule/@name"/>
                     <xsl:text>]!</xsl:text>
                   </xsl:message>
                 </xsl:otherwise>
@@ -1133,7 +1133,7 @@
                 <xsl:otherwise>
                   <xsl:message>
                     <xsl:text>[ERROR] Unknown Collection in AddToCollection in Ruele [</xsl:text>
-                    <xsl:value-of select="ancestor::aorsml:EnvironmentRule/@name"/>
+                    <xsl:value-of select="ancestor::aorsl:EnvironmentRule/@name"/>
                     <xsl:text>]}!</xsl:text>
                   </xsl:message>
                 </xsl:otherwise>
@@ -1147,8 +1147,8 @@
             <xsl:with-param name="method" select="'addObjekt'"/>
             <xsl:with-param name="args">
               <xsl:choose>
-                <xsl:when test="aorsml:ItemObjectRef[@language eq $output.language]">
-                  <xsl:value-of select="aorsml:ItemObjectRef[@language eq $output.language][1]"/>
+                <xsl:when test="aorsl:ItemObjectRef[@language eq $output.language]">
+                  <xsl:value-of select="aorsl:ItemObjectRef[@language eq $output.language][1]"/>
                 </xsl:when>
                 <xsl:when test="@itemObjectVariable">
                   <xsl:value-of select="@itemObjectVariable"/>
@@ -1156,7 +1156,7 @@
                 <xsl:otherwise>
                   <xsl:message>
                     <xsl:text>[ERROR] No Item to add to a collection in Rule [</xsl:text>
-                    <xsl:value-of select="ancestor::aorsml:EnvironmentRule/@name"/>
+                    <xsl:value-of select="ancestor::aorsl:EnvironmentRule/@name"/>
                     <xsl:text>]!</xsl:text>
                   </xsl:message>
                 </xsl:otherwise>
@@ -1172,7 +1172,7 @@
 
   <!-- updates a gridCell -->
   <!-- this template is additional used by createInitialzationRule.xsl  and createActivities.xsl-->
-  <xsl:template match="aorsml:UpdateGridCell" mode="createEnvironmentRules.method.stateEffects.content">
+  <xsl:template match="aorsl:UpdateGridCell" mode="createEnvironmentRules.method.stateEffects.content">
     <xsl:param name="indent" as="xs:integer" required="yes"/>
 
     <xsl:variable name="gridCellVarName" select="if (@gridCellVariable) then @gridCellVariable else fn:concat('simGridCell_', position())"/>
@@ -1192,10 +1192,10 @@
           <xsl:with-param name="method" select="'getGridCell'"/>
           <xsl:with-param name="args" as="xs:string*">
             <xsl:variable name="xCoord" as="xs:string">
-              <xsl:apply-templates select="aorsml:XCoordinate[@language eq $output.language]" mode="assistents.getExpression"/>
+              <xsl:apply-templates select="aorsl:XCoordinate[@language eq $output.language]" mode="assistents.getExpression"/>
             </xsl:variable>
             <xsl:variable name="yCoord" as="xs:string">
-              <xsl:apply-templates select="aorsml:YCoordinate[@language eq $output.language]" mode="assistents.getExpression"/>
+              <xsl:apply-templates select="aorsl:YCoordinate[@language eq $output.language]" mode="assistents.getExpression"/>
             </xsl:variable>
             <xsl:value-of select="$xCoord"/>
             <xsl:value-of select="$yCoord"/>
@@ -1204,17 +1204,17 @@
       </xsl:with-param>
     </xsl:call-template>
 
-    <xsl:apply-templates select="aorsml:Increment" mode="assistents.increment">
+    <xsl:apply-templates select="aorsl:Increment" mode="assistents.increment">
       <xsl:with-param name="indent" select="$indent"/>
       <xsl:with-param name="objectVariable" select="$gridCellVarName"/>
     </xsl:apply-templates>
 
-    <xsl:apply-templates select="aorsml:Decrement" mode="assistents.decrement">
+    <xsl:apply-templates select="aorsl:Decrement" mode="assistents.decrement">
       <xsl:with-param name="indent" select="$indent"/>
       <xsl:with-param name="objectVariable" select="$gridCellVarName"/>
     </xsl:apply-templates>
 
-    <xsl:for-each select="aorsml:Slot">
+    <xsl:for-each select="aorsl:Slot">
       <xsl:call-template name="java:callSetterMethod">
         <xsl:with-param name="indent" select="$indent"/>
         <xsl:with-param name="objInstance" select="$gridCellVarName"/>
@@ -1229,7 +1229,7 @@
 
   <!-- updates all gridCells -->
   <!-- this template is additional used by createInitialzationRule.xsl  and createActivities.xsl-->
-  <xsl:template match="aorsml:ForEachGridCell" mode="createEnvironmentRules.method.stateEffects.content">
+  <xsl:template match="aorsl:ForEachGridCell" mode="createEnvironmentRules.method.stateEffects.content">
     <xsl:param name="indent" as="xs:integer" required="yes"/>
 
     <xsl:variable name="gridCellVarName"
@@ -1237,7 +1237,7 @@
 
     <xsl:variable name="indentOffset" as="xs:integer">
       <xsl:choose>
-        <xsl:when test="fn:exists(aorsml:Selection/aorsml:Condition[@language eq $output.language])">
+        <xsl:when test="fn:exists(aorsl:Selection/aorsl:Condition[@language eq $output.language])">
           <xsl:value-of select="1"/>
         </xsl:when>
         <xsl:otherwise>
@@ -1248,21 +1248,21 @@
 
     <xsl:variable name="content">
 
-      <xsl:for-each select="aorsml:Code[@language eq $output.language]">
+      <xsl:for-each select="aorsl:Code[@language eq $output.language]">
         <xsl:copy-of select="."/>
       </xsl:for-each>
 
-      <xsl:apply-templates select="aorsml:Increment" mode="assistents.increment">
+      <xsl:apply-templates select="aorsl:Increment" mode="assistents.increment">
         <xsl:with-param name="indent" select="$indent + $indentOffset"/>
         <xsl:with-param name="objectVariable" select="$gridCellVarName"/>
       </xsl:apply-templates>
 
-      <xsl:apply-templates select="aorsml:Decrement" mode="assistents.decrement">
+      <xsl:apply-templates select="aorsl:Decrement" mode="assistents.decrement">
         <xsl:with-param name="indent" select="$indent + $indentOffset"/>
         <xsl:with-param name="objectVariable" select="$gridCellVarName"/>
       </xsl:apply-templates>
 
-      <xsl:for-each select="aorsml:Slot">
+      <xsl:for-each select="aorsl:Slot">
         <xsl:call-template name="java:callSetterMethod">
           <xsl:with-param name="indent" select="$indent + $indentOffset"/>
           <xsl:with-param name="objInstance" select="$gridCellVarName"/>
@@ -1280,7 +1280,7 @@
     <xsl:call-template name="java:newLine"/>
 
     <xsl:choose>
-      <xsl:when test="not(exists(preceding-sibling::aorsml:ForEachGridCell[@gridCellVariable = current()/@gridCellVariable]))">
+      <xsl:when test="not(exists(preceding-sibling::aorsl:ForEachGridCell[@gridCellVariable = current()/@gridCellVariable]))">
         <xsl:call-template name="java:newObject">
           <xsl:with-param name="indent" select="$indent"/>
           <xsl:with-param name="class" select="fn:concat($sim.class.simSpaceModel, '.', $sim.class.simGridCell)"/>
@@ -1299,7 +1299,7 @@
 
     <xsl:choose>
 
-      <xsl:when test="fn:exists(aorsml:Selection/aorsml:Condition[@language eq $output.language])">
+      <xsl:when test="fn:exists(aorsl:Selection/aorsl:Condition[@language eq $output.language])">
 
         <xsl:variable name="selectedCellsArrayVarName" select="fn:concat($createdVariablesNamePrefix, 'selectedCells_', position())"/>
 
@@ -1310,7 +1310,7 @@
           <xsl:with-param name="withDeclaration" select="false()"/>
         </xsl:call-template>
 
-        <xsl:for-each select="aorsml:Selection/aorsml:Condition[@language eq $output.language]">
+        <xsl:for-each select="aorsl:Selection/aorsl:Condition[@language eq $output.language]">
 
           <xsl:call-template name="java:newArrayListObject">
             <xsl:with-param name="indent" select="$indent"/>
@@ -1336,35 +1336,38 @@
           </xsl:apply-templates>
           <xsl:call-template name="java:newLine"/>
 
-          <xsl:variable name="cellVarName" select="fn:concat($createdVariablesNamePrefix, 'cell')"/>
-          <xsl:call-template name="java:for-each-loop">
-            <xsl:with-param name="indent" select="$indent"/>
-            <xsl:with-param name="elementType" select="$sim.package.simGridCell"/>
-            <xsl:with-param name="elementVarName" select="$cellVarName"/>
-            <xsl:with-param name="listVarName" select="$selectedCellsArrayVarName"/>
-            <xsl:with-param name="content">
+          <!-- this means no Code, Increment or Decrement or Slot element in ForEachGridCell-->
+          <xsl:if test="not(empty($content/*))">
+            <xsl:variable name="cellVarName" select="fn:concat($createdVariablesNamePrefix, 'cell')"/>
+            <xsl:call-template name="java:for-each-loop">
+              <xsl:with-param name="indent" select="$indent"/>
+              <xsl:with-param name="elementType" select="$sim.package.simGridCell"/>
+              <xsl:with-param name="elementVarName" select="$cellVarName"/>
+              <xsl:with-param name="listVarName" select="$selectedCellsArrayVarName"/>
+              <xsl:with-param name="content">
 
-              <xsl:call-template name="java:variable">
-                <xsl:with-param name="indent" select="$indent + 1"/>
-                <xsl:with-param name="name" select="$gridCellVarName"/>
-                <xsl:with-param name="value" select="$cellVarName"/>
-              </xsl:call-template>
+                <xsl:call-template name="java:variable">
+                  <xsl:with-param name="indent" select="$indent"/>
+                  <xsl:with-param name="name" select="$gridCellVarName"/>
+                  <xsl:with-param name="value" select="$cellVarName"/>
+                </xsl:call-template>
 
-              <xsl:value-of select="$content"/>
+                <xsl:value-of select="$content"/>
 
-            </xsl:with-param>
-          </xsl:call-template>
+              </xsl:with-param>
+            </xsl:call-template>
+          </xsl:if>
+
+          <xsl:if test="../@copyToList">
+            <xsl:call-template name="java:variable">
+              <xsl:with-param name="indent" select="$indent"/>
+              <!-- works for Globals, because is in the imports -->
+              <xsl:with-param name="name" select="../@copyToList"/>
+              <xsl:with-param name="value" select="$selectedCellsArrayVarName"/>
+            </xsl:call-template>
+          </xsl:if>
 
         </xsl:for-each>
-
-        <xsl:if test="@copyToList">
-          <xsl:call-template name="java:variable">
-            <xsl:with-param name="indent" select="$indent + 1"/>
-            <!-- works for Globals, because is in the imports -->
-            <xsl:with-param name="name" select="@copyToList"/>
-            <xsl:with-param name="value" select="$selectedCellsArrayVarName"/>
-          </xsl:call-template>
-        </xsl:if>
 
       </xsl:when>
       <xsl:otherwise>
@@ -1382,7 +1385,7 @@
 
   </xsl:template>
 
-  <xsl:template match="aorsml:Condition" mode="createEnvironmentRules.method.stateEffects.updateGridCells.selectionCondition">
+  <xsl:template match="aorsl:Condition" mode="createEnvironmentRules.method.stateEffects.updateGridCells.selectionCondition">
     <xsl:param name="indent" as="xs:integer" required="yes"/>
     <xsl:param name="selectedCellsArrayVarName" as="xs:string" required="yes"/>
     <xsl:param name="gridCellVariable" as="xs:string" required="yes"/>
@@ -1403,7 +1406,7 @@
     </xsl:call-template>
   </xsl:template>
 
-  <xsl:template match="aorsml:ForEachGridCell[not(@selectionList)]" mode="createEnvironmentRules.method.stateEffects.createRuleGridLoop">
+  <xsl:template match="aorsl:ForEachGridCell[not(@selectionList)]" mode="createEnvironmentRules.method.stateEffects.createRuleGridLoop">
     <xsl:param name="indent" as="xs:integer" required="yes"/>
     <xsl:param name="colCounter" as="xs:string" required="yes"/>
     <xsl:param name="rowCounter" as="xs:string" required="yes"/>
@@ -1568,21 +1571,21 @@
     </xsl:call-template>
 
   </xsl:template>
-  
-  <xsl:template match="aorsml:ForEachGridCell[@selectionList]" mode="createEnvironmentRules.method.stateEffects.createRuleGridLoop">
+
+  <xsl:template match="aorsl:ForEachGridCell[@selectionList]" mode="createEnvironmentRules.method.stateEffects.createRuleGridLoop">
     <xsl:param name="indent" as="xs:integer" required="yes"/>
     <xsl:param name="gridCellVarName" as="xs:string" required="yes"/>
     <xsl:param name="content"/>
-    
+
     <xsl:variable name="internalGridCellVarName" select="fn:concat($createdVariablesNamePrefix, 'gridCell')"/>
-    
+
     <xsl:call-template name="java:for-each-loop">
       <xsl:with-param name="indent" select="$indent"/>
       <xsl:with-param name="elementType" select="$sim.package.simGridCell"/>
       <xsl:with-param name="elementVarName" select="$internalGridCellVarName"/>
       <xsl:with-param name="listVarName" select="@selectionList"/>
       <xsl:with-param name="content">
-        
+
         <xsl:call-template name="java:if">
           <xsl:with-param name="indent" select="$indent + 1"/>
           <xsl:with-param name="condition">
@@ -1593,24 +1596,24 @@
             </xsl:call-template>
           </xsl:with-param>
           <xsl:with-param name="thenContent">
-            
+
             <xsl:call-template name="java:variable">
               <xsl:with-param name="indent" select="$indent + 2"/>
               <xsl:with-param name="name" select="$gridCellVarName"/>
-              <xsl:with-param name="value" select="$internalGridCellVarName"/>            
-            </xsl:call-template>          
-            
+              <xsl:with-param name="value" select="$internalGridCellVarName"/>
+            </xsl:call-template>
+
             <xsl:value-of select="$content"/>
           </xsl:with-param>
         </xsl:call-template>
-        
+
       </xsl:with-param>
     </xsl:call-template>
-  
+
   </xsl:template>
 
   <!-- conditions() -->
-  <xsl:template match="aorsml:EnvironmentRule" mode="createEnvironmentRules.method.conditions">
+  <xsl:template match="aorsl:EnvironmentRule" mode="createEnvironmentRules.method.conditions">
     <xsl:param name="indent" required="yes"/>
 
     <xsl:call-template name="java:method">
@@ -1624,15 +1627,15 @@
           <xsl:with-param name="indent" select="$indent + 1"/>
           <xsl:with-param name="value">
             <!-- check if DataVariableDeclarations with refDataTypes isn't null -->
-            <xsl:if test="fn:exists(aorsml:FOR[@dataVariable][@refDataType])">
+            <xsl:if test="fn:exists(aorsl:FOR[@dataVariable][@refDataType])">
               <xsl:value-of select="'('"/>
-              <xsl:apply-templates select="aorsml:FOR[@dataVariable][@refDataType]" mode="assistents.dataVariableDeclarationcheckNull"/>
+              <xsl:apply-templates select="aorsl:FOR[@dataVariable][@refDataType]" mode="assistents.dataVariableDeclarationcheckNull"/>
               <xsl:value-of select="') &amp;&amp; '"/>
             </xsl:if>
             <xsl:choose>
               <xsl:when
-                test="fn:exists(aorsml:IF[@language = $output.language]) and fn:normalize-space(aorsml:IF[@language = $output.language]) != ''">
-                <xsl:value-of select="fn:normalize-space(aorsml:IF[@language = $output.language][1])"/>
+                test="fn:exists(aorsl:IF[@language = $output.language]) and fn:normalize-space(aorsl:IF[@language = $output.language]) != ''">
+                <xsl:value-of select="fn:normalize-space(aorsl:IF[@language = $output.language][1])"/>
               </xsl:when>
               <xsl:otherwise>
                 <xsl:value-of select="'true'"/>
@@ -1647,7 +1650,7 @@
   </xsl:template>
 
   <!-- its possible to share it, but the returntype of the getmethod is differnt with agtRules -->
-  <xsl:template match="aorsml:EnvironmentRule" mode="createEnvironmentRules.method.setGetTriggeringEvent">
+  <xsl:template match="aorsl:EnvironmentRule" mode="createEnvironmentRules.method.setGetTriggeringEvent">
     <xsl:param name="indent" required="yes" as="xs:integer"/>
     <xsl:param name="eventVar" required="yes" as="xs:string"/>
 
@@ -1661,7 +1664,7 @@
 
         <xsl:call-template name="java:return">
           <xsl:with-param name="indent" select="$indent + 1"/>
-          <xsl:with-param name="value" select="jw:quote(if (aorsml:WHEN/@eventType) then aorsml:WHEN/@eventType else $core.class.onEveryStepEnvEvent)"
+          <xsl:with-param name="value" select="jw:quote(if (aorsl:WHEN/@eventType) then aorsl:WHEN/@eventType else $core.class.onEveryStepEnvEvent)"
           />
         </xsl:call-template>
 
@@ -1685,10 +1688,10 @@
           <xsl:with-param name="indent" select="$indent + 1"/>
           <xsl:with-param name="castType">
             <xsl:choose>
-              <xsl:when test="aorsml:WHEN/@eventType">
-                <xsl:value-of select="aorsml:WHEN/@eventType"/>
+              <xsl:when test="aorsl:WHEN/@eventType">
+                <xsl:value-of select="aorsl:WHEN/@eventType"/>
               </xsl:when>
-              <xsl:when test="aorsml:ON-EACH-SIMULATION-STEP">
+              <xsl:when test="aorsl:ON-EACH-SIMULATION-STEP">
                 <xsl:value-of select="$core.package.onEveryStepEnvEvent"/>
               </xsl:when>
               <xsl:otherwise>
@@ -1722,17 +1725,17 @@
 
         <!-- set the message -->
         <xsl:if
-          test="aorsml:WHEN/@eventType eq $core.class.outMessageEvent and 
-          fn:exists(aorsml:WHEN/@messageType) and 
-          fn:exists(aorsml:WHEN/@messageVariable)">
+          test="aorsl:WHEN/@eventType eq $core.class.outMessageEvent and 
+          fn:exists(aorsl:WHEN/@messageType) and 
+          fn:exists(aorsl:WHEN/@messageVariable)">
           <xsl:call-template name="java:variable">
             <xsl:with-param name="indent" select="$indent + 1"/>
             <xsl:with-param name="name">
               <xsl:call-template name="java:varByDotNotation">
-                <xsl:with-param name="varName" select="aorsml:WHEN/@messageVariable"/>
+                <xsl:with-param name="varName" select="aorsl:WHEN/@messageVariable"/>
               </xsl:call-template>
             </xsl:with-param>
-            <xsl:with-param name="castType" select="aorsml:WHEN/@messageType"/>
+            <xsl:with-param name="castType" select="aorsl:WHEN/@messageType"/>
             <xsl:with-param name="value">
               <xsl:call-template name="java:callGetterMethod">
                 <xsl:with-param name="inLine" select="true()"/>
@@ -1757,7 +1760,7 @@
   <!--           Helper               -->
   <!-- ++++++++++++++++++++++++++++++ -->
   <!-- helper: creates an Agent -->
-  <xsl:template match="aorsml:Agent" mode="createEnvironmentRules.helper.method.createAgent">
+  <xsl:template match="aorsl:Agent" mode="createEnvironmentRules.helper.method.createAgent">
     <xsl:param name="indent" required="yes"/>
 
     <xsl:variable name="varNameObj">
@@ -1849,7 +1852,7 @@
 
 
   <!-- helper: creates an PhysicalAgent -->
-  <xsl:template match="aorsml:PhysicalAgent" mode="createEnvironmentRules.helper.method.createPhysAgent">
+  <xsl:template match="aorsl:PhysicalAgent" mode="createEnvironmentRules.helper.method.createPhysAgent">
     <xsl:param name="indent" required="yes"/>
 
     <xsl:variable name="varNameObj">
@@ -1939,7 +1942,7 @@
 
   </xsl:template>
 
-  <xsl:template match="aorsml:PhysicalObject" mode="createEnvironmentRules.helper.method.createPhysicalObjekt">
+  <xsl:template match="aorsl:PhysicalObject" mode="createEnvironmentRules.helper.method.createPhysicalObjekt">
     <xsl:param name="indent" required="yes"/>
 
     <xsl:variable name="varNameObj">
@@ -2003,7 +2006,7 @@
   </xsl:template>
 
   <!-- helper: create agents from agentset -->
-  <xsl:template match="aorsml:PhysicalAgents" mode="createEnvironmentRules.helper.method.createPhysAgent">
+  <xsl:template match="aorsl:PhysicalAgents" mode="createEnvironmentRules.helper.method.createPhysAgent">
     <xsl:param name="indent" required="yes"/>
 
     <xsl:variable name="varNameObj" select="jw:lowerWord(@objectVariable)"/>
@@ -2088,7 +2091,7 @@
   </xsl:template>
 
   <!-- helper: creates an object -->
-  <xsl:template match="aorsml:Object" mode="createEnvironmentRules.helper.method.createObjekt">
+  <xsl:template match="aorsl:Object" mode="createEnvironmentRules.helper.method.createObjekt">
     <xsl:param name="indent" required="yes"/>
 
     <xsl:variable name="varNameObj">
@@ -2155,7 +2158,7 @@
   </xsl:template>
 
   <!-- helper: create objects from objectset -->
-  <xsl:template match="aorsml:Objects" mode="createEnvironmentRules.helper.method.createObjekt">
+  <xsl:template match="aorsl:Objects" mode="createEnvironmentRules.helper.method.createObjekt">
     <xsl:param name="indent" required="yes"/>
 
     <xsl:variable name="varNameObj">
@@ -2225,23 +2228,23 @@
   </xsl:template>
 
   <!-- helper: destroy objekt -->
-  <xsl:template match="aorsml:DestroyObject" mode="createEnvironmentRules.helper.method.destroyObject">
+  <xsl:template match="aorsl:DestroyObject" mode="createEnvironmentRules.helper.method.destroyObject">
     <xsl:param name="indent" required="yes"/>
     <xsl:param name="objectCollElemVarName" select="''" as="xs:string"/>
 
     <xsl:variable name="physObjId">
       <xsl:choose>
-        <xsl:when test="aorsml:ObjectRef[@language = $output.language]">
+        <xsl:when test="aorsl:ObjectRef[@language = $output.language]">
           <xsl:call-template name="java:callGetterMethod">
             <xsl:with-param name="inLine" select="true()"/>
             <xsl:with-param name="objInstance">
-              <xsl:value-of select="aorsml:ObjectRef[@language = $output.language]"/>
+              <xsl:value-of select="aorsl:ObjectRef[@language = $output.language]"/>
             </xsl:with-param>
             <xsl:with-param name="instVariable" select="'id'"/>
           </xsl:call-template>
         </xsl:when>
-        <xsl:when test="aorsml:ObjectIdRef[@language = $output.language]">
-          <xsl:value-of select="aorsml:ObjectIdRef[@language = $output.language][1]"/>
+        <xsl:when test="aorsl:ObjectIdRef[@language = $output.language]">
+          <xsl:value-of select="aorsl:ObjectIdRef[@language = $output.language][1]"/>
         </xsl:when>
         <xsl:when test="fn:exists(@objectIdRef)">
           <xsl:value-of select="@objectIdRef"/>
@@ -2276,7 +2279,7 @@
       <!-- if we don't have @objectIdRef, ObjectRef or @objectVariable, but  @removeFromCollection -->
       <xsl:when
         test="fn:exists(@removeFromCollection) and $objectCollElemVarName != '' and
-        fn:exists(//aorsml:Collections/aorsml:Collection[@name = current()/@removeFromCollection])">
+        fn:exists(//aorsl:Collections/aorsl:Collection[@name = current()/@removeFromCollection])">
         <xsl:call-template name="java:variable">
           <xsl:with-param name="indent" select="$indent"/>
           <xsl:with-param name="name" select="$objectCollElemVarName"/>
@@ -2325,7 +2328,7 @@
   </xsl:template>
 
   <!-- helper: destroy RemoveObjectFromCollection with @destroy = true-->
-  <xsl:template match="aorsml:RemoveObjectFromCollection" mode="createEnvironmentRules.helper.method.destroyRemoveObjectFromCollection">
+  <xsl:template match="aorsl:RemoveObjectFromCollection" mode="createEnvironmentRules.helper.method.destroyRemoveObjectFromCollection">
     <xsl:param name="indent" required="yes" as="xs:integer"/>
 
     <xsl:variable name="collection" as="node()">
@@ -2386,7 +2389,7 @@
   </xsl:template>
 
   <!-- helper: destroy entities from a set -->
-  <xsl:template match="aorsml:DestroyObjects" mode="createEnvironmentRules.helper.method.destroyObjects">
+  <xsl:template match="aorsl:DestroyObjects" mode="createEnvironmentRules.helper.method.destroyObjects">
     <xsl:param name="indent" required="yes"/>
 
     <xsl:variable name="endId">
@@ -2431,7 +2434,7 @@
 
   <!-- helper -->
   <!-- this template is additional used by createInitialzationRule.xsl and createActivities.xsl -->
-  <xsl:template match="aorsml:UpdateObject" mode="createEnvironmentRules.method.stateEffects.content">
+  <xsl:template match="aorsl:UpdateObject" mode="createEnvironmentRules.method.stateEffects.content">
     <xsl:param name="indent" required="yes" as="xs:integer"/>
 
     <xsl:variable name="objectVariable">
@@ -2439,28 +2442,28 @@
         <xsl:when test="fn:exists(@objectVariable)">
           <xsl:value-of select="@objectVariable"/>
         </xsl:when>
-        <xsl:when test="fn:exists(aorsml:ObjectRef[@language = $output.language])">
+        <xsl:when test="fn:exists(aorsl:ObjectRef[@language = $output.language])">
           <!-- @objectType is required, but still we check it  for potential changes-->
           <xsl:choose>
             <!-- TODO: delete this part, if the changes in repo maked-->
             <xsl:when test="@objectType">
-              <xsl:value-of select="fn:concat('((', @objectType, ')', aorsml:ObjectRef[@language = $output.language],')')"/>
+              <xsl:value-of select="fn:concat('((', @objectType, ')', aorsl:ObjectRef[@language = $output.language],')')"/>
             </xsl:when>
             <!-- ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++ -->
-            <xsl:when test="aorsml:ObjectRef[@language = $output.language]/@objectType">
+            <xsl:when test="aorsl:ObjectRef[@language = $output.language]/@objectType">
               <xsl:value-of
-                select="fn:concat('((', aorsml:ObjectRef[@language = $output.language]/@objectType, ')', aorsml:ObjectRef[@language = $output.language],')')"
+                select="fn:concat('((', aorsl:ObjectRef[@language = $output.language]/@objectType, ')', aorsl:ObjectRef[@language = $output.language],')')"
               />
             </xsl:when>
             <xsl:otherwise>
-              <xsl:value-of select="fn:concat('(', aorsml:ObjectRef[@language = $output.language],')')"/>
+              <xsl:value-of select="fn:concat('(', aorsl:ObjectRef[@language = $output.language],')')"/>
             </xsl:otherwise>
           </xsl:choose>
         </xsl:when>
       </xsl:choose>
     </xsl:variable>
 
-    <xsl:for-each select="aorsml:Slot">
+    <xsl:for-each select="aorsl:Slot">
       <xsl:call-template name="java:callSetterMethod">
         <xsl:with-param name="indent" select="$indent"/>
         <xsl:with-param name="objInstance" select="$objectVariable"/>
@@ -2471,12 +2474,12 @@
       </xsl:call-template>
     </xsl:for-each>
 
-    <xsl:apply-templates select="aorsml:Increment" mode="assistents.increment">
+    <xsl:apply-templates select="aorsl:Increment" mode="assistents.increment">
       <xsl:with-param name="indent" select="$indent"/>
       <xsl:with-param name="objectVariable" select="$objectVariable"/>
     </xsl:apply-templates>
 
-    <xsl:apply-templates select="aorsml:Decrement" mode="assistents.decrement">
+    <xsl:apply-templates select="aorsl:Decrement" mode="assistents.decrement">
       <xsl:with-param name="indent" select="$indent"/>
       <xsl:with-param name="objectVariable" select="$objectVariable"/>
     </xsl:apply-templates>
@@ -2485,7 +2488,7 @@
 
   <!--sets state effects-->
   <!-- this template is additional used by createInitialzationRule.xsl and by createActivities.xsl -->
-  <xsl:template match="aorsml:UpdateObjects" mode="createEnvironmentRules.helper.method.stateEffects">
+  <xsl:template match="aorsl:UpdateObjects" mode="createEnvironmentRules.helper.method.stateEffects">
     <xsl:param name="indent" required="yes" as="xs:integer"/>
 
     <xsl:variable name="loopVariable" select="if (exists(@loopVariable)) then @loopVariable else 'i'"/>
@@ -2526,16 +2529,16 @@
               </xsl:with-param>
               <xsl:with-param name="method">
                 <xsl:choose>
-                  <xsl:when test="fn:exists(//aorsml:PhysicalAgentType[@name = current()/@objectType])">
+                  <xsl:when test="fn:exists(//aorsl:PhysicalAgentType[@name = current()/@objectType])">
                     <xsl:value-of select="'getPhysicalAgentById'"/>
                   </xsl:when>
-                  <xsl:when test="fn:exists(//aorsml:PhysicalObjectType[@name = current()/@objectType])">
+                  <xsl:when test="fn:exists(//aorsl:PhysicalObjectType[@name = current()/@objectType])">
                     <xsl:value-of select="'getPhysicalObjectById'"/>
                   </xsl:when>
-                  <xsl:when test="fn:exists(//aorsml:ObjectType[@name = current()/@objectType])">
+                  <xsl:when test="fn:exists(//aorsl:ObjectType[@name = current()/@objectType])">
                     <xsl:value-of select="'getPhysObjectById'"/>
                   </xsl:when>
-                  <xsl:when test="fn:exists(//aorsml:AgentType[@name = current()/@objectType])">
+                  <xsl:when test="fn:exists(//aorsl:AgentType[@name = current()/@objectType])">
                     <xsl:value-of select="'getAgentById'"/>
                   </xsl:when>
                   <xsl:otherwise>
@@ -2564,7 +2567,7 @@
             </xsl:call-template>
           </xsl:with-param>
           <xsl:with-param name="thenContent">
-            <xsl:for-each select="aorsml:Slot">
+            <xsl:for-each select="aorsl:Slot">
               <xsl:call-template name="java:callSetterMethod">
                 <xsl:with-param name="indent" select="$indent + 2"/>
                 <xsl:with-param name="objInstance" select="../@objectVariable"/>
@@ -2575,12 +2578,12 @@
               </xsl:call-template>
             </xsl:for-each>
 
-            <xsl:apply-templates select="aorsml:Increment" mode="assistents.increment">
+            <xsl:apply-templates select="aorsl:Increment" mode="assistents.increment">
               <xsl:with-param name="indent" select="$indent"/>
               <xsl:with-param name="objectVariable" select="../@objectVariable"/>
             </xsl:apply-templates>
 
-            <xsl:apply-templates select="aorsml:Decrement" mode="assistents.decrement">
+            <xsl:apply-templates select="aorsl:Decrement" mode="assistents.decrement">
               <xsl:with-param name="indent" select="$indent"/>
               <xsl:with-param name="objectVariable" select="../@objectVariable"/>
             </xsl:apply-templates>
@@ -2592,7 +2595,7 @@
   </xsl:template>
 
   <!-- set CausedEvents -->
-  <xsl:template match="aorsml:CausedEventExpr" mode="createEnvironmentRules.helper.method.resultingEvents">
+  <xsl:template match="aorsl:CausedEventExpr" mode="createEnvironmentRules.helper.method.resultingEvents">
     <xsl:param name="indent" required="yes" as="xs:integer"/>
     <xsl:param name="resultList" required="yes" as="xs:string"/>
     <xsl:param name="triggeringEventVar" required="yes" as="xs:string" tunnel="yes"/>
@@ -2629,7 +2632,7 @@
     </xsl:variable>
 
     <xsl:variable name="output">
-      <xsl:variable name="block-indent" select="if (fn:exists(aorsml:Condition[@language eq $output.language])) then $indent + 1 else $indent"/>
+      <xsl:variable name="block-indent" select="if (fn:exists(aorsl:Condition[@language eq $output.language])) then $indent + 1 else $indent"/>
 
       <xsl:call-template name="java:newObject">
         <xsl:with-param name="indent" select="$block-indent"/>
@@ -2639,17 +2642,17 @@
       </xsl:call-template>
 
       <!-- WARNING -->
-      <xsl:if test="fn:exists(aorsml:Slot[@property = 'occurrenceTime'])">
+      <xsl:if test="fn:exists(aorsl:Slot[@property = 'occurrenceTime'])">
         <xsl:message>The use of occurrenceTime is not allowed in CausedEventExpressionSlot!</xsl:message>
       </xsl:if>
 
-      <xsl:for-each select="aorsml:Slot[@property != 'occurrenceTime']">
+      <xsl:for-each select="aorsl:Slot[@property != 'occurrenceTime']">
         <xsl:choose>
           <xsl:when
-            test="//aorsml:CausedEventType[@name = $eventType][aorsml:Attribute/@name = current()/@property or 
-                                                                                                                    aorsml:ReferenceProperty/@name = current()/@property or 
-                                                                                                                    aorsml:ComplexDataProperty/@name = current()/@property or 
-                                                                                                                    aorsml:EnumerationProperty/@name = current()/@property]">
+            test="//aorsl:CausedEventType[@name = $eventType][aorsl:Attribute/@name = current()/@property or 
+                                                                                                                    aorsl:ReferenceProperty/@name = current()/@property or 
+                                                                                                                    aorsl:ComplexDataProperty/@name = current()/@property or 
+                                                                                                                    aorsl:EnumerationProperty/@name = current()/@property]">
             <xsl:call-template name="java:callSetterMethod">
               <xsl:with-param name="indent" select="$block-indent"/>
               <xsl:with-param name="objInstance" select="$eventVar"/>
@@ -2658,7 +2661,7 @@
                 <xsl:apply-templates select="." mode="assistents.getSlotValue"/>
               </xsl:with-param>
               <xsl:with-param name="valueType">
-                <xsl:value-of select="//aorsml:CausedEventType[@name = $eventType][aorsml:*/@name = current()/@property]/@type"/>
+                <xsl:value-of select="//aorsl:CausedEventType[@name = $eventType][aorsl:*/@name = current()/@property]/@type"/>
               </xsl:with-param>
             </xsl:call-template>
           </xsl:when>
@@ -2690,7 +2693,7 @@
   </xsl:template>
 
   <!-- set PerceptionEvents -->
-  <xsl:template match="aorsml:PerceptionEventExpr" mode="createEnvironmentRules.helper.method.resultingEvents">
+  <xsl:template match="aorsl:PerceptionEventExpr" mode="createEnvironmentRules.helper.method.resultingEvents">
     <xsl:param name="indent" required="yes" as="xs:integer"/>
     <xsl:param name="resultList" required="yes" as="xs:string"/>
     <xsl:param name="triggeringEventVar" required="yes" as="xs:string" tunnel="yes"/>
@@ -2706,8 +2709,8 @@
     <!-- define variables her because they will be used in a for-each -->
     <xsl:variable name="occurrenceTime" as="xs:string">
       <xsl:choose>
-        <xsl:when test="fn:exists(aorsml:Slot[@property = 'occurrenceTime'])">
-          <xsl:apply-templates select="aorsml:Slot[@property = 'occurrenceTime']" mode="assistents.getSlotValue"/>
+        <xsl:when test="fn:exists(aorsl:Slot[@property = 'occurrenceTime'])">
+          <xsl:apply-templates select="aorsl:Slot[@property = 'occurrenceTime']" mode="assistents.getSlotValue"/>
         </xsl:when>
         <xsl:otherwise>
           <xsl:variable name="param">
@@ -2726,7 +2729,7 @@
         </xsl:otherwise>
       </xsl:choose>
     </xsl:variable>
-    <xsl:variable name="slots" select="aorsml:Slot[@property != 'occurrenceTime']"/>
+    <xsl:variable name="slots" select="aorsl:Slot[@property != 'occurrenceTime']"/>
     <xsl:variable name="perceiverIdRefs1" as="xs:string*">
       <!-- necessary if someone use two spaces -->
       <xsl:for-each select="fn:tokenize(@perceiverIdRefs, ' ')">
@@ -2735,10 +2738,10 @@
         </xsl:if>
       </xsl:for-each>
     </xsl:variable>
-    <xsl:variable name="perceiverIdRef2" select="aorsml:PerceiverIdRef[@language = $output.language]"/>
+    <xsl:variable name="perceiverIdRef2" select="aorsl:PerceiverIdRef[@language = $output.language]"/>
 
     <xsl:variable name="output">
-      <xsl:variable name="block-indent" select="if (fn:exists(aorsml:Condition[@language eq $output.language])) then $indent + 1 else $indent"/>
+      <xsl:variable name="block-indent" select="if (fn:exists(aorsl:Condition[@language eq $output.language])) then $indent + 1 else $indent"/>
 
       <xsl:call-template name="java:newObject">
         <xsl:with-param name="indent" select="$block-indent"/>
@@ -2765,10 +2768,10 @@
         <xsl:for-each select="$slots">
           <xsl:choose>
             <xsl:when
-              test="//aorsml:PerceptionEventType[@name = $eventType][aorsml:Attribute/@name = current()/@property or 
-                  aorsml:ReferenceProperty/@name = current()/@property or 
-                  aorsml:ComplexDataProperty/@name = current()/@property or 
-                  aorsml:EnumerationProperty/@name = current()/@property]">
+              test="//aorsl:PerceptionEventType[@name = $eventType][aorsl:Attribute/@name = current()/@property or 
+                  aorsl:ReferenceProperty/@name = current()/@property or 
+                  aorsl:ComplexDataProperty/@name = current()/@property or 
+                  aorsl:EnumerationProperty/@name = current()/@property]">
               <xsl:call-template name="java:callSetterMethod">
                 <xsl:with-param name="indent" select="$block-indent"/>
                 <xsl:with-param name="objInstance" select="$eventVar"/>
@@ -2777,7 +2780,7 @@
                   <xsl:apply-templates select="." mode="assistents.getSlotValue"/>
                 </xsl:with-param>
                 <xsl:with-param name="valueType">
-                  <xsl:value-of select="//aorsml:PerceptionEventType[@name = $eventType][aorsml:*/@name = current()/@property][1]/@type"/>
+                  <xsl:value-of select="//aorsl:PerceptionEventType[@name = $eventType][aorsl:*/@name = current()/@property][1]/@type"/>
                 </xsl:with-param>
               </xsl:call-template>
             </xsl:when>
@@ -2809,12 +2812,12 @@
 
   <!-- set InMessageEvents -->
   <!-- it is complete untested -->
-  <xsl:template match="aorsml:InMessageEventExpr" mode="createEnvironmentRules.helper.method.resultingEvents">
+  <xsl:template match="aorsl:InMessageEventExpr" mode="createEnvironmentRules.helper.method.resultingEvents">
     <xsl:param name="indent" required="yes" as="xs:integer"/>
     <xsl:param name="resultList" required="yes" as="xs:string"/>
     <xsl:param name="triggeringEventVar" required="yes" as="xs:string" tunnel="yes"/>
 
-    <xsl:variable name="messageNode" select="//aorsml:MessageType[@name = current()/@messageType]"/>
+    <xsl:variable name="messageNode" select="//aorsl:MessageType[@name = current()/@messageType]"/>
     <!-- get the delay -->
     <xsl:variable name="delay">
       <xsl:apply-templates select="." mode="assistents.getDelay"/>
@@ -2828,7 +2831,7 @@
 
 
         <xsl:variable name="output">
-          <xsl:variable name="block-indent" select="if (fn:exists(aorsml:Condition[@language eq $output.language])) then $indent + 1 else $indent"/>
+          <xsl:variable name="block-indent" select="if (fn:exists(aorsl:Condition[@language eq $output.language])) then $indent + 1 else $indent"/>
 
           <xsl:call-template name="java:newObject">
             <xsl:with-param name="indent" select="$block-indent"/>
@@ -2836,7 +2839,7 @@
             <xsl:with-param name="varName" select="$messageVarName"/>
           </xsl:call-template>
 
-          <xsl:for-each select="aorsml:Slot">
+          <xsl:for-each select="aorsl:Slot">
 
             <xsl:call-template name="java:callSetterMethod">
               <xsl:with-param name="indent" select="$block-indent"/>
@@ -2865,9 +2868,9 @@
           <!-- TODO: implement DO/THEN/ELSE -->
           <xsl:choose>
             <xsl:when
-              test="./ancestor::*/aorsml:WHEN/@eventType = $core.class.outMessageEvent and 
-              ./ancestor::*/aorsml:WHEN/@messageType = current()/@messageType 
-                and (not(aorsml:ReceiverIdRef or @receiverIdRefs) and not(aorsml:SenderIdRef or @senderIdRef))">
+              test="./ancestor::*/aorsl:WHEN/@eventType = $core.class.outMessageEvent and 
+              ./ancestor::*/aorsl:WHEN/@messageType = current()/@messageType 
+                and (not(aorsl:ReceiverIdRef or @receiverIdRefs) and not(aorsl:SenderIdRef or @senderIdRef))">
 
               <!-- if the modeller don't define a delay then we use '0' as default; in this case we save one step -->
               <xsl:variable name="mapping-delay">
@@ -2875,11 +2878,11 @@
                   <xsl:when test="fn:exists(@delay)">
                     <xsl:value-of select="@delay"/>
                   </xsl:when>
-                  <xsl:when test="fn:exists(aorsml:Delay/aorsml:ValueExpr[@language eq $output.language])">
-                    <xsl:value-of select="aorsml:Delay/aorsml:ValueExpr[@language eq $output.language][1]"/>
+                  <xsl:when test="fn:exists(aorsl:Delay/aorsl:ValueExpr[@language eq $output.language])">
+                    <xsl:value-of select="aorsl:Delay/aorsl:ValueExpr[@language eq $output.language][1]"/>
                   </xsl:when>
-                  <xsl:when test="fn:exists(aorsml:Delay/aorsml:DiscreteRandomVariable)">
-                    <xsl:apply-templates select="aorsml:Delay/aorsml:DiscreteRandomVariable/aorsml:*" mode="assistents.distribution"/>
+                  <xsl:when test="fn:exists(aorsl:Delay/aorsl:DiscreteRandomVariable)">
+                    <xsl:apply-templates select="aorsl:Delay/aorsl:DiscreteRandomVariable/aorsl:*" mode="assistents.distribution"/>
                   </xsl:when>
                   <xsl:otherwise>
                     <xsl:value-of select="'0'"/>
@@ -2960,14 +2963,14 @@
                   </xsl:if>
                 </xsl:for-each>
               </xsl:variable>
-              <xsl:variable name="receiverIdRefs2" select="aorsml:ReceiverIdRef[@language = $output.language]"/>
+              <xsl:variable name="receiverIdRefs2" select="aorsl:ReceiverIdRef[@language = $output.language]"/>
               <xsl:variable name="senderIdRef" as="xs:string">
                 <xsl:choose>
                   <xsl:when test="fn:exists(@senderIdRef)">
                     <xsl:value-of select="@senderIdRef"/>
                   </xsl:when>
-                  <xsl:when test="fn:exists(aorsml:SenderIdRef[@language = $output.language])">
-                    <xsl:value-of select="aorsml:SenderIdRef[@language = $output.language]"/>
+                  <xsl:when test="fn:exists(aorsl:SenderIdRef[@language = $output.language])">
+                    <xsl:value-of select="aorsl:SenderIdRef[@language = $output.language]"/>
                   </xsl:when>
                   <xsl:otherwise>
                     <xsl:message>No sender defined for <xsl:value-of select="local-name()"/></xsl:message>
@@ -3049,7 +3052,7 @@
   </xsl:template>
 
   <!-- set  ActivityStartEvent -->
-  <xsl:template match="aorsml:ActivityStartEventExpr" mode="createEnvironmentRules.helper.method.resultingEvents">
+  <xsl:template match="aorsl:ActivityStartEventExpr" mode="createEnvironmentRules.helper.method.resultingEvents">
     <xsl:param name="indent" required="yes" as="xs:integer"/>
     <xsl:param name="resultList" required="yes" as="xs:string"/>
     <xsl:param name="triggeringEventVar" required="yes" as="xs:string" tunnel="yes"/>
@@ -3075,7 +3078,7 @@
     </xsl:variable>
 
     <xsl:variable name="output">
-      <xsl:variable name="block-indent" select="if (fn:exists(aorsml:Condition[@language eq $output.language])) then $indent + 1 else $indent"/>
+      <xsl:variable name="block-indent" select="if (fn:exists(aorsl:Condition[@language eq $output.language])) then $indent + 1 else $indent"/>
 
       <xsl:call-template name="java:newObject">
         <xsl:with-param name="indent" select="$block-indent"/>
@@ -3094,7 +3097,7 @@
       </xsl:call-template>
 
       <xsl:if
-        test="fn:exists(aorsml:ActorRef[@language eq $output.language]) or fn:exists(aorsml:ActorIdRef[@language eq $output.language]) or @actorIdRef">
+        test="fn:exists(aorsl:ActorRef[@language eq $output.language]) or fn:exists(aorsl:ActorIdRef[@language eq $output.language]) or @actorIdRef">
 
         <xsl:call-template name="java:callSetterMethod">
           <xsl:with-param name="indent" select="$block-indent"/>
@@ -3102,8 +3105,8 @@
           <xsl:with-param name="instVariable" select="'activityActor'"/>
           <xsl:with-param name="value">
             <xsl:choose>
-              <xsl:when test="fn:exists(aorsml:ActorRef[@language eq $output.language])">
-                <xsl:value-of select="aorsml:ActorRef[@language eq $output.language][1]"/>
+              <xsl:when test="fn:exists(aorsl:ActorRef[@language eq $output.language])">
+                <xsl:value-of select="aorsl:ActorRef[@language eq $output.language][1]"/>
               </xsl:when>
               <xsl:otherwise>
                 <xsl:call-template name="java:callMethod">
@@ -3117,8 +3120,8 @@
                   <xsl:with-param name="method" select="'getActivityActorById'"/>
                   <xsl:with-param name="args">
                     <xsl:choose>
-                      <xsl:when test="aorsml:ActorIdRef[@language eq $output.language]">
-                        <xsl:value-of select="aorsml:ActorIdRef[@language eq $output.language][1]"/>
+                      <xsl:when test="aorsl:ActorIdRef[@language eq $output.language]">
+                        <xsl:value-of select="aorsl:ActorIdRef[@language eq $output.language][1]"/>
                       </xsl:when>
                       <xsl:otherwise>
                         <xsl:value-of select="@actorIdRef"/>
@@ -3153,7 +3156,7 @@
   </xsl:template>
 
   <!-- set  ActivityEndEvent -->
-  <xsl:template match="aorsml:ActivityEndEventExpr" mode="createEnvironmentRules.helper.method.resultingEvents">
+  <xsl:template match="aorsl:ActivityEndEventExpr" mode="createEnvironmentRules.helper.method.resultingEvents">
     <xsl:param name="indent" required="yes" as="xs:integer"/>
     <xsl:param name="resultList" required="yes" as="xs:string"/>
     <xsl:param name="triggeringEventVar" required="yes" as="xs:string" tunnel="yes"/>
@@ -3179,7 +3182,7 @@
     </xsl:variable>
 
     <xsl:variable name="output">
-      <xsl:variable name="block-indent" select="if (fn:exists(aorsml:Condition[@language eq $output.language])) then $indent + 1 else $indent"/>
+      <xsl:variable name="block-indent" select="if (fn:exists(aorsl:Condition[@language eq $output.language])) then $indent + 1 else $indent"/>
 
       <xsl:call-template name="java:newObject">
         <xsl:with-param name="indent" select="$block-indent"/>
@@ -3216,7 +3219,7 @@
   </xsl:template>
 
   <!-- check the permitted attribut combinations -->
-  <xsl:template match="aorsml:WHEN" mode="createEnvironmentRules.checkAttributes">
+  <xsl:template match="aorsl:WHEN" mode="createEnvironmentRules.checkAttributes">
 
     <!-- if the eventType is an OutMessageEvent it's a messageType required -->
     <xsl:if test="@eventType = $core.class.outMessageEvent and not (fn:exists(@messageType))">
@@ -3225,14 +3228,14 @@
         <xsl:value-of select="$core.class.outMessageEvent"/>
         <xsl:text> defined. </xsl:text>
         <xsl:text>EnvironmentRule: </xsl:text>
-        <xsl:value-of select="../../aorsml:EnvironmentRule/@name"/>
+        <xsl:value-of select="../../aorsl:EnvironmentRule/@name"/>
       </xsl:message>
     </xsl:if>
 
   </xsl:template>
 
   <!-- set collectionitem as classvariable -->
-  <xsl:template match="aorsml:RemoveObjectFromCollection" mode="createEnvironmentRules.setGlobalsByCollectionItems">
+  <xsl:template match="aorsl:RemoveObjectFromCollection" mode="createEnvironmentRules.setGlobalsByCollectionItems">
     <xsl:param name="indent" as="xs:integer" required="yes"/>
 
     <xsl:variable name="collection" as="node()">
@@ -3240,7 +3243,7 @@
     </xsl:variable>
 
     <xsl:if
-      test="not (fn:exists(./ancestor::aorsml:EnvironmentRule/aorsml:FOR[@objectType = $collection/@itemType and @objectVariable = current()/@itemObjectVariable]))">
+      test="not (fn:exists(./ancestor::aorsl:EnvironmentRule/aorsl:FOR[@objectType = $collection/@itemType and @objectVariable = current()/@itemObjectVariable]))">
 
       <xsl:call-template name="java:variable">
         <xsl:with-param name="indent" select="$indent"/>
@@ -3260,35 +3263,35 @@
     </xsl:if>
   </xsl:template>
 
-  <xsl:template match="aorsml:RemoveObjectFromCollection" mode="createEnvironmentRules.helper.getCollectionFromRemoveObjectFromCollection">
+  <xsl:template match="aorsl:RemoveObjectFromCollection" mode="createEnvironmentRules.helper.getCollectionFromRemoveObjectFromCollection">
     <xsl:choose>
       <xsl:when test="fn:exists(@collectionObjectVariable)">
         <xsl:variable name="variabledeclaration" as="node()"
-          select="ancestor::aorsml:EnvironmentRule/aorsml:FOR[@objectVariable = current()/@collectionObjectVariable]"/>
+          select="ancestor::aorsl:EnvironmentRule/aorsl:FOR[@objectVariable = current()/@collectionObjectVariable]"/>
         <xsl:choose>
           <xsl:when test="$variabledeclaration/@objectIdRef">
-            <xsl:copy-of select="//aorsml:Collections/aorsml:Collection[@id = $variabledeclaration/@objectIdRef]"/>
+            <xsl:copy-of select="//aorsl:Collections/aorsl:Collection[@id = $variabledeclaration/@objectIdRef]"/>
           </xsl:when>
           <xsl:when test="$variabledeclaration/@objectName">
-            <xsl:copy-of select="//aorsml:Collections/aorsml:Collection[@name = $variabledeclaration/@objectName]"/>
+            <xsl:copy-of select="//aorsl:Collections/aorsl:Collection[@name = $variabledeclaration/@objectName]"/>
           </xsl:when>
           <xsl:otherwise>
             <xsl:message terminate="yes">ERROR: No FOR[@objectVariable] found for removeOperation in EnvironmentRule </xsl:message>
-            <xsl:value-of select="../../aorsml:EnvironmentRule/@name"/>
+            <xsl:value-of select="../../aorsl:EnvironmentRule/@name"/>
           </xsl:otherwise>
         </xsl:choose>
       </xsl:when>
       <xsl:when test="fn:exists(@collectionID)">
-        <xsl:copy-of select="//aorsml:Collections/aorsml:Collection[@id = current()/@collectionID]"/>
+        <xsl:copy-of select="//aorsl:Collections/aorsl:Collection[@id = current()/@collectionID]"/>
       </xsl:when>
       <xsl:when test="fn:exists(@collectionName)">
-        <xsl:copy-of select="//aorsml:Collections/aorsml:Collection[@name = current()/@collectionName]"/>
+        <xsl:copy-of select="//aorsl:Collections/aorsl:Collection[@name = current()/@collectionName]"/>
       </xsl:when>
       <xsl:otherwise>
         <xsl:copy-of select="node()"/>
         <xsl:message terminate="yes">
           <xsl:text>ERROR: No Collection found for removeOperation in EnvironmentRule </xsl:text>
-          <xsl:value-of select="ancestor::aorsml:EnvironmentRule/@name"/>
+          <xsl:value-of select="ancestor::aorsl:EnvironmentRule/@name"/>
           <xsl:text>]!</xsl:text>
         </xsl:message>
       </xsl:otherwise>
@@ -3296,7 +3299,7 @@
   </xsl:template>
 
   <!-- set collectionitems classvariables from collection -->
-  <xsl:template match="aorsml:RemoveObjectFromCollection" mode="createEnvironmentRules.method.stateEffects.content">
+  <xsl:template match="aorsl:RemoveObjectFromCollection" mode="createEnvironmentRules.method.stateEffects.content">
     <xsl:param name="indent" as="xs:integer" required="yes"/>
 
     <xsl:choose>
@@ -3335,7 +3338,7 @@
                     <xsl:message>Not yet implementet</xsl:message>
                   </xsl:when>
                   <xsl:when test="fn:exists(@collectionName)">
-                    <xsl:variable name="collectionNode" select="//aorsml:Collections/aorsml:Collection[@name = current()/@collectionName][1]"/>
+                    <xsl:variable name="collectionNode" select="//aorsl:Collections/aorsl:Collection[@name = current()/@collectionName][1]"/>
                     <xsl:choose>
                       <xsl:when test="fn:exists($collectionNode)">
                         <xsl:value-of select="jw:createCollectionVarname($collectionNode)"/>
@@ -3397,7 +3400,7 @@
   </xsl:template>
 
   <!--  -->
-  <xsl:template match="aorsml:Create" mode="createEnvironmentRules.method.stateEffects.content">
+  <xsl:template match="aorsl:Create" mode="createEnvironmentRules.method.stateEffects.content">
     <xsl:param name="indent" as="xs:integer" required="yes"/>
 
     <xsl:variable name="getTriggeredTimeForDynamicCreatedAgentsWithOnEachStepEvents">
@@ -3408,48 +3411,48 @@
     </xsl:variable>
 
     <!-- create Object -->
-    <xsl:apply-templates select="aorsml:Object" mode="createEnvironmentRules.helper.method.createObjekt">
+    <xsl:apply-templates select="aorsl:Object" mode="createEnvironmentRules.helper.method.createObjekt">
       <xsl:with-param name="indent" select="$indent"/>
     </xsl:apply-templates>
 
     <!-- create Objects -->
-    <xsl:apply-templates select="aorsml:Objects" mode="createEnvironmentRules.helper.method.createObjekt">
+    <xsl:apply-templates select="aorsl:Objects" mode="createEnvironmentRules.helper.method.createObjekt">
       <xsl:with-param name="indent" select="$indent"/>
     </xsl:apply-templates>
 
     <!-- create Agent -->
-    <xsl:apply-templates select="aorsml:Agent" mode="createEnvironmentRules.helper.method.createAgent">
+    <xsl:apply-templates select="aorsl:Agent" mode="createEnvironmentRules.helper.method.createAgent">
       <xsl:with-param name="indent" select="$indent"/>
       <xsl:with-param name="getTriggeredTimeForDynamicCreatedAgentsWithOnEachStepEvents"
         select="$getTriggeredTimeForDynamicCreatedAgentsWithOnEachStepEvents" tunnel="yes"/>
     </xsl:apply-templates>
 
     <!-- create PhysicalAgent -->
-    <xsl:apply-templates select="aorsml:PhysicalAgent" mode="createEnvironmentRules.helper.method.createPhysAgent">
+    <xsl:apply-templates select="aorsl:PhysicalAgent" mode="createEnvironmentRules.helper.method.createPhysAgent">
       <xsl:with-param name="indent" select="$indent"/>
       <xsl:with-param name="getTriggeredTimeForDynamicCreatedAgentsWithOnEachStepEvents"
         select="$getTriggeredTimeForDynamicCreatedAgentsWithOnEachStepEvents" tunnel="yes"/>
     </xsl:apply-templates>
 
     <!-- create PhysicalAgents -->
-    <xsl:apply-templates select="aorsml:PhysicalAgents" mode="createEnvironmentRules.helper.method.createPhysAgent">
+    <xsl:apply-templates select="aorsl:PhysicalAgents" mode="createEnvironmentRules.helper.method.createPhysAgent">
       <xsl:with-param name="indent" select="$indent"/>
     </xsl:apply-templates>
 
     <!-- create PhysicalObjekt -->
-    <xsl:apply-templates select="aorsml:PhysicalObject" mode="createEnvironmentRules.helper.method.createPhysicalObjekt">
+    <xsl:apply-templates select="aorsl:PhysicalObject" mode="createEnvironmentRules.helper.method.createPhysicalObjekt">
       <xsl:with-param name="indent" select="$indent"/>
     </xsl:apply-templates>
 
     <!-- create PhysicalObjekts -->
-    <xsl:apply-templates select="aorsml:PhysicalObjects" mode="createEnvironmentRules.helper.method.createPhysicalObjekt">
+    <xsl:apply-templates select="aorsl:PhysicalObjects" mode="createEnvironmentRules.helper.method.createPhysicalObjekt">
       <xsl:with-param name="indent" select="$indent"/>
     </xsl:apply-templates>
 
     <xsl:call-template name="java:newLine"/>
   </xsl:template>
 
-  <xsl:template match="aorsml:DestroyObject" mode="createEnvironmentRules.method.stateEffects.content">
+  <xsl:template match="aorsl:DestroyObject" mode="createEnvironmentRules.method.stateEffects.content">
     <xsl:param name="indent" as="xs:integer" required="yes"/>
 
     <xsl:apply-templates select="." mode="createEnvironmentRules.helper.method.destroyObject">
@@ -3461,8 +3464,8 @@
   <!-- set a variablename for a created AOR-Objekt; if @objectVariable is exists then use this from classvariable; otherwise use a 
     lowerCaseStarted @type -->
   <xsl:template
-    match="aorsml:Object | aorsml:Objects | aorsml:Agent | aorsml:Agents | aorsml:PhysicalObject | aorsml:PhysicalObjects |
-    aorsml:PhysicalAgent | aorsml:PhysicalAgents"
+    match="aorsl:Object | aorsl:Objects | aorsl:Agent | aorsl:Agents | aorsl:PhysicalObject | aorsl:PhysicalObjects |
+    aorsl:PhysicalAgent | aorsl:PhysicalAgents"
     mode="createEnvironmentRules.helper.method.createObjekt.varName">
 
     <xsl:choose>
@@ -3479,7 +3482,7 @@
   </xsl:template>
 
   <!-- check the @activityType if exist -->
-  <xsl:template match="aorsml:WHEN" mode="createEnvironmentRules.helper.method.execute.checkActivityType">
+  <xsl:template match="aorsl:WHEN" mode="createEnvironmentRules.helper.method.execute.checkActivityType">
     <xsl:param name="indent" as="xs:integer" required="yes"/>
     <xsl:param name="eventVariable" as="xs:string" required="yes" tunnel="yes"/>
     <xsl:param name="resultListVar" as="xs:string" required="yes"/>

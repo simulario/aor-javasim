@@ -11,7 +11,7 @@
         @last changed by $Author$
 -->
 
-<xsl:stylesheet version="2.0" xmlns:aorsml="http://aor-simulation.org" xmlns:fn="http://www.w3.org/2005/xpath-functions"
+<xsl:stylesheet version="2.0" xmlns:aorsl="http://aor-simulation.org" xmlns:fn="http://www.w3.org/2005/xpath-functions"
   xmlns:java="http://www.sun.com/java" xmlns:xs="http://www.w3.org/2001/XMLSchema" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
   xmlns:xsl="http://www.w3.org/1999/XSL/Transform" xsi:schemaLocation="http://aor-simulation.org aorsml.xsd"
   xmlns:jw="http://www.informatik.tu-cottbus.de/~jwerner/">
@@ -21,10 +21,10 @@
   <!--*******-->
 
   <!--creates class-->
-  <xsl:template match="aorsml:ExogenousEventType" mode="createExogenousEvents.createEvents">
+  <xsl:template match="aorsl:ExogenousEventType" mode="createExogenousEvents.createEvents">
     <xsl:param name="indent" required="yes" as="xs:integer"/>
 
-    <xsl:call-template name="aorsml:classFile">
+    <xsl:call-template name="aorsl:classFile">
       <xsl:with-param name="path" select="$sim.path.model.envevent"/>
       <xsl:with-param name="name" select="jw:upperWord(@name)"/>
 
@@ -45,7 +45,7 @@
           <xsl:with-param name="content">
 
             <!-- classvariables -->
-            <xsl:apply-templates select="aorsml:Attribute | aorsml:ReferenceProperty | aorsml:EnumerationProperty | aorsml:ComplexDataProperty"
+            <xsl:apply-templates select="aorsl:Attribute | aorsl:ReferenceProperty | aorsl:EnumerationProperty | aorsl:ComplexDataProperty"
               mode="assistents.classVariable">
               <xsl:with-param name="indent" select="$indent + 1"/>
             </xsl:apply-templates>
@@ -67,19 +67,19 @@
             </xsl:apply-templates>
 
             <!-- setters -->
-            <xsl:apply-templates select="aorsml:Attribute | aorsml:ReferenceProperty | aorsml:EnumerationProperty | aorsml:ComplexDataProperty"
+            <xsl:apply-templates select="aorsl:Attribute | aorsl:ReferenceProperty | aorsl:EnumerationProperty | aorsl:ComplexDataProperty"
               mode="assistents.setVariableMethod">
               <xsl:with-param name="indent" select="$indent + 1"/>
             </xsl:apply-templates>
 
             <!-- getters -->
-            <xsl:apply-templates select="aorsml:Attribute | aorsml:ReferenceProperty | aorsml:EnumerationProperty | aorsml:ComplexDataProperty"
+            <xsl:apply-templates select="aorsl:Attribute | aorsl:ReferenceProperty | aorsl:EnumerationProperty | aorsl:ComplexDataProperty"
               mode="assistents.getVariableMethod">
               <xsl:with-param name="indent" select="$indent + 1"/>
             </xsl:apply-templates>
 
             <!-- functions -->
-            <xsl:apply-templates select="aorsml:Function" mode="shared.createFunction">
+            <xsl:apply-templates select="aorsl:Function" mode="shared.createFunction">
               <xsl:with-param name="indent" select="$indent + 1"/>
             </xsl:apply-templates>
 
@@ -91,7 +91,7 @@
 
 
   <!--creates constructors-->
-  <xsl:template match="aorsml:ExogenousEventType" mode="createExogenousEvents.constructors">
+  <xsl:template match="aorsl:ExogenousEventType" mode="createExogenousEvents.constructors">
     <xsl:param name="indent" required="yes" as="xs:integer"/>
 
     <!-- empty constructor -->
@@ -103,7 +103,7 @@
         <xsl:call-template name="java:callSuper">
           <xsl:with-param name="indent" select="$indent + 1"/>
         </xsl:call-template>
-        <xsl:apply-templates select="aorsml:Attribute[fn:exists(@initialValue)]" mode="assistents.setInitialAttributeValue">
+        <xsl:apply-templates select="aorsl:Attribute[fn:exists(@initialValue)]" mode="assistents.setInitialAttributeValue">
           <xsl:with-param name="indent" select="$indent + 1"/>
           <xsl:with-param name="asClassVariable" select="true()"/>
         </xsl:apply-templates>
@@ -133,7 +133,7 @@
             <xsl:value-of select="'occurrenceTime'"/>
           </xsl:with-param>
         </xsl:call-template>
-        <xsl:apply-templates select="aorsml:Attribute[fn:exists(@initialValue)]" mode="assistents.setInitialAttributeValue">
+        <xsl:apply-templates select="aorsl:Attribute[fn:exists(@initialValue)]" mode="assistents.setInitialAttributeValue">
           <xsl:with-param name="indent" select="$indent + 1"/>
           <xsl:with-param name="asClassVariable" select="true()"/>
         </xsl:apply-templates>
@@ -163,7 +163,7 @@
             <xsl:value-of select="'occurrenceTime'"/>
           </xsl:with-param>
         </xsl:call-template>
-        <xsl:apply-templates select="aorsml:Attribute[fn:exists(@initialValue)]" mode="assistents.setInitialAttributeValue">
+        <xsl:apply-templates select="aorsl:Attribute[fn:exists(@initialValue)]" mode="assistents.setInitialAttributeValue">
           <xsl:with-param name="indent" select="$indent + 1"/>
           <xsl:with-param name="asClassVariable" select="true()"/>
         </xsl:apply-templates>
@@ -186,7 +186,7 @@
           <xsl:with-param name="indent" select="$indent + 1"/>
           <xsl:with-param name="paramList" select="'occurrenceTime'"/>
         </xsl:call-template>
-        <xsl:apply-templates select="aorsml:Attribute[fn:exists(@initialValue)]" mode="assistents.setInitialAttributeValue">
+        <xsl:apply-templates select="aorsl:Attribute[fn:exists(@initialValue)]" mode="assistents.setInitialAttributeValue">
           <xsl:with-param name="indent" select="$indent + 1"/>
           <xsl:with-param name="asClassVariable" select="true()"/>
         </xsl:apply-templates>
@@ -221,7 +221,7 @@
             <xsl:value-of select="'occurrenceTime'"/>
           </xsl:with-param>
         </xsl:call-template>
-        <xsl:apply-templates select="aorsml:Attribute[fn:exists(@initialValue)]" mode="assistents.setInitialAttributeValue">
+        <xsl:apply-templates select="aorsl:Attribute[fn:exists(@initialValue)]" mode="assistents.setInitialAttributeValue">
           <xsl:with-param name="indent" select="$indent + 1"/>
           <xsl:with-param name="asClassVariable" select="true()"/>
         </xsl:apply-templates>
@@ -234,7 +234,7 @@
   <!--methods-->
   <!--*******-->
   <!--creates stopCondition() method-->
-  <xsl:template match="aorsml:ExogenousEventType" mode="createExogenousEvents.method.stopCondition">
+  <xsl:template match="aorsl:ExogenousEventType" mode="createExogenousEvents.method.stopCondition">
     <xsl:param name="indent" required="yes" as="xs:integer"/>
 
     <xsl:call-template name="java:method">
@@ -249,8 +249,8 @@
           <xsl:with-param name="indent" select="$indent + 1"/>
           <xsl:with-param name="value">
             <xsl:choose>
-              <xsl:when test="fn:exists(aorsml:StopCondition[@language = $output.language])">
-                <xsl:value-of select="aorsml:StopCondition[@language = $output.language]"/>
+              <xsl:when test="fn:exists(aorsl:StopCondition[@language = $output.language])">
+                <xsl:value-of select="aorsl:StopCondition[@language = $output.language]"/>
               </xsl:when>
               <xsl:otherwise>
                 <xsl:value-of select="'false'"/>
@@ -265,7 +265,7 @@
   </xsl:template>
 
   <!--creates periodicity() method-->
-  <xsl:template match="aorsml:ExogenousEventType " mode="createExogenousEvents.method.periodicity">
+  <xsl:template match="aorsl:ExogenousEventType " mode="createExogenousEvents.method.periodicity">
     <xsl:param name="indent" required="yes" as="xs:integer"/>
 
 

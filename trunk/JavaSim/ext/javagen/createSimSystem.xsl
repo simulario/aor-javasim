@@ -9,7 +9,7 @@
         @license:  GNU General Public License version 2 or higher
         @last changed by $Author$
 -->
-<xsl:stylesheet version="2.0" xmlns:aorsml="http://aor-simulation.org" xmlns:fn="http://www.w3.org/2005/xpath-functions"
+<xsl:stylesheet version="2.0" xmlns:aorsl="http://aor-simulation.org" xmlns:fn="http://www.w3.org/2005/xpath-functions"
   xmlns:java="http://www.sun.com/java" xmlns:xs="http://www.w3.org/2001/XMLSchema" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
   xmlns:xsl="http://www.w3.org/1999/XSL/Transform" xsi:schemaLocation="http://aor-simulation.org aorsml.xsd"
   xmlns:jw="http://www.informatik.tu-cottbus.de/~jwerner/">
@@ -20,16 +20,16 @@
   <!--class-->
   <!--*****-->
   <xsl:template name="createSimSystem">
-    <xsl:apply-templates select="aorsml:SimulationScenario" mode="createSimSystem.SimSystem">
+    <xsl:apply-templates select="aorsl:SimulationScenario" mode="createSimSystem.SimSystem">
       <xsl:with-param name="indent" select="0"/>
     </xsl:apply-templates>
   </xsl:template>
 
   <!--creates class-->
-  <xsl:template match="aorsml:SimulationScenario" mode="createSimSystem.SimSystem">
+  <xsl:template match="aorsl:SimulationScenario" mode="createSimSystem.SimSystem">
     <xsl:param name="indent" required="yes" as="xs:integer"/>
 
-    <xsl:call-template name="aorsml:classFile">
+    <xsl:call-template name="aorsl:classFile">
       <xsl:with-param name="path" select="$sim.path.controller"/>
       <xsl:with-param name="name" select="$sim.class.simulatorMain"/>
 
@@ -41,30 +41,30 @@
             <xsl:value-of select="$core.package.simulationEngine"/>
             <xsl:value-of select="fn:concat($core.package.model.envSim, '.*')"/>
             <xsl:if
-              test="fn:exists(aorsml:SimulationModel/aorsml:EntityTypes/aorsml:CausedEventType) or 
-                        fn:exists(aorsml:SimulationModel/aorsml:EntityTypes/aorsml:PerceptionEventType) or 
-                        fn:exists(aorsml:SimulationModel/aorsml:EntityTypes/aorsml:ExogenousEventType) or 
-                        fn:exists(aorsml:SimulationModel/aorsml:EntityTypes/aorsml:ActionEventType)">
+              test="fn:exists(aorsl:SimulationModel/aorsl:EntityTypes/aorsl:CausedEventType) or 
+                        fn:exists(aorsl:SimulationModel/aorsl:EntityTypes/aorsl:PerceptionEventType) or 
+                        fn:exists(aorsl:SimulationModel/aorsl:EntityTypes/aorsl:ExogenousEventType) or 
+                        fn:exists(aorsl:SimulationModel/aorsl:EntityTypes/aorsl:ActionEventType)">
               <xsl:value-of select="fn:concat($sim.package.model.envevent, '.*')"/>
             </xsl:if>
-            <xsl:if test="fn:exists(//aorsml:Collections/aorsml:Collection)">
+            <xsl:if test="fn:exists(//aorsl:Collections/aorsl:Collection)">
               <xsl:value-of select="$collection.package.aORCollection"/>
             </xsl:if>
 
             <xsl:if
-              test="fn:exists(aorsml:SimulationModel/aorsml:EntityTypes/aorsml:PhysicalAgentType) or 
-                    fn:exists(aorsml:SimulationModel/aorsml:EntityTypes/aorsml:AgentType)">
+              test="fn:exists(aorsl:SimulationModel/aorsl:EntityTypes/aorsl:PhysicalAgentType) or 
+                    fn:exists(aorsl:SimulationModel/aorsl:EntityTypes/aorsl:AgentType)">
               <xsl:value-of select="fn:concat($sim.package.model.agentsimulator, '.*')"/>
             </xsl:if>
 
             <!-- <xsl:value-of select="fn:concat($sim.package.model.internalevent, '.*')"/> -->
 
             <xsl:value-of select="$core.package.generalStatistics"/>
-            <xsl:if test="fn:exists(aorsml:SimulationModel/aorsml:Statistics/aorsml:Variable)">
+            <xsl:if test="fn:exists(aorsl:SimulationModel/aorsl:Statistics/aorsl:Variable)">
               <!-- <xsl:value-of select="fn:concat($core.package.statistics, '.*')"/> -->
               <xsl:value-of select="$core.package.statVarDataTypeEnumLit"/>
               <xsl:value-of select="$core.package.statVarDataSourceEnumLit"/>
-              <xsl:if test="fn:exists(aorsml:SimulationModel/aorsml:Statistics/aorsml:Variable/aorsml:Source/@aggregationFunction)">
+              <xsl:if test="fn:exists(aorsl:SimulationModel/aorsl:Statistics/aorsl:Variable/aorsl:Source/@aggregationFunction)">
                 <xsl:value-of select="$core.package.aggregFunEnumLit"/>
               </xsl:if>
             </xsl:if>
@@ -80,7 +80,7 @@
           <xsl:with-param name="content">
 
             <!-- spacemodel as classvariable -->
-            <xsl:if test="fn:exists(aorsml:SimulationModel/aorsml:SpaceModel)">
+            <xsl:if test="fn:exists(aorsl:SimulationModel/aorsl:SpaceModel)">
               <xsl:call-template name="java:variable">
                 <xsl:with-param name="indent" select="$indent + 1"/>
                 <xsl:with-param name="static" select="true()"/>
@@ -103,24 +103,24 @@
             </xsl:apply-templates>
 
             <!-- createSimulationParameters -->
-            <xsl:apply-templates select="aorsml:SimulationParameters" mode="createSimSystem.method.getSimulationParameters">
+            <xsl:apply-templates select="aorsl:SimulationParameters" mode="createSimSystem.method.getSimulationParameters">
               <xsl:with-param name="indent" select="$indent + 1"/>
             </xsl:apply-templates>
 
             <!-- create SimulationModel -->
-            <xsl:apply-templates select="aorsml:SimulationModel" mode="createSimSystem.method.createSimModel">
+            <xsl:apply-templates select="aorsl:SimulationModel" mode="createSimSystem.method.createSimModel">
               <xsl:with-param name="indent" select="$indent + 1"/>
             </xsl:apply-templates>
 
             <!-- createSpaceModel -->
-            <xsl:apply-templates select="aorsml:SimulationModel" mode="createSimSystem.method.createSpaceModel">
+            <xsl:apply-templates select="aorsl:SimulationModel" mode="createSimSystem.method.createSpaceModel">
               <xsl:with-param name="indent" select="$indent + 1"/>
             </xsl:apply-templates>
 
             <!-- it is used to desid which getRandomPosition() - version is called in shared.helper.initAORObjects 
             <xsl:variable name="discreteSpace" as="xs:boolean">
               <xsl:choose>
-                <xsl:when test="ends-with(local-name(aorsml:SimulationModel/aorsml:SpaceModel/aorsml:*), 'Grid')">
+                <xsl:when test="ends-with(local-name(aorsl:SimulationModel/aorsl:SpaceModel/aorsl:*), 'Grid')">
                   <xsl:value-of select="true()"/>
                 </xsl:when>
                 <xsl:otherwise>
@@ -129,35 +129,35 @@
               </xsl:choose>
               </xsl:variable> -->
             
-            <xsl:apply-templates select="aorsml:SimulationModel" mode="createSimSystem.method.initGlobals">
+            <xsl:apply-templates select="aorsl:SimulationModel" mode="createSimSystem.method.initGlobals">
               <xsl:with-param name="indent" select="$indent + 1"/>
             </xsl:apply-templates>
 
             <!-- createEnvironmentSimulator -->
-            <xsl:apply-templates select="aorsml:SimulationModel" mode="createSimSystem.method.createEnvironment">
+            <xsl:apply-templates select="aorsl:SimulationModel" mode="createSimSystem.method.createEnvironment">
               <xsl:with-param name="indent" select="$indent + 1"/>
               <!--xsl:with-param name="discreteSpace" select="$discreteSpace" tunnel="yes"/-->
             </xsl:apply-templates>
 
             <!-- create AgentSubjects -->
-            <xsl:apply-templates select="aorsml:SimulationModel" mode="createSimSystem.method.createAgentSubjects">
+            <xsl:apply-templates select="aorsl:SimulationModel" mode="createSimSystem.method.createAgentSubjects">
               <xsl:with-param name="indent" select="$indent + 1"/>
             </xsl:apply-templates>
 
             <!-- create AgentSubjectFacets
-            <xsl:apply-templates select="aorsml:SimulationModel/aorsml:EntityTypes" mode="createSimSystem.method.createAgentSubjectFacets">
+            <xsl:apply-templates select="aorsl:SimulationModel/aorsl:EntityTypes" mode="createSimSystem.method.createAgentSubjectFacets">
               <xsl:with-param name="indent" select="$indent + 1"/>
               </xsl:apply-templates>  -->
 
             <!-- create createInitialEvents -->
-            <xsl:apply-templates select="aorsml:SimulationModel" mode="createSimSystem.method.createInitialEvents">
+            <xsl:apply-templates select="aorsl:SimulationModel" mode="createSimSystem.method.createInitialEvents">
               <xsl:with-param name="indent" select="$indent + 1"/>
               <xsl:with-param name="onEveryStep" as="xs:boolean"
-                select="exists(aorsml:SimulationModel/aorsml:EnvironmentRules/aorsml:EnvironmentRule/aorsml:ON-EACH-SIMULATION-STEP)"/>
+                select="exists(aorsl:SimulationModel/aorsl:EnvironmentRules/aorsl:EnvironmentRule/aorsl:ON-EACH-SIMULATION-STEP)"/>
             </xsl:apply-templates>
 
             <!-- create Statistics -->
-            <xsl:apply-templates select="aorsml:SimulationModel" mode="createSimSystem.method.createStatistic">
+            <xsl:apply-templates select="aorsl:SimulationModel" mode="createSimSystem.method.createStatistic">
               <xsl:with-param name="indent" select="$indent + 1"/>
             </xsl:apply-templates>
 
@@ -169,17 +169,17 @@
             </xsl:if>
 
             <!-- executeInitializeRules()  -->
-            <xsl:apply-templates select="//aorsml:InitialState" mode="createSimSystem.method.executeInitializeRules">
+            <xsl:apply-templates select="//aorsl:InitialState" mode="createSimSystem.method.executeInitializeRules">
               <xsl:with-param name="indent" select="$indent + 1"/>
             </xsl:apply-templates>
 
             <!-- setActivityFactory -->
-            <xsl:apply-templates select="aorsml:SimulationModel" mode="createSimSystem.method.setActivityFactory">
+            <xsl:apply-templates select="aorsl:SimulationModel" mode="createSimSystem.method.setActivityFactory">
               <xsl:with-param name="indent" select="$indent + 1"/>
             </xsl:apply-templates>
 
             <!-- create InitializationRule  (inner classes)-->
-            <xsl:apply-templates select="//aorsml:InitialState/aorsml:InitializationRule" mode="createInitializationRule.createInitializationRules">
+            <xsl:apply-templates select="//aorsl:InitialState/aorsl:InitializationRule" mode="createInitializationRule.createInitializationRules">
               <xsl:with-param name="indent" select="$indent + 1"/>
             </xsl:apply-templates>
 
@@ -195,7 +195,7 @@
   <!--                                     Constructor(s)                                                -->
   <!-- *****************************************************************  -->
 
-  <xsl:template match="aorsml:SimulationScenario" mode="createSimSystem.constructor">
+  <xsl:template match="aorsl:SimulationScenario" mode="createSimSystem.constructor">
     <xsl:param name="indent" required="yes"/>
     <xsl:param name="name" required="yes"/>
 
@@ -223,7 +223,7 @@
   <!--                                           Method(s)                                                  -->
   <!-- *****************************************************************  -->
   <!--  setScenarioInformations -->
-  <xsl:template match="aorsml:SimulationScenario" mode="createSimSystem.method.setScenarioInformations">
+  <xsl:template match="aorsl:SimulationScenario" mode="createSimSystem.method.setScenarioInformations">
     <xsl:param name="indent" required="yes"/>
 
     <xsl:call-template name="java:method">
@@ -278,7 +278,7 @@
   </xsl:template>
 
   <!-- createSimulationParameters -->
-  <xsl:template match="aorsml:SimulationParameters" mode="createSimSystem.method.getSimulationParameters">
+  <xsl:template match="aorsl:SimulationParameters" mode="createSimSystem.method.getSimulationParameters">
     <xsl:param name="indent" required="yes"/>
 
     <xsl:call-template name="java:method">
@@ -315,7 +315,7 @@
   </xsl:template>
 
   <!-- createSimulationParameters -->
-  <xsl:template match="aorsml:SimulationModel" mode="createSimSystem.method.createSimModel">
+  <xsl:template match="aorsl:SimulationModel" mode="createSimSystem.method.createSimModel">
     <xsl:param name="indent" required="yes"/>
 
     <xsl:call-template name="java:method">
@@ -346,7 +346,7 @@
   </xsl:template>
 
   <!-- createSpaceModel -->
-  <xsl:template match="aorsml:SimulationModel" mode="createSimSystem.method.createSpaceModel">
+  <xsl:template match="aorsl:SimulationModel" mode="createSimSystem.method.createSpaceModel">
     <xsl:param name="indent" required="yes"/>
 
     <xsl:call-template name="java:method">
@@ -362,7 +362,7 @@
         </xsl:apply-templates>
 
         <xsl:choose>
-          <xsl:when test="fn:exists(aorsml:SpaceModel)">
+          <xsl:when test="fn:exists(aorsl:SpaceModel)">
 
             <xsl:variable name="spaceModelVar" select="jw:lowerWord($core.class.spaceModel)"/>
 
@@ -378,29 +378,29 @@
                       <xsl:with-param name="name" select="'Dimensions'"/>
                       <xsl:with-param name="varName">
                         <xsl:choose>
-                          <xsl:when test="aorsml:SpaceModel/aorsml:OneDimensional/@multiplicity = '2'">
+                          <xsl:when test="aorsl:SpaceModel/aorsl:OneDimensional/@multiplicity = '2'">
                             <xsl:value-of select="'OnePlus1'"/>
                           </xsl:when>
-                          <xsl:when test="aorsml:SpaceModel/aorsml:OneDimensional/@multiplicity = '3'">
+                          <xsl:when test="aorsl:SpaceModel/aorsl:OneDimensional/@multiplicity = '3'">
                             <xsl:value-of select="'OnePlus1Plus1'"/>
                           </xsl:when>
-                          <xsl:when test="aorsml:SpaceModel/aorsml:OneDimensional/@multiplicity = '4'">
+                          <xsl:when test="aorsl:SpaceModel/aorsl:OneDimensional/@multiplicity = '4'">
                             <xsl:value-of select="'OnePlus1Plus1Plus1'"/>
                           </xsl:when>
                           <xsl:when
-                            test="exists(aorsml:SpaceModel/aorsml:OneDimensional) or 
-                                exists(aorsml:SpaceModel/aorsml:OneDimensionalGrid)">
+                            test="exists(aorsl:SpaceModel/aorsl:OneDimensional) or 
+                                exists(aorsl:SpaceModel/aorsl:OneDimensionalGrid)">
                             <xsl:value-of select="'one'"/>
                           </xsl:when>
                           <xsl:when
-                            test="exists(aorsml:SpaceModel/aorsml:TwoDimensional) or 
-                                exists(aorsml:SpaceModel/aorsml:TwoDimensional_LateralView) or 
-                                exists(aorsml:SpaceModel/aorsml:TwoDimensionalGrid)">
+                            test="exists(aorsl:SpaceModel/aorsl:TwoDimensional) or 
+                                exists(aorsl:SpaceModel/aorsl:TwoDimensional_LateralView) or 
+                                exists(aorsl:SpaceModel/aorsl:TwoDimensionalGrid)">
                             <xsl:value-of select="'two'"/>
                           </xsl:when>
                           <xsl:when
-                            test="exists(aorsml:SpaceModel/aorsml:ThreeDimensional) or 
-                                exists(aorsml:SpaceModel/aorsml:ThreeDimensionalGrid)">
+                            test="exists(aorsl:SpaceModel/aorsl:ThreeDimensional) or 
+                                exists(aorsl:SpaceModel/aorsl:ThreeDimensionalGrid)">
                             <xsl:value-of select="'three'"/>
                           </xsl:when>
                           <xsl:otherwise>
@@ -414,12 +414,12 @@
               </xsl:with-param>
             </xsl:call-template>
 
-            <xsl:apply-templates select="aorsml:SpaceModel/aorsml:*" mode="createSimSystem.method.createSpaceModel.properties">
+            <xsl:apply-templates select="aorsl:SpaceModel/aorsl:*" mode="createSimSystem.method.createSpaceModel.properties">
               <xsl:with-param name="indent" select="$indent"/>
               <xsl:with-param name="spaceModelVar" select="$spaceModelVar"/>
             </xsl:apply-templates>
 
-            <xsl:if test="ends-with(local-name(aorsml:SpaceModel/aorsml:*) , 'Grid') and fn:exists(aorsml:SpaceModel/aorsml:*/@gridCellMaxOccupancy)">
+            <xsl:if test="ends-with(local-name(aorsl:SpaceModel/aorsl:*) , 'Grid') and fn:exists(aorsl:SpaceModel/aorsl:*/@gridCellMaxOccupancy)">
 
               <!-- gridCellMaxOccupancy  (optional, default = unbounded; mapped to -1)-->
               <xsl:call-template name="java:callSetterMethod">
@@ -428,11 +428,11 @@
                 <xsl:with-param name="instVariable" select="'gridCellMaxOccupancy'"/>
                 <xsl:with-param name="value">
                   <xsl:choose>
-                    <xsl:when test="aorsml:SpaceModel/aorsml:*/@gridCellMaxOccupancy eq 'unbounded'">
+                    <xsl:when test="aorsl:SpaceModel/aorsl:*/@gridCellMaxOccupancy eq 'unbounded'">
                       <xsl:value-of select="'-1'"/>
                     </xsl:when>
                     <xsl:otherwise>
-                      <xsl:value-of select="aorsml:SpaceModel/aorsml:*/@gridCellMaxOccupancy"/>
+                      <xsl:value-of select="aorsl:SpaceModel/aorsl:*/@gridCellMaxOccupancy"/>
                     </xsl:otherwise>
                   </xsl:choose>
                 </xsl:with-param>
@@ -512,7 +512,7 @@
 
   </xsl:template>
 
-  <xsl:template match="aorsml:OneDimensional | aorsml:TwoDimensional | aorsml:TwoDimensional_LateralView | aorsml:ThreeDimensional"
+  <xsl:template match="aorsl:OneDimensional | aorsl:TwoDimensional | aorsl:TwoDimensional_LateralView | aorsl:ThreeDimensional"
     mode="createSimSystem.method.createSpaceModel.properties">
     <xsl:param name="indent" as="xs:integer" required="yes"/>
     <xsl:param name="spaceModelVar" as="xs:string" required="yes"/>
@@ -542,7 +542,7 @@
 
   </xsl:template>
 
-  <xsl:template match="aorsml:OneDimensionalGrid | aorsml:TwoDimensionalGrid | aorsml:ThreeDimensionalGrid"
+  <xsl:template match="aorsl:OneDimensionalGrid | aorsl:TwoDimensionalGrid | aorsl:ThreeDimensionalGrid"
     mode="createSimSystem.method.createSpaceModel.properties">
     <xsl:param name="indent" as="xs:integer" required="yes"/>
     <xsl:param name="spaceModelVar" as="xs:string" required="yes"/>
@@ -591,18 +591,18 @@
 
   </xsl:template>
 
-  <xsl:template match="aorsml:OneDimensionalGrid" mode="createSimSystem.method.createSpaceModel.properties.extra">
+  <xsl:template match="aorsl:OneDimensionalGrid" mode="createSimSystem.method.createSpaceModel.properties.extra">
     <xsl:param name="indent" as="xs:integer" required="yes"/>
     <xsl:param name="spaceModelVar" as="xs:string" required="yes"/>
     <!-- not yet implemented -->
   </xsl:template>
 
-  <xsl:template match="aorsml:TwoDimensionalGrid" mode="createSimSystem.method.createSpaceModel.properties.extra">
+  <xsl:template match="aorsl:TwoDimensionalGrid" mode="createSimSystem.method.createSpaceModel.properties.extra">
     <xsl:param name="indent" as="xs:integer" required="yes"/>
     <xsl:param name="spaceModelVar" as="xs:string" required="yes"/>
 
     <!-- set the gridcells -->
-    <xsl:if test="exists(aorsml:GridCellProperty)">
+    <xsl:if test="exists(aorsl:GridCellProperty)">
 
       <xsl:call-template name="java:newLine"/>
       <!-- initGrid() -->
@@ -627,7 +627,7 @@
         <xsl:with-param name="withDeclaration" select="false()"/>
       </xsl:call-template>
 
-      <xsl:apply-templates select="//aorsml:InitialState/aorsml:GridCells" mode="createSimSystem.helper.createGridCells">
+      <xsl:apply-templates select="//aorsl:InitialState/aorsl:GridCells" mode="createSimSystem.helper.createGridCells">
         <xsl:with-param name="indent" select="$indent + 1"/>
         <xsl:with-param name="spaceModelVar" select="$spaceModelVar" tunnel="yes"/>
         <xsl:with-param name="gridCellVariable" select="$gridCellVariable" tunnel="yes"/>
@@ -637,26 +637,26 @@
 
   </xsl:template>
 
-  <xsl:template match="aorsml:ThreeDimensionalGrid" mode="createSimSystem.method.createSpaceModel.properties.extra">
+  <xsl:template match="aorsl:ThreeDimensionalGrid" mode="createSimSystem.method.createSpaceModel.properties.extra">
     <xsl:param name="indent" as="xs:integer" required="yes"/>
     <xsl:param name="spaceModelVar" as="xs:string" required="yes"/>
     <!-- not yet implemented -->
   </xsl:template>
 
-  <xsl:template match="aorsml:OneDimensional" mode="createSimSystem.method.createSpaceModel.properties.extra">
+  <xsl:template match="aorsl:OneDimensional" mode="createSimSystem.method.createSpaceModel.properties.extra">
     <xsl:param name="indent" as="xs:integer" required="yes"/>
     <xsl:param name="spaceModelVar" as="xs:string" required="yes"/>
     <!-- not yet implemented -->
 
   </xsl:template>
 
-  <xsl:template match="aorsml:TwoDimensional" mode="createSimSystem.method.createSpaceModel.properties.extra">
+  <xsl:template match="aorsl:TwoDimensional" mode="createSimSystem.method.createSpaceModel.properties.extra">
     <xsl:param name="indent" as="xs:integer" required="yes"/>
     <xsl:param name="spaceModelVar" as="xs:string" required="yes"/>
     <!-- not yet implemented -->
   </xsl:template>
 
-  <xsl:template match="aorsml:TwoDimensional_LateralView" mode="createSimSystem.method.createSpaceModel.properties.extra">
+  <xsl:template match="aorsl:TwoDimensional_LateralView" mode="createSimSystem.method.createSpaceModel.properties.extra">
     <xsl:param name="indent" as="xs:integer" required="yes"/>
     <xsl:param name="spaceModelVar" as="xs:string" required="yes"/>
 
@@ -679,15 +679,15 @@
     </xsl:if>
   </xsl:template>
 
-  <xsl:template match="aorsml:ThreeDimensional" mode="createSimSystem.method.createSpaceModel.properties.extra">
+  <xsl:template match="aorsl:ThreeDimensional" mode="createSimSystem.method.createSpaceModel.properties.extra">
     <xsl:param name="indent" as="xs:integer" required="yes"/>
     <xsl:param name="spaceModelVar" as="xs:string" required="yes"/>
     <!-- not yet implemented -->
   </xsl:template>
 
   <xsl:template
-    match="aorsml:OneDimensionalGrid | aorsml:TwoDimensionalGrid | aorsml:ThreeDimensionalGrid |
-           aorsml:OneDimensional | aorsml:TwoDimensional | aorsml:TwoDimensional_LateralView | aorsml:ThreeDimensional"
+    match="aorsl:OneDimensionalGrid | aorsl:TwoDimensionalGrid | aorsl:ThreeDimensionalGrid |
+           aorsl:OneDimensional | aorsl:TwoDimensional | aorsl:TwoDimensional_LateralView | aorsl:ThreeDimensional"
     mode="createSimSystem.method.createSpaceModel.commonProperties">
     <xsl:param name="indent" as="xs:integer" required="yes"/>
     <xsl:param name="spaceModelVar" as="xs:string" required="yes"/>
@@ -787,7 +787,7 @@
 
   </xsl:template>
 
-  <xsl:template match="aorsml:SimulationModel" mode="createSimSystem.method.initGlobals">
+  <xsl:template match="aorsl:SimulationModel" mode="createSimSystem.method.initGlobals">
     <xsl:param name="indent" required="yes"/>
 
     <xsl:call-template name="java:method">
@@ -796,7 +796,7 @@
       <xsl:with-param name="name" select="'initGlobalVariables'"/>
       <xsl:with-param name="content">
 
-        <xsl:apply-templates select="//aorsml:InitialState/aorsml:GlobalVariable" mode="shared.updateGlobalVariable">
+        <xsl:apply-templates select="//aorsl:InitialState/aorsl:GlobalVariable" mode="shared.updateGlobalVariable">
           <xsl:with-param name="indent" select="$indent + 1"/>
         </xsl:apply-templates>
 
@@ -806,15 +806,15 @@
   </xsl:template>
 
   <!-- createEnvironmentSimulator  -->
-  <xsl:template match="aorsml:SimulationModel" mode="createSimSystem.method.createEnvironment">
+  <xsl:template match="aorsl:SimulationModel" mode="createSimSystem.method.createEnvironment">
     <xsl:param name="indent" required="yes"/>
 
     <xsl:variable name="spaceReservationSystem" as="xs:boolean">
       <xsl:choose>
         <xsl:when
-          test="ends-with(local-name(aorsml:SpaceModel/aorsml:*), 'Grid') and 
-            fn:exists(aorsml:SpaceModel/aorsml:*/@gridCellMaxOccupancy) and 
-            not(aorsml:SpaceModel/aorsml:*/@gridCellMaxOccupancy eq 'unbounded')">
+          test="ends-with(local-name(aorsl:SpaceModel/aorsl:*), 'Grid') and 
+            fn:exists(aorsl:SpaceModel/aorsl:*/@gridCellMaxOccupancy) and 
+            not(aorsl:SpaceModel/aorsl:*/@gridCellMaxOccupancy eq 'unbounded')">
           <xsl:value-of select="true()"/>
         </xsl:when>
         <xsl:otherwise>
@@ -829,21 +829,21 @@
       <xsl:with-param name="name" select="'createEnvironment'"/>
       <xsl:with-param name="content">
 
-        <!--xsl:apply-templates select="//aorsml:InitialState/aorsml:GlobalVariable" mode="shared.updateGlobalVariable">
+        <!--xsl:apply-templates select="//aorsl:InitialState/aorsl:GlobalVariable" mode="shared.updateGlobalVariable">
           <xsl:with-param name="indent" select="$indent + 1"/>
         </xsl:apply-templates>
-        <xsl:if test="fn:exists(//aorsml:InitialState/aorsml:GlobalVariable)">
+        <xsl:if test="fn:exists(//aorsl:InitialState/aorsl:GlobalVariable)">
           <xsl:call-template name="java:newLine"/>
         </xsl:if-->
 
         <xsl:variable name="envSimVarName" select="'envSim'"/>
 
-        <xsl:if test="fn:exists(//aorsml:InitialState/*[@hasRandomPosition = true()])">
+        <xsl:if test="fn:exists(//aorsl:InitialState/*[@hasRandomPosition = true()])">
           <xsl:call-template name="java:newObject">
             <xsl:with-param name="indent" select="$indent + 1"/>
             <xsl:with-param name="class">
               <xsl:choose>
-                <xsl:when test="ends-with(local-name(aorsml:SpaceModel/aorsml:*), 'Grid')">
+                <xsl:when test="ends-with(local-name(aorsl:SpaceModel/aorsl:*), 'Grid')">
                   <xsl:value-of select="$space.package.positionData"/>
                 </xsl:when>
                 <xsl:otherwise>
@@ -856,16 +856,16 @@
           </xsl:call-template>
         </xsl:if>
 
-        <xsl:apply-templates select="aorsml:Collections/aorsml:Collection" mode="createSimSystem.helper.initCollections">
+        <xsl:apply-templates select="aorsl:Collections/aorsl:Collection" mode="createSimSystem.helper.initCollections">
           <xsl:with-param name="indent" select="$indent + 1"/>
           <xsl:with-param name="envSimVarName" select="$envSimVarName"/>
         </xsl:apply-templates>
 
         <xsl:apply-templates
-          select="aorsml:EntityTypes/aorsml:PhysicalAgentType | 
-                         aorsml:EntityTypes/aorsml:PhysicalObjectType | 
-                         aorsml:EntityTypes/aorsml:ObjectType |
-                         aorsml:EntityTypes/aorsml:AgentType"
+          select="aorsl:EntityTypes/aorsl:PhysicalAgentType | 
+                         aorsl:EntityTypes/aorsl:PhysicalObjectType | 
+                         aorsl:EntityTypes/aorsl:ObjectType |
+                         aorsl:EntityTypes/aorsl:AgentType"
           mode="createSimSystem.helper.initObjectTypes">
           <xsl:with-param name="indent" select="$indent + 1"/>
           <xsl:with-param name="envSimVarName" select="$envSimVarName"/>
@@ -880,7 +880,7 @@
           <xsl:with-param name="name" select="$rulesVarName"/>
         </xsl:call-template>
 
-        <xsl:apply-templates select="aorsml:EnvironmentRules/aorsml:EnvironmentRule" mode="createSimSystem.helper.initEnvRule">
+        <xsl:apply-templates select="aorsl:EnvironmentRules/aorsl:EnvironmentRule" mode="createSimSystem.helper.initEnvRule">
           <xsl:with-param name="indent" select="$indent + 1"/>
           <xsl:with-param name="rulesListVarName" select="$rulesVarName"/>
         </xsl:apply-templates>
@@ -902,7 +902,7 @@
 
   </xsl:template>
 
-  <xsl:template match="aorsml:SimulationModel" mode="createSimSystem.helper.createEnvironment.initPhysim">
+  <xsl:template match="aorsl:SimulationModel" mode="createSimSystem.helper.createEnvironment.initPhysim">
     <xsl:param name="indent" as="xs:integer" required="yes"/>
 
     <xsl:call-template name="java:newLine"/>
@@ -968,7 +968,7 @@
               </xsl:otherwise>
             </xsl:choose>
             <xsl:choose>
-              <xsl:when test="fn:exists(aorsml:EntityTypes/aorsml:PhysicalAgentType[@autoPerception])">
+              <xsl:when test="fn:exists(aorsl:EntityTypes/aorsl:PhysicalAgentType[@autoPerception])">
                 <xsl:value-of select="'true'"/>
               </xsl:when>
               <xsl:otherwise>
@@ -984,7 +984,7 @@
   </xsl:template>
 
   <!-- create AgentSubjects -->
-  <xsl:template match="aorsml:SimulationModel" mode="createSimSystem.method.createAgentSubjects">
+  <xsl:template match="aorsl:SimulationModel" mode="createSimSystem.method.createAgentSubjects">
     <xsl:param name="indent" required="yes"/>
 
     <xsl:call-template name="java:method">
@@ -993,11 +993,11 @@
       <xsl:with-param name="name" select="'createAgentSubjects'"/>
       <xsl:with-param name="content">
 
-        <xsl:apply-templates select="aorsml:EntityTypes/aorsml:PhysicalAgentType" mode="createSimSystem.helper.initAgentSubject">
+        <xsl:apply-templates select="aorsl:EntityTypes/aorsl:PhysicalAgentType" mode="createSimSystem.helper.initAgentSubject">
           <xsl:with-param name="indent" select="$indent + 1"/>
         </xsl:apply-templates>
 
-        <xsl:apply-templates select="aorsml:EntityTypes/aorsml:AgentType" mode="createSimSystem.helper.initAgentSubject">
+        <xsl:apply-templates select="aorsl:EntityTypes/aorsl:AgentType" mode="createSimSystem.helper.initAgentSubject">
           <xsl:with-param name="indent" select="$indent + 1"/>
         </xsl:apply-templates>
 
@@ -1006,7 +1006,7 @@
   </xsl:template>
 
   <!-- create AgentSubjectFacets -->
-  <xsl:template match="aorsml:EntityTypes" mode="createSimSystem.method.createAgentSubjectFacets">
+  <xsl:template match="aorsl:EntityTypes" mode="createSimSystem.method.createAgentSubjectFacets">
     <xsl:param name="indent" required="yes"/>
 
     <xsl:call-template name="java:method">
@@ -1019,7 +1019,7 @@
   </xsl:template>
 
   <!-- create Statistics -->
-  <xsl:template match="aorsml:SimulationModel" mode="createSimSystem.method.createStatistic">
+  <xsl:template match="aorsl:SimulationModel" mode="createSimSystem.method.createStatistic">
     <xsl:param name="indent" required="yes"/>
 
     <xsl:call-template name="java:method">
@@ -1031,7 +1031,7 @@
 
 
         <xsl:choose>
-          <xsl:when test="fn:exists(aorsml:Statistics)">
+          <xsl:when test="fn:exists(aorsl:Statistics)">
 
             <xsl:variable name="statisticVarName" select="jw:lowerWord($sim.class.simStatistics)"/>
             <xsl:call-template name="java:newObject">
@@ -1040,13 +1040,13 @@
               <xsl:with-param name="varName" select="$statisticVarName"/>
             </xsl:call-template>
 
-            <xsl:apply-templates select="aorsml:Statistics/aorsml:Variable" mode="createSimSystem.helper.createStatistic.variable">
+            <xsl:apply-templates select="aorsl:Statistics/aorsl:Variable" mode="createSimSystem.helper.createStatistic.variable">
               <xsl:with-param name="indent" select="$indent + 1"/>
               <xsl:with-param name="statisticVarName" select="$statisticVarName"/>
             </xsl:apply-templates>
             <xsl:call-template name="java:newLine"/>
 
-            <xsl:apply-templates select="aorsml:Statistics/aorsml:Variable" mode="createSimSystem.helper.createStatistic.parameter">
+            <xsl:apply-templates select="aorsl:Statistics/aorsl:Variable" mode="createSimSystem.helper.createStatistic.parameter">
               <xsl:with-param name="indent" select="$indent + 1"/>
               <xsl:with-param name="statisticVarName" select="$statisticVarName"/>
             </xsl:apply-templates>
@@ -1071,7 +1071,7 @@
 
   </xsl:template>
 
-  <xsl:template match="aorsml:SimulationModel" mode="createSimSystem.method.createInitialEvents">
+  <xsl:template match="aorsl:SimulationModel" mode="createSimSystem.method.createInitialEvents">
     <xsl:param name="indent" required="yes"/>
     <xsl:param name="onEveryStep" as="xs:boolean" select="false()"/>
 
@@ -1081,7 +1081,7 @@
       <xsl:with-param name="name" select="'createInitialEvents'"/>
       <xsl:with-param name="content">
 
-        <xsl:apply-templates select="aorsml:EntityTypes/aorsml:ExogenousEventType | aorsml:EntityTypes/aorsml:CausedEventType"
+        <xsl:apply-templates select="aorsl:EntityTypes/aorsl:ExogenousEventType | aorsl:EntityTypes/aorsl:CausedEventType"
           mode="createSimSystem.helper.initEvents">
           <xsl:with-param name="indent" select="$indent + 1"/>
         </xsl:apply-templates>
@@ -1115,7 +1115,7 @@
   </xsl:template>
 
   <!-- executeInitializeRules() -->
-  <xsl:template match="aorsml:InitialState" mode="createSimSystem.method.executeInitializeRules">
+  <xsl:template match="aorsl:InitialState" mode="createSimSystem.method.executeInitializeRules">
     <xsl:param name="indent" required="yes" as="xs:integer"/>
 
     <xsl:call-template name="java:method">
@@ -1124,7 +1124,7 @@
       <xsl:with-param name="name" select="'executeInitializeRules'"/>
       <xsl:with-param name="content">
 
-        <xsl:for-each select="aorsml:InitializationRule">
+        <xsl:for-each select="aorsl:InitializationRule">
 
           <xsl:variable name="varName" select="fn:concat(jw:lowerWord(@name), '_', position())"/>
 
@@ -1160,7 +1160,7 @@
   </xsl:template>
 
   <!-- setActivityFactory() -->
-  <xsl:template match="aorsml:SimulationModel" mode="createSimSystem.method.setActivityFactory">
+  <xsl:template match="aorsl:SimulationModel" mode="createSimSystem.method.setActivityFactory">
     <xsl:param name="indent" required="yes" as="xs:integer"/>
 
     <xsl:call-template name="java:method">
@@ -1169,7 +1169,7 @@
       <xsl:with-param name="name" select="'setActivityFactory'"/>
       <xsl:with-param name="content">
 
-        <xsl:if test="fn:exists(aorsml:EntityTypes/aorsml:ActivityType)">
+        <xsl:if test="fn:exists(aorsl:EntityTypes/aorsl:ActivityType)">
 
           <!-- this.envSim.getActivityManager().setActivityFactory(new SimActivityFactory()); -->
           <xsl:call-template name="java:callSetterMethod">
@@ -1201,7 +1201,7 @@
     </xsl:call-template>
   </xsl:template>
 
-  <xsl:template match="aorsml:SimulationScenario" mode="createSimSystem.method.main">
+  <xsl:template match="aorsl:SimulationScenario" mode="createSimSystem.method.main">
     <xsl:param name="indent" required="yes"/>
 
     <xsl:call-template name="java:method">
@@ -1214,7 +1214,7 @@
       </xsl:with-param>
       <xsl:with-param name="content">
 
-        <xsl:variable name="simVarName" select="jw:lowerWord(aorsml:SimulationModel/@modelName)"/>
+        <xsl:variable name="simVarName" select="jw:lowerWord(aorsl:SimulationModel/@modelName)"/>
 
         <xsl:call-template name="java:newObject">
           <xsl:with-param name="indent" select="$indent + 1"/>
@@ -1268,7 +1268,7 @@
   <!--                                             Helpers                                                    -->
   <!-- ****************************************************************** -->
   <!-- set the initial PhysicalAgentObjects -->
-  <xsl:template match="aorsml:PhysicalAgentType" mode="createSimSystem.helper.initObjectTypes">
+  <xsl:template match="aorsl:PhysicalAgentType" mode="createSimSystem.helper.initObjectTypes">
     <xsl:param name="indent" required="yes"/>
     <xsl:param name="envSimVarName" required="yes" as="xs:string"/>
 
@@ -1276,8 +1276,8 @@
     <xsl:variable name="className" select="jw:upperWord(@name)"/>
 
     <xsl:if
-      test="fn:exists(//aorsml:InitialState/aorsml:PhysicalAgent[@type = current()/@name and not(@objectVariable)]) or 
-                fn:exists(//aorsml:InitialState/aorsml:PhysicalAgents[@type = current()/@name and not(@objectVariable)])">
+      test="fn:exists(//aorsl:InitialState/aorsl:PhysicalAgent[@type = current()/@name and not(@objectVariable)]) or 
+                fn:exists(//aorsl:InitialState/aorsl:PhysicalAgents[@type = current()/@name and not(@objectVariable)])">
       <xsl:call-template name="java:newObject">
         <xsl:with-param name="indent" select="$indent"/>
         <xsl:with-param name="class" select="$className"/>
@@ -1285,7 +1285,7 @@
         <xsl:with-param name="withDeclaration" select="false()"/>
       </xsl:call-template>
     </xsl:if>
-    <xsl:for-each select="//aorsml:InitialState/aorsml:PhysicalAgent[@type = current()/@name and @objectVariable]">
+    <xsl:for-each select="//aorsl:InitialState/aorsl:PhysicalAgent[@type = current()/@name and @objectVariable]">
       <xsl:call-template name="java:newObject">
         <xsl:with-param name="indent" select="$indent"/>
         <xsl:with-param name="class" select="$className"/>
@@ -1295,7 +1295,7 @@
     </xsl:for-each>
 
     <xsl:apply-templates
-      select="//aorsml:InitialState/aorsml:PhysicalAgent[@type = current()/@name] | //aorsml:InitialState/aorsml:PhysicalAgents[@type = current()/@name]"
+      select="//aorsl:InitialState/aorsl:PhysicalAgent[@type = current()/@name] | //aorsl:InitialState/aorsl:PhysicalAgents[@type = current()/@name]"
       mode="shared.helper.initAORObjects.manager">
       <xsl:with-param name="indent" select="$indent"/>
       <xsl:with-param name="className" select="$className"/>
@@ -1306,7 +1306,7 @@
   </xsl:template>
 
   <!-- set the initial PhysObjekts -->
-  <xsl:template match="aorsml:PhysicalObjectType" mode="createSimSystem.helper.initObjectTypes">
+  <xsl:template match="aorsl:PhysicalObjectType" mode="createSimSystem.helper.initObjectTypes">
     <xsl:param name="indent" required="yes"/>
     <xsl:param name="envSimVarName" required="yes" as="xs:string"/>
 
@@ -1314,8 +1314,8 @@
     <xsl:variable name="varName" select="jw:lowerWord($className)"/>
 
     <xsl:if
-      test="fn:exists(//aorsml:InitialState/aorsml:PhysicalObject[@type = current()/@name and not(@objectVariable)]) or
-            fn:exists(//aorsml:InitialState/aorsml:PhysicalObjects[@type = current()/@name and not(@objectVariable)])">
+      test="fn:exists(//aorsl:InitialState/aorsl:PhysicalObject[@type = current()/@name and not(@objectVariable)]) or
+            fn:exists(//aorsl:InitialState/aorsl:PhysicalObjects[@type = current()/@name and not(@objectVariable)])">
       <xsl:call-template name="java:newObject">
         <xsl:with-param name="indent" select="$indent"/>
         <xsl:with-param name="class" select="$className"/>
@@ -1323,7 +1323,7 @@
         <xsl:with-param name="withDeclaration" select="false()"/>
       </xsl:call-template>
     </xsl:if>
-    <xsl:for-each select="//aorsml:InitialState/aorsml:PhysicalObject[@type = current()/@name and @objectVariable]">
+    <xsl:for-each select="//aorsl:InitialState/aorsl:PhysicalObject[@type = current()/@name and @objectVariable]">
       <xsl:call-template name="java:newObject">
         <xsl:with-param name="indent" select="$indent"/>
         <xsl:with-param name="class" select="$className"/>
@@ -1333,8 +1333,8 @@
     </xsl:for-each>
 
     <xsl:apply-templates
-      select="//aorsml:InitialState/aorsml:PhysicalObject[@type = current()/@name] | 
-              //aorsml:InitialState/aorsml:PhysicalObjects[@type = current()/@name]"
+      select="//aorsl:InitialState/aorsl:PhysicalObject[@type = current()/@name] | 
+              //aorsl:InitialState/aorsl:PhysicalObjects[@type = current()/@name]"
       mode="shared.helper.initAORObjects.manager">
       <xsl:with-param name="indent" select="$indent"/>
       <xsl:with-param name="className" select="$className"/>
@@ -1346,17 +1346,17 @@
   </xsl:template>
 
   <!-- set the initial Objekts -->
-  <xsl:template match="aorsml:ObjectType" mode="createSimSystem.helper.initObjectTypes">
+  <xsl:template match="aorsl:ObjectType" mode="createSimSystem.helper.initObjectTypes">
     <xsl:param name="indent" required="yes"/>
     <xsl:param name="envSimVarName" required="yes" as="xs:string"/>
-    <xsl:if test="fn:exists(//aorsml:InitialState/aorsml:Object[@type = current()/@name])">
+    <xsl:if test="fn:exists(//aorsl:InitialState/aorsl:Object[@type = current()/@name])">
 
       <xsl:variable name="className" select="jw:upperWord(@name)"/>
       <xsl:variable name="varName" select="jw:lowerWord($className)"/>
 
       <xsl:if
-        test="fn:exists(//aorsml:InitialState/aorsml:Object[@type = current()/@name and not (@objectVariable)]) or 
-                            fn:exists(//aorsml:InitialState/aorsml:Objects[@type = current()/@name and not(@objectVariable)])">
+        test="fn:exists(//aorsl:InitialState/aorsl:Object[@type = current()/@name and not (@objectVariable)]) or 
+                            fn:exists(//aorsl:InitialState/aorsl:Objects[@type = current()/@name and not(@objectVariable)])">
         <xsl:call-template name="java:newObject">
           <xsl:with-param name="indent" select="$indent"/>
           <xsl:with-param name="class" select="$className"/>
@@ -1364,7 +1364,7 @@
           <xsl:with-param name="withDeclaration" select="false()"/>
         </xsl:call-template>
       </xsl:if>
-      <xsl:for-each select="//aorsml:InitialState/aorsml:Object[@type = current()/@name and @objectVariable]">
+      <xsl:for-each select="//aorsl:InitialState/aorsl:Object[@type = current()/@name and @objectVariable]">
         <xsl:call-template name="java:newObject">
           <xsl:with-param name="indent" select="$indent"/>
           <xsl:with-param name="class" select="$className"/>
@@ -1373,14 +1373,14 @@
         </xsl:call-template>
       </xsl:for-each>
       <!-- TODO: implement Objects -->
-      <xsl:apply-templates select="//aorsml:InitialState/aorsml:Object[@type = current()/@name]" mode="shared.helper.initAORObjects.manager">
+      <xsl:apply-templates select="//aorsl:InitialState/aorsl:Object[@type = current()/@name]" mode="shared.helper.initAORObjects.manager">
         <xsl:with-param name="indent" select="$indent"/>
         <xsl:with-param name="className" select="$className"/>
         <xsl:with-param name="varName" select="$varName"/>
         <xsl:with-param name="envSimVarName" select="$envSimVarName"/>
       </xsl:apply-templates>
       <!--
-    <xsl:apply-templates select="//aorsml:InitialState/aorsml:ObjectSet[@type = current()/@name]" mode="shared.helper.initAORObjectsSet">
+    <xsl:apply-templates select="//aorsl:InitialState/aorsl:ObjectSet[@type = current()/@name]" mode="shared.helper.initAORObjectsSet">
       <xsl:with-param name="indent" select="$indent"/>
       <xsl:with-param name="className" select="$className"/>
       <xsl:with-param name="varName" select="$varName"/>
@@ -1391,7 +1391,7 @@
     </xsl:if>
   </xsl:template>
 
-  <xsl:template match="aorsml:AgentType" mode="createSimSystem.helper.initObjectTypes">
+  <xsl:template match="aorsl:AgentType" mode="createSimSystem.helper.initObjectTypes">
     <xsl:param name="indent" required="yes"/>
     <xsl:param name="envSimVarName" required="yes" as="xs:string"/>
 
@@ -1399,8 +1399,8 @@
     <xsl:variable name="className" select="jw:upperWord(@name)"/>
 
     <xsl:if
-      test="fn:exists(//aorsml:InitialState/aorsml:Agent[@type = current()/@name and not(@objectVariable)]) or 
-                fn:exists(//aorsml:InitialState/aorsml:Agents[@type = current()/@name and not(@objectVariable)])">
+      test="fn:exists(//aorsl:InitialState/aorsl:Agent[@type = current()/@name and not(@objectVariable)]) or 
+                fn:exists(//aorsl:InitialState/aorsl:Agents[@type = current()/@name and not(@objectVariable)])">
       <xsl:call-template name="java:newObject">
         <xsl:with-param name="indent" select="$indent"/>
         <xsl:with-param name="class" select="$className"/>
@@ -1408,7 +1408,7 @@
         <xsl:with-param name="withDeclaration" select="false()"/>
       </xsl:call-template>
     </xsl:if>
-    <xsl:for-each select="//aorsml:InitialState/aorsml:Agent[@type = current()/@name and @objectVariable]">
+    <xsl:for-each select="//aorsl:InitialState/aorsl:Agent[@type = current()/@name and @objectVariable]">
       <xsl:call-template name="java:newObject">
         <xsl:with-param name="indent" select="$indent"/>
         <xsl:with-param name="class" select="$className"/>
@@ -1418,7 +1418,7 @@
     </xsl:for-each>
 
     <xsl:apply-templates
-      select="//aorsml:InitialState/aorsml:Agent[@type = current()/@name] | //aorsml:InitialState/aorsml:Agents[@type = current()/@name]"
+      select="//aorsl:InitialState/aorsl:Agent[@type = current()/@name] | //aorsl:InitialState/aorsl:Agents[@type = current()/@name]"
       mode="shared.helper.initAORObjects.manager">
       <xsl:with-param name="indent" select="$indent"/>
       <xsl:with-param name="className" select="$className"/>
@@ -1430,7 +1430,7 @@
   </xsl:template>
 
   <!-- set the EnvironmentRules -->
-  <xsl:template match="aorsml:EnvironmentRule" mode="createSimSystem.helper.initEnvRule">
+  <xsl:template match="aorsl:EnvironmentRule" mode="createSimSystem.helper.initEnvRule">
     <xsl:param name="indent" required="yes"/>
     <xsl:param name="rulesListVarName" required="yes"/>
 
@@ -1459,15 +1459,15 @@
   </xsl:template>
 
   <!-- set the initial physAgentSubjects -->
-  <xsl:template match="aorsml:PhysicalAgentType" mode="createSimSystem.helper.initAgentSubject">
+  <xsl:template match="aorsl:PhysicalAgentType" mode="createSimSystem.helper.initAgentSubject">
     <xsl:param name="indent" required="yes"/>
 
     <xsl:variable name="className" select="fn:concat(jw:upperWord(@name), $prefix.agentSubject)"/>
     <xsl:variable name="varName" select="fn:concat($createdVariablesNamePrefix, jw:lowerWord($className))"/>
 
     <xsl:if
-      test="fn:exists(//aorsml:InitialState/aorsml:PhysicalAgent[@type = current()/@name]) or 
-            fn:exists(//aorsml:InitialState/aorsml:PhysicalAgents[@type = current()/@name])">
+      test="fn:exists(//aorsl:InitialState/aorsl:PhysicalAgent[@type = current()/@name]) or 
+            fn:exists(//aorsl:InitialState/aorsl:PhysicalAgents[@type = current()/@name])">
       <xsl:call-template name="java:newObject">
         <xsl:with-param name="indent" select="$indent"/>
         <xsl:with-param name="class" select="$className"/>
@@ -1477,13 +1477,13 @@
     </xsl:if>
     <xsl:call-template name="java:newLine"/>
 
-    <xsl:apply-templates select="//aorsml:InitialState/aorsml:PhysicalAgent[@type = current()/@name]" mode="shared.helper.initAgentSubject">
+    <xsl:apply-templates select="//aorsl:InitialState/aorsl:PhysicalAgent[@type = current()/@name]" mode="shared.helper.initAgentSubject">
       <xsl:with-param name="indent" select="$indent"/>
       <xsl:with-param name="className" select="$className"/>
       <xsl:with-param name="varName" select="$varName"/>
     </xsl:apply-templates>
 
-    <xsl:apply-templates select="//aorsml:InitialState/aorsml:PhysicalAgents[@type = current()/@name]" mode="shared.helper.initAgentSubjectSet">
+    <xsl:apply-templates select="//aorsl:InitialState/aorsl:PhysicalAgents[@type = current()/@name]" mode="shared.helper.initAgentSubjectSet">
       <xsl:with-param name="indent" select="$indent"/>
       <xsl:with-param name="className" select="$className"/>
       <xsl:with-param name="varName" select="$varName"/>
@@ -1492,7 +1492,7 @@
   </xsl:template>
 
   <!-- set the initial agentSubjects -->
-  <xsl:template match="aorsml:AgentType" mode="createSimSystem.helper.initAgentSubject">
+  <xsl:template match="aorsl:AgentType" mode="createSimSystem.helper.initAgentSubject">
     <xsl:param name="indent" required="yes"/>
 
     <xsl:variable name="className" select="fn:concat(jw:upperWord(@name), $prefix.agentSubject)"/>
@@ -1506,13 +1506,13 @@
     </xsl:call-template>
 
     <xsl:call-template name="java:newLine"/>
-    <xsl:apply-templates select="//aorsml:InitialState/aorsml:Agent[@type = current()/@name]" mode="shared.helper.initAgentSubject">
+    <xsl:apply-templates select="//aorsl:InitialState/aorsl:Agent[@type = current()/@name]" mode="shared.helper.initAgentSubject">
       <xsl:with-param name="indent" select="$indent"/>
       <xsl:with-param name="className" select="$className"/>
       <xsl:with-param name="varName" select="$varName"/>
     </xsl:apply-templates>
 
-    <xsl:apply-templates select="//aorsml:InitialState/aorsml:Agents[@type = current()/@name]" mode="shared.helper.initAgentSubjectSet">
+    <xsl:apply-templates select="//aorsl:InitialState/aorsl:Agents[@type = current()/@name]" mode="shared.helper.initAgentSubjectSet">
       <xsl:with-param name="indent" select="$indent"/>
       <xsl:with-param name="className" select="$className"/>
       <xsl:with-param name="varName" select="$varName"/>
@@ -1521,15 +1521,15 @@
   </xsl:template>
 
   <!-- set initial ExogenousEvent  -->
-  <xsl:template match="aorsml:ExogenousEventType | aorsml:CausedEventType" mode="createSimSystem.helper.initEvents">
+  <xsl:template match="aorsl:ExogenousEventType | aorsl:CausedEventType" mode="createSimSystem.helper.initEvents">
     <xsl:param name="indent" required="yes"/>
 
     <xsl:variable name="className" select="jw:upperWord(@name)"/>
     <xsl:variable name="varName" select="fn:concat($createdVariablesNamePrefix, jw:lowerWord($className))"/>
 
     <xsl:if
-      test="(local-name() eq 'ExogenousEventType' and //aorsml:InitialState/aorsml:ExogenousEvent[@type = current()/@name]) or 
-             local-name() eq 'CausedEventType' and //aorsml:InitialState/aorsml:CausedEvent[@type = current()/@name]">
+      test="(local-name() eq 'ExogenousEventType' and //aorsl:InitialState/aorsl:ExogenousEvent[@type = current()/@name]) or 
+             local-name() eq 'CausedEventType' and //aorsl:InitialState/aorsl:CausedEvent[@type = current()/@name]">
       <xsl:call-template name="java:newLine"/>
       <xsl:call-template name="java:newObject">
         <xsl:with-param name="indent" select="$indent"/>
@@ -1541,7 +1541,7 @@
 
     <xsl:choose>
       <xsl:when test="local-name() eq 'ExogenousEventType'">
-        <xsl:apply-templates select="//aorsml:InitialState/aorsml:ExogenousEvent[@type = current()/@name]"
+        <xsl:apply-templates select="//aorsl:InitialState/aorsl:ExogenousEvent[@type = current()/@name]"
           mode="createSimSystem.helper.initEvents.init">
           <xsl:with-param name="indent" select="$indent"/>
           <xsl:with-param name="className" select="$className"/>
@@ -1549,7 +1549,7 @@
         </xsl:apply-templates>
       </xsl:when>
       <xsl:when test="local-name() eq 'CausedEventType'">
-        <xsl:apply-templates select="//aorsml:InitialState/aorsml:CausedEvent[@type = current()/@name]" mode="createSimSystem.helper.initEvents.init">
+        <xsl:apply-templates select="//aorsl:InitialState/aorsl:CausedEvent[@type = current()/@name]" mode="createSimSystem.helper.initEvents.init">
           <xsl:with-param name="indent" select="$indent"/>
           <xsl:with-param name="className" select="$className"/>
           <xsl:with-param name="varName" select="$varName"/>
@@ -1558,7 +1558,7 @@
     </xsl:choose>
   </xsl:template>
 
-  <xsl:template match="aorsml:CausedEvent | aorsml:ExogenousEvent" mode="createSimSystem.helper.initEvents.init">
+  <xsl:template match="aorsl:CausedEvent | aorsl:ExogenousEvent" mode="createSimSystem.helper.initEvents.init">
     <xsl:param name="indent" as="xs:integer" required="yes"/>
     <xsl:param name="className" as="xs:string" required="yes"/>
     <xsl:param name="varName" as="xs:string" required="yes"/>
@@ -1579,7 +1579,7 @@
 
     <xsl:variable name="eventType" select="@type"/>
 
-    <xsl:for-each select="aorsml:Slot[@property != 'occurrenceTime']">
+    <xsl:for-each select="aorsl:Slot[@property != 'occurrenceTime']">
       <xsl:call-template name="java:callSetterMethod">
         <xsl:with-param name="indent" select="$indent"/>
         <xsl:with-param name="objInstance" select="$varName"/>
@@ -1588,7 +1588,7 @@
           <xsl:apply-templates select="." mode="assistents.getSlotValue"/>
         </xsl:with-param>
         <xsl:with-param name="valueType">
-          <xsl:value-of select="//aorsml:EntityTypes/aorsml:*[@name = $eventType]/aorsml:*[@name = current()/@property]/@type"/>
+          <xsl:value-of select="//aorsl:EntityTypes/aorsl:*[@name = $eventType]/aorsl:*[@name = current()/@property]/@type"/>
         </xsl:with-param>
       </xsl:call-template>
     </xsl:for-each>
@@ -1609,7 +1609,7 @@
   <!-- statisticvariables -->
   <!-- it will be 2 times in the SimStatistc; first as a public variable, is for using in Simulation (simpler to write the description);
   and second, in a list, is to analyze without reflection-->
-  <xsl:template match="aorsml:Variable" mode="createSimSystem.helper.createStatistic.variable">
+  <xsl:template match="aorsl:Variable" mode="createSimSystem.helper.createStatistic.variable">
     <xsl:param name="indent" required="yes" as="xs:integer"/>
     <xsl:param name="statisticVarName" required="yes" as="xs:string"/>
 
@@ -1647,11 +1647,11 @@
 
                 <xsl:choose>
                   <xsl:when
-                    test="aorsml:Source/aorsml:ObjectProperty or 
-                    aorsml:Source/aorsml:ObjectTypeExtensionSize or 
-                    aorsml:Source/aorsml:ResourceUtilization">
+                    test="aorsl:Source/aorsl:ObjectProperty or 
+                    aorsl:Source/aorsl:ObjectTypeExtensionSize or 
+                    aorsl:Source/aorsl:ResourceUtilization">
 
-                    <xsl:variable name="node" as="node()" select="aorsml:Source/aorsml:*"/>
+                    <xsl:variable name="node" as="node()" select="aorsl:Source/aorsl:*"/>
 
                     <!-- this.getEnvironmentSimulator().getObjectById([@objectIdRef])  or -->
                     <!-- this.getEnvironmentSimulator().getObjectsByType([@objectType].class) -->
@@ -1716,7 +1716,7 @@
 
   </xsl:template>
 
-  <xsl:template match="aorsml:Variable" mode="createSimSystem.helper.createStatistic.parameter">
+  <xsl:template match="aorsl:Variable" mode="createSimSystem.helper.createStatistic.parameter">
     <xsl:param name="indent" required="yes" as="xs:integer"/>
     <xsl:param name="statisticVarName" required="yes" as="xs:string"/>
 
@@ -1734,8 +1734,8 @@
           <xsl:with-param name="name" select="$core.enum.statVarDataSourceEnumLit"/>
           <xsl:with-param name="varName">
             <xsl:choose>
-              <xsl:when test="exists(aorsml:Source)">
-                <xsl:value-of select="local-name(aorsml:Source/aorsml:*[1])"/>
+              <xsl:when test="exists(aorsl:Source)">
+                <xsl:value-of select="local-name(aorsl:Source/aorsl:*[1])"/>
               </xsl:when>
               <xsl:otherwise>
                 <xsl:value-of select="'Default'"/>
@@ -1747,7 +1747,7 @@
     </xsl:call-template>
 
     <!-- set specific statistic variable properties -->
-    <xsl:apply-templates select="aorsml:Source/aorsml:*" mode="createSimSystem.helper.createStatistic.source">
+    <xsl:apply-templates select="aorsl:Source/aorsl:*" mode="createSimSystem.helper.createStatistic.source">
       <xsl:with-param name="indent" select="$indent"/>
       <xsl:with-param name="statVarName" select="@name"/>
       <xsl:with-param name="statisticVarName" select="$statisticVarName"/>
@@ -1769,7 +1769,7 @@
     </xsl:if>
 
     <!-- set aggregat function -->
-    <xsl:if test="exists(aorsml:Source/@aggregationFunction)">
+    <xsl:if test="exists(aorsl:Source/@aggregationFunction)">
       <xsl:call-template name="java:callSetterMethod">
         <xsl:with-param name="indent" select="$indent"/>
         <xsl:with-param name="objInstance">
@@ -1782,7 +1782,7 @@
         <xsl:with-param name="value">
           <xsl:call-template name="java:varByDotNotation">
             <xsl:with-param name="name" select="$core.enum.aggregFunEnumLit"/>
-            <xsl:with-param name="varName" select="aorsml:Source/@aggregationFunction"/>
+            <xsl:with-param name="varName" select="aorsl:Source/@aggregationFunction"/>
           </xsl:call-template>
         </xsl:with-param>
       </xsl:call-template>
@@ -1791,13 +1791,13 @@
 
   </xsl:template>
 
-  <xsl:template match="aorsml:GlobalVariable" mode="createSimSystem.helper.createStatistic.source">
+  <xsl:template match="aorsl:GlobalVariable" mode="createSimSystem.helper.createStatistic.source">
     <xsl:param name="indent" as="xs:integer" required="yes"/>
     <xsl:param name="statVarName" as="xs:string" required="yes"/>
 
   </xsl:template>
 
-  <xsl:template match="aorsml:StatisticsVariable" mode="createSimSystem.helper.createStatistic.source">
+  <xsl:template match="aorsl:StatisticsVariable" mode="createSimSystem.helper.createStatistic.source">
     <xsl:param name="indent" as="xs:integer" required="yes"/>
     <xsl:param name="statVarName" as="xs:string" required="yes"/>
 
@@ -1820,7 +1820,7 @@
 
   </xsl:template>
 
-  <xsl:template match="aorsml:ObjectProperty" mode="createSimSystem.helper.createStatistic.source">
+  <xsl:template match="aorsl:ObjectProperty" mode="createSimSystem.helper.createStatistic.source">
     <xsl:param name="indent" as="xs:integer" required="yes"/>
     <xsl:param name="statVarName" as="xs:string" required="yes"/>
 
@@ -1838,12 +1838,12 @@
 
   </xsl:template>
 
-  <xsl:template match="aorsml:ObjectTypeExtensionSize" mode="createSimSystem.helper.createStatistic.source">
+  <xsl:template match="aorsl:ObjectTypeExtensionSize" mode="createSimSystem.helper.createStatistic.source">
     <xsl:param name="indent" as="xs:integer" required="yes"/>
     <xsl:param name="statVarName" as="xs:string" required="yes"/>
   </xsl:template>
 
-  <xsl:template match="aorsml:ResourceUtilization" mode="createSimSystem.helper.createStatistic.source">
+  <xsl:template match="aorsl:ResourceUtilization" mode="createSimSystem.helper.createStatistic.source">
     <xsl:param name="indent" as="xs:integer" required="yes"/>
     <xsl:param name="statVarName" as="xs:string" required="yes"/>
 
@@ -1894,7 +1894,7 @@
 
   </xsl:template>
 
-  <xsl:template match="aorsml:ValueExpr" mode="createSimSystem.helper.createStatistic.source">
+  <xsl:template match="aorsl:ValueExpr" mode="createSimSystem.helper.createStatistic.source">
     <xsl:param name="indent" as="xs:integer" required="yes"/>
     <xsl:param name="statisticVarName" as="xs:string" required="yes"/>
     <xsl:param name="statVarName" as="xs:string" required="yes"/>
@@ -1933,12 +1933,12 @@
   </xsl:template>
 
   <!-- create GridCells -->
-  <xsl:template match="aorsml:GridCells" mode="createSimSystem.helper.createGridCells">
+  <xsl:template match="aorsl:GridCells" mode="createSimSystem.helper.createGridCells">
     <xsl:param name="indent" required="yes" as="xs:integer"/>
     <xsl:param name="spaceModelVar" required="yes" as="xs:string" tunnel="yes"/>
     <xsl:param name="observeGridCells" select="false()" tunnel="yes" as="xs:boolean"/>
 
-    <xsl:if test="fn:exists(aorsml:Slot)">
+    <xsl:if test="fn:exists(aorsl:Slot)">
       <xsl:call-template name="java:newLine"/>
       <xsl:call-template name="createGridLoop">
         <xsl:with-param name="indent" select="$indent"/>
@@ -1983,7 +1983,7 @@
       </xsl:call-template>
     </xsl:if>
 
-    <xsl:apply-templates select="aorsml:GridCell | aorsml:GridCellSet" mode="createSimSystem.helper.createGridCells">
+    <xsl:apply-templates select="aorsl:GridCell | aorsl:GridCellSet" mode="createSimSystem.helper.createGridCells">
       <xsl:with-param name="indent" select="$indent"/>
     </xsl:apply-templates>
 
@@ -2022,7 +2022,7 @@
   </xsl:template>
 
   <!-- one special GridCell -->
-  <xsl:template match="aorsml:GridCell" mode="createSimSystem.helper.createGridCells">
+  <xsl:template match="aorsl:GridCell" mode="createSimSystem.helper.createGridCells">
     <xsl:param name="indent" required="yes" as="xs:integer"/>
     <xsl:param name="spaceModelVar" required="yes" tunnel="yes"/>
     <xsl:param name="gridCellVariable" as="xs:string" required="yes" tunnel="yes"/>
@@ -2054,7 +2054,7 @@
       </xsl:with-param>
       <xsl:with-param name="thenContent">
 
-        <xsl:apply-templates select="aorsml:Slot" mode="createSimSystem.helper.createGridCells.setSlot">
+        <xsl:apply-templates select="aorsl:Slot" mode="createSimSystem.helper.createGridCells.setSlot">
           <xsl:with-param name="indent" select="$indent"/>
           <xsl:with-param name="spaceModelVar" select="$spaceModelVar"/>
         </xsl:apply-templates>
@@ -2072,7 +2072,7 @@
   </xsl:template>
 
   <!-- a GridCellSet -->
-  <xsl:template match="aorsml:GridCellSet" mode="createSimSystem.helper.createGridCells">
+  <xsl:template match="aorsl:GridCellSet" mode="createSimSystem.helper.createGridCells">
     <xsl:param name="indent" required="yes" as="xs:integer"/>
     <xsl:param name="spaceModelVar" required="yes" tunnel="yes"/>
 
@@ -2226,7 +2226,7 @@
               </xsl:with-param>
               <xsl:with-param name="thenContent">
 
-                <xsl:apply-templates select="./aorsml:Slot" mode="createSimSystem.helper.createGridCells.setSlot">
+                <xsl:apply-templates select="./aorsl:Slot" mode="createSimSystem.helper.createGridCells.setSlot">
                   <xsl:with-param name="indent" select="$indent + 2"/>
                   <xsl:with-param name="spaceModelVar" select="$spaceModelVar"/>
                 </xsl:apply-templates>
@@ -2247,7 +2247,7 @@
     </xsl:call-template>
   </xsl:template>
 
-  <xsl:template match="aorsml:Slot" mode="createSimSystem.helper.createGridCells.setSlot">
+  <xsl:template match="aorsl:Slot" mode="createSimSystem.helper.createGridCells.setSlot">
     <xsl:param name="indent" required="yes" as="xs:integer"/>
     <xsl:param name="spaceModelVar" required="yes" as="xs:string"/>
     <xsl:param name="gridCellVariable" tunnel="yes" as="xs:string" required="yes"/>
@@ -2265,7 +2265,7 @@
   </xsl:template>
 
   <!-- Collections -->
-  <xsl:template match="aorsml:Collection" mode="createSimSystem.helper.initCollections">
+  <xsl:template match="aorsl:Collection" mode="createSimSystem.helper.initCollections">
     <xsl:param name="indent" required="yes" as="xs:integer"/>
     <xsl:param name="envSimVarName" required="yes" as="xs:string"/>
 
@@ -2342,7 +2342,7 @@
   </xsl:template>
 
   <!-- init the global variables -->
-  <xsl:template match="aorsml:GlobalVariable" mode="createSimSystem.initGlobals">
+  <xsl:template match="aorsl:GlobalVariable" mode="createSimSystem.initGlobals">
     <xsl:param name="indent" as="xs:integer" required="yes"/>
 
     <xsl:apply-templates select="." mode="shared.updateGlobalVariable">

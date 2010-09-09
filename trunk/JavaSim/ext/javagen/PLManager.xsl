@@ -10,7 +10,7 @@
   @last changed by $Author$
 -->
 
-<xsl:stylesheet version="2.0" xmlns:aorsml="http://aor-simulation.org" xmlns:fn="http://www.w3.org/2005/xpath-functions"
+<xsl:stylesheet version="2.0" xmlns:aorsl="http://aor-simulation.org" xmlns:fn="http://www.w3.org/2005/xpath-functions"
   xmlns:java="http://www.sun.com/java" xmlns:xs="http://www.w3.org/2001/XMLSchema" xmlns:xsl="http://www.w3.org/1999/XSL/Transform"
   xmlns:jw="http://www.informatik.tu-cottbus.de/~jwerner/">
 
@@ -21,7 +21,7 @@
   <!--***************************************-->
 
   <!--class file-->
-  <xsl:template name="aorsml:classFile">
+  <xsl:template name="aorsl:classFile">
     <xsl:param name="path" required="yes"/>
     <xsl:param name="name" required="yes"/>
     <xsl:param name="content" required="yes"/>
@@ -52,7 +52,7 @@
   </xsl:template>
 
   <!-- class -->
-  <xsl:template name="aorsml:class">
+  <xsl:template name="aorsl:class">
     <xsl:param name="indent" required="yes" as="xs:integer"/>
     <xsl:param name="modifier"/>
     <xsl:param name="annotation" as="xs:string" select="''"/>

@@ -10,7 +10,7 @@
   @last changed by $Author$
 -->
 
-<xsl:stylesheet version="2.0" xmlns:aorsml="http://aor-simulation.org" xmlns:fn="http://www.w3.org/2005/xpath-functions"
+<xsl:stylesheet version="2.0" xmlns:aorsl="http://aor-simulation.org" xmlns:fn="http://www.w3.org/2005/xpath-functions"
   xmlns:java="http://www.sun.com/java" xmlns:xs="http://www.w3.org/2001/XMLSchema" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
   xmlns:xsl="http://www.w3.org/1999/XSL/Transform" xsi:schemaLocation="http://aor-simulation.org aorsml.xsd"
   xmlns:jw="http://www.informatik.tu-cottbus.de/~jwerner/">
@@ -19,18 +19,18 @@
   <!--class-->
   <!--*****-->
   <xsl:template name="createSimActivityFactory">
-    <xsl:apply-templates select="aorsml:SimulationScenario/aorsml:SimulationModel/aorsml:EntityTypes"
+    <xsl:apply-templates select="aorsl:SimulationScenario/aorsl:SimulationModel/aorsl:EntityTypes"
       mode="createSimActivityFactory.createSimActivityFactory">
       <xsl:with-param name="indent" select="0"/>
     </xsl:apply-templates>
   </xsl:template>
 
-  <xsl:template match="aorsml:EntityTypes" mode="createSimActivityFactory.createSimActivityFactory">
+  <xsl:template match="aorsl:EntityTypes" mode="createSimActivityFactory.createSimActivityFactory">
     <xsl:param name="indent" required="yes" as="xs:integer"/>
 
-    <xsl:if test="fn:exists(aorsml:ActivityType)">
+    <xsl:if test="fn:exists(aorsl:ActivityType)">
 
-      <xsl:call-template name="aorsml:classFile">
+      <xsl:call-template name="aorsl:classFile">
         <xsl:with-param name="path" select="$sim.path.controller"/>
         <xsl:with-param name="name" select="$sim.class.simActivityFactory"/>
 
@@ -74,7 +74,7 @@
   </xsl:template>
 
   <!-- getActivities() -->
-  <xsl:template match="aorsml:EntityTypes" mode="createSimActivityFactory.method.getActivities">
+  <xsl:template match="aorsl:EntityTypes" mode="createSimActivityFactory.method.getActivities">
     <xsl:param name="indent" required="yes" as="xs:integer"/>
 
     <xsl:variable name="envEventNameVarName" select="'envEventSimpleName'"/>
@@ -105,7 +105,7 @@
           <xsl:with-param name="name" select="$listVarName"/>
         </xsl:call-template>
 
-        <xsl:for-each-group select="aorsml:ActivityType[@startEventType]" group-by="@startEventType">
+        <xsl:for-each-group select="aorsl:ActivityType[@startEventType]" group-by="@startEventType">
 
           <xsl:call-template name="java:if">
             <xsl:with-param name="indent" select="$indent + 1"/>
@@ -156,7 +156,7 @@
   </xsl:template>
 
   <!-- getActivityByType -->
-  <xsl:template match="aorsml:EntityTypes" mode="createSimActivityFactory.method.getActivityByType">
+  <xsl:template match="aorsl:EntityTypes" mode="createSimActivityFactory.method.getActivityByType">
     <xsl:param name="indent" as="xs:integer" required="yes"/>
 
     <xsl:variable name="activityType" select="'activityTypeName'"/>
@@ -179,7 +179,7 @@
       </xsl:with-param>
       <xsl:with-param name="content">
 
-        <xsl:for-each select="aorsml:ActivityType">
+        <xsl:for-each select="aorsl:ActivityType">
 
           <xsl:call-template name="java:if">
             <xsl:with-param name="indent" select="$indent + 1"/>

@@ -10,7 +10,7 @@
         @last changed by $Author$
 -->
 
-<xsl:stylesheet version="2.0" xmlns:aorsml="http://aor-simulation.org" xmlns:fn="http://www.w3.org/2005/xpath-functions"
+<xsl:stylesheet version="2.0" xmlns:aorsl="http://aor-simulation.org" xmlns:fn="http://www.w3.org/2005/xpath-functions"
   xmlns:java="http://www.sun.com/java" xmlns:xs="http://www.w3.org/2001/XMLSchema" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
   xmlns:xsl="http://www.w3.org/1999/XSL/Transform" xsi:schemaLocation="http://aor-simulation.org aorsml.xsd"
   xmlns:jw="http://www.informatik.tu-cottbus.de/~jwerner/">
@@ -19,13 +19,13 @@
   <!--class-->
   <!--*****-->
   <xsl:template name="createSimulationSpacemodel">
-    <xsl:apply-templates select="aorsml:SimulationScenario/aorsml:SimulationModel/aorsml:SpaceModel"
+    <xsl:apply-templates select="aorsl:SimulationScenario/aorsl:SimulationModel/aorsl:SpaceModel"
       mode="createSimulationSpacemodel.createSimulationSpacemodel">
       <xsl:with-param name="indent" select="0"/>
     </xsl:apply-templates>
   </xsl:template>
 
-  <xsl:template match="aorsml:SpaceModel" mode="createSimulationSpacemodel.createSimulationSpacemodel">
+  <xsl:template match="aorsl:SpaceModel" mode="createSimulationSpacemodel.createSimulationSpacemodel">
     <xsl:param name="indent" required="yes" as="xs:integer"/>
 
     <!-- flag for using 1-dim-discrete -->
@@ -36,7 +36,7 @@
           <xsl:value-of select="true()"/>
         </xsl:when>
         <!-- new version -->
-        <xsl:when test="exists(aorsml:OneDimensionalGrid)">
+        <xsl:when test="exists(aorsl:OneDimensionalGrid)">
           <xsl:value-of select="true()"/>
         </xsl:when>
         <xsl:otherwise>
@@ -53,7 +53,7 @@
           <xsl:value-of select="true()"/>
         </xsl:when>
         <!-- new version -->
-        <xsl:when test="exists(aorsml:OneDimensional)">
+        <xsl:when test="exists(aorsl:OneDimensional)">
           <xsl:value-of select="true()"/>
         </xsl:when>
         <xsl:otherwise>
@@ -70,7 +70,7 @@
           <xsl:value-of select="true()"/>
         </xsl:when>
         <!-- new version -->
-        <xsl:when test="exists(aorsml:TwoDimensionalGrid)">
+        <xsl:when test="exists(aorsl:TwoDimensionalGrid)">
           <xsl:value-of select="true()"/>
         </xsl:when>
         <xsl:otherwise>
@@ -87,7 +87,7 @@
           <xsl:value-of select="true()"/>
         </xsl:when>
         <!-- new version -->
-        <xsl:when test="exists(aorsml:TwoDimensional)">
+        <xsl:when test="exists(aorsl:TwoDimensional)">
           <xsl:value-of select="true()"/>
         </xsl:when>
         <xsl:otherwise>
@@ -100,7 +100,7 @@
     <xsl:variable name="useTwoDimensionalLateralView" as="xs:boolean">
       <xsl:choose>
         <!-- new version -->
-        <xsl:when test="exists(aorsml:TwoDimensional_LateralView)">
+        <xsl:when test="exists(aorsl:TwoDimensional_LateralView)">
           <xsl:value-of select="true()"/>
         </xsl:when>
         <xsl:otherwise>
@@ -117,7 +117,7 @@
           <xsl:value-of select="true()"/>
         </xsl:when>
         <!-- new version -->
-        <xsl:when test="exists(aorsml:ThreeDimensionalGrid)">
+        <xsl:when test="exists(aorsl:ThreeDimensionalGrid)">
           <xsl:value-of select="true()"/>
         </xsl:when>
         <xsl:otherwise>
@@ -135,7 +135,7 @@
           <xsl:value-of select="true()"/>
         </xsl:when>
         <!-- new version -->
-        <xsl:when test="exists(aorsml:ThreeDimensional)">
+        <xsl:when test="exists(aorsl:ThreeDimensional)">
           <xsl:value-of select="true()"/>
         </xsl:when>
         <xsl:otherwise>
@@ -161,14 +161,14 @@
       <xsl:choose>
         <!-- deprecated -->
         <xsl:when test="$useTwoDimensionalGrid = true() and 
-                (exists(aorsml:GridCellProperty) or exists(aorsml:GridCellFunction))">
+                (exists(aorsl:GridCellProperty) or exists(aorsl:GridCellFunction))">
           <xsl:value-of select="true()"/>
         </xsl:when>
         <!-- new -->
         <xsl:when
           test="$useTwoDimensionalGrid and 
-                ((exists(aorsml:TwoDimensionalGrid/aorsml:GridCellProperty) or 
-                 (exists(aorsml:TwoDimensionalGrid/aorsml:GridCellFunction))))">
+                ((exists(aorsl:TwoDimensionalGrid/aorsl:GridCellProperty) or 
+                 (exists(aorsl:TwoDimensionalGrid/aorsl:GridCellFunction))))">
           <xsl:value-of select="true()"/>
         </xsl:when>
         <xsl:otherwise>
@@ -182,11 +182,11 @@
       <xsl:choose>
         <!-- TODO: check here the right attribute -->
         <!-- deprecated -->
-        <xsl:when test="exists(aorsml:GridCellProperty)">
+        <xsl:when test="exists(aorsl:GridCellProperty)">
           <xsl:value-of select="true()"/>
         </xsl:when>
         <!-- new -->
-        <xsl:when test="exists(aorsml:*/aorsml:GridCellProperty)">
+        <xsl:when test="exists(aorsl:*/aorsl:GridCellProperty)">
           <xsl:value-of select="true()"/>
         </xsl:when>
         <xsl:otherwise>
@@ -196,7 +196,7 @@
 
     </xsl:variable>
 
-    <xsl:call-template name="aorsml:classFile">
+    <xsl:call-template name="aorsl:classFile">
       <xsl:with-param name="path" select="$sim.path.controller"/>
       <xsl:with-param name="name" select="$sim.class.simSpaceModel"/>
 
@@ -529,8 +529,8 @@
 
                 <!-- create gridCell as innerclass -->
                 <xsl:choose>
-                  <xsl:when test="aorsml:TwoDimensionalGrid">
-                    <xsl:apply-templates select="aorsml:TwoDimensionalGrid" mode="createSimulationSpacemodel.createGridCell">
+                  <xsl:when test="aorsl:TwoDimensionalGrid">
+                    <xsl:apply-templates select="aorsl:TwoDimensionalGrid" mode="createSimulationSpacemodel.createGridCell">
                       <xsl:with-param name="indent" select="$indent + 1"/>
                       <xsl:with-param name="observeGridCells" select="$observeGridCells"/>
                     </xsl:apply-templates>
@@ -555,7 +555,7 @@
     </xsl:call-template>
   </xsl:template>
 
-  <xsl:template match="aorsml:SpaceModel" mode="createSimulationSpacemodel.constructor">
+  <xsl:template match="aorsl:SpaceModel" mode="createSimulationSpacemodel.constructor">
     <xsl:param name="indent" required="yes" as="xs:integer"/>
     <xsl:param name="observeGridCells" select="false()" as="xs:boolean"/>
 
@@ -571,7 +571,7 @@
       <xsl:with-param name="content">
         <xsl:choose>
 
-          <xsl:when test="aorsml:*[not(local-name() eq 'GridCellProperty') and not(local-name() eq 'GridCellFunction')]">
+          <xsl:when test="aorsl:*[not(local-name() eq 'GridCellProperty') and not(local-name() eq 'GridCellFunction')]">
 
             <xsl:call-template name="java:callSuper">
               <xsl:with-param name="indent" select="$indent + 1"/>
@@ -581,22 +581,22 @@
                   <xsl:with-param name="name" select="$core.enum.spaceType"/>
                   <xsl:with-param name="varName">
                     <xsl:choose>
-                      <xsl:when test="aorsml:OneDimensional">
+                      <xsl:when test="aorsl:OneDimensional">
                         <xsl:value-of select="'OneD'"/>
                       </xsl:when>
-                      <xsl:when test="aorsml:TwoDimensional">
+                      <xsl:when test="aorsl:TwoDimensional">
                         <xsl:value-of select="'TwoD'"/>
                       </xsl:when>
-                      <xsl:when test="aorsml:TwoDimensional_LateralView">
+                      <xsl:when test="aorsl:TwoDimensional_LateralView">
                         <xsl:value-of select="'TwoDLateralView'"/>
                       </xsl:when>
-                      <xsl:when test="aorsml:ThreeDimensional">
+                      <xsl:when test="aorsl:ThreeDimensional">
                         <xsl:value-of select="'ThreeD'"/>
                       </xsl:when>
-                      <xsl:when test="aorsml:OneDimensionalGrid">
+                      <xsl:when test="aorsl:OneDimensionalGrid">
                         <xsl:value-of select="'OneDGrid'"/>
                       </xsl:when>
-                      <xsl:when test="aorsml:TwoDimensionalGrid">
+                      <xsl:when test="aorsl:TwoDimensionalGrid">
                         <xsl:value-of select="'TwoDGrid'"/>
                       </xsl:when>
                       <xsl:otherwise>
@@ -634,7 +634,7 @@
     </xsl:call-template>
   </xsl:template>
 
-  <xsl:template match="aorsml:SpaceModel" mode="createSimulationSpacemodel.interfaceMethods.gridCells">
+  <xsl:template match="aorsl:SpaceModel" mode="createSimulationSpacemodel.interfaceMethods.gridCells">
     <xsl:param name="indent" as="xs:integer" required="yes"/>
     <xsl:param name="gridSpaceVarName" required="yes" as="xs:string"/>
     <xsl:param name="observeGridCells" select="false()" as="xs:boolean"/>
@@ -648,8 +648,8 @@
 
     <!-- initGrid(int xSize, int ySize, ObjektInitEventListener objektInitEventListener) -->
     <xsl:choose>
-      <xsl:when test="aorsml:TwoDimensionalGrid">
-        <xsl:apply-templates select="aorsml:TwoDimensionalGrid" mode="createSimulationSpacemodel.interfaceMethods.gridCells.initGrid">
+      <xsl:when test="aorsl:TwoDimensionalGrid">
+        <xsl:apply-templates select="aorsl:TwoDimensionalGrid" mode="createSimulationSpacemodel.interfaceMethods.gridCells.initGrid">
           <xsl:with-param name="indent" select="$indent"/>
           <xsl:with-param name="observeGridCells" select="$observeGridCells"/>
           <xsl:with-param name="gridSpaceVarName" select="$gridSpaceVarName"/>
@@ -809,7 +809,7 @@
                       <xsl:with-param name="class" select="$sim.class.simGridCell"/>
                       <xsl:with-param name="args" as="xs:string*">
                         <xsl:choose>
-                          <xsl:when test="@dimensions eq '2' or exists(aorsml:TwoDimensionalGrid)">
+                          <xsl:when test="@dimensions eq '2' or exists(aorsl:TwoDimensionalGrid)">
                             <xsl:value-of select="$colCounter"/>
                             <xsl:value-of select="$rowCounter"/>
                             <xsl:value-of select="'0'"/>
@@ -817,7 +817,7 @@
                           <xsl:otherwise>
                             <xsl:message>
                               <xsl:text>Non cells implementetd for dimension </xsl:text>
-                              <xsl:value-of select="if (@dimension) then @dimension else local-name(aorsml:*)"/>
+                              <xsl:value-of select="if (@dimension) then @dimension else local-name(aorsl:*)"/>
                             </xsl:message>
                           </xsl:otherwise>
                         </xsl:choose>
@@ -837,7 +837,7 @@
     </xsl:call-template>
   </xsl:template>
 
-  <xsl:template match="aorsml:OneDimensionalGrid | aorsml:TwoDimensionalGrid | aorsml:ThreeDimensionalGrid"
+  <xsl:template match="aorsl:OneDimensionalGrid | aorsl:TwoDimensionalGrid | aorsl:ThreeDimensionalGrid"
     mode="createSimulationSpacemodel.interfaceMethods.gridCells.initGrid">
     <xsl:param name="indent" as="xs:integer" required="yes"/>
     <xsl:param name="observeGridCells" as="xs:boolean" select="false()"/>
@@ -1050,7 +1050,7 @@
 
   <!-- create the gridCell -->
   <!-- deprecated -->
-  <xsl:template match="aorsml:SpaceModel" mode="createSimulationSpacemodel.createGridCell">
+  <xsl:template match="aorsl:SpaceModel" mode="createSimulationSpacemodel.createGridCell">
     <xsl:param name="indent" required="yes" as="xs:integer"/>
     <xsl:param name="observeGridCells" as="xs:boolean" select="false()"/>
 
@@ -1062,7 +1062,7 @@
       <xsl:with-param name="content">
 
         <!-- classVariables -->
-        <xsl:apply-templates select="aorsml:GridCellProperty" mode="assistents.classVariable">
+        <xsl:apply-templates select="aorsl:GridCellProperty" mode="assistents.classVariable">
           <xsl:with-param name="indent" select="$indent + 1"/>
         </xsl:apply-templates>
         <xsl:call-template name="java:newLine"/>
@@ -1111,7 +1111,7 @@
 
 
         <!-- setters -->
-        <xsl:for-each select="aorsml:GridCellProperty">
+        <xsl:for-each select="aorsl:GridCellProperty">
           <xsl:apply-templates select="." mode="assistents.setVariableMethod">
             <xsl:with-param name="indent" select="$indent + 1"/>
             <xsl:with-param name="changeCheck" select="true()"/>
@@ -1149,12 +1149,12 @@
         </xsl:for-each>
 
         <!-- getters -->
-        <xsl:apply-templates select="aorsml:GridCellProperty" mode="assistents.getVariableMethod">
+        <xsl:apply-templates select="aorsl:GridCellProperty" mode="assistents.getVariableMethod">
           <xsl:with-param name="indent" select="$indent + 1"/>
         </xsl:apply-templates>
 
         <!-- gridCellFunctions -->
-        <xsl:apply-templates select="aorsml:GridCellFunction" mode="shared.createFunction">
+        <xsl:apply-templates select="aorsl:GridCellFunction" mode="shared.createFunction">
           <xsl:with-param name="indent" select="$indent + 1"/>
         </xsl:apply-templates>
 
@@ -1164,7 +1164,7 @@
   </xsl:template>
 
   <!-- create the gridCell -->
-  <xsl:template match="aorsml:OneDimensionalGrid | aorsml:TwoDimensionalGrid | aorsml:ThreeDimensionalGrid"
+  <xsl:template match="aorsl:OneDimensionalGrid | aorsl:TwoDimensionalGrid | aorsl:ThreeDimensionalGrid"
     mode="createSimulationSpacemodel.createGridCell">
     <xsl:param name="indent" required="yes" as="xs:integer"/>
     <xsl:param name="observeGridCells" as="xs:boolean" select="false()"/>
@@ -1177,7 +1177,7 @@
       <xsl:with-param name="content">
 
         <!-- classVariables -->
-        <xsl:apply-templates select="aorsml:GridCellProperty" mode="assistents.classVariable">
+        <xsl:apply-templates select="aorsl:GridCellProperty" mode="assistents.classVariable">
           <xsl:with-param name="indent" select="$indent + 1"/>
         </xsl:apply-templates>
         <xsl:call-template name="java:newLine"/>
@@ -1238,7 +1238,7 @@
 
 
         <!-- setters -->
-        <xsl:for-each select="aorsml:GridCellProperty">
+        <xsl:for-each select="aorsl:GridCellProperty">
           <xsl:apply-templates select="." mode="assistents.setVariableMethod">
             <xsl:with-param name="indent" select="$indent + 1"/>
             <xsl:with-param name="changeCheck" select="true()"/>
@@ -1276,12 +1276,12 @@
         </xsl:for-each>
 
         <!-- getters -->
-        <xsl:apply-templates select="aorsml:GridCellProperty" mode="assistents.getVariableMethod">
+        <xsl:apply-templates select="aorsl:GridCellProperty" mode="assistents.getVariableMethod">
           <xsl:with-param name="indent" select="$indent + 1"/>
         </xsl:apply-templates>
 
         <!-- gridCellFunctions -->
-        <xsl:apply-templates select="aorsml:GridCellFunction" mode="shared.createFunction">
+        <xsl:apply-templates select="aorsl:GridCellFunction" mode="shared.createFunction">
           <xsl:with-param name="indent" select="$indent + 1"/>
         </xsl:apply-templates>
 

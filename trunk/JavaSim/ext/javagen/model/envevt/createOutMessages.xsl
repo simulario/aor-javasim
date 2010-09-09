@@ -11,15 +11,15 @@
 	@last changed by $Author$
 -->
 
-<xsl:stylesheet version="2.0" xmlns:aorsml="http://aor-simulation.org" xmlns:fn="http://www.w3.org/2005/xpath-functions" xmlns:java="http://www.sun.com/java"
+<xsl:stylesheet version="2.0" xmlns:aorsl="http://aor-simulation.org" xmlns:fn="http://www.w3.org/2005/xpath-functions" xmlns:java="http://www.sun.com/java"
   xmlns:xs="http://www.w3.org/2001/XMLSchema" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:xsl="http://www.w3.org/1999/XSL/Transform"
   xsi:schemaLocation="http://aor-simulation.org aorsml.xsd">
 
   <!--creates class-->
-  <xsl:template match="aorsml:OutMessageEventType" mode="createOutMessages.createOutMessage">
+  <xsl:template match="aorsl:OutMessageEventType" mode="createOutMessages.createOutMessage">
     <xsl:param name="indent" required="yes" as="xs:integer"/>
 
-    <xsl:call-template name="aorsml:classFile">
+    <xsl:call-template name="aorsl:classFile">
       <xsl:with-param name="path" select="$sim.path.model.envevent"/>
       <xsl:with-param name="name" select="@name"/>
 
@@ -55,7 +55,7 @@
   </xsl:template>
 
   <!-- constructors -->
-  <xsl:template match="aorsml:OutMessageEventType" mode="createOutMessages.constructors">
+  <xsl:template match="aorsl:OutMessageEventType" mode="createOutMessages.constructors">
     <xsl:param name="indent" required="yes" as="xs:integer"/>
 
     <!-- empty constructor -->

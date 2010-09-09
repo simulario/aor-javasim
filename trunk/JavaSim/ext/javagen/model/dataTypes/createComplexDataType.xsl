@@ -10,18 +10,18 @@
   @last changed by $Author$
 -->
 
-<xsl:stylesheet version="2.0" xmlns:aorsml="http://aor-simulation.org" xmlns:fn="http://www.w3.org/2005/xpath-functions"
+<xsl:stylesheet version="2.0" xmlns:aorsl="http://aor-simulation.org" xmlns:fn="http://www.w3.org/2005/xpath-functions"
   xmlns:java="http://www.sun.com/java" xmlns:xs="http://www.w3.org/2001/XMLSchema" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
   xmlns:xsl="http://www.w3.org/1999/XSL/Transform" xsi:schemaLocation="http://aor-simulation.org aorsml.xsd"
   xmlns:jw="http://www.informatik.tu-cottbus.de/~jwerner/">
 
   <!--creates referenceDataType-class-->
-  <xsl:template match="aorsml:ComplexDataType" mode="createComplexDataTypes.createComplexDataType">
+  <xsl:template match="aorsl:ComplexDataType" mode="createComplexDataTypes.createComplexDataType">
     <xsl:param name="indent" select="0" as="xs:integer"/>
 
     <xsl:variable name="className" select="jw:upperWord(@name)"/>
 
-    <xsl:call-template name="aorsml:classFile">
+    <xsl:call-template name="aorsl:classFile">
       <xsl:with-param name="path" select="$sim.path.model.dataTypes"/>
       <xsl:with-param name="name" select="$className"/>
 
@@ -43,13 +43,13 @@
             <xsl:choose>
               
               <!-- for class definitions -->
-              <xsl:when test="fn:exists(aorsml:ClassDef)">
-                <xsl:value-of select="aorsml:ClassDef[@language eq $output.language]"/>
+              <xsl:when test="fn:exists(aorsl:ClassDef)">
+                <xsl:value-of select="aorsl:ClassDef[@language eq $output.language]"/>
               </xsl:when>
               <xsl:otherwise>
 
                 <!-- set SelfbeliefAttributes as classvariables -->
-                <xsl:apply-templates select="aorsml:Attribute | aorsml:ComplexDataProperty | aorsml:ReferenceProperty | aorsml:EnumerationProperty"
+                <xsl:apply-templates select="aorsl:Attribute | aorsl:ComplexDataProperty | aorsl:ReferenceProperty | aorsl:EnumerationProperty"
                   mode="assistents.classVariable">
                   <xsl:with-param name="indent" select="$indent + 1"/>
                 </xsl:apply-templates>
@@ -62,19 +62,19 @@
                 </xsl:apply-templates>
 
                 <!-- getter -->
-                <xsl:apply-templates select="aorsml:Attribute | aorsml:ComplexDataProperty | aorsml:ReferenceProperty | aorsml:EnumerationProperty"
+                <xsl:apply-templates select="aorsl:Attribute | aorsl:ComplexDataProperty | aorsl:ReferenceProperty | aorsl:EnumerationProperty"
                   mode="assistents.getVariableMethod">
                   <xsl:with-param name="indent" select="$indent + 1"/>
                 </xsl:apply-templates>
 
                 <!-- getter -->
-                <xsl:apply-templates select="aorsml:Attribute | aorsml:ComplexDataProperty | aorsml:ReferenceProperty | aorsml:EnumerationProperty"
+                <xsl:apply-templates select="aorsl:Attribute | aorsl:ComplexDataProperty | aorsl:ReferenceProperty | aorsl:EnumerationProperty"
                   mode="assistents.setVariableMethod">
                   <xsl:with-param name="indent" select="$indent + 1"/>
                 </xsl:apply-templates>
 
                 <!-- functions -->
-                <xsl:apply-templates select="aorsml:Function" mode="shared.createFunction">
+                <xsl:apply-templates select="aorsl:Function" mode="shared.createFunction">
                   <xsl:with-param name="indent" select="$indent + 1"/>
                 </xsl:apply-templates>
               </xsl:otherwise>
@@ -88,7 +88,7 @@
     </xsl:call-template>
   </xsl:template>
 
-  <xsl:template match="aorsml:ComplexDataType" mode="createComplexDataTypes.createComplexDataType.constructors">
+  <xsl:template match="aorsl:ComplexDataType" mode="createComplexDataTypes.createComplexDataType.constructors">
     <xsl:param name="indent" required="yes" as="xs:integer"/>
     <xsl:param name="className" required="yes" as="xs:string"/>
 
@@ -102,9 +102,9 @@
       </xsl:with-param>
       <xsl:with-param name="content">
         
-        <xsl:value-of select="aorsml:DefaultConstructor/aorsml:Def[@language eq $output.language]"/>
+        <xsl:value-of select="aorsl:DefaultConstructor/aorsl:Def[@language eq $output.language]"/>
 
-       <!-- <xsl:for-each select="aorsml:Attribute | aorsml:ComplexDataProperty | aorsml:ReferenceProperty | aorsml:EnumerationProperty">
+       <!-- <xsl:for-each select="aorsl:Attribute | aorsl:ComplexDataProperty | aorsl:ReferenceProperty | aorsl:EnumerationProperty">
           <xsl:call-template name="java:variable">
             <xsl:with-param name="indent" select="$indent + 1"/>
             <xsl:with-param name="name">
@@ -121,11 +121,11 @@
 
   </xsl:template>
 
-  <!--<xsl:template match="aorsml:ComplexDataType" mode="createComplexDataTypes.createComplexDataType.constructors.allAttributes">
+  <!--<xsl:template match="aorsl:ComplexDataType" mode="createComplexDataTypes.createComplexDataType.constructors.allAttributes">
     <xsl:choose>
       <xsl:when test="fn:exists(@superType)">
         <xsl:for-each
-          select="aorsml:Attribute | aorsml:ReferenceProperty | aorsml:ComplexDataProperty | aorsml:EnumerationProperty | aorsml:BeliefAttribute">
+          select="aorsl:Attribute | aorsl:ReferenceProperty | aorsl:ComplexDataProperty | aorsl:EnumerationProperty | aorsl:BeliefAttribute">
 
           <xsl:choose>
             <xsl:when test="@upperMultiplicity eq 'unbounded'">
@@ -141,12 +141,12 @@
 
           </xsl:choose>
         </xsl:for-each>
-        <xsl:apply-templates select="//aorsml:DataTypes/aorsml:ComplexDataType[@name = current()/@superType]"
+        <xsl:apply-templates select="//aorsl:DataTypes/aorsl:ComplexDataType[@name = current()/@superType]"
           mode="createComplexDataTypes.createComplexDataType.constructors.allAttributes"/>
       </xsl:when>
       <xsl:otherwise>
         <xsl:for-each
-          select="aorsml:Attribute | aorsml:ReferenceProperty | aorsml:ComplexDataProperty | aorsml:EnumerationProperty | aorsml:BeliefAttribute">
+          select="aorsl:Attribute | aorsl:ReferenceProperty | aorsl:ComplexDataProperty | aorsl:EnumerationProperty | aorsl:BeliefAttribute">
 
           <xsl:choose>
             <xsl:when test="@upperMultiplicity eq 'unbounded'">

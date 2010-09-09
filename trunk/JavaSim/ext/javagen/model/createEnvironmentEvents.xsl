@@ -11,7 +11,7 @@
         @last changed by $Author$
 -->
 
-<xsl:stylesheet version="2.0" xmlns:aorsml="http://aor-simulation.org" xmlns:fn="http://www.w3.org/2005/xpath-functions" xmlns:java="http://www.sun.com/java"
+<xsl:stylesheet version="2.0" xmlns:aorsl="http://aor-simulation.org" xmlns:fn="http://www.w3.org/2005/xpath-functions" xmlns:java="http://www.sun.com/java"
   xmlns:xs="http://www.w3.org/2001/XMLSchema" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:xsl="http://www.w3.org/1999/XSL/Transform"
   xsi:schemaLocation="http://aor-simulation.org aorsml.xsd">
 
@@ -30,7 +30,7 @@
 
   <!-- caused events -->
   <xsl:template name="createCausedEvents">
-    <xsl:apply-templates select="aorsml:SimulationScenario/aorsml:SimulationModel/aorsml:EntityTypes/aorsml:CausedEventType[@name != $core.class.stopSimulationEvent.alias]"
+    <xsl:apply-templates select="aorsl:SimulationScenario/aorsl:SimulationModel/aorsl:EntityTypes/aorsl:CausedEventType[@name != $core.class.stopSimulationEvent.alias]"
       mode="createCausedEvents.createEvents">
       <xsl:with-param name="indent" select="0"/>
     </xsl:apply-templates>
@@ -38,7 +38,7 @@
 
   <!-- perceptionEvents -->
   <xsl:template name="createPerceptionEvents">
-    <xsl:apply-templates select="aorsml:SimulationScenario/aorsml:SimulationModel/aorsml:EntityTypes/aorsml:PerceptionEventType"
+    <xsl:apply-templates select="aorsl:SimulationScenario/aorsl:SimulationModel/aorsl:EntityTypes/aorsl:PerceptionEventType"
       mode="createPerceptionEvents.createEvents">
       <xsl:with-param name="indent" select="0"/>
     </xsl:apply-templates>
@@ -46,7 +46,7 @@
 
   <!-- exogeneous events -->
   <xsl:template name="createExogenousEvents">
-    <xsl:apply-templates select="aorsml:SimulationScenario/aorsml:SimulationModel/aorsml:EntityTypes/aorsml:ExogenousEventType"
+    <xsl:apply-templates select="aorsl:SimulationScenario/aorsl:SimulationModel/aorsl:EntityTypes/aorsl:ExogenousEventType"
       mode="createExogenousEvents.createEvents">
       <xsl:with-param name="indent" select="0"/>
     </xsl:apply-templates>
@@ -54,7 +54,7 @@
 
   <!-- action events -->
   <xsl:template name="createActionEvents">
-    <xsl:apply-templates select="aorsml:SimulationScenario/aorsml:SimulationModel/aorsml:EntityTypes/aorsml:ActionEventType"
+    <xsl:apply-templates select="aorsl:SimulationScenario/aorsl:SimulationModel/aorsl:EntityTypes/aorsl:ActionEventType"
       mode="createActionEvent.createActionEvent">
       <xsl:with-param name="indent" select="0"/>
     </xsl:apply-templates>
