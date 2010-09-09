@@ -166,7 +166,7 @@ public class InputFieldSlider extends JPanel implements ChangeListener {
 	public void stateChanged(ChangeEvent e) {
 		JSlider source = (JSlider) e.getSource();
 		if (!source.getValueIsAdjusting()) {
-			int fps = (int) source.getValue();
+			int fps = source.getValue();
 
 			switch (inputFieldSliderType) {
 			case Long: {
