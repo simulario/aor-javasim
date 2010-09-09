@@ -10,16 +10,16 @@
   @last changed by $Author$
 -->
 
-<xsl:stylesheet version="2.0" xmlns:aorsml="http://aor-simulation.org" xmlns:fn="http://www.w3.org/2005/xpath-functions"
+<xsl:stylesheet version="2.0" xmlns:aorsl="http://aor-simulation.org" xmlns:fn="http://www.w3.org/2005/xpath-functions"
   xmlns:java="http://www.sun.com/java" xmlns:xs="http://www.w3.org/2001/XMLSchema" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
   xmlns:xsl="http://www.w3.org/1999/XSL/Transform" xsi:schemaLocation="http://aor-simulation.org aorsml.xsd"
   xmlns:jw="http://www.informatik.tu-cottbus.de/~jwerner/">
 
   <!--creates enumeration-class-->
-  <xsl:template match="aorsml:Enumeration " mode="createEnumerations.createEnumeration">
+  <xsl:template match="aorsl:Enumeration " mode="createEnumerations.createEnumeration">
     <xsl:param name="indent" select="0" as="xs:integer"/>
 
-    <xsl:call-template name="aorsml:classFile">
+    <xsl:call-template name="aorsl:classFile">
       <xsl:with-param name="path" select="$sim.path.model.dataTypes"/>
       <xsl:with-param name="name" select="@name"/>
 
@@ -32,7 +32,7 @@
         <xsl:call-template name="java:enum">
           <xsl:with-param name="indent" select="$indent"/>
           <xsl:with-param name="name" select="@name"/>
-          <xsl:with-param name="enumerationLiteral" as="xs:string*" select="aorsml:EnumerationLiteral"/>
+          <xsl:with-param name="enumerationLiteral" as="xs:string*" select="aorsl:EnumerationLiteral"/>
         </xsl:call-template>
       </xsl:with-param>
     </xsl:call-template>

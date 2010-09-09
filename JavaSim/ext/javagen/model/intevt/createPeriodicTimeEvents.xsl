@@ -10,12 +10,12 @@
         @last changed by $Author$
 -->
 
-<xsl:transform version="2.0" xmlns:aorsml="http://aor-simulation.org" xmlns:fn="http://www.w3.org/2005/xpath-functions"
+<xsl:transform version="2.0" xmlns:aorsl="http://aor-simulation.org" xmlns:fn="http://www.w3.org/2005/xpath-functions"
   xmlns:java="http://www.sun.com/java" xmlns:xs="http://www.w3.org/2001/XMLSchema" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
   xmlns:xsl="http://www.w3.org/1999/XSL/Transform" xsi:schemaLocation="http://aor-simulation.org aorsml.xsd"
   xmlns:jw="http://www.informatik.tu-cottbus.de/~jwerner/">
 
-  <xsl:template match="aorsml:PeriodicTimeEventType" mode="createPeriodicTimeEvents.createPeriodicTimeEvent">
+  <xsl:template match="aorsl:PeriodicTimeEventType" mode="createPeriodicTimeEvents.createPeriodicTimeEvent">
     <xsl:param name="indent" required="yes" as="xs:integer"/>
 
     <xsl:call-template name="java:class">
@@ -25,7 +25,7 @@
       <xsl:with-param name="extends" select="if (fn:exists(@superType)) then @superType else $core.class.periodicTimeEvent"/>
       <xsl:with-param name="content">
 
-        <xsl:apply-templates select="aorsml:Attribute" mode="assistents.classVariable">
+        <xsl:apply-templates select="aorsl:Attribute" mode="assistents.classVariable">
           <xsl:with-param name="indent" select="$indent + 1"/>
         </xsl:apply-templates>
         <xsl:call-template name="java:newLine"/>
@@ -46,17 +46,17 @@
         </xsl:apply-templates>
 
         <!-- setter -->
-        <xsl:apply-templates select="aorsml:Attribute" mode="assistents.setVariableMethod">
+        <xsl:apply-templates select="aorsl:Attribute" mode="assistents.setVariableMethod">
           <xsl:with-param name="indent" select="$indent + 1"/>
         </xsl:apply-templates>
 
         <!-- getter -->
-        <xsl:apply-templates select="aorsml:Attribute" mode="assistents.getVariableMethod">
+        <xsl:apply-templates select="aorsl:Attribute" mode="assistents.getVariableMethod">
           <xsl:with-param name="indent" select="$indent + 1"/>
         </xsl:apply-templates>
 
         <!-- functions -->
-        <xsl:apply-templates select="aorsml:Function" mode="shared.createFunction">
+        <xsl:apply-templates select="aorsl:Function" mode="shared.createFunction">
           <xsl:with-param name="indent" select="$indent + 1"/>
         </xsl:apply-templates>
 
@@ -67,7 +67,7 @@
 
   <!-- constructors -->
   <!-- creates constructor -->
-  <xsl:template match="aorsml:PeriodicTimeEventType" mode="createPeriodicTimeEvents.constructor">
+  <xsl:template match="aorsl:PeriodicTimeEventType" mode="createPeriodicTimeEvents.constructor">
     <xsl:param name="indent" required="yes"/>
 
     <!-- empty constructor -->
@@ -108,7 +108,7 @@
   <!--**************-->
 
   <!-- periodicity() -->
-  <xsl:template match="aorsml:PeriodicTimeEventType" mode="createPeriodicTimeEvents.method.periodicity">
+  <xsl:template match="aorsl:PeriodicTimeEventType" mode="createPeriodicTimeEvents.method.periodicity">
     <xsl:param name="indent" required="yes"/>
 
     <xsl:call-template name="java:method">
@@ -130,7 +130,7 @@
   </xsl:template>
 
   <!-- stopCondition() -->
-  <xsl:template match="aorsml:PeriodicTimeEventType" mode="createPeriodicTimeEvents.method.stopCondition">
+  <xsl:template match="aorsl:PeriodicTimeEventType" mode="createPeriodicTimeEvents.method.stopCondition">
     <xsl:param name="indent" required="yes"/>
 
     <xsl:call-template name="java:method">
@@ -144,8 +144,8 @@
           <xsl:with-param name="indent" select="$indent + 1"/>
           <xsl:with-param name="value">
             <xsl:choose>
-              <xsl:when test="fn:exists(aorsml:StopCondition[@language = $output.language])">
-                <xsl:value-of select="aorsml:StopCondition[@language = $output.language][1]"/>
+              <xsl:when test="fn:exists(aorsl:StopCondition[@language = $output.language])">
+                <xsl:value-of select="aorsl:StopCondition[@language = $output.language][1]"/>
               </xsl:when>
               <xsl:otherwise>
                 <xsl:value-of select="'false'"/>

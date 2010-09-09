@@ -11,7 +11,7 @@
         @last changed by $Author$
 -->
 
-<xsl:stylesheet version="2.0" xmlns:aorsml="http://aor-simulation.org" xmlns:fn="http://www.w3.org/2005/xpath-functions"
+<xsl:stylesheet version="2.0" xmlns:aorsl="http://aor-simulation.org" xmlns:fn="http://www.w3.org/2005/xpath-functions"
   xmlns:java="http://www.sun.com/java" xmlns:xs="http://www.w3.org/2001/XMLSchema" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
   xmlns:xsl="http://www.w3.org/1999/XSL/Transform" xsi:schemaLocation="http://aor-simulation.org aorsml.xsd"
   xmlns:jw="http://www.informatik.tu-cottbus.de/~jwerner/">
@@ -20,15 +20,15 @@
   <!--class-->
   <!--*****-->
   <xsl:template name="createStatistic">
-    <xsl:apply-templates select="aorsml:SimulationScenario/aorsml:SimulationModel/aorsml:Statistics" mode="createStatistics.createStatistics">
+    <xsl:apply-templates select="aorsl:SimulationScenario/aorsl:SimulationModel/aorsl:Statistics" mode="createStatistics.createStatistics">
       <xsl:with-param name="indent" select="0"/>
     </xsl:apply-templates>
   </xsl:template>
 
-  <xsl:template match="aorsml:Statistics" mode="createStatistics.createStatistics">
+  <xsl:template match="aorsl:Statistics" mode="createStatistics.createStatistics">
     <xsl:param name="indent" required="yes" as="xs:integer"/>
 
-    <xsl:call-template name="aorsml:classFile">
+    <xsl:call-template name="aorsl:classFile">
       <xsl:with-param name="path" select="$sim.path.controller"/>
       <xsl:with-param name="name" select="$sim.class.simStatistics"/>
 
@@ -40,8 +40,8 @@
             <xsl:value-of select="$core.package.object"/>
             <xsl:value-of select="'java.util.List'"/>
             <xsl:if
-              test="aorsml:Variable/aorsml:Source/aorsml:*/@objectType | 
-                    aorsml:Variable/aorsml:Source/aorsml:*/@resourceObjectType">
+              test="aorsl:Variable/aorsl:Source/aorsl:*/@objectType | 
+                    aorsl:Variable/aorsl:Source/aorsl:*/@resourceObjectType">
               <xsl:value-of select="fn:concat($sim.package.model.envsimulator, '.*')"/>
             </xsl:if>
           </xsl:with-param>
@@ -54,12 +54,12 @@
           <xsl:with-param name="extends" select="$core.class.generalStatistics"/>
           <xsl:with-param name="content">
 
-            <xsl:apply-templates select="aorsml:Variable" mode="createStatistics.setPublicVariables">
+            <xsl:apply-templates select="aorsl:Variable" mode="createStatistics.setPublicVariables">
               <xsl:with-param name="indent" select="$indent + 1"/>
             </xsl:apply-templates>
 
             <!-- statistic variable classes -->
-            <xsl:apply-templates select="aorsml:Variable" mode="createStatistics.createVariableClasses">
+            <xsl:apply-templates select="aorsl:Variable" mode="createStatistics.createVariableClasses">
               <xsl:with-param name="indent" select="$indent + 1"/>
             </xsl:apply-templates>
 
@@ -69,7 +69,7 @@
     </xsl:call-template>
   </xsl:template>
 
-  <xsl:template match="aorsml:Variable" mode="createStatistics.setPublicVariables">
+  <xsl:template match="aorsl:Variable" mode="createStatistics.setPublicVariables">
     <xsl:param name="indent" required="yes" as="xs:integer"/>
 
     <xsl:call-template name="java:variable">
@@ -84,7 +84,7 @@
 
   <!-- create the classes -->
   <!-- we have to create one class for every variable -->
-  <xsl:template match="aorsml:Variable" mode="createStatistics.createVariableClasses">
+  <xsl:template match="aorsl:Variable" mode="createStatistics.createVariableClasses">
     <xsl:param name="indent" required="yes" as="xs:integer"/>
 
     <xsl:variable name="className" select="fn:concat($sim.class.simStatistics.Variable, jw:upperWord(@name))"/>
@@ -95,16 +95,16 @@
       <xsl:with-param name="name" select="$className"/>
       <xsl:with-param name="extends">
         <xsl:choose>
-          <xsl:when test="aorsml:Source/aorsml:ResourceUtilization">
+          <xsl:when test="aorsl:Source/aorsl:ResourceUtilization">
             <xsl:value-of select="$core.class.abstractResourceUtilizationStatisticVariable"/>
           </xsl:when>
-          <xsl:when test="aorsml:Source/aorsml:ObjectTypeExtensionSize">
+          <xsl:when test="aorsl:Source/aorsl:ObjectTypeExtensionSize">
             <xsl:value-of select="$core.class.abstractObjectTypeExtensionSizeStatisticVariable"/>
           </xsl:when>
-          <xsl:when test="aorsml:Source/aorsml:ObjectProperty">
+          <xsl:when test="aorsl:Source/aorsl:ObjectProperty">
             <xsl:value-of select="$core.class.abstractObjectPropertyStatisticVariable"/>
           </xsl:when>
-          <xsl:when test="aorsml:Source/aorsml:StatisticsVariable">
+          <xsl:when test="aorsl:Source/aorsl:StatisticsVariable">
             <xsl:value-of select="$core.class.abstractStatisticsVariableStatisticsVariable"/>
           </xsl:when>
           <xsl:otherwise>
@@ -134,13 +134,13 @@
   </xsl:template>
 
   <!-- constructor -->
-  <xsl:template match="aorsml:Variable" mode="createStatistics.createVariableClasses.constructor">
+  <xsl:template match="aorsl:Variable" mode="createStatistics.createVariableClasses.constructor">
     <xsl:param name="indent" required="yes" as="xs:integer"/>
     <xsl:param name="className" required="yes" as="xs:string"/>
 
     <xsl:choose>
-      <xsl:when test="aorsml:Source[not(aorsml:ValueExpr)]">
-        <xsl:apply-templates select="aorsml:Source" mode="createStatistics.createVariableClasses.constructor.source">
+      <xsl:when test="aorsl:Source[not(aorsl:ValueExpr)]">
+        <xsl:apply-templates select="aorsl:Source" mode="createStatistics.createVariableClasses.constructor.source">
           <xsl:with-param name="indent" select="$indent"/>
           <xsl:with-param name="className" select="$className" tunnel="yes"/>
         </xsl:apply-templates>
@@ -174,29 +174,29 @@
 
   </xsl:template>
 
-  <xsl:template match="aorsml:Source" mode="createStatistics.createVariableClasses.constructor.source">
+  <xsl:template match="aorsl:Source" mode="createStatistics.createVariableClasses.constructor.source">
     <xsl:param name="indent" as="xs:integer" required="yes"/>
 
     <xsl:apply-templates
-      select="aorsml:ObjectProperty[not(@objectIdRef)] | aorsml:ObjectTypeExtensionSize | 
-      aorsml:ResourceUtilization[not(@resourceObjectIdRef)]"
+      select="aorsl:ObjectProperty[not(@objectIdRef)] | aorsl:ObjectTypeExtensionSize | 
+      aorsl:ResourceUtilization[not(@resourceObjectIdRef)]"
       mode="createStatistics.createVariableClasses.constructor.source.objList">
       <xsl:with-param name="indent" select="$indent"/>
     </xsl:apply-templates>
 
-    <xsl:apply-templates select="aorsml:ObjectProperty[@objectIdRef] | 
-      aorsml:ResourceUtilization[@resourceObjectIdRef]"
+    <xsl:apply-templates select="aorsl:ObjectProperty[@objectIdRef] | 
+      aorsl:ResourceUtilization[@resourceObjectIdRef]"
       mode="createStatistics.createVariableClasses.constructor.source.objRef">
       <xsl:with-param name="indent" select="$indent"/>
     </xsl:apply-templates>
 
-    <xsl:apply-templates select="aorsml:GlobalVariable | aorsml:StatisticsVariable" mode="createStatistics.createVariableClasses.constructor.source">
+    <xsl:apply-templates select="aorsl:GlobalVariable | aorsl:StatisticsVariable" mode="createStatistics.createVariableClasses.constructor.source">
       <xsl:with-param name="indent" select="$indent"/>
     </xsl:apply-templates>
 
   </xsl:template>
 
-  <xsl:template match="aorsml:GlobalVariable | aorsml:StatisticsVariable" mode="createStatistics.createVariableClasses.constructor.source">
+  <xsl:template match="aorsl:GlobalVariable | aorsl:StatisticsVariable" mode="createStatistics.createVariableClasses.constructor.source">
     <xsl:param name="indent" as="xs:integer" required="yes"/>
     <xsl:param name="className" as="xs:string" required="yes" tunnel="yes"/>
 
@@ -224,7 +224,7 @@
   </xsl:template>
 
   <!-- constructor for a single object reference -->
-  <xsl:template match="aorsml:ObjectProperty | aorsml:ResourceUtilization" mode="createStatistics.createVariableClasses.constructor.source.objRef">
+  <xsl:template match="aorsl:ObjectProperty | aorsl:ResourceUtilization" mode="createStatistics.createVariableClasses.constructor.source.objRef">
     <xsl:param name="indent" as="xs:integer" required="yes"/>
     <xsl:param name="className" as="xs:string" required="yes" tunnel="yes"/>
 
@@ -256,8 +256,8 @@
   </xsl:template>
 
   <!-- constructor for an object list -->
-  <xsl:template match="aorsml:ObjectProperty | aorsml:ObjectTypeExtensionSize | 
-    aorsml:ResourceUtilization"
+  <xsl:template match="aorsl:ObjectProperty | aorsl:ObjectTypeExtensionSize | 
+    aorsl:ResourceUtilization"
     mode="createStatistics.createVariableClasses.constructor.source.objList">
     <xsl:param name="indent" as="xs:integer" required="yes"/>
     <xsl:param name="className" as="xs:string" required="yes" tunnel="yes"/>
@@ -290,12 +290,12 @@
   </xsl:template>
 
   <!-- create the gettermethod; returnvalue is depends the current valueType; -->
-  <xsl:template match="aorsml:Variable" mode="createStatistics.createVariableClasses.method.getter">
+  <xsl:template match="aorsl:Variable" mode="createStatistics.createVariableClasses.method.getter">
     <xsl:param name="indent" required="yes" as="xs:integer"/>
 
     <xsl:choose>
-      <xsl:when test="aorsml:Source">
-        <xsl:apply-templates select="aorsml:Source" mode="createStatistics.createVariableClasses.method.getter">
+      <xsl:when test="aorsl:Source">
+        <xsl:apply-templates select="aorsl:Source" mode="createStatistics.createVariableClasses.method.getter">
           <xsl:with-param name="indent" select="$indent"/>
         </xsl:apply-templates>
       </xsl:when>
@@ -311,7 +311,7 @@
               <xsl:with-param name="indent" select="$indent + 1"/>
               <xsl:with-param name="value">
                 <xsl:choose>
-                  <xsl:when test="aorsml:Source/aorsml:ObjectProperty[not(@objectIdRef)]">
+                  <xsl:when test="aorsl:Source/aorsl:ObjectProperty[not(@objectIdRef)]">
                     <xsl:value-of select="'null'"/>
                   </xsl:when>
                   <xsl:otherwise>
@@ -333,16 +333,16 @@
 
   </xsl:template>
 
-  <xsl:template match="aorsml:Source" mode="createStatistics.createVariableClasses.method.getter">
+  <xsl:template match="aorsl:Source" mode="createStatistics.createVariableClasses.method.getter">
     <xsl:param name="indent" as="xs:integer" required="yes"/>
 
-    <xsl:apply-templates select="aorsml:*" mode="createStatistics.createVariableClasses.method.getter.value">
+    <xsl:apply-templates select="aorsl:*" mode="createStatistics.createVariableClasses.method.getter.value">
       <xsl:with-param name="indent" select="$indent"/>
     </xsl:apply-templates>
 
   </xsl:template>
 
-  <xsl:template match="aorsml:GlobalVariable" mode="createStatistics.createVariableClasses.method.getter.value">
+  <xsl:template match="aorsl:GlobalVariable" mode="createStatistics.createVariableClasses.method.getter.value">
     <xsl:param name="indent" as="xs:integer" required="yes"/>
 
     <xsl:call-template name="java:method">
@@ -371,7 +371,7 @@
 
   </xsl:template>
 
-  <xsl:template match="aorsml:StatisticsVariable" mode="createStatistics.createVariableClasses.method.getter.value">
+  <xsl:template match="aorsl:StatisticsVariable" mode="createStatistics.createVariableClasses.method.getter.value">
     <xsl:param name="indent" as="xs:integer" required="yes"/>
 
     <xsl:call-template name="java:method">
@@ -406,7 +406,7 @@
   </xsl:template>
 
 
-  <xsl:template match="aorsml:ObjectProperty" mode="createStatistics.createVariableClasses.method.getter.value">
+  <xsl:template match="aorsl:ObjectProperty" mode="createStatistics.createVariableClasses.method.getter.value">
     <xsl:param name="indent" as="xs:integer" required="yes"/>
 
     <xsl:call-template name="java:method">
@@ -531,7 +531,7 @@
 
   </xsl:template>
 
-  <xsl:template match="aorsml:ObjectTypeExtensionSize" mode="createStatistics.createVariableClasses.method.getter.value">
+  <xsl:template match="aorsl:ObjectTypeExtensionSize" mode="createStatistics.createVariableClasses.method.getter.value">
     <xsl:param name="indent" as="xs:integer" required="yes"/>
 
     <!-- empty -->
@@ -539,7 +539,7 @@
 
   </xsl:template>
 
-  <xsl:template match="aorsml:ResourceUtilization" mode="createStatistics.createVariableClasses.method.getter.value">
+  <xsl:template match="aorsl:ResourceUtilization" mode="createStatistics.createVariableClasses.method.getter.value">
     <xsl:param name="indent" as="xs:integer" required="yes"/>
 
     <xsl:variable name="currentStepVar" select="'currentStep'"/>
@@ -677,10 +677,10 @@
 
   </xsl:template>
 
-  <xsl:template match="aorsml:ValueExpr" mode="createStatistics.createVariableClasses.method.getter.value">
+  <xsl:template match="aorsl:ValueExpr" mode="createStatistics.createVariableClasses.method.getter.value">
     <xsl:param name="indent" as="xs:integer" required="yes"/>
 
-    <xsl:if test="not(preceding-sibling::aorsml:ValueExpr)">
+    <xsl:if test="not(preceding-sibling::aorsl:ValueExpr)">
 
       <xsl:call-template name="java:method">
         <xsl:with-param name="indent" select="$indent"/>
@@ -709,7 +709,7 @@
   </xsl:template>
 
   <!-- for expression -->
-  <xsl:template match="aorsml:Variable" mode="createStatistics.createVariableClasses.method.expression">
+  <xsl:template match="aorsl:Variable" mode="createStatistics.createVariableClasses.method.expression">
     <xsl:param name="indent" required="yes" as="xs:integer"/>
 
     <xsl:call-template name="java:method">
@@ -718,7 +718,7 @@
       <xsl:with-param name="name" select="'computeVar'"/>
       <xsl:with-param name="content">
 
-        <xsl:if test="fn:exists(aorsml:Source/aorsml:ValueExpr[@language = $output.language])">
+        <xsl:if test="fn:exists(aorsl:Source/aorsl:ValueExpr[@language = $output.language])">
           <xsl:call-template name="java:variable">
             <xsl:with-param name="indent" select="$indent + 1"/>
             <xsl:with-param name="name">
@@ -727,7 +727,7 @@
               </xsl:call-template>
             </xsl:with-param>
             <xsl:with-param name="value">
-              <xsl:value-of select="fn:normalize-space(aorsml:Source/aorsml:ValueExpr[@language eq $output.language][1])"/>
+              <xsl:value-of select="fn:normalize-space(aorsl:Source/aorsl:ValueExpr[@language eq $output.language][1])"/>
             </xsl:with-param>
           </xsl:call-template>
         </xsl:if>
@@ -741,7 +741,7 @@
   <!-- ++++++++++++++++++++++++++++++++++++++++++++++ -->
   <!--              PropertyIterator                  -->
   <!-- ++++++++++++++++++++++++++++++++++++++++++++++ -->
-  <xsl:template match="aorsml:ObjectProperty" mode="createStatistics.createVariableClasses.createPropertyIterator">
+  <xsl:template match="aorsl:ObjectProperty" mode="createStatistics.createVariableClasses.createPropertyIterator">
     <xsl:param name="indent" required="yes" as="xs:integer"/>
 
     <xsl:call-template name="java:class">
@@ -771,7 +771,7 @@
     <xsl:call-template name="java:newLine"/>
   </xsl:template>
 
-  <xsl:template match="aorsml:ObjectProperty" mode="createStatistics.createVariableClasses.createPropertyIterator.constructor">
+  <xsl:template match="aorsl:ObjectProperty" mode="createStatistics.createVariableClasses.createPropertyIterator.constructor">
     <xsl:param name="indent" as="xs:integer" required="yes"/>
 
     <xsl:call-template name="java:constructor">
@@ -816,7 +816,7 @@
 
   </xsl:template>
 
-  <xsl:template match="aorsml:ObjectProperty" mode="createStatistics.createVariableClasses.createPropertyIterator.method.hasNext">
+  <xsl:template match="aorsl:ObjectProperty" mode="createStatistics.createVariableClasses.createPropertyIterator.method.hasNext">
     <xsl:param name="indent" as="xs:integer" required="yes"/>
 
     <xsl:call-template name="java:method">
@@ -858,7 +858,7 @@
 
   </xsl:template>
 
-  <xsl:template match="aorsml:ObjectProperty" mode="createStatistics.createVariableClasses.createPropertyIterator.method.next">
+  <xsl:template match="aorsl:ObjectProperty" mode="createStatistics.createVariableClasses.createPropertyIterator.method.next">
     <xsl:param name="indent" as="xs:integer" required="yes"/>
 
     <xsl:call-template name="java:method">
@@ -956,7 +956,7 @@
   <!-- ++++++++++++++++++++++++++++++++++++++++++++++ -->
   <!--       PropertyWithObjektIDRefIterator          -->
   <!-- ++++++++++++++++++++++++++++++++++++++++++++++ -->
-  <xsl:template match="aorsml:ObjectProperty" mode="createStatistics.createVariableClasses.createPropertyWithObjektIDRefIterator">
+  <xsl:template match="aorsl:ObjectProperty" mode="createStatistics.createVariableClasses.createPropertyWithObjektIDRefIterator">
     <xsl:param name="indent" required="yes" as="xs:integer"/>
 
     <xsl:call-template name="java:class">
@@ -986,7 +986,7 @@
     <xsl:call-template name="java:newLine"/>
   </xsl:template>
 
-  <xsl:template match="aorsml:ObjectProperty" mode="createStatistics.createVariableClasses.createPropertyWithObjektIDRefIterator.constructor">
+  <xsl:template match="aorsl:ObjectProperty" mode="createStatistics.createVariableClasses.createPropertyWithObjektIDRefIterator.constructor">
     <xsl:param name="indent" as="xs:integer" required="yes"/>
 
     <xsl:call-template name="java:constructor">
@@ -1032,7 +1032,7 @@
   </xsl:template>
 
   <!-- same as createStatistics.createVariableClasses.createPropertyIterator.method.hasNext -->
-  <xsl:template match="aorsml:ObjectProperty" mode="createStatistics.createVariableClasses.createPropertyWithObjektIDRefIterator.method.hasNext">
+  <xsl:template match="aorsl:ObjectProperty" mode="createStatistics.createVariableClasses.createPropertyWithObjektIDRefIterator.method.hasNext">
     <xsl:param name="indent" as="xs:integer" required="yes"/>
 
     <xsl:call-template name="java:method">
@@ -1074,7 +1074,7 @@
 
   </xsl:template>
 
-  <xsl:template match="aorsml:ObjectProperty" mode="createStatistics.createVariableClasses.createPropertyWithObjektIDRefIterator.method.next">
+  <xsl:template match="aorsl:ObjectProperty" mode="createStatistics.createVariableClasses.createPropertyWithObjektIDRefIterator.method.next">
     <xsl:param name="indent" as="xs:integer" required="yes"/>
 
     <xsl:call-template name="java:method">

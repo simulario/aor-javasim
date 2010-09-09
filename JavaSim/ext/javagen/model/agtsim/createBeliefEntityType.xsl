@@ -11,13 +11,13 @@
       @last changed by $Author$
 -->
 
-<xsl:transform version="2.0" xmlns:aorsml="http://aor-simulation.org" xmlns:fn="http://www.w3.org/2005/xpath-functions"
+<xsl:transform version="2.0" xmlns:aorsl="http://aor-simulation.org" xmlns:fn="http://www.w3.org/2005/xpath-functions"
   xmlns:java="http://www.sun.com/java" xmlns:xs="http://www.w3.org/2001/XMLSchema" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
   xmlns:xsl="http://www.w3.org/1999/XSL/Transform" xsi:schemaLocation="http://aor-simulation.org aorsml.xsd"
   xmlns:jw="http://www.informatik.tu-cottbus.de/~jwerner/">
 
   <!--creates class-->
-  <xsl:template match="aorsml:BeliefEntityType" mode="createBeliefEntityTypes.createBeliefEntityType">
+  <xsl:template match="aorsl:BeliefEntityType" mode="createBeliefEntityTypes.createBeliefEntityType">
     <xsl:param name="indent" required="yes" as="xs:integer"/>
 
     <xsl:call-template name="java:class">
@@ -27,8 +27,8 @@
       <xsl:with-param name="extends" select="$core.class.entity"/>
       <xsl:with-param name="content">
 
-        <!-- classVariables (from aorsml:BeliefAttribute and aorsml:BeliefReferenceProperty) -->
-        <xsl:apply-templates select="aorsml:BeliefAttribute | aorsml:BeliefReferenceProperty" mode="assistents.classVariable">
+        <!-- classVariables (from aorsl:BeliefAttribute and aorsl:BeliefReferenceProperty) -->
+        <xsl:apply-templates select="aorsl:BeliefAttribute | aorsl:BeliefReferenceProperty" mode="assistents.classVariable">
           <xsl:with-param name="indent" select="$indent + 1"/>
         </xsl:apply-templates>
         <xsl:call-template name="java:newLine"/>
@@ -40,7 +40,7 @@
         <xsl:call-template name="java:newLine"/>
 
         <!-- setters -->
-        <xsl:for-each select="aorsml:BeliefAttribute | aorsml:BeliefReferenceProperty">
+        <xsl:for-each select="aorsl:BeliefAttribute | aorsl:BeliefReferenceProperty">
           <xsl:apply-templates select="." mode="assistents.setVariableMethod">
             <xsl:with-param name="indent" select="$indent + 1"/>
             <xsl:with-param name="changeCheck" select="true()"/>
@@ -48,7 +48,7 @@
         </xsl:for-each>
 
         <!-- getters -->
-        <xsl:apply-templates select="aorsml:BeliefAttribute | aorsml:BeliefReferenceProperty" mode="assistents.getVariableMethod">
+        <xsl:apply-templates select="aorsl:BeliefAttribute | aorsl:BeliefReferenceProperty" mode="assistents.getVariableMethod">
           <xsl:with-param name="indent" select="$indent + 1"/>
         </xsl:apply-templates>
 
@@ -57,7 +57,7 @@
   </xsl:template>
 
   <!-- creates constructors -->
-  <xsl:template match="aorsml:BeliefEntityType" mode="createBeliefEntityTypes.constructor">
+  <xsl:template match="aorsl:BeliefEntityType" mode="createBeliefEntityTypes.constructor">
     <xsl:param name="indent" required="yes"/>
     
     <!-- create constructor only with ID parameter -->
@@ -104,7 +104,7 @@
         <xsl:call-template name="java:newLine"/>
 
         <!-- set all attributvalues from constructor -->
-        <xsl:for-each select="aorsml:BeliefAttribute | aorsml:BeliefReferenceProperty">
+        <xsl:for-each select="aorsl:BeliefAttribute | aorsl:BeliefReferenceProperty">
 
           <xsl:call-template name="java:callSetterMethod">
             <xsl:with-param name="indent" select="$indent + 1"/>

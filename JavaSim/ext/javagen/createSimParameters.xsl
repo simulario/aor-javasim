@@ -11,7 +11,7 @@
         @last changed by $Author$
 -->
 
-<xsl:stylesheet version="2.0" xmlns:aorsml="http://aor-simulation.org"
+<xsl:stylesheet version="2.0" xmlns:aorsl="http://aor-simulation.org"
   xmlns:fn="http://www.w3.org/2005/xpath-functions" xmlns:java="http://www.sun.com/java"
   xmlns:xs="http://www.w3.org/2001/XMLSchema" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
   xmlns:xsl="http://www.w3.org/1999/XSL/Transform"
@@ -22,17 +22,17 @@
   <!--class-->
   <!--*****-->
   <xsl:template name="createSimulationParameter">
-    <xsl:apply-templates select="aorsml:SimulationScenario"
+    <xsl:apply-templates select="aorsl:SimulationScenario"
       mode="createSimulationParameter.createSimulationParameter">
       <xsl:with-param name="indent" select="0"/>
     </xsl:apply-templates>
   </xsl:template>
 
-  <xsl:template match="aorsml:SimulationScenario"
+  <xsl:template match="aorsl:SimulationScenario"
     mode="createSimulationParameter.createSimulationParameter">
     <xsl:param name="indent" required="yes" as="xs:integer"/>
 
-    <xsl:call-template name="aorsml:classFile">
+    <xsl:call-template name="aorsl:classFile">
       <xsl:with-param name="path" select="$sim.path.controller"/>
       <xsl:with-param name="name" select="$sim.class.simParams"/>
 
@@ -54,12 +54,12 @@
           <xsl:with-param name="extends" select="$core.class.simulationParameters"/>
           <xsl:with-param name="content">
 
-            <xsl:apply-templates select="aorsml:SimulationParameters"
+            <xsl:apply-templates select="aorsl:SimulationParameters"
               mode="createSimulationParameter.setParameter">
               <xsl:with-param name="indent" select="$indent + 1"/>
             </xsl:apply-templates>
 
-            <xsl:apply-templates select="aorsml:SimulationParameters/aorsml:SimulationParameter"
+            <xsl:apply-templates select="aorsl:SimulationParameters/aorsl:SimulationParameter"
               mode="createSimulationParameter.setParameter">
               <xsl:with-param name="indent" select="$indent + 1"/>
             </xsl:apply-templates>
@@ -71,7 +71,7 @@
   </xsl:template>
 
   <!-- default parameter -->
-  <xsl:template match="aorsml:SimulationParameters" mode="createSimulationParameter.setParameter">
+  <xsl:template match="aorsl:SimulationParameters" mode="createSimulationParameter.setParameter">
     <xsl:param name="indent" required="yes" as="xs:integer"/>
 
     <!-- simulationSteps(required) -->
@@ -182,13 +182,13 @@
     </xsl:call-template>
   </xsl:template>
 
-  <xsl:template match="aorsml:SimPar" mode="createSimulationParameter.setParameter">
+  <xsl:template match="aorsl:SimPar" mode="createSimulationParameter.setParameter">
     <xsl:param name="indent" required="yes" as="xs:integer"/>
 
     <xsl:call-template name="java:newLine"/>
 
     <xsl:variable name="type"
-      select="//aorsml:SimulationModel/aorsml:SimulationParameterDeclaration[@name = current()/@parameter]/@type"/>
+      select="//aorsl:SimulationModel/aorsl:SimulationParameterDeclaration[@name = current()/@parameter]/@type"/>
     <xsl:if test="$type != ''">
       <xsl:call-template name="java:variable">
         <xsl:with-param name="indent" select="$indent"/>

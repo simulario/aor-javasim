@@ -10,7 +10,7 @@
   @last changed by $Author$
 -->
 
-<xsl:stylesheet version="2.0" xmlns:aorsml="http://aor-simulation.org" xmlns:fn="http://www.w3.org/2005/xpath-functions"
+<xsl:stylesheet version="2.0" xmlns:aorsl="http://aor-simulation.org" xmlns:fn="http://www.w3.org/2005/xpath-functions"
   xmlns:java="http://www.sun.com/java" xmlns:xs="http://www.w3.org/2001/XMLSchema" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
   xmlns:xsl="http://www.w3.org/1999/XSL/Transform" xsi:schemaLocation="http://aor-simulation.org aorsml.xsd">
 
@@ -18,9 +18,9 @@
   <xsl:import href="dataTypes/createComplexDataType.xsl"/>
 
   <xsl:template name="createDataTypes">
-    <xsl:apply-templates select="aorsml:SimulationScenario/aorsml:SimulationModel/aorsml:DataTypes/aorsml:Enumeration"
+    <xsl:apply-templates select="aorsl:SimulationScenario/aorsl:SimulationModel/aorsl:DataTypes/aorsl:Enumeration"
       mode="createEnumerations.createEnumeration"/>
-    <xsl:apply-templates select="aorsml:SimulationScenario/aorsml:SimulationModel/aorsml:DataTypes/aorsml:ComplexDataType"
+    <xsl:apply-templates select="aorsl:SimulationScenario/aorsl:SimulationModel/aorsl:DataTypes/aorsl:ComplexDataType"
       mode="createComplexDataTypes.createComplexDataType"/>
   </xsl:template>
 

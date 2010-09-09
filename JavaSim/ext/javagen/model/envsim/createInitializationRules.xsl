@@ -11,12 +11,12 @@
   @last changed by $Author$
 -->
 
-<xsl:stylesheet version="2.0" xmlns:aorsml="http://aor-simulation.org" xmlns:fn="http://www.w3.org/2005/xpath-functions"
+<xsl:stylesheet version="2.0" xmlns:aorsl="http://aor-simulation.org" xmlns:fn="http://www.w3.org/2005/xpath-functions"
   xmlns:java="http://www.sun.com/java" xmlns:xs="http://www.w3.org/2001/XMLSchema" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
   xmlns:xsl="http://www.w3.org/1999/XSL/Transform" xsi:schemaLocation="http://aor-simulation.org aorsml.xsd"
   xmlns:jw="http://www.informatik.tu-cottbus.de/~jwerner/">
 
-  <xsl:template match="aorsml:InitializationRule" mode="createInitializationRule.createInitializationRules">
+  <xsl:template match="aorsl:InitializationRule" mode="createInitializationRule.createInitializationRules">
     <xsl:param name="indent" required="yes" as="xs:integer"/>
 
     <xsl:call-template name="java:class">
@@ -28,7 +28,7 @@
       <xsl:with-param name="content">
 
         <!-- set involved entitys as classvariable -->
-        <xsl:for-each select="aorsml:FOR[@objectVariable]">
+        <xsl:for-each select="aorsl:FOR[@objectVariable]">
 
           <xsl:variable name="objectType">
             <xsl:apply-templates select="." mode="assistents.getVariableType"/>
@@ -44,7 +44,7 @@
         </xsl:for-each>
 
         <!-- set the DataVariableDeclaration as classvaraibles -->
-        <xsl:apply-templates select="aorsml:FOR[@dataVariable]" mode="assistents.setDataVariableDeclarationClassVariables">
+        <xsl:apply-templates select="aorsl:FOR[@dataVariable]" mode="assistents.setDataVariableDeclarationClassVariables">
           <xsl:with-param name="indent" select="$indent"/>
         </xsl:apply-templates>
         <xsl:call-template name="java:newLine"/>
@@ -77,7 +77,7 @@
 
 
   <!-- constructor -->
-  <xsl:template match="aorsml:InitializationRule" mode="createInitializationRule.constructor">
+  <xsl:template match="aorsl:InitializationRule" mode="createInitializationRule.constructor">
     <xsl:param name="indent" required="yes" as="xs:integer"/>
 
     <xsl:call-template name="java:constructor">
@@ -103,7 +103,7 @@
   </xsl:template>
 
   <!-- conditions() -->
-  <xsl:template match="aorsml:InitializationRule" mode="createInitializationRule.method.conditions">
+  <xsl:template match="aorsl:InitializationRule" mode="createInitializationRule.method.conditions">
     <xsl:param name="indent" required="yes"/>
 
     <xsl:call-template name="java:method">
@@ -117,15 +117,15 @@
           <xsl:with-param name="indent" select="$indent + 1"/>
           <xsl:with-param name="value">
             <!-- check if DataVariableDeclarations with refDataTypes isn't null -->
-            <xsl:if test="fn:exists(aorsml:FOR[@dataVariable][@refDataType])">
+            <xsl:if test="fn:exists(aorsl:FOR[@dataVariable][@refDataType])">
               <xsl:value-of select="'('"/>
-              <xsl:apply-templates select="aorsml:FOR[@dataVariable][@refDataType]" mode="assistents.dataVariableDeclarationcheckNull"/>
+              <xsl:apply-templates select="aorsl:FOR[@dataVariable][@refDataType]" mode="assistents.dataVariableDeclarationcheckNull"/>
               <xsl:value-of select="') &amp;&amp; '"/>
             </xsl:if>
             <xsl:choose>
               <xsl:when
-                test="fn:exists(aorsml:IF[@language = $output.language]) and fn:normalize-space(aorsml:IF[@language = $output.language]) != ''">
-                <xsl:value-of select="fn:normalize-space(aorsml:IF[@language = $output.language])"/>
+                test="fn:exists(aorsl:IF[@language = $output.language]) and fn:normalize-space(aorsl:IF[@language = $output.language]) != ''">
+                <xsl:value-of select="fn:normalize-space(aorsl:IF[@language = $output.language])"/>
               </xsl:when>
               <xsl:otherwise>
                 <xsl:value-of select="'true'"/>
@@ -140,13 +140,13 @@
   </xsl:template>
 
   <!-- execute() -->
-  <xsl:template match="aorsml:InitializationRule" mode="createInitializationRule.method.execute">
+  <xsl:template match="aorsl:InitializationRule" mode="createInitializationRule.method.execute">
     <xsl:param name="indent" required="yes"/>
 
     <xsl:call-template name="java:method">
       <xsl:with-param name="indent" select="$indent"/>
       <xsl:with-param name="annotation">
-        <xsl:if test="$suppressWarnings and aorsml:FOR[@objectVariable]/@objectType = 'Collection'">
+        <xsl:if test="$suppressWarnings and aorsl:FOR[@objectVariable]/@objectType = 'Collection'">
           <xsl:call-template name="getAnnotationSuppressWarnings.unchecked"/>
         </xsl:if>
       </xsl:with-param>
@@ -163,7 +163,7 @@
   </xsl:template>
 
   <!-- stateEffects() -->
-  <xsl:template match="aorsml:InitializationRule" mode="createInitializationRule.method.stateEffects">
+  <xsl:template match="aorsl:InitializationRule" mode="createInitializationRule.method.stateEffects">
     <xsl:param name="indent" required="yes"/>
 
     <xsl:call-template name="java:method">
@@ -173,14 +173,14 @@
       <xsl:with-param name="content">
 
         <!-- achieve the order -->
-        <xsl:apply-templates select="aorsml:UpdateObject | aorsml:UpdateGridCell | aorsml:ForEachGridCell"
+        <xsl:apply-templates select="aorsl:UpdateObject | aorsl:UpdateGridCell | aorsl:ForEachGridCell"
           mode="createEnvironmentRules.method.stateEffects.content">
           <xsl:with-param name="indent" select="$indent + 1"/>
           <xsl:with-param name="spaceReservationSystem" select="true()" tunnel="yes"/>
         </xsl:apply-templates>
 
         <!--sets state effects-->
-        <xsl:apply-templates select="aorsml:UpdateObjects" mode="createEnvironmentRules.helper.method.stateEffects">
+        <xsl:apply-templates select="aorsl:UpdateObjects" mode="createEnvironmentRules.helper.method.stateEffects">
           <xsl:with-param name="indent" select="$indent + 1"/>
         </xsl:apply-templates>
 

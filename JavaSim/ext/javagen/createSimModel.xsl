@@ -11,7 +11,7 @@
         @last changed by $Author$
 -->
 
-<xsl:transform version="2.0" xmlns:aorsml="http://aor-simulation.org" xmlns:fn="http://www.w3.org/2005/xpath-functions"
+<xsl:transform version="2.0" xmlns:aorsl="http://aor-simulation.org" xmlns:fn="http://www.w3.org/2005/xpath-functions"
   xmlns:java="http://www.sun.com/java" xmlns:xs="http://www.w3.org/2001/XMLSchema" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
   xmlns:xsl="http://www.w3.org/1999/XSL/Transform" xsi:schemaLocation="http://aor-simulation.org aorsml.xsd"
   xmlns:jw="http://www.informatik.tu-cottbus.de/~jwerner/">
@@ -20,15 +20,15 @@
   <!--class-->
   <!--*****-->
   <xsl:template name="createSimulationModel">
-    <xsl:apply-templates select="aorsml:SimulationScenario/aorsml:SimulationModel" mode="createSimulationModel.createSimulationModel">
+    <xsl:apply-templates select="aorsl:SimulationScenario/aorsl:SimulationModel" mode="createSimulationModel.createSimulationModel">
       <xsl:with-param name="indent" select="0"/>
     </xsl:apply-templates>
   </xsl:template>
 
-  <xsl:template match="aorsml:SimulationModel" mode="createSimulationModel.createSimulationModel">
+  <xsl:template match="aorsl:SimulationModel" mode="createSimulationModel.createSimulationModel">
     <xsl:param name="indent" required="yes" as="xs:integer"/>
 
-    <xsl:call-template name="aorsml:classFile">
+    <xsl:call-template name="aorsl:classFile">
       <xsl:with-param name="path" select="$sim.path.controller"/>
       <xsl:with-param name="name" select="$sim.class.simModel"/>
 
@@ -60,7 +60,7 @@
   </xsl:template>
 
 
-  <xsl:template match="aorsml:SimulationModel" mode="createSimulationModel.setParameter">
+  <xsl:template match="aorsl:SimulationModel" mode="createSimulationModel.setParameter">
     <xsl:param name="indent" required="yes" as="xs:integer"/>
 
     <!-- modelName(required) -->
@@ -185,7 +185,7 @@
   </xsl:template>
 
   <!-- set the modelparameter in the createSimModel() in Simulation.java see createSimSystem.xsl -->
-  <xsl:template match="aorsml:SimulationModel" mode="createSimulationModel.helper.method.createSimModel">
+  <xsl:template match="aorsl:SimulationModel" mode="createSimulationModel.helper.method.createSimModel">
     <xsl:param name="indent" as="xs:integer" required="yes"/>
 
     <xsl:variable name="simModelVarName" select="$sim.class.simModel"/>
