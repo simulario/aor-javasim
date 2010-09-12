@@ -38,12 +38,6 @@ import aors.module.Constants;
 import aors.module.GUIModule;
 import aors.module.Module;
 import aors.util.jar.JarUtil;
-import java.lang.reflect.Constructor;
-import java.lang.reflect.InvocationTargetException;
-import java.net.MalformedURLException;
-import java.util.HashSet;
-import java.util.Map;
-import java.util.Set;
 
 /**
  * This class represents the manager of the simulation.
@@ -164,6 +158,9 @@ public class SimulationManager {
     // get all files from the modules directory
     File[] moduleJars = modulesDir.listFiles();
 
+    // the number of found jar module files
+    int modulesNumber = moduleJars.length;
+
     // access the general modules property file
     Properties generalproperties = new Properties();
     InputStream input;
@@ -185,285 +182,250 @@ public class SimulationManager {
       return;
     }
 
-    List<ValuePair<JarFile, Integer>> modulesToLoad = new ArrayList<ValuePair<JarFile, Integer>>();
+    System.out.println("***** Simulation Manager: processing modules *****");
 
-    System.out.println("********** Manager: Load modules **********");
+    // create the empty modules list
+    this.modules = new ArrayList<Module>();
 
-    // load GUI component of the module
-    for (File moduleJar : moduleJars) {
-
-      // only jar files are considered, ignore all others possible files
-      if (!moduleJar.getName().endsWith(".jar")) {
-        continue;
-      }
-
+    // try to load one by one all found modules in the modules directory
+    for (int i = 0; i < modulesNumber; i++) {
+      // load the module - may fail if something goes wrong...
       try {
-        // new jar file...so, new module
-        JarFile jarFile = new JarFile(moduleJar);
+        String moduleFileName = moduleJars[i].getName();
 
-        // access the properties file from inside this jar
-        JarEntry jarEntry = jarFile.getJarEntry("properties.xml");
-
-        // no property file...then we can't continue loading this module.
-        if (jarEntry == null) {
-          System.out
-              .println("The module: "
-                  + moduleJar.getName()
-                  + " does not "
-                  + "contains a property.xml file! This module can't be loaded! \n");
-
-          // go to the next jar file (new module) if there is one
+        // files without jar extension are ignored
+        if (!moduleFileName.endsWith(".jar")) {
           continue;
         }
 
-        // initially the position is undefined
-        int pos = -1;
+        System.out.println("      Module: " + moduleFileName);
 
-        // try to get the tab position for this module, if there is defined a
-        // position in the general modules property file...
-        if (generalproperties.getProperty(moduleJar.getName()) != null) {
-          pos = Integer.parseInt(generalproperties.getProperty(moduleJar
-              .getName()));
+        // ignore non OS compatible modules
+        if (!this.isCompatibleWithCurrentPlatform(moduleJars[i])) {
+          continue;
         }
 
-        modulesToLoad.add(new ValuePair<JarFile, Integer>(jarFile, pos));
-
-      } catch (IOException e) {
-        e.printStackTrace();
-      }
-    }
-    this.modules = loadModules(modulesToLoad);
-
-    System.out.println("*******************************************");
-  }
-
-  private List<Module> loadModules(
-      List<ValuePair<JarFile, Integer>> modulesToLoad) {
-    Map<String, ValuePair<Module, Integer>> loadedModules = new HashMap<String, ValuePair<Module, Integer>>();
-    Map<String, Set<ValuePair<JarFile, Integer>>> dependingModules = new HashMap<String, Set<ValuePair<JarFile, Integer>>>();
-
-    for (ValuePair<JarFile, Integer> moduleToLoad : modulesToLoad) {
-      try {
-        tryToLoadModule(moduleToLoad, loadedModules, dependingModules);
+        // load the module
+        loadModule(moduleJars[i], generalproperties);
       } catch (IOException e) {
         e.printStackTrace();
       }
     }
 
-    List<Module> returnValue = new ArrayList<Module>();
-    for (ValuePair<Module, Integer> loadedModule : loadedModules.values()) {
-      Module module = loadedModule.value1;
-      int pos = loadedModule.value2;
-
-      // TODO: FIXME
-      // add the new module to list according to its position
-      if (pos >= 0 && returnValue.size() >= pos) {
-        returnValue.add(pos - 1, module);
-      } // no order found for this module, so it is added at end
-      else {
-        returnValue.add(module);
-      }
-    }
-    return returnValue;
+    System.out
+        .println("***** Simulation Manager: finished modules loading *****");
   }
 
-  private void tryToLoadModule(ValuePair<JarFile, Integer> moduleToLoad,
-      Map<String, ValuePair<Module, Integer>> loadedModules,
-      Map<String, Set<ValuePair<JarFile, Integer>>> dependingModules)
+  /**
+   * Load a single module
+   * 
+   * @param filename
+   *          the module filename
+   * @throws IOException
+   */
+  private void loadModule(File moduleFile, Properties generalproperties)
       throws IOException {
 
-    JarFile jarFile = moduleToLoad.value1;
-    int pos = moduleToLoad.value2;
+    // new jar file...so, new module
+    JarFile jarFile = new JarFile(moduleFile);
 
-    // access the properties file of the module
+    // access the properties file from inside this jar
     JarEntry jarEntry = jarFile.getJarEntry("properties.xml");
-    Properties moduleProperties = new Properties();
-    InputStream inputStream = jarFile.getInputStream(jarEntry);
-    moduleProperties.loadFromXML(inputStream);
 
-    String[] dependencies = moduleProperties.getProperty(
-        Module.PROP_DEPENDS_ON_MODULE_CLASSES, " ").split("\\s+");
+    // no property file...then we can't continue loading this module.
+    if (jarEntry == null) {
+      System.out
+          .println("The module: "
+              + moduleFile.getName()
+              + " does not contains a property.xml file! This module can't be loaded! \n");
 
-    // check if alle dependencies are available
-    boolean isDependingOnAMissingModule = false;
-    for (String dependency : dependencies) {
-      if (!loadedModules.containsKey(dependency)) {
-        if (!dependingModules.containsKey(dependency)) {
-          dependingModules.put(dependency,
-              new HashSet<ValuePair<JarFile, Integer>>());
-        }
-        dependingModules.get(dependency).add(
-            new ValuePair<JarFile, Integer>(jarFile, moduleToLoad.value2));
-        isDependingOnAMissingModule = true;
-      }
-    }
-    if (isDependingOnAMissingModule) {
+      // go to the next jar file (new module) if there is one
       return;
     }
 
-    // start loading
-    System.out.println(" - NAME: "
-        + moduleProperties.getProperty(Module.PROP_NAME));
+    // access the properties file of the module
+    Properties properties = new Properties();
+    InputStream inputStream = jarFile.getInputStream(jarEntry);
+    properties.loadFromXML(inputStream);
+
+    System.out.println("         name: "
+        + properties.getProperty(Module.PROP_NAME));
+
+    // check if we have a GUI component for this module
+    System.out.print("         has GUI: ");
+    if (properties.getProperty(GUIModule.PROP_GUI_MODULE_CLASS) != null) {
+      System.out.print("YES");
+    } else {
+      System.out.print("NO");
+    }
+
+    System.out.print("\n");
+
+    // check if we have the base component for this module
+    System.out.print("         has BASE: ");
+    if (properties.getProperty(Module.PROP_BASE_MODULE_CLASS) != null) {
+      System.out.print("YES");
+    } else {
+      System.out.print("NO... module can't be loaded!.");
+
+      // go to the next module if there is any
+      return;
+    }
+
+    System.out.print("\n");
+
+    // define this Jar file as usable - See JarUtil for more details...
+    JarUtil.loadJar(new URL("file:///" + moduleFile.getPath()));
+
+    try {
+      instantiateModule(properties.getProperty(Module.PROP_BASE_MODULE_CLASS),
+          properties.getProperty(GUIModule.PROP_GUI_TITLE), properties
+              .getProperty(GUIModule.PROP_GUI_TITLE));
+    } catch (ClassNotFoundException ex) {
+      ex.printStackTrace();
+      return;
+    } catch (IllegalAccessException ex) {
+      ex.printStackTrace();
+      return;
+    } catch (InstantiationException ex) {
+      ex.printStackTrace();
+      return;
+    }
+  }
+
+  /**
+   * Check compatibility with the current OS
+   * 
+   * @param moduleFile
+   *          the module JAR file from where properties will be read
+   * @return true if module is OS and Bits Version compatible with the one from
+   *         the current PC, false otherwise
+   * @throws IOException
+   */
+  private boolean isCompatibleWithCurrentPlatform(File moduleFile) {
+    // access the properties file of the module
+    Properties properties = new Properties();
+
+    // access the properties file from inside this jar
+    JarFile moduleJarFile;
+    JarEntry jarEntry;
+    try {
+      moduleJarFile = new JarFile(moduleFile);
+      jarEntry = moduleJarFile.getJarEntry("properties.xml");
+    } catch (IOException e) {
+      e.printStackTrace();
+      return false;
+    }
+
+    // load the properties file
+    InputStream inputStream;
+    try {
+      inputStream = moduleJarFile.getInputStream(jarEntry);
+      properties.loadFromXML(inputStream);
+    } catch (IOException e1) {
+      e1.printStackTrace();
+    }
 
     // check if the OS version is specified, otherwise is loaded by default
-    if (moduleProperties.getProperty(Module.PROP_MODULE_OS_VERSION) != null) {
-      String propVal = moduleProperties.getProperty(
-          Module.PROP_MODULE_OS_VERSION).trim().toLowerCase();
+    System.out.print("         OS check: ");
+    if (properties.getProperty(Module.PROP_MODULE_OS_VERSION) != null) {
+      String propVal = properties.getProperty(Module.PROP_MODULE_OS_VERSION)
+          .trim().toLowerCase();
 
-      // wrong OS...skip loading (the OS specified in prop file does not match
-      // the PC OS
-      if (!((JarUtil.isWindows() && propVal
+      // the OS specified in prop file match the PC OS
+      if ((JarUtil.isWindows() && propVal
           .equals(Module.PROP_MODULE_OS_VERSION_VALUE_WINDOWS))
           || (JarUtil.isUnix() && propVal
-              .equals(Module.PROP_MODULE_OS_VERSION_VALUE_LINUX)) || (JarUtil
-          .isMac() && propVal.equals(Module.PROP_MODULE_OS_VERSION_VALUE_MAC)))) {
-        System.out.println(" - OS Version: not match! Skip loading of this "
-            + "module! \n");
-        return;
+              .equals(Module.PROP_MODULE_OS_VERSION_VALUE_LINUX))
+          || (JarUtil.isMac() && propVal
+              .equals(Module.PROP_MODULE_OS_VERSION_VALUE_MAC))) {
+        System.out.print("OK, ");
       }
-
-      System.out.println(" - OS Version: " + propVal);
-    } else {
-      System.out.println(" - OS Version: ALL");
+      // wrong OS...skip loading
+      else {
+        System.out.println("failed! The module will not be loaded!");
+        return false;
+      }
+    }
+    // properties file does not say nothing about OS, so that means
+    // "good for all Operating Systems"
+    else {
+      System.out.print("OK, ");
     }
 
     // check if the OS bits version is specified
-    if (moduleProperties.getProperty(Module.PROP_MODULE_OS_BITS_VERSION) != null) {
-      String propValue = moduleProperties.getProperty(
+    System.out.print("OS bits version check: ");
+    if (properties.getProperty(Module.PROP_MODULE_OS_BITS_VERSION) != null) {
+      String propValue = properties.getProperty(
           Module.PROP_MODULE_OS_BITS_VERSION).trim();
       boolean is64BitsOs = System.getProperty("os.arch").indexOf("64") != -1;
 
+      // the OS Bits version match the version from property file
+      if ((propValue.equals("32") && !is64BitsOs)
+          || (propValue.equals("64") && is64BitsOs)) {
+        System.out.print("OK");
+      }
       // OS Bits version does not match the version from property file.
-      if (!((propValue.equals("32") && !is64BitsOs) || (propValue.equals("64") && is64BitsOs))) {
-        System.out.println(" - OS Bits Version: not match! Skip loading of "
-            + "this module! \n");
-        return;
+      else {
+        System.out.println("failed! The module will not be loaded! \n");
+        return false;
       }
-
-      System.out.println(" - OS Bits Version: "
-          + moduleProperties.getProperty(Module.PROP_MODULE_OS_BITS_VERSION));
     } else {
-      System.out.println(" - OS Bits Version: ALL");
+      System.out.print("OK");
     }
 
-    // check if we have the base component for this module
-    if (moduleProperties.getProperty(Module.PROP_BASE_MODULE_CLASS) == null) {
-      System.out.println(" - HAS BASE: NO... Failed to load this module. \n");
-      return;
-    }
-    System.out.println(" - HAS BASE: YES");
+    System.out.print("\n");
 
-    // check if we have a GUI component for this module
-    if (moduleProperties.getProperty(GUIModule.PROP_GUI_MODULE_CLASS) != null) {
-      System.out.println(" - HAS GUI: YES");
-    } else {
-      System.out.println(" - HAS GUI: NO");
-    }
-
-    // return the priority
-    if (pos < 0) {
-      System.out.println(" - PRIORITY: NONE");
-    } else {
-      System.out.println(" - PRIORITY: " + pos);
-    }
-
-    Module module = null;
-    try {
-      module = loadModule(moduleToLoad, loadedModules);
-    } catch (IllegalAccessException e) {
-      e.printStackTrace();
-    } catch (InstantiationException e) {
-      e.printStackTrace();
-    } catch (MalformedURLException e) {
-      e.printStackTrace();
-    } catch (ClassNotFoundException e) {
-      e.printStackTrace();
-    } catch (NoSuchMethodException e) {
-      e.printStackTrace();
-    } catch (InvocationTargetException e) {
-      e.printStackTrace();
-    }
-
-    if (module != null) {
-      // module is a listener for simulation step events
-      this.dataBus.addSimulationStepEventListener(module);
-
-      // module is a listener for simulation events
-      this.dataBus.addSimulationEventListener(module);
-
-      // the module is a listener for destroy object/agent event
-      this.dataBus.addDestroyObjektEventListener(module);
-
-      // the module is a listener for object/agent creation events
-      this.dataBus.addObjektInitEventListener(module);
-
-      // the module is a listener for ControllerEvents
-      this.dataBus.addControllerEventListener(module);
-
-      // get the module tab title from the property file
-      if (module.getGUIComponent() != null
-          && moduleProperties.getProperty(GUIModule.PROP_GUI_TITLE) != null) {
-        ((JScrollPane) module.getGUIComponent()).setName(moduleProperties
-            .getProperty(GUIModule.PROP_GUI_TITLE));
-      }
-    }
-    System.out.println();
-
-    String moduleClassName = moduleProperties
-        .getProperty(Module.PROP_BASE_MODULE_CLASS);
-
-    if (module != null && moduleClassName != null
-        && dependingModules.containsKey(moduleClassName)) {
-      for (ValuePair<JarFile, Integer> dependingModule : dependingModules
-          .remove(moduleClassName)) {
-        tryToLoadModule(dependingModule, loadedModules, dependingModules);
-      }
-    }
+    // if we are here, the module is OS/Bits compatible with the current system
+    return true;
   }
 
-  @SuppressWarnings("unchecked")
-  private Module loadModule(ValuePair<JarFile, Integer> moduleToLoad,
-      Map<String, ValuePair<Module, Integer>> loadedModules)
-      throws IllegalAccessException, InstantiationException,
-      MalformedURLException, ClassNotFoundException, IOException,
-      NoSuchMethodException, InvocationTargetException {
-
-    JarFile jarFile = moduleToLoad.value1;
-
-    // access the properties file of the module
-    JarEntry jarEntry = jarFile.getJarEntry("properties.xml");
-    Properties moduleProperties = new Properties();
-    InputStream inputStream = jarFile.getInputStream(jarEntry);
-    moduleProperties.loadFromXML(inputStream);
-
-    // define this Jar file as usable - See JarUtil for more details...
-    JarUtil.loadJar(new URL("file:///" + jarFile.getName()));
-
-    String className = moduleProperties
-        .getProperty(Module.PROP_BASE_MODULE_CLASS);
-    String[] dependencies = moduleProperties.getProperty(
-        Module.PROP_DEPENDS_ON_MODULE_CLASSES, " ").split("\\s+");
+  /**
+   * In this point is assumed that the module is fine and ready to be
+   * instantiated
+   * 
+   * @param baseClassName
+   *          the module main class name (including package)
+   * @param guiClassName
+   *          the module GUI class name (including package)
+   * @param tabTitle
+   *          the title that will appear on the module tab. This will have no
+   *          meaning if the module is part of a GROUP (many modules shown in
+   *          the same tab)
+   * 
+   * @throws ClassNotFoundException
+   * @throws IllegalAccessException
+   * @throws InstantiationException
+   */
+  private void instantiateModule(String baseClassName, String guiClassName,
+      String tabTitle) throws ClassNotFoundException, IllegalAccessException,
+      InstantiationException {
 
     // load the base logic module
-    Class<? extends Object> moduleClass = Class.forName(className);
+    Class<? extends Object> moduleClass = Class.forName(baseClassName);
 
-    List<Class<? extends Module>> parameterClasses = new ArrayList<Class<? extends Module>>();
-    List<Module> parameterObjects = new ArrayList<Module>();
+    // get the tab instance
+    Module module = ((Module) moduleClass.newInstance());
 
-    for (String dependency : dependencies) {
-      parameterClasses.add(Module.class);
-      parameterObjects.add(loadedModules.get(dependency).value1);
+    // add module to instances list
+    this.modules.add(module);
+
+    // module is a listener for simulation step events
+    this.dataBus.addSimulationStepEventListener(module);
+
+    // module is a listener for simulation events
+    this.dataBus.addSimulationEventListener(module);
+
+    // the module is a listener for destroy object/agent event
+    this.dataBus.addDestroyObjektEventListener(module);
+
+    // the module is a listener for object/agent creation events
+    this.dataBus.addObjektInitEventListener(module);
+
+    // get the module tab title from the property file
+    if (module.getGUIComponent() != null && guiClassName != null) {
+      ((JScrollPane) module.getGUIComponent()).setName(tabTitle);
     }
-
-    Class[] parameters = new Class[parameterClasses.size()];
-    parameters = parameterClasses.toArray(parameters);
-    Constructor moduleConstructor = moduleClass.getConstructor(parameterClasses
-        .toArray(parameters));
-    Module module = ((Module) moduleConstructor.newInstance(parameterObjects
-        .toArray()));
-    loadedModules.put(className, new ValuePair<Module, Integer>(module,
-        moduleToLoad.value2));
-    return module;
   }
 
   /**
@@ -1045,22 +1007,6 @@ public class SimulationManager {
     } else {
       System.out.println("more than zero arguments ");
 
-    }
-  }
-
-  private class ValuePair<T1, T2> {
-
-    public T1 value1;
-    public T2 value2;
-
-    public ValuePair(T1 value1, T2 value2) {
-      this.value1 = value1;
-      this.value2 = value2;
-    }
-
-    @Override
-    public String toString() {
-      return "(" + value1.toString() + ", " + value2.toString() + ")";
     }
   }
 }
