@@ -2,6 +2,7 @@ package aors.gui.swing;
 
 import java.awt.BorderLayout;
 import java.awt.Color;
+import java.awt.Component;
 import java.awt.FlowLayout;
 import java.awt.Font;
 import java.awt.event.ActionEvent;
@@ -362,6 +363,37 @@ public class AORJavaGui extends JFrame implements ActionListener,
     this.tabPane.add(this.tabAORSL, this.tabAORSLIndex);
     // this.tabPane.add(this.tabStatistics, this.tabStatistics);
 
+    // create modules group tab - if is the case
+    List<Module> groupModules = this.simulationManager.getGroupModules();
+    if (groupModules.size() > 0) {
+      JScrollPane groupModulesTab = new JScrollPane();
+      groupModulesTab.setName("Group-Modules");
+      JPanel groupModulesPanel = new JPanel();
+      groupModulesPanel.setLayout(new BorderLayout());
+      int posIndex = 0;
+      for (Module module : groupModules) {
+        Component moduleGUI = ((JScrollPane) module.getGUIComponent());
+
+        switch (posIndex) {
+        case 0:
+          groupModulesPanel.add(BorderLayout.SOUTH, moduleGUI);
+          break;
+        case 1:
+          groupModulesPanel.add(BorderLayout.CENTER, moduleGUI);
+          break;
+        case 2:
+          groupModulesPanel.add(BorderLayout.EAST, moduleGUI);
+          break;
+        case 3:
+          groupModulesPanel.add(BorderLayout.WEST, moduleGUI);
+          break;
+        }
+        posIndex++;
+      }
+      groupModulesTab.setViewportView(groupModulesPanel);
+      this.tabPane.add(groupModulesTab);
+    }
+
     // create modules tabs
     for (Module module : this.simulationManager.getModules()) {
       // no GUI component defined for this module
@@ -398,6 +430,9 @@ public class AORJavaGui extends JFrame implements ActionListener,
         Font.BOLD, 12)));
 
     this.getContentPane().add(this.tabPane);
+
+    // put the application window in full screen mode
+    this.setExtendedState(AORJavaGui.MAXIMIZED_BOTH);
 
     this.fileChooser = new JFileChooser();
 
@@ -2633,7 +2668,7 @@ public class AORJavaGui extends JFrame implements ActionListener,
   @Override
   public void moduleEvent(ModuleEvent moduleEvent) {
     int actualStepDelay = this.toolBarSimulation.getStepTime();
-    int speedUpTimeValue = (actualStepDelay >3 ? actualStepDelay/3 : 1);
+    int speedUpTimeValue = (actualStepDelay > 3 ? actualStepDelay / 3 : 1);
     int slowDownTimeValue = 1;
 
     if (moduleEvent instanceof ModuleEventSpeedUpSimulation

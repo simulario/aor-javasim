@@ -13,6 +13,7 @@ import java.io.StringReader;
 import java.net.URL;
 import java.net.URLClassLoader;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.InvalidPropertiesFormatException;
 import java.util.List;
@@ -66,8 +67,11 @@ public class SimulationManager {
   // the current project assigned to the simulation manager
   private static Project project;
 
-  // the list with all current loaded modules
+  // the list with all current loaded modules - non grouped
   private List<Module> modules;
+
+  // the list with all current loaded modules - grouped ones
+  private List<Module> groupModules;
 
   // the user directory
   private final String APP_ROOT_DIRECTORY = System.getProperty("user.dir");
@@ -158,16 +162,13 @@ public class SimulationManager {
     // get all files from the modules directory
     File[] moduleJars = modulesDir.listFiles();
 
-    // the number of found jar module files
-    int modulesNumber = moduleJars.length;
-
     // access the general modules property file
-    Properties generalproperties = new Properties();
+    Properties modulesGeneralProperties = new Properties();
     InputStream input;
     try {
       input = new FileInputStream(new File(Constants.modulesDirectory
           + File.separator + "properties.xml"));
-      generalproperties.loadFromXML(input);
+      modulesGeneralProperties.loadFromXML(input);
     } catch (FileNotFoundException e) {
       e.printStackTrace();
     } catch (InvalidPropertiesFormatException e) {
@@ -184,29 +185,27 @@ public class SimulationManager {
 
     System.out.println("***** Simulation Manager: processing modules *****");
 
-    // create the empty modules list
+    // create the empty modules list(s)
     this.modules = new ArrayList<Module>();
+    this.groupModules = new ArrayList<Module>();
+
+    // perform module selection (drop non usable ones)
+    System.out.println("   ->Perform modules selection: ");
+    ArrayList<File> filteredModuleJars = this
+        .filterAndOrderModulesByIndexPosition(moduleJars,
+            modulesGeneralProperties);
 
     // try to load one by one all found modules in the modules directory
-    for (int i = 0; i < modulesNumber; i++) {
+    System.out.println("   ->Load modules: ");
+    for (File moduleFile : filteredModuleJars) {
       // load the module - may fail if something goes wrong...
       try {
-        String moduleFileName = moduleJars[i].getName();
-
-        // files without jar extension are ignored
-        if (!moduleFileName.endsWith(".jar")) {
-          continue;
-        }
+        String moduleFileName = moduleFile.getName();
 
         System.out.println("      Module: " + moduleFileName);
 
-        // ignore non OS compatible modules
-        if (!this.isCompatibleWithCurrentPlatform(moduleJars[i])) {
-          continue;
-        }
-
         // load the module
-        loadModule(moduleJars[i], generalproperties);
+        loadModule(moduleFile, modulesGeneralProperties);
       } catch (IOException e) {
         e.printStackTrace();
       }
@@ -217,13 +216,87 @@ public class SimulationManager {
   }
 
   /**
+   * The user can set index position for modules. This will affect the tab order
+   * apparition. This method order the modules by their possible given position
+   * index. The method does also a filtering of the module files, so only real
+   * module files will be kept finally;
+   * 
+   * NOTE: for any module that is implied in a group (many modules in the same
+   * tab) the index position is ignored
+   * 
+   * @param moduleJars
+   *          the list with all and unordered modules
+   * @param modulesGeneralProperties
+   *          the properties file where general modules properties are described
+   */
+  private ArrayList<File> filterAndOrderModulesByIndexPosition(
+      File[] moduleJars, Properties modulesGeneralProperties) {
+
+    // this will contain only selected modules
+    ArrayList<File> resultModuleJars = new ArrayList<File>();
+
+    // temporarily used Map for modules ordering
+    HashMap<Integer, File> tmpModules = new HashMap<Integer, File>();
+
+    for (File moduleFile : moduleJars) {
+      String moduleFileName = moduleFile.getName();
+
+      // files without jar extension are ignored
+      if (!moduleFileName.endsWith(".jar")) {
+        continue;
+      }
+
+      // ignore non OS compatible modules
+      if (!this.isCompatibleWithCurrentPlatform(moduleFile)) {
+        continue;
+      }
+
+      try {
+        if (modulesGeneralProperties.getProperty(moduleFileName) != null) {
+          int pos = Integer.parseInt(modulesGeneralProperties
+              .getProperty(moduleFileName));
+
+          // using 0 or negative for positioning will have as effect that the
+          // module will not be loaded
+          if (pos > 0) {
+            // add module in the right position
+            tmpModules.put(pos, moduleFile);
+          }
+        }
+        // this module does not use any order...
+        else {
+          resultModuleJars.add(moduleFile);
+        }
+      } catch (NumberFormatException nfex) {
+        // just a backup in case that you provide by mistake a "non-number"
+        // position in the properties list for this module, so in this case it
+        // will be a "non-ordered" one as when the position is not given at all
+        resultModuleJars.add(moduleFile);
+      }
+    }
+
+    // add the ordered modules now
+    List<Integer> sortList = new ArrayList<Integer>(tmpModules.keySet());
+    Collections.sort(sortList);
+    int len = sortList.size();
+    for (int i = len - 1; i >= 0; i--) {
+      resultModuleJars.add(0, tmpModules.get(sortList.get(i)));
+    }
+
+    // return filtered and ordered modules files list
+    return resultModuleJars;
+  }
+
+  /**
    * Load a single module
    * 
-   * @param filename
+   * @param moduleFile
    *          the module filename
+   * @param moduleGeneralProperties
+   *          the general modules properties object
    * @throws IOException
    */
-  private void loadModule(File moduleFile, Properties generalproperties)
+  private void loadModule(File moduleFile, Properties moduleGeneralProperties)
       throws IOException {
 
     // new jar file...so, new module
@@ -278,9 +351,22 @@ public class SimulationManager {
     JarUtil.loadJar(new URL("file:///" + moduleFile.getPath()));
 
     try {
-      instantiateModule(properties.getProperty(Module.PROP_BASE_MODULE_CLASS),
-          properties.getProperty(GUIModule.PROP_GUI_TITLE), properties
-              .getProperty(GUIModule.PROP_GUI_TITLE));
+      // get the modules list for group
+      String modulesGroup = moduleGeneralProperties
+          .getProperty(Module.PROP_MODULES_GROUP);
+
+      Module moduleInstance = instantiateModule(properties
+          .getProperty(Module.PROP_BASE_MODULE_CLASS), properties
+          .getProperty(GUIModule.PROP_GUI_TITLE), properties
+          .getProperty(GUIModule.PROP_GUI_TITLE));
+
+      // add module to the right modules list
+      if (modulesGroup == null
+          || modulesGroup.indexOf(moduleFile.getName()) == -1) {
+        this.modules.add(moduleInstance);
+      } else {
+        this.groupModules.add(moduleInstance);
+      }
     } catch (ClassNotFoundException ex) {
       ex.printStackTrace();
       return;
@@ -327,7 +413,8 @@ public class SimulationManager {
     }
 
     // check if the OS version is specified, otherwise is loaded by default
-    System.out.print("         OS check: ");
+    System.out.print("      Module:  " + moduleFile.getName()
+        + "   ->   OS check: ");
     if (properties.getProperty(Module.PROP_MODULE_OS_VERSION) != null) {
       String propVal = properties.getProperty(Module.PROP_MODULE_OS_VERSION)
           .trim().toLowerCase();
@@ -397,7 +484,7 @@ public class SimulationManager {
    * @throws IllegalAccessException
    * @throws InstantiationException
    */
-  private void instantiateModule(String baseClassName, String guiClassName,
+  private Module instantiateModule(String baseClassName, String guiClassName,
       String tabTitle) throws ClassNotFoundException, IllegalAccessException,
       InstantiationException {
 
@@ -406,9 +493,6 @@ public class SimulationManager {
 
     // get the tab instance
     Module module = ((Module) moduleClass.newInstance());
-
-    // add module to instances list
-    this.modules.add(module);
 
     // module is a listener for simulation step events
     this.dataBus.addSimulationStepEventListener(module);
@@ -426,6 +510,8 @@ public class SimulationManager {
     if (module.getGUIComponent() != null && guiClassName != null) {
       ((JScrollPane) module.getGUIComponent()).setName(tabTitle);
     }
+
+    return module;
   }
 
   /**
@@ -930,12 +1016,21 @@ public class SimulationManager {
   }
 
   /**
-   * Gets the existing modules.
+   * Gets the existing modules - non-grouped ones only.
    * 
-   * @return the existing modules
+   * @return the existing non-grouped modules
    */
   public List<Module> getModules() {
     return this.modules;
+  }
+
+  /**
+   * Gets the existing modules - grouped ones only
+   * 
+   * @return the existing grouped modules
+   */
+  public List<Module> getGroupModules() {
+    return this.groupModules;
   }
 
   /**
