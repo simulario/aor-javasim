@@ -88,6 +88,12 @@ public interface Module extends SimulationStepEventListener,
 	 * classes. This is optional.
    */
   public static final String PROP_DEPENDS_ON_MODULE_CLASSES = "depends-on-module-classes";
+  
+  /**
+   * The property name that defines the module's dependencies to other module
+   * classes. This is optional.
+   */
+  public static final String PROP_MODULES_GROUP = "modules-group";
 
 	/**
    * This method returns the GUI component if there is one, or null otherwise.

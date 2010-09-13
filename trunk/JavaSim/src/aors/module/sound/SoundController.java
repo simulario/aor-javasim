@@ -155,7 +155,7 @@ public class SoundController extends Thread implements Module {
     // initialize the module libraries
     this.initModuleLibraries();
 
-    // in this moment nos sonification map is defined
+    // in this moment no sonification map is defined
     this.sonificationMap = new HashMap<String, SonificationMap>();
 
     // in this moment we have an empty soundMap
