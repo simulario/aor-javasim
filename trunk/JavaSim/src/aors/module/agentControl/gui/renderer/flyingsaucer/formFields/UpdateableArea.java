@@ -1,21 +1,23 @@
 package aors.module.agentControl.gui.renderer.flyingsaucer.formFields;
 
-import aors.module.agentControl.controller.ModuleAgentController;
-import aors.module.agentControl.gui.interaction.EventMediator;
-import aors.module.agentControl.gui.interaction.Receiver;
-import aors.module.agentControl.gui.renderer.flyingsaucer.AORSForm;
-import java.awt.Dimension;
 import java.awt.GridLayout;
 import java.beans.PropertyChangeEvent;
 import java.util.ArrayList;
 import java.util.List;
+
 import javax.swing.JComponent;
 import javax.swing.JPanel;
+
 import org.w3c.dom.Element;
 import org.xhtmlrenderer.layout.LayoutContext;
 import org.xhtmlrenderer.render.BlockBox;
 import org.xhtmlrenderer.simple.FSScrollPane;
 import org.xhtmlrenderer.simple.extend.form.FormFieldState;
+
+import aors.module.agentControl.controller.ModuleAgentController;
+import aors.module.agentControl.gui.interaction.EventMediator;
+import aors.module.agentControl.gui.interaction.Receiver;
+import aors.module.agentControl.gui.renderer.flyingsaucer.AORSForm;
 
 class UpdateableArea extends FormField<FSScrollPane> implements Receiver {
 
