@@ -61,12 +61,6 @@ public class SimpleAgentControllerFactory implements AgentControllerFactory {
 		private AgentSubjectFacade agentSubjectFacade;
 
 		/**
-		 * Indicates if the agent that belogs to this controller is controlled by an
-		 * user.
-		 */
-		private boolean agentIsControlled;
-
-		/**
 		 * Set of rule name for the rules that are suspended if the agent is
 		 * controlled by an user.
 		 */
@@ -110,7 +104,6 @@ public class SimpleAgentControllerFactory implements AgentControllerFactory {
 			this.beliefProperties = new HashMap<String, Object>();
 			this.userActions = new ArrayList<Pair<String, Map<String, String>>>();
 			this.controlView = null;
-			this.agentIsControlled = true;
 
 			this.interactionEventFactory = initializer.getInteractionEventFactory();
 			this.suspendedRules = initializer.getSuspendedRules();
