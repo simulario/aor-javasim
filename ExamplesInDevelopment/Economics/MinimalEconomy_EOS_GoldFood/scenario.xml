@@ -14,7 +14,7 @@
 		<documentation>
 			<dc:modified>20100306</dc:modified>
 			<dc:source>"A computational market model based on individual action", by Ken Steiglitz, Michael L. Honig and Leonard M. Cohen, 1996. URL: http://www.cs.princeton.edu/~ken/scott.pdf</dc:source>
-			<aors:description xmlns="http://www.w3.org/1999/xhtml">The "Gold Food Economy" is an example of an agent-based simulation of a relatively basic economy that does not directly model a real economy, but attempts to explain the macroeconomy through simulation of a minimal economy. It is one of the simplest models wherein zero-intelligence agents produce, consume and trade in an economy with only two goods: gold and food. The model simulates the actions of independent "worker" agents, each with his own inventory and skills (at producing food and gold), interacting through an auction market agent that establishes a commonly accepted transaction price. Workers must consume a unit of food every period, and each worker tries to maintain a minimum inventory of food to guarantee consumption. For the system to survive the production of food must be greater than the total food consumption per period, but this leads to a surplus of food in the economy. The market allows agents to sell their surplus food for gold that can be used to purchase food in the same market later on. Agents more skilled in the production of gold might decide to mine gold and trade it for food at every period.</aors:description>
+			<aors:description xmlns="http://www.w3.org/1999/xhtml">The "Gold Food Economy" is an example of an agent-based simulation of a relatively basic economy that does not directly model a real economy, but attempts to explain the macroeconomy through simulation of a minimal economy. It is one of the simplest models wherein zero-intelligence agents produce, consume and trade in an economy with only two goods: gold and food. The model simulates the actions of independent "Person" agents, each with his own inventory and skills (at producing food and gold), interacting through an auction market agent that establishes a commonly accepted transaction price. Workers must consume a unit of food every period, and each Person tries to maintain a minimum inventory of food to guarantee consumption. For the system to survive the production of food must be greater than the total food consumption per period, but this leads to a surplus of food in the economy. The market allows agents to sell their surplus food for gold that can be used to purchase food in the same market later on. Agents more skilled in the production of gold might decide to mine gold and trade it for food at every period.</aors:description>
 		</documentation>
 		<Statistics>
 			<!-- ========================================= -->
@@ -348,19 +348,30 @@ public java.util.List<BidToBuyRecord> getList() {
 			<ExogenousEventType name="EachDayAt11AM" periodicity="24" />
 			<!-- ================================================== -->
 			<ExogenousEventType name="EndOfDay" periodicity="24" />		
-			<!-- ======================= -->
-       <AgentType name="Market">
-       	<!-- ======================= -->
-       	<Attribute name="price" type="Float" />
-        <Attribute name="tradedFood" type="Float"/>    	
-       	<Attribute name="supplyQuantity" type="Float" />
-       	<Attribute name="demandQuantity" type="Float" />
-       	<Attribute name="totalNumberOfSellers" type="Integer" />
-       	<Attribute name="totalNumberOfBuyers" type="Integer" />  
-       	<Attribute name="numberOfEligibleSellers" type="Integer" />
-       	<Attribute name="numberOfEligibleBuyers" type="Integer" />
+			<!-- ================================================== -->
+			<AgentType name="EconomicAgent">
+			<!-- ================================================== -->
+				<ComplexDataProperty name="goods" type="GoodOrService" upperMultiplicity="unbounded"/>
+       	<Function name="getNetWorth" resultType="double">
+       		<Body language="Java"><![CDATA[
+       			
+       		]]></Body>
+       	</Function>
+       	
        </AgentType>
-
+			<!-- ======================= -->
+			<AgentType name="Market">
+				<!-- ======================= -->
+				<Attribute name="price" type="Float" />
+				<Attribute name="tradedFood" type="Float"/>    	
+				<Attribute name="supplyQuantity" type="Float" />
+				<Attribute name="demandQuantity" type="Float" />
+				<Attribute name="totalNumberOfSellers" type="Integer" />
+				<Attribute name="totalNumberOfBuyers" type="Integer" />  
+				<Attribute name="numberOfEligibleSellers" type="Integer" />
+				<Attribute name="numberOfEligibleBuyers" type="Integer" />
+			</AgentType>
+			
 			<!-- =================================================================== -->
 			<AgentType name="SealedBidMaximumVolumeAuction_Market" superType="Market">
 			<!-- ==================================================================== -->			
@@ -731,10 +742,10 @@ m.getTradedFood() + m.getOffers().tradedFood()
 				</CommunicationRule>
 			</AgentType>
 			<!-- ============================================ -->
-			<AgentType name="Worker">
+			<AgentType name="Person" superType="Economic_Agent">
 			<!-- ============================================ -->
 				<documentation>
-					<description>The attributes skillLevelFood and skillLevelGold represent the number of food, resp. gold, units that a worker can produce in a day. On each day, a worker will produce either gold or food, whatever yields a higher value in terms of yesterday's price of food.</description>
+					<description>The attributes skillLevelFood and skillLevelGold represent the number of food, resp. gold, units that a Person can produce in a day. On each day, a Person will produce either gold or food, whatever yields a higher value in terms of yesterday's price of food.</description>
 				</documentation>
 				<Attribute name="skillLevelFood" type="Float" />
 				<Attribute name="skillLevelGold" type="Float" />
@@ -837,7 +848,7 @@ w.getGoldInventory() + w.getSkillLevelGold()
 				<CommunicationRule name="AcceptBidToBuy_Rule" agentVariable="w">
 					<!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->
 					<documentation>
-						<description> The rule is triggered by the action event AcceptBidToBuy sent by the market with the total quantity of food and the gold, that the worker bought. If this occurs, then will be able to update the foodInventory and the goldInventory of a specific worker. </description>
+						<description> The rule is triggered by the action event AcceptBidToBuy sent by the market with the total quantity of food and the gold, that the Person bought. If this occurs, then will be able to update the foodInventory and the goldInventory of a specific Person. </description>
 					</documentation>
 					<WHEN eventType="InMessageEvent" messageType="AcceptBidToBuy" messageVariable="mes" />
 					<IF language="Java"><![CDATA[
@@ -862,7 +873,7 @@ w.getFoodInventory() + mes.getQuantity()
 				<CommunicationRule name="AcceptOfferToSell_Rule" agentVariable="w">
 					<!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->
 					<documentation>
-						<description> The rule is triggered by the event AcceptOfferToSell sent by the market with the total quantity of food and the gold, that the worker sold. If this occurs, then will be able to update the foodInventory and the goldInventory of a specific worker. </description>
+						<description> The rule is triggered by the event AcceptOfferToSell sent by the market with the total quantity of food and the gold, that the Person sold. If this occurs, then will be able to update the foodInventory and the goldInventory of a specific Person. </description>
 					</documentation>
 					<WHEN eventType="InMessageEvent" messageType="AcceptOfferToSell" messageVariable="mes" />
 					<IF language="Java"><![CDATA[
@@ -893,7 +904,7 @@ w.getFoodInventory() - mes.getQuantity()
 						<description> Workers decide to buy or to sell food. Their behaviour is wealth maximise and therefore they make this decision in function of the last market price .</description>
 					</documentation>
 					<WHEN eventType="StartOfDay" />
-					<FOR objectVariable="w" objectType="Worker" />		
+					<FOR objectVariable="w" objectType="Person" />		
 					<DO>
 						<UPDATE-ENV>
 							<UpdateObject objectVariable="w">
@@ -924,10 +935,10 @@ w.getFoodInventory() - mes.getQuantity()
 				<EnvironmentRule name="EachDayAt8AM_Rule">
 					<!-- ================================= -->
 					<documentation>
-						<description> Every day at 8 AM each worker eats 1 unity of food.</description>
+						<description> Every day at 8 AM each Person eats 1 unity of food.</description>
 					</documentation>
 					<WHEN eventType="EachDayAt8AM"/>
-					<FOR objectVariable="w" objectType="Worker" />
+					<FOR objectVariable="w" objectType="Person" />
 					<DO>
 						<UPDATE-ENV>
 							<UpdateObject objectVariable="w">
@@ -944,10 +955,10 @@ w.getFoodInventory() - 1
 				<EnvironmentRule name="EachDayAt11AM_Rule">
 					<!-- ================================ --> 
 					<documentation>
-						<description> The OfferToSell-/BidToBuy- messages are prepared to be sent to the market-agent. Each message contains the following information: the bid price of each worker, the quantity that they want to trade and the id of the worker. </description>
+						<description> The OfferToSell-/BidToBuy- messages are prepared to be sent to the market-agent. Each message contains the following information: the bid price of each Person, the quantity that they want to trade and the id of the Person. </description>
 					</documentation>
 					<WHEN eventType="EachDayAt11AM" />
-					<FOR objectVariable="w" objectType="Worker" />
+					<FOR objectVariable="w" objectType="Person" />
 					<FOR dataVariable="bid" dataType="Float">
 						<ValueExpr language="Java"><![CDATA[
 w.determineBidToBuy(( float)w.getGoldInventory(),( float)w.getBid(), ( float)w.getFoodInventory(), ( float)w.getReserveLevel())							
@@ -1006,7 +1017,7 @@ bid
 						<description> The market establishes the price and announce all the workers. The workers update their actualPrice attribute with the value of the new price.</description>
 					</documentation>
 					<WHEN eventType="OutMessageEvent" messageType="AnnouncePrice" messageVariable="mes" />
-					<FOR objectVariable="w" objectType="Worker" />
+					<FOR objectVariable="w" objectType="Person" />
 					<DO>
 						<UPDATE-ENV>
 							<UpdateObject objectVariable="w">
@@ -1051,7 +1062,7 @@ bid
 			<PeriodicTimeEvent occurrenceTime="18" type="TransactionPrice" />
 		</Agent>
 		<!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->			
-		<Agents type="Worker" rangeStartID="1001" rangeEndID="1500">
+		<Agents type="Person" rangeStartID="1001" rangeEndID="1500">
 		<!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->			
 			<Slot property="skillLevelGold">
 				<RandomVariable>
@@ -1078,7 +1089,7 @@ bid
 			<Slot property="leisureWorker" value="false" />
 		</Agents>
 		<!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->			
-		<Agents type="Worker" rangeStartID="1501" rangeEndID="2000">
+		<Agents type="Person" rangeStartID="1501" rangeEndID="2000">
 		<!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->			
 			<Slot property="skillLevelGold">
 				<RandomVariable>
