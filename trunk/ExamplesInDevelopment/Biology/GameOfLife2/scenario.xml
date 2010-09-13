@@ -113,13 +113,16 @@ else {
 			<!-- =================================================================== -->
 			<EnvironmentRule name="ComputeNextGeneration_EnvRule">
 			<!-- =================================================================== -->
-				
 				<ON-EACH-SIMULATION-STEP/>
+				<!-- Funktioniert die Variablendeklarationen so ohne Wertzuweisung? -->
+				<FOR-ListItemVariable variable="nc" listItemType="SpaceModel.SimGridCell"/>
+				<FOR-ListVariable variable="newList" listItemType="SpaceModel.SimGridCell"/>
 				<DO>
 					<UPDATE-ENV>
 						<ForEachGridCell gridCellVariable="gc" selectionList="Global.listOfLivingCells">							
 							<Code language="Java"><![CDATA[
 // reset nextStatus to unknown for all cells in the neighborhood
+System.out.println("reset nextStatus");
 int posX = (int) gc.getPosX();
 int posY = (int) gc.getPosY();
 int xMax = (int) Simulator.spaceModel.getXMax();
@@ -146,11 +149,11 @@ for (var x = posX-1; x <= posX+1; x++)
 						<ForEachGridCell gridCellVariable="gc" selectionList="Global.listOfLivingCells">
 							<Code language="Java"><![CDATA[
 // compute nextStatus avoiding repeated computations
+System.out.println("compute nextStatus");
 int posX = (int) gc.getPosX();
 int posY = (int) gc.getPosY();
 int xMax = (int) Simulator.spaceModel.getXMax();
 int yMax = (int) Simulator.spaceModel.getYMax();
-SpaceModel.SimGridCell nc;
 for (int x = posX-1; x <= posX+1; x++)
 	for (int y = posY-1; y <= posY+1; y++)
 		if (x >= 1 && x <= xMax && y >= 1 && y <= yMax ) {
@@ -176,25 +179,27 @@ for (var x = posX-1; x <= posX+1; x++)
 
 						<ForEachGridCell gridCellVariable="gc" selectionList="Global.listOfLivingCells">
 							<Code language="Java"><![CDATA[
-// assign new alive values from nextStatus and rebuild list of living cells
+// assign new alive values from nextStatus and build the new list of living cells
+System.out.println("assign new alive values");
 int posX = (int) gc.getPosX();
 int posY = (int) gc.getPosY();
 int xMax = (int) Simulator.spaceModel.getXMax();
 int yMax = (int) Simulator.spaceModel.getYMax();
-SpaceModel.SimGridCell nc;
-Global.listOfLivingCells.clear();
 for (int x = posX-1; x <= posX+1; x++)
 	for (int y = posY-1; y <= posY+1; y++)
 		if (x >= 1 && x <= xMax && y >= 1 && y <= yMax ) {
 			nc = Simulator.spaceModel.getGridCell(x,y);
 			if (nc.getNextStatus() == 1) {
 				nc.setAlive(true);
-				Global.listOfLivingCells.add( nc);
+				newList.add( nc);
 			}
 			else nc.setAlive(false);
 		}
 							]]></Code>
-						</ForEachGridCell>
+						</ForEachGridCell>						
+						<UpdateGlobalVariable name="listOfLivingCells"><!-- clear() and addAll( newList) -->
+							<ValueExpr language="Java">newList</ValueExpr>
+						</UpdateGlobalVariable>
 					</UPDATE-ENV>
 				</DO>
 			</EnvironmentRule>
@@ -276,9 +281,6 @@ for (int x = posX-1; x <= posX+1; x++)
 				<Slot property="alive" value="true"/>
 			</GridCellSet>
 			
-			<GridCellSet startX="49" endX="50" startY="49" endY="50">
-				<Slot property="nextStatus" value="-1"/>
-			</GridCellSet>
 			<!-- Randomly initialized board -->
 			<!--
 				<GridCellSet startX="1" endX="50" startY="1" endY="50">
