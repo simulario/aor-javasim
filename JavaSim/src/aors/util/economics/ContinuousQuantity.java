@@ -1,4 +1,4 @@
-package aors.model.util.economics;
+package aors.util.economics;
 
 /**
  * The datatype class ContinuousQuantity allows to define continuous quantites 
