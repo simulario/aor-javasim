@@ -83,7 +83,7 @@
             <xsl:when test="@upperMultiplicity eq 'unbounded'">
               <!--<xsl:message>unbounded upperMultiplicity is not yet implemented</xsl:message>-->
               <xsl:call-template name="java:createParam">
-                <xsl:with-param name="type" select="fn:concat('List&lt;', jw:upperWord(jw:mappeDataType(@type)), '&gt;')"/>
+                <xsl:with-param name="type" select="fn:concat('List&lt;', jw:mappeDataType(@type), '&gt;')"/>
                 <xsl:with-param name="name" select="@name"/>
               </xsl:call-template>
             </xsl:when>
@@ -106,7 +106,7 @@
           <xsl:choose>
             <xsl:when test="@upperMultiplicity eq 'unbounded'">
               <xsl:call-template name="java:createParam">
-                <xsl:with-param name="type" select="fn:concat('List&lt;', jw:upperWord(jw:mappeDataType(@type)), '&gt;')"/>
+                <xsl:with-param name="type" select="fn:concat('List&lt;', jw:mappeDataType(@type), '&gt;')"/>
                 <xsl:with-param name="name" select="@name"/>
               </xsl:call-template>
             </xsl:when>
@@ -274,7 +274,7 @@
       <xsl:with-param name="variableType">
         <xsl:choose>
           <xsl:when test="@upperMultiplicity eq 'unbounded'">
-            <xsl:value-of select="fn:concat('List&lt;', jw:upperWord(jw:mappeDataType(@type)), '&gt;')"/>
+            <xsl:value-of select="fn:concat('List&lt;', jw:mappeDataType(@type), '&gt;')"/>
           </xsl:when>
           <xsl:otherwise>
             <xsl:value-of select="@type | @dataType | @refDataType"/>
@@ -668,7 +668,7 @@
           <xsl:with-param name="indent" select="$indent"/>
           <xsl:with-param name="modifier" select="'private'"/>
           <xsl:with-param name="class" select="'List'"/>
-          <xsl:with-param name="generic" select="jw:upperWord(jw:mappeDataType(@type))"/>
+          <xsl:with-param name="generic" select="jw:mappeDataType(@type)"/>
           <xsl:with-param name="varName" select="@name"/>
           <xsl:with-param name="withDeclaration" select="false()"/>
         </xsl:call-template>
@@ -2606,7 +2606,7 @@
         <xsl:call-template name="java:newObject">
           <xsl:with-param name="inLine" select="true()"/>
           <xsl:with-param name="class" select="'ArrayList'"/>
-          <xsl:with-param name="generic" select="jw:upperWord(jw:mappeDataType(@type))"/>
+          <xsl:with-param name="generic" select="jw:mappeDataType(@type)"/>
           <xsl:with-param name="isVariable" select="true()"/>
         </xsl:call-template>
       </xsl:with-param>
@@ -2688,7 +2688,7 @@
     <xsl:call-template name="java:method">
       <xsl:with-param name="indent" select="$indent"/>
       <xsl:with-param name="modifier" select="'public'"/>
-      <xsl:with-param name="type" select="jw:upperWord(@type)"/>
+      <xsl:with-param name="type" select="@type"/>
       <xsl:with-param name="name" select="fn:concat($method, $methodPrefix)"/>
       <xsl:with-param name="parameterList" as="xs:string*">
         <xsl:call-template name="java:createParam">
@@ -2701,7 +2701,7 @@
         <xsl:variable name="returnObjVarName" select="'result'"/>
         <xsl:call-template name="java:newObject">
           <xsl:with-param name="indent" select="$indent + 1"/>
-          <xsl:with-param name="class" select="jw:upperWord(jw:mappeDataType(@type))"/>
+          <xsl:with-param name="class" select="jw:mappeDataType(@type)"/>
           <xsl:with-param name="varName" select="$returnObjVarName"/>
           <xsl:with-param name="initWithNull" select="true()"/>
         </xsl:call-template>
@@ -2810,7 +2810,7 @@
       <xsl:with-param name="name" select="fn:concat($method, $methodPrefix)"/>
       <xsl:with-param name="parameterList" as="xs:string*">
         <xsl:call-template name="java:createParam">
-          <xsl:with-param name="type" select="jw:upperWord(@type)"/>
+          <xsl:with-param name="type" select="@type"/>
           <xsl:with-param name="name" select="$objVarName"/>
         </xsl:call-template>
       </xsl:with-param>
@@ -2847,7 +2847,7 @@
       <xsl:with-param name="indent" select="$indent"/>
       <xsl:with-param name="modifier" select="'public'"/>
       <xsl:with-param name="type" select="'ArrayList'"/>
-      <xsl:with-param name="genericType" select="jw:upperWord(jw:mappeDataType(@type))"/>
+      <xsl:with-param name="genericType" select="jw:mappeDataType(@type)"/>
       <xsl:with-param name="name" select="fn:concat('get', $methodPrefix)"/>
       <xsl:with-param name="content">
 
@@ -2858,7 +2858,7 @@
               <xsl:with-param name="varName" select="@name"/>
             </xsl:call-template>
           </xsl:with-param>
-          <xsl:with-param name="returnType" select="fn:concat('ArrayList&lt;', jw:upperWord(jw:mappeDataType(@type)), '&gt;')"/>
+          <xsl:with-param name="returnType" select="fn:concat('ArrayList&lt;', jw:mappeDataType(@type), '&gt;')"/>
         </xsl:call-template>
 
       </xsl:with-param>
