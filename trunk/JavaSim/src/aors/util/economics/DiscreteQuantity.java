@@ -1,4 +1,4 @@
-package aors.model.util.economics;
+package aors.util.economics;
 
 import aors.model.envsim.Objekt;
 import java.util.ArrayList;

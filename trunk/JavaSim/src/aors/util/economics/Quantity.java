@@ -1,4 +1,4 @@
-package aors.model.util.economics;
+package aors.util.economics;
 
 public abstract class Quantity {
 
