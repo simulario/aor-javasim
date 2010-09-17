@@ -53,9 +53,9 @@
 			<ExogenousEventType name="EachDayAt8AM" periodicity="24" />
 			<ExogenousEventType name="EachDayAt11AM" periodicity="24" />
 			<AgentType name="EconomicAgent">
-				<ComplexDataProperty name="assets" type="C:\Dokumente und Einstellungen\Lars Langjahr\Eigene Dateien\repo\JavaSim\src\aors\util\economics\Quantity.java" upperMultiplicity="unbounded" />
+				<ComplexDataProperty name="assets" type="aors.util.economics.Quantity" upperMultiplicity="unbounded" />
 				
-				<Function name="getAsset" resultType="Float">
+				<Function name="getAsset" resultType="aors.util.economics.Quantity">
 					<Parameter name="asset" type="String"/>
 					<Body language="Java"><![CDATA[
 						int pos = getAssets().indexOf(asset);
@@ -82,15 +82,20 @@
 				<Function name="eat" resultType="Boolean">
 					<Body language="Java"><![CDATA[
 						if(getAsset("Food").getQuantity() - getEAT_AMOUNT() < getEAT_AMOUNT() ){
-							return false;
+							
 						}
 						else{
-							getAsset("Food").withdraw(1);
+							if(!getAsset("Food").isDiscrete()){
+								aors.util.economics.ContinuousQuantity a = getAsset("Food");
+								a.withdraw(1);
+								return true;
+							}
 						}
+						return false;
 					]]></Body>
 				</Function>
 				
-				<CommunicationRule name="eat_Rule" agentVariable="p">
+				<!--<CommunicationRule name="eat_Rule" agentVariable="p">
 					<WHEN eventType="InMessageEvent" messageType="EatMessage"/>
 					<IF language="Java"><<![CDATA[!p.eat()]]>></IF>
 					<THEN>
@@ -100,7 +105,7 @@
 							</DestroyBeliefEntity>
 						</UPDATE-AGT>
 					</THEN>
-				</CommunicationRule>				
+				</CommunicationRule>	-->			
 			</AgentType>		
 			<AgentType name="Market">
 				<Attribute type="Float" name="marketPrice"/>
