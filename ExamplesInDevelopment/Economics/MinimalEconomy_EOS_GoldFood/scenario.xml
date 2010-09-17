@@ -52,8 +52,20 @@
 			<ExogenousEventType name="StartOfDay" periodicity="24" />
 			<ExogenousEventType name="EachDayAt8AM" periodicity="24" />
 			<ExogenousEventType name="EachDayAt11AM" periodicity="24" />
+			<AgentType name="EconomicAgent">
+				<ComplexDataProperty name="assets" type="Quantity" upperMultiplicity="unbounded" />
+				
+				<Function name="getAsset" resultType="Quantity">
+					<Parameter name="asset" type="String"/>
+					<Body language="Java"><![CDATA[
+						int pos = getAssets().indexOf(asset);
+						return getAssets(pos);
+					]]></Body>
+				</Function>
+			</AgentType>
 			
-			<AgentType name="Person">
+			
+			<AgentType name="Person" superType="EconomicAgent">
 				<!-- ============================================ -->
 				<documentation>
 					<description>Model Level representation of a Person</description>
@@ -66,19 +78,21 @@
 				<Attribute type="Float" name="HISTORICAL_FOOD_PRICE" initialValue="0.02"/>
 				<Attribute type="Float" name="lastPrice"/>
 				<Attribute type="Float" name="foodStock"/>
-				<ComplexDataProperty name="assets" type="Quantity" upperMultiplicity="unbounded" />
 				
-				<Function name="eat" resultType="Float">
+				<Function name="eat" resultType="Boolean">
 					<Body language="Java"><![CDATA[
-						setFoodStock(getFoodStock()-1);
-						return getFoodStock();
+						if(getAsset("Food").getQuantity() - getEAT_AMOUNT() < getEAT_AMOUNT() ){
+							return false;
+						}
+						else{
+							getAsset("Food").withdraw(1);
+						}
 					]]></Body>
 				</Function>
 				
-				
 				<CommunicationRule name="eat_Rule" agentVariable="p">
 					<WHEN eventType="InMessageEvent" messageType="EatMessage"/>
-					<IF language="Java"><![CDATA[(getFoodStock() - getEAT_AMOUNT()) < getEAT_AMOUNT()]]></IF>
+					<IF language="Java"><<![CDATA[!p.eat()]]>></IF>
 					<THEN>
 						<UPDATE-AGT>
 							<DestroyBeliefEntity >
@@ -86,13 +100,6 @@
 							</DestroyBeliefEntity>
 						</UPDATE-AGT>
 					</THEN>
-					<ELSE>
-						<UPDATE-AGT>
-							<Slot property="foodStock">
-								<ValueExpr language="Java"><![CDATA[p.eat()]]></ValueExpr>
-							</Slot>
-						</UPDATE-AGT>
-					</ELSE>
 				</CommunicationRule>				
 			</AgentType>		
 			<AgentType name="Market">
