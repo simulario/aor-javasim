@@ -1,5 +1,6 @@
 package aors.module.visopengl.gui;
 
+import java.awt.Dimension;
 import java.io.File;
 import java.io.IOException;
 
@@ -40,6 +41,8 @@ public class GUIComponent extends JScrollPane implements GUIModule {
 
     // Create the content panel (always do this after JOGL was initialized)
     content = new ContentPanel();
+    
+    this.setMinimumSize(new Dimension(500,400));
   }
 
   /**
