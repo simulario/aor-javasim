@@ -585,7 +585,7 @@ public class Engine implements GLEventListener {
 
       mapEmbedded(embeddedShape, parent);
       /*
-       * Check if the shape was changed by a ShapePropertyMap and regenerate its
+       * Check if the shape was changed by a ShapePropertyVisualizationMap  and regenerate its
        * display list if necessary.
        */
       if (embeddedShape.isRecompile()) {
@@ -675,7 +675,7 @@ public class Engine implements GLEventListener {
         mapNonPhysicals(shape);
 
         /*
-         * Check if the shape was changed by a ShapePropertyMap and regenerate
+         * Check if the shape was changed by a ShapePropertyVisualizationMap  and regenerate
          * its display list if necessary.
          */
         if (shape.isRecompile()) {

@@ -24,6 +24,7 @@ import aors.module.visopengl.shape.Rectangle;
 import aors.module.visopengl.shape.RegularPolygon;
 import aors.module.visopengl.shape.Shape2D;
 import aors.module.visopengl.shape.Shape2DMap;
+import aors.module.visopengl.shape.ShapePropertyVisualizationMap;
 import aors.module.visopengl.shape.Square;
 import aors.module.visopengl.shape.Triangle;
 import aors.module.visopengl.shape.View;
@@ -785,7 +786,7 @@ public class XMLReader {
       }
 
       if (childNodes.item(i).getNodeName().equals(Shape2DMap.SHAPE2D_MAP)) {
-        // Read a "Shape2DMap" node
+        // Read a "Shape2dVisualizationMap" node
         shape2DMap = readShape2DMap(childNodes.item(i));
       }
     }
@@ -1245,19 +1246,19 @@ public class XMLReader {
     if (childNodes.getLength() > 0) {
       for (int i = 0; i < childNodes.getLength(); i++) {
         /*
-         * Search for the GridCellPropertyVisualizationMap or ShapePropertyMap
+         * Search for the GridCellPropertyVisualizationMap or ShapePropertyVisualizationMap
          * nodes.
          */
         if (childNodes.item(i).getNodeName().equals(
             PropertyMap.GRID_PROPERTY_MAP)
             || childNodes.item(i).getNodeName().equals(
-                PropertyMap.SHAPE_PROPERTY_MAP)) {
+                ShapePropertyVisualizationMap.SHAPE_PROPERTY_MAP)) {
           // Create a PropertyMap instance
           PropertyMap pm = new PropertyMap();
 
           /*
            * Retrieve the attributes of a GridCellPropertyVisualizationMap or
-           * ShapePropertyMap node.
+           * ShapePropertyVisualizationMap node.
            */
           NamedNodeMap attributes = childNodes.item(i).getAttributes();
 
@@ -1526,7 +1527,7 @@ public class XMLReader {
   private Shape2DMap readShape2DMap(Node node) {
     Shape2DMap s2dm = new Shape2DMap();
 
-    // Retrieve all attributes of the "Shape2DMap" or "PhysicalShape2DMap"
+    // Retrieve all attributes of the "Shape2dVisualizationMap" or "PhysicalShape2DMap"
     // node
     NamedNodeMap attributes = node.getAttributes();
 
@@ -1540,7 +1541,7 @@ public class XMLReader {
       }
     }
 
-    // Retrieve child nodes the "Shape2DMap" or "PhysicalShape2DMap" node
+    // Retrieve child nodes the "Shape2dVisualizationMap" or "PhysicalShape2DMap" node
     NodeList childNodes = node.getChildNodes();
 
     for (int i = 0; i < childNodes.getLength(); i++) {

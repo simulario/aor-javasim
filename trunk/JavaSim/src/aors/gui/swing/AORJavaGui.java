@@ -376,10 +376,10 @@ public class AORJavaGui extends JFrame implements ActionListener,
 
         switch (posIndex) {
         case 0:
-          groupModulesPanel.add(BorderLayout.SOUTH, moduleGUI);
+          groupModulesPanel.add(BorderLayout.CENTER, moduleGUI);
           break;
         case 1:
-          groupModulesPanel.add(BorderLayout.CENTER, moduleGUI);
+          groupModulesPanel.add(BorderLayout.SOUTH, moduleGUI);
           break;
         case 2:
           groupModulesPanel.add(BorderLayout.EAST, moduleGUI);

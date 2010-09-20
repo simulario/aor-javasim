@@ -1,5 +1,7 @@
 package aors.module.visopengl.gui;
 
+import java.awt.Dimension;
+
 import javax.swing.JLabel;
 import javax.swing.JPanel;
 import javax.swing.JScrollPane;
@@ -35,12 +37,12 @@ public class DescriptionPanel extends JScrollPane {
     JPanel containerPanel = new JPanel();
     containerPanel.add(descriptionLabel);
     containerPanel.setBorder(new EtchedBorder());
+    this.setPreferredSize(new Dimension(350, 500));
 
     this.getViewport().add(containerPanel);
     this.setDescriptionData("<br/><br/><br/><center><b>"
         + LanguageManager.getMessage("messageNoDescription") + "<br/>"
-        + LanguageManager.getMessage("messageNoViews")
-        + "</center></b>");
+        + LanguageManager.getMessage("messageNoViews") + "</center></b>");
   }
 
   /**

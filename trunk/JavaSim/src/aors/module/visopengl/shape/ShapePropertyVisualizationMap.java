@@ -10,12 +10,12 @@ import aors.module.visopengl.space.view.MapType;
  * @since March 11th, 2010
  * 
  */
-public class ShapePropertyMap {
+public class ShapePropertyVisualizationMap {
 
-  // String constant for a "ShapePropertyMap" node
-  public static final String SHAPE_PROPERTY_MAP = "ShapePropertyMap";
+  // String constant for a "ShapePropertyVisualizationMap" node
+  public static final String SHAPE_PROPERTY_MAP = "ShapePropertyVisualizationMap";
 
-  // String constants for attributes of a "ShapePropertyMap" node
+  // String constants for attributes of a "ShapePropertyVisualizationMap" node
   public static final String SHAPE_PROPERTY = "shapeProperty";
   public static final String PROPERTY = "property";
   public static final String MAP_TYPE = "mapType";

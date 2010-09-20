@@ -33,7 +33,7 @@ public class ContentPanel extends JPanel {
    */
   public ContentPanel() {
     setLayout(new BorderLayout());
-    setPreferredSize(new Dimension(0, 0));
+    setPreferredSize(new Dimension(500, 500));
 
     // Add GUI elements
     add(BorderLayout.WEST, descriptionPanel);

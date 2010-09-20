@@ -10,7 +10,6 @@ package aors.module.visopengl.space.view;
 public class PropertyMap {
 
   // Property map nodes
-  public static final String SHAPE_PROPERTY_MAP = "ShapePropertyMap";
   public static final String GRID_PROPERTY_MAP = "GridCellPropertyVisualizationMap";
 
   // Attributes of property map nodes
