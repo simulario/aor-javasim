@@ -476,7 +476,7 @@
     <xsl:call-template name="java:method">
       <xsl:with-param name="indent" select="$indent"/>
       <xsl:with-param name="modifier" select="'public'"/>
-      <xsl:with-param name="type" select="jw:upperWord(@type)"/>
+      <xsl:with-param name="type" select="@type"/>
       <xsl:with-param name="name" select="fn:concat('get', $methodPrefix)"/>
       <xsl:with-param name="parameterList" as="xs:string*">
         <xsl:call-template name="java:createParam">
@@ -511,7 +511,7 @@
       <xsl:with-param name="indent" select="$indent"/>
       <xsl:with-param name="modifier" select="'public'"/>
       <xsl:with-param name="type" select="'ArrayList'"/>
-      <xsl:with-param name="genericType" select="jw:upperWord(jw:mappeDataType(@type))"/>
+      <xsl:with-param name="genericType" select="jw:mappeDataType(@type)"/>
       <xsl:with-param name="name"
         select="fn:concat('get', if (fn:ends-with($methodPrefix,'s')) then $methodPrefix else fn:concat($methodPrefix, 's'))"/>
       <xsl:with-param name="content">
@@ -534,7 +534,7 @@
             </xsl:call-template>
           </xsl:with-param>
           <xsl:with-param name="returnType"
-            select="fn:concat('ArrayList&lt;', jw:upperWord(jw:mappeDataType(@type)), '&gt;')"
+            select="fn:concat('ArrayList&lt;', jw:mappeDataType(@type), '&gt;')"
           />
         </xsl:call-template>
 
@@ -624,7 +624,7 @@
     <xsl:call-template name="java:method">
       <xsl:with-param name="indent" select="$indent"/>
       <xsl:with-param name="modifier" select="'public'"/>
-      <xsl:with-param name="type" select="jw:upperWord(@type)"/>
+      <xsl:with-param name="type" select="@type"/>
       <xsl:with-param name="name" select="fn:concat('remove', $methodPrefix)"/>
       <xsl:with-param name="parameterList" as="xs:string*">
         <xsl:call-template name="java:createParam">
@@ -664,7 +664,7 @@
       <xsl:with-param name="name" select="fn:concat('remove', $methodPrefix)"/>
       <xsl:with-param name="parameterList" as="xs:string*">
         <xsl:call-template name="java:createParam">
-          <xsl:with-param name="type" select="jw:upperWord(@type)"/>
+          <xsl:with-param name="type" select="@type"/>
           <xsl:with-param name="name" select="$objVarName"/>
         </xsl:call-template>
       </xsl:with-param>
@@ -700,7 +700,7 @@
       <xsl:with-param name="name" select="fn:concat('add', $methodPrefix)"/>
       <xsl:with-param name="parameterList" as="xs:string*">
         <xsl:call-template name="java:createParam">
-          <xsl:with-param name="type" select="jw:upperWord(@type)"/>
+          <xsl:with-param name="type" select="@type"/>
           <xsl:with-param name="name" select="$objVarName"/>
         </xsl:call-template>
       </xsl:with-param>
