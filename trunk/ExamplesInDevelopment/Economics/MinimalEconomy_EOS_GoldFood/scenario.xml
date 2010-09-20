@@ -37,7 +37,9 @@
 		</DataTypes>
 		
 		<EntityTypes>	
-			<MessageType name="OpenMarket"></MessageType>
+			<MessageType name="OpenMarket">
+				<Attribute name="price" type="Float"/>
+			</MessageType>
 			<MessageType name="EatMessage"></MessageType>
 			<MessageType name="AnnouncePrice">
 				<Attribute type="Float" name="price"/>
@@ -62,6 +64,13 @@
 						return getAssets(pos);
 					]]></Body>
 				</Function>
+				
+				<Function name="addContinuous" resultType="Void">
+					<Parameter name="asset" type="aors.util.economics.ContinuousQuantity"/>
+					<Body language="Java"><![CDATA[
+						getAssets().add(asset);
+					]]></Body>
+				</Function>
 			</AgentType>
 			
 			
@@ -81,23 +90,28 @@
 				
 				<Function name="eat" resultType="Boolean">
 					<Body language="Java"><![CDATA[
-						if(getAsset("Food").getQuantity() - getEAT_AMOUNT() < getEAT_AMOUNT() ){
-							
-						}
-						else{
-							if(!getAsset("Food").isDiscrete()){
-								aors.util.economics.ContinuousQuantity a = getAsset("Food");
-								a.withdraw(1);
-								return true;
+					/*getAsset("Food").getClass.equals(aors.util.economics.ContinuousQuantity*/
+						if(true){	
+							if(getAsset("Food").getQuantity() - getEAT_AMOUNT() < getEAT_AMOUNT() ){
+								
 							}
+							else{
+								getAsset("Food").withdraw(1);
+								return true;
+								
+							}
+							return false;
+						}else{
+							aors.util.economics.ContinuousQuantityType FoodType = new aors.util.economics.ContinuousQuantityType("Food", "Stk");
+							aors.util.economics.ContinuousQuantity Food = new aors.util.economics.ContinuousQuantity(20, FoodType);
+							getAssets().addContinuous(Food);
 						}
-						return false;
 					]]></Body>
 				</Function>
 				
-				<!--<CommunicationRule name="eat_Rule" agentVariable="p">
-					<WHEN eventType="InMessageEvent" messageType="EatMessage"/>
-					<IF language="Java"><<![CDATA[!p.eat()]]>></IF>
+				<CommunicationRule name="OpenMarket_Rule" agentVariable="p">
+					<WHEN eventType="InMessageEvent" messageType="OpenMarket"/>
+					<IF language="Java"><![CDATA[!p.eat()]]></IF>
 					<THEN>
 						<UPDATE-AGT>
 							<DestroyBeliefEntity >
@@ -105,7 +119,7 @@
 							</DestroyBeliefEntity>
 						</UPDATE-AGT>
 					</THEN>
-				</CommunicationRule>	-->			
+				</CommunicationRule>
 			</AgentType>		
 			<AgentType name="Market">
 				<Attribute type="Float" name="marketPrice"/>
@@ -130,10 +144,15 @@
 			<EnvironmentRule name="StartOfDay_Rule">
 				<WHEN eventType="StartOfDay"/>
 				<FOR objectVariable="m" objectType="Market" />
+				<FOR objectVariable="p" objectType="Person" />
 				<DO>
 					<SCHEDULE-EVT>
-						<InMessageEventExpr messageType="OpenMarket" senderIdRef="0">
-							<ReceiverIdRef language="Java">m.getId()</ReceiverIdRef>
+						<InMessageEventExpr messageType="OpenMarket">
+						    <SenderIdRef language="Java">m.getId()</SenderIdRef>
+							<ReceiverIdRef language="Java">p.getId()</ReceiverIdRef>
+							<Slot property="price">
+								<ValueExpr language="Java">m.getMarketPrice()</ValueExpr>
+							</Slot>
 						</InMessageEventExpr>
 					</SCHEDULE-EVT>
 				</DO>
@@ -165,7 +184,7 @@
 					<UPDATE-ENV>
 						<UpdateObject objectVariable="p">
 							<Slot property="lastPrice">
-								<ValueExpr language="Java">mes.getPrice()</ValueExpr>
+								<ValueExpr language="Java">mes.getMarketPrice()</ValueExpr>
 							</Slot>
 						</UpdateObject>
 					</UPDATE-ENV>
@@ -182,11 +201,7 @@
 			<Slot property="marketPrice" value="2.0" />
 		</Agent>
 		<Agents type="Person" rangeStartID="1000" rangeEndID="1001">
-			<Slot property="foodStock">
-				<RandomVariable>
-					<Uniform lowerBound="20.0" upperBound="40.0" />
-				</RandomVariable>
-			</Slot>
+				
 		</Agents>
 		<ExogenousEvent occurrenceTime="1" type="StartOfDay" />
 		<ExogenousEvent occurrenceTime="8" type="EachDayAt8AM" />
