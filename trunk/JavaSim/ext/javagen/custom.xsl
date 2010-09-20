@@ -407,7 +407,7 @@
   <xsl:variable name="defaultImports" as="xs:string*">
     <xsl:value-of select="fn:concat($core.package.util, '.*')"/>
     <xsl:value-of select="$util.package.refTypes"/>
-    <xsl:if test="fn:exists(//aorsl:Enumeration) or fn:exists(//aorsl:ComplexDataProperty)">
+    <xsl:if test="fn:exists(//aorsl:DataTypes/aorsl:Enumeration) or fn:exists(//aorsl:DataTypes/aorsl:ComplexDataProperty)">
       <xsl:value-of select="fn:concat($sim.package.model.dataTypes, '.*')"/>
     </xsl:if>
     <xsl:value-of select="fn:concat($sim.package.model.envsimulator, '.*')"/>
