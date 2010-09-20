@@ -12,7 +12,7 @@ package aors.util.economics;
  * ISSUES
  * - should this class implement Cloneable?
  */
-public class ContinuousQuantity {
+public class ContinuousQuantity extends Object{
 
   private double quantity;  
   private ContinuousQuantityType continuousQuantityType;  
