@@ -13,7 +13,7 @@ import java.util.ArrayList;
  * ISSUES
  * - should this class implement Cloneable?
  */
-public class DiscreteQuantity {
+public class DiscreteQuantity extends Quantity{
 
   private String objectType;  
   private int quantity;  // optional (default is 1)
