@@ -196,7 +196,7 @@ public class PhysicalAgentObject extends AgentObject implements Physical {
    * @param perceptionDirectionY
    * @param perceptionDirectionZ
    */
-  public void setPerceptionAngle(double perceptionDirectionX,
+  public void setPerceptionDirection(double perceptionDirectionX,
       double perceptionDirectionY, double perceptionDirectionZ) {
 
     this.perceptionDirection.setX(perceptionDirectionX);
