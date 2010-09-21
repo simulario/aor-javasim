@@ -70,6 +70,10 @@ public class PhysicalAgentObject extends AgentObject implements Physical {
 
   private double perceptionRadius;
 
+  private Vector perceptionDirection = new Vector();
+
+  private double perceptionAngle = 360;
+
   private String points = "";
 
   /**
@@ -129,6 +133,78 @@ public class PhysicalAgentObject extends AgentObject implements Physical {
       this.propertyChangeSupport.firePropertyChange(new PropertyChangeEvent(
           this, Physical.PROP_PERCEPTION_RADIUS, null, this.perceptionRadius));
     }
+  }
+
+  /**
+   * Usage:
+   * 
+   * 
+   * Comments: Get the {@code perceptionAngle}.
+   * 
+   * 
+   * 
+   * @return the {@code perceptionAngle}.
+   */
+  public double getPerceptionAngle() {
+    return perceptionAngle;
+  }
+
+  /**
+   * Usage:
+   * 
+   * 
+   * Comments: Set the {@code perceptionAngle}.
+   * 
+   * 
+   * 
+   * @param perceptionAngle
+   *          The {@code perceptionAngle} to set.
+   */
+  public void setPerceptionAngle(double perceptionAngle) {
+
+    if (this.perceptionAngle != perceptionAngle) {
+      this.perceptionAngle = perceptionAngle;
+
+      this.propertyChangeSupport.firePropertyChange(new PropertyChangeEvent(
+          this, Physical.PROP_PERCEPTION_ANGLE, null, this.perceptionAngle));
+    }
+  }
+
+  /**
+   * Usage:
+   * 
+   * 
+   * Comments: Get the {@code perceptionDirection}.
+   * 
+   * 
+   * 
+   * @return the {@code perceptionDirection}.
+   */
+  public Vector getPerceptionDirection() {
+    return perceptionDirection;
+  }
+
+  /**
+   * Usage:
+   * 
+   * 
+   * Comments: Set the {@code perceptionAngle}.
+   * 
+   * 
+   * 
+   * @param perceptionDirectionX
+   * @param perceptionDirectionY
+   * @param perceptionDirectionZ
+   */
+  public void setPerceptionAngle(double perceptionDirectionX,
+      double perceptionDirectionY, double perceptionDirectionZ) {
+
+    this.perceptionDirection.setX(perceptionDirectionX);
+    this.perceptionDirection.setY(perceptionDirectionY);
+    this.perceptionDirection.setZ(perceptionDirectionZ);
+
+    this.propertyChangeSupport.firePropertyChange(new PropertyChangeEvent(this,
+        Physical.PROP_PERCEPTION_DIRECTION, null, this.perceptionDirection));
   }
 
   @Override
@@ -675,35 +751,35 @@ public class PhysicalAgentObject extends AgentObject implements Physical {
     return result;
   }
 
-	@Override
-	public Map<String, Object> getProperties() {
-		Map<String, Object> properties = super.getProperties();
-		properties.put(PROP_ALPHA_X, this.getAlphaX());
-		properties.put(PROP_ALPHA_Y, this.getAlphaY());
-		properties.put(PROP_ALPHA_Z, this.getAlphaZ());
-		properties.put(PROP_AX, this.getAx());
-		properties.put(PROP_AY, this.getAy());
-		properties.put(PROP_AZ, this.getAz());
-		properties.put(PROP_DEPTH, this.getDepth());
-		properties.put(PROP_HEIGHT, this.getHeight());
-		properties.put(PROP_M, this.getM());
-		properties.put(PROP_MATERIALTYPE, this.getMaterialType());
-		properties.put(PROP_OMEGA_X, this.getOmegaX());
-		properties.put(PROP_OMEGA_Y, this.getOmegaY());
-		properties.put(PROP_OMEGA_Z, this.getOmegaZ());
-		properties.put(PROP_POINTS, this.getPoints());
-		properties.put(PROP_ROTATION_ANGLE_X, this.getRotX());
-		properties.put(PROP_ROTATION_ANGLE_Y, this.getRotY());
-		properties.put(PROP_ROTATION_ANGLE_Z, this.getRotZ());
-		properties.put(PROP_SHAPE2D, this.getShape2D());
-		properties.put(PROP_SHAPE3D, this.getShape3D());
-		properties.put(PROP_VX, this.getVx());
-		properties.put(PROP_VY, this.getVy());
-		properties.put(PROP_VZ, this.getVz());
-		properties.put(PROP_WIDTH, this.getWidth());
-		properties.put(PROP_X, this.getX());
-		properties.put(PROP_Y, this.getY());
-		properties.put(PROP_Z, this.getZ());
-		return properties;
-	}
+  @Override
+  public Map<String, Object> getProperties() {
+    Map<String, Object> properties = super.getProperties();
+    properties.put(PROP_ALPHA_X, this.getAlphaX());
+    properties.put(PROP_ALPHA_Y, this.getAlphaY());
+    properties.put(PROP_ALPHA_Z, this.getAlphaZ());
+    properties.put(PROP_AX, this.getAx());
+    properties.put(PROP_AY, this.getAy());
+    properties.put(PROP_AZ, this.getAz());
+    properties.put(PROP_DEPTH, this.getDepth());
+    properties.put(PROP_HEIGHT, this.getHeight());
+    properties.put(PROP_M, this.getM());
+    properties.put(PROP_MATERIALTYPE, this.getMaterialType());
+    properties.put(PROP_OMEGA_X, this.getOmegaX());
+    properties.put(PROP_OMEGA_Y, this.getOmegaY());
+    properties.put(PROP_OMEGA_Z, this.getOmegaZ());
+    properties.put(PROP_POINTS, this.getPoints());
+    properties.put(PROP_ROTATION_ANGLE_X, this.getRotX());
+    properties.put(PROP_ROTATION_ANGLE_Y, this.getRotY());
+    properties.put(PROP_ROTATION_ANGLE_Z, this.getRotZ());
+    properties.put(PROP_SHAPE2D, this.getShape2D());
+    properties.put(PROP_SHAPE3D, this.getShape3D());
+    properties.put(PROP_VX, this.getVx());
+    properties.put(PROP_VY, this.getVy());
+    properties.put(PROP_VZ, this.getVz());
+    properties.put(PROP_WIDTH, this.getWidth());
+    properties.put(PROP_X, this.getX());
+    properties.put(PROP_Y, this.getY());
+    properties.put(PROP_Z, this.getZ());
+    return properties;
+  }
 }

@@ -138,6 +138,16 @@ public interface Physical {
    * Constant that defines the String name of the perceptionRadius property
    */
   public static final String PROP_PERCEPTION_RADIUS = "perceptionRadius";
+  
+  /**
+   * Constant that defines the String name of the perceptionAngle property
+   */
+  public static final String PROP_PERCEPTION_ANGLE = "perceptionAngle";
+  
+  /**
+   * Constant that defines the String name of the perceptionDirection property
+   */
+  public static final String PROP_PERCEPTION_DIRECTION = "perceptionDirection";
 
   /**
    * NOTICE: We use this interface as a supertype of every implementation of
