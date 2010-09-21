@@ -32,46 +32,56 @@
 			</Variable>
 		</Statistics>	
 		
-		<DataTypes>	
+		<DataTypes>
+			<ComplexDataType name="Assets">
+				<!--====================================-->
+				<ClassDef language="Java"><![CDATA[
+					private java.util.ArrayList<aors.util.economics.Quantity> assets = new java.util.ArrayList<aors.util.economics.Quantity>();
 				
+					public Assets() {
+					}
+					
+					public Float addAsset(Float quantity, String name, String unit) {
+					  /*aors.util.economics.ContinuousQuantityType assetType = new aors.util.economics.ContinuousQuantityType(name, unit);
+					  aors.util.economics.ContinuousQuantity asset = new aors.util.economics.ContinuousQuantity(quantity, assetType);
+					  assets.add(asset);*/
+					  return quantity;
+					}
+					
+					public aors.util.economics.Quantity getAsset(String name){
+						int i;
+						for(i=0; i < assets.size(); i++){
+							if(!assets.get(i).isDiscrete()){
+								if(((aors.util.economics.ContinuousQuantity)assets.get(i)).getContinuousQuantityType().getName() == name){
+									break;
+								}
+							}
+						}
+						return assets.get(i);
+					}
+	  			]]></ClassDef>
+			</ComplexDataType>
 		</DataTypes>
 		
-		<EntityTypes>	
+		<EntityTypes>
 			<MessageType name="OpenMarket">
 				<Attribute name="price" type="Float"/>
 			</MessageType>
-			<MessageType name="EatMessage"></MessageType>
-			<MessageType name="AnnouncePrice">
-				<Attribute type="Float" name="price"/>
-			</MessageType>	
-			<MessageType name="BuyFoodMessage"></MessageType>
-			<MessageType name="SellFoodMessage"></MessageType>
-			<MessageType name="BidMessage">
-				<Attribute type="String" name="product"/>
-				<Attribute type="String" name="currency"/>
-				<ComplexDataProperty name="bidList" type="Offer" upperMultiplicity="unbounded"/>			
+			<MessageType name="BuyFoodMessage">
+				<ComplexDataProperty name="OfferList" type="Offer" upperMultiplicity="unbounded"/>
+			</MessageType>
+			<MessageType name="SellFoodMessage">
+				<ComplexDataProperty name="OfferList" type="Offer" upperMultiplicity="unbounded"/>
 			</MessageType>
 			<ExogenousEventType name="StartOfDay" periodicity="24" />
 			<ExogenousEventType name="EachDayAt8AM" periodicity="24" />
 			<ExogenousEventType name="EachDayAt11AM" periodicity="24" />
 			
 			<AgentType name="EconomicAgent">
-				<ComplexDataProperty name="assets" type="aors.util.economics.Quantity" upperMultiplicity="unbounded" />
+				<!--<ComplexDataProperty name="assets" type="Quantity" upperMultiplicity="unbounded" />-->
+				<ComplexDataProperty name="assets" type="model.dataTypes.Assets"  />
 				
-				<Function name="getAsset" resultType="aors.util.economics.Quantity">
-					<Parameter name="asset" type="String"/>
-					<Body language="Java"><![CDATA[
-						int pos = getAssets().indexOf(asset);
-						return getAssets(pos);
-					]]></Body>
-				</Function>
-				
-				<Function name="addContinuous" resultType="void">
-					<Parameter name="asset" type="aors.util.economics.ContinuousQuantity"/>
-					<Body language="Java"><![CDATA[
-					     getAssets().add(asset);
-					]]></Body>
-				</Function>
+				<PeriodicTimeEventType name="SetAssets" />
 			</AgentType>
 			
 			
@@ -88,27 +98,35 @@
 				<Attribute type="Float" name="HISTORICAL_FOOD_PRICE" initialValue="0.02"/>
 				<Attribute type="Float" name="lastPrice"/>
 				<Attribute type="Float" name="foodStock"/>
+				<Attribute type="Float" name="goldAmount"/>
 				
 				<Function name="eat" resultType="boolean">
 					<Body language="Java"><![CDATA[
-							if(getAsset("Food").getQuantity() - getEAT_AMOUNT() >= getEAT_AMOUNT() ){
-								getAsset("Food").withdraw(1);
-								setFoodStock(getAsset("Food").getQuantity());
-								setFoodStock(10);
+							if(getAssets().getAsset("Food").getQuantity() - getEAT_AMOUNT() >= getEAT_AMOUNT() ){
+								getAssets().getAsset("Food").withdraw(1);
+								setFoodStock(getFoodStock()-1);
 							}
 						return true;
 					]]></Body>
 				</Function>
 				
-				<Function name="init" resultType="boolean">
-				<Body language="Java"><![CDATA[
-						aors.util.economics.ContinuousQuantityType FoodType = new aors.util.economics.ContinuousQuantityType("Food", "Stk");
-						aors.util.economics.ContinuousQuantity Food = new aors.util.economics.ContinuousQuantity(20, FoodType);
-						addContinuous(Food);
-						setFoodStock(20);
-						return true;
-					]]></Body>
-				</Function>
+				<CommunicationRule name="SetAssets_Rule" agentVariable="p">
+					<WHEN eventType="SetAssets" />
+					<DO>
+						<UPDATE-AGT>
+							<Slot property="foodStock">
+								<ValueExpr language="Java"><![CDATA[
+									p.getAssets().addAsset(20.0f, "Food", "Stk")
+								]]></ValueExpr>
+							</Slot>
+							<Slot property="goldAmount">
+								<ValueExpr language="Java"><![CDATA[
+									p.getAssets().addAsset(10.0f, "Gold", "Stk")	
+								]]></ValueExpr>
+							</Slot>
+						</UPDATE-AGT>
+					</DO>	
+				</CommunicationRule>
 				
 				<CommunicationRule name="OpenMarket_Rule" agentVariable="p">
 					<WHEN eventType="InMessageEvent" messageType="OpenMarket"/>
@@ -118,7 +136,6 @@
 							<OutMessageEventExpr messageType="OpenMarket" receiverIdRefs="0" />
 						</SCHEDULE-EVT>
 					</THEN>
-					
 				</CommunicationRule>
 			</AgentType>		
 			<AgentType name="Market">
@@ -126,8 +143,9 @@
 				<Attribute type="Float" name="marketVolume"/>
 			</AgentType>
 		</EntityTypes>
-		<EnvironmentRules>
-			<EnvironmentRule name="StartOfDay_Rule">
+		
+	<EnvironmentRules>
+		<EnvironmentRule name="StartOfDay_Rule">
 				<WHEN eventType="StartOfDay"/>
 				<FOR objectVariable="m" objectType="Market" />
 				<FOR objectVariable="p" objectType="Person" />
@@ -143,6 +161,7 @@
 					</SCHEDULE-EVT>
 				</DO>
 			</EnvironmentRule>
+			
 			<EnvironmentRule name="Die">
 				<WHEN eventType="OutMessageEvent" messageType="OpenMarket" eventVariable="evt" />
 				<DO>
@@ -155,9 +174,11 @@
 					</UPDATE-ENV>
 				</DO>
 			</EnvironmentRule>
+			
 			<EnvironmentRule name="EachDayAt8AM_Rule">
 				<WHEN eventType="EachDayAt8AM"/>
 			</EnvironmentRule>
+			
 			<EnvironmentRule name="EachDayAt11AM_Rule">
 				<WHEN eventType="EachDayAt11AM"/>
 			</EnvironmentRule>
@@ -172,9 +193,10 @@
 			<Slot property="marketPrice" value="2.0" />
 		</Agent>
 		<Agent type="Person" id="1000">
-				
+			<Slot property="foodStock" value="20"></Slot>
+			<PeriodicTimeEvent type="SetAssets" occurrenceTime="1" />
 		</Agent>
-		<ExogenousEvent occurrenceTime="1" type="StartOfDay" />
+		<ExogenousEvent occurrenceTime="2" type="StartOfDay" />
 		<ExogenousEvent occurrenceTime="8" type="EachDayAt8AM" />
 		<ExogenousEvent occurrenceTime="11" type="EachDayAt11AM" />
 	</InitialState>
