@@ -65,6 +65,22 @@
 					}
 	  			]]></ClassDef>
 			</ComplexDataType>
+			<ComplexDataType name="Offer">
+				<Attribute type="String" name="product"/>
+				<Attribute type="String" name="currency"/>
+				<Attribute type="Float" name="price"/>
+				<Attribute type="Float" name="maxQuantity"/>
+				<Attribute type="Integer" name="AgentID"/>
+			</ComplexDataType>
+			<ComplexDataType name="OfferList">
+				<ClassDef language="Java"><![CDATA[
+					private java.util.ArrayList<Offer> offers = new java.util.ArrayList<Offer>();
+					
+					public void addOffer(Offer o){
+						offers.add(o);
+					}
+				]]></ClassDef>
+			</ComplexDataType>
 		</DataTypes>
 		
 		<EntityTypes>
@@ -72,11 +88,11 @@
 				<Attribute name="price" type="Float"/>
 			</MessageType>
 			<MessageType name="Act_msg" />
-			<MessageType name="BuyFoodMessage">
-				<ComplexDataProperty name="OfferList" type="Offer" upperMultiplicity="unbounded"/>
+			<MessageType name="BuyFood_msg">
+				<ComplexDataProperty name="OfferList" type="OfferList"/>
 			</MessageType>
-			<MessageType name="SellFoodMessage">
-				<ComplexDataProperty name="OfferList" type="Offer" upperMultiplicity="unbounded"/>
+			<MessageType name="SellFood_msg">
+				<ComplexDataProperty name="OfferList" type="OfferList"/>
 			</MessageType>
 			<ExogenousEventType name="StartOfDay" periodicity="24" />
 			<ExogenousEventType name="EachDayAt8AM" periodicity="24" />
@@ -105,6 +121,9 @@
 				<Attribute name="leisureWorker" type="Boolean" />
 				<Attribute name="skillLevelFood" type="Float" />
 				<Attribute name="skillLevelGold" type="Float" />
+				<ComplexDataProperty name="BuyList" type="OfferList"/>
+				<ComplexDataProperty name="SellList" type="OfferList"/>
+				
 				<!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~-->
 				<Function name="eat" resultType="boolean">
 					<!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~-->
@@ -114,7 +133,8 @@
 								setFoodStock(getFoodStock()- getEAT_AMOUNT());
 								System.out.println("Eat: " + getEAT_AMOUNT());
 								return true;
-							}		 
+							}	
+							System.out.println("Die");
 							return false;
 					]]></Body>
 				</Function>
@@ -124,7 +144,7 @@
 					<Body language="Java"><![CDATA[
 							getAssets().getAsset("Food").deposit(getSkillLevelFood());
 							setFoodStock(getFoodStock() + getSkillLevelFood());
-							System.out.println("produceFood: " + getSkillLevelFood());
+							System.out.println("produceFood: " + getAssets().getAsset("Food").getQuantity());
 							return getFoodStock();
 					]]></Body>
 				</Function>
@@ -134,11 +154,64 @@
 					<Body language="Java"><![CDATA[
 							getAssets().getAsset("Gold").deposit(getSkillLevelGold());
 							setGoldAmount(getGoldAmount() + getSkillLevelGold());
-							System.out.println("produceGold: " + getSkillLevelGold());
+							System.out.println("produceGold: " + getAssets().getAsset("Gold").getQuantity());
 							return getGoldAmount();
 					]]></Body>
 				</Function>
-				
+				<!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~-->
+				<Function name="buyFood" resultType="Boolean">
+					<!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~-->
+					<Body language="Java"><![CDATA[
+						final double quantum = getEAT_AMOUNT() * 1.0;
+			          	double purse = getAssets().getAsset("Gold").getQuantity();
+			          	System.out.println("buyFood: " + purse);
+			          	for (double x = getAssets().getAsset("Food").getQuantity(); x <= 1.5 * getTARGET_FOOD_STOCK(); x += quantum) {
+			            	if(x == 0.0) x = .00000000001;
+			            	double mod = .1*Math.pow(getTARGET_FOOD_STOCK()/x, .2) +.90/*5*/+Random.uniform(0.0, 1.0)*getRANDOM_FACTOR();
+			            	double price = mod*getLastPrice();
+			            	price = Math.min(price, purse);
+			            	if (price <= 0.0)
+			              		break;
+			            	purse -= quantum*price;
+			            	if(purse < 0.0) break;
+			            	
+			            	Offer o = new Offer();
+			            	//prüfen ob überhaupt soviel abgehoben werden kann eventl. esrt im Markt
+			            	o.setProduct("Food");
+			            	o.setCurrency("Gold");
+			            	o.setMaxQuantity(quantum);
+			            	o.setPrice(price);
+			            	getBuyList().addOffer(o);
+			            	System.out.println("buyFood: " + quantum + " " + price);
+			          	}
+						return true;
+					]]></Body>
+				</Function>
+				<!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~-->
+				<Function name="sellFood" resultType="Boolean">
+					<!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~-->
+					<Body language="Java"><![CDATA[
+						if(getAssets().getAsset("Food").getQuantity() > 1.5*getTARGET_FOOD_STOCK()){
+				        	final double quantum = getEAT_AMOUNT() * 1.0;
+				          	for (double x = getAssets().getAsset("Food").getQuantity(); x > 1.5*getTARGET_FOOD_STOCK(); x -= quantum) {
+				            if(x == 0.0) x = .00000000001;
+				            double mod = .1*Math.pow(getTARGET_FOOD_STOCK()/(x - getTARGET_FOOD_STOCK()), .2) +.90/*5*/+Random.uniform(0.0, 1.0)*getRANDOM_FACTOR();
+				            double price = mod*getLastPrice();
+				            if (price <= 0.0) break;
+				            
+				            Offer o = new Offer();
+				            o.setProduct("Food");
+			            	o.setCurrency("Gold");
+			            	o.setMaxQuantity(quantum);
+			            	o.setPrice(price);
+			            	getSellList().addOffer(o);
+				            System.out.println("sellFood: " + quantum + " " + price);
+				          }
+						return true;
+						}
+						return false;
+					]]></Body>
+				</Function>
 				<PeriodicTimeEventType name="SetAssets" />
 				<!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~-->
 				<CommunicationRule name="SetAssets_Rule" agentVariable="p">
@@ -148,12 +221,12 @@
 						<UPDATE-AGT>
 							<Slot property="foodStock">
 								<ValueExpr language="Java"><![CDATA[
-									p.getAssets().addAsset(20.0f, "Food", "Stk")
+									p.getAssets().addAsset(33.0f, "Food", "Stk")
 								]]></ValueExpr>
 							</Slot>
 							<Slot property="goldAmount">
 								<ValueExpr language="Java"><![CDATA[
-									p.getAssets().addAsset(10.0f, "Gold", "Stk")	
+									p.getAssets().addAsset(60.0f, "Gold", "Stk")	
 								]]></ValueExpr>
 							</Slot>
 						</UPDATE-AGT>
@@ -208,6 +281,42 @@
 								]]></ValueExpr>
 							</Slot>
 						</UPDATE-AGT>
+					</THEN>
+				</CommunicationRule>
+				<!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->
+				<CommunicationRule name="BuyFood_Rule" agentVariable="p">
+					<!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->
+					<documentation>
+						<description> The person decides how much food he wants to buy</description>
+					</documentation>
+					<WHEN eventType="InMessageEvent" messageType="Act_msg"/>
+					<IF language="Java">buyFood()</IF>
+					<THEN>
+						<SCHEDULE-EVT>
+							<OutMessageEventExpr messageType="BuyFood_msg" receiverIdRefs="2">
+								<Slot property="OfferList">
+									<ValueExpr language="Java">getBuyList()</ValueExpr>
+								</Slot>
+							</OutMessageEventExpr>
+						</SCHEDULE-EVT>
+					</THEN>
+				</CommunicationRule>
+				<!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->
+				<CommunicationRule name="SellFood_Rule" agentVariable="p">
+					<!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->
+					<documentation>
+						<description> The person decides how much food he wants to sell</description>
+					</documentation>
+					<WHEN eventType="InMessageEvent" messageType="Act_msg"/>
+					<IF language="Java">sellFood()</IF>
+					<THEN>
+						<SCHEDULE-EVT>
+							<OutMessageEventExpr messageType="SellFood_msg" receiverIdRefs="2">
+								<Slot property="OfferList">
+									<ValueExpr language="Java">getSellList()</ValueExpr>
+								</Slot>
+							</OutMessageEventExpr>
+						</SCHEDULE-EVT>
 					</THEN>
 				</CommunicationRule>
 			</AgentType>		
@@ -280,8 +389,8 @@
 		</Agent>
 		
 		<Agent type="Person" id="1000">
-			<Slot property="foodStock" value="20" />	
-			<Slot property="goldAmount" value="10" />
+			<Slot property="foodStock" value="33" />	
+			<Slot property="goldAmount" value="60" />
 			<Slot property="skillLevelGold">
 				<RandomVariable>
 					<Uniform lowerBound="3.0" upperBound="4.0" />
