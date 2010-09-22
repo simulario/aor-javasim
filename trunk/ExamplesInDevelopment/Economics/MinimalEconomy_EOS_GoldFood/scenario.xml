@@ -16,38 +16,39 @@
 			<dc:source>"A computational market model based on individual action", by Ken Steiglitz, Michael L. Honig and Leonard M. Cohen, 1996. URL: http://www.cs.princeton.edu/~ken/scott.pdf</dc:source>
 			<aors:description xmlns="http://www.w3.org/1999/xhtml">The "Gold Food Economy" is an example of an agent-based simulation of a relatively basic economy that does not directly model a real economy, but attempts to explain the macroeconomy through simulation of a minimal economy. It is one of the simplest models wherein zero-intelligence agents produce, consume and trade in an economy with only two goods: gold and food. The model simulates the actions of independent "worker" agents, each with his own inventory and skills (at producing food and gold), interacting through an auction market agent that establishes a commonly accepted transaction price. Workers must consume a unit of food every period, and each worker tries to maintain a minimum inventory of food to guarantee consumption. For the system to survive the production of food must be greater than the total food consumption per period, but this leads to a surplus of food in the economy. The market allows agents to sell their surplus food for gold that can be used to purchase food in the same market later on. Agents more skilled in the production of gold might decide to mine gold and trade it for food at every period.</aors:description>
 		</documentation>
+		<!--
 		<Statistics>
-			<!-- ========================================= -->
+			
 			<Variable name="Food" dataType="Float">
-				<!-- ========================================= -->
+				
 				<Source>
 					<ObjectProperty property="foodStock" objectType="Person"/>
 				</Source>
 			</Variable>
+			
 			<Variable name="Price" dataType="Float">
-				<!-- ========================================= -->
+				
 				<Source>
 					<ObjectProperty property="lastPrice" objectType="Person"/>
 				</Source>
 			</Variable>
 		</Statistics>	
-		
+		-->
 		<DataTypes>
+			<!--====================================-->
 			<ComplexDataType name="AssetsList">
 				<!--====================================-->
 				<ClassDef language="Java"><![CDATA[
-					private java.util.ArrayList<aors.util.economics.Quantity> assets = new java.util.ArrayList<aors.util.economics.Quantity>();
-				
-					public AssetsList() {
-					}
+					private java.util.ArrayList<aors.util.economics.Quantity> assets = new java.util.ArrayList<aors.util.economics.Quantity>();			
+				 
+					public AssetsList() {}			                       
 					
 					public Float addAsset(Float quantity, String name, String unit) {
+				
 					  aors.util.economics.ContinuousQuantityType assetType = new aors.util.economics.ContinuousQuantityType(name, unit);
 					  aors.util.economics.ContinuousQuantity asset = new aors.util.economics.ContinuousQuantity(quantity, assetType);
-					  assets.add(asset);
-					  if(assets.isEmpty()){
-					  	System.out.println("empty");
-					  }
+					  assets.add(asset);	
+					  //System.out.println("Array is: "+assets);
 					  return quantity;
 					}
 					
@@ -55,7 +56,8 @@
 						int i;
 						for(i=0; i < assets.size(); i++){
 							if(!assets.get(i).isDiscrete()){
-								if(((aors.util.economics.ContinuousQuantity)assets.get(i)).getContinuousQuantityType().getName() == name){
+								if(((aors.util.economics.ContinuousQuantity)assets.get(i)).getContinuousQuantityType().getName().equals(name)){
+								   System.out.println("eated asset: "+name);
 									break;
 								}
 							}
@@ -82,17 +84,15 @@
 			
 			<AgentType name="EconomicAgent">
 				<!--<ComplexDataProperty name="assets" type="Quantity" upperMultiplicity="unbounded" />-->
-				<ComplexDataProperty name="assets" type="model.dataTypes.AssetsList"  />
-				
-				<PeriodicTimeEventType name="SetAssets" />
 			</AgentType>
 			
-			
+			<!-- ============================================ -->
 			<AgentType name="Person" superType="EconomicAgent">
 				<!-- ============================================ -->
 				<documentation>
 					<description>Model Level representation of a Person</description>
 				</documentation>
+				<ComplexDataProperty name="assets" type="model.dataTypes.AssetsList"  />
 				<Attribute type="Float" name="EAT_AMOUNT" initialValue="1.0"/>
 				<Attribute type="Float" name="TARGET_FOOD_STOCK" initialValue="30.0"/>
 				<Attribute type="Float" name="TARGET_MONEY_STOCK" initialValue="60.0"/>
@@ -103,17 +103,23 @@
 				<Attribute type="Float" name="foodStock"/>
 				<Attribute type="Float" name="goldAmount"/>
 				
+				<!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~-->
 				<Function name="eat" resultType="boolean">
+					<!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~-->
 					<Body language="Java"><![CDATA[
 							if(getAssets().getAsset("Food").getQuantity() - getEAT_AMOUNT() >= getEAT_AMOUNT() ){
 								getAssets().getAsset("Food").withdraw(1);
 								setFoodStock(getFoodStock()-1);
-							}
-						return true;
+								return true;
+							}		 
+							return false;
 					]]></Body>
 				</Function>
 				
+				<PeriodicTimeEventType name="SetAssets" />
+				<!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~-->
 				<CommunicationRule name="SetAssets_Rule" agentVariable="p">
+					<!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~-->
 					<WHEN eventType="SetAssets" />
 					<DO>
 						<UPDATE-AGT>
@@ -131,15 +137,18 @@
 					</DO>	
 				</CommunicationRule>
 				
+				<!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~-->
 				<CommunicationRule name="OpenMarket_Rule" agentVariable="p">
+					<!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~-->
 					<WHEN eventType="InMessageEvent" messageType="OpenMarket"/>
-					<IF language="Java">eat()</IF>
+					<IF language="Java">!eat()</IF>
 					<THEN>
 						<SCHEDULE-EVT>
 							<OutMessageEventExpr messageType="OpenMarket" receiverIdRefs="0" />
 						</SCHEDULE-EVT>
 					</THEN>
 				</CommunicationRule>
+
 			</AgentType>		
 			<AgentType name="Market">
 				<Attribute type="Float" name="marketPrice"/>
@@ -148,7 +157,9 @@
 		</EntityTypes>
 		
 	<EnvironmentRules>
+		<!-- ====================================== -->
 		<EnvironmentRule name="StartOfDay_Rule">
+			<!-- ====================================== -->
 				<WHEN eventType="StartOfDay"/>
 				<FOR objectVariable="m" objectType="Market" />
 				<FOR objectVariable="p" objectType="Person" />
@@ -164,10 +175,12 @@
 					</SCHEDULE-EVT>
 				</DO>
 			</EnvironmentRule>
-			
+		   <!-- ============================= -->
 			<EnvironmentRule name="Die">
+				<!-- ========================== -->
 				<WHEN eventType="OutMessageEvent" messageType="OpenMarket" eventVariable="evt" />
-				<DO>
+				<IF language="Java"></IF>
+				<THEN>
 					<UPDATE-ENV>
 						<DestroyObject>
 							<ObjectIdRef language="Java">
@@ -175,7 +188,7 @@
 							</ObjectIdRef>
 						</DestroyObject>
 					</UPDATE-ENV>
-				</DO>
+				</THEN>
 			</EnvironmentRule>
 			
 			<EnvironmentRule name="EachDayAt8AM_Rule">
@@ -195,11 +208,13 @@
 			<!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->			
 			<Slot property="marketPrice" value="2.0" />
 		</Agent>
+		
 		<Agent type="Person" id="1000">
-			<Slot property="foodStock" value="20"></Slot>
-			<PeriodicTimeEvent type="SetAssets" occurrenceTime="1" />
+			<Slot property="foodStock" value="20" />		
+			<PeriodicTimeEvent type="SetAssets" occurrenceTime="1"  />
 		</Agent>
-		<ExogenousEvent occurrenceTime="2" type="StartOfDay" />
+		
+		<ExogenousEvent occurrenceTime="1" type="StartOfDay" />
 		<ExogenousEvent occurrenceTime="8" type="EachDayAt8AM" />
 		<ExogenousEvent occurrenceTime="11" type="EachDayAt11AM" />
 	</InitialState>
