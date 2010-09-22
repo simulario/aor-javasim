@@ -57,7 +57,6 @@
 						for(i=0; i < assets.size(); i++){
 							if(!assets.get(i).isDiscrete()){
 								if(((aors.util.economics.ContinuousQuantity)assets.get(i)).getContinuousQuantityType().getName().equals(name)){
-								   System.out.println("eated asset: "+name);
 									break;
 								}
 							}
@@ -72,6 +71,7 @@
 			<MessageType name="OpenMarket">
 				<Attribute name="price" type="Float"/>
 			</MessageType>
+			<MessageType name="Act_msg" />
 			<MessageType name="BuyFoodMessage">
 				<ComplexDataProperty name="OfferList" type="Offer" upperMultiplicity="unbounded"/>
 			</MessageType>
@@ -102,17 +102,40 @@
 				<Attribute type="Float" name="lastPrice"/>
 				<Attribute type="Float" name="foodStock"/>
 				<Attribute type="Float" name="goldAmount"/>
-				
+				<Attribute name="leisureWorker" type="Boolean" />
+				<Attribute name="skillLevelFood" type="Float" />
+				<Attribute name="skillLevelGold" type="Float" />
 				<!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~-->
 				<Function name="eat" resultType="boolean">
 					<!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~-->
 					<Body language="Java"><![CDATA[
 							if(getAssets().getAsset("Food").getQuantity() - getEAT_AMOUNT() >= getEAT_AMOUNT() ){
-								getAssets().getAsset("Food").withdraw(1);
-								setFoodStock(getFoodStock()-1);
+								getAssets().getAsset("Food").withdraw(getEAT_AMOUNT());
+								setFoodStock(getFoodStock()- getEAT_AMOUNT());
+								System.out.println("Eat: " + getEAT_AMOUNT());
 								return true;
 							}		 
 							return false;
+					]]></Body>
+				</Function>
+				<!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~-->
+				<Function name="produceFood" resultType="Float">
+					<!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~-->
+					<Body language="Java"><![CDATA[
+							getAssets().getAsset("Food").deposit(getSkillLevelFood());
+							setFoodStock(getFoodStock() + getSkillLevelFood());
+							System.out.println("produceFood: " + getSkillLevelFood());
+							return getFoodStock();
+					]]></Body>
+				</Function>
+				<!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~-->
+				<Function name="produceGold" resultType="Float">
+					<!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~-->
+					<Body language="Java"><![CDATA[
+							getAssets().getAsset("Gold").deposit(getSkillLevelGold());
+							setGoldAmount(getGoldAmount() + getSkillLevelGold());
+							System.out.println("produceGold: " + getSkillLevelGold());
+							return getGoldAmount();
 					]]></Body>
 				</Function>
 				
@@ -136,7 +159,6 @@
 						</UPDATE-AGT>
 					</DO>	
 				</CommunicationRule>
-				
 				<!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~-->
 				<CommunicationRule name="OpenMarket_Rule" agentVariable="p">
 					<!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~-->
@@ -148,7 +170,46 @@
 						</SCHEDULE-EVT>
 					</THEN>
 				</CommunicationRule>
-
+				<!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~-->
+				<CommunicationRule name="produceFood_Rule" agentVariable="p">
+					<!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~-->
+					<documentation>
+						<description> The foodInventory is incremented with the value of the skillLevelFood. </description>
+					</documentation>
+					<WHEN eventType="InMessageEvent" messageType="Act_msg"/>
+					<IF language="Java"><![CDATA[
+						(((p.getAssets().getAsset("Gold").getQuantity() + (p.getAssets().getAsset("Food").getQuantity() * p.getLastPrice())) < p.getLEISURE_VALUE()) && p.isLeisureWorker()) || !p.isLeisureWorker()
+					]]></IF>
+					<THEN>
+						<UPDATE-AGT>
+							<Slot property="foodStock">
+								<ValueExpr language="Java"><![CDATA[
+									p.produceFood()	
+								]]></ValueExpr>
+							</Slot>
+						</UPDATE-AGT>
+					</THEN>
+				</CommunicationRule>
+				<!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->
+				<CommunicationRule name="ProduceGold_Rule" agentVariable="p">
+					<!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->
+					<documentation>
+						<description> The goldInventory is incremented with the value of the skillLevelGold. </description>
+					</documentation>
+					<WHEN eventType="InMessageEvent" messageType="Act_msg"/>
+					<IF language="Java"><![CDATA[
+						(((p.getAssets().getAsset("Gold").getQuantity() + (p.getAssets().getAsset("Food").getQuantity() * p.getLastPrice())) < p.getLEISURE_VALUE()) && p.isLeisureWorker()) || !p.isLeisureWorker()
+					]]></IF>
+					<THEN>
+						<UPDATE-AGT>
+							<Slot property="goldAmount">
+								<ValueExpr language="Java"><![CDATA[ 
+									p.produceGold()
+								]]></ValueExpr>
+							</Slot>
+						</UPDATE-AGT>
+					</THEN>
+				</CommunicationRule>
 			</AgentType>		
 			<AgentType name="Market">
 				<Attribute type="Float" name="marketPrice"/>
@@ -174,30 +235,39 @@
 						</InMessageEventExpr>
 					</SCHEDULE-EVT>
 				</DO>
-			</EnvironmentRule>
-		   <!-- ============================= -->
-			<EnvironmentRule name="Die">
-				<!-- ========================== -->
-				<WHEN eventType="OutMessageEvent" messageType="OpenMarket" eventVariable="evt" />
-				<IF language="Java"></IF>
-				<THEN>
-					<UPDATE-ENV>
-						<DestroyObject>
-							<ObjectIdRef language="Java">
-								evt.getActorIdRef()
-							</ObjectIdRef>
-						</DestroyObject>
-					</UPDATE-ENV>
-				</THEN>
-			</EnvironmentRule>
-			
-			<EnvironmentRule name="EachDayAt8AM_Rule">
-				<WHEN eventType="EachDayAt8AM"/>
-			</EnvironmentRule>
-			
-			<EnvironmentRule name="EachDayAt11AM_Rule">
-				<WHEN eventType="EachDayAt11AM"/>
-			</EnvironmentRule>
+		</EnvironmentRule>
+		<!-- ============================= -->
+		<EnvironmentRule name="EachDayAt8AM_Rule">
+			<WHEN eventType="EachDayAt8AM"/>
+			<FOR objectVariable="p" objectType="Person" />
+			<DO>
+				<SCHEDULE-EVT>
+					<InMessageEventExpr messageType="Act_msg" senderIdRef="0">
+						<ReceiverIdRef language="Java">p.getId()</ReceiverIdRef>
+					</InMessageEventExpr>
+				</SCHEDULE-EVT>
+			</DO>
+		<!-- ========================== -->
+		</EnvironmentRule>	
+		<!-- ============================= -->
+		<EnvironmentRule name="Die">
+			<!-- ========================== -->
+			<WHEN eventType="OutMessageEvent" messageType="OpenMarket" eventVariable="evt" />
+			<IF language="Java"></IF>
+			<THEN>
+				<UPDATE-ENV>
+					<DestroyObject>
+						<ObjectIdRef language="Java">
+							evt.getActorIdRef()
+						</ObjectIdRef>
+					</DestroyObject>
+				</UPDATE-ENV>
+			</THEN>
+		</EnvironmentRule>
+		
+		<EnvironmentRule name="EachDayAt11AM_Rule">
+			<WHEN eventType="EachDayAt11AM"/>
+		</EnvironmentRule>
 		</EnvironmentRules>	
 		
 	</SimulationModel>
@@ -210,7 +280,18 @@
 		</Agent>
 		
 		<Agent type="Person" id="1000">
-			<Slot property="foodStock" value="20" />		
+			<Slot property="foodStock" value="20" />	
+			<Slot property="goldAmount" value="10" />
+			<Slot property="skillLevelGold">
+				<RandomVariable>
+					<Uniform lowerBound="3.0" upperBound="4.0" />
+				</RandomVariable>
+			</Slot>
+			<Slot property="skillLevelFood">
+				<RandomVariable>
+					<Uniform lowerBound="1.25" upperBound="1.75" />
+				</RandomVariable>
+			</Slot>
 			<PeriodicTimeEvent type="SetAssets" occurrenceTime="1"  />
 		</Agent>
 		
