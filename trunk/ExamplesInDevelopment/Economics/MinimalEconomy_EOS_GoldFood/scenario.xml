@@ -94,9 +94,10 @@
 			<MessageType name="SellFood_msg">
 				<ComplexDataProperty name="OfferList" type="OfferList"/>
 			</MessageType>
+			<MessageType name="Clear_msg" />
 			<ExogenousEventType name="StartOfDay" periodicity="24" />
 			<ExogenousEventType name="EachDayAt8AM" periodicity="24" />
-			<ExogenousEventType name="EachDayAt11AM" periodicity="24" />
+			<ExogenousEventType name="EndOfDay" periodicity="24" />
 			
 			<AgentType name="EconomicAgent">
 				<!--<ComplexDataProperty name="assets" type="Quantity" upperMultiplicity="unbounded" />-->
@@ -325,6 +326,37 @@
 			<AgentType name="Market">
 				<Attribute type="Float" name="marketPrice"/>
 				<Attribute type="Float" name="marketVolume"/>
+				<ComplexDataProperty name="buyOffers" type="OfferList"/>
+				<ComplexDataProperty name="sellOffers" type="OfferList"/>
+				<!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->
+				<CommunicationRule name="Accept_BuyFood">
+					<!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->
+					<WHEN eventType="OutMessageEvent" messageType="BuyFood_msg" messageVariable="msg"/>
+					<DO>
+						<UPDATE-AGT>
+							<Slot property="buyOffers">
+								<ValueExpr language="Java">msg.getOfferList()</ValueExpr>
+							</Slot>
+						</UPDATE-AGT>
+					</DO>
+				</CommunicationRule>
+				<!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->
+				<CommunicationRule name="Accept_SellFood">
+					<!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->
+					<WHEN eventType="OutMessageEvent" messageType="SellFood_msg" messageVariable="msg"/>
+					<DO>
+						<UPDATE-AGT>
+							<Slot property="sellOffers">
+								<ValueExpr language="Java">msg.getOfferList()</ValueExpr>
+							</Slot>
+						</UPDATE-AGT>
+					</DO>
+				</CommunicationRule>
+				<!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->
+				<CommunicationRule name="Clear">
+					<!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->
+					<WHEN eventType="InMessageEvent" messageType="clear_msg"/>
+				</CommunicationRule>
 			</AgentType>
 		</EntityTypes>
 		
@@ -364,8 +396,7 @@
 		<EnvironmentRule name="Die">
 			<!-- ========================== -->
 			<WHEN eventType="OutMessageEvent" messageType="OpenMarket" eventVariable="evt" />
-			<IF language="Java"></IF>
-			<THEN>
+			<DO>
 				<UPDATE-ENV>
 					<DestroyObject>
 						<ObjectIdRef language="Java">
@@ -373,11 +404,19 @@
 						</ObjectIdRef>
 					</DestroyObject>
 				</UPDATE-ENV>
-			</THEN>
+			</DO>
 		</EnvironmentRule>
 		
-		<EnvironmentRule name="EachDayAt11AM_Rule">
-			<WHEN eventType="EachDayAt11AM"/>
+		<EnvironmentRule name="EndOfDay_Rule">
+			<WHEN eventType="EndOfDay"/>
+			<FOR objectVariable="m" objectType="Market" />
+			<DO>
+				<SCHEDULE-EVT>
+					<InMessageEventExpr messageType="Clear_msg" senderIdRef="0">
+						<ReceiverIdRef language="Java">m.getId()</ReceiverIdRef>
+					</InMessageEventExpr>
+				</SCHEDULE-EVT>
+			</DO>
 		</EnvironmentRule>
 		</EnvironmentRules>	
 		
@@ -408,7 +447,7 @@
 		
 		<ExogenousEvent occurrenceTime="1" type="StartOfDay" />
 		<ExogenousEvent occurrenceTime="8" type="EachDayAt8AM" />
-		<ExogenousEvent occurrenceTime="11" type="EachDayAt11AM" />
+		<ExogenousEvent occurrenceTime="24" type="EndOfDay" />
 	</InitialState>
 	
 	<!-- =================================================== -->
