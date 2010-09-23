@@ -130,8 +130,7 @@
     mode="assistents.constructor.allSuperAttributes">
     <xsl:param name="current" select="false()" as="xs:boolean"/>
     <xsl:if test="$current">
-      <xsl:for-each
-        select="aorsl:Attribute | aorsl:ReferenceProperty | aorsl:ComplexDataProperty | aorsl:EnumerationProperty | aorsl:BeliefAttribute">
+      <xsl:for-each select="aorsl:Attribute | aorsl:ReferenceProperty | aorsl:ComplexDataProperty | aorsl:EnumerationProperty | aorsl:BeliefAttribute">
         <xsl:value-of select="@name"/>
       </xsl:for-each>
     </xsl:if>
@@ -185,8 +184,7 @@
   </xsl:template>
 
   <!-- all attributes of a class incl. superclassattributes, but without default attributes like x, perceptionRadius, ... -->
-  <xsl:template match="aorsl:PhysicalObjectType | aorsl:PhysicalAgentType | aorsl:AgentType | aorsl:ObjectType"
-    mode="assistents.list.allAttributes">
+  <xsl:template match="aorsl:PhysicalObjectType | aorsl:PhysicalAgentType | aorsl:AgentType | aorsl:ObjectType" mode="assistents.list.allAttributes">
     <xsl:copy-of select="aorsl:Attribute | aorsl:ReferenceProperty | aorsl:ComplexDataProperty | aorsl:EnumerationProperty"/>
     <xsl:choose>
       <xsl:when test="fn:exists(@superType)">
@@ -835,6 +833,35 @@
       </xsl:otherwise>
     </xsl:choose>
 
+  </xsl:template>
+
+  <xsl:template match="aorsl:MultiValuedSlot" mode="assistent.setMultiValuedSlot">
+    <xsl:param name="indent" required="yes" as="xs:integer"/>
+
+    <xsl:call-template name="java:callMethod">
+      <xsl:with-param name="indent" select="$indent"/>
+      <xsl:with-param name="objInstance" select="jw:checkProperty(@property)"/>
+      <xsl:with-param name="method">
+        <xsl:choose>
+          <xsl:when test="aorsl:Add">
+            <xsl:value-of select="'add'"/>
+          </xsl:when>
+          <xsl:when test="aorsl:Remove">
+            <xsl:value-of select="'remove'"/>
+          </xsl:when>
+        </xsl:choose>
+      </xsl:with-param>
+      <xsl:with-param name="args">
+        <xsl:choose>
+          <xsl:when test="@itemVariable">
+            <xsl:value-of select="jw:checkProperty(@itemVariable)"/>
+          </xsl:when>
+          <xsl:otherwise>
+            <xsl:value-of select="aorsl:ValueExpr[@language = $output.language][1]"/>
+          </xsl:otherwise>
+        </xsl:choose>
+      </xsl:with-param>
+    </xsl:call-template>
 
   </xsl:template>
 

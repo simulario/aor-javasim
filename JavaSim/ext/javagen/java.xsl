@@ -14,6 +14,22 @@
   xmlns:java="http://www.sun.com/java" xmlns:xs="http://www.w3.org/2001/XMLSchema" xmlns:xsl="http://www.w3.org/1999/XSL/Transform"
   xmlns:jw="http://www.informatik.tu-cottbus.de/~jwerner/">
 
+  <xsl:function name="jw:checkProperty" as="xs:string">
+    <xsl:param name="property" as="xs:string"/>
+    <xsl:choose>
+      <xsl:when test="not(contains($property, '.'))">
+        <!-- local property -->
+        <xsl:call-template name="java:varByDotNotation">
+          <xsl:with-param name="varName" select="$property"/>
+        </xsl:call-template>
+      </xsl:when>
+      <xsl:otherwise>
+        <!-- dot notated -->
+        <xsl:value-of select="$property"/>
+      </xsl:otherwise>
+    </xsl:choose>
+  </xsl:function>
+
   <xsl:function name="jw:mappeDataType">
     <xsl:param name="xmlType" as="xs:string"/>
     <xsl:choose>
@@ -35,7 +51,7 @@
       </xsl:when>
     </xsl:choose>
   </xsl:function>
-  
+
   <xsl:function name="jw:setFullQualifiedName">
     <xsl:param name="class" as="xs:string"/>
     <xsl:choose>
@@ -46,7 +62,7 @@
         <xsl:value-of select="$class"/>
       </xsl:otherwise>
     </xsl:choose>
-    
+
   </xsl:function>
 
   <!-- TODO: to complete -->
