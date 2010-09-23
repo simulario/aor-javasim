@@ -22,6 +22,7 @@
 			<dc:creator>Oana Nicolae</dc:creator>
 			<dc:contributor>Gerd Wagner</dc:contributor>
 			<dc:source>Mac Dongle Restaurant paper description.</dc:source>
+			<dc:description>ISSUES: - In the case of a partial order fulfillment situation, the menu board should not order the entire order quantity, but only the difference wrt the quantity in stock.</dc:description>
 		</documentation>
 
 		<Statistics>
@@ -106,13 +107,13 @@ return Random.uniformInt(200,250);
 			<!-- =================================================== -->
 			<MessageType name="OrderSolicitation"/>
 			<!-- =================================================== -->
-			<MessageType name="SendOrder">
+			<MessageType name="CustomerOrder">
 			<!-- =================================================== -->
 				<Attribute name="hamburgerType" type="Integer"/>
 				<Attribute name="hamburgerQty" type="Integer"/>
 			</MessageType>
 			<!-- =================================================== -->
-			<MessageType name="ConfirmOrder">
+			<MessageType name="OrderConfirmation">
 			<!-- =================================================== -->
 				<Attribute name="orderNo" type="Integer"/>
 			</MessageType>
@@ -188,7 +189,7 @@ return Random.uniformInt(200,250);
 			<!-- =================================================== -->
 			<CausedEventType name="StartKitchenService">
 		    <!-- =================================================== -->
-				<ReferenceProperty name="order" type="OrderRequested"/>
+				<ReferenceProperty name="order" type="ProductionOrderRecord"/>
 			</CausedEventType>
 			<!-- =================================================== -->
 			<CausedEventType name="EndKitchenService">
@@ -221,7 +222,7 @@ return Random.uniformInt(200,250);
 				<Attribute name="lengthOfQueue" type="Integer"/>
 			</ObjectType>
 			<!-- =================================================== -->
-			<ObjectType name="OrderRequested">
+			<ObjectType name="ProductionOrderRecord">
 			<!-- =================================================== -->	
 				<Attribute name="orderNo" type="Integer"/>
 				<Attribute name="hamburgerType" type="Integer"/>
@@ -289,7 +290,7 @@ int i=messageInfo.indexOf("and");
 					<documentation>
 						<description> The MenuBoard receives the Order information from the customer. It replies with the orderId information (i.e. the occurrence time of the event) and also schedules a Reminder event in order to know that the MenuBoard service for that particular customer is over. A ProductionOrder message (containing orderNo and pizzaType) will be also sent to KitchenService, in order to prepare the pizza. </description>
 					</documentation>
-					<WHEN eventType="InMessageEvent" messageType="SendOrder" messageVariable="mes" eventVariable="evt"/>
+					<WHEN eventType="InMessageEvent" messageType="CustomerOrder" messageVariable="mes" eventVariable="evt"/>
 					<DO>
 						<SCHEDULE-EVT>
 							<OutMessageEventExpr messageType="ProductionOrder" receiverIdRefs="5">
@@ -326,7 +327,7 @@ evt.getSenderIdRef() + "and" + evt.getOccurrenceTime()
 					<WHEN eventType="ReminderEvent" eventVariable="evt"/>
 					<DO>
 						<SCHEDULE-EVT>
-							<OutMessageEventExpr messageType="ConfirmOrder">
+							<OutMessageEventExpr messageType="OrderConfirmation">
 								<ReceiverIdRef language="Java"><![CDATA[
 Integer.parseInt( getMessagePart( evt.getReminderMsg(), 1))
 								]]></ReceiverIdRef>
@@ -585,7 +586,7 @@ return Random.uniformInt(1,3);
 				<CommunicationRule name="OrderSolicitation_Rule" agentVariable="cust">
 					<!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->
 					<documentation>
-						<description> The customer is at the Menu Board. He is asked to place the order. He replies giving the information about the hamburger type and Qty inside of a SendOrder message. </description>
+						<description> The customer is at the Menu Board. He is asked to place the order. He replies giving the information about the hamburger type and Qty inside of a CustomerOrder message. </description>
 					</documentation>
 					<WHEN eventType="InMessageEvent" messageType="OrderSolicitation"/>
 					<FOR dataVariable="q" dataType="Integer">
@@ -593,7 +594,7 @@ return Random.uniformInt(1,3);
 					</FOR>
 					<DO>
 						<SCHEDULE-EVT>
-							<OutMessageEventExpr messageType="SendOrder" receiverIdRefs="1">
+							<OutMessageEventExpr messageType="CustomerOrder" receiverIdRefs="1">
 								<Slot property="hamburgerType">
 									<ValueExpr language="Java"><![CDATA[
 cust.randomHamburgerType()
@@ -643,10 +644,10 @@ cust.getOrderNo()
 				<!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->
 				<CommunicationRule name="ConfirmOrder_Rule" agentVariable="cust">
 					<!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->
-					<WHEN eventType="InMessageEvent" messageType="ConfirmOrder" messageVariable="mes"/>
+					<WHEN eventType="InMessageEvent" messageType="OrderConfirmation" messageVariable="mes"/>
 					<DO>
 						<SCHEDULE-EVT>
-							<OutMessageEventExpr messageType="ConfirmOrder" receiverIdRefs="1" >
+							<OutMessageEventExpr messageType="OrderConfirmation" receiverIdRefs="1" >
 								<Slot property="orderNo">
 									<ValueExpr language="Java">mes.getOrderNo()</ValueExpr>
 								</Slot>
@@ -801,7 +802,7 @@ SimStatistics.numberOfCustomers.getValue() + 1
 				<documentation>
 					<description> If the order of the customer is available on the PickupWindow tray, then the MenuBoard will not send anymore an order to the Kitchen. </description>
 				</documentation>
-				<WHEN eventType="OutMessageEvent" messageType="SendOrder" messageVariable="mes" eventVariable="evt" />
+				<WHEN eventType="OutMessageEvent" messageType="CustomerOrder" messageVariable="mes" eventVariable="evt" />
 				<FOR objectVariable="pw" objectType="PickupWindow" objectIdRef="2" />
 				<FOR objectVariable="mbq" objectType="Collection" objectName="MenuBoardQueue" objectIdRef="3" />
 				<FOR objectVariable="q4" objectType="Queue" objectIdRef="12" />
@@ -831,7 +832,7 @@ pw.getHamburgerOnTheTray() + pw.getCheeseburgerOnTheTray() + pw.getSaladOnTheTra
 						</UpdateObject>
 					</UPDATE-ENV>
 					<SCHEDULE-EVT>
-						<InMessageEventExpr messageType="ConfirmOrder" senderIdRef="1">
+						<InMessageEventExpr messageType="OrderConfirmation" senderIdRef="1">
 							<ReceiverIdRef language="Java">cust.getId()</ReceiverIdRef>
 							<Delay>
 								<ValueExpr language="Java">Global.twoDice(10) - 1</ValueExpr>
@@ -866,7 +867,7 @@ cust.getId()
 				</THEN>
 				<ELSE>
 					<SCHEDULE-EVT>
-						<InMessageEventExpr messageType="SendOrder" receiverIdRefs="1">
+						<InMessageEventExpr messageType="CustomerOrder" receiverIdRefs="1">
 						 <SenderIdRef language="Java">cust.getId()</SenderIdRef>
 						  <Slot property="hamburgerType">
 						  	<ValueExpr language="Java"><![CDATA[
@@ -888,7 +889,7 @@ Qty
 				<documentation>
 					<description> When a MenuBoard service ends, but the PickupWindowQueue is full, the customer cannot move forward. We just update the customer attribute, so we know that he is waiting for a free place in the Pickup Window waiting line.</description>
 				</documentation>
-				<WHEN eventType="OutMessageEvent" messageType="ConfirmOrder" messageVariable="mes"/>
+				<WHEN eventType="OutMessageEvent" messageType="OrderConfirmation" messageVariable="mes"/>
 				<FOR objectVariable="mbq" objectName="MenuBoardQueue" objectType="Collection" objectIdRef="3"/>
 				<FOR objectVariable="pw" objectType="PickupWindow" objectIdRef="2"/>
 				<FOR objectVariable="pwq" objectName="PickupWindowQueue" objectType="Collection" objectIdRef="4"/>
@@ -923,7 +924,7 @@ mes.getOrderNo()
 				<documentation>
 					<description>When a menu board service ends and the pickup window service queue is not full, then the current customer moves forward. Furthermore, if there are no more customers in the menu board queue, then the menu board is no longer busy. Otherwise, a new StartMenuBoardService event is created for serving the next customer. </description>
 				</documentation>
-				<WHEN eventType="OutMessageEvent" messageType="ConfirmOrder" messageVariable="mes" eventVariable="evt"/>
+				<WHEN eventType="OutMessageEvent" messageType="OrderConfirmation" messageVariable="mes" eventVariable="evt"/>
 				<FOR objectVariable="mb" objectType="MenuBoard" objectIdRef="1"/>
 				<FOR objectVariable="pw" objectType="PickupWindow" objectIdRef="2"/>
 				<FOR objectVariable="mbq" objectName="MenuBoardQueue" objectType="Collection" objectIdRef="3"/>
@@ -1175,7 +1176,7 @@ SimStatistics.revenue.getValue() + 	k.burgPrice(( int) ht) * qty
 								<ValueExpr language="Java">cust.getOrderNo()</ValueExpr>
 							</Slot>
 						</CausedEventExpr>
-						<InMessageEventExpr messageType="ConfirmOrder">
+						<InMessageEventExpr messageType="OrderConfirmation">
 							<Condition language="Java"><![CDATA[
 ( mbq.size() > 0) && ( mbq.getItem() != null) && (( Customer)mbq.getItem()).isWaitingForPWFree()
                          	]]></Condition>
@@ -1338,7 +1339,7 @@ k.getTomatoQtyInStock() + t.getQtyPerIngredient()
 			</EnvironmentRule>
 			<!-- ================================================ -->
 			<EnvironmentRule name="EmptyTheTrayEvery2Hours_Rule">
-				<!-- ================================================ -->
+			<!-- ================================================ -->
 				<WHEN eventType="EmptyTheTrayEvery2Hours" eventVariable="evt" />
 				<FOR objectVariable="pw" objectType="PickupWindow" objectIdRef="2" />
 				<FOR objectVariable="k" objectType="Kitchen" objectIdRef="5" />
@@ -1482,7 +1483,7 @@ pw.getLostRevenue() + ( float)k.burgPrice(0) * pw.getHamburgerOnTheTray() + ( fl
 				<DO>
 					<UPDATE-ENV>
 						<Create>
-							<Object type="OrderRequested" addToCollection="KitchenQueue" objectVariable="o">
+							<Object type="ProductionOrderRecord" addToCollection="KitchenQueue" objectVariable="o">
 								<Slot property="orderNo">
 									<ValueExpr language="Java">mes.getOrderNo()</ValueExpr>
 								</Slot>
@@ -1523,7 +1524,7 @@ pw.getLostRevenue() + ( float)k.burgPrice(0) * pw.getHamburgerOnTheTray() + ( fl
 				</documentation>
 				<WHEN eventType="StartKitchenService" eventVariable="evt"/>
 				<FOR objectVariable="k" objectType="Kitchen" />
-				<FOR objectVariable="o" objectType="OrderRequested">
+				<FOR objectVariable="o" objectType="ProductionOrderRecord">
 					<ObjectRef language="Java">evt.getOrder()</ObjectRef>
 				</FOR>
 				<FOR dataVariable="delay" dataType="Integer">
@@ -1590,7 +1591,7 @@ pw.getLostRevenue() + ( float)k.burgPrice(0) * pw.getHamburgerOnTheTray() + ( fl
 evt.getCustID()
 					]]></ValueExpr>
 				</FOR>
-				<FOR objectVariable="o" objectType="OrderRequested" >
+				<FOR objectVariable="o" objectType="ProductionOrderRecord" >
 					<ObjectRef language="Java">kq.getItem()</ObjectRef>
 				</FOR>
 				<FOR dataVariable="hamburgerType" dataType="Integer">
@@ -1646,7 +1647,7 @@ pwq.size() > 0  && (( Customer)pwq.getItem()).getId() == custID && (( Customer)p
 					<SCHEDULE-EVT>
 						<CausedEventExpr eventType="StartKitchenService">
 							<Slot property="order">
-								<ValueExpr language="Java">( OrderRequested)kq.getItem()</ValueExpr>
+								<ValueExpr language="Java">( ProductionOrderRecord)kq.getItem()</ValueExpr>
 							</Slot>
 						</CausedEventExpr>
 					</SCHEDULE-EVT>
@@ -1900,7 +1901,7 @@ cust.isWaitingForOrderToArrive() && ((Customer)pwq.getItem()).getId() != cust.ge
 		<Collections>
 			<Collection itemType="Customer" type="FIFO_QUEUE" name="MenuBoardQueue" id="3" />
 			<Collection itemType="Customer" type="FIFO_QUEUE" name="PickupWindowQueue" id="4" />
-			<Collection itemType="OrderRequested" type="FIFO_QUEUE" name="KitchenQueue" id="8" />
+			<Collection itemType="ProductionOrderRecord" type="FIFO_QUEUE" name="KitchenQueue" id="8" />
 			<Collection itemType="Hamburger" type="SET" name="PWTray" id="11" />
 		</Collections>
 	</SimulationModel>
