@@ -372,7 +372,7 @@
           <!-- TODO: check if this necessary, maybe we should set a variable for the agentsubject ever -->
           <xsl:comment>if we have defined an @agentVariable then we can use the created classVariable (with the assoziated AgentSubjectClass) from
             AgentRule, otherwise we use the AgentSubjectClass localy </xsl:comment>
-          <xsl:if test="fn:exists($mode/aorsl:UPDATE-AGT/aorsl:Slot) and not ($agentVariable)">
+          <xsl:if test="(fn:exists($mode/aorsl:UPDATE-AGT/aorsl:Slot) or fn:exists($mode/aorsl:UPDATE-AGT/aorsl:Call)) and not ($agentVariable)">
             <xsl:call-template name="java:newObject">
               <xsl:with-param name="indent" select="$indent + 1"/>
               <xsl:with-param name="class" select="$agentClassName"/>
@@ -679,6 +679,26 @@
 
       </xsl:with-param>
     </xsl:call-template>
+  </xsl:template>
+  
+  <xsl:template match="aorsl:Call" mode="createAgentRules.method.stateEffects.call">
+    <xsl:param name="indent" as="xs:integer" required="yes"/>
+    
+    <xsl:variable name="funct" select="ancestor::aorsl:AgentType/aorsl:Function[@name = current()/@procedure][1]" as="element()"/>
+    
+    <xsl:choose>
+      <xsl:when test="exists($funct)"></xsl:when>
+      <xsl:otherwise>
+        <xsl:message>
+          <xsl:text>[ERROR] No Function </xsl:text>
+          <xsl:value-of select="@procedure"/>
+          <xsl:text> found.</xsl:text>
+        </xsl:message>
+      </xsl:otherwise>
+    </xsl:choose>
+    
+    
+    
   </xsl:template>
 
   <!-- UpdateComplexDataPropertyValue -->
