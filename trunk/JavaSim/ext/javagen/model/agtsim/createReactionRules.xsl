@@ -118,7 +118,7 @@
         <xsl:apply-templates select="." mode="createAgentRules.method.resultingActionEvents">
           <xsl:with-param name="indent" select="$indent + 1"/>
           <xsl:with-param name="eventVar" select="$eventVariable"/>
-          <xsl:with-param name="agentVariable" select="@agentVariable"/>
+          <xsl:with-param name="agentVariable" select="$agtVarName"/>
           <xsl:with-param name="agentType" select="local-name($agentType)"/>
           <xsl:with-param name="mode" select="aorsl:DO"/>
           <xsl:with-param name="prefix" select="'do'"/>
@@ -126,7 +126,7 @@
         <xsl:apply-templates select="." mode="createAgentRules.method.resultingActionEvents">
           <xsl:with-param name="indent" select="$indent + 1"/>
           <xsl:with-param name="eventVar" select="$eventVariable"/>
-          <xsl:with-param name="agentVariable" select="@agentVariable"/>
+          <xsl:with-param name="agentVariable" select="$agtVarName"/>
           <xsl:with-param name="agentType" select="local-name($agentType)"/>
           <xsl:with-param name="mode" select="aorsl:THEN"/>
           <xsl:with-param name="prefix" select="'then'"/>
@@ -134,7 +134,7 @@
         <xsl:apply-templates select="." mode="createAgentRules.method.resultingActionEvents">
           <xsl:with-param name="indent" select="$indent + 1"/>
           <xsl:with-param name="eventVar" select="$eventVariable"/>
-          <xsl:with-param name="agentVariable" select="@agentVariable"/>
+          <xsl:with-param name="agentVariable" select="$agtVarName"/>
           <xsl:with-param name="agentType" select="local-name($agentType)"/>
           <xsl:with-param name="mode" select="aorsl:ELSE"/>
           <xsl:with-param name="prefix" select="'else'"/>
