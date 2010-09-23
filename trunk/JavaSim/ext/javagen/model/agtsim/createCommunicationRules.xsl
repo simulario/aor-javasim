@@ -730,13 +730,13 @@
                   <xsl:value-of select="jw:quote(@property)"/>
                   <xsl:value-of>
                     <xsl:choose>
-                      <xsl:when
-                        test="fn:exists(aorsl:ValueExpr[@language = $output.language]) 
-                      and fn:normalize-space(aorsl:ValueExpr[@language = $output.language]) != ''">
-                        <xsl:value-of select="aorsl:ValueExpr[@language = $output.language]"/>
-                      </xsl:when>
                       <xsl:when test="fn:exists(@value) and @value!=''">
                         <xsl:value-of select="@value"/>
+                      </xsl:when>
+                      <xsl:when
+                        test="fn:exists(aorsl:ValueExpr[@language = $output.language]) 
+                        and fn:normalize-space(aorsl:ValueExpr[@language = $output.language]) != ''">
+                        <xsl:value-of select="aorsl:ValueExpr[@language = $output.language]"/>
                       </xsl:when>
                     </xsl:choose>
                   </xsl:value-of>

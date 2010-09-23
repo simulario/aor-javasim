@@ -1224,6 +1224,10 @@
         </xsl:with-param>
       </xsl:call-template>
     </xsl:for-each>
+    
+    <xsl:apply-templates select="aorsl:MultiValuedSlot" mode="assistent.setMultiValuedSlot">
+      <xsl:with-param name="indent" select="$indent"/>
+    </xsl:apply-templates>
 
   </xsl:template>
 
@@ -1272,6 +1276,10 @@
           </xsl:with-param>
         </xsl:call-template>
       </xsl:for-each>
+      
+      <xsl:apply-templates select="aorsl:MultiValuedSlot" mode="assistent.setMultiValuedSlot">
+        <xsl:with-param name="indent" select="$indent"/>
+      </xsl:apply-templates>
 
     </xsl:variable>
 
@@ -2473,6 +2481,10 @@
         </xsl:with-param>
       </xsl:call-template>
     </xsl:for-each>
+    
+    <xsl:apply-templates select="aorsl:MultiValuedSlot" mode="assistent.setMultiValuedSlot">
+      <xsl:with-param name="indent" select="$indent"/>
+    </xsl:apply-templates>
 
     <xsl:apply-templates select="aorsl:Increment" mode="assistents.increment">
       <xsl:with-param name="indent" select="$indent"/>
@@ -2567,6 +2579,7 @@
             </xsl:call-template>
           </xsl:with-param>
           <xsl:with-param name="thenContent">
+            
             <xsl:for-each select="aorsl:Slot">
               <xsl:call-template name="java:callSetterMethod">
                 <xsl:with-param name="indent" select="$indent + 2"/>
@@ -2577,6 +2590,10 @@
                 </xsl:with-param>
               </xsl:call-template>
             </xsl:for-each>
+            
+            <xsl:apply-templates select="aorsl:MultiValuedSlot" mode="assistent.setMultiValuedSlot">
+              <xsl:with-param name="indent" select="$indent"/>
+            </xsl:apply-templates>
 
             <xsl:apply-templates select="aorsl:Increment" mode="assistents.increment">
               <xsl:with-param name="indent" select="$indent"/>
