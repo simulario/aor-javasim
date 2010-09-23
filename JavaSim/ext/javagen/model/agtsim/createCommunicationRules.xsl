@@ -58,6 +58,7 @@
           <xsl:with-param name="indent" select="$indent + 1"/>
           <xsl:with-param name="eventVarName" select="$eventVariable"/>
           <xsl:with-param name="agentClassName" select="$agentTypeClassName"/>
+          <xsl:with-param name="agtVarName" select="$agtVarName"/>
         </xsl:apply-templates>
 
         <!-- condition() -->
@@ -89,21 +90,21 @@
         <xsl:apply-templates select="." mode="createCommunicationRules.method.stateEffects">
           <xsl:with-param name="indent" select="$indent + 1"/>
           <xsl:with-param name="agentClassName" select="$agentTypeClassName"/>
-          <xsl:with-param name="agentVariable" select="@agentVariable"/>
+          <xsl:with-param name="agentVariable" select="$agtVarName"/>
           <xsl:with-param name="mode" select="aorsl:DO"/>
           <xsl:with-param name="prefix" select="'do'"/>
         </xsl:apply-templates>
         <xsl:apply-templates select="." mode="createCommunicationRules.method.stateEffects">
           <xsl:with-param name="indent" select="$indent + 1"/>
           <xsl:with-param name="agentClassName" select="$agentTypeClassName"/>
-          <xsl:with-param name="agentVariable" select="@agentVariable"/>
+          <xsl:with-param name="agentVariable" select="$agtVarName"/>
           <xsl:with-param name="mode" select="aorsl:THEN"/>
           <xsl:with-param name="prefix" select="'then'"/>
         </xsl:apply-templates>
         <xsl:apply-templates select="." mode="createCommunicationRules.method.stateEffects">
           <xsl:with-param name="indent" select="$indent + 1"/>
           <xsl:with-param name="agentClassName" select="$agentTypeClassName"/>
-          <xsl:with-param name="agentVariable" select="@agentVariable"/>
+          <xsl:with-param name="agentVariable" select="$agtVarName"/>
           <xsl:with-param name="mode" select="aorsl:ELSE"/>
           <xsl:with-param name="prefix" select="'else'"/>
         </xsl:apply-templates>
@@ -112,14 +113,14 @@
         <xsl:apply-templates select="." mode="createCommunicationRules.method.resultingOutMessageEvents">
           <xsl:with-param name="indent" select="$indent + 1"/>
           <xsl:with-param name="eventVar" select="$eventVariable"/>
-          <xsl:with-param name="agentVariable" select="@agentVariable"/>
+          <xsl:with-param name="agentVariable" select="$agtVarName"/>
           <xsl:with-param name="mode" select="aorsl:DO"/>
           <xsl:with-param name="prefix" select="'do'"/>
         </xsl:apply-templates>
         <xsl:apply-templates select="." mode="createCommunicationRules.method.resultingOutMessageEvents">
           <xsl:with-param name="indent" select="$indent + 1"/>
           <xsl:with-param name="eventVar" select="$eventVariable"/>
-          <xsl:with-param name="agentVariable" select="@agentVariable"/>
+          <xsl:with-param name="agentVariable" select="$agtVarName"/>
           <xsl:with-param name="agentType" select="local-name($agentType)"/>
           <xsl:with-param name="mode" select="aorsl:THEN"/>
           <xsl:with-param name="prefix" select="'then'"/>
@@ -127,7 +128,7 @@
         <xsl:apply-templates select="." mode="createCommunicationRules.method.resultingOutMessageEvents">
           <xsl:with-param name="indent" select="$indent + 1"/>
           <xsl:with-param name="eventVar" select="$eventVariable"/>
-          <xsl:with-param name="agentVariable" select="@agentVariable"/>
+          <xsl:with-param name="agentVariable" select="$agtVarName"/>
           <xsl:with-param name="agentType" select="local-name($agentType)"/>
           <xsl:with-param name="mode" select="aorsl:ELSE"/>
           <xsl:with-param name="prefix" select="'else'"/>
@@ -160,6 +161,7 @@
     <xsl:param name="indent" required="yes" as="xs:integer"/>
     <xsl:param name="eventVarName" required="yes" as="xs:string"/>
     <xsl:param name="agentClassName" required="yes" as="xs:string"/>
+    <xsl:param name="agtVarName" required="yes" as="xs:string"/>
 
     <xsl:variable name="agentSubjVarName" select="jw:lowerWord($core.class.agentSubject)"/>
     <xsl:variable name="agentSubjNameVarName" select="'name'"/>
@@ -215,14 +217,12 @@
           <xsl:with-param name="isVariable" select="true()"/>
         </xsl:call-template>
 
-        <xsl:if test="@agentVariable">
           <xsl:call-template name="java:variable">
             <xsl:with-param name="indent" select="$indent + 1"/>
             <xsl:with-param name="castType" select="$agentClassName"/>
             <xsl:with-param name="name">
               <xsl:call-template name="java:varByDotNotation">
-                <xsl:with-param name="name" select="'this'"/>
-                <xsl:with-param name="varName" select="@agentVariable"/>
+                <xsl:with-param name="varName" select="$agtVarName"/>
               </xsl:call-template>
             </xsl:with-param>
             <xsl:with-param name="value">
@@ -233,7 +233,7 @@
               </xsl:call-template>
             </xsl:with-param>
           </xsl:call-template>
-        </xsl:if>
+        
 
         <xsl:apply-templates select="aorsl:documentation" mode="shared.setDocumentation">
           <xsl:with-param name="indent" select="$indent + 1"/>
