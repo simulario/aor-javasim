@@ -5,6 +5,8 @@ import java.awt.Color;
 import java.awt.Component;
 import java.awt.FlowLayout;
 import java.awt.Font;
+import java.awt.Point;
+import java.awt.Rectangle;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.awt.event.WindowAdapter;
@@ -23,6 +25,7 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
 import javax.swing.JComboBox;
+import javax.swing.JDialog;
 import javax.swing.JFileChooser;
 import javax.swing.JFrame;
 import javax.swing.JLabel;
@@ -125,6 +128,9 @@ public class AORJavaGui extends JFrame implements ActionListener,
   private String propertyUseExternalXMLEditor = "GUI.UseExternalXMLEditor";
   private String propertyUseExternalLogViewer = "GUI.UseExternalLogViewer";
   private String propertyExternalXMLEditorLocation = "GUI.ExternalXMLEditorLocation";
+
+  // the loading message dialog
+  private JDialog loadingDialog;
 
   /**
    * PANES
@@ -484,6 +490,21 @@ public class AORJavaGui extends JFrame implements ActionListener,
     if (value != null) {
       this.preferences.setExternalXMLEditorLocation(value);
     }
+
+    // create the loading message dialog
+    loadingDialog = new JDialog(this);
+    loadingDialog.setSize(250, 70);
+    Rectangle bounds = this.getBounds();
+    Point location = this.getLocation();
+    int x = location.x + (bounds.width - loadingDialog.getSize().width) / 2;
+    int y = location.y + (bounds.height - loadingDialog.getSize().height) / 2;
+    loadingDialog.setLocation(x, y);
+    loadingDialog.setUndecorated(true);
+    JLabel messageLabel = new JLabel("Loading scenario...please wait!",
+        JLabel.CENTER);
+    messageLabel.setBorder(new EtchedBorder());
+    loadingDialog.add(messageLabel);
+    loadingDialog.setVisible(false);
 
     // after all errors that may happen...
     // redirect the System.out and System.err streams to the text area in the
@@ -1400,7 +1421,14 @@ public class AORJavaGui extends JFrame implements ActionListener,
 
       this.fileChooser.setCurrentDirectory(this.getCurrentUserDir());
 
-      if (fileChooser.showOpenDialog(this) == JFileChooser.APPROVE_OPTION) {
+      // show the loading message dialog
+      // NOTE: this line can't go after this call :
+      // fileChooser.showOpenDialog(this) while does not work anymore until
+      // the loading finishes...must find why ?!
+      loadingDialog.setVisible(true);
+
+      int response = fileChooser.showOpenDialog(this);
+      if (response == JFileChooser.APPROVE_OPTION) {
 
         // if the selection was successful
         if (fileChooser.getSelectedFile().isDirectory()) {
@@ -1541,6 +1569,8 @@ public class AORJavaGui extends JFrame implements ActionListener,
       }
     }
 
+    // finished loading, hide the loading message dialog
+    loadingDialog.setVisible(false);
   }
 
   private File getCurrentUserDir() {
@@ -2244,7 +2274,6 @@ public class AORJavaGui extends JFrame implements ActionListener,
           + evt.getActionCommand());
 
     }
-
   }
 
   @Override
