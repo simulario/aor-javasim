@@ -2470,6 +2470,11 @@
         </xsl:when>
       </xsl:choose>
     </xsl:variable>
+    
+    <xsl:apply-templates select="aorsl:Call" mode="createEnvironmentRules.method.stateEffects.content.call">
+      <xsl:with-param name="indent" select="$indent"/>
+      <xsl:with-param name="objectVarName" select="$objectVariable"/>
+    </xsl:apply-templates>
 
     <xsl:for-each select="aorsl:Slot">
       <xsl:call-template name="java:callSetterMethod">
@@ -2496,6 +2501,87 @@
       <xsl:with-param name="objectVariable" select="$objectVariable"/>
     </xsl:apply-templates>
 
+  </xsl:template>
+  
+  <xsl:template match="aorsl:Call" mode="createEnvironmentRules.method.stateEffects.content.call">
+    <xsl:param name="indent" as="xs:integer" required="yes"/>
+    <xsl:param name="objectVarName" as="xs:string" required="yes"/>
+    
+    <xsl:variable name="objectType">
+      <xsl:choose>
+        <xsl:when test="ancestor::aorsl:UpdateObject/@objectVariable">
+          <xsl:value-of select="ancestor::aorsl:EnvironmentRule/aorsl:FOR[@objectVariable =
+            current()/ancestor::aorsl:UpdateObject/@objectVariable][1]/@objectType"/>
+        </xsl:when>
+        <xsl:when test="exists(ancestor::aorsl:UpdateObject/aorsl:ObjectRef[@language eq $output.language])">
+          <xsl:value-of select="ancestor::aorsl:UpdateObject/aorsl:ObjectRef[@language eq $output.language][1]/@objectType"/>
+        </xsl:when>
+      </xsl:choose>    
+    </xsl:variable>
+       
+    <xsl:variable name="funct" as="element()*">
+      <xsl:call-template name="getObjectFunction">
+        <xsl:with-param name="objectType" select="$objectType"/>
+        <xsl:with-param name="functionName" select="@procedure"/>
+      </xsl:call-template>
+    </xsl:variable>
+    <xsl:variable name="call" select="."/>
+    
+    <xsl:choose>
+      <xsl:when test="exists($funct)">
+        <xsl:choose>
+          <xsl:when test="count(aorsl:Argument) = count($funct/aorsl:Parameter)">
+            
+            <xsl:call-template name="java:callMethod">
+              <xsl:with-param name="indent" select="$indent + 1"/>
+              <xsl:with-param name="objInstance" select="$objectVarName"/>
+              <xsl:with-param name="method" select="$funct/@name"/>
+              <xsl:with-param name="args" as="item()*">
+                <xsl:for-each select="$funct/aorsl:Parameter">
+                  <xsl:variable name="argument" select="$call/aorsl:Argument[@property = current()/@name]"/>
+                  <xsl:choose>
+                    <xsl:when test="exists($argument)">
+                      <xsl:choose>
+                        <xsl:when test="@type = 'String'">
+                          <xsl:value-of select="jw:quote($argument/@value)"/>
+                        </xsl:when>
+                        <xsl:otherwise>
+                          <xsl:value-of select="$argument/@value"/>
+                        </xsl:otherwise>
+                      </xsl:choose>               
+                    </xsl:when>
+                    <xsl:otherwise>
+                      <xsl:message>
+                        <xsl:text>[ERROR] No Argument for function parameter [</xsl:text>
+                        <xsl:value-of select="@name"/>
+                        <xsl:text>] found.</xsl:text>
+                      </xsl:message>
+                    </xsl:otherwise>
+                  </xsl:choose>               
+                </xsl:for-each>
+              </xsl:with-param>
+            </xsl:call-template>
+            
+          </xsl:when>
+          <xsl:otherwise>
+            <xsl:message>
+              <xsl:text>[ERROR] Wrong numbers of Argument for call of function </xsl:text>
+              <xsl:value-of select="$funct/@name"/>
+              <xsl:text> found.</xsl:text>
+            </xsl:message>
+          </xsl:otherwise>
+        </xsl:choose>    
+        
+      </xsl:when>
+      <xsl:otherwise>
+        <xsl:message>
+          <xsl:text>[ERROR] No Function [</xsl:text>
+          <xsl:value-of select="@procedure"/>
+          <xsl:text>] found.</xsl:text>
+        </xsl:message>
+      </xsl:otherwise>
+    </xsl:choose>
+      
   </xsl:template>
 
   <!--sets state effects-->

@@ -15,6 +15,18 @@
   xmlns:xsl="http://www.w3.org/1999/XSL/Transform" xsi:schemaLocation="http://aor-simulation.org aorsml.xsd"
   xmlns:jw="http://www.informatik.tu-cottbus.de/~jwerner/">
 
+  <xsl:key name="AllObjectTypesByName"
+    match="/aorsl:SimulationScenario/aorsl:SimulationModel/aorsl:EntityTypes/aorsl:ObjectType | 
+    /aorsl:SimulationScenario/aorsl:SimulationModel/aorsl:EntityTypes/aorsl:PhysicalObjectType |
+    /aorsl:SimulationScenario/aorsl:SimulationModel/aorsl:EntityTypes/aorsl:AgentType |
+    /aorsl:SimulationScenario/aorsl:SimulationModel/aorsl:EntityTypes/aorsl:PhysicalAgentType"
+    use="@name"/>
+
+  <xsl:key name="AllAgentTypesByName"
+    match="/aorsl:SimulationScenario/aorsl:SimulationModel/aorsl:EntityTypes/aorsl:AgentType |
+    /aorsl:SimulationScenario/aorsl:SimulationModel/aorsl:EntityTypes/aorsl:PhysicalAgentType"
+    use="@name"/>
+
   <!-- return the UWORD with a lower startletter -->
   <xsl:function name="jw:lowerWord">
     <xsl:param name="uWord" as="xs:string"/>
@@ -52,20 +64,20 @@
       </xsl:otherwise>
     </xsl:choose>
   </xsl:function>
-  
+
   <!-- NEW -->
   <xsl:function name="jw:parenthesise">
     <xsl:param name="content" as="xs:string"/>
     <xsl:value-of select="fn:concat('(', $content, ')')"/>
   </xsl:function>
-  
+
   <xsl:function name="jw:createCollectionVarname">
     <xsl:param name="collectionNode" as="node()"/>
     <xsl:value-of
       select="fn:concat(jw:lowerWord(jw:lowerWord($collectionNode/@itemType)), $collection.class.aORCollection, $collectionNode/@name, $collectionNode/@id)"
     />
   </xsl:function>
-  
+
   <xsl:function name="jw:createInternalVarName" as="xs:string">
     <xsl:param name="varName"/>
     <xsl:value-of select="fn:concat($createdVariablesNamePrefix, $varName)"/>
@@ -1262,6 +1274,7 @@
     <xsl:value-of select="$objektType"/>
 
   </xsl:template>
+
 
   <!-- set the  InitialAttributeValue for Attributes -->
   <xsl:template match="aorsl:InitialAttributeValue" mode="assistents.setInitialAttributeValue">
@@ -3648,7 +3661,151 @@
       </xsl:otherwise>
     </xsl:choose>
 
+  </xsl:template>
 
+  <xsl:template match="aorsl:Function | aorsl:SubjectiveFunction" mode="assistents.call.function">
+    <xsl:param name="indent" as="xs:integer" required="yes"/>
+    <xsl:param name="call" as="element()" required="yes"/>
+    <xsl:param name="variableName" as="xs:string" required="yes"/>
+
+    <xsl:choose>
+      <xsl:when test="count($call/aorsl:Argument) = count(aorsl:Parameter)">
+
+        <xsl:call-template name="java:callMethod">
+          <xsl:with-param name="indent" select="$indent + 1"/>
+          <xsl:with-param name="objInstance" select="$variableName"/>
+          <xsl:with-param name="method" select="@name"/>
+          <xsl:with-param name="args" as="item()*">
+            <xsl:for-each select="aorsl:Parameter">
+              <xsl:variable name="argument" select="$call/aorsl:Argument[@property = current()/@name]"/>
+              <xsl:choose>
+                <xsl:when test="exists($argument)">
+                  <xsl:choose>
+                    <xsl:when test="@type = 'String'">
+                      <xsl:value-of select="jw:quote($argument/@value)"/>
+                    </xsl:when>
+                    <xsl:otherwise>
+                      <xsl:value-of select="$argument/@value"/>
+                    </xsl:otherwise>
+                  </xsl:choose>
+                </xsl:when>
+                <xsl:otherwise>
+                  <xsl:message>
+                    <xsl:text>[ERROR] No Argument for function parameter [</xsl:text>
+                    <xsl:value-of select="@name"/>
+                    <xsl:text>] found.</xsl:text>
+                  </xsl:message>
+                </xsl:otherwise>
+              </xsl:choose>
+            </xsl:for-each>
+          </xsl:with-param>
+        </xsl:call-template>
+
+      </xsl:when>
+      <xsl:otherwise>
+        <xsl:message>
+          <xsl:text>[ERROR] Wrong numbers of Argument for call of function </xsl:text>
+          <xsl:value-of select="@name"/>
+          <xsl:text> found.</xsl:text>
+        </xsl:message>
+      </xsl:otherwise>
+    </xsl:choose>
+
+  </xsl:template>
+
+  <!-- return a Function from an Object, PhysicalObject, Agent or PhysicalAgent (if exists) -->
+  <xsl:template name="getObjectFunction" as="item()*">
+    <xsl:param name="objectType" as="xs:string" required="yes"/>
+    <xsl:param name="functionName" as="xs:string" required="yes"/>
+
+    <xsl:variable name="object" select="key('AllObjectTypesByName', $objectType)"/>
+    <xsl:if test="exists($object)">
+      <xsl:variable name="function" select="$object/aorsl:Function[@name = $functionName]"/>
+      <xsl:choose>
+        <xsl:when test="exists($function)">
+          <xsl:copy-of select="$function"/>
+        </xsl:when>
+        <xsl:otherwise>
+          <xsl:if test="$object/@superType">
+            <xsl:call-template name="getObjectFunction">
+              <xsl:with-param name="objectType" select="$object/@superType"/>
+              <xsl:with-param name="functionName" select="$functionName"/>
+            </xsl:call-template>
+          </xsl:if>
+        </xsl:otherwise>
+      </xsl:choose>
+    </xsl:if>
+  </xsl:template>
+
+  <xsl:template name="getAgentFunction" as="item()*">
+    <xsl:param name="agentType" as="xs:string" required="yes"/>
+    <xsl:param name="functionName" as="xs:string" required="yes"/>
+
+    <xsl:variable name="agent" select="key('AllAgentTypesByName', $agentType)"/>
+    <xsl:if test="exists($agent)">
+      <xsl:variable name="function" select="$agent/aorsl:Function[@name = $functionName]"/>
+      <xsl:choose>
+        <xsl:when test="exists($function)">
+          <xsl:copy-of select="$function"/>
+        </xsl:when>
+        <xsl:otherwise>
+          <xsl:if test="$agent/@superType">
+            <xsl:call-template name="getAgentFunction">
+              <xsl:with-param name="agentType" select="$agent/@superType"/>
+              <xsl:with-param name="functionName" select="$functionName"/>
+            </xsl:call-template>
+          </xsl:if>
+        </xsl:otherwise>
+      </xsl:choose>
+    </xsl:if>
+  </xsl:template>
+
+  <xsl:template name="getAgentSubjectiveFunction" as="item()*">
+    <xsl:param name="agentType" as="xs:string" required="yes"/>
+    <xsl:param name="functionName" as="xs:string" required="yes"/>
+
+    <xsl:variable name="agent" select="key('AllAgentTypesByName', $agentType)"/>
+    <xsl:if test="exists($agent)">
+      <xsl:variable name="subjectiveFunction" select="$agent/aorsl:SubjectiveFunction[@name = $functionName]"/>
+      <xsl:choose>
+        <xsl:when test="exists($subjectiveFunction)">
+          <xsl:copy-of select="$subjectiveFunction"/>
+        </xsl:when>
+        <xsl:otherwise>
+          <xsl:if test="$agent/@superType">
+            <xsl:call-template name="getAgentSubjectiveFunction">
+              <xsl:with-param name="agentType" select="$agent/@superType"/>
+              <xsl:with-param name="functionName" select="$functionName"/>
+            </xsl:call-template>
+          </xsl:if>
+        </xsl:otherwise>
+      </xsl:choose>
+    </xsl:if>
+  </xsl:template>
+
+  <xsl:template name="checkForExistingSubjectiveFunctions" as="xs:boolean">
+    <xsl:param name="agentType" as="xs:string" required="yes"/>
+    <xsl:variable name="agent" select="key('AllAgentTypesByName', $agentType)"/>
+    <xsl:choose>
+      <xsl:when test="exists($agent)">
+        <xsl:choose>
+          <xsl:when test="exists($agent/aorsl:SubjectiveFunction)">
+            <xsl:value-of select="true()"/>
+          </xsl:when>
+          <xsl:when test="$agent/@superType">
+            <xsl:call-template name="checkForExistingSubjectiveFunctions">
+              <xsl:with-param name="agentType" select="$agent/@superType"/>
+            </xsl:call-template>
+          </xsl:when>
+          <xsl:otherwise>
+            <xsl:value-of select="false()"/>
+          </xsl:otherwise>
+        </xsl:choose>
+      </xsl:when>
+      <xsl:otherwise>
+        <xsl:value-of select="false()"/>
+      </xsl:otherwise>
+    </xsl:choose>
   </xsl:template>
 
 </xsl:stylesheet>

@@ -689,8 +689,43 @@
     <xsl:param name="indent" as="xs:integer" required="yes"/>
     <xsl:param name="agtVarName" as="xs:string" required="yes"/>
     
-    <xsl:variable name="funct" select="ancestor::aorsl:AgentType/aorsl:Function[@name = current()/@procedure][1]" as="element()"/>
-    <xsl:variable name="call" select="."/>
+    
+    <xsl:variable name="hasSubjectivFunction" as="xs:boolean">
+      <xsl:call-template name="checkForExistingSubjectiveFunctions">
+        <xsl:with-param name="agentType" select="(ancestor::aorsl:AgentType | ancestor::aorsl:PhysicalAgentType)[1]/@name"/>
+      </xsl:call-template>
+    </xsl:variable>
+    
+    <xsl:variable name="funct" as="element()*">
+      <xsl:choose>
+        <xsl:when test="not($hasSubjectivFunction)">
+          <xsl:call-template name="getAgentFunction">
+            <xsl:with-param name="agentType" select="(ancestor::aorsl:AgentType | ancestor::aorsl:PhysicalAgentType)[1]/@name"/>
+            <xsl:with-param name="functionName" select="@procedure"/>
+          </xsl:call-template>
+        </xsl:when>
+        <xsl:otherwise>
+          <xsl:call-template name="getAgentSubjectiveFunction">
+            <xsl:with-param name="agentType" select="(ancestor::aorsl:AgentType | ancestor::aorsl:PhysicalAgentType)[1]/@name"/>
+            <xsl:with-param name="functionName" select="@procedure"/>
+          </xsl:call-template>
+        </xsl:otherwise>
+      </xsl:choose>     
+    </xsl:variable>
+    
+    <xsl:apply-templates select="$funct" mode="assistents.call.function">
+      <xsl:with-param name="indent" select="$indent"/>
+      <xsl:with-param name="call" select="."/>
+      <xsl:with-param name="variableName">
+        <xsl:call-template name="java:varByDotNotation">
+          <xsl:with-param name="varName" select="$agtVarName"/>
+        </xsl:call-template>
+      </xsl:with-param>
+    </xsl:apply-templates>
+    
+    
+    
+    <!--xsl:variable name="call" select="."/>
     
     <xsl:choose>
       <xsl:when test="exists($funct)">
@@ -744,12 +779,12 @@
       </xsl:when>
       <xsl:otherwise>
         <xsl:message>
-          <xsl:text>[ERROR] No Function </xsl:text>
+          <xsl:text>[ERROR] No Function [</xsl:text>
           <xsl:value-of select="@procedure"/>
-          <xsl:text> found.</xsl:text>
+          <xsl:text>] in found.</xsl:text>
         </xsl:message>
       </xsl:otherwise>
-    </xsl:choose>
+    </xsl:choose-->
      
   </xsl:template>
 
