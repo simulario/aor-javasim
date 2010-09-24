@@ -164,15 +164,19 @@
             </xsl:apply-templates>
 
             <!-- functions -->
-            <!-- as a simplification, we assume, if we have only <Functions>, then we use all of them in Objects and Subjects -->
+            <xsl:variable name="hasSubjectivFunction" as="xs:boolean">
+              <xsl:call-template name="checkForExistingSubjectiveFunctions">
+                <xsl:with-param name="agentType" select="@name"/>
+              </xsl:call-template>
+            </xsl:variable>
             <xsl:choose>
-              <xsl:when test="fn:exists(aorsl:SubjectiveFunction)">
-                <xsl:apply-templates select="aorsl:SubjectiveFunction" mode="shared.createFunction">
+              <xsl:when test="not($hasSubjectivFunction)">
+                <xsl:apply-templates select="aorsl:Function" mode="shared.createFunction">
                   <xsl:with-param name="indent" select="$indent + 1"/>
                 </xsl:apply-templates>
               </xsl:when>
               <xsl:otherwise>
-                <xsl:apply-templates select="aorsl:Function" mode="shared.createFunction">
+                <xsl:apply-templates select="aorsl:SubjectiveFunction" mode="shared.createFunction">
                   <xsl:with-param name="indent" select="$indent + 1"/>
                 </xsl:apply-templates>
               </xsl:otherwise>
