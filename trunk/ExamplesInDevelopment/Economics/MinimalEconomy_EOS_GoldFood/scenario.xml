@@ -32,7 +32,13 @@
 					<ObjectProperty property="lastPrice" objectType="Person"/>
 				</Source>
 			</Variable>
-		</Statistics>	
+			
+			<Variable name="Volume" dataType="Float">
+				<Source>
+					<ObjectProperty property="marketVolume" objectType="Market"/>
+				</Source>
+			</Variable>
+		</Statistics>
 		
 		<DataTypes>
 			<!--====================================-->
@@ -75,9 +81,45 @@
 			<ComplexDataType name="OfferList">
 				<ClassDef language="Java"><![CDATA[
 					private java.util.ArrayList<Offer> offers = new java.util.ArrayList<Offer>();
+					private java.util.Comparator<Offer> comparator;
+					
+					public OfferList(){
+						this.comparator = new java.util.Comparator<Offer>() {
+						 public int compare (Offer a, Offer b) {
+							  double p1 = a.getPrice();
+							  double p2 = b.getPrice(); 
+								if(p1 < p2) return -1;
+								if(p1 > p2) return 1;
+								            return 0;	             		
+							}		
+						 };
+					}
 					
 					public void addOffer(Offer o){
-						offers.add(o);
+						int index = 0;
+						if(offers.isEmpty()){
+							offers.add(o);
+						}else{
+							index = java.util.Collections.binarySearch(offers, o, this.comparator);
+							// if the price value does not exist in the ordered array list, then the binarySearch function returns the position of the recommended insertion point: index = - insertionPoint -1
+							if(index < 0){
+								offers.add(-index-1, o);
+							}
+							// if the price value exists in the ordered array list. We add the new complex data imediately after the position returned by the binarySearch function.
+							else {
+								offers.add(index+1, o);
+							}
+						}
+					}
+					
+					public Boolean isEmpty(){
+						return offers.isEmpty();
+					}
+					
+					public void print(){
+						for(int i=0;i<offers.size();i++){
+							System.out.println(offers.get(i).getPrice());
+						}
 					}
 				]]></ClassDef>
 			</ComplexDataType>
@@ -163,20 +205,22 @@
 				<Function name="buyFood" resultType="Boolean">
 					<!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~-->
 					<Body language="Java"><![CDATA[
-						
 						final double quantum = getEAT_AMOUNT() * 1.0;
 			          	double purse = getAssets().getAsset("Gold").getQuantity();
 			          	for (double x = getAssets().getAsset("Food").getQuantity(); x <= 1.5 * getTARGET_FOOD_STOCK(); x += quantum) {
-			          		System.out.println(" hallo");
-			            	if(x == 0.0) x = .00000000001;
+			            	if(x == 0.0){
+			            		x = .00000000001;
+			            	} 
 			            	double mod = .1*Math.pow(getTARGET_FOOD_STOCK()/x, .2) +.90/*5*/+Random.uniform(0.0, 1.0)*getRANDOM_FACTOR();
 			            	double price = mod*getLastPrice();
 			            	price = Math.min(price, purse);
-			            	if (price <= 0.0)
-			              		break;
-			            	purse -= quantum*price;
-			            	if(purse < 0.0) break;
-			            	
+			            	if (price <= 0.0){
+			            		break;
+			            	}
+			              	purse -= quantum*price;
+			            	if(purse < 0.0){
+			            		break;
+			            	}
 			            	Offer o = new Offer();
 			            	//prüfen ob überhaupt soviel abgehoben werden kann eventl. esrt im Markt
 			            	o.setProduct("Food");
@@ -184,7 +228,7 @@
 			            	o.setMaxQuantity(quantum);
 			            	o.setPrice(price);
 			            	getBuyList().addOffer(o);
-			            	System.out.println("buyFood " + quantum + "     " + price);
+			            	System.out.println("buyFood: quantum" + quantum + " ||||| price:   " + price);
 			          	}
 						return true;
 					]]></Body>
@@ -194,13 +238,16 @@
 					<!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~-->
 					<Body language="Java"><![CDATA[
 						if(getAssets().getAsset("Food").getQuantity() > 1.5*getTARGET_FOOD_STOCK()){
-							System.out.println("sellFood: ");
 				        	final double quantum = getEAT_AMOUNT() * 1.0;
 				          	for (double x = getAssets().getAsset("Food").getQuantity(); x > 1.5*getTARGET_FOOD_STOCK(); x -= quantum) {
-					            if(x == 0.0) x = .00000000001;
+					            if(x == 0.0){
+					            	x = .00000000001;
+					            }
 					            double mod = .1*Math.pow(getTARGET_FOOD_STOCK()/(x - getTARGET_FOOD_STOCK()), .2) +.90/*5*/+Random.uniform(0.0, 1.0)*getRANDOM_FACTOR();
 					            double price = mod*getLastPrice();
-					            if (price <= 0.0) break;
+					            if (price <= 0.0){
+					            	break;
+					            }
 					            
 					            Offer o = new Offer();
 					            o.setProduct("Food");
@@ -208,7 +255,7 @@
 				            	o.setMaxQuantity(quantum);
 				            	o.setPrice(price);
 				            	getSellList().addOffer(o);
-					            System.out.println(quantum + " " + price);
+					            System.out.println("sellFood: quantum" + quantum + " ||||| price:   " + price);
 				          }
 						return true;
 						}
@@ -224,7 +271,7 @@
 						<UPDATE-AGT>
 							<Slot property="foodStock">
 								<ValueExpr language="Java"><![CDATA[
-									p.getAssets().addAsset(33.0f, "Food", "Stk")
+									p.getAssets().addAsset(50.0f, "Food", "Stk")
 								]]></ValueExpr>
 							</Slot>
 							<Slot property="goldAmount">
@@ -238,13 +285,25 @@
 				<!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~-->
 				<CommunicationRule name="OpenMarket_Rule" agentVariable="p">
 					<!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~-->
-					<WHEN eventType="InMessageEvent" messageType="OpenMarket"/>
+					<WHEN eventType="InMessageEvent" messageType="OpenMarket" messageVariable="msg"/>
 					<IF language="Java">!eat()</IF>
 					<THEN>
+						<UPDATE-AGT>
+							<Slot property="lastPrice">
+								<ValueExpr language="Java">msg.getPrice()</ValueExpr>
+							</Slot>
+						</UPDATE-AGT>
 						<SCHEDULE-EVT>
 							<OutMessageEventExpr messageType="OpenMarket" receiverIdRefs="0" />
 						</SCHEDULE-EVT>
 					</THEN>
+					<ELSE>
+						<UPDATE-AGT>
+							<Slot property="lastPrice">
+								<ValueExpr language="Java">msg.getPrice()</ValueExpr>
+							</Slot>
+						</UPDATE-AGT>
+					</ELSE>
 				</CommunicationRule>
 				<!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~-->
 				<CommunicationRule name="produceFood_Rule" agentVariable="p">
@@ -322,16 +381,35 @@
 						</SCHEDULE-EVT>
 					</THEN>
 				</CommunicationRule>
-			</AgentType>		
+			</AgentType>
+			
 			<AgentType name="Market">
 				<Attribute type="Float" name="marketPrice"/>
 				<Attribute type="Float" name="marketVolume"/>
 				<ComplexDataProperty name="buyOffers" type="OfferList"/>
 				<ComplexDataProperty name="sellOffers" type="OfferList"/>
+				
+				<Function name="clear" resultType="Boolean">
+					<Body language="Java"><![CDATA[
+						System.out.println("Start");
+						// handle special cases
+				        // highest buy price < lowest sell price -> no transactions OR
+				        // empty offer list -> no transactions
+				        if (getBuyOffers().isEmpty() || getSellOffers().isEmpty()) {
+				        	// ToDO less
+				        	System.out.println("False");
+				        	return false;
+				        }
+										
+						return true;
+						]]></Body>
+				</Function>
+				
+				
 				<!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->
-				<CommunicationRule name="Accept_BuyFood">
+				<CommunicationRule name="Accept_BuyFood" agentVariable="m">
 					<!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->
-					<WHEN eventType="OutMessageEvent" messageType="BuyFood_msg" messageVariable="msg"/>
+					<WHEN eventType="InMessageEvent" messageType="BuyFood_msg" messageVariable="msg"/>
 					<DO>
 						<UPDATE-AGT>
 							<Slot property="buyOffers">
@@ -341,9 +419,9 @@
 					</DO>
 				</CommunicationRule>
 				<!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->
-				<CommunicationRule name="Accept_SellFood">
+				<CommunicationRule name="Accept_SellFood" agentVariable="m">
 					<!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->
-					<WHEN eventType="OutMessageEvent" messageType="SellFood_msg" messageVariable="msg"/>
+					<WHEN eventType="InMessageEvent" messageType="SellFood_msg" messageVariable="msg"/>
 					<DO>
 						<UPDATE-AGT>
 							<Slot property="sellOffers">
@@ -355,7 +433,8 @@
 				<!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->
 				<CommunicationRule name="Clear">
 					<!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->
-					<WHEN eventType="InMessageEvent" messageType="clear_msg"/>
+					<WHEN eventType="InMessageEvent" messageType="Clear_msg"/>
+					<IF language="Java">clear()</IF><THEN></THEN>
 				</CommunicationRule>
 			</AgentType>
 		</EntityTypes>
@@ -429,7 +508,7 @@
 			<Slot property="marketPrice" value="2.0" />
 		</Agent>
 		
-		<Agent type="Person" id="1000">
+		<Agents type="Person" rangeStartID="1000" rangeEndID="1001" >
 			<Slot property="foodStock" value="33" />	
 			<Slot property="goldAmount" value="60" />
 			<Slot property="skillLevelGold">
@@ -438,12 +517,13 @@
 				</RandomVariable>
 			</Slot>
 			<Slot property="skillLevelFood">
-				<RandomVariable>
+				<!-- <RandomVariable>
 					<Uniform lowerBound="1.25" upperBound="1.75" />
-				</RandomVariable>
+					</RandomVariable> -->
+				<ValueExpr language="Java">0</ValueExpr>
 			</Slot>
 			<PeriodicTimeEvent type="SetAssets" occurrenceTime="1"  />
-		</Agent>
+		</Agents>
 		
 		<ExogenousEvent occurrenceTime="1" type="StartOfDay" />
 		<ExogenousEvent occurrenceTime="8" type="EachDayAt8AM" />
@@ -451,7 +531,7 @@
 	</InitialState>
 	
 	<!-- =================================================== -->
-	<!--<UserInterface>
+	<UserInterface>
 		<StatisticsUI>
 			<StatisticsVariableUI variable="Food" comparisonGroup="pricevsfood">
 				<Label>
@@ -472,9 +552,9 @@
 					<Weight>kg</Weight>
 				</Format>
 			</StatisticsVariableUI>
-			<StatisticsVariableUI variable="Price" comparisonGroup="pricevsfood">
+			<StatisticsVariableUI variable="Volume" comparisonGroup="pricevsfood">
 				<Label>
-					<Text xml:lang="en">Price</Text>
+					<Text xml:lang="en">Volume</Text>
 					<Text xml:lang="de">Marktpreis</Text>
 					<Text xml:lang="es">Precio de Mercado</Text>
 					<Text xml:lang="fr">Le Prix du Marché</Text>
@@ -492,5 +572,5 @@
 				</Format>
 			</StatisticsVariableUI>
 		</StatisticsUI>
-	</UserInterface>-->
+	</UserInterface>
 </SimulationScenario>
