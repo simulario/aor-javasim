@@ -52,24 +52,25 @@
       </xsl:otherwise>
     </xsl:choose>
   </xsl:function>
-
+  
   <!-- NEW -->
   <xsl:function name="jw:parenthesise">
     <xsl:param name="content" as="xs:string"/>
     <xsl:value-of select="fn:concat('(', $content, ')')"/>
   </xsl:function>
-
+  
   <xsl:function name="jw:createCollectionVarname">
     <xsl:param name="collectionNode" as="node()"/>
     <xsl:value-of
       select="fn:concat(jw:lowerWord(jw:lowerWord($collectionNode/@itemType)), $collection.class.aORCollection, $collectionNode/@name, $collectionNode/@id)"
     />
   </xsl:function>
-
+  
   <xsl:function name="jw:createInternalVarName" as="xs:string">
     <xsl:param name="varName"/>
     <xsl:value-of select="fn:concat($createdVariablesNamePrefix, $varName)"/>
   </xsl:function>
+
 
   <!-- all attributes as param of a class incl. superclassattributes -->
   <xsl:template match="aorsl:PhysicalObjectType | aorsl:PhysicalAgentType | aorsl:AgentType | aorsl:ObjectType | aorsl:BeliefEntityType"

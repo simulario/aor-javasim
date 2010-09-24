@@ -357,7 +357,6 @@
             <xsl:with-param name="indent" select="$indent"/>
           </xsl:apply-templates>
 
-
           <xsl:variable name="agentVarName">
             <xsl:choose>
               <xsl:when test="$agentVariable">
@@ -395,6 +394,11 @@
           <xsl:apply-templates select="$mode/aorsl:UPDATE-AGT/aorsl:UpdateComplexDataPropertyValue"
             mode="createAgentRules.method.stateEffects.updateComplexDataPropertyValue">
             <xsl:with-param name="indent" select="$indent + 1"/>
+          </xsl:apply-templates>
+          
+          <xsl:apply-templates select="$mode/aorsl:UPDATE-AGT/aorsl:Call" mode="createAgentRules.method.stateEffects.call">
+            <xsl:with-param name="indent" select="$indent"/>
+            <xsl:with-param name="agtVarName" select="$agentVarName"/>
           </xsl:apply-templates>
 
           <!--sets state effects-->
@@ -683,11 +687,61 @@
   
   <xsl:template match="aorsl:Call" mode="createAgentRules.method.stateEffects.call">
     <xsl:param name="indent" as="xs:integer" required="yes"/>
+    <xsl:param name="agtVarName" as="xs:string" required="yes"/>
     
     <xsl:variable name="funct" select="ancestor::aorsl:AgentType/aorsl:Function[@name = current()/@procedure][1]" as="element()"/>
+    <xsl:variable name="call" select="."/>
     
     <xsl:choose>
-      <xsl:when test="exists($funct)"></xsl:when>
+      <xsl:when test="exists($funct)">
+        <xsl:choose>
+          <xsl:when test="count(aorsl:Argument) = count($funct/aorsl:Parameter)">
+            
+            <xsl:call-template name="java:callMethod">
+              <xsl:with-param name="indent" select="$indent + 1"/>
+              <xsl:with-param name="objInstance">
+                <xsl:call-template name="java:varByDotNotation">
+                  <xsl:with-param name="varName" select="$agtVarName"/>
+                </xsl:call-template>
+              </xsl:with-param>
+              <xsl:with-param name="method" select="$funct/@name"/>
+              <xsl:with-param name="args" as="item()*">
+                <xsl:for-each select="$funct/aorsl:Parameter">
+                  <xsl:variable name="argument" select="$call/aorsl:Argument[@property = current()/@name]"/>
+                  <xsl:choose>
+                    <xsl:when test="exists($argument)">
+                      <xsl:choose>
+                        <xsl:when test="@type = 'String'">
+                          <xsl:value-of select="jw:quote($argument/@value)"/>
+                        </xsl:when>
+                        <xsl:otherwise>
+                          <xsl:value-of select="$argument/@value"/>
+                        </xsl:otherwise>
+                      </xsl:choose>               
+                    </xsl:when>
+                    <xsl:otherwise>
+                      <xsl:message>
+                        <xsl:text>[ERROR] No Argument for function parameter [</xsl:text>
+                        <xsl:value-of select="@name"/>
+                        <xsl:text>] found.</xsl:text>
+                      </xsl:message>
+                    </xsl:otherwise>
+                  </xsl:choose>               
+                </xsl:for-each>
+              </xsl:with-param>
+            </xsl:call-template>
+            
+          </xsl:when>
+          <xsl:otherwise>
+            <xsl:message>
+              <xsl:text>[ERROR] Wrong numbers of Argument for call of function </xsl:text>
+              <xsl:value-of select="$funct/@name"/>
+              <xsl:text> found.</xsl:text>
+            </xsl:message>
+          </xsl:otherwise>
+        </xsl:choose>    
+
+      </xsl:when>
       <xsl:otherwise>
         <xsl:message>
           <xsl:text>[ERROR] No Function </xsl:text>
@@ -696,9 +750,7 @@
         </xsl:message>
       </xsl:otherwise>
     </xsl:choose>
-    
-    
-    
+     
   </xsl:template>
 
   <!-- UpdateComplexDataPropertyValue -->
