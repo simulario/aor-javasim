@@ -29,7 +29,7 @@
 			<Variable name="Price" dataType="Float">
 				
 				<Source>
-					<ObjectProperty property="lastPrice" objectType="Person"/>
+					<ObjectProperty property="marketPrice" objectType="Market"/>
 				</Source>
 			</Variable>
 			
@@ -139,9 +139,12 @@
 			<MessageType name="SellFood_msg">
 				<ComplexDataProperty name="OfferList" type="OfferList"/>
 			</MessageType>
-			<MessageType name="Clear_msg" />
+			<MessageType name="Clear_msg" >
+				<ComplexDataProperty name="TransactionList" type="OfferList"/>
+			</MessageType>
 			<ExogenousEventType name="StartOfDay" periodicity="24" />
 			<ExogenousEventType name="EachDayAt8AM" periodicity="24" />
+			<ExogenousEventType name="EachDayAt11AM" periodicity="24" />
 			<ExogenousEventType name="EndOfDay" periodicity="24" />
 			
 			<AgentType name="EconomicAgent">
@@ -207,6 +210,7 @@
 				<!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~-->
 				<Function name="buyFood" resultType="Boolean">
 					<!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~-->
+					<Parameter name="agentID" type="long"/>
 					<Body language="Java"><![CDATA[
 						final double quantum = getEAT_AMOUNT() * 1.0;
 			          	double purse = getAssets().getAsset("Gold").getQuantity();
@@ -230,6 +234,7 @@
 			            	o.setCurrency("Gold");
 			            	o.setMaxQuantity(quantum);
 			            	o.setPrice(price);
+			            	o.setAgentID(agentID);
 			            	getBuyList().addOffer(o);
 			            	//System.out.println("buyFood: quantum" + quantum + " ||||| price:   " + price);
 			          	}
@@ -239,6 +244,7 @@
 				<!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~-->
 				<Function name="sellFood" resultType="Boolean">
 					<!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~-->
+					<Parameter name="agentID" type="long"/>
 					<Body language="Java"><![CDATA[
 						if(getAssets().getAsset("Food").getQuantity() > 1.5*getTARGET_FOOD_STOCK()){
 				        	final double quantum = getEAT_AMOUNT() * 1.0;
@@ -257,6 +263,7 @@
 				            	o.setCurrency("Gold");
 				            	o.setMaxQuantity(quantum);
 				            	o.setPrice(price);
+				            	o.setAgentID(agentID);
 				            	getSellList().addOffer(o);
 					            //System.out.println("sellFood: quantum" + quantum + " ||||| price:   " + price);
 				          }
@@ -355,7 +362,7 @@
 						<description> The person decides how much food he wants to buy</description>
 					</documentation>
 					<WHEN eventType="InMessageEvent" messageType="Act_msg"/>
-					<IF language="Java">buyFood()</IF>
+					<IF language="Java">buyFood(p.getId())</IF>
 					<THEN>
 						<SCHEDULE-EVT>
 							<OutMessageEventExpr messageType="BuyFood_msg" receiverIdRefs="2">
@@ -373,7 +380,7 @@
 						<description> The person decides how much food he wants to sell</description>
 					</documentation>
 					<WHEN eventType="InMessageEvent" messageType="Act_msg"/>
-					<IF language="Java">sellFood()</IF>
+					<IF language="Java">sellFood(p.getId())</IF>
 					<THEN>
 						<SCHEDULE-EVT>
 							<OutMessageEventExpr messageType="SellFood_msg" receiverIdRefs="2">
@@ -391,10 +398,12 @@
 				<Attribute type="Float" name="marketVolume"/>
 				<ComplexDataProperty name="buyOffers" type="OfferList"/>
 				<ComplexDataProperty name="sellOffers" type="OfferList"/>
+				<ComplexDataProperty name="transactions" type="OfferList"/>
 				
 				<Function name="clear" resultType="Boolean">
 					<Body language="Java"><![CDATA[
-						System.out.println("Start");// handle special cases
+						getTransactions().getOffers().clear();
+						// handle special cases
 				        // highest buy price < lowest sell price -> no transactions OR
 				        // empty offer list -> no transactions
 				        if (getBuyOffers().isEmpty() || getSellOffers().isEmpty()) {
@@ -426,39 +435,184 @@
                     			   && equal(prices.get(prices.size() - 1),getBuyOffers().getOffers().get(b).getPrice())){
                 				b++;
                 			}
-                			// then add the remainder if there is one
-        					if (s < getSellOffers().getOffers().size()){
-	           				 	while (s < getSellOffers().getOffers().size()) {
-					                if (!equal(prices.get(prices.size() - 1), getSellOffers().getOffers().get(s).getPrice())){
-					                	prices.add(getSellOffers().getOffers().get(s).getPrice());
-					                }
-					                s++;
-				            	}
-				            }else if (b < getBuyOffers().getOffers().size()){
-            					while (b < getBuyOffers().getOffers().size()) {
-					                if (!equal(prices.get(prices.size() - 1), getBuyOffers().getOffers().get(b).getPrice())){
-					                    prices.add(getBuyOffers().getOffers().get(b).getPrice());
-					                }
-					                b++;
-					            }
-            				}
+                		}
+                		// then add the remainder if there is one
+        				if (s < getSellOffers().getOffers().size()){
+           				 	while (s < getSellOffers().getOffers().size()) {
+				                if (!equal(prices.get(prices.size() - 1), getSellOffers().getOffers().get(s).getPrice())){
+				                	prices.add(getSellOffers().getOffers().get(s).getPrice());
+				                }
+				                s++;
+			            	}
+			            }else if (b < getBuyOffers().getOffers().size()){
+            				while (b < getBuyOffers().getOffers().size()) {
+				                if (!equal(prices.get(prices.size() - 1), getBuyOffers().getOffers().get(b).getPrice())){
+				                    prices.add(getBuyOffers().getOffers().get(b).getPrice());
+				                }
+				                b++;
+				            }
+            			}
+            			
+            			// find the price(s) at which supply and demand intersect
+				        double supply = 0, demand = 0;
+				        // initialize demand to be the demand at lowest demand price
+				        for (Offer o : getBuyOffers().getOffers()){
+				            demand += o.getMaxQuantity();
+				            }
+				        // walk through prices, updating supply and demand as needed.
+				        int p = 0;
+				        double bestVolume = Double.NEGATIVE_INFINITY;
+				        int bestP = 0;
+				        for (s = -1, b = 0; s + 1 < getSellOffers().getOffers().size() && b < getBuyOffers().getOffers().size(); p++) {
+				            // if prices[p] is the next supply price:
+				            while (s + 1 < getSellOffers().getOffers().size() && equal(prices.get(p), getSellOffers().getOffers().get(s +1 ).getPrice())){
+				                supply += getSellOffers().getOffers().get(++s).getMaxQuantity();
+				            }
+				            // if the current demand price is less than prices[p]:
+				            while (b < getBuyOffers().getOffers().size() && less(getBuyOffers().getOffers().get(b).getPrice(), prices.get(p))){
+				                demand -= getBuyOffers().getOffers().get(b++).getMaxQuantity();
+				            }
+				            if (supply > demand) {
+				                // volume = demand
+				                if (demand > bestVolume) {
+				                    bestVolume = demand;
+				                    bestP = p;
+				                }
+				                break; // stop
+				            } else if (supply > bestVolume) {
+				            	// volume = supply here
+				                bestVolume = supply;
+				                bestP = p;
+				            }
 				        }
-				   System.out.println("True");				
+				        
+			      	  	/*
+				         * If the above loop broke because the final supply price was reached,
+				         * then supply at Price >= prices[p-1] remains constant. Thus, it is
+				         * necessary to check whether demand at higher prices will ever become
+				         * less than the current supply. If so, then that will be at the market
+				         * price.
+				         */
+				         if (s + 1 == getSellOffers().getOffers().size()) {
+				            for (; b < getBuyOffers().getOffers().size() && p < prices.size(); p++) {
+				                while (b < getBuyOffers().getOffers().size() && less(getBuyOffers().getOffers().get(b).getPrice(), prices.get(p)))
+				                    demand -= getBuyOffers().getOffers().get(b++).getMaxQuantity();
+				
+				                if (supply > demand) {
+				                    // volume = demand
+				                    if (demand > bestVolume) {
+				                        bestVolume = demand;
+				                        bestP = p;
+				                    }
+				                    break; // stop
+				                } else if (supply > bestVolume) { 
+				                	// volume = supply here
+				                    bestVolume = supply;
+				                    bestP = p;
+				                }
+				            }
+				        }
+				        
+				        /*
+				         * If one of the loops broke because the next price was greater than the
+				         * highest demand price, then the market price is set to the highest
+				         * demand price in order to minimize shortage.
+				         */
+				        if (b == getBuyOffers().getOffers().size()){
+				            setMarketPrice(getBuyOffers().getOffers().get(b - 1).getPrice());
+				        }
+				        /* If supply never crosses demand, set to highest supply price */
+				        else if (p == prices.size()){
+				            setMarketPrice(getBuyOffers().getOffers().get(p -1 ).getPrice());
+				        }
+				        /*
+				         * Finally, if the loop broke because supply > demand, there are two
+				         * valid prices that could be the market price: prices[p], which is the
+				         * smallest price at which supply tops demand, or prices[p-1], which is
+				         * the largest price at which demand tops supply. Since either price is
+				         * valid, we select between them in an arbitrary, yet deterministic
+				         * manner. However, if choosing between a two prices, one of which would
+				         * not cause any transactions to occur, we choose the other price.
+				         */
+				        else {
+				            if (p == 0){
+				                setMarketPrice(prices.get(p));
+				            }else if (less(prices.get(p - 1), getSellOffers().getOffers().get(0).getPrice())){
+				                setMarketPrice(prices.get(p));
+				            }else if (less(getBuyOffers().getOffers().get(getBuyOffers().getOffers().size() - 1).getPrice(), prices.get(p))){
+				                setMarketPrice(prices.get(p - 1));
+				            }else {
+				                setMarketPrice(prices.get(bestP));
+				            }
+				        }
+				        int seller = 0, buyer = getBuyOffers().getOffers().size() - 1;
+				        while (seller < getSellOffers().getOffers().size() && buyer >= 0
+				                && !less(getMarketPrice(), getSellOffers().getOffers().get(seller).getPrice()) // sP <= mP
+				                && !less(getBuyOffers().getOffers().get(buyer).getPrice(), getMarketPrice())) { // bP >= mP
+				            if (transact(getSellOffers().getOffers().get(seller), getBuyOffers().getOffers().get(buyer), getMarketPrice())){
+				                seller++; // sell offer exhausted, move to next
+				            }else{
+				                buyer--; // buy offer exhausted, move to next
+				            }
+				        }
+				        
+						// reset offer lists
+				        getBuyOffers().getOffers().clear();
+				        getSellOffers().getOffers().clear();
+				        
+				   		System.out.println("MarketPrice:" + getMarketPrice());
+				   		System.out.println("Transactions:" + getTransactions().getOffers().size());
 						return true;
 					]]></Body>
 				</Function>
+				
 				<Function name="equal" resultType="Boolean">
-					<Parameter name="a" type="Float"/>
-					<Parameter name="b" type="Float"/>
+					<Parameter name="a" type="double"/>
+					<Parameter name="b" type="double"/>
 					<Body language="Java"><![CDATA[
-						/*Float eps = 1e-5;
-						if (a + eps < b)
+						double eps = 1e-5;
+						if (a + eps < b){
             				return false;
-       					if (a - eps > b)
-            				return false;*/
+            			}
+       					if (a - eps > b){
+            				return false;
+            			}
         				return true;
 					]]></Body>
 				</Function>
+				
+				<Function name="less" resultType="Boolean">
+					<Parameter name="a" type="double"/>
+					<Parameter name="b" type="double"/>
+					<Body language="Java"><![CDATA[
+						double eps = 1e-5;
+						if (a + eps < b){
+				            return true;
+				        }
+				        return false;
+					]]></Body>
+				</Function>
+				
+				<Function name="transact" resultType="Boolean">
+					<Parameter name="sellOffer" type="Offer"/>
+					<Parameter name="buyOffer" type="Offer"/>
+					<Parameter name="salePrice" type="double"/>
+					<Body language="Java"><![CDATA[
+						if (sellOffer.getMaxQuantity() <= 0){
+				            return true;
+				        }
+				        if (buyOffer.getMaxQuantity() <= 0){
+				            return false;
+				        }
+				        // else, proceed with the transaction
+				        boolean returnVal = sellOffer.getMaxQuantity() < buyOffer.getMaxQuantity();
+						getTransactions().getOffers().add(buyOffer);
+						getTransactions().getOffers().add(sellOffer);
+						
+				        return returnVal;
+					]]></Body>
+				</Function>
+				
 				
 				<!-- List nicht einfach übersreiben sonder anhängen wichtig sobald es mehrere agenten gibt -->
 				<!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->
@@ -486,10 +640,13 @@
 					</DO>
 				</CommunicationRule>
 				<!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->
-				<CommunicationRule name="Clear">
+				<CommunicationRule name="Clear" agentVariable="m">
 					<!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->
-					<WHEN eventType="InMessageEvent" messageType="Clear_msg"/>
-					<IF language="Java">clear()</IF><THEN></THEN>
+					<WHEN eventType="InMessageEvent" messageType="Clear_msg" messageVariable="msg"/>
+					<IF language="Java">m.clear()</IF>
+					<THEN>
+						<!-- Update the Persons -->
+					</THEN>
 				</CommunicationRule>
 			</AgentType>
 		</EntityTypes>
@@ -541,8 +698,8 @@
 			</DO>
 		</EnvironmentRule>
 		
-		<EnvironmentRule name="EndOfDay_Rule">
-			<WHEN eventType="EndOfDay"/>
+		<EnvironmentRule name="EachDayAt11AM_Rule">
+			<WHEN eventType="EachDayAt11AM"/>
 			<FOR objectVariable="m" objectType="Market" />
 			<DO>
 				<SCHEDULE-EVT>
@@ -552,7 +709,8 @@
 				</SCHEDULE-EVT>
 			</DO>
 		</EnvironmentRule>
-		</EnvironmentRules>	
+		
+	</EnvironmentRules>	
 		
 	</SimulationModel>
 	<!-- ======================= -->
@@ -597,6 +755,7 @@
 		</Agent>
 		<ExogenousEvent occurrenceTime="1" type="StartOfDay" />
 		<ExogenousEvent occurrenceTime="8" type="EachDayAt8AM" />
+		<ExogenousEvent occurrenceTime="11" type="EachDayAt11AM" />
 		<ExogenousEvent occurrenceTime="24" type="EndOfDay" />
 	</InitialState>
 	
@@ -622,9 +781,9 @@
 					<Weight>kg</Weight>
 				</Format>
 			</StatisticsVariableUI>
-			<StatisticsVariableUI variable="Volume" comparisonGroup="pricevsfood">
+			<StatisticsVariableUI variable="Price" comparisonGroup="pricevsfood">
 				<Label>
-					<Text xml:lang="en">Volume</Text>
+					<Text xml:lang="en">Marketprice</Text>
 					<Text xml:lang="de">Marktpreis</Text>
 					<Text xml:lang="es">Precio de Mercado</Text>
 					<Text xml:lang="fr">Le Prix du Marché</Text>
