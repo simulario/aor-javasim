@@ -116,6 +116,9 @@
 						return offers.isEmpty();
 					}
 					
+					public java.util.ArrayList<Offer> getOffers(){
+						return this.offers;
+					}
 					public void print(){
 						for(int i=0;i<offers.size();i++){
 							System.out.println(offers.get(i).getPrice());
@@ -228,7 +231,7 @@
 			            	o.setMaxQuantity(quantum);
 			            	o.setPrice(price);
 			            	getBuyList().addOffer(o);
-			            	System.out.println("buyFood: quantum" + quantum + " ||||| price:   " + price);
+			            	//System.out.println("buyFood: quantum" + quantum + " ||||| price:   " + price);
 			          	}
 						return true;
 					]]></Body>
@@ -255,7 +258,7 @@
 				            	o.setMaxQuantity(quantum);
 				            	o.setPrice(price);
 				            	getSellList().addOffer(o);
-					            System.out.println("sellFood: quantum" + quantum + " ||||| price:   " + price);
+					            //System.out.println("sellFood: quantum" + quantum + " ||||| price:   " + price);
 				          }
 						return true;
 						}
@@ -271,7 +274,7 @@
 						<UPDATE-AGT>
 							<Slot property="foodStock">
 								<ValueExpr language="Java"><![CDATA[
-									p.getAssets().addAsset(50.0f, "Food", "Stk")
+									p.getAssets().addAsset(new Float(getFoodStock()), "Food", "Stk")
 								]]></ValueExpr>
 							</Slot>
 							<Slot property="goldAmount">
@@ -391,21 +394,73 @@
 				
 				<Function name="clear" resultType="Boolean">
 					<Body language="Java"><![CDATA[
-						System.out.println("Start");
-						// handle special cases
+						System.out.println("Start");// handle special cases
 				        // highest buy price < lowest sell price -> no transactions OR
 				        // empty offer list -> no transactions
 				        if (getBuyOffers().isEmpty() || getSellOffers().isEmpty()) {
 				        	// ToDO less
+				        	getBuyOffers().getOffers().clear();
+				        	getSellOffers().getOffers().clear();
 				        	System.out.println("False");
 				        	return false;
 				        }
-										
+				        // merge prices into sorted list, eliminating duplicates
+        				ArrayList<Double> prices = new ArrayList<Double>(getBuyOffers().getOffers().size() + getSellOffers().getOffers().size());
+        				int s = 0, b = 0;
+				        while (s < getSellOffers().getOffers().size() && b < getBuyOffers().getOffers().size()) {
+				            if (equal(getSellOffers().getOffers().get(s).getPrice(), getBuyOffers().getOffers().get(b).getPrice())) {
+				            	prices.add(getSellOffers().getOffers().get(s++).getPrice());
+				                b++;
+				            } else if(getSellOffers().getOffers().get(s).getPrice() < getBuyOffers().getOffers().get(b).getPrice()){
+                				prices.add(getSellOffers().getOffers().get(s++).getPrice());
+                			} else{
+                				prices.add(getBuyOffers().getOffers().get(b++).getPrice());
+                			}
+                			// eliminate duplicates in sellOffers
+				        	while (s < getSellOffers().getOffers().size() 
+                    			   && equal(prices.get(prices.size() - 1), getSellOffers().getOffers().get(s).getPrice())){
+                				s++;
+							}
+							 // eliminate duplicates in buyOffers
+							while (b < getBuyOffers().getOffers().size()
+                    			   && equal(prices.get(prices.size() - 1),getBuyOffers().getOffers().get(b).getPrice())){
+                				b++;
+                			}
+                			// then add the remainder if there is one
+        					if (s < getSellOffers().getOffers().size()){
+	           				 	while (s < getSellOffers().getOffers().size()) {
+					                if (!equal(prices.get(prices.size() - 1), getSellOffers().getOffers().get(s).getPrice())){
+					                	prices.add(getSellOffers().getOffers().get(s).getPrice());
+					                }
+					                s++;
+				            	}
+				            }else if (b < getBuyOffers().getOffers().size()){
+            					while (b < getBuyOffers().getOffers().size()) {
+					                if (!equal(prices.get(prices.size() - 1), getBuyOffers().getOffers().get(b).getPrice())){
+					                    prices.add(getBuyOffers().getOffers().get(b).getPrice());
+					                }
+					                b++;
+					            }
+            				}
+				        }
+				   System.out.println("True");				
 						return true;
-						]]></Body>
+					]]></Body>
+				</Function>
+				<Function name="equal" resultType="Boolean">
+					<Parameter name="a" type="Float"/>
+					<Parameter name="b" type="Float"/>
+					<Body language="Java"><![CDATA[
+						/*Float eps = 1e-5;
+						if (a + eps < b)
+            				return false;
+       					if (a - eps > b)
+            				return false;*/
+        				return true;
+					]]></Body>
 				</Function>
 				
-				
+				<!-- List nicht einfach übersreiben sonder anhängen wichtig sobald es mehrere agenten gibt -->
 				<!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->
 				<CommunicationRule name="Accept_BuyFood" agentVariable="m">
 					<!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->
@@ -508,8 +563,8 @@
 			<Slot property="marketPrice" value="2.0" />
 		</Agent>
 		
-		<Agents type="Person" rangeStartID="1000" rangeEndID="1001" >
-			<Slot property="foodStock" value="33" />	
+		<Agent type="Person"  id="1000" >
+			<Slot property="foodStock" value="20" />	
 			<Slot property="goldAmount" value="60" />
 			<Slot property="skillLevelGold">
 				<RandomVariable>
@@ -523,8 +578,23 @@
 				<ValueExpr language="Java">0</ValueExpr>
 			</Slot>
 			<PeriodicTimeEvent type="SetAssets" occurrenceTime="1"  />
-		</Agents>
-		
+		</Agent>
+		<Agent type="Person"  id="1001" >
+			<Slot property="foodStock" value="120" />	
+			<Slot property="goldAmount" value="60" />
+			<Slot property="skillLevelGold">
+				<RandomVariable>
+					<Uniform lowerBound="3.0" upperBound="4.0" />
+				</RandomVariable>
+			</Slot>
+			<Slot property="skillLevelFood">
+				<!-- <RandomVariable>
+					<Uniform lowerBound="1.25" upperBound="1.75" />
+					</RandomVariable> -->
+				<ValueExpr language="Java">0</ValueExpr>
+			</Slot>
+			<PeriodicTimeEvent type="SetAssets" occurrenceTime="1"  />
+		</Agent>
 		<ExogenousEvent occurrenceTime="1" type="StartOfDay" />
 		<ExogenousEvent occurrenceTime="8" type="EachDayAt8AM" />
 		<ExogenousEvent occurrenceTime="24" type="EndOfDay" />
