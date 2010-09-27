@@ -346,6 +346,7 @@ public java.util.List<BidToBuyRecord> getList() {
 			<ExogenousEventType name="EachDayAt8AM" periodicity="24" />
 			<!-- ================================================== -->
 			<ExogenousEventType name="EachDayAt11AM" periodicity="24" />
+			<ExogenousEventType name="EachDayAt11PM" periodicity="24" />
 			<!-- ================================================== -->
 			<ExogenousEventType name="EndOfDay" periodicity="24" />		
 			<!-- ======================= -->
@@ -369,6 +370,7 @@ public java.util.List<BidToBuyRecord> getList() {
 				<ComplexDataProperty name="bidToBuy" type="BidToBuyRecord" upperMultiplicity="unbounded" />
 				<ComplexDataProperty name="bids" type="BidToBuyList" />
 				<ComplexDataProperty name="individualTransaction" type="IndividualTransactionType" />
+				<ComplexDataProperty name="sellOffers" type="OfferToSellRecord" upperMultiplicity="unbounded" />
 				<!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->
 				<Function name="individualTransaction" resultType="IndividualTransactionType">
 				<!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->
@@ -1018,6 +1020,29 @@ bid
 					</DO>
 				</EnvironmentRule>	
 				<!-- =================================== -->
+				<EnvironmentRule name="EachDayAt11PM_Rule">
+					<!-- =================================== -->
+					<documentation>
+						<description>Test the MultiValuedSlot element.</description>
+					</documentation>
+					<WHEN eventType="EachDayAt11PM"/>
+					<FOR objectVariable="m2" objectType="SealedBidMaximumVolumeAuction_Market" />
+					<FOR dataVariable="o" refDataType="OfferToSellRecord" />
+					<DO>
+						<UPDATE-ENV>
+							<UpdateObject objectVariable="m2">
+								<MultiValuedSlot property="offers" >
+									<Add itemVariable="o" />
+									<Add>
+										<ValueExpr language="Java">new OfferToSellRecord()</ValueExpr>
+									</Add>
+									<Remove itemVariable="o" />
+								</MultiValuedSlot>
+							</UpdateObject>
+						</UPDATE-ENV>
+					</DO>
+				</EnvironmentRule>
+				<!-- =================================== -->
 				<EnvironmentRule name="EndOfDay_Rule">
 	      <!-- =================================== -->
 						<documentation>
@@ -1108,6 +1133,7 @@ bid
 		<ExogenousEvent occurrenceTime="1" type="StartOfDay" />
 		<ExogenousEvent occurrenceTime="8" type="EachDayAt8AM" />
 		<ExogenousEvent occurrenceTime="11" type="EachDayAt11AM" />
+		<ExogenousEvent occurrenceTime="23" type="EachDayAt11PM"/>
 		<ExogenousEvent occurrenceTime="24" type="EndOfDay" />
 	</InitialState>
 	
