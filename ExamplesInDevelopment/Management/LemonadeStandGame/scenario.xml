@@ -1,0 +1,209 @@
+<?xml version="1.0"?>
+<?xml-stylesheet type="text/xsl" href="prettyprint.xsl"?>
+
+<SimulationScenario version="0.8.4" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xsi:schemaLocation="http://aor-simulation.org ../../../AORSL/AORSL_0-8-4.xsd"
+	xmlns="http://aor-simulation.org" xmlns:aors="http://aor-simulation.org"
+	xmlns:dc="http://purl.org/dc/elements/1.1/" 
+	scenarioName="LemonadeStandGame"
+	scenarioTitle="Make lemonade and sell it at a street stand"
+	simulationManagerDirectory="../../..">
+
+	<SimulationParameters simulationSteps="4320" timeUnit="h"  stepTimeDelay="0"/>
+	<SimulationModel modelName="LemonadeStandGame">
+		<documentation>
+			<dc:modified>20100927</dc:modified>
+			<dc:source>http://en.wikipedia.org/wiki/Lemonade_Stand</dc:source>
+			<aors:description xmlns="http://www.w3.org/1999/xhtml">
+				A lemonade seller makes lemonade and sells it at a stand in a street market from 4 pm until 8 pm.
+				The work day starts at 3 pm with purchasing the ingredients and ends at 8 pm. Each
+				hour is represented by 10 time steps.
+			</aors:description>
+		</documentation>
+		
+		<SpaceModel geometry="Euclidean" spatialDistanceUnit="m">
+			<OneDimensional xMax="30"/>
+		</SpaceModel>
+		
+		<Statistics>			
+			<Variable name="Price" dataType="Float">				
+				<Source>
+					<ObjectProperty property="lemonadeSalesPrice" objectType="LemonadeSeller"/>
+				</Source>
+			</Variable>
+		</Statistics>
+				
+		<EntityTypes>
+			<MessageType name="Order"/>
+			<MessageType name="OrderConfirmation"/>
+			
+			<ExogenousEventType name="StartOfDay" periodicity="50" />
+			<ExogenousEventType name="EachDayAt4pm" periodicity="50" />
+			<ExogenousEventType name="EachDayAt8pm" periodicity="50" />
+			
+			<ActionEventType name="Halt"/>
+			<ActionEventType name="Go"/>
+			
+			<PhysicalObjectType name="PricePoster" idPerceivable="true">
+				<Attribute name="sellerIdRef" type="Integer"/>
+				<Attribute name="price" type="Float"/>
+			</PhysicalObjectType>
+			
+			<!-- =================================================== -->
+			<PhysicalAgentType name="Customer" autoPerception="true">
+			<!-- =================================================== -->
+				<documentation><description>Customers walk along a street and perceive the price posters 
+					of the lemonade stands.	When the price is smaller than their price limit, they halt
+					at the stand and order a lemonade. 
+					Possible extensions:
+					- use a waiting line at the stand
+					- Vary the price limit with the weather (better weather = higher price limit)
+					- Model the lemonade's quality with respect to cutomer preferences
+					- Model the binding	of a customer to a preferred seller
+					- Offer large and small amounts of lemonade
+				</description></documentation>
+				<Attribute name="priceLimit" type="Float"/>
+				<Attribute name="patience" type="Integer"/>					
+				<!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->
+				<ReactionRule name="PricePosterPerception_RR" agentVariable="cust">
+				<!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->
+					<documentation>
+						<description>When approaching a lemonade stand, the customer perceives the price poster. 
+							If the price is not above her price limit, the customer gets into the waiting line 
+							of the stand and orders a lemonade. </description>
+					</documentation>
+					<WHEN eventType="PhysicalObjectPerceptionEvent" physicalObjectType="PricePoster" eventVariable="e"/>
+					<FOR dataVariable="q" dataType="Integer">
+						<ValueExpr language="Java">cust.randomHamburgerQty()</ValueExpr>
+					</FOR>
+					<IF language="Java"><![CDATA[
+						cust.getPriceLimit() >= ((PricePoster)e.getPerceivedPhysicalObject()).getPrice()
+					]]></IF>
+					<THEN>
+						<SCHEDULE-EVT>
+							<ActionEventExpr actionEventType="Halt"/>
+							<OutMessageEventExpr messageType="Order">
+								<ReceiverIdRef language="Java">
+									((PricePoster)e.getPerceivedPhysicalObject()).getSellerIdRef()
+								</ReceiverIdRef>
+							</OutMessageEventExpr>
+						</SCHEDULE-EVT>
+					</THEN>
+				</ReactionRule>
+				<!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->
+				<ReactionRule name="OrderConfirmation_RR" agentVariable="cust">
+				<!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->
+					<documentation>
+						<description>When the customer receives an oder conformation (and the cup of lemonade), she pays the bill
+							and stays for a moment for drinking the cup of lemonade. </description>
+					</documentation>
+					<WHEN eventType="InMessageEvent" messageType="OrderConfirmation"/>
+
+				</ReactionRule>
+				<!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->
+			</PhysicalAgentType>
+			
+			<!-- ============================================ -->
+			<PhysicalAgentType name="LemonadeSeller">
+			<!-- ============================================ -->
+				<documentation>
+					<description xmlns:h="http://www.w3.org/1999/xhtml">A lemonade seller makes lemonade and sells it in paper cups at a stand in a street market.
+						Lemonade is made in a pitcher by adding a number of sugar cubes and the juice of a number
+						of lemons, and filling it up with water. Then, for serving the lemonade in a cup, first
+						a number of ice cubes are put into the cup, which is then filled with the lemonade from
+						the pitcher. On each day, the lemonade seller has to decide on 
+						<h:ol>
+							<h:li>The <strong>purchase</strong> of paper cups, lemons, sugar and ice</h:li>
+							<h:li>The <strong>production</strong> of lemonade from how many lemons, sugar cubes 
+								and ice cubes per pitcher</h:li>
+							<h:li>The <strong>sales</strong> of a cup of lemonade for how much</h:li>
+						</h:ol>						
+					</description>
+				</documentation>
+				<!-- Inventory -->
+				<Attribute name="lemonStock" type="Integer"/>
+				<Attribute name="sugarStock" type="Integer"/>
+				<Attribute name="iceStock" type="Integer"/>
+				<Attribute name="cupStock" type="Integer"/>
+				<!-- Purchase decisions -->
+				<Attribute name="lemonPurchaseQuantity" type="Integer"/>
+				<Attribute name="sugarPurchaseQuantity" type="Integer"/>
+				<Attribute name="icePurchaseQuantity" type="Integer"/>
+				<Attribute name="cupPurchaseQuantity" type="Integer"/>
+				<!-- Production decisions: lemon and sugar quantities per 1.5 liter pitcher, ice cubes per cup -->
+				<Attribute name="lemonProductionQuantity" type="Integer"/>
+				<Attribute name="sugarProductionQuantity" type="Integer"/>
+				<Attribute name="iceProductionQuantity" type="Integer"/>
+				<!-- Sales decisions -->
+				<Attribute name="salesPrice" type="Float"/>
+				
+				<PeriodicTimeEventType name="StartOfDay" periodicity="50" />
+				<PeriodicTimeEventType name="EachDayAt4pm" periodicity="50" />
+				<PeriodicTimeEventType name="EachDayAt8pm" periodicity="50" />
+
+				<!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~-->
+				<ReactionRule name="StartOfDay_RR" agentVariable="p">
+				<!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~-->
+					<WHEN eventType="StartOfDay" />
+					<DO>
+					</DO>	
+				</ReactionRule>
+
+			</PhysicalAgentType>
+		</EntityTypes>
+		
+	<EnvironmentRules>
+		<!-- ====================================== -->
+		<EnvironmentRule name="StartOfDay_ER">
+		<!-- ====================================== -->
+				<WHEN eventType="StartOfDay"/>
+		</EnvironmentRule>
+		<!-- ============================= -->
+	</EnvironmentRules>	
+	</SimulationModel>
+	
+	<!-- ======================= -->
+	<InitialState>
+	<!-- ======================= -->
+		<Agent type="LemonadeSeller" id="1">
+		<!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->			
+			<Slot property="lemonStock" value="0" />
+			<Slot property="sugarStock" value="0" />
+			<Slot property="iceStock" value="0" />
+			<Slot property="cupStock" value="0" />
+
+			<Slot property="lemonPurchaseQuantity" value="10" />
+			<Slot property="sugarPurchaseQuantity" value="10" />
+			<Slot property="icePurchaseQuantity" value="10" />
+			<Slot property="cupPurchaseQuantity" value="10" />
+
+			<Slot property="lemonProductionQuantity" value="4" />
+			<Slot property="sugarProductionQuantity" value="15" />
+
+			<Slot property="salesPrice" value="1.20" />
+		</Agent>
+		
+		<Agent type="LemonadeSeller" id="2">
+			<!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->			
+			<Slot property="lemonStock" value="0" />
+			<Slot property="sugarStock" value="0" />
+			<Slot property="iceStock" value="0" />
+			<Slot property="cupStock" value="0" />
+			
+			<Slot property="lemonPurchaseQuantity" value="10" />
+			<Slot property="sugarPurchaseQuantity" value="10" />
+			<Slot property="icePurchaseQuantity" value="10" />
+			<Slot property="cupPurchaseQuantity" value="10" />
+			
+			<Slot property="lemonProductionQuantity" value="4" />
+			<Slot property="sugarProductionQuantity" value="15" />
+			
+			<Slot property="salesPrice" value="1.20" />
+		</Agent>
+
+		<ExogenousEvent occurrenceTime="1" type="StartOfDay" />
+		<ExogenousEvent occurrenceTime="10" type="EachDayAt4pm" />
+		<ExogenousEvent occurrenceTime="50" type="EachDayAt8pm" />
+	</InitialState>
+	
+</SimulationScenario>
