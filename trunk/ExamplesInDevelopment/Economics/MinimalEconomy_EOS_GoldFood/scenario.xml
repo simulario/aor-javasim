@@ -76,40 +76,14 @@
 				<Attribute type="String" name="currency"/>
 				<Attribute type="Float" name="price"/>
 				<Attribute type="Float" name="maxQuantity"/>
+				<Attribute type="Boolean" name="buy"/>
 				<Attribute type="Integer" name="AgentID"/>
 			</ComplexDataType>
 			<ComplexDataType name="OfferList">
 				<ClassDef language="Java"><![CDATA[
 					private java.util.ArrayList<Offer> offers = new java.util.ArrayList<Offer>();
-					private java.util.Comparator<Offer> comparator;
 					
-					public OfferList(){
-						this.comparator = new java.util.Comparator<Offer>() {
-						 public int compare (Offer a, Offer b) {
-							  double p1 = a.getPrice();
-							  double p2 = b.getPrice(); 
-								if(p1 < p2) return -1;
-								if(p1 > p2) return 1;
-								            return 0;	             		
-							}		
-						 };
-					}
-					
-					public void addOffer(Offer o){
-						int index = 0;
-						if(offers.isEmpty()){
-							offers.add(o);
-						}else{
-							index = java.util.Collections.binarySearch(offers, o, this.comparator);
-							// if the price value does not exist in the ordered array list, then the binarySearch function returns the position of the recommended insertion point: index = - insertionPoint -1
-							if(index < 0){
-								offers.add(-index-1, o);
-							}
-							// if the price value exists in the ordered array list. We add the new complex data imediately after the position returned by the binarySearch function.
-							else {
-								offers.add(index+1, o);
-							}
-						}
+					public OfferList(){;
 					}
 					
 					public Boolean isEmpty(){
@@ -142,10 +116,12 @@
 			<MessageType name="Clear_msg" >
 				<ComplexDataProperty name="TransactionList" type="OfferList"/>
 			</MessageType>
+			<MessageType name="Transaction_msg" >
+				<ComplexDataProperty name="offer" type="Offer"/>
+			</MessageType>
 			<ExogenousEventType name="StartOfDay" periodicity="24" />
 			<ExogenousEventType name="EachDayAt8AM" periodicity="24" />
 			<ExogenousEventType name="EachDayAt11AM" periodicity="24" />
-			<ExogenousEventType name="EndOfDay" periodicity="24" />
 			
 			<AgentType name="EconomicAgent">
 				<!--<ComplexDataProperty name="assets" type="Quantity" upperMultiplicity="unbounded" />-->
@@ -192,9 +168,8 @@
 					<!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~-->
 					<Body language="Java"><![CDATA[
 							getAssets().getAsset("Food").deposit(getSkillLevelFood());
-							setFoodStock(getFoodStock() + getSkillLevelFood());
 							System.out.println("produceFood: " + getAssets().getAsset("Food").getQuantity());
-							return getFoodStock();
+							return getFoodStock() + getSkillLevelFood();
 					]]></Body>
 				</Function>
 				<!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~-->
@@ -202,9 +177,8 @@
 					<!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~-->
 					<Body language="Java"><![CDATA[
 							getAssets().getAsset("Gold").deposit(getSkillLevelGold());
-							setGoldAmount(getGoldAmount() + getSkillLevelGold());
 							System.out.println("produceGold: " + getAssets().getAsset("Gold").getQuantity());
-							return getGoldAmount();
+							return getGoldAmount() + getSkillLevelGold();
 					]]></Body>
 				</Function>
 				<!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~-->
@@ -234,8 +208,9 @@
 			            	o.setCurrency("Gold");
 			            	o.setMaxQuantity(quantum);
 			            	o.setPrice(price);
+			            	o.setBuy(true);
 			            	o.setAgentID(agentID);
-			            	getBuyList().addOffer(o);
+			            	getBuyList().getOffers().add(o);
 			            	//System.out.println("buyFood: quantum" + quantum + " ||||| price:   " + price);
 			          	}
 						return true;
@@ -263,8 +238,9 @@
 				            	o.setCurrency("Gold");
 				            	o.setMaxQuantity(quantum);
 				            	o.setPrice(price);
+				            	o.setBuy(false);
 				            	o.setAgentID(agentID);
-				            	getSellList().addOffer(o);
+				            	getSellList().getOffers().add(o);
 					            //System.out.println("sellFood: quantum" + quantum + " ||||| price:   " + price);
 				          }
 						return true;
@@ -272,6 +248,39 @@
 						return false;
 					]]></Body>
 				</Function>
+				<!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~-->
+				<Function name="updateFood" resultType="Float">
+					<!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~-->
+					<Parameter name="offer" type="Offer"/>
+					<Body language="Java"><![CDATA[
+						if(offer.isBuy()){
+							getAssets().getAsset("Food").deposit(offer.getMaxQuantity());
+							System.out.println("updateFood: " + getAssets().getAsset("Food").getQuantity() + " ||| PersonID: " + offer.getAgentID());
+							return getFoodStock() + offer.getMaxQuantity();						
+						}else{
+							getAssets().getAsset("Food").withdraw(offer.getMaxQuantity());
+							System.out.println("updateFood: " + getAssets().getAsset("Food").getQuantity() + " ||| PersonID: " + offer.getAgentID());
+							return getFoodStock() - offer.getMaxQuantity();
+						}
+					]]></Body>
+				</Function>
+				<!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~-->
+				<Function name="updateGold" resultType="Float">
+					<!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~-->
+					<Parameter name="offer" type="Offer"/>
+					<Body language="Java"><![CDATA[
+						if(offer.isBuy()){
+							getAssets().getAsset("Gold").withdraw(offer.getMaxQuantity()*offer.getPrice());
+							System.out.println("updateGold: " + getAssets().getAsset("Gold").getQuantity());
+							return (getGoldAmount() - (offer.getMaxQuantity()*offer.getPrice()));						
+						}else{
+							getAssets().getAsset("Gold").deposit(offer.getMaxQuantity()*offer.getPrice());
+							System.out.println("updateGold: " + getAssets().getAsset("Gold").getQuantity());
+							return (getGoldAmount() + (offer.getMaxQuantity()*offer.getPrice()));
+						}
+					]]></Body>
+				</Function>
+				<!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~-->
 				<PeriodicTimeEventType name="SetAssets" />
 				<!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~-->
 				<CommunicationRule name="SetAssets_Rule" agentVariable="p">
@@ -391,6 +400,21 @@
 						</SCHEDULE-EVT>
 					</THEN>
 				</CommunicationRule>
+				<!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->
+				<CommunicationRule name="Update_Rule" agentVariable="p">
+					<!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->
+					<WHEN eventType="InMessageEvent" messageType="Transaction_msg" messageVariable="msg"/>
+					<DO>
+						<UPDATE-AGT>
+							<Slot property="foodStock">
+								<ValueExpr language="Java">p.updateFood(msg.getOffer())</ValueExpr>
+							</Slot>
+							<Slot property="goldAmount">
+								<ValueExpr language="Java">p.updateGold(msg.getOffer())</ValueExpr>
+							</Slot>
+						</UPDATE-AGT>
+					</DO>
+					</CommunicationRule>
 			</AgentType>
 			
 			<AgentType name="Market">
@@ -410,9 +434,20 @@
 				        	// ToDO less
 				        	getBuyOffers().getOffers().clear();
 				        	getSellOffers().getOffers().clear();
-				        	System.out.println("False");
 				        	return false;
 				        }
+				        java.util.Comparator<Offer> comparator;
+				        comparator = new java.util.Comparator<Offer>() {
+							public int compare (Offer a, Offer b) {
+							  double p1 = a.getPrice();
+							  double p2 = b.getPrice(); 
+								if(p1 < p2) return -1;
+								if(p1 > p2) return 1;
+								            return 0;	             		
+							}		
+						 };
+						java.util.Collections.sort(getBuyOffers().getOffers(), comparator);
+						java.util.Collections.sort(getSellOffers().getOffers(), comparator);
 				        // merge prices into sorted list, eliminating duplicates
         				ArrayList<Double> prices = new ArrayList<Double>(getBuyOffers().getOffers().size() + getSellOffers().getOffers().size());
         				int s = 0, b = 0;
@@ -642,12 +677,35 @@
 				<!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->
 				<CommunicationRule name="Clear" agentVariable="m">
 					<!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->
-					<WHEN eventType="InMessageEvent" messageType="Clear_msg" messageVariable="msg"/>
+					<WHEN eventType="InMessageEvent" messageType="Clear_msg"/>
 					<IF language="Java">m.clear()</IF>
 					<THEN>
-						<!-- Update the Persons -->
+						<SCHEDULE-EVT>
+							<ReminderEventExpr>
+								<ReminderMsg language="Java">"transactions ready"</ReminderMsg>
+							</ReminderEventExpr>
+						</SCHEDULE-EVT>
 					</THEN>
 				</CommunicationRule>
+				<!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->
+				<CommunicationRule name="Transact" agentVariable="m">
+					<!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->
+					<WHEN eventType="ReminderEvent" eventVariable="evt" />
+					<FOR-ListItemVariable variable="o" listItemType="Offer">
+						<ListExpr language="Java">getTransactions().getOffers()</ListExpr>
+					</FOR-ListItemVariable>
+					<IF language="Java"><![CDATA[evt.getReminderMsg().equals("transactions ready")]]></IF>
+					<THEN>
+						<SCHEDULE-EVT>
+							<OutMessageEventExpr messageType="Transaction_msg">
+								<ReceiverIdRef language="Java">o.getAgentID()</ReceiverIdRef>
+								<Slot property="offer">
+									<ValueExpr language="Java">o</ValueExpr>
+								</Slot>
+							</OutMessageEventExpr>
+						</SCHEDULE-EVT>
+					</THEN>
+				</CommunicationRule>	
 			</AgentType>
 		</EntityTypes>
 		
@@ -696,9 +754,11 @@
 					</DestroyObject>
 				</UPDATE-ENV>
 			</DO>
+		<!-- ========================== -->
 		</EnvironmentRule>
-		
+		<!-- ============================= -->
 		<EnvironmentRule name="EachDayAt11AM_Rule">
+			<!-- ========================== -->
 			<WHEN eventType="EachDayAt11AM"/>
 			<FOR objectVariable="m" objectType="Market" />
 			<DO>
@@ -708,8 +768,9 @@
 					</InMessageEventExpr>
 				</SCHEDULE-EVT>
 			</DO>
+		<!-- ========================== -->
 		</EnvironmentRule>
-		
+		<!-- ============================= -->
 	</EnvironmentRules>	
 		
 	</SimulationModel>
@@ -730,10 +791,9 @@
 				</RandomVariable>
 			</Slot>
 			<Slot property="skillLevelFood">
-				<!-- <RandomVariable>
-					<Uniform lowerBound="1.25" upperBound="1.75" />
-					</RandomVariable> -->
-				<ValueExpr language="Java">0</ValueExpr>
+				<RandomVariable>
+					<Uniform lowerBound="0.25" upperBound="0.75" />
+				</RandomVariable>
 			</Slot>
 			<PeriodicTimeEvent type="SetAssets" occurrenceTime="1"  />
 		</Agent>
@@ -746,17 +806,15 @@
 				</RandomVariable>
 			</Slot>
 			<Slot property="skillLevelFood">
-				<!-- <RandomVariable>
-					<Uniform lowerBound="1.25" upperBound="1.75" />
-					</RandomVariable> -->
-				<ValueExpr language="Java">0</ValueExpr>
+				<RandomVariable>
+					<Uniform lowerBound="0.25" upperBound="0.75" />
+					</RandomVariable> 
 			</Slot>
 			<PeriodicTimeEvent type="SetAssets" occurrenceTime="1"  />
 		</Agent>
 		<ExogenousEvent occurrenceTime="1" type="StartOfDay" />
 		<ExogenousEvent occurrenceTime="8" type="EachDayAt8AM" />
 		<ExogenousEvent occurrenceTime="11" type="EachDayAt11AM" />
-		<ExogenousEvent occurrenceTime="24" type="EndOfDay" />
 	</InitialState>
 	
 	<!-- =================================================== -->
