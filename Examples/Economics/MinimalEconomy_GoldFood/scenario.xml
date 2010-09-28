@@ -346,10 +346,10 @@ public java.util.List<BidToBuyRecord> getList() {
 			<ExogenousEventType name="EachDayAt8AM" periodicity="24" />
 			<!-- ================================================== -->
 			<ExogenousEventType name="EachDayAt11AM" periodicity="24" />
-			<ExogenousEventType name="EachDayAt11PM" periodicity="24" />
 			<!-- ================================================== -->
 			<ExogenousEventType name="EndOfDay" periodicity="24" />		
-			<!-- ======================= -->
+			<!-- ================================================== -->
+	   <!-- ======================= -->
        <AgentType name="Market">
        	<!-- ======================= -->
        	<Attribute name="price" type="Float" />
@@ -370,7 +370,6 @@ public java.util.List<BidToBuyRecord> getList() {
 				<ComplexDataProperty name="bidToBuy" type="BidToBuyRecord" upperMultiplicity="unbounded" />
 				<ComplexDataProperty name="bids" type="BidToBuyList" />
 				<ComplexDataProperty name="individualTransaction" type="IndividualTransactionType" />
-				<ComplexDataProperty name="sellOffers" type="OfferToSellRecord" upperMultiplicity="unbounded" />
 				<!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->
 				<Function name="individualTransaction" resultType="IndividualTransactionType">
 				<!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->
@@ -462,7 +461,7 @@ if ( nrOfSellers != 0 && nrOfBuyers == 0) {
 	return price;
 				]]></Body>
 				</Function>								
-				<PeriodicTimeEventType name="TransactionPrice" periodicity="24" />			
+				<PeriodicTimeEventType name="ComputeMarketPrice" periodicity="24" />			
 				<!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~-->
 				<CommunicationRule name="ReceiveOfferToSell_Rule" agentVariable="m">
 				<!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~-->
@@ -508,11 +507,11 @@ m.getDemandQuantity() + mes.getQuantity()
 					</DO>
 				</CommunicationRule>			
 				<!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->
-				<CommunicationRule name="TransactionPrice_Rule_1" agentVariable="m">
+				<CommunicationRule name="ComputeMarketPrice_Rule_1" agentVariable="m">
 				<!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->
 					<documentation>
 						<description> The rule calculates the market price according to the formula specified in the article "A computational market model based on individual action"(Steiglitz, Honig, Cohen) pp.15-16. : P1 * alfa + (1-alfa) * P2 </description></documentation>
-					<WHEN eventType="TransactionPrice"/>
+					<WHEN eventType="ComputeMarketPrice"/>
 					<IF language="Java"><![CDATA[ 
 ( m.getTotalNumberOfSellers() > 0 &&  m.getTotalNumberOfBuyers() > 0) && ( m.getDemandQuantity() != m.getSupplyQuantity()) && ( m.getDemandQuantity() > 0 && m.getSupplyQuantity() > 0)
            ]]></IF>
@@ -548,12 +547,12 @@ m.getBids().checkBuyersEligibility( m.getPrice(), m.getSupplyQuantity())
 					</THEN>
 				</CommunicationRule>
 				<!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->
-				<CommunicationRule name="TransactionPrice_Rule_2" agentVariable="m">
+				<CommunicationRule name="ComputeMarketPrice_Rule_2" agentVariable="m">
 				<!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->
 					<documentation>
 						<description>When the demand quantity of food is equal with the supply quantity of food, then the new price will remain equal with the last day price. The condition applies also when both supply-/demand- quantities are zero (no sellers and no buyers). </description>
 					</documentation>
-					<WHEN eventType="TransactionPrice" />
+					<WHEN eventType="ComputeMarketPrice" />
 					<IF language="Java"><![CDATA[ 
 ( m.getDemandQuantity() == m.getSupplyQuantity()) && ( m.getTotalNumberOfSellers() > 0 && m.getTotalNumberOfBuyers() > 0)
            ]]></IF>
@@ -584,12 +583,12 @@ m.getBids().checkBuyersEligibility( m.getPrice(), m.getSupplyQuantity())
 					</THEN>
 				</CommunicationRule>
 				<!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->
-				<CommunicationRule name="TransactionPrice_Rule_3" agentVariable="m">
+				<CommunicationRule name="ComputeMarketPrice_Rule_3" agentVariable="m">
 				<!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->
 					<documentation>
 						<description>The special cases when there aren't any sellers the price became the value of the highest bid. Also, when there aren't any buyers, the price became the value of the lowest offer.</description>
 					</documentation>
-					<WHEN eventType="TransactionPrice" />
+					<WHEN eventType="ComputeMarketPrice" />
 					<IF language="Java"><![CDATA[
 ( m.getTotalNumberOfSellers() == 0 && m.getTotalNumberOfBuyers() != 0) || ( m.getTotalNumberOfSellers() != 0 && m.getTotalNumberOfBuyers() == 0)
 						]]></IF>
@@ -1020,31 +1019,8 @@ bid
 					</DO>
 				</EnvironmentRule>	
 				<!-- =================================== -->
-				<EnvironmentRule name="EachDayAt11PM_Rule">
-					<!-- =================================== -->
-					<documentation>
-						<description>Test the MultiValuedSlot element.</description>
-					</documentation>
-					<WHEN eventType="EachDayAt11PM"/>
-					<FOR objectVariable="m2" objectType="SealedBidMaximumVolumeAuction_Market" />
-					<FOR dataVariable="o" refDataType="OfferToSellRecord" />
-					<DO>
-						<UPDATE-ENV>
-							<UpdateObject objectVariable="m2">
-								<MultiValuedSlot property="sellOffers" >
-									<Add itemVariable="o" />
-									<Add>
-										<ValueExpr language="Java">new OfferToSellRecord()</ValueExpr>
-									</Add>
-									<Remove itemVariable="o" />
-								</MultiValuedSlot>
-							</UpdateObject>
-						</UPDATE-ENV>
-					</DO>
-				</EnvironmentRule>
-				<!-- =================================== -->
 				<EnvironmentRule name="EndOfDay_Rule">
-	      <!-- =================================== -->
+	             <!-- =================================== -->
 						<documentation>
 							<description>Reset the Attribute counters for the market agent.</description>
 						</documentation>
@@ -1073,7 +1049,7 @@ bid
 		<Agent type="SealedBidMaximumVolumeAuction_Market" id="2">
 		<!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->			
 			<Slot property="price" value="2.0" />
-			<PeriodicTimeEvent occurrenceTime="18" type="TransactionPrice" />
+			<PeriodicTimeEvent occurrenceTime="18" type="ComputeMarketPrice" />
 		</Agent>
 		<!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->			
 		<Agents type="Worker" rangeStartID="1001" rangeEndID="1500">
@@ -1133,7 +1109,6 @@ bid
 		<ExogenousEvent occurrenceTime="1" type="StartOfDay" />
 		<ExogenousEvent occurrenceTime="8" type="EachDayAt8AM" />
 		<ExogenousEvent occurrenceTime="11" type="EachDayAt11AM" />
-		<ExogenousEvent occurrenceTime="23" type="EachDayAt11PM"/>
 		<ExogenousEvent occurrenceTime="24" type="EndOfDay" />
 	</InitialState>
 	
