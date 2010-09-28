@@ -186,6 +186,7 @@
 					<!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~-->
 					<Parameter name="agentID" type="long"/>
 					<Body language="Java"><![CDATA[
+						getBuyList().getOffers().clear();
 						final double quantum = getEAT_AMOUNT() * 1.0;
 			          	double purse = getAssets().getAsset("Gold").getQuantity();
 			          	for (double x = getAssets().getAsset("Food").getQuantity(); x <= 1.5 * getTARGET_FOOD_STOCK(); x += quantum) {
@@ -221,6 +222,7 @@
 					<!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~-->
 					<Parameter name="agentID" type="long"/>
 					<Body language="Java"><![CDATA[
+						getSellList().getOffers().clear();
 						if(getAssets().getAsset("Food").getQuantity() > 1.5*getTARGET_FOOD_STOCK()){
 				        	final double quantum = getEAT_AMOUNT() * 1.0;
 				          	for (double x = getAssets().getAsset("Food").getQuantity(); x > 1.5*getTARGET_FOOD_STOCK(); x -= quantum) {
@@ -255,11 +257,11 @@
 					<Body language="Java"><![CDATA[
 						if(offer.isBuy()){
 							getAssets().getAsset("Food").deposit(offer.getMaxQuantity());
-							System.out.println("updateFood: " + getAssets().getAsset("Food").getQuantity() + " ||| PersonID: " + offer.getAgentID());
+							//System.out.println("updateFood: " + getAssets().getAsset("Food").getQuantity() + " ||| PersonID: " + offer.getAgentID());
 							return getFoodStock() + offer.getMaxQuantity();						
 						}else{
 							getAssets().getAsset("Food").withdraw(offer.getMaxQuantity());
-							System.out.println("updateFood: " + getAssets().getAsset("Food").getQuantity() + " ||| PersonID: " + offer.getAgentID());
+							//System.out.println("updateFood: " + getAssets().getAsset("Food").getQuantity() + " ||| PersonID: " + offer.getAgentID());
 							return getFoodStock() - offer.getMaxQuantity();
 						}
 					]]></Body>
@@ -271,11 +273,11 @@
 					<Body language="Java"><![CDATA[
 						if(offer.isBuy()){
 							getAssets().getAsset("Gold").withdraw(offer.getMaxQuantity()*offer.getPrice());
-							System.out.println("updateGold: " + getAssets().getAsset("Gold").getQuantity());
+							//System.out.println("updateGold: " + getAssets().getAsset("Gold").getQuantity());
 							return (getGoldAmount() - (offer.getMaxQuantity()*offer.getPrice()));						
 						}else{
 							getAssets().getAsset("Gold").deposit(offer.getMaxQuantity()*offer.getPrice());
-							System.out.println("updateGold: " + getAssets().getAsset("Gold").getQuantity());
+							//System.out.println("updateGold: " + getAssets().getAsset("Gold").getQuantity());
 							return (getGoldAmount() + (offer.getMaxQuantity()*offer.getPrice()));
 						}
 					]]></Body>
@@ -427,6 +429,8 @@
 				<Function name="clear" resultType="Boolean">
 					<Body language="Java"><![CDATA[
 						getTransactions().getOffers().clear();
+						System.out.println("BuyOffers:" + getBuyOffers().getOffers().size());
+						System.out.println("SellOffers:" + getSellOffers().getOffers().size());
 						// handle special cases
 				        // highest buy price < lowest sell price -> no transactions OR
 				        // empty offer list -> no transactions
@@ -446,6 +450,8 @@
 								            return 0;	             		
 							}		
 						 };
+						java.util.Collections.shuffle(getBuyOffers().getOffers());
+						java.util.Collections.shuffle(getSellOffers().getOffers());
 						java.util.Collections.sort(getBuyOffers().getOffers(), comparator);
 						java.util.Collections.sort(getSellOffers().getOffers(), comparator);
 				        // merge prices into sorted list, eliminating duplicates
@@ -594,7 +600,6 @@
 						// reset offer lists
 				        getBuyOffers().getOffers().clear();
 				        getSellOffers().getOffers().clear();
-				        
 				   		System.out.println("MarketPrice:" + getMarketPrice());
 				   		System.out.println("Transactions:" + getTransactions().getOffers().size());
 						return true;
@@ -648,29 +653,38 @@
 					]]></Body>
 				</Function>
 				
+				<Function name="addBuyFood" resultType="Boolean">
+					<Parameter name="offers" type="OfferList"/>
+					<Body language="Java"><![CDATA[
+						getBuyOffers().getOffers().addAll(offers.getOffers());
+						System.out.println("BuyOfferID: "+ offers.getOffers().get(0).getAgentID());
+						return true;
+					]]></Body>
+				</Function>
+				
+				<Function name="addSellFood" resultType="Boolean">
+					<Parameter name="offers" type="OfferList"/>
+					<Body language="Java"><![CDATA[
+						getSellOffers().getOffers().addAll(offers.getOffers());
+						System.out.println("SellOfferID: " + offers.getOffers().get(0).getAgentID());
+						return true;
+					]]></Body>
+				</Function>
+				
+				<!-- Wenn es mehrere Agenten geben soll muss die Liste angehängt werden und nicht überschrieben -->
 				<!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->
 				<CommunicationRule name="Accept_BuyFood" agentVariable="m">
 					<!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->
 					<WHEN eventType="InMessageEvent" messageType="BuyFood_msg" messageVariable="msg"/>
-					<DO>
-						<UPDATE-AGT>
-							<Slot property="buyOffers">
-								<ValueExpr language="Java">msg.getOfferList()</ValueExpr>
-							</Slot>
-						</UPDATE-AGT>
-					</DO>
+					<IF language="Java">m.addBuyFood(msg.getOfferList())</IF>
+					<THEN></THEN>
 				</CommunicationRule>
 				<!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->
 				<CommunicationRule name="Accept_SellFood" agentVariable="m">
 					<!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->
 					<WHEN eventType="InMessageEvent" messageType="SellFood_msg" messageVariable="msg"/>
-					<DO>
-						<UPDATE-AGT>
-							<Slot property="sellOffers">
-								<ValueExpr language="Java">msg.getOfferList()</ValueExpr>
-							</Slot>
-						</UPDATE-AGT>
-					</DO>
+					<IF language="Java">m.addSellFood(msg.getOfferList())</IF>
+					<THEN></THEN>
 				</CommunicationRule>
 				<!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->
 				<CommunicationRule name="Clear" agentVariable="m">
@@ -781,26 +795,11 @@
 		</Agent>
 		
 		<Agent type="Person"  id="1000" >
-			<Slot property="foodStock" value="20" />	
-			<Slot property="goldAmount" value="200" />
-			<Slot property="skillLevelGold">
-				<RandomVariable>
-					<Uniform lowerBound="3.0" upperBound="4.0" />
-				</RandomVariable>
-			</Slot>
-			<Slot property="skillLevelFood">
-				<RandomVariable>
-					<Uniform lowerBound="0.25" upperBound="0.50" />
-				</RandomVariable>
-			</Slot>
-			<PeriodicTimeEvent type="SetAssets" occurrenceTime="1"  />
-		</Agent>
-		<Agent type="Person"  id="1001" >
-			<Slot property="foodStock" value="200" />	
+			<Slot property="foodStock" value="60" />	
 			<Slot property="goldAmount" value="20" />
 			<Slot property="skillLevelGold">
 				<RandomVariable>
-					<Uniform lowerBound="0.3" upperBound="0.4" />
+					<Uniform lowerBound="0.25" upperBound="0.5" />
 				</RandomVariable>
 			</Slot>
 			<Slot property="skillLevelFood">
@@ -810,6 +809,37 @@
 			</Slot>
 			<PeriodicTimeEvent type="SetAssets" occurrenceTime="1"  />
 		</Agent>
+		<Agent type="Person"  id="1001" >
+			<Slot property="foodStock" value="20" />	
+			<Slot property="goldAmount" value="40" />
+			<Slot property="skillLevelGold">
+				<RandomVariable>
+					<Uniform lowerBound="2.0" upperBound="3.0" />
+				</RandomVariable>
+			</Slot>
+			<Slot property="skillLevelFood">
+				<RandomVariable>
+					<Uniform lowerBound="0.25" upperBound="0.50" />
+				</RandomVariable>
+			</Slot>
+			<PeriodicTimeEvent type="SetAssets" occurrenceTime="1"  />
+		</Agent>
+		<Agent type="Person"  id="1002" >
+			<Slot property="foodStock" value="20" />	
+			<Slot property="goldAmount" value="40" />
+			<Slot property="skillLevelGold">
+				<RandomVariable>
+					<Uniform lowerBound="2.0" upperBound="3.0" />
+				</RandomVariable>
+			</Slot>
+			<Slot property="skillLevelFood">
+				<RandomVariable>
+					<Uniform lowerBound="0.25" upperBound="0.50" />
+				</RandomVariable>
+			</Slot>
+			<PeriodicTimeEvent type="SetAssets" occurrenceTime="1"  />
+		</Agent>
+
 		<ExogenousEvent occurrenceTime="1" type="StartOfDay" />
 		<ExogenousEvent occurrenceTime="8" type="EachDayAt8AM" />
 		<ExogenousEvent occurrenceTime="11" type="EachDayAt11AM" />
