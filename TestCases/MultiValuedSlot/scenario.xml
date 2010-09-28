@@ -14,60 +14,19 @@
 		<documentation>
 			<dc:modified>20100928</dc:modified>
 		</documentation>
-		<Statistics>
-			<!-- ========================================= -->
-			<Variable name="marketPrice" dataType="Float">
-				<!-- ========================================= -->
-				<Source>
-					<ObjectProperty property="price" objectType="SealedBidMaximumVolumeAuction_Market"/>
-				</Source>
-			</Variable>
-			<!-- ========================================= -->
-			<Variable name="tradedFood" dataType="Float">
-				<!-- ========================================= -->
-				<Source>
-					<ObjectProperty property="tradedFood" objectType="SealedBidMaximumVolumeAuction_Market"/>
-				</Source>
-			</Variable>
-		</Statistics>	
-		
-		<DataTypes>
-			<!--====================================-->
-			<ComplexDataType name="OfferToSellRecord">
-			<!--====================================-->		
-				<Attribute name="price" type="Float"/>
-				<Attribute name="quantity" type="Float"/>
-				<Attribute name="sellerId" type="Integer"/>
-				<Function name="addOfferToSell" resultType="void">
-					<Parameter name="price" type="Float"/>
-					<Parameter name="quantity" type="Float"/>
-					<Parameter name="sellerId" type="int"/>
-					<Body language="Java"><![CDATA[
- OfferToSellRecord offer = new OfferToSellRecord();						
- offer.setPrice( price);
- offer.setQuantity( quantity);
- offer.setSellerId( sellerId);
-                 ]]></Body>
-				</Function>
-			</ComplexDataType>		
-		</DataTypes>
 		
 		<EntityTypes>	
 	   <ExogenousEventType name="StartOfDay" periodicity="1" />	
-	   <!-- ======================= -->
-       <AgentType name="Market">
-       	<!-- ======================= -->
-       	<Attribute name="price" type="Float" />
-        <Attribute name="tradedFood" type="Float"/>    	
-       </AgentType>
 
-			<!-- =================================================================== -->
-			<AgentType name="SealedBidMaximumVolumeAuction_Market" superType="Market">
-			<!-- ==================================================================== -->			
-				<ComplexDataProperty name="sellOffers" type="OfferToSellRecord" upperMultiplicity="unbounded" />
-			</AgentType>
+			<!-- ======================= -->
+       <ObjectType name="Market">
+      <!-- ======================= -->
+       	<ComplexDataProperty name="offers" type="String" upperMultiplicity="unbounded"/>
+       </ObjectType>
+
 		</EntityTypes>
-			<EnvironmentRules>
+
+		<EnvironmentRules>
 				<!-- ==================================== -->
 				<EnvironmentRule name="StartOfDay_Rule">
 					<!-- ================================== -->
@@ -75,14 +34,14 @@
 						<description> Test the MultiValuedSlot element. </description>
 					</documentation>
 					<WHEN eventType="StartOfDay" />
-					<FOR objectVariable="m2" objectType="SealedBidMaximumVolumeAuction_Market" />
+					<FOR objectVariable="m" objectType="Market" />
 					<DO>
 						<UPDATE-ENV>
-							<UpdateObject objectVariable="m2">
-								<MultiValuedSlot property="sellOffers" >
+							<UpdateObject objectVariable="m">
+								<MultiValuedSlot property="offers" >
 									<Add>
 										<ValueExpr language="Java"><![CDATA[
-m2.getSellOffers().addOfferToSell(3.0f,5.0f, aors.util.UniformInt(1,10))
+										"test"
 										]]></ValueExpr>
 									</Add>
 								</MultiValuedSlot>
@@ -96,56 +55,12 @@ m2.getSellOffers().addOfferToSell(3.0f,5.0f, aors.util.UniformInt(1,10))
 	<InitialState>
 	<!-- ======================= -->
 		<!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->			
-		<Agent type="SealedBidMaximumVolumeAuction_Market" id="2">
-		<!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->			
-			<Slot property="price" value="2.0" />
+		<Agent type="Market" id="1">
+		<!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->
 		</Agent>
+
 		<ExogenousEvent occurrenceTime="1" type="StartOfDay" />
 		
 	</InitialState>
 	
-	<!-- =================================================== -->
-	<UserInterface>
-		<!-- =================================================== -->
-		<StatisticsUI>
-			<StatisticsVariableUI variable="marketPrice" comparisonGroup="pricevsfood">
-				<Label>
-					<Text xml:lang="en">Market price</Text>
-					<Text xml:lang="de">Marktpreis</Text>
-					<Text xml:lang="es">Precio de Mercado</Text>
-					<Text xml:lang="fr">Le Prix du Marché</Text>
-					<Text xml:lang="ro">Pret mediu</Text>
-				</Label>
-				<Hint>
-					<Text xml:lang="en">What is the average market price?</Text>
-					<Text xml:lang="de">Was ist der durchschnittliche Marktpreis?</Text>
-					<Text xml:lang="es">Cuál es el precio medio de mercado?</Text>
-					<Text xml:lang="fr">Quel est le moyen prix du marché?</Text>
-					<Text xml:lang="ro">Care este pretul mediu statilit de bursa?</Text>
-				</Hint>
-				<Format decimalPlaces="2">
-					<Currency>EUR(&#8364;)</Currency>
-				</Format>
-			</StatisticsVariableUI>
-			<StatisticsVariableUI variable="tradedFood" comparisonGroup="pricevsfood">
-				<Label>
-					<Text xml:lang="en">Trade volume</Text>
-					<Text xml:lang="de">Handelsvolumen</Text>
-					<Text xml:lang="es">Comida comerciada</Text>
-					<Text xml:lang="fr">La quantité de nourriture en bourse</Text>
-					<Text xml:lang="ro">Cantitatea de alimente comercializata</Text>
-				</Label>
-				<Hint>
-					<Text xml:lang="en">What is the food trade volume?</Text>
-					<Text xml:lang="de">Wie groß ist das Nahrungsmittel-Handelsvolumen?</Text>
-					<Text xml:lang="es">Cuanta comida fue comerciada?</Text>
-					<Text xml:lang="fr">Quelle est la quantité de nourriture en bourse?</Text>
-					<Text xml:lang="ro">Care este cantitatea de alimente comercializata?</Text>
-				</Hint>
-				<Format decimalPlaces="2">
-					<Weight>kg</Weight>
-				</Format>
-			</StatisticsVariableUI>
-		</StatisticsUI>
-	</UserInterface>
 </SimulationScenario>
