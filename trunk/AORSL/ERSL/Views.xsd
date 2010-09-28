@@ -407,7 +407,8 @@
 			<xs:choice minOccurs="1" maxOccurs="2">
 				<xs:choice minOccurs="0">
 					<xs:element ref="ers:PhysicalShape2D"/>
-					<xs:element name="PhysicalShape2dMap">
+					<xs:element name="PhysicalShape2dVisualizationMap">
+						<xs:annotation><xs:documentation>Defines a "dynamic shape" that may change when the value of a specific object property changes. </xs:documentation></xs:annotation>
 						<xs:complexType>
 							<xs:sequence>
 								<xs:element name="Case" maxOccurs="unbounded">
@@ -431,7 +432,7 @@
 					<xs:documentation>Allows defining nested 2D shapes.</xs:documentation>
 				</xs:annotation>
 			</xs:element>
-			<xs:element ref="ers:EmbeddedShape3D" minOccurs="0" maxOccurs="unbounded">
+			<xs:element ref="ers:AttachedShape3D" minOccurs="0" maxOccurs="unbounded">
 				<xs:annotation>
 					<xs:documentation>Allows defining nested 3D shapes. Not yet implemented!</xs:documentation>
 				</xs:annotation>
@@ -456,6 +457,7 @@
 				<xs:choice minOccurs="0">
 					<xs:element ref="ers:Shape2D" minOccurs="0"/>
 					<xs:element name="Shape2dVisualizationMap" minOccurs="0">
+						<xs:annotation><xs:documentation>Defines a "dynamic shape" that may change when the value of a specific object property changes. </xs:documentation></xs:annotation>
 						<xs:complexType>
 							<xs:sequence>
 								<xs:element name="Case" maxOccurs="unbounded">
@@ -479,7 +481,7 @@
 					<xs:documentation>Allows defining nested 2D shapes.</xs:documentation>
 				</xs:annotation>
 			</xs:element>
-			<xs:element ref="ers:EmbeddedShape3D" minOccurs="0" maxOccurs="unbounded">
+			<xs:element ref="ers:AttachedShape3D" minOccurs="0" maxOccurs="unbounded">
 				<xs:annotation>
 					<xs:documentation>Allows defining nested 3D shapes. Not yet implemented!</xs:documentation>
 				</xs:annotation>
@@ -524,13 +526,14 @@
 	<xs:element name="EmbeddedShape2D">
 	<!-- =================================================================== -->
 		<xs:annotation>
-			<xs:documentation>Defines a subshape that is embedded in a view or in another embedded shape. </xs:documentation>
+			<xs:documentation>Defines a (possibly dynamic) shape that is embedded in a view or in another embedded shape. An embedded shape is either a shape or a dynamic shape (i.e. a shape visualization map), and possibly has other embedded shapes. </xs:documentation>
 		</xs:annotation>
 		<xs:complexType>
 			<xs:sequence>
 				<xs:choice>
 					<xs:element ref="ers:Shape2D" minOccurs="0"/>
 					<xs:element name="Shape2dVisualizationMap" minOccurs="0">
+						<xs:annotation><xs:documentation>Defines a "dynamic shape" that may change when the value of a specific object property changes. </xs:documentation></xs:annotation>
 						<xs:complexType>
 							<xs:sequence>
 								<xs:element name="Case" maxOccurs="unbounded">
@@ -558,10 +561,10 @@
 		</xs:complexType>
 	</xs:element>
 	<!-- =================================================================== -->
-	<xs:element name="EmbeddedShape3D">
+	<xs:element name="AttachedShape3D">
 		<!-- =================================================================== -->
 		<xs:annotation>
-			<xs:documentation>Defines a subshape that is embedded in a view or in another embedded shape. </xs:documentation>
+			<xs:documentation>Defines a (possibly dynamic) shape that is attached to the main shape of a view or to another attached shape. </xs:documentation>
 		</xs:annotation>
 		<xs:complexType>
 			<xs:sequence>
@@ -583,7 +586,7 @@
 						</xs:complexType>
 					</xs:element>
 				</xs:choice>
-				<xs:element ref="ers:EmbeddedShape3D" minOccurs="0" maxOccurs="unbounded">
+				<xs:element ref="ers:AttachedShape3D" minOccurs="0" maxOccurs="unbounded">
 					<xs:annotation>
 						<xs:documentation>Allows defining nested shapes.</xs:documentation>
 					</xs:annotation>
@@ -1089,7 +1092,7 @@
 	<xs:element name="ShapePropertyVisualizationMap">
 	<!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->
 		<xs:annotation>
-			<xs:documentation>Either a polynomial or a casewise constant function, or a function defined by equality cases (either of integers resp. strings, or of enumeration literals).</xs:documentation>
+			<xs:documentation>Allows to define the dynamic visualization of object properties by mapping them to shape properties. The map can be defined either as a polynomial or a casewise constant function, or a function defined by equality cases (either of integers resp. strings, or of enumeration literals).</xs:documentation>
 		</xs:annotation>
 		<xs:complexType>
 			<xs:attribute name="shapeProperty" type="ers:ShapeProperty.type" use="required"/>
@@ -1572,7 +1575,7 @@
 	<xs:element name="SonificationMap">
 	<!-- =================================================================== -->
 		<xs:annotation>
-			<xs:documentation>Either a casewise constant function or a polynomial function with y = a3x^3 + a2x^2 + a1x+ a0, where x is the event/object property and y is one of the four sound properties instrumentNo, note, duration, volume. The casewise constant function is defined by y = v0 if  x &lt; a0, y = v1 if  a0 &lt;= x &lt; a1, etc. </xs:documentation>
+			<xs:documentation>Allows to map an object property to a MIDI sound property. Either a casewise constant function or a polynomial function with y = a3x^3 + a2x^2 + a1x+ a0, where x is the event/object property and y is one of the four sound properties instrumentNo, note, duration, volume. The casewise constant function is defined by y = v0 if  x &lt; a0, y = v1 if  a0 &lt;= x &lt; a1, etc. </xs:documentation>
 		</xs:annotation>
 		<xs:complexType>
 			<xs:attribute name="soundProperty" use="required">

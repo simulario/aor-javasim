@@ -35,7 +35,9 @@
 				
 		<EntityTypes>
 			<MessageType name="Order"/>
-			<MessageType name="OrderConfirmation"/>
+			<MessageType name="OrderConfirmation">
+				<Attribute name="price" type="Float"/>
+			</MessageType>
 			
 			<ExogenousEventType name="StartOfDay" periodicity="50" />
 			<ExogenousEventType name="EachDayAt4pm" periodicity="50" />
@@ -43,6 +45,10 @@
 			
 			<ActionEventType name="Halt"/>
 			<ActionEventType name="Go"/>
+			<ActionEventType name="MakePayment">
+				<Attribute name="amount" type="Float"/>
+				<ReferenceProperty name="receiver" type="LemonadeSeller"/>
+			</ActionEventType>
 			
 			<PhysicalObjectType name="PricePoster" idPerceivable="true">
 				<Attribute name="sellerIdRef" type="Integer"/>
@@ -56,7 +62,7 @@
 					of the lemonade stands.	When the price is smaller than their price limit, they halt
 					at the stand and order a lemonade. 
 					Possible extensions:
-					- use a waiting line at the stand
+					- Use a waiting line at the stand
 					- Vary the price limit with the weather (better weather = higher price limit)
 					- Model the lemonade's quality with respect to cutomer preferences
 					- Model the binding	of a customer to a preferred seller
@@ -97,8 +103,19 @@
 						<description>When the customer receives an oder conformation (and the cup of lemonade), she pays the bill
 							and stays for a moment for drinking the cup of lemonade. </description>
 					</documentation>
-					<WHEN eventType="InMessageEvent" messageType="OrderConfirmation"/>
-
+					<WHEN eventType="InMessageEvent" messageType="OrderConfirmation" eventVariable="e" messageVariable="m"/>
+					<DO>
+						<SCHEDULE-EVT>
+							<ActionEventExpr actionEventType="MakePayment">
+								<Slot property="amount">
+									<ValueExpr language="Java">	m.getPrice() </ValueExpr>
+								</Slot>
+								<Slot property="receiver">
+									<ValueExpr language="Java">	e.getActor() </ValueExpr>
+								</Slot>
+							</ActionEventExpr>
+						</SCHEDULE-EVT>
+					</DO>
 				</ReactionRule>
 				<!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->
 			</PhysicalAgentType>
@@ -120,6 +137,7 @@
 						</h:ol>						
 					</description>
 				</documentation>
+				<Attribute name="cash" type="Float"/>
 				<!-- Inventory -->
 				<Attribute name="lemonStock" type="Integer"/>
 				<Attribute name="sugarStock" type="Integer"/>
@@ -158,7 +176,23 @@
 		<!-- ====================================== -->
 				<WHEN eventType="StartOfDay"/>
 		</EnvironmentRule>
-		<!-- ============================= -->
+		<!-- ====================================== -->
+		<EnvironmentRule name="MakePayment_RR">
+		<!-- ====================================== -->
+			<WHEN eventType="MakePayment" eventVariable="e"/>
+			<FOR objectVariable="ls" objectType="LemonadeSeller">
+				<ValueExpr language="Java"> e.getReceiver() </ValueExpr>
+			</FOR>
+			<DO>
+				<UPDATE-ENV>
+					<UpdateObject objectVariable="ls">
+						<Slot property="cash">
+							<ValueExpr language="Java"> ls.getCash() + e.getAmount() </ValueExpr>
+						</Slot>
+					</UpdateObject>
+				</UPDATE-ENV>
+			</DO>
+		</EnvironmentRule>
 	</EnvironmentRules>	
 	</SimulationModel>
 	
