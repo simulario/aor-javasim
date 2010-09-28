@@ -18,24 +18,9 @@
 		</documentation>
 		
 		<Statistics>
-			
-			<Variable name="Food" dataType="Float">
-				
-				<Source>
-					<ObjectProperty property="foodStock" objectType="Person"/>
-				</Source>
-			</Variable>
-			
-			<Variable name="Price" dataType="Float">
-				
+			<Variable name="Price" dataType="Float">	
 				<Source>
 					<ObjectProperty property="marketPrice" objectType="Market"/>
-				</Source>
-			</Variable>
-			
-			<Variable name="Volume" dataType="Float">
-				<Source>
-					<ObjectProperty property="marketVolume" objectType="Market"/>
 				</Source>
 			</Variable>
 		</Statistics>
@@ -139,7 +124,6 @@
 				<Attribute type="Float" name="TARGET_MONEY_STOCK" initialValue="60.0"/>
 				<Attribute type="Float" name="LEISURE_VALUE" initialValue="5.0"/>
 				<Attribute type="Float" name="RANDOM_FACTOR" initialValue="0.01"/>
-				<Attribute type="Float" name="HISTORICAL_FOOD_PRICE" initialValue="0.02"/>
 				<Attribute type="Float" name="lastPrice"/>
 				<Attribute type="Float" name="foodStock"/>
 				<Attribute type="Float" name="goldAmount"/>
@@ -156,7 +140,7 @@
 							if(getAssets().getAsset("Food").getQuantity() - getEAT_AMOUNT() >= getEAT_AMOUNT() ){
 								getAssets().getAsset("Food").withdraw(getEAT_AMOUNT());
 								setFoodStock(getFoodStock()- getEAT_AMOUNT());
-								System.out.println("Eat: " + getEAT_AMOUNT());
+								//System.out.println("Eat: " + getEAT_AMOUNT());
 								return true;
 							}	
 							System.out.println("Die");
@@ -177,7 +161,7 @@
 					<!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~-->
 					<Body language="Java"><![CDATA[
 							getAssets().getAsset("Gold").deposit(getSkillLevelGold());
-							System.out.println("produceGold: " + getAssets().getAsset("Gold").getQuantity());
+							//System.out.println("produceGold: " + getAssets().getAsset("Gold").getQuantity());
 							return getGoldAmount() + getSkillLevelGold();
 					]]></Body>
 				</Function>
@@ -600,8 +584,8 @@
 						// reset offer lists
 				        getBuyOffers().getOffers().clear();
 				        getSellOffers().getOffers().clear();
-				   		System.out.println("MarketPrice:" + getMarketPrice());
-				   		System.out.println("Transactions:" + getTransactions().getOffers().size());
+				   		//System.out.println("MarketPrice:" + getMarketPrice());
+				   		//System.out.println("Transactions:" + getTransactions().getOffers().size());
 						return true;
 					]]></Body>
 				</Function>
@@ -657,7 +641,7 @@
 					<Parameter name="offers" type="OfferList"/>
 					<Body language="Java"><![CDATA[
 						getBuyOffers().getOffers().addAll(offers.getOffers());
-						System.out.println("BuyOfferID: "+ offers.getOffers().get(0).getAgentID());
+						//System.out.println("BuyOfferID: "+ offers.getOffers().get(0).getAgentID());
 						return true;
 					]]></Body>
 				</Function>
@@ -666,7 +650,7 @@
 					<Parameter name="offers" type="OfferList"/>
 					<Body language="Java"><![CDATA[
 						getSellOffers().getOffers().addAll(offers.getOffers());
-						System.out.println("SellOfferID: " + offers.getOffers().get(0).getAgentID());
+						//System.out.println("SellOfferID: " + offers.getOffers().get(0).getAgentID());
 						return true;
 					]]></Body>
 				</Function>
@@ -793,23 +777,21 @@
 			<Slot property="marketPrice" value="2.0" />
 		</Agent>
 		
-		<Agent type="Person"  id="1000" >
-			<Slot property="foodStock" value="60" />	
+		<Agents type="Person"   rangeStartID="1000" rangeEndID="1000">
+			<Slot property="foodStock" value="33" />	
 			<Slot property="goldAmount" value="20" />
 			<Slot property="skillLevelGold">
-				<RandomVariable>
-					<Uniform lowerBound="0.25" upperBound="0.5" />
-				</RandomVariable>
+				<ValueExpr language="Java">0</ValueExpr>
 			</Slot>
 			<Slot property="skillLevelFood">
 				<RandomVariable>
-					<Uniform lowerBound="2.0" upperBound="3.0" />
+					<Uniform lowerBound="2.5" upperBound="3.5" />
 					</RandomVariable> 
 			</Slot>
 			<PeriodicTimeEvent type="SetAssets" occurrenceTime="1"  />
-		</Agent>
-		<Agent type="Person"  id="1001" >
-			<Slot property="foodStock" value="20" />	
+		</Agents>
+		<Agents type="Person" rangeStartID="1500" rangeEndID="1501">
+			<Slot property="foodStock" value="33" />	
 			<Slot property="goldAmount" value="40" />
 			<Slot property="skillLevelGold">
 				<RandomVariable>
@@ -817,28 +799,10 @@
 				</RandomVariable>
 			</Slot>
 			<Slot property="skillLevelFood">
-				<RandomVariable>
-					<Uniform lowerBound="0.25" upperBound="0.50" />
-				</RandomVariable>
+				<ValueExpr language="Java">0</ValueExpr>
 			</Slot>
 			<PeriodicTimeEvent type="SetAssets" occurrenceTime="1"  />
-		</Agent>
-		<Agent type="Person"  id="1002" >
-			<Slot property="foodStock" value="20" />	
-			<Slot property="goldAmount" value="40" />
-			<Slot property="skillLevelGold">
-				<RandomVariable>
-					<Uniform lowerBound="2.0" upperBound="3.0" />
-				</RandomVariable>
-			</Slot>
-			<Slot property="skillLevelFood">
-				<RandomVariable>
-					<Uniform lowerBound="0.25" upperBound="0.50" />
-				</RandomVariable>
-			</Slot>
-			<PeriodicTimeEvent type="SetAssets" occurrenceTime="1"  />
-		</Agent>
-
+		</Agents>
 		<ExogenousEvent occurrenceTime="1" type="StartOfDay" />
 		<ExogenousEvent occurrenceTime="8" type="EachDayAt8AM" />
 		<ExogenousEvent occurrenceTime="11" type="EachDayAt11AM" />
@@ -847,25 +811,6 @@
 	<!-- =================================================== -->
 	<UserInterface>
 		<StatisticsUI>
-			<StatisticsVariableUI variable="Food" comparisonGroup="pricevsfood">
-				<Label>
-					<Text xml:lang="en">Food</Text>
-					<Text xml:lang="de">Marktpreis</Text>
-					<Text xml:lang="es">Precio de Mercado</Text>
-					<Text xml:lang="fr">Le Prix du Marché</Text>
-					<Text xml:lang="ro">Pret mediu</Text>
-				</Label>
-				<Hint>
-					<Text xml:lang="en">What is the average market price?</Text>
-					<Text xml:lang="de">Was ist der durchschnittliche Marktpreis?</Text>
-					<Text xml:lang="es">Cuál es el precio medio de mercado?</Text>
-					<Text xml:lang="fr">Quel est le moyen prix du marché?</Text>
-					<Text xml:lang="ro">Care este pretul mediu statilit de bursa?</Text>
-				</Hint>
-				<Format decimalPlaces="1">
-					<Weight>kg</Weight>
-				</Format>
-			</StatisticsVariableUI>
 			<StatisticsVariableUI variable="Price" comparisonGroup="pricevsfood">
 				<Label>
 					<Text xml:lang="en">Marketprice</Text>
