@@ -830,7 +830,7 @@ public class SimulationManager {
     File schemaFile = this.getXMLSchema();
 
     SchemaFactory factory;
-
+    
     try {
       factory = SchemaFactory
           .newInstance("http://www.w3.org/XML/XMLSchema/v1.1");
@@ -838,7 +838,7 @@ public class SimulationManager {
     } catch (IllegalArgumentException iae) {
       // lookup a factory for the W3C XML Schema language
       factory = SchemaFactory.newInstance(XMLConstants.W3C_XML_SCHEMA_NS_URI);
-      System.out.println("Xerces with XML-Schema 1.0 Support is loaded.");
+      System.out.println("Loaded schema validation provider " + factory.getClass().getName());
     }
 
     try {
