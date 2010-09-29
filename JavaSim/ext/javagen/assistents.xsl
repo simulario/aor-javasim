@@ -850,27 +850,28 @@
 
   <xsl:template match="aorsl:MultiValuedSlot" mode="assistent.setMultiValuedSlot">
     <xsl:param name="indent" required="yes" as="xs:integer"/>
+    <xsl:param name="objectContext" required="yes" as="xs:string"/>
 
     <xsl:call-template name="java:callMethod">
       <xsl:with-param name="indent" select="$indent"/>
-      <xsl:with-param name="objInstance" select="jw:checkProperty(@property)"/>
+      <xsl:with-param name="objInstance" select="$objectContext"/>
       <xsl:with-param name="method">
         <xsl:choose>
           <xsl:when test="aorsl:Add">
-            <xsl:value-of select="'add'"/>
+            <xsl:value-of select="concat('add', jw:upperWord(@property))"/>
           </xsl:when>
           <xsl:when test="aorsl:Remove">
-            <xsl:value-of select="'remove'"/>
+            <xsl:value-of select="concat('remove', jw:upperWord(@property))"/>
           </xsl:when>
         </xsl:choose>
       </xsl:with-param>
       <xsl:with-param name="args">
         <xsl:choose>
-          <xsl:when test="@itemVariable">
-            <xsl:value-of select="jw:checkProperty(@itemVariable)"/>
+          <xsl:when test="(aorsl:Add | aorsl:Remove)/@itemVariable">
+            <xsl:value-of select="jw:checkProperty((aorsl:Add | aorsl:Remove)/@itemVariable)"/>
           </xsl:when>
           <xsl:otherwise>
-            <xsl:value-of select="aorsl:ValueExpr[@language = $output.language][1]"/>
+            <xsl:value-of select="(aorsl:Add | aorsl:Remove)/aorsl:ValueExpr[@language = $output.language][1]"/>
           </xsl:otherwise>
         </xsl:choose>
       </xsl:with-param>

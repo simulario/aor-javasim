@@ -1227,6 +1227,7 @@
     
     <xsl:apply-templates select="aorsl:MultiValuedSlot" mode="assistent.setMultiValuedSlot">
       <xsl:with-param name="indent" select="$indent"/>
+      <xsl:with-param name="objectContext" select="$gridCellVarName"/>
     </xsl:apply-templates>
 
   </xsl:template>
@@ -1278,7 +1279,8 @@
       </xsl:for-each>
       
       <xsl:apply-templates select="aorsl:MultiValuedSlot" mode="assistent.setMultiValuedSlot">
-        <xsl:with-param name="indent" select="$indent"/>
+        <xsl:with-param name="indent" select="$indent + $indentOffset"/>
+        <xsl:with-param name="objectContext" select="$gridCellVarName"/>
       </xsl:apply-templates>
 
     </xsl:variable>
@@ -2489,6 +2491,19 @@
     
     <xsl:apply-templates select="aorsl:MultiValuedSlot" mode="assistent.setMultiValuedSlot">
       <xsl:with-param name="indent" select="$indent"/>
+      <xsl:with-param name="objectContext">
+        <xsl:choose>
+          <xsl:when test="@objectVariable">
+            <xsl:call-template name="java:varByDotNotation">
+              <xsl:with-param name="varName" select="@objectVariable"/>
+            </xsl:call-template>
+          </xsl:when>
+          <xsl:when test="exists(aorsl:ObjectRef[@language = $output.language])">
+            <xsl:value-of select="jw:parenthesise(aorsl:ObjectRef[@language = $output.language][1])"/>
+          </xsl:when>
+        </xsl:choose>
+        
+      </xsl:with-param>
     </xsl:apply-templates>
 
     <xsl:apply-templates select="aorsl:Increment" mode="assistents.increment">
@@ -2676,10 +2691,6 @@
                 </xsl:with-param>
               </xsl:call-template>
             </xsl:for-each>
-            
-            <xsl:apply-templates select="aorsl:MultiValuedSlot" mode="assistent.setMultiValuedSlot">
-              <xsl:with-param name="indent" select="$indent"/>
-            </xsl:apply-templates>
 
             <xsl:apply-templates select="aorsl:Increment" mode="assistents.increment">
               <xsl:with-param name="indent" select="$indent"/>
@@ -2690,6 +2701,12 @@
               <xsl:with-param name="indent" select="$indent"/>
               <xsl:with-param name="objectVariable" select="../@objectVariable"/>
             </xsl:apply-templates>
+            
+            <xsl:apply-templates select="aorsl:MultiValuedSlot" mode="assistent.setMultiValuedSlot">
+              <xsl:with-param name="indent" select="$indent"/>
+              <xsl:with-param name="objectContext" select="../@objectVariable"/>
+            </xsl:apply-templates>
+            
           </xsl:with-param>
         </xsl:call-template>
 
