@@ -870,8 +870,15 @@
           <xsl:when test="(aorsl:Add | aorsl:Remove)/@itemVariable">
             <xsl:value-of select="jw:checkProperty((aorsl:Add | aorsl:Remove)/@itemVariable)"/>
           </xsl:when>
-          <xsl:otherwise>
+          <xsl:when test="exists((aorsl:Add | aorsl:Remove)/aorsl:ValueExpr[@language = $output.language])">
             <xsl:value-of select="(aorsl:Add | aorsl:Remove)/aorsl:ValueExpr[@language = $output.language][1]"/>
+          </xsl:when>
+          <xsl:otherwise>
+            <xsl:message>
+              <xsl:text>[ERROR] No argument in </xsl:text>
+              <xsl:value-of select="local-name()"/>
+              <xsl:text> found!</xsl:text>
+            </xsl:message>
           </xsl:otherwise>
         </xsl:choose>
       </xsl:with-param>
