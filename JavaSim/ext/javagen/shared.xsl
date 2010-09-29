@@ -121,8 +121,7 @@
                         </xsl:when>
                         <!-- new -->
                         <xsl:when test="fn:exists($objNode/aorsl:Slot[@property eq current()/@name]/aorsl:ValueExpr[@language eq $output.language])">
-                          <xsl:value-of select="$objNode/aorsl:Slot[@property eq current()/@name]/aorsl:ValueExpr[@language eq $output.language][1]"
-                          />
+                          <xsl:value-of select="$objNode/aorsl:Slot[@property eq current()/@name]/aorsl:ValueExpr[@language eq $output.language][1]"/>
                         </xsl:when>
                         <!-- depricated -->
                         <xsl:when
@@ -216,8 +215,7 @@
                         </xsl:when>
                         <!-- new -->
                         <xsl:when test="fn:exists($objNode/aorsl:Slot[@property eq current()/@name]/aorsl:ValueExpr[@language eq $output.language])">
-                          <xsl:value-of select="$objNode/aorsl:Slot[@property eq current()/@name]/aorsl:ValueExpr[@language eq $output.language][1]"
-                          />
+                          <xsl:value-of select="$objNode/aorsl:Slot[@property eq current()/@name]/aorsl:ValueExpr[@language eq $output.language][1]"/>
                         </xsl:when>
                         <!-- depricated -->
                         <xsl:when
@@ -310,8 +308,7 @@
                         </xsl:when>
                         <!-- new -->
                         <xsl:when test="fn:exists($objNode/aorsl:Slot[@property eq current()/@name]/aorsl:ValueExpr[@language eq $output.language])">
-                          <xsl:value-of select="$objNode/aorsl:Slot[@property eq current()/@name]/aorsl:ValueExpr[@language eq $output.language][1]"
-                          />
+                          <xsl:value-of select="$objNode/aorsl:Slot[@property eq current()/@name]/aorsl:ValueExpr[@language eq $output.language][1]"/>
                         </xsl:when>
                         <!-- depricated -->
                         <xsl:when
@@ -403,8 +400,7 @@
                         </xsl:when>
                         <!-- new -->
                         <xsl:when test="fn:exists($objNode/aorsl:Slot[@property eq current()/@name]/aorsl:ValueExpr[@language eq $output.language])">
-                          <xsl:value-of select="$objNode/aorsl:Slot[@property eq current()/@name]/aorsl:ValueExpr[@language eq $output.language][1]"
-                          />
+                          <xsl:value-of select="$objNode/aorsl:Slot[@property eq current()/@name]/aorsl:ValueExpr[@language eq $output.language][1]"/>
                         </xsl:when>
                         <!-- depricated -->
                         <xsl:when
@@ -576,25 +572,28 @@
 
   </xsl:template>
 
+  <!-- if there are no slot, then create a default instance of this ComplexDataType -->
   <xsl:template match="aorsl:ComplexDataProperty" mode="shared.helper.initAORObjects.ComplexDataProperty">
     <xsl:param name="objNode" required="yes"/>
 
-    <xsl:variable name="complexDataType" select="root($objNode)//aorsl:DataTypes/aorsl:ComplexDataType[@name eq current()/@type][1]"/>
-    <xsl:choose>
-      <xsl:when test="fn:exists($complexDataType)">
+    <xsl:if test="not(fn:exists($objNode/aorsl:Slot[@property = current()/@name]))">
+      <xsl:variable name="complexDataType" select="root($objNode)//aorsl:DataTypes/aorsl:ComplexDataType[@name eq current()/@type][1]"/>
+      <xsl:choose>
+        <xsl:when test="fn:exists($complexDataType)">
 
-        <xsl:choose>
-          <xsl:when test="fn:exists($complexDataType/aorsl:ClassDef[@language eq $output.language])">
-            <xsl:call-template name="java:newObject">
-              <xsl:with-param name="inLine" select="true()"/>
-              <xsl:with-param name="isVariable" select="true()"/>
-              <xsl:with-param name="class" select="$complexDataType/@name"/>
-            </xsl:call-template>
-          </xsl:when>
-        </xsl:choose>
+          <xsl:choose>
+            <xsl:when test="fn:exists($complexDataType/aorsl:ClassDef[@language eq $output.language])">
+              <xsl:call-template name="java:newObject">
+                <xsl:with-param name="inLine" select="true()"/>
+                <xsl:with-param name="isVariable" select="true()"/>
+                <xsl:with-param name="class" select="$complexDataType/@name"/>
+              </xsl:call-template>
+            </xsl:when>
+          </xsl:choose>
 
-      </xsl:when>
-    </xsl:choose>
+        </xsl:when>
+      </xsl:choose>
+    </xsl:if>
 
   </xsl:template>
 
@@ -636,8 +635,7 @@
         </xsl:apply-templates>
       </xsl:when>
       <xsl:when test="fn:exists($objTypeNode/aorsl:InitialAttributeValue[@attribute eq current()/@name])">
-        <xsl:apply-templates select="$objTypeNode/aorsl:InitialAttributeValue[@attribute eq current()/@name][1]"
-          mode="assistents.setInitialEnumValue">
+        <xsl:apply-templates select="$objTypeNode/aorsl:InitialAttributeValue[@attribute eq current()/@name][1]" mode="assistents.setInitialEnumValue">
           <xsl:with-param name="enumeration" select="$enumeration"/>
         </xsl:apply-templates>
       </xsl:when>
