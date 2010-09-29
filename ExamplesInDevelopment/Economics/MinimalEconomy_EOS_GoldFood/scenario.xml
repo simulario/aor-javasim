@@ -23,9 +23,14 @@
 					<ObjectProperty property="marketPrice" objectType="Market"/>
 				</Source>
 			</Variable>
-			<Variable name="Volume" dataType="Float">	
+			<Variable name="BuyOffers" dataType="Float">	
 				<Source>
-					<ObjectProperty property="marketVolume" objectType="Market"/>
+					<ObjectProperty property="buyVolume" objectType="Market"/>
+				</Source>
+			</Variable>
+			<Variable name="SellOffers" dataType="Float">	
+				<Source>
+					<ObjectProperty property="sellVolume" objectType="Market"/>
 				</Source>
 			</Variable>
 		</Statistics>
@@ -69,7 +74,9 @@
 					}
 	  			]]></ClassDef>
 			</ComplexDataType>
+			<!--====================================-->
 			<ComplexDataType name="Offer">
+				<!--====================================-->
 				<Attribute type="String" name="product"/>
 				<Attribute type="String" name="currency"/>
 				<Attribute type="Float" name="price"/>
@@ -77,7 +84,9 @@
 				<Attribute type="Boolean" name="buy"/>
 				<Attribute type="Integer" name="AgentID"/>
 			</ComplexDataType>
+			<!--====================================-->
 			<ComplexDataType name="OfferList">
+				<!--====================================-->
 				<ClassDef language="Java"><![CDATA[
 					private java.util.ArrayList<Offer> offers = new java.util.ArrayList<Offer>();
 					
@@ -101,39 +110,49 @@
 		</DataTypes>
 		
 		<EntityTypes>
-			<MessageType name="OpenMarket">
+			<!--====================================-->
+			<MessageType name="StartOfDay_msg">
+				<!--====================================-->
 				<Attribute name="price" type="Float"/>
 			</MessageType>
+			<!--====================================-->
 			<MessageType name="Act_msg" />
+			<!--====================================-->
 			<MessageType name="BuyFood_msg">
+				<!--====================================-->
 				<ComplexDataProperty name="OfferList" type="OfferList"/>
 			</MessageType>
+			<!--====================================-->
 			<MessageType name="SellFood_msg">
+				<!--====================================-->
 				<ComplexDataProperty name="OfferList" type="OfferList"/>
 			</MessageType>
+			<!--====================================-->
 			<MessageType name="Clear_msg" >
+				<!--====================================-->
 				<ComplexDataProperty name="TransactionList" type="OfferList"/>
 			</MessageType>
+			<!--====================================-->
 			<MessageType name="Transaction_msg" >
+				<!--====================================-->
 				<ComplexDataProperty name="offer" type="Offer"/>
 			</MessageType>
+			<!--=======================================================-->
+			<ExogenousEventType name="StartOfDay" periodicity="15" />
+			<!--=======================================================-->
+			<ExogenousEventType name="EachDayAt8AM" periodicity="15" />
+			<!--=======================================================-->
+			<ExogenousEventType name="EachDayAt11AM" periodicity="15" />
 			
-			<ActionEventType name="Eat"/>
-			
-			<ExogenousEventType name="StartOfDay" periodicity="24" />
-			<ExogenousEventType name="EachDayAt8AM" periodicity="24" />
-			<ExogenousEventType name="EachDayAt11AM" periodicity="24" />
-			
+			<!-- ============================================ -->
 			<AgentType name="EconomicAgent">
+				<!-- ============================================ -->
 				<!--<ComplexDataProperty name="assets" type="Quantity" upperMultiplicity="unbounded" />-->
 			</AgentType>
 			
 			<!-- ============================================ -->
 			<AgentType name="Person">
-			<!-- ============================================ -->
-				<documentation>
-					<description>Model Level representation of a Person</description>
-				</documentation>
+				<!-- ============================================ -->
 				<ComplexDataProperty name="assets" type="AssetsList" />
 				<Attribute type="Float" name="EAT_AMOUNT" initialValue="1.0"/>
 				<Attribute type="Float" name="TARGET_FOOD_STOCK" initialValue="30.0"/>
@@ -143,7 +162,6 @@
 				<Attribute type="Float" name="lastPrice"/>
 				<Attribute type="Float" name="foodStock"/>
 				<Attribute type="Float" name="goldAmount"/>
-				<Attribute name="leisureWorker" type="Boolean" />
 				<Attribute name="skillLevelFood" type="Float" />
 				<Attribute name="skillLevelGold" type="Float" />
 				<ComplexDataProperty name="BuyList" type="OfferList"/>
@@ -152,24 +170,33 @@
 				<!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~-->
 				<Function name="produceFood" resultType="Float">
 					<!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~-->
+					<documentation>
+						<dc:description>Increase the foodamount by the SkillLevelFood</dc:description>
+					</documentation>
 					<Body language="Java"><![CDATA[
 							getAssets().getAsset("Food").deposit(getSkillLevelFood());
-							System.out.println("produceFood: " + getAssets().getAsset("Food").getQuantity());
+							System.out.println("produceFood: " + getAssets().getAsset("Food").getQuantity()+"||| gold: "+getAssets().getAsset("Gold").getQuantity());
 							return getFoodStock() + getSkillLevelFood();
 					]]></Body>
 				</Function>
 				<!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~-->
 				<Function name="produceGold" resultType="Float">
 					<!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~-->
+					<documentation>
+						<dc:description>Increase the foodamount by the SkillLevelFood</dc:description>
+					</documentation>
 					<Body language="Java"><![CDATA[
 							getAssets().getAsset("Gold").deposit(getSkillLevelGold());
-							//System.out.println("produceGold: " + getAssets().getAsset("Gold").getQuantity());
+							System.out.println("produceGold: " + getAssets().getAsset("Gold").getQuantity()+"|||Food: "+getAssets().getAsset("Food").getQuantity());
 							return getGoldAmount() + getSkillLevelGold();
 					]]></Body>
 				</Function>
 				<!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~-->
 				<Function name="buyFood" resultType="Boolean">
 					<!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~-->
+					<documentation>
+						<dc:description>Calculates the buyoffers and adds them to the buyofferlist</dc:description>
+					</documentation>
 					<Parameter name="agentID" type="long"/>
 					<Body language="Java"><![CDATA[
 						getBuyList().getOffers().clear();
@@ -206,6 +233,9 @@
 				<!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~-->
 				<Function name="sellFood" resultType="Boolean">
 					<!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~-->
+					<documentation>
+						<dc:description>Calculates the selloffers and adds them to the sellofferlist</dc:description>
+					</documentation>
 					<Parameter name="agentID" type="long"/>
 					<Body language="Java"><![CDATA[
 						getSellList().getOffers().clear();
@@ -239,6 +269,9 @@
 				<!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~-->
 				<Function name="updateFood" resultType="Float">
 					<!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~-->
+					<documentation>
+						<dc:description>Updates the foodamount by the quantity of the offer</dc:description>
+					</documentation>
 					<Parameter name="offer" type="Offer"/>
 					<Body language="Java"><![CDATA[
 						if(offer.isBuy()){
@@ -255,6 +288,9 @@
 				<!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~-->
 				<Function name="updateGold" resultType="Float">
 					<!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~-->
+					<documentation>
+						<dc:description>Updates the goldamount by the quantity*price of the offer</dc:description>
+					</documentation>
 					<Parameter name="offer" type="Offer"/>
 					<Body language="Java"><![CDATA[
 						if(offer.isBuy()){
@@ -268,31 +304,13 @@
 						}
 					]]></Body>
 				</Function>
-				<!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~-->
-				<PeriodicTimeEventType name="SetAssets" />
-				<!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~-->
-				<CommunicationRule name="SetAssets_Rule" agentVariable="p">
-					<!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~-->
-					<WHEN eventType="SetAssets" />
-					<DO>
-						<UPDATE-AGT>
-							<Slot property="foodStock">
-								<ValueExpr language="Java"><![CDATA[
-									p.getAssets().addAsset(getFoodStock(), "Food", "Stk")
-								]]></ValueExpr>
-							</Slot>
-							<Slot property="goldAmount">
-								<ValueExpr language="Java"><![CDATA[
-									p.getAssets().addAsset(getGoldAmount(), "Gold", "Stk")	
-								]]></ValueExpr>
-							</Slot>
-						</UPDATE-AGT>
-					</DO>	
-				</CommunicationRule>
 				<!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~-->
-				<CommunicationRule name="OpenMarket_Rule" agentVariable="p">
+				<CommunicationRule name="StartOfDay_Rule" agentVariable="p">
 					<!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~-->
-					<WHEN eventType="InMessageEvent" messageType="OpenMarket" messageVariable="msg"/>
+					<documentation>
+						<dc:description>price is updated and decides to produce food or gold</dc:description>
+					</documentation>
+					<WHEN eventType="InMessageEvent" messageType="StartOfDay_msg" messageVariable="msg"/>
 					<DO>
 						<UPDATE-AGT>
 							<Slot property="lastPrice">
@@ -300,42 +318,17 @@
 							</Slot>
 						</UPDATE-AGT>
 					</DO>
-				</CommunicationRule>
-				<!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~-->
-				<CommunicationRule name="produceFood_Rule" agentVariable="p">
-					<!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~-->
-					<documentation>
-						<description> The foodInventory is incremented with the value of the skillLevelFood. </description>
-					</documentation>
-					<WHEN eventType="InMessageEvent" messageType="Act_msg"/>
-					<IF language="Java"><![CDATA[
-						(((p.getAssets().getAsset("Gold").getQuantity() 
-						 + (p.getAssets().getAsset("Food").getQuantity() * p.getLastPrice())) 
-						 < p.getLEISURE_VALUE()) && p.isLeisureWorker()) || !p.isLeisureWorker()
-					]]></IF>
+					<IF language="Java">(p.getLastPrice() * p.getSkillLevelFood()) >= p.getSkillLevelGold()</IF>
 					<THEN>
 						<UPDATE-AGT>
 							<Slot property="foodStock">
 								<ValueExpr language="Java"><![CDATA[
-									p.produceFood()	
-								]]></ValueExpr>
+								p.produceFood()	
+							]]></ValueExpr>
 							</Slot>
 						</UPDATE-AGT>
 					</THEN>
-				</CommunicationRule>
-				<!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->
-				<CommunicationRule name="ProduceGold_Rule" agentVariable="p">
-					<!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->
-					<documentation>
-						<description> The goldInventory is incremented with the value of the skillLevelGold. </description>
-					</documentation>
-					<WHEN eventType="InMessageEvent" messageType="Act_msg"/>
-					<IF language="Java"><![CDATA[
-						(((p.getAssets().getAsset("Gold").getQuantity() 
-						 + (p.getAssets().getAsset("Food").getQuantity() * p.getLastPrice())) 
-						 < p.getLEISURE_VALUE()) && p.isLeisureWorker()) || !p.isLeisureWorker()
-					]]></IF>
-					<THEN>
+					<ELSE>
 						<UPDATE-AGT>
 							<Slot property="goldAmount">
 								<ValueExpr language="Java"><![CDATA[ 
@@ -343,9 +336,9 @@
 								]]></ValueExpr>
 							</Slot>
 						</UPDATE-AGT>
-					</THEN>
+					</ELSE>
 				</CommunicationRule>
-				<!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->
+				<!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~-->
 				<CommunicationRule name="BuyFood_Rule" agentVariable="p">
 					<!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->
 					<documentation>
@@ -384,6 +377,9 @@
 				<!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->
 				<CommunicationRule name="Update_Rule" agentVariable="p">	
 					<!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->
+					<documentation>
+						<dc:description>succesfull transactions are receiverd from the market, food and gold is updated</dc:description>
+					</documentation>
 					<WHEN eventType="InMessageEvent" messageType="Transaction_msg" messageVariable="msg"/>
 					<DO>
 						<UPDATE-AGT>
@@ -398,15 +394,22 @@
 				</CommunicationRule>
 				
 			</AgentType>
-			
+			<!-- ============================================ -->
 			<AgentType name="Market">
+				<!-- ============================================ -->
 				<Attribute type="Float" name="marketPrice"/>
 				<Attribute type="Float" name="marketVolume"/>
+				<Attribute type="Float" name="buyVolume"/>
+				<Attribute type="Float" name="sellVolume"/>
 				<ComplexDataProperty name="buyOffers" type="OfferList"/>
 				<ComplexDataProperty name="sellOffers" type="OfferList"/>
 				<ComplexDataProperty name="transactions" type="OfferList"/>
-				
+				<!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~-->
 				<Function name="clear" resultType="Boolean">
+					<documentation>
+						<dc:description>Calculates the marketprice and adds the corresponding buy- and selloffers to the transactionlist</dc:description>
+					</documentation>
+					<!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~-->
 					<Body language="Java"><![CDATA[
 						getTransactions().getOffers().clear();
 						System.out.println("BuyOffers:" + getBuyOffers().getOffers().size());
@@ -429,14 +432,8 @@
 								if(p1 > p2) return 1;
 								            return 0;	             		
 							}		
-						 };
-						 /*AssetsList a = new AssetsList(){
-					        {
-					            addAsset(33.0d, "Food", "Stk");
-					            addAsset(40.0d, "Gold", "Stk");
-					        }
-					    };
-					    System.out.println(a);*/
+						};
+						
 						java.util.Collections.shuffle(getBuyOffers().getOffers());
 						java.util.Collections.shuffle(getSellOffers().getOffers());
 						java.util.Collections.sort(getBuyOffers().getOffers(), comparator);
@@ -584,17 +581,23 @@
 				            }
 				        }
 				        
-						// reset offer lists
+						// reset offer lists and set statistic variables
+				        setMarketVolume(getTransactions().getOffers().size());
+				        setBuyVolume(getBuyOffers().getOffers().size());
+				        setSellVolume(getSellOffers().getOffers().size());
 				        getBuyOffers().getOffers().clear();
 				        getSellOffers().getOffers().clear();
-				        setMarketVolume(getTransactions().getOffers().size());
 				   		//System.out.println("MarketPrice:" + getMarketPrice());
 				   		//System.out.println("Transactions:" + getTransactions().getOffers().size());
 						return true;
 					]]></Body>
 				</Function>
-				
+				<!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~-->
 				<Function name="equal" resultType="Boolean">
+					<!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~-->
+					<documentation>
+						<dc:description>Check if the two Inputparameters are equal</dc:description>
+					</documentation>
 					<Parameter name="a" type="double"/>
 					<Parameter name="b" type="double"/>
 					<Body language="Java"><![CDATA[
@@ -608,8 +611,12 @@
         				return true;
 					]]></Body>
 				</Function>
-				
+				<!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~-->
 				<Function name="less" resultType="Boolean">
+					<!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~-->
+					<documentation>
+						<dc:description>checks if a less b </dc:description>
+					</documentation>
 					<Parameter name="a" type="double"/>
 					<Parameter name="b" type="double"/>
 					<Body language="Java"><![CDATA[
@@ -620,8 +627,12 @@
 				        return false;
 					]]></Body>
 				</Function>
-				
+				<!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~-->
 				<Function name="transact" resultType="Boolean">
+					<!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~-->
+					<documentation>
+						<dc:description>Adds the buy- and selloffer to the transactionlist</dc:description>
+					</documentation>
 					<Parameter name="sellOffer" type="Offer"/>
 					<Parameter name="buyOffer" type="Offer"/>
 					<Parameter name="salePrice" type="double"/>
@@ -640,8 +651,12 @@
 				        return returnVal;
 					]]></Body>
 				</Function>
-				
+				<!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~-->
 				<Function name="addBuyFood" resultType="Boolean">
+					<!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~-->
+					<documentation>
+						<dc:description>Adds the buyoffer to the buyofferlist</dc:description>
+					</documentation>
 					<Parameter name="offers" type="OfferList"/>
 					<Body language="Java"><![CDATA[
 						getBuyOffers().getOffers().addAll(offers.getOffers());
@@ -649,8 +664,12 @@
 						return true;
 					]]></Body>
 				</Function>
-				
+				<!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~-->
 				<Function name="addSellFood" resultType="Boolean">
+					<!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~-->
+					<documentation>
+						<dc:description>Adds the selloffer to the sellofferlist</dc:description>
+					</documentation>
 					<Parameter name="offers" type="OfferList"/>
 					<Body language="Java"><![CDATA[
 						getSellOffers().getOffers().addAll(offers.getOffers());
@@ -662,6 +681,9 @@
 				<!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->
 				<CommunicationRule name="Accept_BuyFood" agentVariable="m">
 					<!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->
+					<documentation>
+						<dc:description>BuyOffers are stored</dc:description>
+					</documentation>
 					<WHEN eventType="InMessageEvent" messageType="BuyFood_msg" messageVariable="msg"/>
 					<IF language="Java">m.addBuyFood(msg.getOfferList())</IF>
 					<THEN></THEN>
@@ -669,6 +691,9 @@
 				<!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->
 				<CommunicationRule name="Accept_SellFood" agentVariable="m">
 					<!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->
+					<documentation>
+						<dc:description>SellOffers are stored</dc:description>
+					</documentation>
 					<WHEN eventType="InMessageEvent" messageType="SellFood_msg" messageVariable="msg"/>
 					<IF language="Java">m.addSellFood(msg.getOfferList())</IF>
 					<THEN></THEN>
@@ -676,6 +701,9 @@
 				<!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->
 				<CommunicationRule name="Clear" agentVariable="m">
 					<!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->
+					<documentation>
+						<dc:description>The market gets cleared</dc:description>
+					</documentation>
 					<WHEN eventType="InMessageEvent" messageType="Clear_msg"/>
 					<IF language="Java">m.clear()</IF>
 					<THEN>
@@ -689,6 +717,9 @@
 				<!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->
 				<CommunicationRule name="Transact" agentVariable="m">
 					<!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->
+					<documentation>
+						<dc:description>Done trades are reurned to the persons</dc:description>
+					</documentation>
 					<WHEN eventType="ReminderEvent" eventVariable="evt" />
 					<FOR-ListItemVariable variable="o" listItemType="Offer">
 						<ListExpr language="Java">getTransactions().getOffers()</ListExpr>
@@ -712,6 +743,9 @@
 		<!-- ============================= -->
 		<EnvironmentRule name="AtStartOfDayEat_ER">
 			<!-- ============================= -->
+			<documentation>
+				<dc:description>Every person tries to eat, if he can't he dies</dc:description>
+			</documentation>
 			<WHEN eventType="StartOfDay" eventVariable="evt" />
 			<FOR objectVariable="p" objectType="Person" />
 			<IF language="Java"><![CDATA[
@@ -724,27 +758,33 @@ p.getAssets().getAsset("Food").withdraw( p.getEAT_AMOUNT()) < p.getEAT_AMOUNT()
 			</THEN>
 		</EnvironmentRule>
 		<!-- ====================================== -->
-		<EnvironmentRule name="StartOfDay_Rule">
-		<!-- ====================================== -->
-				<WHEN eventType="StartOfDay"/>
-				<FOR objectVariable="m" objectType="Market" />
-				<FOR objectVariable="p" objectType="Person" />
-				<DO>
-					<SCHEDULE-EVT>
-						<InMessageEventExpr messageType="OpenMarket">
-						    <SenderIdRef language="Java">m.getId()</SenderIdRef>
-							<ReceiverIdRef language="Java">p.getId()</ReceiverIdRef>
-							<Slot property="price">
-								<ValueExpr language="Java">m.getMarketPrice()</ValueExpr>
-							</Slot>
-						</InMessageEventExpr>
-					</SCHEDULE-EVT>
-				</DO>
+		<EnvironmentRule name="StartOfDay_Rule_ER">
+			<!-- ====================================== -->
+			<documentation>
+				<dc:description>For all markets that exist, the marketprice of the last day is send to every person</dc:description>
+			</documentation>
+			<WHEN eventType="StartOfDay"/>
+			<FOR objectVariable="m" objectType="Market" />
+			<FOR objectVariable="p" objectType="Person" />
+			<DO>
+				<SCHEDULE-EVT>
+					<InMessageEventExpr messageType="StartOfDay_msg">
+					    <SenderIdRef language="Java">m.getId()</SenderIdRef>
+						<ReceiverIdRef language="Java">p.getId()</ReceiverIdRef>
+						<Slot property="price">
+							<ValueExpr language="Java">m.getMarketPrice()</ValueExpr>
+						</Slot>
+					</InMessageEventExpr>
+				</SCHEDULE-EVT>
+			</DO>
 		</EnvironmentRule>
 		
 		<!-- ============================= -->
-		<EnvironmentRule name="EachDayAt8AM_Rule">
+		<EnvironmentRule name="EachDayAt8AM_ER">
 			<!-- ============================= -->
+			<documentation>
+				<dc:description>Act_msg is send to every person</dc:description>
+			</documentation>
 			<WHEN eventType="EachDayAt8AM"/>
 			<FOR objectVariable="p" objectType="Person" />
 			<DO>
@@ -756,8 +796,11 @@ p.getAssets().getAsset("Food").withdraw( p.getEAT_AMOUNT()) < p.getEAT_AMOUNT()
 			</DO>
 		</EnvironmentRule>	
 		<!-- ===================================== -->
-		<EnvironmentRule name="EachDayAt11AM_Rule">
+		<EnvironmentRule name="EachDayAt11AM_ER">
 		<!-- ===================================== -->
+			<documentation>
+				<dc:description>Clear_msg is send to every market</dc:description>
+			</documentation>
 			<WHEN eventType="EachDayAt11AM"/>
 			<FOR objectVariable="m" objectType="Market" />
 			<DO>
@@ -785,12 +828,13 @@ p.getAssets().getAsset("Food").withdraw( p.getEAT_AMOUNT()) < p.getEAT_AMOUNT()
 					new AssetsList(){
 				        {
 				            addAsset(33.0d, "Food", "Stk");
-				            addAsset(40.0d, "Gold", "Stk");
+				            addAsset(20.0d, "Gold", "Stk");
 				        }
+				    }
 				]]></ValueExpr>
 			</Slot>
-			<Slot property="foodStock" value="33" />	
-			<Slot property="goldAmount" value="20" />
+			<Slot property="foodStock" value="66" />
+			<Slot property="goldAmount" value="40" />
 			<Slot property="skillLevelGold">
 				<ValueExpr language="Java">0</ValueExpr>
 			</Slot>
@@ -799,22 +843,31 @@ p.getAssets().getAsset("Food").withdraw( p.getEAT_AMOUNT()) < p.getEAT_AMOUNT()
 					<Uniform lowerBound="2.5" upperBound="3.5" />
 				</RandomVariable> 
 			</Slot>
-			<PeriodicTimeEvent type="SetAssets" occurrenceTime="1"  />
 		</Agents>
 		<Agents type="Person" rangeStartID="1500" rangeEndID="1501">
-			<Slot property="foodStock" value="33" />	
+			<Slot property="assets">
+				<ValueExpr language="Java"><![CDATA[
+					new AssetsList(){
+				        {
+				            addAsset(33.0d, "Food", "Stk");
+				            addAsset(20.0d, "Gold", "Stk");
+				        }
+				    }
+				]]></ValueExpr>
+			</Slot>
+			
+			<Slot property="foodStock" value="33" />
 			<Slot property="goldAmount" value="40" />
 			<Slot property="skillLevelGold">
 				<RandomVariable>
-					<Uniform lowerBound="2.0" upperBound="3.0" />
+					<Uniform lowerBound="1.5" upperBound="2.5" />
 				</RandomVariable>
 			</Slot>
 			<Slot property="skillLevelFood">
 				<ValueExpr language="Java">0</ValueExpr>
 			</Slot>
-			<PeriodicTimeEvent type="SetAssets" occurrenceTime="1"  />
 		</Agents>
-		<ExogenousEvent occurrenceTime="2" type="StartOfDay" />
+		<ExogenousEvent occurrenceTime="1" type="StartOfDay" />
 		<ExogenousEvent occurrenceTime="8" type="EachDayAt8AM" />
 		<ExogenousEvent occurrenceTime="11" type="EachDayAt11AM" />
 	</InitialState>
@@ -833,9 +886,17 @@ p.getAssets().getAsset("Food").withdraw( p.getEAT_AMOUNT()) < p.getEAT_AMOUNT()
 					<Currency>EUR(&#8364;)</Currency>
 				</Format>
 			</StatisticsVariableUI>
-			<StatisticsVariableUI variable="Volume" comparisonGroup="pricevsfood">
+			<StatisticsVariableUI variable="BuyOffers" comparisonGroup="pricevsfood">
 				<Label>
-					<Text xml:lang="en">MarketVolume</Text>
+					<Text xml:lang="en">number of BuyOffers</Text>
+				</Label>
+				<Hint>
+					<Text xml:lang="en">What is the average market volume?</Text>
+				</Hint>
+			</StatisticsVariableUI>
+			<StatisticsVariableUI variable="Selloffers" comparisonGroup="pricevsfood">
+				<Label>
+					<Text xml:lang="en">number of SellOffers</Text>
 				</Label>
 				<Hint>
 					<Text xml:lang="en">What is the average market volume?</Text>
