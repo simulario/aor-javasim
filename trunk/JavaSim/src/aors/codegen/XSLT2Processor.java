@@ -43,6 +43,14 @@ public class XSLT2Processor {
   public final static String INDENT_AMOUNT = "{http://xml.apache.org/xslt}indent-amount";
 
   public XSLT2Processor() {
+    // For Saxon(be sure that saxon library is in your classpath!):
+    System.setProperty("javax.xml.transform.TransformerFactory",
+        "net.sf.saxon.TransformerFactoryImpl");
+    
+    // For XALAN use:
+    // System.setProperty("javax.xml.transform.TransformerFactory",
+    // "com.sun.org.apache.xalan.internal.xsltc.trax.TransformerFactoryImpl");
+
     this.parameter = new HashMap<String, String>();
     this.messageWriter = new StringWriter();
     this.messageEmitter = new MessageEmitter();
@@ -83,7 +91,8 @@ public class XSLT2Processor {
     try {
       // Create a transform factory instance.
       TransformerFactory transformerFactory = TransformerFactory.newInstance();
-
+      System.out.println("TF: "
+          + transformerFactory.getClass().getCanonicalName());
       // set the output resolver, that writes the content of the XSLT's
       // <xsl:result-document href="test.out"> attribute into the result
       // HashMap, where the key is the file name and the content is the
@@ -124,7 +133,7 @@ public class XSLT2Processor {
       controller.setMessageEmitter(this.messageEmitter);
 
       transformer.setOutputProperty(OutputKeys.OMIT_XML_DECLARATION, "yes");
-//      transformer.setOutputProperty(OutputKeys.STANDALONE, "yes");
+      // transformer.setOutputProperty(OutputKeys.STANDALONE, "yes");
       transformer.setOutputProperty(OutputKeys.METHOD, "xml");
       transformer.setOutputProperty(INDENT_AMOUNT, "4");
       transformer.setOutputProperty(OutputKeys.INDENT, "yes");
