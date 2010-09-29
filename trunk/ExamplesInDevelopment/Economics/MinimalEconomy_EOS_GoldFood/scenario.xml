@@ -39,13 +39,21 @@
 				 
 					public AssetsList() {}			                       
 					
-					public Float addAsset(Float quantity, String name, String unit) {
+					public Double addAsset(Double quantity, String name, String unit) {
 				
 					  aors.util.economics.ContinuousQuantityType assetType = new aors.util.economics.ContinuousQuantityType(name, unit);
 					  aors.util.economics.ContinuousQuantity asset = new aors.util.economics.ContinuousQuantity(quantity, assetType);
 					  assets.add(asset);	
 					  //System.out.println("Array is: "+assets);
 					  return quantity;
+					}
+					
+					public void add(Double quantity, String name, String unit) {
+				
+					  aors.util.economics.ContinuousQuantityType assetType = new aors.util.economics.ContinuousQuantityType(name, unit);
+					  aors.util.economics.ContinuousQuantity asset = new aors.util.economics.ContinuousQuantity(quantity, assetType);
+					  assets.add(asset);	
+					  //System.out.println("Array is: "+assets);
 					}
 					
 					public aors.util.economics.Quantity getAsset(String name){
@@ -121,7 +129,7 @@
 			</AgentType>
 			
 			<!-- ============================================ -->
-			<PhysicalAgentType name="Person">
+			<AgentType name="Person">
 			<!-- ============================================ -->
 				<documentation>
 					<description>Model Level representation of a Person</description>
@@ -263,28 +271,26 @@
 				<!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~-->
 				<PeriodicTimeEventType name="SetAssets" />
 				<!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~-->
-				<PeriodicTimeEventType name="EachDayAt8am" periodicity="24" />
-				<!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~-->
-				<ReactionRule name="SetAssets_Rule" agentVariable="p">
+				<CommunicationRule name="SetAssets_Rule" agentVariable="p">
 					<!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~-->
 					<WHEN eventType="SetAssets" />
 					<DO>
 						<UPDATE-AGT>
 							<Slot property="foodStock">
 								<ValueExpr language="Java"><![CDATA[
-									p.getAssets().addAsset(new Float(getFoodStock()), "Food", "Stk")
+									p.getAssets().addAsset(getFoodStock(), "Food", "Stk")
 								]]></ValueExpr>
 							</Slot>
 							<Slot property="goldAmount">
 								<ValueExpr language="Java"><![CDATA[
-									p.getAssets().addAsset(new Float(getGoldAmount()), "Gold", "Stk")	
+									p.getAssets().addAsset(getGoldAmount(), "Gold", "Stk")	
 								]]></ValueExpr>
 							</Slot>
 						</UPDATE-AGT>
 					</DO>	
-				</ReactionRule>
+				</CommunicationRule>
 				<!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~-->
-				<ReactionRule name="OpenMarket_Rule" agentVariable="p">
+				<CommunicationRule name="OpenMarket_Rule" agentVariable="p">
 					<!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~-->
 					<WHEN eventType="InMessageEvent" messageType="OpenMarket" messageVariable="msg"/>
 					<DO>
@@ -294,9 +300,9 @@
 							</Slot>
 						</UPDATE-AGT>
 					</DO>
-				</ReactionRule>
+				</CommunicationRule>
 				<!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~-->
-				<ReactionRule name="produceFood_Rule" agentVariable="p">
+				<CommunicationRule name="produceFood_Rule" agentVariable="p">
 					<!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~-->
 					<documentation>
 						<description> The foodInventory is incremented with the value of the skillLevelFood. </description>
@@ -316,9 +322,9 @@
 							</Slot>
 						</UPDATE-AGT>
 					</THEN>
-				</ReactionRule>
+				</CommunicationRule>
 				<!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->
-				<ReactionRule name="ProduceGold_Rule" agentVariable="p">
+				<CommunicationRule name="ProduceGold_Rule" agentVariable="p">
 					<!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->
 					<documentation>
 						<description> The goldInventory is incremented with the value of the skillLevelGold. </description>
@@ -338,9 +344,9 @@
 							</Slot>
 						</UPDATE-AGT>
 					</THEN>
-				</ReactionRule>
+				</CommunicationRule>
 				<!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->
-				<ReactionRule name="BuyFood_Rule" agentVariable="p">
+				<CommunicationRule name="BuyFood_Rule" agentVariable="p">
 					<!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->
 					<documentation>
 						<description> The person decides how much food he wants to buy</description>
@@ -356,9 +362,9 @@
 							</OutMessageEventExpr>
 						</SCHEDULE-EVT>
 					</THEN>
-				</ReactionRule>
+				</CommunicationRule>
 				<!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->
-				<ReactionRule name="SellFood_Rule" agentVariable="p">
+				<CommunicationRule name="SellFood_Rule" agentVariable="p">
 					<!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->
 					<documentation>
 						<description> The person decides how much food he wants to sell</description>
@@ -374,9 +380,9 @@
 							</OutMessageEventExpr>
 						</SCHEDULE-EVT>
 					</THEN>
-				</ReactionRule>
+				</CommunicationRule>
 				<!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->
-				<ReactionRule name="Update_Rule" agentVariable="p">
+				<CommunicationRule name="Update_Rule" agentVariable="p">	
 					<!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->
 					<WHEN eventType="InMessageEvent" messageType="Transaction_msg" messageVariable="msg"/>
 					<DO>
@@ -389,10 +395,11 @@
 							</Slot>
 						</UPDATE-AGT>
 					</DO>
-					</ReactionRule>
-			</PhysicalAgentType>
+				</CommunicationRule>
+				
+			</AgentType>
 			
-			<PhysicalAgentType name="Market">
+			<AgentType name="Market">
 				<Attribute type="Float" name="marketPrice"/>
 				<Attribute type="Float" name="marketVolume"/>
 				<ComplexDataProperty name="buyOffers" type="OfferList"/>
@@ -423,6 +430,13 @@
 								            return 0;	             		
 							}		
 						 };
+						 /*AssetsList a = new AssetsList(){
+					        {
+					            addAsset(33.0d, "Food", "Stk");
+					            addAsset(40.0d, "Gold", "Stk");
+					        }
+					    };
+					    System.out.println(a);*/
 						java.util.Collections.shuffle(getBuyOffers().getOffers());
 						java.util.Collections.shuffle(getSellOffers().getOffers());
 						java.util.Collections.sort(getBuyOffers().getOffers(), comparator);
@@ -646,21 +660,21 @@
 				</Function>
 				
 				<!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->
-				<ReactionRule name="Accept_BuyFood" agentVariable="m">
+				<CommunicationRule name="Accept_BuyFood" agentVariable="m">
 					<!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->
 					<WHEN eventType="InMessageEvent" messageType="BuyFood_msg" messageVariable="msg"/>
 					<IF language="Java">m.addBuyFood(msg.getOfferList())</IF>
 					<THEN></THEN>
-				</ReactionRule>
+				</CommunicationRule>
 				<!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->
-				<ReactionRule name="Accept_SellFood" agentVariable="m">
+				<CommunicationRule name="Accept_SellFood" agentVariable="m">
 					<!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->
 					<WHEN eventType="InMessageEvent" messageType="SellFood_msg" messageVariable="msg"/>
 					<IF language="Java">m.addSellFood(msg.getOfferList())</IF>
 					<THEN></THEN>
-				</ReactionRule>
+				</CommunicationRule>
 				<!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->
-				<ReactionRule name="Clear" agentVariable="m">
+				<CommunicationRule name="Clear" agentVariable="m">
 					<!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->
 					<WHEN eventType="InMessageEvent" messageType="Clear_msg"/>
 					<IF language="Java">m.clear()</IF>
@@ -671,9 +685,9 @@
 							</ReminderEventExpr>
 						</SCHEDULE-EVT>
 					</THEN>
-				</ReactionRule>
+				</CommunicationRule>
 				<!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->
-				<ReactionRule name="Transact" agentVariable="m">
+				<CommunicationRule name="Transact" agentVariable="m">
 					<!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->
 					<WHEN eventType="ReminderEvent" eventVariable="evt" />
 					<FOR-ListItemVariable variable="o" listItemType="Offer">
@@ -690,8 +704,8 @@
 							</OutMessageEventExpr>
 						</SCHEDULE-EVT>
 					</THEN>
-				</ReactionRule>	
-			</PhysicalAgentType>
+				</CommunicationRule>	
+			</AgentType>
 		</EntityTypes>
 		
 	<EnvironmentRules>
@@ -766,6 +780,15 @@ p.getAssets().getAsset("Food").withdraw( p.getEAT_AMOUNT()) < p.getEAT_AMOUNT()
 		</Agent>
 		
 		<Agents type="Person" rangeStartID="1000" rangeEndID="1000">
+			<Slot property="assets">
+				<ValueExpr language="Java"><![CDATA[
+					new AssetsList(){
+				        {
+				            addAsset(33.0d, "Food", "Stk");
+				            addAsset(40.0d, "Gold", "Stk");
+				        }
+				]]></ValueExpr>
+			</Slot>
 			<Slot property="foodStock" value="33" />	
 			<Slot property="goldAmount" value="20" />
 			<Slot property="skillLevelGold">
@@ -774,7 +797,7 @@ p.getAssets().getAsset("Food").withdraw( p.getEAT_AMOUNT()) < p.getEAT_AMOUNT()
 			<Slot property="skillLevelFood">
 				<RandomVariable>
 					<Uniform lowerBound="2.5" upperBound="3.5" />
-					</RandomVariable> 
+				</RandomVariable> 
 			</Slot>
 			<PeriodicTimeEvent type="SetAssets" occurrenceTime="1"  />
 		</Agents>
@@ -791,7 +814,7 @@ p.getAssets().getAsset("Food").withdraw( p.getEAT_AMOUNT()) < p.getEAT_AMOUNT()
 			</Slot>
 			<PeriodicTimeEvent type="SetAssets" occurrenceTime="1"  />
 		</Agents>
-		<ExogenousEvent occurrenceTime="1" type="StartOfDay" />
+		<ExogenousEvent occurrenceTime="2" type="StartOfDay" />
 		<ExogenousEvent occurrenceTime="8" type="EachDayAt8AM" />
 		<ExogenousEvent occurrenceTime="11" type="EachDayAt11AM" />
 	</InitialState>
