@@ -13,7 +13,7 @@ import aors.model.envsim.Physical;
 public class Shape2DMap {
 
   // String constants describing nodes of a shape map
-  public static final String PHYSICAL_SHAPE2D_MAP = "PhysicalShape2dMap";
+  public static final String PHYSICAL_SHAPE2D_MAP = "PhysicalShape2dVisualizationMap";
   public static final String SHAPE2D_MAP = "Shape2dVisualizationMap";
   public static final String CASE = "Case";
 
