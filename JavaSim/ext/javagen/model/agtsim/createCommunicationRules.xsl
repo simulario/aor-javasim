@@ -20,6 +20,7 @@
   <xsl:template match="aorsl:CommunicationRule" mode="createCommunicationRules.createCommunicationRule">
     <xsl:param name="indent" required="yes" as="xs:integer"/>
     <xsl:param name="agentType" as="node()" required="yes"/>
+    <xsl:param name="isPIAgent" as="xs:boolean" select="false()"/>
 
     <xsl:apply-templates select="aorsl:WHEN" mode="createCommunicationRules.checkAttributes"/>
 
@@ -92,6 +93,7 @@
           <xsl:with-param name="agentVariable" select="$agtVarName"/>
           <xsl:with-param name="mode" select="aorsl:DO"/>
           <xsl:with-param name="prefix" select="'do'"/>
+          <xsl:with-param name="isPIAgent" select="$isPIAgent"/>
         </xsl:apply-templates>
         <xsl:apply-templates select="." mode="createCommunicationRules.method.stateEffects">
           <xsl:with-param name="indent" select="$indent + 1"/>
@@ -99,6 +101,7 @@
           <xsl:with-param name="agentVariable" select="$agtVarName"/>
           <xsl:with-param name="mode" select="aorsl:THEN"/>
           <xsl:with-param name="prefix" select="'then'"/>
+          <xsl:with-param name="isPIAgent" select="$isPIAgent"/>
         </xsl:apply-templates>
         <xsl:apply-templates select="." mode="createCommunicationRules.method.stateEffects">
           <xsl:with-param name="indent" select="$indent + 1"/>
@@ -106,6 +109,7 @@
           <xsl:with-param name="agentVariable" select="$agtVarName"/>
           <xsl:with-param name="mode" select="aorsl:ELSE"/>
           <xsl:with-param name="prefix" select="'else'"/>
+          <xsl:with-param name="isPIAgent" select="$isPIAgent"/>
         </xsl:apply-templates>
 
         <!-- resultingActionEvents() -->
@@ -548,17 +552,9 @@
     <xsl:param name="agentClassName" required="yes" as="xs:string"/>
     <xsl:param name="mode" as="element()?"/>
     <xsl:param name="prefix" as="xs:string" select="''"/>
+    <xsl:param name="isPIAgent" as="xs:boolean" required="yes"/>
 
-    <xsl:variable name="methodName">
-      <xsl:choose>
-        <xsl:when test="$prefix != ''">
-          <xsl:value-of select="fn:concat($prefix,jw:upperWord('stateEffects'))"/>
-        </xsl:when>
-        <xsl:otherwise>
-          <xsl:value-of select="'stateEffects'"/>
-        </xsl:otherwise>
-      </xsl:choose>
-    </xsl:variable>
+    <xsl:variable name="methodName" select="fn:concat($prefix, 'StateEffects')"/>
 
 
     <xsl:call-template name="java:method">
@@ -664,7 +660,7 @@
             <xsl:with-param name="indent" select="$indent + 1"/>
             <xsl:with-param name="agentVariable" select="$agentVarName"/>
           </xsl:apply-templates>
-          
+
           <xsl:apply-templates select="$mode/aorsl:UPDATE-AGT/aorsl:Call" mode="createAgentRules.method.stateEffects.call">
             <xsl:with-param name="indent" select="$indent"/>
             <xsl:with-param name="agtVarName" select="$agentVarName"/>
@@ -927,11 +923,34 @@
           </xsl:for-each>
 
           <!--sets state effects (PI-Agents)-->
-          <xsl:for-each select="$mode/aorsl:UPDATE-AGT/aorsl:Slot">
+          <xsl:if test="$isPIAgent = true()">
+            <xsl:for-each select="$mode/aorsl:UPDATE-AGT/aorsl:Slot">
 
-            <xsl:call-template name="java:callSetterMethod">
-              <xsl:with-param name="indent" select="$indent +  1"/>
-              <xsl:with-param name="objInstance">
+              <xsl:call-template name="java:callSetterMethod">
+                <xsl:with-param name="indent" select="$indent +  1"/>
+                <xsl:with-param name="objInstance">
+                  <xsl:choose>
+                    <xsl:when test="$agentVariable">
+                      <xsl:call-template name="java:varByDotNotation">
+                        <xsl:with-param name="varName" select="$agentVarName"/>
+                      </xsl:call-template>
+                    </xsl:when>
+                    <xsl:otherwise>
+                      <xsl:value-of select="$agentVarName"/>
+                    </xsl:otherwise>
+                  </xsl:choose>
+
+                </xsl:with-param>
+                <xsl:with-param name="instVariable" select="@property"/>
+                <xsl:with-param name="value">
+                  <xsl:apply-templates select="." mode="assistents.getSlotValue"/>
+                </xsl:with-param>
+              </xsl:call-template>
+            </xsl:for-each>
+            
+            <xsl:apply-templates select="$mode/aorsl:UPDATE-AGT/aorsl:MultiValuedSlot" mode="assistent.setMultiValuedSlot">
+              <xsl:with-param name="indent" select="$indent + 1"/>
+              <xsl:with-param name="objectContext">
                 <xsl:choose>
                   <xsl:when test="$agentVariable">
                     <xsl:call-template name="java:varByDotNotation">
@@ -942,14 +961,10 @@
                     <xsl:value-of select="$agentVarName"/>
                   </xsl:otherwise>
                 </xsl:choose>
-
               </xsl:with-param>
-              <xsl:with-param name="instVariable" select="@property"/>
-              <xsl:with-param name="value">
-                <xsl:apply-templates select="." mode="assistents.getSlotValue"/>
-              </xsl:with-param>
-            </xsl:call-template>
-          </xsl:for-each>
+            </xsl:apply-templates>
+            
+          </xsl:if>
 
         </xsl:if>
 
