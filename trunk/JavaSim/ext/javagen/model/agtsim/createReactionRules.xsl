@@ -35,8 +35,7 @@
         <xsl:variable name="eventVariable">
           <xsl:choose>
             <xsl:when test="exists(aorsl:WHEN)">
-              <xsl:value-of select="if (exists(aorsl:WHEN/@eventVariable)) then aorsl:WHEN/@eventVariable else jw:lowerWord(aorsl:WHEN/@eventType)"
-              />
+              <xsl:value-of select="if (exists(aorsl:WHEN/@eventVariable)) then aorsl:WHEN/@eventVariable else jw:lowerWord(aorsl:WHEN/@eventType)"/>
             </xsl:when>
             <xsl:when test="exists(aorsl:ON-EACH-SIMULATION-STEP)">
               <xsl:value-of select="concat($createdVariablesNamePrefix, jw:lowerWord($core.class.onEveryStepIntEvent))"/>
@@ -342,7 +341,7 @@
     <xsl:param name="mode" as="element()?"/>
     <xsl:param name="prefix" as="xs:string" required="yes"/>
 
-    <xsl:variable name="methodName" select="fn:concat($prefix, jw:upperWord('stateEffects'))"/>
+    <xsl:variable name="methodName" select="fn:concat($prefix, 'StateEffects')"/>
 
     <xsl:call-template name="java:method">
       <xsl:with-param name="indent" select="$indent"/>
@@ -352,8 +351,7 @@
 
         <xsl:if test="fn:exists($mode)">
 
-          <xsl:apply-templates select="$mode/aorsl:SCHEDULE-EVT/aorsl:CreateDescription"
-            mode="createAgentRules.method.stateEffects.createDescription">
+          <xsl:apply-templates select="$mode/aorsl:SCHEDULE-EVT/aorsl:CreateDescription" mode="createAgentRules.method.stateEffects.createDescription">
             <xsl:with-param name="indent" select="$indent"/>
           </xsl:apply-templates>
 
@@ -371,7 +369,8 @@
           <!-- TODO: check if this necessary, maybe we should set a variable for the agentsubject ever -->
           <xsl:comment>if we have defined an @agentVariable then we can use the created classVariable (with the assoziated AgentSubjectClass) from
             AgentRule, otherwise we use the AgentSubjectClass localy </xsl:comment>
-          <xsl:if test="(fn:exists($mode/aorsl:UPDATE-AGT/aorsl:Slot) or fn:exists($mode/aorsl:UPDATE-AGT/aorsl:Call)) and not ($agentVariable)">
+          <xsl:if
+            test="(fn:exists($mode/aorsl:UPDATE-AGT/aorsl:Slot) or fn:exists($mode/aorsl:UPDATE-AGT/aorsl:Call) or fn:exists($mode/aorsl:UPDATE-AGT/aorsl:MultiValuedSlot)) and not ($agentVariable)">
             <xsl:call-template name="java:newObject">
               <xsl:with-param name="indent" select="$indent + 1"/>
               <xsl:with-param name="class" select="$agentClassName"/>
@@ -395,43 +394,48 @@
             mode="createAgentRules.method.stateEffects.updateComplexDataPropertyValue">
             <xsl:with-param name="indent" select="$indent + 1"/>
           </xsl:apply-templates>
-          
+
           <xsl:apply-templates select="$mode/aorsl:UPDATE-AGT/aorsl:Call" mode="createAgentRules.method.stateEffects.call">
             <xsl:with-param name="indent" select="$indent"/>
             <xsl:with-param name="agtVarName" select="$agentVarName"/>
           </xsl:apply-templates>
 
+
           <!--sets state effects-->
-          <xsl:for-each select="$mode/aorsl:UPDATE-AGT/aorsl:SelfBeliefSlot">
-
-            <xsl:call-template name="java:callSetterMethod">
-              <xsl:with-param name="indent" select="$indent +  1"/>
-              <xsl:with-param name="objInstance">
-                <xsl:choose>
-                  <xsl:when test="$agentVariable">
-                    <xsl:call-template name="java:varByDotNotation">
-                      <xsl:with-param name="varName" select="$agentVarName"/>
-                    </xsl:call-template>
-                  </xsl:when>
-                  <xsl:otherwise>
-                    <xsl:value-of select="$agentVarName"/>
-                  </xsl:otherwise>
-                </xsl:choose>
-
-              </xsl:with-param>
-              <xsl:with-param name="instVariable" select="@property"/>
-              <xsl:with-param name="value">
-                <xsl:apply-templates select="." mode="assistents.getSlotValue"/>
-              </xsl:with-param>
-            </xsl:call-template>
-          </xsl:for-each>
+          <xsl:apply-templates select="$mode/aorsl:UPDATE-AGT/aorsl:SelfBeliefSlot" mode="createAgentRules.method.stateEffects.selfBeliefSlot">
+            <xsl:with-param name="indent" select="$indent"/>
+            <xsl:with-param name="agentVarName" select="$agentVarName"/>
+          </xsl:apply-templates>
 
           <!--sets state effects (PI-Agents)-->
-          <xsl:for-each select="$mode/aorsl:UPDATE-AGT/aorsl:Slot">
+          <xsl:if test="$isPIAgent = true()">
+            <xsl:for-each select="$mode/aorsl:UPDATE-AGT/aorsl:Slot">
 
-            <xsl:call-template name="java:callSetterMethod">
-              <xsl:with-param name="indent" select="$indent +  1"/>
-              <xsl:with-param name="objInstance">
+              <xsl:call-template name="java:callSetterMethod">
+                <xsl:with-param name="indent" select="$indent +  1"/>
+                <xsl:with-param name="objInstance">
+                  <xsl:choose>
+                    <xsl:when test="$agentVariable">
+                      <xsl:call-template name="java:varByDotNotation">
+                        <xsl:with-param name="varName" select="$agentVarName"/>
+                      </xsl:call-template>
+                    </xsl:when>
+                    <xsl:otherwise>
+                      <xsl:value-of select="$agentVarName"/>
+                    </xsl:otherwise>
+                  </xsl:choose>
+
+                </xsl:with-param>
+                <xsl:with-param name="instVariable" select="@property"/>
+                <xsl:with-param name="value">
+                  <xsl:apply-templates select="." mode="assistents.getSlotValue"/>
+                </xsl:with-param>
+              </xsl:call-template>
+            </xsl:for-each>
+            
+            <xsl:apply-templates select="$mode/aorsl:UPDATE-AGT/aorsl:MultiValuedSlot" mode="assistent.setMultiValuedSlot">
+              <xsl:with-param name="indent" select="$indent + 1"/>
+              <xsl:with-param name="objectContext">
                 <xsl:choose>
                   <xsl:when test="$agentVariable">
                     <xsl:call-template name="java:varByDotNotation">
@@ -442,14 +446,9 @@
                     <xsl:value-of select="$agentVarName"/>
                   </xsl:otherwise>
                 </xsl:choose>
-
               </xsl:with-param>
-              <xsl:with-param name="instVariable" select="@property"/>
-              <xsl:with-param name="value">
-                <xsl:apply-templates select="." mode="assistents.getSlotValue"/>
-              </xsl:with-param>
-            </xsl:call-template>
-          </xsl:for-each>
+            </xsl:apply-templates>
+          </xsl:if>
 
           <!-- update belief entities in agent rules -->
           <xsl:for-each select="$mode/aorsl:UPDATE-AGT/aorsl:UpdateBeliefEntity">
@@ -684,18 +683,18 @@
       </xsl:with-param>
     </xsl:call-template>
   </xsl:template>
-  
+
   <xsl:template match="aorsl:Call" mode="createAgentRules.method.stateEffects.call">
     <xsl:param name="indent" as="xs:integer" required="yes"/>
     <xsl:param name="agtVarName" as="xs:string" required="yes"/>
-    
-    
+
+
     <xsl:variable name="hasSubjectivFunction" as="xs:boolean">
       <xsl:call-template name="checkForExistingSubjectiveFunctions">
         <xsl:with-param name="agentType" select="(ancestor::aorsl:AgentType | ancestor::aorsl:PhysicalAgentType)[1]/@name"/>
       </xsl:call-template>
     </xsl:variable>
-    
+
     <xsl:variable name="funct" as="element()*">
       <xsl:choose>
         <xsl:when test="not($hasSubjectivFunction)">
@@ -710,9 +709,9 @@
             <xsl:with-param name="functionName" select="@procedure"/>
           </xsl:call-template>
         </xsl:otherwise>
-      </xsl:choose>     
+      </xsl:choose>
     </xsl:variable>
-    
+
     <xsl:apply-templates select="$funct" mode="assistents.call.function">
       <xsl:with-param name="indent" select="$indent"/>
       <xsl:with-param name="call" select="."/>
@@ -722,70 +721,35 @@
         </xsl:call-template>
       </xsl:with-param>
     </xsl:apply-templates>
-    
-    
-    
-    <!--xsl:variable name="call" select="."/>
-    
-    <xsl:choose>
-      <xsl:when test="exists($funct)">
+
+  </xsl:template>
+
+  <xsl:template match="aorsl:SelfBeliefSlot" mode="createAgentRules.method.stateEffects.selfBeliefSlot">
+    <xsl:param name="indent" as="xs:integer" required="yes"/>
+    <xsl:param name="agentVariable" tunnel="yes"/>
+    <xsl:param name="agentVarName" as="xs:string" required="yes"/>
+
+    <xsl:call-template name="java:callSetterMethod">
+      <xsl:with-param name="indent" select="$indent +  1"/>
+      <xsl:with-param name="objInstance">
         <xsl:choose>
-          <xsl:when test="count(aorsl:Argument) = count($funct/aorsl:Parameter)">
-            
-            <xsl:call-template name="java:callMethod">
-              <xsl:with-param name="indent" select="$indent + 1"/>
-              <xsl:with-param name="objInstance">
-                <xsl:call-template name="java:varByDotNotation">
-                  <xsl:with-param name="varName" select="$agtVarName"/>
-                </xsl:call-template>
-              </xsl:with-param>
-              <xsl:with-param name="method" select="$funct/@name"/>
-              <xsl:with-param name="args" as="item()*">
-                <xsl:for-each select="$funct/aorsl:Parameter">
-                  <xsl:variable name="argument" select="$call/aorsl:Argument[@property = current()/@name]"/>
-                  <xsl:choose>
-                    <xsl:when test="exists($argument)">
-                      <xsl:choose>
-                        <xsl:when test="@type = 'String'">
-                          <xsl:value-of select="jw:quote($argument/@value)"/>
-                        </xsl:when>
-                        <xsl:otherwise>
-                          <xsl:value-of select="$argument/@value"/>
-                        </xsl:otherwise>
-                      </xsl:choose>               
-                    </xsl:when>
-                    <xsl:otherwise>
-                      <xsl:message>
-                        <xsl:text>[ERROR] No Argument for function parameter [</xsl:text>
-                        <xsl:value-of select="@name"/>
-                        <xsl:text>] found.</xsl:text>
-                      </xsl:message>
-                    </xsl:otherwise>
-                  </xsl:choose>               
-                </xsl:for-each>
-              </xsl:with-param>
+          <xsl:when test="$agentVariable">
+            <xsl:call-template name="java:varByDotNotation">
+              <xsl:with-param name="varName" select="$agentVarName"/>
             </xsl:call-template>
-            
           </xsl:when>
           <xsl:otherwise>
-            <xsl:message>
-              <xsl:text>[ERROR] Wrong numbers of Argument for call of function </xsl:text>
-              <xsl:value-of select="$funct/@name"/>
-              <xsl:text> found.</xsl:text>
-            </xsl:message>
+            <xsl:value-of select="$agentVarName"/>
           </xsl:otherwise>
-        </xsl:choose>    
+        </xsl:choose>
 
-      </xsl:when>
-      <xsl:otherwise>
-        <xsl:message>
-          <xsl:text>[ERROR] No Function [</xsl:text>
-          <xsl:value-of select="@procedure"/>
-          <xsl:text>] in found.</xsl:text>
-        </xsl:message>
-      </xsl:otherwise>
-    </xsl:choose-->
-     
+      </xsl:with-param>
+      <xsl:with-param name="instVariable" select="@property"/>
+      <xsl:with-param name="value">
+        <xsl:apply-templates select="." mode="assistents.getSlotValue"/>
+      </xsl:with-param>
+    </xsl:call-template>
+
   </xsl:template>
 
   <!-- UpdateComplexDataPropertyValue -->
@@ -1051,8 +1015,7 @@
           </xsl:if>
 
           <!-- OutMessageEvents -->
-          <xsl:apply-templates select="$mode/aorsl:SCHEDULE-EVT/aorsl:OutMessageEventExpr"
-            mode="createAgentRules.helper.method.resultingActionEvents">
+          <xsl:apply-templates select="$mode/aorsl:SCHEDULE-EVT/aorsl:OutMessageEventExpr" mode="createAgentRules.helper.method.resultingActionEvents">
             <xsl:with-param name="indent" select="$indent + 1"/>
             <xsl:with-param name="eventVar" select="$eventVar"/>
             <xsl:with-param name="agentVariable" select="$agentVariable"/>
@@ -1115,8 +1078,7 @@
           </xsl:apply-templates>
 
           <!-- ReminderEvents -->
-          <xsl:apply-templates select="$mode/aorsl:SCHEDULE-EVT/aorsl:ReminderEventExpr"
-            mode="createAgentRules.helper.method.resultingInternalEvents">
+          <xsl:apply-templates select="$mode/aorsl:SCHEDULE-EVT/aorsl:ReminderEventExpr" mode="createAgentRules.helper.method.resultingInternalEvents">
             <xsl:with-param name="indent" select="$indent + 1"/>
             <xsl:with-param name="eventVar" select="$eventVar"/>
             <xsl:with-param name="eventList" select="$resultVar"/>
