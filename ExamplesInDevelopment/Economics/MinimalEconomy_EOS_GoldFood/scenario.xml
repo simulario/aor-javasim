@@ -133,7 +133,7 @@
 				<ComplexDataProperty name="TransactionList" type="OfferList"/>
 			</MessageType>
 			<!--====================================-->
-			<MessageType name="Transaction_msg" >
+			<MessageType name="MatchingOffersNotification_msg" >
 				<!--====================================-->
 				<ComplexDataProperty name="offer" type="Offer"/>
 			</MessageType>
@@ -342,9 +342,11 @@
 				<CommunicationRule name="BuyFood_Rule" agentVariable="p">
 					<!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->
 					<documentation>
-						<description> The person decides how much food he wants to buy</description>
+						<description> The person sends offers to the market. 
+							ISSUE: can we use a periodic time event for triggering this rule?</description>
 					</documentation>
 					<WHEN eventType="InMessageEvent" messageType="Act_msg"/>
+					<!-- The IF element is a workaround for calling a function that computes the offers -->
 					<IF language="Java">buyFood(p.getId())</IF>
 					<THEN>
 						<SCHEDULE-EVT>
@@ -362,6 +364,7 @@
 					<documentation>
 						<description> The person decides how much food he wants to sell</description>
 					</documentation>
+					<!-- The IF element is a workaround for calling a function that computes the offers -->
 					<WHEN eventType="InMessageEvent" messageType="Act_msg"/>
 					<IF language="Java">sellFood(p.getId())</IF>
 					<THEN>
@@ -375,12 +378,12 @@
 					</THEN>
 				</CommunicationRule>
 				<!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->
-				<CommunicationRule name="Update_Rule" agentVariable="p">	
+				<CommunicationRule name="MatchingOffersNotification_Rule" agentVariable="p">	
 					<!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->
 					<documentation>
 						<dc:description>succesfull transactions are receiverd from the market, food and gold is updated</dc:description>
 					</documentation>
-					<WHEN eventType="InMessageEvent" messageType="Transaction_msg" messageVariable="msg"/>
+					<WHEN eventType="InMessageEvent" messageType="MatchingOffersNotification_msg" messageVariable="msg"/>
 					<DO>
 						<UPDATE-AGT>
 							<Slot property="foodStock">
@@ -637,18 +640,13 @@
 					<Parameter name="buyOffer" type="Offer"/>
 					<Parameter name="salePrice" type="double"/>
 					<Body language="Java"><![CDATA[
-						if (sellOffer.getMaxQuantity() <= 0){
-				            return true;
-				        }
-				        if (buyOffer.getMaxQuantity() <= 0){
-				            return false;
-				        }
-				        // else, proceed with the transaction
-				        boolean returnVal = sellOffer.getMaxQuantity() < buyOffer.getMaxQuantity();
+						if (sellOffer.getMaxQuantity() <= 0) return true;
+		        if (buyOffer.getMaxQuantity() <= 0) return false;
+		        // else, proceed with the transaction
 						getTransactions().getOffers().add(buyOffer);
-						getTransactions().getOffers().add(sellOffer);
-						
-				        return returnVal;
+						getTransactions().getOffers().add(sellOffer);					
+		        boolean returnVal = sellOffer.getMaxQuantity() < buyOffer.getMaxQuantity();
+		        return returnVal;
 					]]></Body>
 				</Function>
 				<!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~-->
@@ -709,7 +707,7 @@
 					<THEN>
 						<SCHEDULE-EVT>
 							<ReminderEventExpr>
-								<ReminderMsg language="Java">"transactions ready"</ReminderMsg>
+								<ReminderMsg language="Java">"transactions_ready"</ReminderMsg>
 							</ReminderEventExpr>
 						</SCHEDULE-EVT>
 					</THEN>
@@ -718,23 +716,22 @@
 				<CommunicationRule name="Transact" agentVariable="m">
 					<!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->
 					<documentation>
-						<dc:description>Done trades are reurned to the persons</dc:description>
+						<dc:description>Persons are notified about matching offers.</dc:description>
 					</documentation>
-					<WHEN eventType="ReminderEvent" eventVariable="evt" />
+					<WHEN eventType="ReminderEvent" reminderMsg="transactions_ready" eventVariable="evt" />
 					<FOR-ListItemVariable variable="o" listItemType="Offer">
 						<ListExpr language="Java">getTransactions().getOffers()</ListExpr>
 					</FOR-ListItemVariable>
-					<IF language="Java"><![CDATA[evt.getReminderMsg().equals("transactions ready")]]></IF>
-					<THEN>
+					<DO>
 						<SCHEDULE-EVT>
-							<OutMessageEventExpr messageType="Transaction_msg">
+							<OutMessageEventExpr messageType="MatchingOffersNotification_msg">
 								<ReceiverIdRef language="Java">o.getAgentID()</ReceiverIdRef>
 								<Slot property="offer">
 									<ValueExpr language="Java">o</ValueExpr>
 								</Slot>
 							</OutMessageEventExpr>
 						</SCHEDULE-EVT>
-					</THEN>
+					</DO>
 				</CommunicationRule>	
 			</AgentType>
 		</EntityTypes>
