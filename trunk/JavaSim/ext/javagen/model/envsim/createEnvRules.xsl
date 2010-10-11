@@ -922,7 +922,8 @@
               aorsl:ForEachGridCell | 
               aorsl:AddObjectToCollection |
               aorsl:IncrementGlobalVariable |
-              aorsl:UpdateGlobalVariable"
+              aorsl:UpdateGlobalVariable | 
+              aorsl:Call"
       mode="createEnvironmentRules.method.stateEffects.content">
       <xsl:with-param name="indent" select="$indent + 1"/>
       <!-- spaceReservationSystem works only in the initial phase, but we have to set the 'spaceReservationSystem'
@@ -1224,7 +1225,7 @@
         </xsl:with-param>
       </xsl:call-template>
     </xsl:for-each>
-    
+
     <xsl:apply-templates select="aorsl:MultiValuedSlot" mode="assistent.setMultiValuedSlot">
       <xsl:with-param name="indent" select="$indent"/>
       <xsl:with-param name="objectContext" select="$gridCellVarName"/>
@@ -1277,7 +1278,7 @@
           </xsl:with-param>
         </xsl:call-template>
       </xsl:for-each>
-      
+
       <xsl:apply-templates select="aorsl:MultiValuedSlot" mode="assistent.setMultiValuedSlot">
         <xsl:with-param name="indent" select="$indent + $indentOffset"/>
         <xsl:with-param name="objectContext" select="$gridCellVarName"/>
@@ -1643,8 +1644,7 @@
               <xsl:value-of select="') &amp;&amp; '"/>
             </xsl:if>
             <xsl:choose>
-              <xsl:when
-                test="fn:exists(aorsl:IF[@language = $output.language]) and fn:normalize-space(aorsl:IF[@language = $output.language]) != ''">
+              <xsl:when test="fn:exists(aorsl:IF[@language = $output.language]) and fn:normalize-space(aorsl:IF[@language = $output.language]) != ''">
                 <xsl:value-of select="fn:normalize-space(aorsl:IF[@language = $output.language][1])"/>
               </xsl:when>
               <xsl:otherwise>
@@ -1674,8 +1674,7 @@
 
         <xsl:call-template name="java:return">
           <xsl:with-param name="indent" select="$indent + 1"/>
-          <xsl:with-param name="value" select="jw:quote(if (aorsl:WHEN/@eventType) then aorsl:WHEN/@eventType else $core.class.onEveryStepEnvEvent)"
-          />
+          <xsl:with-param name="value" select="jw:quote(if (aorsl:WHEN/@eventType) then aorsl:WHEN/@eventType else $core.class.onEveryStepEnvEvent)"/>
         </xsl:call-template>
 
       </xsl:with-param>
@@ -2472,10 +2471,23 @@
         </xsl:when>
       </xsl:choose>
     </xsl:variable>
-    
+
     <xsl:apply-templates select="aorsl:Call" mode="createEnvironmentRules.method.stateEffects.content.call">
       <xsl:with-param name="indent" select="$indent"/>
       <xsl:with-param name="objectVarName" select="$objectVariable"/>
+      <xsl:with-param name="objectType" as="xs:string*">
+        <xsl:choose>
+          <xsl:when test="@objectVariable">
+            <xsl:value-of
+              select="ancestor::aorsl:EnvironmentRule/aorsl:FOR[@objectVariable =
+                current()/ancestor::aorsl:UpdateObject/@objectVariable][1]/@objectType"
+            />
+          </xsl:when>
+          <xsl:when test="exists(aorsl:ObjectRef[@language eq $output.language])">
+            <xsl:value-of select="aorsl:ObjectRef[@language eq $output.language][1]/@objectType"/>
+          </xsl:when>
+        </xsl:choose>
+      </xsl:with-param>
     </xsl:apply-templates>
 
     <xsl:for-each select="aorsl:Slot">
@@ -2488,7 +2500,7 @@
         </xsl:with-param>
       </xsl:call-template>
     </xsl:for-each>
-    
+
     <xsl:apply-templates select="aorsl:MultiValuedSlot" mode="assistent.setMultiValuedSlot">
       <xsl:with-param name="indent" select="$indent"/>
       <xsl:with-param name="objectContext">
@@ -2502,7 +2514,7 @@
             <xsl:value-of select="jw:parenthesise(aorsl:ObjectRef[@language = $output.language][1])"/>
           </xsl:when>
         </xsl:choose>
-        
+
       </xsl:with-param>
     </xsl:apply-templates>
 
@@ -2517,23 +2529,31 @@
     </xsl:apply-templates>
 
   </xsl:template>
-  
+
+  <xsl:template match="aorsl:Call" mode="createEnvironmentRules.method.stateEffects.content">
+    <xsl:param name="indent" as="xs:integer" required="yes"/>
+
+    <xsl:apply-templates select="." mode="createEnvironmentRules.method.stateEffects.content.call">
+      <xsl:with-param name="indent" select="$indent"/>
+      <xsl:with-param name="objectVarName">
+        <xsl:call-template name="java:varByDotNotation">
+          <xsl:with-param name="varName" select="@contextObjectVariable"/>
+        </xsl:call-template>
+      </xsl:with-param>
+      <xsl:with-param name="objectType">
+        <xsl:value-of select="ancestor::aorsl:EnvironmentRule/aorsl:FOR[@objectVariable =
+          current()/@contextObjectVariable][1]/@objectType"
+        />
+      </xsl:with-param>
+    </xsl:apply-templates>
+
+  </xsl:template>
+
   <xsl:template match="aorsl:Call" mode="createEnvironmentRules.method.stateEffects.content.call">
     <xsl:param name="indent" as="xs:integer" required="yes"/>
     <xsl:param name="objectVarName" as="xs:string" required="yes"/>
-    
-    <xsl:variable name="objectType">
-      <xsl:choose>
-        <xsl:when test="ancestor::aorsl:UpdateObject/@objectVariable">
-          <xsl:value-of select="ancestor::aorsl:EnvironmentRule/aorsl:FOR[@objectVariable =
-            current()/ancestor::aorsl:UpdateObject/@objectVariable][1]/@objectType"/>
-        </xsl:when>
-        <xsl:when test="exists(ancestor::aorsl:UpdateObject/aorsl:ObjectRef[@language eq $output.language])">
-          <xsl:value-of select="ancestor::aorsl:UpdateObject/aorsl:ObjectRef[@language eq $output.language][1]/@objectType"/>
-        </xsl:when>
-      </xsl:choose>    
-    </xsl:variable>
-       
+    <xsl:param name="objectType" as="xs:string" select="''"/>
+
     <xsl:variable name="funct" as="element()*">
       <xsl:call-template name="getObjectFunction">
         <xsl:with-param name="objectType" select="$objectType"/>
@@ -2541,17 +2561,18 @@
       </xsl:call-template>
     </xsl:variable>
     <xsl:variable name="call" select="."/>
-    
+
     <xsl:choose>
       <xsl:when test="exists($funct)">
         <xsl:choose>
           <xsl:when test="count(aorsl:Argument) = count($funct/aorsl:Parameter)">
-            
+
             <xsl:call-template name="java:callMethod">
               <xsl:with-param name="indent" select="$indent + 1"/>
               <xsl:with-param name="objInstance" select="$objectVarName"/>
               <xsl:with-param name="method" select="$funct/@name"/>
               <xsl:with-param name="args" as="item()*">
+
                 <xsl:for-each select="$funct/aorsl:Parameter">
                   <xsl:variable name="argument" select="$call/aorsl:Argument[@property = current()/@name]"/>
                   <xsl:choose>
@@ -2563,7 +2584,7 @@
                         <xsl:otherwise>
                           <xsl:value-of select="$argument/@value"/>
                         </xsl:otherwise>
-                      </xsl:choose>               
+                      </xsl:choose>
                     </xsl:when>
                     <xsl:otherwise>
                       <xsl:message>
@@ -2572,11 +2593,12 @@
                         <xsl:text>] found.</xsl:text>
                       </xsl:message>
                     </xsl:otherwise>
-                  </xsl:choose>               
+                  </xsl:choose>
                 </xsl:for-each>
+
               </xsl:with-param>
             </xsl:call-template>
-            
+
           </xsl:when>
           <xsl:otherwise>
             <xsl:message>
@@ -2585,8 +2607,8 @@
               <xsl:text> found.</xsl:text>
             </xsl:message>
           </xsl:otherwise>
-        </xsl:choose>    
-        
+        </xsl:choose>
+
       </xsl:when>
       <xsl:otherwise>
         <xsl:message>
@@ -2596,7 +2618,7 @@
         </xsl:message>
       </xsl:otherwise>
     </xsl:choose>
-      
+
   </xsl:template>
 
   <!--sets state effects-->
@@ -2680,7 +2702,7 @@
             </xsl:call-template>
           </xsl:with-param>
           <xsl:with-param name="thenContent">
-            
+
             <xsl:for-each select="aorsl:Slot">
               <xsl:call-template name="java:callSetterMethod">
                 <xsl:with-param name="indent" select="$indent + 2"/>
@@ -2701,12 +2723,12 @@
               <xsl:with-param name="indent" select="$indent"/>
               <xsl:with-param name="objectVariable" select="../@objectVariable"/>
             </xsl:apply-templates>
-            
+
             <xsl:apply-templates select="aorsl:MultiValuedSlot" mode="assistent.setMultiValuedSlot">
               <xsl:with-param name="indent" select="$indent"/>
               <xsl:with-param name="objectContext" select="../@objectVariable"/>
             </xsl:apply-templates>
-            
+
           </xsl:with-param>
         </xsl:call-template>
 
