@@ -690,12 +690,16 @@
     <xsl:param name="agtVarName" as="xs:string" required="yes"/>
     <xsl:param name="isPIAgent" as="xs:boolean" required="yes"/>
 
-
     <xsl:variable name="funct" as="element()*">
       <xsl:choose>
         <xsl:when test="$isPIAgent = true() and @contextObjectVariable">
-          
-          
+          <xsl:variable name="complexDataProperties">
+            <xsl:apply-templates select="(ancestor::aorsl:AgentType | ancestor::aorsl:PhysicalAgentType)[1]" mode="assistents.list.allComplexDataProperty"/>
+          </xsl:variable>
+          <xsl:call-template name="getComplexDataFunction">
+            <xsl:with-param name="complexDataTypeName" select="$complexDataProperties[@name = @contextObjectVariable][1]/@type"/>
+            <xsl:with-param name="functionName" select="@procedure"/>
+          </xsl:call-template>
         </xsl:when>
         <xsl:otherwise>
           <xsl:variable name="hasSubjectivFunction" as="xs:boolean">
