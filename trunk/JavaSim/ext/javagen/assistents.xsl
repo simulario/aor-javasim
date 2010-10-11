@@ -207,6 +207,15 @@
       </xsl:when>
     </xsl:choose>
   </xsl:template>
+  
+  <xsl:template match="aorsl:PhysicalObjectType | aorsl:PhysicalAgentType | aorsl:AgentType | aorsl:ObjectType" mode="assistents.list.allComplexDataProperty">
+    <xsl:copy-of select="aorsl:ComplexDataProperty"/>
+    <xsl:choose>
+      <xsl:when test="fn:exists(@superType)">
+        <xsl:apply-templates select="key('AllObjectTypesByName', @superType)" mode="assistents.list.allComplexDataProperty"/>
+      </xsl:when>
+    </xsl:choose>
+  </xsl:template>
 
   <!-- all selfBeliefattributes of a class incl. superclassattributes -->
   <xsl:template match="aorsl:PhysicalAgentType | aorsl:AgentType" mode="assistents.list.allSelfBeliefAttributes">
