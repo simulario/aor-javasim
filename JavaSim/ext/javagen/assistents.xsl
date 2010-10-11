@@ -27,6 +27,8 @@
     /aorsl:SimulationScenario/aorsl:SimulationModel/aorsl:EntityTypes/aorsl:PhysicalAgentType"
     use="@name"/>
 
+  <xsl:key name="AllComplexDataTypesByName" match="/aorsl:SimulationScenario/aorsl:SimulationModel/aorsl:DataTypes/aorsl:ComplexDataType" use="@name"/>
+
   <!-- return the UWORD with a lower startletter -->
   <xsl:function name="jw:lowerWord">
     <xsl:param name="uWord" as="xs:string"/>
@@ -3789,6 +3791,32 @@
         </xsl:otherwise>
       </xsl:choose>
     </xsl:if>
+  </xsl:template>
+
+  <xsl:template name="getComplexDataFunction">
+    <xsl:param name="complexDataTypeName" as="xs:string" required="yes"/>
+    <xsl:param name="functionName" as="xs:string" required="yes"/>
+    
+    <xsl:variable name="complexDataType" select="key('AllComplexDataTypesByName', $complexDataTypeName)"/>
+    <xsl:if test="exists($complexDataType)">
+      <xsl:variable name="function" select="$complexDataType/aorsl:Function[@name = $functionName]"/>
+      <xsl:choose>
+        <xsl:when test="exists($function)">
+          <xsl:copy-of select="$function"/>
+        </xsl:when>
+        <xsl:otherwise>
+          <xsl:if test="$complexDataType/@superType">
+            <xsl:call-template name="getComplexDataFunction">
+              <xsl:with-param name="complexDataTypeName" select="$complexDataType/@superType"/>
+              <xsl:with-param name="functionName" select="$functionName"/>
+            </xsl:call-template>
+          </xsl:if>
+        </xsl:otherwise>
+      </xsl:choose>
+      
+    </xsl:if>
+
+
   </xsl:template>
 
   <xsl:template name="checkForExistingSubjectiveFunctions" as="xs:boolean">

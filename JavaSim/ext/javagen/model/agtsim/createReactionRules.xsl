@@ -398,6 +398,7 @@
           <xsl:apply-templates select="$mode/aorsl:UPDATE-AGT/aorsl:Call" mode="createAgentRules.method.stateEffects.call">
             <xsl:with-param name="indent" select="$indent"/>
             <xsl:with-param name="agtVarName" select="$agentVarName"/>
+            <xsl:with-param name="isPIAgent" select="$isPIAgent"/>
           </xsl:apply-templates>
 
 
@@ -687,29 +688,39 @@
   <xsl:template match="aorsl:Call" mode="createAgentRules.method.stateEffects.call">
     <xsl:param name="indent" as="xs:integer" required="yes"/>
     <xsl:param name="agtVarName" as="xs:string" required="yes"/>
+    <xsl:param name="isPIAgent" as="xs:boolean" required="yes"/>
 
-
-    <xsl:variable name="hasSubjectivFunction" as="xs:boolean">
-      <xsl:call-template name="checkForExistingSubjectiveFunctions">
-        <xsl:with-param name="agentType" select="(ancestor::aorsl:AgentType | ancestor::aorsl:PhysicalAgentType)[1]/@name"/>
-      </xsl:call-template>
-    </xsl:variable>
 
     <xsl:variable name="funct" as="element()*">
       <xsl:choose>
-        <xsl:when test="not($hasSubjectivFunction)">
-          <xsl:call-template name="getAgentFunction">
-            <xsl:with-param name="agentType" select="(ancestor::aorsl:AgentType | ancestor::aorsl:PhysicalAgentType)[1]/@name"/>
-            <xsl:with-param name="functionName" select="@procedure"/>
-          </xsl:call-template>
+        <xsl:when test="$isPIAgent = true() and @contextObjectVariable">
+          
+          
         </xsl:when>
         <xsl:otherwise>
-          <xsl:call-template name="getAgentSubjectiveFunction">
-            <xsl:with-param name="agentType" select="(ancestor::aorsl:AgentType | ancestor::aorsl:PhysicalAgentType)[1]/@name"/>
-            <xsl:with-param name="functionName" select="@procedure"/>
-          </xsl:call-template>
+          <xsl:variable name="hasSubjectivFunction" as="xs:boolean">
+            <xsl:call-template name="checkForExistingSubjectiveFunctions">
+              <xsl:with-param name="agentType" select="(ancestor::aorsl:AgentType | ancestor::aorsl:PhysicalAgentType)[1]/@name"/>
+            </xsl:call-template>
+          </xsl:variable>
+          <xsl:choose>
+            <xsl:when test="not($hasSubjectivFunction)">
+              <!-- is in  assistents.xsl -->
+              <xsl:call-template name="getAgentFunction">
+                <xsl:with-param name="agentType" select="(ancestor::aorsl:AgentType | ancestor::aorsl:PhysicalAgentType)[1]/@name"/>
+                <xsl:with-param name="functionName" select="@procedure"/>
+              </xsl:call-template>
+            </xsl:when>
+            <xsl:otherwise>
+              <xsl:call-template name="getAgentSubjectiveFunction">
+                <xsl:with-param name="agentType" select="(ancestor::aorsl:AgentType | ancestor::aorsl:PhysicalAgentType)[1]/@name"/>
+                <xsl:with-param name="functionName" select="@procedure"/>
+              </xsl:call-template>
+            </xsl:otherwise>
+          </xsl:choose>
         </xsl:otherwise>
-      </xsl:choose>
+      </xsl:choose>   
+
     </xsl:variable>
 
     <xsl:apply-templates select="$funct" mode="assistents.call.function">
