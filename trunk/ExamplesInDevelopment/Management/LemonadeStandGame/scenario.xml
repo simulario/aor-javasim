@@ -12,17 +12,20 @@
 	<SimulationParameters simulationSteps="4320" timeUnit="h"  stepTimeDelay="0"/>
 	<SimulationModel modelName="LemonadeStandGame">
 		<documentation>
-			<dc:modified>20100927</dc:modified>
+			<dc:created>Oct-2010</dc:created>
+			<dc:creator>Gerd Wagner</dc:creator>
+			<dc:modified></dc:modified>
 			<dc:source>http://en.wikipedia.org/wiki/Lemonade_Stand</dc:source>
 			<aors:description xmlns="http://www.w3.org/1999/xhtml">
-				A lemonade seller makes lemonade and sells it at a stand in a street market from 4 pm until 8 pm.
+				A lemonade seller makes lemonade in 1.5 liter pitchers and sells it in 200 ml cups 
+				at a stand in a street market from 4 pm until 8 pm.
 				The work day starts at 3 pm with purchasing the ingredients and ends at 8 pm. Each
 				hour is represented by 10 time steps.
 			</aors:description>
 		</documentation>
 		
 		<SpaceModel geometry="Euclidean" spatialDistanceUnit="m">
-			<OneDimensional xMax="30"/>
+			<TwoDimensionalGrid xMax="30" yMax="1"/>
 		</SpaceModel>
 		
 		<Statistics>			
@@ -124,7 +127,8 @@
 			<PhysicalAgentType name="LemonadeSeller">
 			<!-- ============================================ -->
 				<documentation>
-					<description xmlns:h="http://www.w3.org/1999/xhtml">A lemonade seller makes lemonade and sells it in paper cups at a stand in a street market.
+					<description xmlns:h="http://www.w3.org/1999/xhtml">
+						A lemonade seller makes lemonade and sells it in paper cups at a stand in a street market.
 						Lemonade is made in a pitcher by adding a number of sugar cubes and the juice of a number
 						of lemons, and filling it up with water. Then, for serving the lemonade in a cup, first
 						a number of ice cubes are put into the cup, which is then filled with the lemonade from
@@ -137,21 +141,27 @@
 						</h:ol>						
 					</description>
 				</documentation>
+				<!-- The amount of money available to the seller -->
 				<Attribute name="cash" type="Float"/>
+				<!-- The production quantity planned for the current day-->
+				<Attribute name="plannedProductionQuantity" type="Integer"/>
 				<!-- Inventory -->
 				<Attribute name="lemonStock" type="Integer"/>
-				<Attribute name="sugarStock" type="Integer"/>
 				<Attribute name="iceStock" type="Integer"/>
+				<Attribute name="sugarStock" type="Integer"/>
 				<Attribute name="cupStock" type="Integer"/>
+				<!-- Inventory refill levels for non-expiring items -->
+				<Attribute name="sugarRefillLevel" type="Integer"/>
+				<Attribute name="cupRefillLevel" type="Integer"/>
 				<!-- Purchase decisions -->
 				<Attribute name="lemonPurchaseQuantity" type="Integer"/>
-				<Attribute name="sugarPurchaseQuantity" type="Integer"/>
 				<Attribute name="icePurchaseQuantity" type="Integer"/>
+				<Attribute name="sugarPurchaseQuantity" type="Integer"/>
 				<Attribute name="cupPurchaseQuantity" type="Integer"/>
-				<!-- Production decisions: lemon and sugar quantities per 1.5 liter pitcher, ice cubes per cup -->
-				<Attribute name="lemonProductionQuantity" type="Integer"/>
-				<Attribute name="sugarProductionQuantity" type="Integer"/>
-				<Attribute name="iceProductionQuantity" type="Integer"/>
+				<!-- Product design decisions: lemon and sugar quantities per 1.5 liter pitcher, ice cubes per cup -->
+				<Attribute name="lemonQuantityPerPitcher" type="Integer"/>
+				<Attribute name="sugarQuantityPerPitcher" type="Integer"/>
+				<Attribute name="iceQuantityPerCup" type="Integer"/>
 				<!-- Sales decisions -->
 				<Attribute name="salesPrice" type="Float"/>
 				
@@ -159,11 +169,25 @@
 				<PeriodicTimeEventType name="EachDayAt4pm" periodicity="50" />
 				<PeriodicTimeEventType name="EachDayAt8pm" periodicity="50" />
 
-				<!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~-->
+				<!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->
 				<ReactionRule name="StartOfDay_RR" agentVariable="p">
-				<!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~-->
+				<!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->
 					<WHEN eventType="StartOfDay" />
 					<DO>
+						<UPDATE-AGT>
+							<Slot property="plannedProductionQuantity">
+								<!-- TODO: use a function depending on the weather forecast -->
+								<ValueExpr language="Java"><![CDATA[
+									20
+								]]></ValueExpr>
+							</Slot>
+							<Slot property="lemonPurchaseQuantity">
+								<!-- TODO: improve formula -->
+								<ValueExpr language="Java"><![CDATA[
+									Math.ceil( getPlannedProductionQuantity() / 7) * lemonQuantityPerPitcher
+								]]></ValueExpr>
+							</Slot>
+						</UPDATE-AGT>
 					</DO>	
 				</ReactionRule>
 
