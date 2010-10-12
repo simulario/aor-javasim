@@ -30,9 +30,8 @@ import java.util.ArrayList;
 import java.util.List;
 
 import aors.model.AtomicEvent;
-import aors.model.Message;
-import aors.model.agtsim.ReactionRule;
 import aors.model.agtsim.AgentSubject;
+import aors.model.agtsim.ReactionRule;
 import aors.model.envevt.ActionEvent;
 import aors.model.envsim.PhysicalAgentObject;
 import aors.model.intevt.InternalEvent;
