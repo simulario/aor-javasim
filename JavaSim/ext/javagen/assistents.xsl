@@ -208,7 +208,8 @@
     </xsl:choose>
   </xsl:template>
   
-  <xsl:template match="aorsl:PhysicalObjectType | aorsl:PhysicalAgentType | aorsl:AgentType | aorsl:ObjectType" mode="assistents.list.allComplexDataProperty">
+  <xsl:template match="aorsl:PhysicalObjectType | aorsl:PhysicalAgentType | aorsl:AgentType | aorsl:ObjectType"
+    mode="assistents.list.allComplexDataProperty" as="item()*">
     <xsl:copy-of select="aorsl:ComplexDataProperty"/>
     <xsl:choose>
       <xsl:when test="fn:exists(@superType)">
@@ -761,7 +762,7 @@
     </xsl:if>
   </xsl:template>
 
-  <xsl:template match="aorsl:Slot | aorsl:SelfBeliefSlot | aorsl:BeliefSlot" mode="assistents.getSlotValue">
+  <xsl:template match="aorsl:Slot | aorsl:SelfBeliefSlot | aorsl:BeliefSlot | aorsl:Argument" mode="assistents.getSlotValue">
     <xsl:param name="type"/>
     <xsl:choose>
       <!-- the using of xsi:type is depricated -->
@@ -908,7 +909,7 @@
       </xsl:otherwise>
     </xsl:choose>
   </xsl:template>
-
+  
   <!-- set the value for enums -->
   <xsl:template match="@initialValue" mode="assistents.getEnumValue">
     <xsl:param name="enumeration" required="yes"/>
@@ -3696,15 +3697,34 @@
           <xsl:with-param name="method" select="@name"/>
           <xsl:with-param name="args" as="item()*">
             <xsl:for-each select="aorsl:Parameter">
-              <xsl:variable name="argument" select="$call/aorsl:Argument[@property = current()/@name]"/>
+              <xsl:variable name="argument" select="$call/aorsl:Argument[@parameter = current()/@name]"/>
               <xsl:choose>
                 <xsl:when test="exists($argument)">
+                  <!-- if there is an external error managment or logical validation, use:
+                    <xsl:apply-template select="$argument" mode="assistents.getSlotValue"/>
+                  -->
                   <xsl:choose>
-                    <xsl:when test="@type = 'String'">
-                      <xsl:value-of select="jw:quote($argument/@value)"/>
+                    <xsl:when test="$argument/@value">
+                      <xsl:choose>
+                        <xsl:when test="@type = 'String'">
+                          <xsl:value-of select="jw:quote($argument/@value)"/>
+                        </xsl:when>
+                        <xsl:otherwise>
+                          <xsl:value-of select="$argument/@value"/>
+                        </xsl:otherwise>
+                      </xsl:choose>
+                    </xsl:when>
+                    <xsl:when test="exists($argument/aorsl:ValueExpr[@language = $output.language])">
+                      <xsl:value-of select="$argument/aorsl:ValueExpr[@language = $output.language][1]"/>
                     </xsl:when>
                     <xsl:otherwise>
-                      <xsl:value-of select="$argument/@value"/>
+                      <xsl:message>
+                        <xsl:text>[ERROR] No value for </xsl:text>
+                        <xsl:value-of select="local-name($argument)"/>
+                        <xsl:text> found in </xsl:text>
+                        <xsl:value-of select="local-name($call)"/>
+                        <xsl:text>!</xsl:text>
+                      </xsl:message>
                     </xsl:otherwise>
                   </xsl:choose>
                 </xsl:when>
