@@ -2574,15 +2574,31 @@
               <xsl:with-param name="args" as="item()*">
 
                 <xsl:for-each select="$funct/aorsl:Parameter">
-                  <xsl:variable name="argument" select="$call/aorsl:Argument[@property = current()/@name]"/>
+                  <xsl:variable name="argument" select="$call/aorsl:Argument[@parameter = current()/@name]"/>
                   <xsl:choose>
                     <xsl:when test="exists($argument)">
                       <xsl:choose>
-                        <xsl:when test="@type = 'String'">
-                          <xsl:value-of select="jw:quote($argument/@value)"/>
+                        <xsl:when test="$argument/@value">
+                          <xsl:choose>
+                            <xsl:when test="@type = 'String'">
+                              <xsl:value-of select="jw:quote($argument/@value)"/>
+                            </xsl:when>
+                            <xsl:otherwise>
+                              <xsl:value-of select="$argument/@value"/>
+                            </xsl:otherwise>
+                          </xsl:choose>
+                        </xsl:when>
+                        <xsl:when test="exists($argument/aorsl:ValueExpr[@language = $output.language])">
+                          <xsl:value-of select="$argument/aorsl:ValueExpr[@language = $output.language][1]"/>
                         </xsl:when>
                         <xsl:otherwise>
-                          <xsl:value-of select="$argument/@value"/>
+                          <xsl:message>
+                            <xsl:text>[ERROR] No value for </xsl:text>
+                            <xsl:value-of select="local-name($argument)"/>
+                            <xsl:text> found in </xsl:text>
+                            <xsl:value-of select="local-name($call)"/>
+                            <xsl:text>!</xsl:text>
+                          </xsl:message>
                         </xsl:otherwise>
                       </xsl:choose>
                     </xsl:when>

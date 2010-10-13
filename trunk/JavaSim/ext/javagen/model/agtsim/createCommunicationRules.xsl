@@ -664,6 +664,7 @@
           <xsl:apply-templates select="$mode/aorsl:UPDATE-AGT/aorsl:Call" mode="createAgentRules.method.stateEffects.call">
             <xsl:with-param name="indent" select="$indent"/>
             <xsl:with-param name="agtVarName" select="$agentVarName"/>
+            <xsl:with-param name="isPIAgent" select="$isPIAgent"/>
           </xsl:apply-templates>
 
           <!--sets state effects-->
