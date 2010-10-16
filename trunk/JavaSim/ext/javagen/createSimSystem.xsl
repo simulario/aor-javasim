@@ -355,12 +355,6 @@
       <xsl:with-param name="type" select="$core.class.spaceModel"/>
       <xsl:with-param name="name" select="'createSpaceModel'"/>
       <xsl:with-param name="content">
-
-        <!-- init the physim -->
-        <xsl:apply-templates select="." mode="createSimSystem.helper.createEnvironment.initPhysim">
-          <xsl:with-param name="indent" select="$indent + 1"/>
-        </xsl:apply-templates>
-
         <xsl:choose>
           <xsl:when test="fn:exists(aorsl:SpaceModel)">
 
@@ -462,36 +456,7 @@
               <xsl:with-param name="method" select="'notifySpaceModel'"/>
               <xsl:with-param name="args" select="$spaceModelVar"/>
             </xsl:call-template>
-
-
-            <!-- this.physim.setSpaceModel(generalSpaceModel); -->
-            <xsl:call-template name="java:if">
-              <xsl:with-param name="indent" select="$indent + 1"/>
-              <xsl:with-param name="condition">
-                <xsl:call-template name="java:boolExpr">
-                  <xsl:with-param name="value1">
-                    <xsl:call-template name="java:varByDotNotation">
-                      <xsl:with-param name="varName" select="'physim'"/>
-                    </xsl:call-template>
-                  </xsl:with-param>
-                  <xsl:with-param name="value2" select="'null'"/>
-                  <xsl:with-param name="operator" select="'!='"/>
-                </xsl:call-template>
-              </xsl:with-param>
-              <xsl:with-param name="thenContent">
-                <xsl:call-template name="java:callMethod">
-                  <xsl:with-param name="indent" select="$indent + 2"/>
-                  <xsl:with-param name="objInstance">
-                    <xsl:call-template name="java:varByDotNotation">
-                      <xsl:with-param name="name" select="'this'"/>
-                      <xsl:with-param name="varName" select="'physim'"/>
-                    </xsl:call-template>
-                  </xsl:with-param>
-                  <xsl:with-param name="method" select="'setSpaceModel'"/>
-                  <xsl:with-param name="args" select="$spaceModelVar"/>
-                </xsl:call-template>
-              </xsl:with-param>
-            </xsl:call-template>
+            
             <xsl:call-template name="java:return">
               <xsl:with-param name="indent" select="$indent + 1"/>
               <xsl:with-param name="value" select="$spaceModelVar"/>
@@ -895,87 +860,6 @@
           </xsl:with-param>
           <xsl:with-param name="instVariable" select="'rules'"/>
           <xsl:with-param name="value" select="$rulesVarName"/>
-        </xsl:call-template>
-
-      </xsl:with-param>
-    </xsl:call-template>
-
-  </xsl:template>
-
-  <xsl:template match="aorsl:SimulationModel" mode="createSimSystem.helper.createEnvironment.initPhysim">
-    <xsl:param name="indent" as="xs:integer" required="yes"/>
-
-    <xsl:call-template name="java:newLine"/>
-    <xsl:call-template name="java:inlineComment">
-      <xsl:with-param name="indent" select="$indent"/>
-      <xsl:with-param name="content" select="'parameters are: autoKinematics, autoCollision, autoGravitation, autoImpulse, autoPerception'"/>
-    </xsl:call-template>
-    <xsl:call-template name="java:if">
-      <xsl:with-param name="indent" select="$indent"/>
-      <xsl:with-param name="condition">
-        <xsl:call-template name="java:boolExpr">
-          <xsl:with-param name="value1">
-            <xsl:call-template name="java:varByDotNotation">
-              <xsl:with-param name="varName" select="'physim'"/>
-            </xsl:call-template>
-          </xsl:with-param>
-          <xsl:with-param name="value2" select="'null'"/>
-          <xsl:with-param name="operator" select="'!='"/>
-        </xsl:call-template>
-      </xsl:with-param>
-      <xsl:with-param name="thenContent">
-
-        <!-- Set physics attributes (autoKinematics, autoCollision, autoGravitation and autoImpulse) for PhySim -->
-        <xsl:call-template name="java:callMethod">
-          <xsl:with-param name="indent" select="$indent + 1"/>
-          <xsl:with-param name="objInstance">
-            <xsl:call-template name="java:varByDotNotation">
-              <xsl:with-param name="varName" select="'physim'"/>
-            </xsl:call-template>
-          </xsl:with-param>
-          <xsl:with-param name="method" select="'setPhysicsAttributes'"/>
-          <xsl:with-param name="args" as="xs:string*">
-            <xsl:choose>
-              <xsl:when test="fn:exists(@autoKinematics)">
-                <xsl:value-of select="@autoKinematics"/>
-              </xsl:when>
-              <xsl:otherwise>
-                <xsl:value-of select="'false'"/>
-              </xsl:otherwise>
-            </xsl:choose>
-            <xsl:choose>
-              <xsl:when test="fn:exists(@autoCollision)">
-                <xsl:value-of select="@autoCollision"/>
-              </xsl:when>
-              <xsl:otherwise>
-                <xsl:value-of select="'false'"/>
-              </xsl:otherwise>
-            </xsl:choose>
-            <xsl:choose>
-              <xsl:when test="fn:exists(@autoGravitation)">
-                <xsl:value-of select="@autoGravitation"/>
-              </xsl:when>
-              <xsl:otherwise>
-                <xsl:value-of select="'false'"/>
-              </xsl:otherwise>
-            </xsl:choose>
-            <xsl:choose>
-              <xsl:when test="fn:exists(@autoImpulse)">
-                <xsl:value-of select="@autoImpulse"/>
-              </xsl:when>
-              <xsl:otherwise>
-                <xsl:value-of select="'false'"/>
-              </xsl:otherwise>
-            </xsl:choose>
-            <xsl:choose>
-              <xsl:when test="fn:exists(aorsl:EntityTypes/aorsl:PhysicalAgentType[@autoPerception])">
-                <xsl:value-of select="'true'"/>
-              </xsl:when>
-              <xsl:otherwise>
-                <xsl:value-of select="'false'"/>
-              </xsl:otherwise>
-            </xsl:choose>
-          </xsl:with-param>
         </xsl:call-template>
 
       </xsl:with-param>
