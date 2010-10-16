@@ -93,12 +93,9 @@ public class Box2DSimulator extends PhysicsSimulator {
     unitConverter = new UnitConverter(simParams.getTimeUnit(), spaceModel
         .getSpatialDistanceUnit());
 
-    // calculate step duration, the value for Box2D should be between 0.01 and
-    // 0.1
-    stepDuration = simParams.getStepDuration();
-    // if (simParams.getTimeUnit().equals("ms")) {
-    // stepDuration /= 1000;
-    // }
+    // compute step duration, the value for Box2D should be between 0.01 and 0.1
+    stepDuration = (simParams.getStepDuration() != null ? simParams
+        .getStepDuration() : 1);
 
     int x = (int) Math.log10(stepDuration);
     stepDurationFactor = (int) Math.pow(10, x + 2);
@@ -114,7 +111,7 @@ public class Box2DSimulator extends PhysicsSimulator {
         .accelerationToUser(gravitation)
         * stepDurationFactor * stepDurationFactor);
     world = new World(aabb, gravity, true);
-    //System.out.println(gravity);
+    // System.out.println(gravity);
 
     CollisionListener cl = new CollisionListener();
     world.setContactListener(cl);
@@ -451,7 +448,9 @@ public class Box2DSimulator extends PhysicsSimulator {
             .getLinearVelocity().y)
             / stepDurationFactor);
 
-        object.setOmegaZ(unitConverter.angularVelocityToRadiansPerSeconds(body.getAngularVelocity()) / stepDurationFactor);
+        object.setOmegaZ(unitConverter.angularVelocityToRadiansPerSeconds(body
+            .getAngularVelocity())
+            / stepDurationFactor);
 
         // debug output
         // System.out.print(object.getId() + ") ");
@@ -496,7 +495,7 @@ public class Box2DSimulator extends PhysicsSimulator {
             * stepDurationFactor;
         double vy = unitConverter.velocityToUser(object.getV().getY())
             * stepDurationFactor;
-        
+
         body.setLinearVelocity(new Vec2((float) vx, (float) vy));
         body.setAngularVelocity((float) unitConverter
             .angularVelocityToUser(object.getOmegaZ())

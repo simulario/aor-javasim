@@ -28,7 +28,6 @@
  **************************************************************************************************************/
 package aors.model.agtsim.sim;
 
-import aors.controller.AbstractSimulator;
 import java.beans.PropertyChangeEvent;
 import java.beans.PropertyChangeListener;
 import java.lang.reflect.Field;
@@ -40,6 +39,7 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 
+import aors.controller.AbstractSimulator;
 import aors.logger.model.AgentSimulatorStep;
 import aors.model.agtsim.ActualPerceptionRule;
 import aors.model.agtsim.AgentMemory;
@@ -51,7 +51,6 @@ import aors.model.envevt.InMessageEvent;
 import aors.model.envevt.OutMessageEvent;
 import aors.model.envevt.PerceptionEvent;
 import aors.model.envsim.AgentObject;
-import aors.physim.PhysicsSimulator;
 import aors.util.JsonData;
 
 /**
@@ -216,7 +215,7 @@ public class DefaultAgentSimulator implements AgentSimulator,
     try {
       // finally determine memory-size
       Field field = agentSubject.getClass().getDeclaredField(
-          PhysicsSimulator.MEMORY_SIZE);
+          AgentMemory.MEMORY_SIZE);
       int capacity = Integer.valueOf(field.get(null).toString());
       if (capacity > 0 || capacity == -1) {
         /** Add the agentMemory **/

@@ -63,7 +63,6 @@ import aors.model.envevt.EnvironmentEvent;
 import aors.model.envevt.ExogenousEvent;
 import aors.model.envevt.PerceptionEvent;
 import aors.model.envsim.EnvironmentSimulator;
-import aors.physim.PhysicsSimulator;
 import aors.statistics.GeneralStatistics;
 import aors.util.JsonData;
 
@@ -91,9 +90,6 @@ public abstract class AbstractSimulator implements AgentSimulatorListener {
   // if there is false, the Logger will don't use
   public final static boolean runLogger = true;
 
-  // if there is false, the PhysSim will don't use
-  public final static boolean runPhysics = true;
-
   // switch the debug-state output in the gui
   public final static boolean showDebugFlags = false;
 
@@ -114,11 +110,6 @@ public abstract class AbstractSimulator implements AgentSimulatorListener {
    * other parts.
    */
   private InitialState initialState;
-
-  /**
-   * Instance of PhySim (physics simulation extension)
-   */
-  protected PhysicsSimulator physim = null;
 
   /**
    * the statistics object
@@ -339,11 +330,6 @@ public abstract class AbstractSimulator implements AgentSimulatorListener {
    */
   public void initialize() {
 
-    if (AbstractSimulator.runPhysics) {
-      this.physim = new PhysicsSimulator();
-      this.physim.setDataBus(dataBus);
-    }
-
     this.agentSimulators = new ArrayList<AgentSimulator>();
     this.controlledAgentSimulators = new HashSet<AgentSimulator>();
 
@@ -407,7 +393,7 @@ public abstract class AbstractSimulator implements AgentSimulatorListener {
     // 05 call in created simulator
     this.createInitialEvents();
 
-    this.envSim = new EnvironmentSimulator(dataBus, physim);
+    this.envSim = new EnvironmentSimulator(dataBus);
     this.envSim.setEventsList(this.environmentEvents);
     this.envSim.initialize();
 
@@ -430,17 +416,6 @@ public abstract class AbstractSimulator implements AgentSimulatorListener {
           .getModelParameter(GeneralSimulationModel.ModelParameter.BASE_URI
               .name()));
     }
-
-    if (physim != null)
-      physim.setSimulationParameters(this.generalSimulationParameters);
-
-    /**
-     * TODO delete following line if past march 2009 ArrayList<AgentSubject>
-     * agentSubjectsTemp = new ArrayList<AgentSubject>(); for(AgentSimulator
-     * agentSimulator: agentSimulators) {
-     * agentSubjectsTemp.add(agentSimulator.getAgentSubject()); }
-     * physim.setAgentSubjects(agentSubjectsTemp);
-     */
 
     // 09 call in created simulator
     this.executeInitializeRules();
@@ -645,33 +620,10 @@ public abstract class AbstractSimulator implements AgentSimulatorListener {
     if (envSim.isForceStopSimulation()) {
       System.out.println("Simulation stoped by: StopSimulationEvent!");
       this.currentSimulationStep = this.totalSimulationSteps + 1;
-    } else if (agentSimulators.isEmpty() && physim != null
-        && !physim.isAutoKinematics()) {
-      // jump to the next eventOccurenceTime if no agents exist and
-      // autoKinematics is false
-      this.currentSimulationStep = this
-          .getNearestOccurrenceTimeFromNextEvents();
-    } else {
+    }  else {
       this.currentSimulationStep++;
     }
   } // calculateNewValueOfCurrentSimulationStep
-
-  /**
-   * Returns the nearest occurrenceTime when an event will occur.
-   * 
-   * @return closestOccurrenceTime - the next step when an event will occur
-   */
-  private long getNearestOccurrenceTimeFromNextEvents() {
-    long closestOccurrenceTime = this.totalSimulationSteps + 1;
-    for (EnvironmentEvent envEvent : this.environmentEvents) {
-      if (envEvent.getOccurrenceTime() == this.currentSimulationStep + 1) {
-        return this.currentSimulationStep + 1;
-      } else if (envEvent.getOccurrenceTime() < closestOccurrenceTime) {
-        closestOccurrenceTime = envEvent.getOccurrenceTime();
-      }
-    }
-    return closestOccurrenceTime;
-  } // getNearestOccurrenceTimeFromNextEvents
 
   /**
    * Runs a single simulation step. Called from <code>runMainLoop()</code>.

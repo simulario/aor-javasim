@@ -520,7 +520,6 @@ public class AORJavaGui extends JFrame implements ActionListener,
       System.out.println("Run activities   : "
           + AbstractSimulator.runActivities);
       System.out.println("Run logger       : " + AbstractSimulator.runLogger);
-      System.out.println("Run physics      : " + AbstractSimulator.runPhysics);
       System.out
           .println("****************************************************");
     }
