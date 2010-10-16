@@ -219,6 +219,12 @@ public class PhysicsController implements Module {
     // opened, and the simulator must be created later when the simulation
     // initialize!
     this.simulator = null;
+
+    // reset parameters
+    this.gravitation = -9.81;
+    this.autoKinematics = false;
+    this.autoCollisionDetection = false;
+    this.autoCollisionHandling = false;
   }
 
   /*

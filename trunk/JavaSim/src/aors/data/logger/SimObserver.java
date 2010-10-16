@@ -449,8 +449,7 @@ public class SimObserver extends Logger {
       // because we have different resultingStateChanges- and
       // resultingEventsTypes
       // in the log-schema (=> jaxb); ones for PhysicsSimulationType and ones
-      // for
-      // EnvSimInputEventType
+      // for EnvSimInputEventType
       if (environmentRule instanceof PhySimKinematicsRule) {
         PhysicsSimulationType physicsSimulationType = this.simulationStep
             .getEnvironmentSimulatorStep().getPhysicsSimulation();

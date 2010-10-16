@@ -17,6 +17,8 @@ import aors.util.collection.BoundedBuffer;
  * @author Volkmar Kantor
  */
 public class AgentMemory {
+  
+  public static final String MEMORY_SIZE = "MEMORY_SIZE";
 
   /**
    * Internal Class, used to have an datatype for the buffer.
