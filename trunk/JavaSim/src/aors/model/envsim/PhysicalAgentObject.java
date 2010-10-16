@@ -68,7 +68,7 @@ public class PhysicalAgentObject extends AgentObject implements Physical {
 
   private Shape3D shape3D;
 
-  private double perceptionRadius;
+  private double perceptionRadius = 1;
 
   private Vector perceptionDirection = new Vector();
 
