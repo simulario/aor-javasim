@@ -215,6 +215,10 @@ public class PhysicsController implements Module {
    */
   @Override
   public void simulationProjectDirectoryChanged(File projectDirectory) {
+    // in this point the simulator does not exist while a new scenario is
+    // opened, and the simulator must be created later when the simulation
+    // initialize!
+    this.simulator = null;
   }
 
   /*
@@ -384,7 +388,5 @@ public class PhysicsController implements Module {
   @Override
   public void notifyEvent(ControllerEvent event) {
     // TODO Auto-generated method stub
-    
   }
-
 }
