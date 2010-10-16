@@ -486,7 +486,7 @@ public class Engine implements GLEventListener {
         int index = getSpaceComponentIndex((int) phy.getX(), (int) phy.getY());
 
         // Check if the space component index is valid
-        if (index < 0 && index > spaceModel.getSpaceComponents().size() - 1) {
+        if (index < 0 || index > spaceModel.getSpaceComponents().size() - 1) {
           System.out.println("Visualization Warning: Invalid component index!");
           return;
         }

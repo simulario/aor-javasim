@@ -9,6 +9,7 @@ import aors.module.visopengl.engine.TessellatedPolygon;
 import aors.module.visopengl.space.model.OneDimSpaceModel;
 import aors.module.visopengl.space.view.Alignment;
 import aors.module.visopengl.utility.Color;
+import aors.space.Space;
 
 /**
  * A track is a component of a one dimensional space model. It can either be
@@ -352,8 +353,10 @@ public class Track implements SpaceComponent {
   }
 
   @Override
-  public double[] getWorldCoordinates(double x, double y) {
+  public double[] getWorldCoordinates(double x, double yP) {
     double vertex[] = new double[3];
+    
+    double y= yP- Space.ORDINATEBASE;
 
     // Map to horizontal alignment
     if (alignment == Alignment.horizontal) {
