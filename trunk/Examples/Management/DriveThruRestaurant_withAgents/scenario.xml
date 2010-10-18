@@ -157,7 +157,7 @@ int i=messageInfo.indexOf("and");
            ]]></Body>
 				</Function>
 				<!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->
-				<CommunicationRule name="SendOrder_Rule" agentVariable="mb">
+				<ReactionRule name="SendOrder_Rule" agentVariable="mb">
 					<!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->
 					<documentation>
 						<description> The MenuBoard receives the Order information from the customer. It replies with the orderId information (i.e. the occurrence time of the event) and also schedules a Reminder event in order to know that the MenuBoard service for that particular customer is over. A ProductionOrder message (containing orderNo and pizzaType) will be also sent to KitchenService, in order to prepare the pizza. </description>
@@ -186,9 +186,9 @@ evt.getSenderIdRef() + "and" + evt.getOccurrenceTime()
 							</ReminderEventExpr>
 						</SCHEDULE-EVT>
 					</DO>
-				</CommunicationRule>
+				</ReactionRule>
 				<!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->
-				<CommunicationRule name="MenuBoardReminder_Rule">
+				<ReactionRule name="MenuBoardReminder_Rule">
 					<!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->
 					<documentation>
 						<description> When the Menu Board receives the reminder rule, it triggers an appropriate message to Customer agent to announce him that the service is over and, if the case, he can move forward. </description>
@@ -208,7 +208,7 @@ Integer.parseInt(getMessagePart(evt.getReminderMsg(),2))
 							</OutMessageEventExpr>
 						</SCHEDULE-EVT>
 					</DO>
-				</CommunicationRule>
+				</ReactionRule>
 			</AgentType>
 			<!-- =================================================== -->
 			<AgentType name="Kitchen">
@@ -240,7 +240,7 @@ int j= substr.indexOf("and");
           ]]></Body>
 				</Function>
 				<!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->
-				<CommunicationRule name="ProductionOrder_Rule" agentVariable="k">
+				<ReactionRule name="ProductionOrder_Rule" agentVariable="k">
 					<!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->
 					<documentation>
 						<description> The MenuBoard agent sends a ProductionOrder for the Kitchen agent, in which it specifies the orderNo, the pizzaType and the customer id. The Kitchen agent schedules a reminder event with the appropriate delay i.e. the delay at the kitchen. </description>
@@ -258,9 +258,9 @@ int j= substr.indexOf("and");
 							</ReminderEventExpr>
 						</SCHEDULE-EVT>
 					</DO>
-				</CommunicationRule>
+				</ReactionRule>
 				<!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->
-				<CommunicationRule name="KitchenReminder_Rule" agentVariable="k">
+				<ReactionRule name="KitchenReminder_Rule" agentVariable="k">
 					<!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->
 					<documentation>
 						<description> Once the reminder event is triggered, the Kitchen service notifies the PW agent by sending an appropriate message OrderPrepared containing the orderNo, pizzaType and custID information.</description>
@@ -287,7 +287,7 @@ Integer.parseInt(getMessagePart(evt.getReminderMsg(),3))
 							</OutMessageEventExpr>
 						</SCHEDULE-EVT>
 					</DO>
-				</CommunicationRule>
+				</ReactionRule>
 			</AgentType>
 			<!-- ============================= -->
 			<AgentType name="PickupWindow">
@@ -307,7 +307,7 @@ double[] price = {8.90, 9.80, 8.50, 7.20, 7.80, 5.20};
 					<BeliefAttribute name="orderNo" type="Integer" initialValue="0"/>
 				</BeliefEntityType>
 				<!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->
-				<CommunicationRule name="OrderPrepared_Rule" agentVariable="pw">
+				<ReactionRule name="OrderPrepared_Rule" agentVariable="pw">
 					<!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->
 					<documentation>
 						<description> The PW agent receives the prepared order from the Kitchen agent (i.e. the orderNo) He uses this information and he creates for each new Customer agent a new Order BeliefEntityType for which it sets the orderNo attribute. </description>
@@ -323,9 +323,9 @@ double[] price = {8.90, 9.80, 8.50, 7.20, 7.80, 5.20};
 							</CreateBeliefEntity>
 						</UPDATE-AGT>
 					</DO>
-				</CommunicationRule>
+				</ReactionRule>
 				<!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->
-				<CommunicationRule name="ReplyOrderNo_Rule" agentVariable="pw">
+				<ReactionRule name="ReplyOrderNo_Rule" agentVariable="pw">
 					<!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->
 					<documentation>
 						<description> The PW agent asks the Customer agent about its orderNo SelfBeliefAttr and the Customer replies this information. Then the PW agent verifies if the customer order is already arrived. If the order is arrived then, it schedules a reminder event type with the delay at the kitchen.</description>
@@ -349,9 +349,9 @@ mes.getOrderNo() == ((Order)order).getOrderNo()
 							</ReminderEventExpr>
 						</SCHEDULE-EVT>
 					</THEN>
-				</CommunicationRule>
+				</ReactionRule>
 				<!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->
-				<CommunicationRule name="PickupWindowReminder_Rule" agentVariable="pw">
+				<ReactionRule name="PickupWindowReminder_Rule" agentVariable="pw">
 					<!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->
 					<documentation>
 						<description> Once this reminder event is triggered, the PW agent notifies the appropriate customer agent about the end of the PW Service by sending it an appropriate message: "Here is yout pizza!" </description>
@@ -366,7 +366,7 @@ Integer.parseInt(evt.getReminderMsg())
 							</OutMessageEventExpr>
 						</SCHEDULE-EVT>
 					</DO>
-				</CommunicationRule>
+				</ReactionRule>
 			</AgentType>
 			<!-- =================================================== -->
 			<AgentType name="Customer">
@@ -386,7 +386,7 @@ return Random.uniformInt(0,5);
 		      ]]></Body>
 				</SubjectiveFunction>
 				<!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->
-				<CommunicationRule name="OrderSolicitation_Rule" agentVariable="cust">
+				<ReactionRule name="OrderSolicitation_Rule" agentVariable="cust">
 					<!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->
 					<documentation>
 						<description> The customer is at the Menu Board. He is asked to place the order. He replies giving the information about the pizza type inside of a SendOrder message. </description>
@@ -403,10 +403,10 @@ cust.randomPizzaType()
 							</OutMessageEventExpr>
 						</SCHEDULE-EVT>
 					</DO>
-				</CommunicationRule>
+				</ReactionRule>
 
 				<!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->
-				<CommunicationRule name="AskOrderNo_Rule" agentVariable="cust">
+				<ReactionRule name="AskOrderNo_Rule" agentVariable="cust">
 					<!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->
 					<documentation>
 						<description> The Customer who is first in line in the PW queue receives an order solicitation from the PickupWindow Service. He replies to PW agent with his orderNo information. </description>
@@ -423,9 +423,9 @@ cust.getOrderNo()
 							</OutMessageEventExpr>
 						</SCHEDULE-EVT>
 					</DO>
-				</CommunicationRule>
+				</ReactionRule>
 				<!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->
-				<CommunicationRule name="OrderArrived_Rule" agentVariable="cust">
+				<ReactionRule name="OrderArrived_Rule" agentVariable="cust">
 					<!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->
 					<documentation>
 						<description> The customer at the PW serice desk is announced that his order is arrived. While waiting for other preparations at the PW desk the customer is not asked anymore about his orderNo information.</description>
@@ -436,7 +436,7 @@ cust.getOrderNo()
 							<Slot property="waitingForOrderToArrive" value="false"/>
 						</UPDATE-AGT>
 					</DO>
-				</CommunicationRule>
+				</ReactionRule>
 			</AgentType>
 		</EntityTypes>
 		<EnvironmentRules>
