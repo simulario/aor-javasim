@@ -178,6 +178,12 @@
               <xsl:with-param name="agentType" select="."/>
               <xsl:with-param name="isPIAgent" select="$isPIAgent"/>
             </xsl:apply-templates>
+            <!-- AgentRules -->
+            <xsl:apply-templates select="aorsl:ReactionRule" mode="createAgentRules.createAgentRule">
+              <xsl:with-param name="indent" select="$indent + 1"/>
+              <xsl:with-param name="agentType" select="."/>
+              <xsl:with-param name="isPIAgent" select="$isPIAgent"/>
+            </xsl:apply-templates>
 
             <!-- PeriodicTimeEvent -->
             <xsl:apply-templates select="aorsl:PeriodicTimeEventType" mode="createPeriodicTimeEvents.createPeriodicTimeEvent">
