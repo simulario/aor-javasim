@@ -2478,10 +2478,8 @@
       <xsl:with-param name="objectType" as="xs:string*">
         <xsl:choose>
           <xsl:when test="@objectVariable">
-            <xsl:value-of
-              select="ancestor::aorsl:EnvironmentRule/aorsl:FOR[@objectVariable =
-                current()/ancestor::aorsl:UpdateObject/@objectVariable][1]/@objectType"
-            />
+            <xsl:value-of select="ancestor::aorsl:EnvironmentRule/aorsl:FOR[@objectVariable =
+              current()/@objectVariable][1]/@objectType"/>
           </xsl:when>
           <xsl:when test="exists(aorsl:ObjectRef[@language eq $output.language])">
             <xsl:value-of select="aorsl:ObjectRef[@language eq $output.language][1]/@objectType"/>
