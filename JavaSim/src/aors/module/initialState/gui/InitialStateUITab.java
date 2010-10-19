@@ -312,7 +312,8 @@ public class InitialStateUITab extends JScrollPane implements GUIModule {
           .getAttribute("type");//enumerated type
       
       //entity type
-      String parentName = ((Element)(EnumerationPropertys.item(j)).getParentNode()).getAttribute("name");
+      String parentName = ((Element)(EnumerationPropertys.item(j)).getParentNode())
+      .getAttribute("name");
       
      
       //enumPropertyTypeMap create a mapping between entity type and propertyType
@@ -348,7 +349,7 @@ public class InitialStateUITab extends JScrollPane implements GUIModule {
   
   
   
-  /*set all correspondent values from superType to subType*/
+  /*set all corresponding values from superType to subType*/
   public void processSuperTypeContainerMap(HashMap<String,HashSet<String>> propertyTypeMap,String type){
 	  
 	 	  
@@ -1226,7 +1227,8 @@ public class InitialStateUITab extends JScrollPane implements GUIModule {
   }
 
   //We use this method to process all event(event,objectevent)
-  public JPanel createEventPanel(Node node, String type, String objectType) {
+  
+  public JPanel createEventPanel(Node node, String type, String objectType){
 
     String modelType = typeTransfer(objectType,type);
     String title = type + "<<" + node.getNodeName() + ">>";
@@ -1538,6 +1540,7 @@ public class InitialStateUITab extends JScrollPane implements GUIModule {
     }
 
     for (int k = 0; k < rattrs.getLength(); k++) {
+    	
       Attr attribute = (Attr) rattrs.item(k);
       if ((attribute.getName().equals("id"))
           | (attribute.getName().equals("idRef"))
@@ -1549,7 +1552,9 @@ public class InitialStateUITab extends JScrollPane implements GUIModule {
       if ((attribute.getName().equals("rangeEndID"))) {
 
         rowDatumTemp.set(1, attribute.getValue());
-      } else {
+      } 
+      else {
+    	  
         Iterator<String> it = tempContent.iterator();
         while (it.hasNext()) {
 
@@ -1945,7 +1950,8 @@ public class InitialStateUITab extends JScrollPane implements GUIModule {
                   String label = labelMap.get(tempString);
 
                   if (label.equals(tableHeadElement)) {
-                    String tempPropertyName = tempString.substring(0,
+                    
+                	  String tempPropertyName = tempString.substring(0,
                         (tempString.length() - 16));
 
                     for (int g = 0; g < globalVariables.getLength(); g++) {
@@ -2004,6 +2010,7 @@ public class InitialStateUITab extends JScrollPane implements GUIModule {
       int l, Node editNode, String objectType) {
 
     String tempPropertyValue = null;
+    
     for (int j = 0; j < model.getColumnCount(); j++) {
 
       String tableHeadElement = model.getColumnName(j);
@@ -2553,6 +2560,7 @@ public class InitialStateUITab extends JScrollPane implements GUIModule {
  /* create the default table model, and fill it with empty string, if the 
   value of a cell is null, and render the cell as JCheckBox if the type
   of value of one cell is boolean*/ 
+  
 
   @SuppressWarnings("serial")
   public DefaultTableModel createTableModel(String type, Node node) {
@@ -3567,7 +3575,7 @@ public class InitialStateUITab extends JScrollPane implements GUIModule {
 
       }
 
-      nextField:
+    nextField:
     	  
      for (int i = 0; i < fieldsContainer.size(); i++) {
 
@@ -3698,12 +3706,15 @@ public class InitialStateUITab extends JScrollPane implements GUIModule {
       // " with type:=> " +type );
 
       boolean enumProperty = false;
-      String property = "";
+      String propertyType = "";
       subTempStop: {
+    	  
         for (Iterator<String> it = enumMap.keySet().iterator(); it.hasNext();) {
 
-          property = it.next();
-          String propertyType = property + type;
+          //property = it.next();
+          //String propertyType = property + type;
+        	
+          propertyType = it.next();
 
           HashSet<String> tempLanSet = lanType.get(type);
           for (Iterator<String> lans = tempLanSet.iterator(); lans.hasNext();) {
@@ -3738,7 +3749,7 @@ public class InitialStateUITab extends JScrollPane implements GUIModule {
 
       } else {
 
-        HashSet<String> tempEnumContent = enumMap.get(property);
+        HashSet<String> tempEnumContent = enumMap.get(propertyType);
 
         if (tempEnumContent.contains(((JTextField) fields[i]).getText().trim())) {
 
