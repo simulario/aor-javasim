@@ -1053,10 +1053,17 @@ public abstract class AbstractSimulator implements AgentSimulatorListener {
   private List<PerceptionEvent> getEventsForAgentSubject(long agentSubjectId,
       List<PerceptionEvent> perceptionEvents) {
     List<PerceptionEvent> result = new ArrayList<PerceptionEvent>();
-    for (PerceptionEvent event : perceptionEvents) {
-      if (event.getPerceiverIdRef() == agentSubjectId)
-        result.add(event);
+    Iterator<PerceptionEvent> iter = perceptionEvents.iterator();
+    
+    PerceptionEvent event = null;
+    while(iter.hasNext()) {
+      event = iter.next();
+       if (event.getPerceiverIdRef() == agentSubjectId) {
+         result.add(event);
+         iter.remove();
+       }
     }
+ 
     return result;
   } // getEventsForAgentSubject
 
