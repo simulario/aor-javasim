@@ -829,45 +829,7 @@ public class InitialStateUITab extends JScrollPane implements GUIModule {
       JTable table = new JTable();
       table.setModel(model);
       
-      //Here we will render the table cell of SelfBeliefProperty
-      for (int j = 0; j < model.getColumnCount(); j++) {
-
-        String colHeadValue = model.getColumnName(j);
-        //test if an entity contains SelfBeliefProperty
-        if (selfPropertyMap.keySet().contains(type)) {
-
-          HashSet<String> tempContent = userInterfaceMap.get(type);
-          for (Iterator<String> it = tempContent.iterator(); it.hasNext();) {
-
-            String tempString = it.next();
-            String label = labelMap.get(tempString);
-            //test if label match column name if so, we will transfer labelKey
-            // to property
-            if (label.equals(colHeadValue)) {
-
-              String tempPropertyName = tempString.substring(0, (tempString
-                  .length()
-                  - type.length() - 2));
-
-              //get all SelfBeliefProperty name 
-              //for an Agent type
-              Vector<String> tempVector = selfPropertyMap.get(type);
-              
-              //if it contains this property, then this property will be rendered
-              if (tempVector.contains(tempPropertyName)) {
-
-                TableColumn selfColumn = table.getColumnModel().getColumn(j);
-                //set cell renderer for SelfBeliefProperty
-                selfColumn.setCellRenderer(new ColorColumnRenderer(new Color(
-                    168, 64, 89), Color.WHITE));
-
-              }
-            }
-          }
-        }
-      }
-
-      processTableFieldLength(type, table);
+      //processTableFieldLength(type, table);
       JScrollPane tablePane = createScrollPane(table);
       objectCenterPanel.add(tablePane);
       objectCenterPanel.add(createButtonPanel(model, table, type, node, null));
@@ -1262,7 +1224,7 @@ public class InitialStateUITab extends JScrollPane implements GUIModule {
     if (!fieldStyleSet.contains(type)) {
 
       JTable table = new JTable(model);
-      processTableFieldLength(type, table);
+      //processTableFieldLength(type, table);
       JScrollPane tablePane = createScrollPane(table);
       
       if(objectType != null){//process independent event
@@ -1715,7 +1677,8 @@ public class InitialStateUITab extends JScrollPane implements GUIModule {
               //if there are on errors, then continue saving process 
               if (tempBooleanContainer.get(b).contains(false)) {
 
-                return;
+            	  fieldValidateTypeMap = null; 
+                  return;
               }
             }
           }
@@ -1740,8 +1703,8 @@ public class InitialStateUITab extends JScrollPane implements GUIModule {
             for (int b = 0; b < tempBooleanContainer.size(); b++) {
 
               if (tempBooleanContainer.get(b).contains(false)) {
-
-                return;
+            	  fieldValidateTypeMap = null; 
+                  return;
               }
             }
           }
@@ -1779,6 +1742,28 @@ public class InitialStateUITab extends JScrollPane implements GUIModule {
     return true;
 
   }
+  
+   public boolean validateResult(String type, int i){
+	    
+	    //System.out.println("type: " + type + " i: " + i);
+	    boolean result = false;
+	    
+	    Vector<Vector<Boolean>> validateContainers = fieldValidateTypeMap.get(type);
+	    
+	    if(validateContainers.get(i).contains(false)){
+	      
+	        return result;
+	      
+	    }else{
+	      
+	       result = true;
+	       return result;
+	    
+	  }
+	  
+	}
+  
+  
 
   @SuppressWarnings("unchecked")
   public void processDom() {
@@ -1855,6 +1840,8 @@ public class InitialStateUITab extends JScrollPane implements GUIModule {
                   FieldsEdit tempFieldEdit = fieldsContainer.get(f);
                   Vector<String> savedFields = tempFieldEdit.saveProcess(
                       tempFieldEdit.getFieldsContainer(), type, null);
+                  
+                  if(validateResult(type,f)){ 
 
                   processFieldProperty(tempLabels, savedFields, nodes.item(f),
                       type, attrNames, null, f);
@@ -1875,6 +1862,7 @@ public class InitialStateUITab extends JScrollPane implements GUIModule {
             }
           }
         }
+      }
         //process event sub element 
         if (nodeName.contains("Event")) {
 
@@ -1912,9 +1900,11 @@ public class InitialStateUITab extends JScrollPane implements GUIModule {
                   FieldsEdit tempFieldEdit = fieldsContainer.get(f);
                   Vector<String> savedFields = tempFieldEdit.saveProcess(
                       tempFieldEdit.getFieldsContainer(), type, null);
+                  
+                  if(validateResult(type,f)){
                   processFieldProperty(tempLabels, savedFields, nodes.item(f),
                       type, attrNames, null, f);
-
+                  }
                 }
               }
             }
@@ -1936,7 +1926,7 @@ public class InitialStateUITab extends JScrollPane implements GUIModule {
               Vector<String> savedFields = tempFieldsEdit.saveProcess(
                   tempFieldsEdit.getFieldsContainer(), "globalVariable", null);
               
-              
+            if(validateResult("globalVariable",0)){
               for (int j = 0; j < tempLabels.size(); j++) {
 
                 String tableHeadElement = tempLabels.get(j);
@@ -2004,7 +1994,7 @@ public class InitialStateUITab extends JScrollPane implements GUIModule {
       }
     }
   }
-
+}
   public void processPropertyEdit(DefaultTableModel model,
       Vector<Vector<Object>> dataRows, String type, Vector<String> attrNames,
       int l, Node editNode, String objectType) {
@@ -2405,15 +2395,18 @@ public class InitialStateUITab extends JScrollPane implements GUIModule {
             
           } else {
 
-            for (int e = (l * eventNodes.getLength()); e < (l
-                * eventNodes.getLength() + eventNodes.getLength()); e++) {
+            /*for (int e = (l * eventNodes.getLength()); e < (l
+                * eventNodes.getLength() + eventNodes.getLength()); e++) {*/
               Vector<String> tempLabels = labelTypeMap.get(objectEventType);
-              FieldsEdit tempFieldEdit = objectEventFieldsContainer.get(e);
+              FieldsEdit tempFieldEdit = objectEventFieldsContainer.get(r);
+              
               Vector<String> savedFields = tempFieldEdit
                   .saveProcess(tempFieldEdit.getFieldsContainer(), tempType,
                       objectEventType);
+              
+              if(validateResult(objectEventType,r)){
               processFieldProperty(tempLabels, savedFields, eventNode,
-                  tempType, objectEventAttrNames, type, oen);
+                  tempType, objectEventAttrNames, type, r);
             }
           }
           oen++;
@@ -2892,12 +2885,101 @@ public class InitialStateUITab extends JScrollPane implements GUIModule {
  
   public void processTableRenderer() {
 
+	processSelfBeliefProerpty();
+	processTableFieldLength();
     prepareProcessJComboBoxAndJSliderRender(minMaxPropertyTypeMap,"JSlider");
     prepareProcessJComboBoxAndJSliderRender(enumPropertyTypeMap,"JComboBox");
     processValueExprAndRanVarTableRender(valueExprTypePropertyMap,"ValueExpr");
     processValueExprAndRanVarTableRender(ranTypePropertyMap,"RandomVariable");
 
   }
+  
+  public void processSelfBeliefProerpty(){
+	    
+	    for(Iterator<String> it = tableType.keySet().iterator(); it.hasNext();){
+	      
+	         String tempType = it.next();
+	         JTable processTable = tableType.get(tempType);
+	         
+	         for (int j = 0; j<processTable.getColumnCount(); j++) {
+	           
+	           String colHeadValue = (String) processTable.getColumnModel().getColumn(j).getHeaderValue();
+	           
+	           if(selfPropertyMap.keySet().contains(tempType)){
+	           
+	             HashSet<String> tempContent = userInterfaceMap.get(tempType);
+	               
+	             for(Iterator<String> properties = tempContent.iterator(); properties.hasNext();){   
+	             
+	                 String tempString = (String) properties.next();
+	                 String label = labelMap.get(tempString);
+	                 if (label.equals(colHeadValue)) {
+	                   
+	                   String tempPropertyName = tempString.substring(0, (tempString.length()
+	                       - tempType.length() - 2));
+	                   
+	                   Vector<String> tempVector = selfPropertyMap.get(tempType);
+
+	                   if (tempVector.contains(tempPropertyName)) {
+	                     System.out.println("The tempPropertyName:=> " + tempPropertyName);
+	                     
+	                     
+	                       TableColumn selfColumn = processTable.getColumnModel().getColumn(j);
+	                       selfColumn.setCellRenderer(new ColorColumnRenderer(new Color(168, 64,
+	                           89), Color.WHITE));        
+	                       
+	                       
+	                       
+	              }
+	            }
+	          }
+	        }
+	      }
+	    }
+	  }
+
+
+	public void processTableFieldLength(){
+	   
+	   Set<String> tableTypeKeySet = tableType.keySet();
+	   
+	   for(Iterator<String> it = tableTypeKeySet.iterator(); it.hasNext();){
+	     
+	     String tempType = it.next();
+	     JTable tempTable = tableType.get(tempType);
+	     processTableFieldLength(tempType, tempTable);
+	         
+	   }
+	   
+	   tableTypeKeySet = objectObjectEventMap.keySet();
+	   if(!tableTypeKeySet.isEmpty()){
+	     
+	      for(Iterator<String> it = tableTypeKeySet.iterator(); it.hasNext();){
+	        
+	          String objectType = it.next();
+	          HashSet<String> tempObjectEventTypeSet = objectObjectEventMap.get(objectType);
+	          
+	          for(Iterator<String> events = tempObjectEventTypeSet.iterator(); events.hasNext();){
+	            
+	            String objectEventType = events.next();
+	            String eventType = objectEventType.substring(objectType.length());
+	            
+	            JTable tempObjectEventTable = tableType.get(objectEventType);
+	            
+	            if(tempObjectEventTable != null){
+	              
+	              processTableFieldLength(eventType, tempObjectEventTable);
+	            }
+	         }
+	      }
+	   }
+	 } 
+  
+  
+  
+  
+  
+  
 
   //prepare to process JSlider rendering for minValue and maxValue 
   public void prepareProcessJComboBoxAndJSliderRender
@@ -3568,7 +3650,12 @@ public class InitialStateUITab extends JScrollPane implements GUIModule {
         String type, String objectEventType) {
 
       fieldValidateContainer = new Vector<Boolean>();
-      fieldValidateTypeMap = new HashMap<String, Vector<Vector<Boolean>>>();
+      
+      if(fieldValidateTypeMap==null){
+    	  
+        fieldValidateTypeMap = new HashMap<String, Vector<Vector<Boolean>>>();
+      }
+      
       for (int k = 0; k < fieldsContainer.size(); k++) {
 
         fieldValidateContainer.add(false);
