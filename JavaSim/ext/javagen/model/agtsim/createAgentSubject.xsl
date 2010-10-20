@@ -292,7 +292,7 @@
           </xsl:call-template>
         </xsl:if>
 
-        <xsl:for-each select="aorsl:CommunicationRule">
+        <xsl:for-each select="aorsl:CommunicationRule, aorsl:ReactionRule">
 
           <xsl:call-template name="java:newLine"/>
           <xsl:call-template name="java:newObject">
