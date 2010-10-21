@@ -305,16 +305,7 @@
         </xsl:choose>
       </xsl:with-param>
       <xsl:with-param name="variableName" select="@name"/>
-      <xsl:with-param name="modifier">
-        <xsl:choose>
-          <xsl:when test="@upperMultiplicity eq 'unbounded'">
-            <xsl:value-of select="'private'"/>
-          </xsl:when>
-          <xsl:otherwise>
-            <xsl:value-of select="'public'"/>
-          </xsl:otherwise>
-        </xsl:choose>
-      </xsl:with-param>
+      <xsl:with-param name="modifier" select="'public'"/>
       <xsl:with-param name="static" select="$static"/>
       <xsl:with-param name="staticClassName" select="$staticClassName"/>
       <xsl:with-param name="changeCheck" select="$changeCheck"/>
