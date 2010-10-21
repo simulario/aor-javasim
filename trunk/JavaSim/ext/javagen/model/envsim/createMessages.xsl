@@ -83,6 +83,15 @@
               mode="assistents.getVariableMethod">
               <xsl:with-param name="indent" select="$indent + 1"/>
             </xsl:apply-templates>
+            
+            <!-- get(int index), remove(int index), remove(Object o), add(Object o) for Properties with @upperMultiplicity eq 'unbounded' -->
+            <xsl:apply-templates
+              select="aorsl:Attribute[@upperMultiplicity eq 'unbounded'] | 
+              aorsl:ReferenceProperty[@upperMultiplicity eq 'unbounded'] | 
+              aorsl:ComplexDataProperty[@upperMultiplicity eq 'unbounded']"
+              mode="assistents.listMethods">
+              <xsl:with-param name="indent" select="$indent + 1"/>
+            </xsl:apply-templates>
 
             <!-- functions -->
             <xsl:apply-templates select="aorsl:Function" mode="shared.createFunction">
