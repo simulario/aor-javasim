@@ -2767,7 +2767,7 @@
                 <xsl:call-template name="java:boolExpr">
                   <xsl:with-param name="value1" select="$indexVarName"/>
                   <xsl:with-param name="value2" select="'0'"/>
-                  <xsl:with-param name="operator" select="'&gt;'"/>
+                  <xsl:with-param name="operator" select="'&gt;='"/>
                 </xsl:call-template>
               </xsl:with-param>
               <xsl:with-param name="value2">
