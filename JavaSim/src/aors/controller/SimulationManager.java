@@ -55,13 +55,10 @@ import aors.util.jar.JarUtil;
  */
 public class SimulationManager {
 
-  // the XSLT processor object
   private XSLT2Processor xslt2Processor;
 
-  // the map with XSLT parameters
   private HashMap<String, String> xsltParameter;
 
-  // Simulationdescription
   private SimulationDescription simulationDescription;
 
   // the current project assigned to the simulation manager
@@ -76,7 +73,6 @@ public class SimulationManager {
   // the user directory
   private final String APP_ROOT_DIRECTORY = System.getProperty("user.dir");
 
-  // the projects directory
   public final static String PROJECT_DIRECTORY = "projects";
 
   private String AORSLDirectory;
@@ -85,7 +81,7 @@ public class SimulationManager {
   private String codeGenXsltDirectory;
   private String codeGenXsltName;
 
-  // the current (used as defautl) schema name
+  // the current (used as default) schema name
   private final String CURRENT_AORSL_SCHEMA_NAME = "AORSL_0-8-4.xsd";
   private final String DEFAULT_CODEGEN_XSLT_FILE = "aorsl2java.xsl";
 
@@ -129,6 +125,7 @@ public class SimulationManager {
 
     // load properties from simulation project property file
     this.loadProperties();
+    this.setProperties();
 
     // initialize the logger
     this.initLogger();
@@ -583,8 +580,6 @@ public class SimulationManager {
 
     try {
       this.properties.loadFromXML(new FileInputStream(this.PROPERTY_FILE_NAME));
-      this.setProperties();
-
     } catch (IOException ioe) {
       System.err.println("Can not load the file " + this.PROPERTY_FILE_NAME
           + ". Using the default values.");
@@ -698,7 +693,6 @@ public class SimulationManager {
     project = null;
 
     project = new Project();
-    project.setAutoMultithreading(this.autoMultithreading);
     project.setDataBus(dataBus);
   }
 
@@ -714,9 +708,6 @@ public class SimulationManager {
 
     // new project instance
     project = new Project();
-
-    // set whether to use MT on Multi-Core CPU's
-    project.setAutoMultithreading(this.autoMultithreading);
     project.setDataBus(dataBus);
 
     // load the project for the given path
@@ -960,9 +951,6 @@ public class SimulationManager {
    */
   public void setAutoMultithreading(boolean autoMultithreading) {
     this.autoMultithreading = autoMultithreading;
-    if (project != null) {
-      project.setAutoMultithreading(this.autoMultithreading);
-    }
   }
 
   /**
@@ -1103,5 +1091,9 @@ public class SimulationManager {
       System.out.println("more than zero arguments ");
 
     }
+  }
+  
+  public void runSimulation() {
+    SimulationManager.project.runSimulation(this.autoMultithreading);
   }
 }

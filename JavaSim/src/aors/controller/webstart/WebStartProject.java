@@ -36,9 +36,6 @@ public class WebStartProject implements ProjectInterface {
   // the simulation description content as String
   private String simulationDescription;
 
-  // auto multi-threading is activated ?
-  private boolean autoMultithreading;
-
   // the abstract simulator - used to run the simulation
   private AbstractSimulator simulation = null;
 
@@ -101,7 +98,6 @@ public class WebStartProject implements ProjectInterface {
     this.directory = USER_DIR + File.separator + PROJECTS_DIR;
 
     this.simulationDescription = "";
-    this.autoMultithreading = false;
   }
 
   /**
@@ -281,25 +277,6 @@ public class WebStartProject implements ProjectInterface {
   }
 
   /**
-   * The state of auto-multi-threading
-   * 
-   * @return true if auto-multi-threading is activated, false otherwise
-   */
-  public boolean isAutoMultithreading() {
-    return autoMultithreading;
-  }
-
-  /**
-   * Set new value for auto-multi-threading
-   * 
-   * @param status
-   *          new status to set
-   */
-  public void setAutoMultithreading(boolean status) {
-    this.autoMultithreading = status;
-  }
-
-  /**
    * Load the simulation description from an XML file
    */
   public boolean loadSimulationDescription() {
@@ -427,9 +404,6 @@ public class WebStartProject implements ProjectInterface {
 
     // please maintain the order of following two calls
     this.simulation.setDataBus(this.dataBus);
-
-    // turn on/off multi-threading
-    this.simulation.setAutoMultithreading(this.autoMultithreading);
 
     // call the simulation initialization
     this.simulation.initialize();

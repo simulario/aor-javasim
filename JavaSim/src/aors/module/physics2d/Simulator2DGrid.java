@@ -104,14 +104,20 @@ public class Simulator2DGrid extends PhysicsSimulator {
       determineNewPositions();
       updatePositions();
     }
+    
+
 
     intervalList.updateGrid();
+    
+
 
     List<Collision1D> collisions = new ArrayList<Collision1D>();
     List<Perception> perceptions = new ArrayList<Perception>();
+    
+    long t = System.currentTimeMillis();
 
     intervalList.detectCollisionsGrid(collisions, perceptions);
-
+    System.err.println("detectCollisionsGrid: " + (System.currentTimeMillis() - t));
     // processCollisions(collisions);
     processPerceptions(perceptions);
 

@@ -64,9 +64,6 @@ public class Project implements ProjectInterface {
   // project was already compile
   private boolean compiled;
 
-  // auto multi-threading is activated ?
-  private boolean autoMultithreading;
-
   // the simulation class - this is the one with main() method. It is used for
   // create instances of the AbstractSimulator
   private Class<? extends Object> simulationClass;
@@ -135,7 +132,6 @@ public class Project implements ProjectInterface {
   private final String propertyName = "name";
   private final String propertyGenerated = "sources generated";
   private final String propertyCompiled = "sources compiled";
-  private final String propertyMultithreading = "multi-threading";
   private final String propertyLogFileName = "log file";
   private final String propertySimulationDescriptionFileName = "simDescFileName";
   private final String propertySimulationDescriptionFileMD5 = "simDescMD5";
@@ -159,7 +155,6 @@ public class Project implements ProjectInterface {
     this.saved = false;
     this.generated = false;
     this.compiled = false;
-    this.autoMultithreading = false;
 
     // instantiate the Java compiler
     this.compiler = ToolProvider.getSystemJavaCompiler();
@@ -469,25 +464,6 @@ public class Project implements ProjectInterface {
   }
 
   /**
-   * The state of auto-multi-threading
-   * 
-   * @return true if auto-multi-threading is activated, false otherwise
-   */
-  public boolean isAutoMultithreading() {
-    return autoMultithreading;
-  }
-
-  /**
-   * Set new value for auto-multi-threading
-   * 
-   * @param status
-   *          new status to set
-   */
-  public void setAutoMultithreading(boolean status) {
-    this.autoMultithreading = status;
-  }
-
-  /**
    * Helper method for loading a new project
    * 
    * @return true if load was successful, false otherwise
@@ -551,8 +527,6 @@ public class Project implements ProjectInterface {
         if (this.simulationDescriptionFilePath == null)
           this.simulationDescriptionFilePath = "";
 
-        this.autoMultithreading = new Boolean(properties
-            .getProperty(this.propertyMultithreading));
         this.logFileName = properties.getProperty(this.propertyLogFileName);
 
         // the project state is the same as saved and of course as
@@ -735,8 +709,6 @@ public class Project implements ProjectInterface {
     properties.put(this.propertyGenerated, Boolean.valueOf(generated)
         .toString());
     properties.put(this.propertyCompiled, Boolean.valueOf(compiled).toString());
-    properties.put(this.propertyMultithreading, Boolean.valueOf(
-        this.autoMultithreading).toString());
     properties.put(this.propertyLogFileName, this.logFileName);
     properties.put(this.propertySimulationDescriptionFileName,
         this.simDescXmlFileName);
@@ -971,9 +943,6 @@ public class Project implements ProjectInterface {
     // please maintain the order of following two calls
     this.simulation.setDataBus(this.dataBus);
 
-    // turn on/off multi-threading
-    simulation.setAutoMultithreading(this.autoMultithreading);
-
     // call the simulation initialization
     this.simulation.initialize();
   }
@@ -1026,5 +995,13 @@ public class Project implements ProjectInterface {
    */
   public void setSimulationDescriptionFile(File simulationDescriptionFile) {
     this.simulationDescriptionFile = simulationDescriptionFile;
+  }
+  
+  public void runSimulation(boolean multithreading) {
+    this.simulation.runSimulation(multithreading);
+  }
+  
+  public boolean existSimulation() {
+    return this.simulation != null;
   }
 }
