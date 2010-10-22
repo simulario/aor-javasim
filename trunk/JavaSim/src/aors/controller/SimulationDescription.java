@@ -349,7 +349,7 @@ public class SimulationDescription {
       throw new UnsupportedOperationException();
     }
 
-    @SuppressWarnings("unchecked")
+    @SuppressWarnings("rawtypes")
     @Override
     public Iterator getPrefixes(String namespaceURI) {
       throw new UnsupportedOperationException();
