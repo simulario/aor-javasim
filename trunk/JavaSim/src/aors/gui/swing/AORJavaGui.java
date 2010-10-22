@@ -85,7 +85,7 @@ import aors.module.evt.ModuleEventSpeedUpSimulation;
  */
 public class AORJavaGui extends JFrame implements ActionListener,
     ChangeListener, SimulationEventListener, ObjektInitEventListener,
-    FileListener, SimulationStepEventListener, ModuleEventListener {// vlog
+    FileListener, SimulationStepEventListener, ModuleEventListener {
 
   static final long serialVersionUID = 122140342341234L;
   private Runnable simulationThread;
@@ -1152,9 +1152,9 @@ public class AORJavaGui extends JFrame implements ActionListener,
             // simulate the simulation project
             simulationManager.getProject().prepareSimulation();
 
-            if (simulationManager.getProject().getSimulation() != null) {
+            if (simulationManager.getProject().existSimulation()) {
               // run the simulation
-              simulationManager.getProject().getSimulation().runSimulation();
+              simulationManager.runSimulation();
             }
           } finally {
 

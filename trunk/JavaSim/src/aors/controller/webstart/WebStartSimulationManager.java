@@ -317,9 +317,6 @@ public class WebStartSimulationManager {
 
     // new project instance
     project = new WebStartProject();
-
-    // set whether to use MT on Multi-Core CPU's
-    project.setAutoMultithreading(this.autoMultithreading);
     project.setDataBus(dataBus);
 
     return project.loadSimulationDescription();
@@ -363,9 +360,6 @@ public class WebStartSimulationManager {
    */
   public void setAutoMultithreading(boolean autoMultithreading) {
     this.autoMultithreading = autoMultithreading;
-    if (project != null) {
-      project.setAutoMultithreading(this.autoMultithreading);
-    }
   }
 
   /**

@@ -117,21 +117,6 @@ public abstract class AbstractSimulator implements AgentSimulatorListener {
   private GeneralStatistics statistics = null;
 
   /**
-   * List of displayable Variables
-   */
-  // private List<AbstractStatisticsVariable> statisticVars;
-
-  /**
-   * List of executable StatisticVariables (every step)
-   */
-  // private List<AbstractStatisticsVariable> statisticVarExprStep;
-
-  /**
-   * List of executable StatisticVariables (end of simulation)
-   */
-  // private List<AbstractStatisticsVariable> statisticVarExprSim;
-
-  /**
    * An Object which holds some informations about the current
    * simulation/scenario.
    */
@@ -435,9 +420,9 @@ public abstract class AbstractSimulator implements AgentSimulatorListener {
 
     if (this.autoMultithreading
         && Runtime.getRuntime().availableProcessors() > 1) {
-      multithreading = true;
+      this.multithreading = true;
     } else {
-      multithreading = false;
+      this.multithreading = false;
     }
   } // initialize
 
@@ -507,6 +492,11 @@ public abstract class AbstractSimulator implements AgentSimulatorListener {
   protected abstract void executeInitializeRules();
 
   protected abstract void setActivityFactory();
+  
+  public void runSimulation(boolean multithreading) {
+    this.multithreading = multithreading;
+    this.runSimulation();
+  }
 
   /**
    * Run the simulation that has been initialized before.
@@ -801,27 +791,6 @@ public abstract class AbstractSimulator implements AgentSimulatorListener {
   } // runAgentSimulatorsSingleThreaded
 
   /**
-   * 
-   * Usage: computes the values for statistic variables
-   * 
-   * @param step
-   *          - if true, then compute variables for every step, otherwise the
-   *          variables for the end of the simulation (computeOnlyAtEnd="true")
-   */
-  // private void computeStatisticsVariables(boolean step) {
-  //
-  // if (step) {
-  // for (AbstractStatisticsVariable var : this.statisticVarExprStep) {
-  // var.computeVar();
-  // }
-  // } else {
-  // for (AbstractStatisticsVariable var : this.statisticVarExprSim) {
-  // var.computeVar();
-  // }
-  // }
-  // } // computeStatisticsVariables
-
-  /**
    * addAgentSubject adds a new AgentSubject to the simulator
    * 
    * @param agentSubject
@@ -1089,12 +1058,12 @@ public abstract class AbstractSimulator implements AgentSimulatorListener {
    * 
    * @param agentSubjectEvent
    */
-  public void receiveActionEvents(List<ActionEvent> actions, JsonData agentLog) {
+  public synchronized void receiveActionEvents(List<ActionEvent> actions, JsonData agentLog) {
     this.environmentEvents.addAll(actions);
     this.dataBus.notifyAgentSimulatorStep(agentLog);
   }
 
-  public void receiveActionEvents(List<ActionEvent> actions,
+  public synchronized void receiveActionEvents(List<ActionEvent> actions,
       AgentSimulatorStep agentSimulatorStep) {
     this.environmentEvents.addAll(actions);
     this.dataBus.notifyAgentSimulatorStep(agentSimulatorStep);
@@ -1179,9 +1148,9 @@ public abstract class AbstractSimulator implements AgentSimulatorListener {
    * 
    * @return the {@code autoMultiThreading}.
    */
-  public boolean isAutoMultithreading() {
-    return autoMultithreading;
-  }
+//  public boolean isAutoMultithreading() {
+//    return autoMultithreading;
+//  }
 
   /**
    * Comments: Set the {@code autoMultiThreading}.
