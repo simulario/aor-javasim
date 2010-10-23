@@ -854,27 +854,41 @@
   <xsl:template match="aorsl:MultiValuedSlot" mode="assistent.setMultiValuedSlot">
     <xsl:param name="indent" required="yes" as="xs:integer"/>
     <xsl:param name="objectContext" required="yes" as="xs:string"/>
+    
+    <xsl:apply-templates select="aorsl:*" mode="assistent.setMultiValuedSlot.listMethods">
+      <xsl:with-param name="indent" select="$indent"/>
+      <xsl:with-param name="objectContext" select="$objectContext"/>
+    </xsl:apply-templates>
 
+  </xsl:template>
+  
+  <xsl:template match="aorsl:Add | aorsl:Remove | aorsl:AddAll" mode="assistent.setMultiValuedSlot.listMethods">
+    <xsl:param name="indent" required="yes" as="xs:integer"/>
+    <xsl:param name="objectContext" required="yes" as="xs:string"/>
+    
     <xsl:call-template name="java:callMethod">
       <xsl:with-param name="indent" select="$indent"/>
       <xsl:with-param name="objInstance" select="$objectContext"/>
       <xsl:with-param name="method">
         <xsl:choose>
-          <xsl:when test="aorsl:Add">
-            <xsl:value-of select="concat('add', jw:upperWord(@property))"/>
+          <xsl:when test="local-name() eq 'Add'">
+            <xsl:value-of select="concat('add', jw:upperWord(../@property))"/>
           </xsl:when>
-          <xsl:when test="aorsl:Remove">
-            <xsl:value-of select="concat('remove', jw:upperWord(@property))"/>
+          <xsl:when test="local-name() eq 'Remove'">
+            <xsl:value-of select="concat('remove', jw:upperWord(../@property))"/>
+          </xsl:when>
+          <xsl:when test="local-name() eq 'AddAll'">
+            <xsl:value-of select="concat('addAll', jw:upperWord(../@property))"/>
           </xsl:when>
         </xsl:choose>
       </xsl:with-param>
       <xsl:with-param name="args">
         <xsl:choose>
-          <xsl:when test="(aorsl:Add | aorsl:Remove)/@itemVariable">
-            <xsl:value-of select="jw:checkProperty((aorsl:Add | aorsl:Remove)/@itemVariable)"/>
+          <xsl:when test="@itemVariable | @listVariable">
+            <xsl:value-of select="jw:checkProperty(@itemVariable | @listVariable)"/>
           </xsl:when>
-          <xsl:when test="exists((aorsl:Add | aorsl:Remove)/aorsl:ValueExpr[@language = $output.language])">
-            <xsl:value-of select="(aorsl:Add | aorsl:Remove)/aorsl:ValueExpr[@language = $output.language][1]"/>
+          <xsl:when test="exists(aorsl:ValueExpr[@language = $output.language])">
+            <xsl:value-of select="aorsl:ValueExpr[@language = $output.language][1]"/>
           </xsl:when>
           <xsl:otherwise>
             <xsl:message>
@@ -886,7 +900,8 @@
         </xsl:choose>
       </xsl:with-param>
     </xsl:call-template>
-
+    
+    
   </xsl:template>
 
   <xsl:template match="@initialValue" mode="assistents.getValue">
@@ -2696,6 +2711,12 @@
       <xsl:with-param name="methodPrefix" select="$methodPrefix"/>
     </xsl:apply-templates>
 
+    <!-- addAll(List<Object> l) -->
+    <xsl:apply-templates select="." mode="assistents.listMethods.addAll">
+      <xsl:with-param name="indent" select="$indent"/>
+      <xsl:with-param name="methodPrefix" select="$methodPrefix"/>
+    </xsl:apply-templates>
+
     <!-- get() -->
     <xsl:apply-templates select="." mode="assistents.listMethods.getList">
       <xsl:with-param name="indent" select="$indent"/>
@@ -2846,6 +2867,48 @@
       <xsl:with-param name="method" select="'add'"/>
     </xsl:apply-templates>
 
+  </xsl:template>
+  
+  <!-- addAll#prefix#(List<Object> l) -->
+  <xsl:template match="aorsl:Attribute | aorsl:ReferenceProperty | aorsl:ComplexDataProperty" mode="assistents.listMethods.addAll">
+    <xsl:param name="indent" required="yes" as="xs:integer"/>
+    <xsl:param name="methodPrefix" required="yes" as="xs:string"/>
+    
+    <xsl:variable name="listVarName" select="fn:concat(@name, 'List')"/>
+    <xsl:call-template name="java:method">
+      <xsl:with-param name="indent" select="$indent"/>
+      <xsl:with-param name="modifier" select="'public'"/>
+      <xsl:with-param name="type" select="'boolean'"/>
+      <xsl:with-param name="name" select="fn:concat('addAll', $methodPrefix)"/>
+      <xsl:with-param name="parameterList" as="xs:string*">
+        <xsl:call-template name="java:createParam">
+          <xsl:with-param name="type" select="fn:concat('List&lt;', jw:mappeDataType(@type), '&gt;')"/>
+          <xsl:with-param name="name" select="$listVarName"/>
+        </xsl:call-template>
+      </xsl:with-param>
+      <xsl:with-param name="content">
+        
+        <xsl:call-template name="java:return">
+          <xsl:with-param name="indent" select="$indent + 1"/>
+          <xsl:with-param name="value">
+            
+            <xsl:call-template name="java:callMethod">
+              <xsl:with-param name="inLine" select="true()"/>
+              <xsl:with-param name="objInstance">
+                <xsl:call-template name="java:varByDotNotation">
+                  <xsl:with-param name="varName" select="@name"/>
+                </xsl:call-template>
+              </xsl:with-param>
+              <xsl:with-param name="method" select="'addAll'"/>
+              <xsl:with-param name="args" select="$listVarName"/>
+            </xsl:call-template>
+            
+          </xsl:with-param>
+        </xsl:call-template>
+        
+      </xsl:with-param>
+    </xsl:call-template>    
+    
   </xsl:template>
 
   <!-- add(Object o) and remove(Object o) have a simular structure -->
