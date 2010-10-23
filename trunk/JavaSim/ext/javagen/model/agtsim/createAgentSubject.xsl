@@ -718,6 +718,44 @@
 
       </xsl:with-param>
     </xsl:call-template>
+    
+    <!-- addAll(List<Object> l) -->
+    <xsl:variable name="listVarName" select="fn:concat(@name, 'List')"/>
+    <xsl:call-template name="java:method">
+      <xsl:with-param name="indent" select="$indent"/>
+      <xsl:with-param name="modifier" select="'public'"/>
+      <xsl:with-param name="type" select="'boolean'"/>
+      <xsl:with-param name="name" select="fn:concat('addAll', $methodPrefix)"/>
+      <xsl:with-param name="parameterList" as="xs:string*">
+        <xsl:call-template name="java:createParam">
+          <xsl:with-param name="type" select="fn:concat('List&lt;', jw:mappeDataType(@type), '&gt;')"/>
+          <xsl:with-param name="name" select="$listVarName"/>
+        </xsl:call-template>
+      </xsl:with-param>
+      <xsl:with-param name="content">
+        
+        <xsl:call-template name="createObjekt">
+          <xsl:with-param name="indent" select="$indent"/>
+          <xsl:with-param name="agentObjectClassName" select="$agentObjectClassName"/>
+          <xsl:with-param name="agentObjVarName" select="$agentObjVarName"/>
+        </xsl:call-template>
+        
+        <xsl:call-template name="java:return">
+          <xsl:with-param name="indent" select="$indent + 1"/>
+          <xsl:with-param name="value">
+            
+            <xsl:call-template name="java:callMethod">
+              <xsl:with-param name="inLine" select="true()"/>
+              <xsl:with-param name="objInstance" select="$agentObjVarName"/>
+              <xsl:with-param name="method" select="fn:concat('addAll', $methodPrefix)"/>
+              <xsl:with-param name="args" select="$listVarName"/>
+            </xsl:call-template>
+            
+          </xsl:with-param>
+        </xsl:call-template>
+        
+      </xsl:with-param>
+    </xsl:call-template>
   </xsl:template>
 
   <!-- set the @memorySize from AgentType or from superType -->
