@@ -1531,13 +1531,7 @@
       <xsl:with-param name="type" select="@resultType"/>
       <xsl:with-param name="name" select="@name"/>
       <xsl:with-param name="parameterList" as="xs:string*">
-        <xsl:for-each select="aorsl:Parameter">
-          <xsl:call-template name="java:createParam">
-            <xsl:with-param name="type" select="@type"/>
-            <xsl:with-param name="name" select="@name"/>
-            <xsl:with-param name="typeMapping" select="true()"/>
-          </xsl:call-template>
-        </xsl:for-each>
+        <xsl:apply-templates select="aorsl:Parameter" mode="shared.createFunction.parameter"/>
       </xsl:with-param>
       <xsl:with-param name="content">
         <xsl:call-template name="java:indent">
@@ -1553,6 +1547,23 @@
         </xsl:choose>
         <xsl:call-template name="java:newLine"/>
       </xsl:with-param>
+    </xsl:call-template>
+  </xsl:template>
+
+  <xsl:template match="aorsl:Parameter" mode="shared.createFunction.parameter">
+    <xsl:call-template name="java:createParam">
+      <xsl:with-param name="type">
+        <xsl:choose>
+          <xsl:when test="@type = 'List'">
+            <xsl:value-of select="fn:concat('List&lt;', @itemType, '&gt;')"/>
+          </xsl:when>
+          <xsl:otherwise>
+            <xsl:value-of select="@type"/>
+          </xsl:otherwise>
+        </xsl:choose>
+      </xsl:with-param>
+      <xsl:with-param name="name" select="@name"/>
+      <xsl:with-param name="typeMapping" select="true()"/>
     </xsl:call-template>
   </xsl:template>
 
