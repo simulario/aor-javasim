@@ -133,6 +133,7 @@ public class PhysicalObjectPerceptionEvent extends PerceptionEvent {
    */
   public void setPerceivedPhysicalObject(Physical physicalObject) {
     this.perceivedPhysicalObject = physicalObject;
+    this.perceivedPhysicalObjectIdRef = physicalObject.getId();
   }
 
   @Override
