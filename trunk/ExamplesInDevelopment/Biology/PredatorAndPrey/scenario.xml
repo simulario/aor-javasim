@@ -89,6 +89,7 @@
 				<Attribute name="age" type="Integer" minValue="0"/>
 				<Attribute name="maxAge" type="Integer"/>
 				<Attribute name="sex" type="Integer" minValue="1" maxValue="2"/>
+				<Attribute name="dateOfLastKid" type="Integer" />
 				<Function name="randomDirection" resultType="Direction4">
 					<Body language="Java"><![CDATA[
 		Direction4 dir = Direction4.N;
@@ -101,6 +102,8 @@
 		return dir;
 					]]></Body>
 				</Function>
+				
+				
 				<!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~-->
 				<ReactionRule name="MoveRule" agentVariable="a">
 					<!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~-->
@@ -127,11 +130,25 @@
 					<!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~-->
 					<documentation><dc:description> If a prey perceives another prey, and one of them is female and the other one male, a new prey is to be created.	</dc:description></documentation>
 					<WHEN eventType="PhysicalObjectPerceptionEvent" physicalObjectType="Prey" eventVariable="event"/>
-					<IF language="Java"><![CDATA[ 
-          prey.getSex() != ((Prey)event.getPerceivedPhysicalObject()).getSex()
-          && prey.getAge() > 50 && ((Prey)event.getPerceivedPhysicalObject()).getAge() > 50
-          ]]></IF>
+					<IF language="Java">
+						<![CDATA[ 
+          					prey.getSex() != ((Prey)event.getPerceivedPhysicalObject()).getSex()
+          					&& prey.getAge() > 50 && ((Prey)event.getPerceivedPhysicalObject()).getAge() > 50
+          					
+          					/* only mother can do a child! only each 7 steps a child can be born by the same mother! */
+          					&& prey.getSex() == 1 && (event.getOccurrenceTime() - prey.getDateOfLastKid()) > 7
+          				]]>
+					</IF>
 					<THEN>
+						<UPDATE-AGT>
+							<Slot property="dateOfLastKid">
+								<ValueExpr language="Java">
+									<![CDATA[
+										event.getOccurrenceTime()
+									]]>
+								</ValueExpr>
+							</Slot>
+						</UPDATE-AGT>
 						<SCHEDULE-EVT>
 							<ActionEventExpr actionEventType="ProducePreyOffspring">
 								<Slot property="father">
@@ -178,11 +195,25 @@
 					<!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~-->
 					<documentation><dc:description> If a predator perceives another predator, and one of them is female and the other one male, and both are older than 50, a predator offspring is created. </dc:description></documentation>
 					<WHEN eventType="PhysicalObjectPerceptionEvent" physicalObjectType="Predator" eventVariable="event"/>
-				  <IF language="Java"><![CDATA[ Random.uniformBoolean() &&
-          predator.getSex() != ((Predator)event.getPerceivedPhysicalObject()).getSex()
-          && predator.getAge() > 50 && ((Predator)event.getPerceivedPhysicalObject()).getAge() > 50
-          ]]></IF>
+				  <IF language="Java">
+				  	<![CDATA[ 
+				  		Random.uniformBoolean() && predator.getSex() != ((Predator)event.getPerceivedPhysicalObject()).getSex()
+          				&& predator.getAge() > 50 && ((Predator)event.getPerceivedPhysicalObject()).getAge() > 50 
+          				
+          				/* only mother can do a child! only each 7 steps a child can be born by the same mother! */
+          				&& predator.getSex() == 1 && (event.getOccurrenceTime() - predator.getDateOfLastKid()) > 7
+			        ]]>
+				  </IF>
 					<THEN>
+						<UPDATE-AGT>
+							<Slot property="dateOfLastKid">
+								<ValueExpr language="Java">
+									<![CDATA[
+										event.getOccurrenceTime()
+									]]>
+								</ValueExpr>
+							</Slot>
+						</UPDATE-AGT>
 						<SCHEDULE-EVT>
 							<ActionEventExpr actionEventType="ProducePredatorOffspring">
 								<Slot property="father">
@@ -206,7 +237,7 @@
 						<dc:description> When a hungry predator perceives a prey, it kills and eats it.  </dc:description>
 					</documentation>
 					<WHEN eventType="PhysicalObjectPerceptionEvent" physicalObjectType="Prey" eventVariable="event"/>
-					<IF language="Java"><![CDATA[ predator.getEnergy() <= 10 ]]></IF>
+					<IF language="Java"><![CDATA[ predator.getEnergy() <= 50 ]]></IF>
 					<THEN>
 						<SCHEDULE-EVT>
 							<ActionEventExpr actionEventType="KillPrey">
@@ -457,7 +488,7 @@
 			</Slot>
 		</PhysicalAgents>
 		<!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~-->
-		<PhysicalAgents type="Predator" rangeStartID="1000" rangeEndID="1010" hasRandomPosition="true" perceptionRadius="2">
+		<PhysicalAgents type="Predator" rangeStartID="1000" rangeEndID="1015" hasRandomPosition="true" perceptionRadius="3">
 			<!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~-->
 			<Slot property="sex">
 				<RandomVariable><UniformInt lowerBound="1" upperBound="2"/></RandomVariable>
@@ -469,7 +500,7 @@
 				<RandomVariable><UniformInt lowerBound="1300" upperBound="1600"/></RandomVariable>
 			</Slot>
 			<Slot property="energy">
-				<RandomVariable><UniformInt lowerBound="20" upperBound="40"/></RandomVariable>
+				<RandomVariable><UniformInt lowerBound="50" upperBound="70"/></RandomVariable>
 			</Slot>
 		</PhysicalAgents>
 		<!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~-->
