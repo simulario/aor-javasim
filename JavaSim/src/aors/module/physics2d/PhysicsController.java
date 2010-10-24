@@ -176,21 +176,25 @@ public class PhysicsController implements Module {
       return;
     }
 
+    // the space type used by the space model
+    SpaceType spaceType = spaceModel.getSpaceType();
+
     // create specific simulator depending on SpaceType
-    if (spaceModel.getSpaceType().equals(SpaceType.TwoD)
-        || spaceModel.getSpaceType().equals(SpaceType.TwoDLateralView)) {
+    if (spaceType.equals(SpaceType.TwoD)
+        || spaceType.equals(SpaceType.TwoDLateralView)) {
       simulator = new Box2DSimulator(simParams, spaceModel, autoKinematics,
           autoCollisionDetection, autoCollisionHandling, gravitation,
           initialState.getDatabus(), objects, agents);
     }
 
-    if (spaceModel.getSpaceType().equals(SpaceType.TwoDGrid)) {
+    // 2D grid space uses only perceptions and kinematics (no collision or
+    // gravitation is suitable for this space type)
+    if (spaceType.equals(SpaceType.TwoDGrid)) {
       simulator = new Simulator2DGrid(simParams, spaceModel, autoKinematics,
-          autoCollisionDetection, autoCollisionHandling, gravitation,
-          initialState.getDatabus(), objects, agents);
+          false, false, 0, initialState.getDatabus(), objects, agents);
     }
 
-    if (spaceModel.getSpaceType().equals(SpaceType.OneD)) {
+    if (spaceType.equals(SpaceType.OneD)) {
       simulator = new Simulator1D(simParams, spaceModel, autoKinematics,
           autoCollisionDetection, autoCollisionHandling, gravitation,
           initialState.getDatabus(), objects, agents);
