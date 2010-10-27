@@ -189,10 +189,8 @@ public class StatisticVar {
    * @return Number
    */
   public Number getMinimumOfList(List<Number> list) {
-    /*
-     * Double[] arr = list.toArray(new Double[list.size()]); Arrays.sort(arr);
-     * return arr[0];
-     */
+
+    if (list.isEmpty()) return null;
     Number min = list.get(0);
     for (int i = 1; i < list.size(); i++) {
       if (list.get(i).doubleValue() < min.doubleValue()) {
@@ -209,11 +207,8 @@ public class StatisticVar {
    * @return Number
    */
   public Number getMaximumOfList(List<Number> list) {
-    /*
-     * Double[] arr = list.toArray(new Double[list.size()]); Arrays.sort(arr);
-     * return arr[arr.length-1];
-     */
-
+    
+    if (list.isEmpty()) return null;
     Number max = list.get(0);
     for (int i = 1; i < list.size(); i++) {
       if (list.get(i).doubleValue() > max.doubleValue()) {
@@ -230,6 +225,8 @@ public class StatisticVar {
    * @return Number
    */
   public Number getAverageOfList(List<Number> list) {
+    
+    if (list.isEmpty()) return null;
     double avg = list.get(0).doubleValue();
     for (int i = 1; i < list.size(); i++) {
       avg = avg + list.get(i).doubleValue();
@@ -243,6 +240,7 @@ public class StatisticVar {
    * @param value
    */
   private void setMinValue(Number value) {
+    if (value == null) return;
     if (this.getCurrentStep() == 1) {
       this.getStatsVarUIMap().put(MIN, value.toString());
     } else {
@@ -259,6 +257,7 @@ public class StatisticVar {
    * @param value
    */
   private void setMaxValue(Number value) {
+    if (value == null) return;
     if (this.getCurrentStep() == 1) {
       this.getStatsVarUIMap().put(MAX, value.toString());
     } else {
@@ -366,6 +365,7 @@ public class StatisticVar {
    * @param lastValue
    */
   public void setLastValue(Number lastValue) {
+    if (lastValue == null) return;
     this.lastValue = lastValue;
   }
 

@@ -57,7 +57,7 @@ public class StatisticalAnalysis {
     }
     double currMax = Double.parseDouble(vars.get(variable).getStatsVarUIMap()
         .get(StatisticVar.MAX));
-    if (max.doubleValue() < currMax) {
+    if (max.doubleValue() < currMax || max == null) {
       max = currMax;
     }
     if (vars.get(variable).getDataType().equals(StatVarDataTypeEnumLit.Integer)) {
@@ -82,7 +82,7 @@ public class StatisticalAnalysis {
     }
     double currMin = Double.parseDouble(vars.get(variable).getStatsVarUIMap()
         .get(StatisticVar.MIN));
-    if (min.doubleValue() > currMin) {
+    if (min.doubleValue() > currMin || min == null) {
       min = currMin;
     }
     if (vars.get(variable).getDataType().equals(StatVarDataTypeEnumLit.Integer)) {
