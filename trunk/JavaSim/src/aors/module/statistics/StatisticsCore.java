@@ -275,8 +275,8 @@ public class StatisticsCore implements Module {
 
       getActualStatsVarValue(false);
       if (showCharts) {
-        guiTab.getTabStatistics().getStatsChartPanel().updateCharts(
-            statisticVars);
+        guiTab.getTabStatistics().getStatsChartPanel()
+            .updateCharts(statisticVars);
       }
     }
   }
@@ -351,7 +351,6 @@ public class StatisticsCore implements Module {
     compData = new HashMap<Integer, Integer[]>();
   }
 
-  @SuppressWarnings("unchecked")
   @Override
   public void simulationDomOnlyInitialization(
       SimulationDescription simulationDescription) {
@@ -363,17 +362,15 @@ public class StatisticsCore implements Module {
       if (!simulationLoaded) {
         statisticVars = new ArrayList<StatisticVar>();
         for (String key : statsVarMap.keySet()) {
-          if (statsVarMap.get(key).getStatsVarUIMap().get(
-              StatisticVar.DISPLAYNAME) != null) {
+          if (statsVarMap.get(key).getStatsVarUIMap()
+              .get(StatisticVar.DISPLAYNAME) != null) {
             statisticVars.add(statsVarMap.get(key));
           }
         }
-        Collections.sort(statisticVars, new Comparator() {
-          public int compare(Object o1, Object o2) {
-            String id1 = (((StatisticVar) o1).getStatsVarUIMap()
-                .get(StatisticVar.ID));
-            String id2 = (((StatisticVar) o2).getStatsVarUIMap()
-                .get(StatisticVar.ID));
+        Collections.sort(statisticVars, new Comparator<StatisticVar>() {
+          public int compare(StatisticVar o1, StatisticVar o2) {
+            String id1 = o1.getStatsVarUIMap().get(StatisticVar.ID);
+            String id2 = o2.getStatsVarUIMap().get(StatisticVar.ID);
             return -id2.compareTo(id1);
           }
         });
@@ -383,8 +380,8 @@ public class StatisticsCore implements Module {
       comparisons = xmlReader.getComparisons();
       if (isInit == false) {
         guiTab.getTabStatistics().setStatsVarsPanel();
-        guiTab.getTabStatistics().getStatsVarsPanel().initialization(
-            statisticVars);
+        guiTab.getTabStatistics().getStatsVarsPanel()
+            .initialization(statisticVars);
         guiTab.getTabStatistics().setStatsChartPanel();
         guiTab.getTabStatistics().getStatsChartPanel().deleteImageFolder();
         isInit = true;
@@ -439,8 +436,8 @@ public class StatisticsCore implements Module {
     for (int i = 0; i < statisticVars.size(); i++) {
       if (statisticVars.get(i).isComputeOnlyAtEnd() == computeOnlyAtEnd) {
         statisticVars.get(i).setSimulationstepValue(initialState, stepEvent);
-        guiTab.getTabStatistics().getStatsVarsPanel().formatStatsVar(
-            statisticVars.get(i), i);
+        guiTab.getTabStatistics().getStatsVarsPanel()
+            .formatStatsVar(statisticVars.get(i), i);
       }
     }
     guiTab.getTabStatistics().getStatsVarsPanel().getPanelSingleSim()
@@ -457,8 +454,8 @@ public class StatisticsCore implements Module {
     for (int i = 0; i < statisticVars.size(); i++) {
       xmlReader.getStatisticsVarUI(statisticVars.get(i), lang);
       if (simulations.size() > 0) {
-        simulations.get(0).get(i).setStatsVarUIMap(
-            statisticVars.get(i).getStatsVarUIMap());
+        simulations.get(0).get(i)
+            .setStatsVarUIMap(statisticVars.get(i).getStatsVarUIMap());
       }
     }
     guiTab.getTabStatistics().getStatsVarsPanel().updateLanguage(statisticVars);
@@ -574,6 +571,6 @@ public class StatisticsCore implements Module {
   @Override
   public void notifyEvent(ControllerEvent event) {
     // TODO Auto-generated method stub
-    
+
   }
 }
