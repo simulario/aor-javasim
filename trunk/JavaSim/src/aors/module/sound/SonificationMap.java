@@ -330,7 +330,6 @@ public class SonificationMap {
    *          v4 value
    * @return the corresponding value to be mapped
    */
-  @SuppressWarnings("unchecked")
   private int computeMapValue(Object propertyValue, Object a0, Object a1,
       Object a2, Object a3, int v0, int v1, int v2, int v3, int v4) {
 
