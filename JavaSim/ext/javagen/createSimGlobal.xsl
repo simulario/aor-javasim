@@ -37,11 +37,7 @@
         <xsl:call-template name="java:imports">
           <xsl:with-param name="importList" as="xs:string*">
 
-            <xsl:value-of select="fn:concat($core.package.util, '.*')"/>
-            <xsl:value-of select="$util.package.refTypes"/>
-            <xsl:if test="fn:exists(//aorsl:Enumeration) or fn:exists(//aorsl:ComplexDataProperty)">
-              <xsl:value-of select="fn:concat($sim.package.model.dataTypes, '.*')"/>
-            </xsl:if>
+            <xsl:call-template name="setDefaultJavaImports"/>
 
           </xsl:with-param>
         </xsl:call-template>
