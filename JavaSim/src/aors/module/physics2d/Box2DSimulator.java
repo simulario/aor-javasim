@@ -383,7 +383,6 @@ public class Box2DSimulator extends PhysicsSimulator {
         }
       }
     }
-
   }
 
   /**
@@ -462,13 +461,13 @@ public class Box2DSimulator extends PhysicsSimulator {
         // System.out.print("Alpha:" + object.getAlpha() + " ");
         // System.out.println();
 
-        // System.out.print(object.getId() + ") ");
-        // System.out.print("x:" + body.getPosition().x + " y:"
-        // + body.getPosition().y + " ");
-        // System.out.print("vx:" + body.getLinearVelocity().x + " vy:"
-        // + body.getLinearVelocity().y + " ");
-        // System.out.print("omega:" + body.getAngularVelocity());
-        // System.out.println();
+//         System.out.print(object.getId() + ") ");
+//         System.out.print("x:" + body.getPosition().x + " y:"
+//         + body.getPosition().y + " ");
+//         System.out.print("vx:" + body.getLinearVelocity().x + " vy:"
+//         + body.getLinearVelocity().y + " ");
+//         System.out.print("omega:" + body.getAngularVelocity());
+//         System.out.println();
       }
 
       body = body.getNext();
@@ -573,9 +572,9 @@ public class Box2DSimulator extends PhysicsSimulator {
 
     @Override
     public void add(ContactPoint arg0) {
-      // System.out.println(stepNumber + ": ADD " +
-      // arg0.shape1.getBody().getUserData() + " " +
-      // arg0.shape2.getBody().getUserData() + " " + arg0.position);
+//       System.out.println(stepNumber + ": ADD " +
+//       arg0.shape1.getBody().getUserData() + " " +
+//       arg0.shape2.getBody().getUserData() + " " + arg0.position);
 
       // perception
       if ((arg0.shape1.getUserData().equals(CollisionObjectType.PERCEPTION) && arg0.shape2

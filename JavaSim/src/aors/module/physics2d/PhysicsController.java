@@ -190,7 +190,7 @@ public class PhysicsController implements Module {
     // 2D grid space uses only perceptions and kinematics (no collision or
     // gravitation is suitable for this space type)
     if (spaceType.equals(SpaceType.TwoDGrid)) {
-      simulator = new Simulator2DGrid(simParams, spaceModel, autoKinematics,
+      simulator = new Simulator2DGridOld(simParams, spaceModel, autoKinematics,
           false, false, 0, initialState.getDatabus(), objects, agents);
     }
 

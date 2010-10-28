@@ -160,7 +160,6 @@ public class IntervalList {
 
       return str;
     }
-
   }
 
   private enum EndpointType {
@@ -233,27 +232,6 @@ public class IntervalList {
     Collections.sort(list);
   }
 
-  /**
-   * Creates an IntervalList from a list of Physicals. Determines the interval
-   * endpoints of every object and stores it in the list. The coordinate axis to
-   * use must be specified. (This is the constructor for the grid space)
-   * 
-   * @param objList
-   * @param spaceModel
-   * @param axis
-   *          - the coordinate axis to use [X|Y|Z]
-   */
-  public IntervalList(List<Physical> objList, GeneralSpaceModel spaceModel,
-      Axis axis) {
-    this.spaceModel = spaceModel;
-
-    for (Physical object : objList) {
-      addGrid(object, axis);
-    }
-
-    // sort list
-    Collections.sort(list);
-  }
 
   /**
    * Checks if any collisions occur (this includes perceptions as well). The
@@ -578,109 +556,6 @@ public class IntervalList {
   }
 
   /**
-   * Add an object to this list. This will add two endpoints for the object and
-   * in case of an agent two endpoints for its perception radius to the list.
-   * The coordinate axis to use must be specified.
-   * 
-   * @param object
-   * @param axis
-   */
-  public void addGrid(Physical object, Axis axis) {
-    double point = 0;
-    double max = 0;
-
-    switch (axis) {
-    case X:
-      point = object.getX();
-      max = spaceModel.getXMax();
-      break;
-    case Y:
-      point = object.getY();
-      max = spaceModel.getYMax();
-      break;
-    case Z:
-      point = object.getZ();
-      max = spaceModel.getZMax();
-      break;
-    default:
-      point = object.getX();
-      max = spaceModel.getXMax();
-    }
-
-    IntervalEndpoint startpoint = new IntervalEndpoint();
-    startpoint.setType(EndpointType.START);
-    startpoint.setPoint(point);
-    startpoint.setObject(object);
-    startpoint.setCollisionObjectType(CollisionObjectType.OBJECT);
-
-    IntervalEndpoint endpoint = new IntervalEndpoint();
-    endpoint.setType(EndpointType.END);
-    endpoint.setPoint(point);
-    endpoint.setObject(object);
-    endpoint.setCollisionObjectType(CollisionObjectType.OBJECT);
-
-    startpoint.setOther(endpoint);
-    endpoint.setOther(startpoint);
-
-    list.add(startpoint);
-    list.add(endpoint);
-
-    // if agent with autoPerception, also add endpoints of its perception
-    // radius
-    if (object instanceof PhysicalAgentObject) {
-      PhysicalAgentObject agent = (PhysicalAgentObject) object;
-
-      try {
-        Field autoPerceptionField = agent.getClass().getDeclaredField(
-            "AUTO_PERCEPTION");
-
-        if (autoPerceptionField.getBoolean(agent)) {
-
-          double start = point - agent.getPerceptionRadius();
-          double end = point + agent.getPerceptionRadius();
-
-          if (spaceModel.getGeometry().equals(Geometry.Toroidal)) {
-            if (start < Space.ORDINATEBASE) {
-              start += max;
-            }
-
-            if (start > (max - 1 + Space.ORDINATEBASE)) {
-              start %= max;
-            }
-
-            if (end < Space.ORDINATEBASE) {
-              end += max;
-            }
-
-            if (end > (max - 1 + Space.ORDINATEBASE)) {
-              end %= max;
-            }
-          }
-
-          startpoint = new IntervalEndpoint();
-          startpoint.setType(EndpointType.START);
-          startpoint.setPoint(start);
-          startpoint.setObject(object);
-          startpoint.setCollisionObjectType(CollisionObjectType.PERCEPTION);
-
-          endpoint = new IntervalEndpoint();
-          endpoint.setType(EndpointType.END);
-          endpoint.setPoint(end);
-          endpoint.setObject(object);
-          endpoint.setCollisionObjectType(CollisionObjectType.PERCEPTION);
-
-          startpoint.setOther(endpoint);
-          endpoint.setOther(startpoint);
-
-          list.add(startpoint);
-          list.add(endpoint);
-        }
-      } catch (Exception e) {
-      }
-    }
-  }
-
-  /**
    * Removes the endpoints belonging to the given object.
    * 
    * @param object
@@ -753,82 +628,4 @@ public class IntervalList {
     // System.out.println(list);
   }
 
-  /**
-   * Updates the list with the values of the objects saved in the interval
-   * endpoints. The coordinate axis must be specified(used in grid space)
-   * 
-   * @param axis
-   *          - the coordinate axis [X|Y|Z]
-   */
-  public void updateGrid(Axis axis) {
-    for (IntervalEndpoint ie : list) {
-      Physical object = ie.getObject();
-
-      if (object == null) {
-        continue;
-      }
-
-      double point, max = 0;
-
-      switch (axis) {
-      case X:
-        point = object.getX();
-        max = spaceModel.getXMax();
-        break;
-      case Y:
-        point = object.getY();
-        max = spaceModel.getYMax();
-        break;
-      case Z:
-        point = object.getZ();
-        max = spaceModel.getZMax();
-        break;
-      default:
-        point = object.getX();
-        max = spaceModel.getXMax();
-      }
-
-      if (ie.getType().equals(EndpointType.START)) {
-        // start point
-
-        if (ie.getCollisionObjectType().equals(CollisionObjectType.PERCEPTION)) {
-          point -= ((PhysicalAgentObject) object).getPerceptionRadius();
-        }
-
-        if (spaceModel.getGeometry().equals(Geometry.Toroidal)) {
-          if (point < Space.ORDINATEBASE) {
-            point += max;
-          }
-
-          if (point > (max - 1 + Space.ORDINATEBASE)) {
-            point %= max;
-          }
-        }
-
-        ie.setPoint(point);
-      } else {
-        // end point
-
-        if (ie.getCollisionObjectType().equals(CollisionObjectType.PERCEPTION)) {
-          point += ((PhysicalAgentObject) object).getPerceptionRadius();
-        }
-
-        if (spaceModel.getGeometry().equals(Geometry.Toroidal)) {
-          if (point < Space.ORDINATEBASE) {
-            point += max;
-          }
-
-          if (point > (max - 1 + Space.ORDINATEBASE)) {
-            point %= max;
-          }
-        }
-
-        ie.setPoint(point);
-      }
-
-    }
-
-    sort();
-    // System.out.println(axis + ": " + list);
-  }
 }
