@@ -29,7 +29,7 @@
 
         <xsl:call-template name="java:imports">
           <xsl:with-param name="importList" as="xs:string*">
-            <xsl:value-of select="$util.package.refTypes"/>
+            <xsl:call-template name="setDefaultJavaImports"/>
           </xsl:with-param>
         </xsl:call-template>
 
