@@ -5,7 +5,7 @@
 	<xs:include schemaLocation="UMLetc.xsd"/>
 	<!-- =================================================================== -->
 	<xs:element name="SpaceView" type="ers:SpaceView.type">
-		<!-- =================================================================== -->
+	<!-- =================================================================== -->
 		<xs:annotation>
 			<xs:documentation><h:p>A space view allows to define in which way the space model will be visualized. If no space view is defined, the default visualization applies. By default, the entire display area will be used. The space parameters <h:code>xMax</h:code> and <h:code>yMax</h:code> (representing spatial distance units such as mm or m) are mapped to the space view parameters displayWidth and displayHeight (representing screen pixels). For physical objects in a non-discrete space, the resulting scale factors scaleX = displayWidth/<h:code>xMax</h:code> and scaleY = displayHeight/<h:code>yMax</h:code> are applied to the position coordinates <h:code>x</h:code> and <h:code>y</h:code> (of the object's center), as well as to the physical extension parameters <h:code>width</h:code> and <h:code>height</h:code>.</h:p>
 			<h:p>In the case of a discrete space model, object view shapes are positioned by placing them somewhere in the cell corresponding to the object's coordinates. The physical size and shape of an object are not significant, since these space models abtsracts away from them.</h:p> 
@@ -126,6 +126,7 @@
 	<xs:complexType name="TwoDimensionalSpaceView2D.type">
 	<!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->
 		<xs:sequence>
+			<xs:element ref="ers:SpaceViewPropertyVisualizationMap" minOccurs="0" maxOccurs="unbounded"/>
 			<xs:element name="OverlayGrid" minOccurs="0">
 				<xs:complexType>
 					<xs:attribute name="numberOfGridCellsX" use="required">
@@ -187,16 +188,7 @@
 			</xs:element>
 		</xs:sequence>
 		<xs:attributeGroup ref="ers:SpaceViewBackground.attributes"/>
-		<xs:attribute name="borderColor" type="ers:Color.type" use="optional">
-			<xs:annotation>
-				<xs:documentation>Defines the color of the border line. </xs:documentation>
-			</xs:annotation>
-		</xs:attribute>
-		<xs:attribute name="borderColorRGB" type="ers:RGB.type" use="optional">
-			<xs:annotation>
-				<xs:documentation>Defines the color of the border line. </xs:documentation>
-			</xs:annotation>
-		</xs:attribute>
+		<xs:attributeGroup ref="ers:SpaceViewBorder.attributes"/>
 	</xs:complexType>
 	<!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->
 	<xs:simpleType name="GridCellSize.type">
@@ -209,13 +201,45 @@
 	<!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->
 	<xs:complexType name="TwoDimensionalSpaceView3D.type">
 	<!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->
-		<xs:complexContent>
-			<xs:extension base="ers:TwoDimensionalSpaceView2D.type">
-				<xs:sequence>
-					<xs:element ref="ers:Skybox" minOccurs="0"/>
-				</xs:sequence>
-			</xs:extension>
-		</xs:complexContent>
+		<xs:sequence>
+			<xs:element ref="ers:Skybox" minOccurs="0"/>
+			<xs:choice>
+				<xs:element name="GlobalCamera">
+					<xs:complexType>
+						<xs:attribute name="position" type="ers:DoubleTriple.type" use="required"/>
+						<xs:attribute name="viewVector" type="ers:DoubleTriple.type" use="required"/>
+						<xs:attribute name="upVector" type="ers:DoubleTriple.type" use="required"/>
+					</xs:complexType>
+				</xs:element>
+				<xs:element name="AgentCamera">
+					<xs:complexType>
+						<xs:attribute name="agentIdRef" type="xs:long" use="required"/>
+						<xs:attribute name="viewType" use="required">
+							<xs:simpleType>
+								<xs:restriction base="xs:string">
+									<xs:enumeration value="FIRST_PERSON"/>
+									<xs:enumeration value="THIRD_PERSON"/>
+								</xs:restriction>
+							</xs:simpleType>
+						</xs:attribute>
+						<xs:attribute name="defaultViewVector" type="ers:DoubleTriple.type" use="required"/>
+						<xs:attribute name="upVector" type="ers:DoubleTriple.type" use="required"/>
+						<xs:attribute name="cameraOrientationMode" use="required">
+							<xs:simpleType>
+								<xs:restriction base="xs:string">
+									<xs:enumeration value="FIXED"/>
+									<xs:enumeration value="BODY_ROTATION"/>
+									<xs:enumeration value="MOVING_DIRECTION"/>
+								</xs:restriction>
+							</xs:simpleType>
+						</xs:attribute>
+					</xs:complexType>
+				</xs:element>
+			</xs:choice>
+			<xs:element ref="ers:SpaceViewPropertyVisualizationMap" minOccurs="0" maxOccurs="unbounded"/>
+		</xs:sequence>
+		<xs:attributeGroup ref="ers:SpaceViewBackground.attributes"/>
+		<xs:attributeGroup ref="ers:SpaceViewBorder.attributes"/>
 	</xs:complexType>
 	<!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->
 	<xs:complexType name="TwoDimensionalGridSpaceView2D.type">
@@ -269,15 +293,16 @@
 			</xs:extension>
 		</xs:complexContent>
 	</xs:complexType>
-	<!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->
+	<!-- =================================================================== -->
 	<xs:element name="SpaceViewPropertyVisualizationMap">
-	<!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->
+	<!-- =================================================================== -->
 		<xs:annotation>
 			<xs:documentation>A function that maps a global variable or an object property to a space view property for visualizing it. The <h:code>mapType</h:code> attribute allows to specify the type of function: polynomial, casewise constant, equality-casewise or enumeration. A polynomial function has the form y = a<h:sub>3</h:sub>x<h:sup>3</h:sup> + a<h:sub>2</h:sub>x<h:sup>2</h:sup> + a<h:sub>1</h:sub>x + a<h:sub>0</h:sub>, where x is the object property and y is the grid cell view property. The casewise constant function is defined by y = v<h:sub>0</h:sub> if x &lt; a<h:sub>0</h:sub>, y = v<h:sub>1</h:sub> if a<h:sub>0</h:sub> &lt;= x &lt; a<h:sub>1</h:sub>, etc. A map may be defined by equality cases as y = v<h:sub>0</h:sub> if  x = a<h:sub>0</h:sub>, y = v<h:sub>1</h:sub> if x = a<h:sub>1</h:sub>, etc. Finally, a map may be defined on an enumeration property by equality cases as y = v<h:sub>0</h:sub> if  x = enumLit(1), y = v<h:sub>1</h:sub> if x = enumLit(2), etc. </xs:documentation>
 		</xs:annotation>
 		<xs:complexType>
 			<xs:attribute name="spaceViewProperty" type="ers:SpaceViewProperty.type" use="required"/>
-			<xs:attributeGroup ref="ers:Map.attrgrp"/>
+			<xs:attribute name="globalVariable" type="ers:CanonicalName" use="required"/>
+			<xs:attributeGroup ref="ers:MapParameters.attrgrp"/>
 		</xs:complexType>
 	</xs:element>
 	<!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->
@@ -322,6 +347,19 @@
 		</xs:attribute>
 	</xs:attributeGroup>
 	<!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->
+	<xs:attributeGroup name="SpaceViewBorder.attributes">
+	<!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->
+		<xs:attribute name="borderColor" type="ers:Color.type" use="optional">
+			<xs:annotation>
+				<xs:documentation>Defines the color of the border line. </xs:documentation>
+			</xs:annotation>
+		</xs:attribute>
+		<xs:attribute name="borderColorRGB" type="ers:RGB.type" use="optional">
+			<xs:annotation>
+				<xs:documentation>Defines the color of the border line. </xs:documentation>
+			</xs:annotation>
+		</xs:attribute>	</xs:attributeGroup>
+	<!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->
 	<xs:attributeGroup name="GridStroke.attributes">
 	<!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->
 		<xs:attribute name="stroke" type="ers:Color.type" use="optional">
@@ -344,6 +382,11 @@
 	<xs:attributeGroup name="Map.attrgrp">
 	<!-- =================================================================== -->
 		<xs:attribute name="property" type="ers:CanonicalName" use="required"/>
+		<xs:attributeGroup ref="ers:MapParameters.attrgrp"/>
+	</xs:attributeGroup>
+	<!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->
+	<xs:attributeGroup name="MapParameters.attrgrp">
+	<!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->
 		<xs:attribute name="mapType" use="required">
 			<xs:simpleType>
 				<xs:restriction base="xs:string">
