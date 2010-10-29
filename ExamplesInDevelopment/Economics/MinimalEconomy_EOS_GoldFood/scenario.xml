@@ -6,10 +6,10 @@
 	xmlns="http://aor-simulation.org" xmlns:aors="http://aor-simulation.org"
 	xmlns:dc="http://purl.org/dc/elements/1.1/" 
 	scenarioName="Gold_Food_Economy"
-	scenarioTitle="Gold Food Economy"
+	scenarioTitle="Gold_Food Economy"
 	simulationManagerDirectory="../../..">
 
-	<SimulationParameters simulationSteps="4320" timeUnit="h"  stepTimeDelay="0"/>
+	<SimulationParameters simulationSteps="6000" timeUnit="h"  stepTimeDelay="0"/>
 	<SimulationModel modelName="Gold_Food_Economy">
 		<documentation>
 			<dc:modified>20100306</dc:modified>
@@ -18,155 +18,167 @@
 		</documentation>
 		
 		<Statistics>
-			<Variable name="Price" dataType="Float">	
+			<Variable name="PriceFood" dataType="Float">	
 				<Source>
-					<ObjectProperty property="marketPrice" objectType="Market"/>
+					<ObjectProperty property="lastMarketPrice" objectType="Market" objectIdRef="2"/>
 				</Source>
 			</Variable>
-			<Variable name="BuyOffers" dataType="Float">	
+			<Variable name="BuyOffersFood" dataType="Float">	
 				<Source>
-					<ObjectProperty property="buyVolume" objectType="Market"/>
+					<ObjectProperty property="buyVolume" objectType="Market" objectIdRef="2"/>
 				</Source>
 			</Variable>
-			<Variable name="SellOffers" dataType="Float">	
+			<Variable name="SellOffersFood" dataType="Float">	
 				<Source>
-					<ObjectProperty property="sellVolume" objectType="Market"/>
+					<ObjectProperty property="sellVolume" objectType="Market" objectIdRef="2"/>
+				</Source>
+			</Variable>
+			<Variable name="FoodAmount1" dataType="Float">
+				<Source>
+					<ObjectProperty property="foodAmount" objectType="Person" objectIdRef="1000"/>
+				</Source>
+			</Variable>
+			<Variable name="GoldAmount1" dataType="Float">
+				<Source>
+					<ObjectProperty property="goldAmount" objectType="Person" objectIdRef="1000"/>
+				</Source>
+			</Variable>
+			<Variable name="FoodAmount2" dataType="Float">
+				<Source>
+					<ObjectProperty property="foodAmount" objectType="Person" objectIdRef="2000"/>
+				</Source>
+			</Variable>
+			<Variable name="GoldAmount2" dataType="Float">
+				<Source>
+					<ObjectProperty property="goldAmount" objectType="Person" objectIdRef="2000"/>
 				</Source>
 			</Variable>
 		</Statistics>
 		
 		<DataTypes>
 			<!--====================================-->
-			<ComplexDataType name="AssetsList">
-				<!--====================================-->
-				<ClassDef language="Java"><![CDATA[
-					private java.util.ArrayList<aors.util.economics.Quantity> assets = new java.util.ArrayList<aors.util.economics.Quantity>();			
-				 
-					public AssetsList() {}			                       
-					
-					public Double addAsset(Double quantity, String name, String unit) {
-				
-					  aors.util.economics.ContinuousQuantityType assetType = new aors.util.economics.ContinuousQuantityType(name, unit);
-					  aors.util.economics.ContinuousQuantity asset = new aors.util.economics.ContinuousQuantity(quantity, assetType);
-					  assets.add(asset);	
-					  //System.out.println("Array is: "+assets);
-					  return quantity;
-					}
-					
-					public void add(Double quantity, String name, String unit) {
-				
-					  aors.util.economics.ContinuousQuantityType assetType = new aors.util.economics.ContinuousQuantityType(name, unit);
-					  aors.util.economics.ContinuousQuantity asset = new aors.util.economics.ContinuousQuantity(quantity, assetType);
-					  assets.add(asset);	
-					  //System.out.println("Array is: "+assets);
-					}
-					
-					public aors.util.economics.Quantity getAsset(String name){
-						int i;
-						for(i=0; i < assets.size(); i++){
-							if(!assets.get(i).isDiscrete()){
-								if(((aors.util.economics.ContinuousQuantity)assets.get(i)).getContinuousQuantityType().getName().equals(name)){
-									break;
-								}
-							}
-						}
-						return assets.get(i);
-					}
-	  			]]></ClassDef>
-			</ComplexDataType>
-			<!--====================================-->
-			<ComplexDataType name="Offer">
+			<ComplexDataType name="TradeOffer">
 				<!--====================================-->
 				<Attribute type="String" name="product"/>
-				<Attribute type="String" name="currency"/>
 				<Attribute type="Float" name="price"/>
-				<Attribute type="Float" name="maxQuantity"/>
+				<Attribute type="Float" name="Quantity"/>
 				<Attribute type="Boolean" name="buy"/>
-				<Attribute type="Integer" name="AgentID"/>
-			</ComplexDataType>
-			<!--====================================-->
-			<ComplexDataType name="OfferList">
-				<!--====================================-->
-				<ClassDef language="Java"><![CDATA[
-					private java.util.ArrayList<Offer> offers = new java.util.ArrayList<Offer>();
-					
-					public OfferList(){;
-					}
-					
-					public Boolean isEmpty(){
-						return offers.isEmpty();
-					}
-					
-					public java.util.ArrayList<Offer> getOffers(){
-						return this.offers;
-					}
-					public void print(){
-						for(int i=0;i<offers.size();i++){
-							System.out.println(offers.get(i).getPrice());
-						}
-					}
-				]]></ClassDef>
+				<Attribute type="Integer" name="bidderIdRef"/>
+				<!--<ReferenceProperty name="bidder" type="EconomicAgent"/>-->
 			</ComplexDataType>
 		</DataTypes>
+		
+		<Globals>
+			<!--====================================-->
+			<GlobalFunction name="getAssetByName" resultType="aors.util.economics.Quantity">
+				<Parameter name="name" type="String"/>
+				<Parameter name="assets" type="List" itemType="aors.util.economics.Quantity"/>
+				<Body language="Java"><![CDATA[
+					int i;
+					for(i=0; i < assets.size(); i++){
+						if(((aors.util.economics.ContinuousQuantity)assets.get(i)).getContinuousQuantityType().getName().equals(name)){
+							break;
+						}	
+					}
+					return assets.get(i);
+					]]></Body>	
+			</GlobalFunction>
+			<!--====================================-->
+			<GlobalFunction name="addContinuous" resultType="Double">
+				<Parameter name="quantity" type="Double"/>
+				<Parameter name="name" type="String"/>
+				<Parameter name="unit" type="String"/>
+				<Parameter name="assets" type="List" itemType="aors.util.economics.Quantity"/>
+				<Body language="Java"><![CDATA[
+					aors.util.economics.ContinuousQuantityType assetType = new aors.util.economics.ContinuousQuantityType(name, unit);
+				  	aors.util.economics.ContinuousQuantity asset = new aors.util.economics.ContinuousQuantity(quantity, assetType);
+				  	assets.add(asset);
+				  	return quantity;
+				]]></Body>
+			</GlobalFunction>
+		</Globals>
 		
 		<EntityTypes>
 			<!--====================================-->
 			<MessageType name="StartOfDay_msg">
 				<!--====================================-->
 				<Attribute name="price" type="Float"/>
+				<Attribute name="marketType" type="String" />
 			</MessageType>
 			<!--====================================-->
 			<MessageType name="Act_msg" />
 			<!--====================================-->
-			<MessageType name="BuyFood_msg">
+			<MessageType name="OfferToBuyFood">
 				<!--====================================-->
-				<ComplexDataProperty name="OfferList" type="OfferList"/>
+				<ComplexDataProperty name="buyOffers" type="TradeOffer" upperMultiplicity="unbounded"/>
 			</MessageType>
 			<!--====================================-->
-			<MessageType name="SellFood_msg">
+			<MessageType name="OfferToSellFood">
 				<!--====================================-->
-				<ComplexDataProperty name="OfferList" type="OfferList"/>
+				<ComplexDataProperty name="sellOffers" type="TradeOffer" upperMultiplicity="unbounded"/>
 			</MessageType>
 			<!--====================================-->
-			<MessageType name="Clear_msg" >
-				<!--====================================-->
-				<ComplexDataProperty name="TransactionList" type="OfferList"/>
-			</MessageType>
+			<MessageType name="ClearMarket" />
 			<!--====================================-->
-			<MessageType name="MatchingOffersNotification_msg" >
+			<MessageType name="MatchingOffer" >
 				<!--====================================-->
-				<ComplexDataProperty name="offer" type="Offer"/>
+				<ComplexDataProperty name="offer" type="TradeOffer"/>
 			</MessageType>
 			<!--=======================================================-->
-			<ExogenousEventType name="StartOfDay" periodicity="15" />
+			<ExogenousEventType name="StartOfDay" periodicity="9" />
 			<!--=======================================================-->
-			<ExogenousEventType name="EachDayAt8AM" periodicity="15" />
+			<ExogenousEventType name="StartWork" periodicity="9" />
 			<!--=======================================================-->
-			<ExogenousEventType name="EachDayAt11AM" periodicity="15" />
-			
-			<!-- ============================================ -->
-			<AgentType name="EconomicAgent">
-				
-				<!-- ============================================ -->
-				<!--<ComplexDataProperty name="assets" type="Quantity" upperMultiplicity="unbounded" />-->
-			</AgentType>
-			<!-- ============================================ -->
+			<ExogenousEventType name="CloseMarket" periodicity="9" />
+			<!--=======================================================-->
 			<AgentType name="Person">
 				<!-- ============================================ -->
-				<ComplexDataProperty name="assets" type="AssetsList" />
-				<Attribute type="Float" name="EAT_AMOUNT" initialValue="1.0"/>
-				<Attribute type="Float" name="TARGET_FOOD_STOCK" initialValue="30.0"/>
-				<Attribute type="Float" name="TARGET_MONEY_STOCK" initialValue="60.0"/>
-				<Attribute type="Float" name="LEISURE_VALUE" initialValue="5.0"/>
+				<ComplexDataProperty name="assets" type="aors.util.economics.Quantity" upperMultiplicity="unbounded" />
 				<Attribute type="Float" name="RANDOM_FACTOR" initialValue="0.01"/>
-				<Attribute type="Float" name="lastPrice"/>
-				<Attribute type="Float" name="foodStock"/>
+				<Attribute type="Float" name="TARGET_FOOD_STOCK" initialValue="30.0"/>
+				<Attribute type="Float" name="TARGET_Gold_STOCK" initialValue="60.0"/>
+				<Attribute type="Float" name="EAT_AMOUNT" initialValue="1.0"/>
+				<Attribute type="Float" name="lastFoodPrice"/>
+				<Attribute type="Float" name="foodAmount"/>
 				<Attribute type="Float" name="goldAmount"/>
 				<Attribute name="skillLevelFood" type="Float" />
 				<Attribute name="skillLevelGold" type="Float" />
-				<ComplexDataProperty name="BuyList" type="OfferList"/>
-				<ComplexDataProperty name="SellList" type="OfferList"/>
-				
+				<ComplexDataProperty name="foodBuyList" type="TradeOffer" upperMultiplicity="unbounded"/>
+				<ComplexDataProperty name="foodSellList" type="TradeOffer" upperMultiplicity="unbounded"/>
+				<!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~-->
+				<Function name="updateFood" resultType="Float">
+					<!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~-->
+					<documentation>
+						<dc:description>Updates the foodamount by the quantity of the offer</dc:description>
+					</documentation>
+					<Parameter name="offer" type="TradeOffer"/>
+					<Body language="Java"><![CDATA[
+						if(offer.getProduct().equals("Food")){
+							if(offer.isBuy()){
+								Global.getAssetByName("Food", getAssets()).deposit(offer.getQuantity());	
+							}else{
+								Global.getAssetByName("Food", getAssets()).withdraw(offer.getQuantity());
+							}
+						}
+						return Global.getAssetByName("Food", getAssets()).getQuantity();
+					]]></Body>
+				</Function>
+				<!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~-->
+				<Function name="updateGold" resultType="Float">
+					<!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~-->
+					<documentation>
+						<dc:description>Updates the goldamount by the quantity*price of the offer</dc:description>
+					</documentation>
+					<Parameter name="offer" type="TradeOffer"/>
+					<Body language="Java"><![CDATA[
+						if(offer.isBuy()){
+							Global.getAssetByName("Gold",getAssets()).withdraw(offer.getQuantity()*offer.getPrice());					
+						}else{
+							Global.getAssetByName("Gold",getAssets()).deposit(offer.getQuantity()*offer.getPrice());
+						}
+						return Global.getAssetByName("Gold",getAssets()).getQuantity();
+					]]></Body>
+				</Function>
 				<!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~-->
 				<Function name="produceFood" resultType="Float">
 					<!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~-->
@@ -174,9 +186,8 @@
 						<dc:description>Increase the foodamount by the SkillLevelFood</dc:description>
 					</documentation>
 					<Body language="Java"><![CDATA[
-							getAssets().getAsset("Food").deposit(getSkillLevelFood());
-							System.out.println("produceFood: " + getAssets().getAsset("Food").getQuantity()+"||| gold: "+getAssets().getAsset("Gold").getQuantity());
-							return getFoodStock() + getSkillLevelFood();
+							Global.getAssetByName("Food", getAssets()).deposit(getSkillLevelFood());
+							return Global.getAssetByName("Food", getAssets()).getQuantity();
 					]]></Body>
 				</Function>
 				<!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~-->
@@ -186,9 +197,8 @@
 						<dc:description>Increase the foodamount by the SkillLevelFood</dc:description>
 					</documentation>
 					<Body language="Java"><![CDATA[
-							getAssets().getAsset("Gold").deposit(getSkillLevelGold());
-							System.out.println("produceGold: " + getAssets().getAsset("Gold").getQuantity()+"|||Food: "+getAssets().getAsset("Food").getQuantity());
-							return getGoldAmount() + getSkillLevelGold();
+							Global.getAssetByName("Gold", getAssets()).deposit(getSkillLevelGold());
+							return Global.getAssetByName("Gold", getAssets()).getQuantity();
 					]]></Body>
 				</Function>
 				<!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~-->
@@ -197,35 +207,31 @@
 					<documentation>
 						<dc:description>Calculates the buyoffers and adds them to the buyofferlist</dc:description>
 					</documentation>
-					<Parameter name="agentID" type="long"/>
+					<Parameter name="bidder" type="long"/>
 					<Body language="Java"><![CDATA[
-						getBuyList().getOffers().clear();
+						getFoodBuyLists().clear();
 						final double quantum = getEAT_AMOUNT() * 1.0;
-			          	double purse = getAssets().getAsset("Gold").getQuantity();
-			          	for (double x = getAssets().getAsset("Food").getQuantity(); x <= 1.5 * getTARGET_FOOD_STOCK(); x += quantum) {
+			          	double purse = Global.getAssetByName("Gold", getAssets()).getQuantity();
+			          	for (double x = Global.getAssetByName("Food", getAssets()).getQuantity(); x <= 1.5 * getTARGET_FOOD_STOCK(); x += quantum) {
 			            	if(x == 0.0){
 			            		x = .00000000001;
 			            	} 
-			            	double mod = .1*Math.pow(getTARGET_FOOD_STOCK()/x, .2) +.90/*5*/+Random.uniform(0.0, 1.0)*getRANDOM_FACTOR();
-			            	double price = mod*getLastPrice();
+			            	double mod = 0.1*Math.pow(getTARGET_FOOD_STOCK()/x, 0.2) +0.90+Random.uniform(0.0, 1.0)*getRANDOM_FACTOR();
+			            	double price = mod*getLastFoodPrice();
 			            	price = Math.min(price, purse);
-			            	if (price <= 0.0){
-			            		break;
-			            	}
-			              	purse -= quantum*price;
-			            	if(purse < 0.0){
-			            		break;
-			            	}
-			            	Offer o = new Offer();
-			            	//prüfen ob überhaupt soviel abgehoben werden kann eventl. esrt im Markt
+			            	if (price <= 0.0) break;
+			            	
+			              	purse = purse - (quantum*price);
+			              	
+			            	if(purse < 0.0) break;
+			            	
+			            	TradeOffer o = new TradeOffer();
 			            	o.setProduct("Food");
-			            	o.setCurrency("Gold");
-			            	o.setMaxQuantity(quantum);
+			            	o.setQuantity(quantum);
 			            	o.setPrice(price);
 			            	o.setBuy(true);
-			            	o.setAgentID(agentID);
-			            	getBuyList().getOffers().add(o);
-			            	//System.out.println("buyFood: quantum" + quantum + " ||||| price:   " + price);
+			            	o.setBidderIdRef(bidder);
+			            	getFoodBuyLists().add(o);
 			          	}
 						return true;
 					]]></Body>
@@ -236,72 +242,32 @@
 					<documentation>
 						<dc:description>Calculates the selloffers and adds them to the sellofferlist</dc:description>
 					</documentation>
-					<Parameter name="agentID" type="long"/>
+					<Parameter name="bidderIdRef" type="long"/>
 					<Body language="Java"><![CDATA[
-						getSellList().getOffers().clear();
-						if(getAssets().getAsset("Food").getQuantity() > 1.5*getTARGET_FOOD_STOCK()){
+						getFoodSellLists().clear();
+						if(Global.getAssetByName("Food", getAssets()).getQuantity() > 1.5*getTARGET_FOOD_STOCK()){
 				        	final double quantum = getEAT_AMOUNT() * 1.0;
-				          	for (double x = getAssets().getAsset("Food").getQuantity(); x > 1.5*getTARGET_FOOD_STOCK(); x -= quantum) {
+				          	for (double x = Global.getAssetByName("Food", getAssets()).getQuantity(); x > 1.5*getTARGET_FOOD_STOCK(); x -= quantum) {
 					            if(x == 0.0){
 					            	x = .00000000001;
 					            }
 					            double mod = .1*Math.pow(getTARGET_FOOD_STOCK()/(x - getTARGET_FOOD_STOCK()), .2) +.90/*5*/+Random.uniform(0.0, 1.0)*getRANDOM_FACTOR();
-					            double price = mod*getLastPrice();
+					            double price = mod*getLastFoodPrice();
 					            if (price <= 0.0){
 					            	break;
 					            }
 					            
-					            Offer o = new Offer();
+					            TradeOffer o = new TradeOffer();
 					            o.setProduct("Food");
-				            	o.setCurrency("Gold");
-				            	o.setMaxQuantity(quantum);
+				            	o.setQuantity(quantum);
 				            	o.setPrice(price);
 				            	o.setBuy(false);
-				            	o.setAgentID(agentID);
-				            	getSellList().getOffers().add(o);
-					            //System.out.println("sellFood: quantum" + quantum + " ||||| price:   " + price);
+				            	o.setBidderIdRef(bidderIdRef);
+				            	getFoodSellLists().add(o);
 				          }
 						return true;
 						}
 						return false;
-					]]></Body>
-				</Function>
-				<!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~-->
-				<Function name="updateFood" resultType="Float">
-					<!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~-->
-					<documentation>
-						<dc:description>Updates the foodamount by the quantity of the offer</dc:description>
-					</documentation>
-					<Parameter name="offer" type="Offer"/>
-					<Body language="Java"><![CDATA[
-						if(offer.isBuy()){
-							getAssets().getAsset("Food").deposit(offer.getMaxQuantity());
-							//System.out.println("updateFood: " + getAssets().getAsset("Food").getQuantity() + " ||| PersonID: " + offer.getAgentID());
-							return getFoodStock() + offer.getMaxQuantity();						
-						}else{
-							getAssets().getAsset("Food").withdraw(offer.getMaxQuantity());
-							//System.out.println("updateFood: " + getAssets().getAsset("Food").getQuantity() + " ||| PersonID: " + offer.getAgentID());
-							return getFoodStock() - offer.getMaxQuantity();
-						}
-					]]></Body>
-				</Function>
-				<!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~-->
-				<Function name="updateGold" resultType="Float">
-					<!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~-->
-					<documentation>
-						<dc:description>Updates the goldamount by the quantity*price of the offer</dc:description>
-					</documentation>
-					<Parameter name="offer" type="Offer"/>
-					<Body language="Java"><![CDATA[
-						if(offer.isBuy()){
-							getAssets().getAsset("Gold").withdraw(offer.getMaxQuantity()*offer.getPrice());
-							//System.out.println("updateGold: " + getAssets().getAsset("Gold").getQuantity());
-							return (getGoldAmount() - (offer.getMaxQuantity()*offer.getPrice()));						
-						}else{
-							getAssets().getAsset("Gold").deposit(offer.getMaxQuantity()*offer.getPrice());
-							//System.out.println("updateGold: " + getAssets().getAsset("Gold").getQuantity());
-							return (getGoldAmount() + (offer.getMaxQuantity()*offer.getPrice()));
-						}
 					]]></Body>
 				</Function>
 				<!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~-->
@@ -313,15 +279,15 @@
 					<WHEN eventType="InMessageEvent" messageType="StartOfDay_msg" messageVariable="msg"/>
 					<DO>
 						<UPDATE-AGT>
-							<Slot property="lastPrice">
+							<Slot property="lastFoodPrice">
 								<ValueExpr language="Java">msg.getPrice()</ValueExpr>
 							</Slot>
 						</UPDATE-AGT>
 					</DO>
-					<IF language="Java">(p.getLastPrice() * p.getSkillLevelFood()) >= p.getSkillLevelGold()</IF>
+					<IF language="Java">(p.getLastFoodPrice() * p.getSkillLevelFood()) >= p.getSkillLevelGold()</IF>
 					<THEN>
 						<UPDATE-AGT>
-							<Slot property="foodStock">
+							<Slot property="foodAmount">
 								<ValueExpr language="Java"><![CDATA[
 								p.produceFood()	
 							]]></ValueExpr>
@@ -338,21 +304,19 @@
 						</UPDATE-AGT>
 					</ELSE>
 				</ReactionRule>
-				<!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~-->
+				<!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~-->
 				<ReactionRule name="BuyFood_Rule" agentVariable="p">
 					<!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->
 					<documentation>
-						<description> The person sends offers to the market. 
-							ISSUE: can we use a periodic time event for triggering this rule?</description>
+						<description> The person decides how much food he wants to buy</description>
 					</documentation>
 					<WHEN eventType="InMessageEvent" messageType="Act_msg"/>
-					<!-- The IF element is a workaround for calling a function that computes the offers -->
 					<IF language="Java">buyFood(p.getId())</IF>
 					<THEN>
 						<SCHEDULE-EVT>
-							<OutMessageEventExpr messageType="BuyFood_msg" receiverIdRefs="2">
-								<Slot property="OfferList">
-									<ValueExpr language="Java">getBuyList()</ValueExpr>
+							<OutMessageEventExpr messageType="OfferToBuyFood" receiverIdRefs="2">
+								<Slot property="BuyOffers">
+									<ValueExpr language="Java">getFoodBuyLists()</ValueExpr>
 								</Slot>
 							</OutMessageEventExpr>
 						</SCHEDULE-EVT>
@@ -364,49 +328,49 @@
 					<documentation>
 						<description> The person decides how much food he wants to sell</description>
 					</documentation>
-					<!-- The IF element is a workaround for calling a function that computes the offers -->
 					<WHEN eventType="InMessageEvent" messageType="Act_msg"/>
 					<IF language="Java">sellFood(p.getId())</IF>
 					<THEN>
 						<SCHEDULE-EVT>
-							<OutMessageEventExpr messageType="SellFood_msg" receiverIdRefs="2">
-								<Slot property="OfferList">
-									<ValueExpr language="Java">getSellList()</ValueExpr>
+							<OutMessageEventExpr messageType="OfferToSellFood" receiverIdRefs="2">
+								<Slot property="SellOffers">
+									<ValueExpr language="Java">getFoodSellLists()</ValueExpr>
 								</Slot>
 							</OutMessageEventExpr>
 						</SCHEDULE-EVT>
 					</THEN>
 				</ReactionRule>
 				<!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->
-				<ReactionRule name="MatchingOffersNotification_Rule" agentVariable="p">	
+				<ReactionRule name="Update_Rule" agentVariable="p">	
 					<!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->
 					<documentation>
 						<dc:description>succesfull transactions are receiverd from the market, food and gold is updated</dc:description>
 					</documentation>
-					<WHEN eventType="InMessageEvent" messageType="MatchingOffersNotification_msg" messageVariable="msg"/>
+					<WHEN eventType="InMessageEvent" messageType="MatchingOffer" messageVariable="msg"/>
 					<DO>
 						<UPDATE-AGT>
-							<Slot property="foodStock">
-								<ValueExpr language="Java">p.updateFood(msg.getOffer())</ValueExpr>
-							</Slot>
 							<Slot property="goldAmount">
 								<ValueExpr language="Java">p.updateGold(msg.getOffer())</ValueExpr>
+							</Slot>
+							<Slot property="foodAmount">
+								<ValueExpr language="Java">p.updateFood(msg.getOffer())</ValueExpr>
 							</Slot>
 						</UPDATE-AGT>
 					</DO>
 				</ReactionRule>
-				
 			</AgentType>
 			<!-- ============================================ -->
 			<AgentType name="Market">
 				<!-- ============================================ -->
-				<Attribute type="Float" name="marketPrice"/>
-				<Attribute type="Float" name="marketVolume"/>
+				<Attribute type="Float" name="lastMarketPrice"/>
+				<Attribute type="Float" name="lastMarketVolume"/>
 				<Attribute type="Float" name="buyVolume"/>
 				<Attribute type="Float" name="sellVolume"/>
-				<ComplexDataProperty name="buyOffers" type="OfferList"/>
-				<ComplexDataProperty name="sellOffers" type="OfferList"/>
-				<ComplexDataProperty name="transactions" type="OfferList"/>
+				<Attribute type="String" name="commodity"/>
+				<Attribute type="String" name="currency"/>
+				<ComplexDataProperty name="buyOffers" type="TradeOffer" upperMultiplicity="unbounded"/>
+				<ComplexDataProperty name="sellOffers" type="TradeOffer" upperMultiplicity="unbounded"/>
+				<ComplexDataProperty name="transactions" type="TradeOffer" upperMultiplicity="unbounded"/>
 				<!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~-->
 				<Function name="clear" resultType="Boolean">
 					<documentation>
@@ -414,21 +378,12 @@
 					</documentation>
 					<!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~-->
 					<Body language="Java"><![CDATA[
-						getTransactions().getOffers().clear();
-						System.out.println("BuyOffers:" + getBuyOffers().getOffers().size());
-						System.out.println("SellOffers:" + getSellOffers().getOffers().size());
-						// handle special cases
-				        // highest buy price < lowest sell price -> no transactions OR
-				        // empty offer list -> no transactions
-				        if (getBuyOffers().isEmpty() || getSellOffers().isEmpty()) {
-				        	// ToDO less
-				        	getBuyOffers().getOffers().clear();
-				        	getSellOffers().getOffers().clear();
-				        	return false;
-				        }
-				        java.util.Comparator<Offer> comparator;
-				        comparator = new java.util.Comparator<Offer>() {
-							public int compare (Offer a, Offer b) {
+						
+						getTransactions().clear();
+						
+				        java.util.Comparator<TradeOffer> comparator;
+				        comparator = new java.util.Comparator<TradeOffer>() {
+							public int compare (TradeOffer a, TradeOffer b) {
 							  double p1 = a.getPrice();
 							  double p2 = b.getPrice(); 
 								if(p1 < p2) return -1;
@@ -437,45 +392,58 @@
 							}		
 						};
 						
-						java.util.Collections.shuffle(getBuyOffers().getOffers());
-						java.util.Collections.shuffle(getSellOffers().getOffers());
-						java.util.Collections.sort(getBuyOffers().getOffers(), comparator);
-						java.util.Collections.sort(getSellOffers().getOffers(), comparator);
+						java.util.Collections.shuffle(getBuyOffers());
+						java.util.Collections.shuffle(getSellOffers());
+						java.util.Collections.sort(getBuyOffers(), comparator);
+						java.util.Collections.sort(getSellOffers(), comparator);
+						
+						// handle special cases
+				        // highest buy price < lowest sell price -> no transactions OR
+				        // empty offer list -> no transactions
+				        
+				        if ((getBuyOffers().size() == 0) || (getSellOffers().size() == 0) || (less(getBuyOffers(getBuyOffers().size()-1).getPrice(), getSellOffers(0).getPrice()))) {
+				        	setBuyVolume(getBuyOffers().size());
+				        	setSellVolume(getSellOffers().size());
+				        	getBuyOffers().clear();
+				        	getSellOffers().clear();
+				        	return false;
+				        }
+				        
 				        // merge prices into sorted list, eliminating duplicates
-        				ArrayList<Double> prices = new ArrayList<Double>(getBuyOffers().getOffers().size() + getSellOffers().getOffers().size());
+        				ArrayList<Double> prices = new ArrayList<Double>(getBuyOffers().size() + getSellOffers().size());
         				int s = 0, b = 0;
-				        while (s < getSellOffers().getOffers().size() && b < getBuyOffers().getOffers().size()) {
-				            if (equal(getSellOffers().getOffers().get(s).getPrice(), getBuyOffers().getOffers().get(b).getPrice())) {
-				            	prices.add(getSellOffers().getOffers().get(s++).getPrice());
+				        while (s < getSellOffers().size() && b < getBuyOffers().size()) {
+				            if (equal(getSellOffers(s).getPrice(), getBuyOffers(b).getPrice())) {
+				            	prices.add(getSellOffers(s++).getPrice());
 				                b++;
-				            } else if(getSellOffers().getOffers().get(s).getPrice() < getBuyOffers().getOffers().get(b).getPrice()){
-                				prices.add(getSellOffers().getOffers().get(s++).getPrice());
+				            } else if(getSellOffers(s).getPrice() < getBuyOffers(b).getPrice()){
+                				prices.add(getSellOffers(s++).getPrice());
                 			} else{
-                				prices.add(getBuyOffers().getOffers().get(b++).getPrice());
+                				prices.add(getBuyOffers(b++).getPrice());
                 			}
                 			// eliminate duplicates in sellOffers
-				        	while (s < getSellOffers().getOffers().size() 
-                    			   && equal(prices.get(prices.size() - 1), getSellOffers().getOffers().get(s).getPrice())){
+				        	while (s < getSellOffers().size() 
+                    			   && equal(prices.get(prices.size() - 1), getSellOffers(s).getPrice())){
                 				s++;
 							}
 							 // eliminate duplicates in buyOffers
-							while (b < getBuyOffers().getOffers().size()
-                    			   && equal(prices.get(prices.size() - 1),getBuyOffers().getOffers().get(b).getPrice())){
+							while (b < getBuyOffers().size()
+                    			   && equal(prices.get(prices.size() - 1),getBuyOffers(b).getPrice())){
                 				b++;
                 			}
                 		}
                 		// then add the remainder if there is one
-        				if (s < getSellOffers().getOffers().size()){
-           				 	while (s < getSellOffers().getOffers().size()) {
-				                if (!equal(prices.get(prices.size() - 1), getSellOffers().getOffers().get(s).getPrice())){
-				                	prices.add(getSellOffers().getOffers().get(s).getPrice());
+        				if (s < getSellOffers().size()){
+           				 	while (s < getSellOffers().size()) {
+				                if (!equal(prices.get(prices.size() - 1), getSellOffers(s).getPrice())){
+				                	prices.add(getSellOffers(s).getPrice());
 				                }
 				                s++;
 			            	}
-			            }else if (b < getBuyOffers().getOffers().size()){
-            				while (b < getBuyOffers().getOffers().size()) {
-				                if (!equal(prices.get(prices.size() - 1), getBuyOffers().getOffers().get(b).getPrice())){
-				                    prices.add(getBuyOffers().getOffers().get(b).getPrice());
+			            }else if (b < getBuyOffers().size()){
+            				while (b < getBuyOffers().size()) {
+				                if (!equal(prices.get(prices.size() - 1), getBuyOffers(b).getPrice())){
+				                    prices.add(getBuyOffers(b).getPrice());
 				                }
 				                b++;
 				            }
@@ -484,21 +452,21 @@
             			// find the price(s) at which supply and demand intersect
 				        double supply = 0, demand = 0;
 				        // initialize demand to be the demand at lowest demand price
-				        for (Offer o : getBuyOffers().getOffers()){
-				            demand += o.getMaxQuantity();
+				        for (TradeOffer o : getBuyOffers()){
+				            demand += o.getQuantity();
 				            }
 				        // walk through prices, updating supply and demand as needed.
 				        int p = 0;
 				        double bestVolume = Double.NEGATIVE_INFINITY;
 				        int bestP = 0;
-				        for (s = -1, b = 0; s + 1 < getSellOffers().getOffers().size() && b < getBuyOffers().getOffers().size(); p++) {
+				        for (s = -1, b = 0; s + 1 < getSellOffers().size() && b < getBuyOffers().size(); p++) {
 				            // if prices[p] is the next supply price:
-				            while (s + 1 < getSellOffers().getOffers().size() && equal(prices.get(p), getSellOffers().getOffers().get(s +1 ).getPrice())){
-				                supply += getSellOffers().getOffers().get(++s).getMaxQuantity();
+				            while (s + 1 < getSellOffers().size() && equal(prices.get(p), getSellOffers(s + 1).getPrice())){
+				                supply += getSellOffers(++s).getQuantity();
 				            }
 				            // if the current demand price is less than prices[p]:
-				            while (b < getBuyOffers().getOffers().size() && less(getBuyOffers().getOffers().get(b).getPrice(), prices.get(p))){
-				                demand -= getBuyOffers().getOffers().get(b++).getMaxQuantity();
+				            while (b < getBuyOffers().size() && less(getBuyOffers(b).getPrice(), prices.get(p))){
+				                demand -= getBuyOffers(b++).getQuantity();
 				            }
 				            if (supply > demand) {
 				                // volume = demand
@@ -521,10 +489,10 @@
 				         * less than the current supply. If so, then that will be at the market
 				         * price.
 				         */
-				         if (s + 1 == getSellOffers().getOffers().size()) {
-				            for (; b < getBuyOffers().getOffers().size() && p < prices.size(); p++) {
-				                while (b < getBuyOffers().getOffers().size() && less(getBuyOffers().getOffers().get(b).getPrice(), prices.get(p)))
-				                    demand -= getBuyOffers().getOffers().get(b++).getMaxQuantity();
+				         if (s + 1 == getSellOffers().size()) {
+				            for (; b < getBuyOffers().size() && p < prices.size(); p++) {
+				                while (b < getBuyOffers().size() && less(getBuyOffers(b).getPrice(), prices.get(p)))
+				                    demand -= getBuyOffers(b++).getQuantity();
 				
 				                if (supply > demand) {
 				                    // volume = demand
@@ -546,12 +514,12 @@
 				         * highest demand price, then the market price is set to the highest
 				         * demand price in order to minimize shortage.
 				         */
-				        if (b == getBuyOffers().getOffers().size()){
-				            setMarketPrice(getBuyOffers().getOffers().get(b - 1).getPrice());
+				        if (b == getBuyOffers().size()){
+				            setLastMarketPrice(getBuyOffers(b - 1).getPrice());
 				        }
 				        /* If supply never crosses demand, set to highest supply price */
 				        else if (p == prices.size()){
-				            setMarketPrice(getBuyOffers().getOffers().get(p -1 ).getPrice());
+				            setLastMarketPrice(getBuyOffers(p - 1).getPrice());
 				        }
 				        /*
 				         * Finally, if the loop broke because supply > demand, there are two
@@ -564,34 +532,33 @@
 				         */
 				        else {
 				            if (p == 0){
-				                setMarketPrice(prices.get(p));
-				            }else if (less(prices.get(p - 1), getSellOffers().getOffers().get(0).getPrice())){
-				                setMarketPrice(prices.get(p));
-				            }else if (less(getBuyOffers().getOffers().get(getBuyOffers().getOffers().size() - 1).getPrice(), prices.get(p))){
-				                setMarketPrice(prices.get(p - 1));
+				                setLastMarketPrice(prices.get(p));
+				            }else if (less(prices.get(p - 1), getSellOffers(0).getPrice())){
+				                setLastMarketPrice(prices.get(p));
+				            }else if (less(getBuyOffers(getBuyOffers().size() - 1).getPrice(), prices.get(p))){
+				                setLastMarketPrice(prices.get(p - 1));
 				            }else {
-				                setMarketPrice(prices.get(bestP));
+				                setLastMarketPrice(prices.get(bestP));
 				            }
 				        }
-				        int seller = 0, buyer = getBuyOffers().getOffers().size() - 1;
-				        while (seller < getSellOffers().getOffers().size() && buyer >= 0
-				                && !less(getMarketPrice(), getSellOffers().getOffers().get(seller).getPrice()) // sP <= mP
-				                && !less(getBuyOffers().getOffers().get(buyer).getPrice(), getMarketPrice())) { // bP >= mP
-				            if (transact(getSellOffers().getOffers().get(seller), getBuyOffers().getOffers().get(buyer), getMarketPrice())){
-				                seller++; // sell offer exhausted, move to next
-				            }else{
-				                buyer--; // buy offer exhausted, move to next
-				            }
+				        int seller = 0, buyer = getBuyOffers().size() - 1;
+				        while (seller < getSellOffers().size() && buyer >= 0
+				                && !less(getLastMarketPrice(), getSellOffers(seller).getPrice()) // sP <= mP
+				                && !less(getBuyOffers(buyer).getPrice(), getLastMarketPrice()))  // bP >= mP
+						{	
+				            	getSellOffers(seller).setPrice(getLastMarketPrice());
+				            	getTransactions().add(getSellOffers(seller));
+				                seller++;
+				                getBuyOffers(buyer).setPrice(getLastMarketPrice());
+				            	getTransactions().add(getBuyOffers(buyer));
+				                buyer--;
 				        }
-				        
 						// reset offer lists and set statistic variables
-				        setMarketVolume(getTransactions().getOffers().size());
-				        setBuyVolume(getBuyOffers().getOffers().size());
-				        setSellVolume(getSellOffers().getOffers().size());
-				        getBuyOffers().getOffers().clear();
-				        getSellOffers().getOffers().clear();
-				   		//System.out.println("MarketPrice:" + getMarketPrice());
-				   		//System.out.println("Transactions:" + getTransactions().getOffers().size());
+				        setLastMarketVolume(getTransactions().size());
+				        setBuyVolume(getBuyOffers().size());
+				        setSellVolume(getSellOffers().size());
+				        getBuyOffers().clear();
+				        getSellOffers().clear();
 						return true;
 					]]></Body>
 				</Function>
@@ -631,60 +598,21 @@
 					]]></Body>
 				</Function>
 				<!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~-->
-				<Function name="transact" resultType="Boolean">
-					<!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~-->
-					<documentation>
-						<dc:description>Adds the buy- and selloffer to the transactionlist</dc:description>
-					</documentation>
-					<Parameter name="sellOffer" type="Offer"/>
-					<Parameter name="buyOffer" type="Offer"/>
-					<Parameter name="salePrice" type="double"/>
-					<Body language="Java"><![CDATA[
-						if (sellOffer.getMaxQuantity() <= 0) return true;
-		        if (buyOffer.getMaxQuantity() <= 0) return false;
-		        // else, proceed with the transaction
-						getTransactions().getOffers().add(buyOffer);
-						getTransactions().getOffers().add(sellOffer);					
-		        boolean returnVal = sellOffer.getMaxQuantity() < buyOffer.getMaxQuantity();
-		        return returnVal;
-					]]></Body>
-				</Function>
-				<!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~-->
-				<Function name="addBuyFood" resultType="Boolean">
-					<!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~-->
-					<documentation>
-						<dc:description>Adds the buyoffer to the buyofferlist</dc:description>
-					</documentation>
-					<Parameter name="offers" type="OfferList"/>
-					<Body language="Java"><![CDATA[
-						getBuyOffers().getOffers().addAll(offers.getOffers());
-						//System.out.println("BuyOfferID: "+ offers.getOffers().get(0).getAgentID());
-						return true;
-					]]></Body>
-				</Function>
-				<!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~-->
-				<Function name="addSellFood" resultType="Boolean">
-					<!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~-->
-					<documentation>
-						<dc:description>Adds the selloffer to the sellofferlist</dc:description>
-					</documentation>
-					<Parameter name="offers" type="OfferList"/>
-					<Body language="Java"><![CDATA[
-						getSellOffers().getOffers().addAll(offers.getOffers());
-						//System.out.println("SellOfferID: " + offers.getOffers().get(0).getAgentID());
-						return true;
-					]]></Body>
-				</Function>
-				
-				<!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->
 				<ReactionRule name="Accept_BuyFood" agentVariable="m">
 					<!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->
 					<documentation>
 						<dc:description>BuyOffers are stored</dc:description>
 					</documentation>
-					<WHEN eventType="InMessageEvent" messageType="BuyFood_msg" messageVariable="msg"/>
-					<IF language="Java">m.addBuyFood(msg.getOfferList())</IF>
-					<THEN></THEN>
+					<WHEN eventType="InMessageEvent" messageType="OfferToBuyFood" messageVariable="msg"/>
+					<DO>
+						<UPDATE-AGT>
+							<MultiValuedSlot property="buyOffers">
+								<AddAll>
+									<ValueExpr language="Java">msg.getBuyOffers()</ValueExpr>
+								</AddAll>
+							</MultiValuedSlot>
+						</UPDATE-AGT>
+					</DO>
 				</ReactionRule>
 				<!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->
 				<ReactionRule name="Accept_SellFood" agentVariable="m">
@@ -692,9 +620,17 @@
 					<documentation>
 						<dc:description>SellOffers are stored</dc:description>
 					</documentation>
-					<WHEN eventType="InMessageEvent" messageType="SellFood_msg" messageVariable="msg"/>
-					<IF language="Java">m.addSellFood(msg.getOfferList())</IF>
-					<THEN></THEN>
+					<WHEN eventType="InMessageEvent" messageType="OfferToSellFood" messageVariable="msg"/>
+					<DO>
+						
+						<UPDATE-AGT>
+							<MultiValuedSlot property="sellOffers">
+								<AddAll>
+									<ValueExpr language="Java">msg.getSellOffers()</ValueExpr>
+								</AddAll>
+							</MultiValuedSlot>
+						</UPDATE-AGT>
+					</DO>
 				</ReactionRule>
 				<!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->
 				<ReactionRule name="Clear" agentVariable="m">
@@ -702,12 +638,12 @@
 					<documentation>
 						<dc:description>The market gets cleared</dc:description>
 					</documentation>
-					<WHEN eventType="InMessageEvent" messageType="Clear_msg"/>
+					<WHEN eventType="InMessageEvent" messageType="ClearMarket"/>
 					<IF language="Java">m.clear()</IF>
 					<THEN>
 						<SCHEDULE-EVT>
 							<ReminderEventExpr>
-								<ReminderMsg language="Java">"transactions_ready"</ReminderMsg>
+								<ReminderMsg language="Java">"transactions ready"</ReminderMsg>
 							</ReminderEventExpr>
 						</SCHEDULE-EVT>
 					</THEN>
@@ -716,28 +652,30 @@
 				<ReactionRule name="Transact" agentVariable="m">
 					<!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->
 					<documentation>
-						<dc:description>Persons are notified about matching offers.</dc:description>
+						<dc:description>Done trades are reurned to the persons</dc:description>
 					</documentation>
-					<WHEN eventType="ReminderEvent" reminderMsg="transactions_ready" eventVariable="evt" />
-					<FOR-ListItemVariable variable="o" listItemType="Offer">
-						<ListExpr language="Java">getTransactions().getOffers()</ListExpr>
+					<WHEN eventType="ReminderEvent" eventVariable="evt" />
+					<FOR-ListItemVariable variable="o" listItemType="TradeOffer">
+						<ListExpr language="Java">getTransactions()</ListExpr>
 					</FOR-ListItemVariable>
-					<DO>
+					<IF language="Java"><![CDATA[evt.getReminderMsg().equals("transactions ready")]]></IF>
+					<THEN>
 						<SCHEDULE-EVT>
-							<OutMessageEventExpr messageType="MatchingOffersNotification_msg">
-								<ReceiverIdRef language="Java">o.getAgentID()</ReceiverIdRef>
+							<OutMessageEventExpr messageType="MatchingOffer">
+								<ReceiverIdRef language="Java">o.getBidderIdRef()</ReceiverIdRef>
 								<Slot property="offer">
 									<ValueExpr language="Java">o</ValueExpr>
 								</Slot>
 							</OutMessageEventExpr>
 						</SCHEDULE-EVT>
-					</DO>
+					</THEN>
 				</ReactionRule>	
 			</AgentType>
+			<!-- ============================================ -->
+			<AgentType name="ContinuousCommodityMarket" superType="Market"></AgentType>
 		</EntityTypes>
 		
 	<EnvironmentRules>
-		<!-- ============================= -->
 		<EnvironmentRule name="AtStartOfDayEat_ER">
 			<!-- ============================= -->
 			<documentation>
@@ -746,7 +684,7 @@
 			<WHEN eventType="StartOfDay" eventVariable="evt" />
 			<FOR objectVariable="p" objectType="Person" />
 			<IF language="Java"><![CDATA[
-p.getAssets().getAsset("Food").withdraw( p.getEAT_AMOUNT()) < p.getEAT_AMOUNT() 
+				Global.getAssetByName("Food", p.getAssets()).withdraw(p.getEAT_AMOUNT()) < p.getEAT_AMOUNT() 
 			]]></IF>
 			<THEN>
 				<UPDATE-ENV>
@@ -769,20 +707,22 @@ p.getAssets().getAsset("Food").withdraw( p.getEAT_AMOUNT()) < p.getEAT_AMOUNT()
 					    <SenderIdRef language="Java">m.getId()</SenderIdRef>
 						<ReceiverIdRef language="Java">p.getId()</ReceiverIdRef>
 						<Slot property="price">
-							<ValueExpr language="Java">m.getMarketPrice()</ValueExpr>
+							<ValueExpr language="Java">m.getLastMarketPrice()</ValueExpr>
+						</Slot>
+						<Slot property="marketType">
+							<ValueExpr language="Java">m.getCommodity()</ValueExpr>
 						</Slot>
 					</InMessageEventExpr>
 				</SCHEDULE-EVT>
 			</DO>
 		</EnvironmentRule>
-		
 		<!-- ============================= -->
-		<EnvironmentRule name="EachDayAt8AM_ER">
+		<EnvironmentRule name="StartWork_ER">
 			<!-- ============================= -->
 			<documentation>
 				<dc:description>Act_msg is send to every person</dc:description>
 			</documentation>
-			<WHEN eventType="EachDayAt8AM"/>
+			<WHEN eventType="StartWork"/>
 			<FOR objectVariable="p" objectType="Person" />
 			<DO>
 				<SCHEDULE-EVT>
@@ -793,16 +733,16 @@ p.getAssets().getAsset("Food").withdraw( p.getEAT_AMOUNT()) < p.getEAT_AMOUNT()
 			</DO>
 		</EnvironmentRule>	
 		<!-- ===================================== -->
-		<EnvironmentRule name="EachDayAt11AM_ER">
+		<EnvironmentRule name="CloseMarket_ER">
 		<!-- ===================================== -->
 			<documentation>
-				<dc:description>Clear_msg is send to every market</dc:description>
+				<dc:description>ClearMarket is send to every market</dc:description>
 			</documentation>
-			<WHEN eventType="EachDayAt11AM"/>
+			<WHEN eventType="CloseMarket"/>
 			<FOR objectVariable="m" objectType="Market" />
 			<DO>
 				<SCHEDULE-EVT>
-					<InMessageEventExpr messageType="Clear_msg" senderIdRef="0">
+					<InMessageEventExpr messageType="ClearMarket" senderIdRef="0">
 						<ReceiverIdRef language="Java">m.getId()</ReceiverIdRef>
 					</InMessageEventExpr>
 				</SCHEDULE-EVT>
@@ -814,67 +754,88 @@ p.getAssets().getAsset("Food").withdraw( p.getEAT_AMOUNT()) < p.getEAT_AMOUNT()
 	<!-- ======================= -->
 	<InitialState>
 	<!-- ======================= -->
-		<Agent type="Market" id="2">
+		<Agent type="ContinuousCommodityMarket" id="2">
 			<!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->			
-			<Slot property="marketPrice" value="2.0" />
-		</Agent>
-		
-		<Agents type="Person" rangeStartID="1000" rangeEndID="1000">
-			<Slot property="assets">
-				<ValueExpr language="Java"><![CDATA[
-					new AssetsList(){
-				        {
-				            addAsset(33.0d, "Food", "Stk");
-				            addAsset(20.0d, "Gold", "Stk");
-				        }
-				    }
-				]]></ValueExpr>
+			<Slot property="lastMarketPrice" value="0.2" />
+			<Slot property="commodity" value="Food"></Slot>
+			<Slot property="currency" value="Gold"></Slot>
+			<Slot property="buyOffers">
+				<ValueExpr language="Java"><![CDATA[new ArrayList<TradeOffer>()]]></ValueExpr>
 			</Slot>
-			<Slot property="foodStock" value="66" />
-			<Slot property="goldAmount" value="40" />
-			<Slot property="skillLevelGold">
-				<ValueExpr language="Java">0</ValueExpr>
+			<Slot property="sellOffers">
+				<ValueExpr language="Java"><![CDATA[new ArrayList<TradeOffer>()]]></ValueExpr>
+			</Slot>
+			<Slot property="transactions">
+				<ValueExpr language="Java"><![CDATA[new ArrayList<TradeOffer>()]]></ValueExpr>
+			</Slot>
+		</Agent>	
+		<Agents type="Person" rangeStartID="1000" rangeEndID="1009">
+			<Slot property="assets">
+				<ValueExpr language="Java"><![CDATA[new ArrayList<aors.util.economics.Quantity>(){
+				        {
+				            Global.addContinuous(33.0d, "Food", "Stk", this);
+				            Global.addContinuous(60.0d, "Gold", "Stk", this);
+				        }
+				    }]]></ValueExpr>
+			</Slot>
+			<Slot property="foodBuyList">
+				<ValueExpr language="Java"><![CDATA[new ArrayList<TradeOffer>()]]></ValueExpr>
+			</Slot>
+			<Slot property="foodSellList">
+				<ValueExpr language="Java"><![CDATA[new ArrayList<TradeOffer>()]]></ValueExpr>
 			</Slot>
 			<Slot property="skillLevelFood">
 				<RandomVariable>
-					<Uniform lowerBound="2.5" upperBound="3.5" />
-				</RandomVariable> 
-			</Slot>
-		</Agents>
-		<Agents type="Person" rangeStartID="1500" rangeEndID="1501">
-			<Slot property="assets">
-				<ValueExpr language="Java"><![CDATA[
-					new AssetsList(){
-				        {
-				            addAsset(33.0d, "Food", "Stk");
-				            addAsset(20.0d, "Gold", "Stk");
-				        }
-				    }
-				]]></ValueExpr>
-			</Slot>
-			
-			<Slot property="foodStock" value="33" />
-			<Slot property="goldAmount" value="40" />
-			<Slot property="skillLevelGold">
-				<RandomVariable>
-					<Uniform lowerBound="1.5" upperBound="2.5" />
+					<Uniform lowerBound="0" upperBound="0.5" />
 				</RandomVariable>
 			</Slot>
-			<Slot property="skillLevelFood">
-				<ValueExpr language="Java">0</ValueExpr>
+			<Slot property="skillLevelGold">
+				<RandomVariable>
+					<Uniform lowerBound="2.0" upperBound="3.0" />
+				</RandomVariable>
 			</Slot>
+			<Slot property="foodAmount" value="33.0" />
+			<Slot property="goldAmount" value="60.0" />
+		</Agents>
+		<Agents type="Person" rangeStartID="2000" rangeEndID="2009">
+			<Slot property="assets">
+				<ValueExpr language="Java"><![CDATA[new ArrayList<aors.util.economics.Quantity>(){
+				        {
+				            Global.addContinuous(60.0d, "Food", "Stk", this);
+				            Global.addContinuous(33.0d, "Gold", "Stk", this);
+				        }
+				    }]]></ValueExpr>
+			</Slot>
+			<Slot property="foodBuyList">
+				<ValueExpr language="Java"><![CDATA[new ArrayList<TradeOffer>()]]></ValueExpr>
+			</Slot>
+			<Slot property="foodSellList">
+				<ValueExpr language="Java"><![CDATA[new ArrayList<TradeOffer>()]]></ValueExpr>
+			</Slot>
+			<Slot property="skillLevelFood">
+				<RandomVariable>
+					<Uniform lowerBound="2.0" upperBound="3.0" />
+				</RandomVariable>
+			</Slot>
+			<Slot property="skillLevelGold">
+				<RandomVariable>
+					<Uniform lowerBound="0" upperBound="0.5" />
+				</RandomVariable>
+			</Slot>
+			<Slot property="foodAmount" value="60.0" />
+			<Slot property="goldAmount" value="33.0" />
 		</Agents>
 		<ExogenousEvent occurrenceTime="1" type="StartOfDay" />
-		<ExogenousEvent occurrenceTime="8" type="EachDayAt8AM" />
-		<ExogenousEvent occurrenceTime="11" type="EachDayAt11AM" />
+		<ExogenousEvent occurrenceTime="3" type="StartWork" />
+		<ExogenousEvent occurrenceTime="6" type="CloseMarket" />
 	</InitialState>
 	
 	<!-- =================================================== -->
 	<UserInterface>
 		<StatisticsUI>
-			<StatisticsVariableUI variable="Price" comparisonGroup="pricevsfood">
+			<StatisticsVariableUI variable="PriceFood" comparisonGroup="pricevsfood">
 				<Label>
-					<Text xml:lang="en">Marketprice</Text>
+					<Text xml:lang="en">FoodPrice</Text>
 				</Label>
 				<Hint>
 					<Text xml:lang="en">What is the average market price?</Text>
@@ -883,22 +844,55 @@ p.getAssets().getAsset("Food").withdraw( p.getEAT_AMOUNT()) < p.getEAT_AMOUNT()
 					<Currency>EUR(&#8364;)</Currency>
 				</Format>
 			</StatisticsVariableUI>
-			<StatisticsVariableUI variable="BuyOffers" comparisonGroup="pricevsfood">
+			<StatisticsVariableUI variable="BuyOffersFood" comparisonGroup="pricevsfood">
 				<Label>
-					<Text xml:lang="en">number of BuyOffers</Text>
+					<Text xml:lang="en">Food BuyOffers</Text>
 				</Label>
 				<Hint>
 					<Text xml:lang="en">What is the average market volume?</Text>
 				</Hint>
 			</StatisticsVariableUI>
-			<StatisticsVariableUI variable="Selloffers" comparisonGroup="pricevsfood">
+			<StatisticsVariableUI variable="SellOffersFood" comparisonGroup="pricevsfood">
 				<Label>
-					<Text xml:lang="en">number of SellOffers</Text>
+					<Text xml:lang="en">Food SellOffers</Text>
 				</Label>
 				<Hint>
 					<Text xml:lang="en">What is the average market volume?</Text>
 				</Hint>
 			</StatisticsVariableUI>
+			<StatisticsVariableUI variable="FoodAmount1" comparisonGroup="pricevsfood">
+				<Label>
+					<Text xml:lang="en">FoodWorker</Text>
+				</Label>
+				<Hint>
+					<Text xml:lang="en">What is the average market volume?</Text>
+				</Hint>
+			</StatisticsVariableUI>
+			<StatisticsVariableUI variable="GoldAmount1" comparisonGroup="pricevsfood">
+				<Label>
+					<Text xml:lang="en">GoldWorker</Text>
+				</Label>
+				<Hint>
+					<Text xml:lang="en">What is the average market volume?</Text>
+				</Hint>
+			</StatisticsVariableUI>
+			<StatisticsVariableUI variable="FoodAmount2" comparisonGroup="pricevsfood">
+				<Label>
+					<Text xml:lang="en">FoodProducer</Text>
+				</Label>
+				<Hint>
+					<Text xml:lang="en">What is the average market volume?</Text>
+				</Hint>
+			</StatisticsVariableUI>
+			<StatisticsVariableUI variable="GoldAmount2" comparisonGroup="pricevsfood">
+				<Label>
+					<Text xml:lang="en">GoldProducer</Text>
+				</Label>
+				<Hint>
+					<Text xml:lang="en">What is the average market volume?</Text>
+				</Hint>
+			</StatisticsVariableUI>
+			
 		</StatisticsUI>
 	</UserInterface>
 </SimulationScenario>
