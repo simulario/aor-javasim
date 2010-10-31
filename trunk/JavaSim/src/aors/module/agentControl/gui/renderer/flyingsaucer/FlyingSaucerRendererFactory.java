@@ -65,6 +65,20 @@ public class FlyingSaucerRendererFactory implements AbstractRendererFactory {
 		private Map<String, Element> styleMap;
 
 		/**
+		 * Default style for the Structure element
+		 */
+		private static final String STRUCTURE_STYPE = "form.__Structure { " +
+			"display: block; " +
+			"position: fixed; " +
+			"margin: 0; " +
+			"padding: 0; " +
+			"border: none; " +
+			"top: 0; " +
+			"left: 0; " +
+			"width: 100%; " +
+			"height: 100%; " +
+			"background-color: silver; }\n";
+		/**
 		 * Instantiates the adapter.
 		 */
 		public FlyingSaucerAdapter() {
@@ -118,7 +132,6 @@ public class FlyingSaucerRendererFactory implements AbstractRendererFactory {
 				// adds an entry for the current uri
 				this.styleMap.put(sourceURI, null);
 
-
 				// if there is a stylesheet processing instruction, remove it from the
 				// document, create a style-element based on its content and update the
 				// map
@@ -146,8 +159,8 @@ public class FlyingSaucerRendererFactory implements AbstractRendererFactory {
 
 					// adds the new style data to the style map
 					this.styleMap.put(sourceURI, new Element("style").setAttribute("type",
-						type).setAttribute("style", "display: none").setText(styleData.
-						toString()));
+						type).setAttribute("style", "display: none").setText(
+						FlyingSaucerAdapter.STRUCTURE_STYPE + styleData.toString()));
 				}
 			}
 
