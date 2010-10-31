@@ -13,7 +13,9 @@ import aors.model.agtsim.agentControl.AgentControlListener;
 import aors.model.envevt.EnvironmentEvent;
 import aors.module.Module;
 import aors.module.agentControl.gui.GUIManager;
+import aors.util.jar.JarUtil;
 import java.io.File;
+import java.io.IOException;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -57,6 +59,7 @@ public class ModuleController implements Module, AgentControlListener {
 	 * {@link AgentControlBroker} as {@link AgentControlListener}.
 	 */
 	public ModuleController() {
+		this.initModuleLibraries();
 		this.projectPath = null;
 		this.guiManager = new GUIManager(this);
 		this.initIdentifier = true;
@@ -80,6 +83,44 @@ public class ModuleController implements Module, AgentControlListener {
 //		this();
 //	}
 
+	/**
+	 * Initializes the required libaries.
+	 */
+	private void initModuleLibraries() {
+
+		// local path in the temporarily directory for this module
+		String localTmpPath = "agentControlModule";
+
+		String libDirName = "lib";
+
+		String[] libs = {
+			"core-renderer-head.jar",
+			"jaxen-1.1.1.jar",
+			"jdom.jar"
+		};
+
+		// path to jar
+		String jarPath = System.getProperty("user.dir") + File.separator
+			+ "modules" + File.separator + "agentControlModule.jar";
+
+		// extract the jar files
+		try {
+			for(String lib : libs) {
+				JarUtil.extractFileFromJar(jarPath, localTmpPath, libDirName, lib);
+			}
+		} catch (Exception exception) {
+			exception.printStackTrace();
+		}
+
+		// add this path in the library path
+		JarUtil.setLibraryPath(localTmpPath);
+
+		// load jars from that temporarily directory
+		for(String lib : libs) {
+			JarUtil.loadJar(localTmpPath, lib);
+		}
+	}
+
 	/**********************************/
 	/*** methods related to the gui ***/
 	/**********************************/
@@ -90,6 +131,9 @@ public class ModuleController implements Module, AgentControlListener {
 	 */
 	@Override
 	public GUIManager getGUIComponent() {
+		if(this.guiManager == null) {
+			this.guiManager = new GUIManager(this);
+		}
 		return this.guiManager;
 	}
 

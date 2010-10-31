@@ -7,7 +7,7 @@ import java.util.List;
 import java.util.Map;
 
 /**
- * Interface for the agent controller. Its used by the agent subject (mvc model).
+ * Interface for the agent controller. It's used by the agent subject (mvc model).
  * @author Thomas Grundmann
  */
 public interface CoreAgentController {

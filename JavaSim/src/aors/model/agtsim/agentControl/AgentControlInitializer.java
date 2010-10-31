@@ -11,16 +11,57 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
+/**
+ * This class provides all neccessary information to initialize agent control
+ * for an agent subject. Its concrete implementation is created by the code
+ * generation.
+ * @author Thomas Grundmann
+ */
 public abstract class AgentControlInitializer {
 	
+	/**
+	 * List of the ids of all controllable agents.
+	 */
 	private Long[] controllableAgents;
+
+	/**
+	 * The agent subject facade used for the agent control.
+	 */
 	private AgentSubjectFacade agentSubjectFacade;
+
+	/**
+	 * The interaction event factory used for the agent control.
+	 */
 	private InteractionEventFactory interactionEventFactory;
+
+	/**
+	 * The additional reaction rules for the agent control.
+	 */
 	private List<ReactionRule> agentControlRules;
+
+	/**
+	 * Set of the names of the suspeneded reaction rules.
+	 */
 	private Set<String> suspendedRules;
+
+	/**
+	 * Set of the key events.
+	 */
 	private Set<Pair<String, String>> keyEvents;
+
+	/**
+	 * Set of the mouse events.
+	 */
 	private Map<String, Set<Pair<String, String>>> mouseEvents;
+
+	/**
+	 * Set of the supported user interface languages.
+	 */
 	private Set<String> uiLanguages;
+
+	/**
+	 * The default user interface language.
+	 */
 	private String defaultUILanguage;
 
 	/**

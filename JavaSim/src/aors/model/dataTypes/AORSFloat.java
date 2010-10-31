@@ -7,6 +7,9 @@ public final class AORSFloat {
   }
 
 	public static Double valueOf(String string) {
+		if(string == null || "".equals(string.trim())) {
+			return 0.0;
+		}
 		return Double.valueOf(string);
 	}
 

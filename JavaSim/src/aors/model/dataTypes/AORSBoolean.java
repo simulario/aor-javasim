@@ -7,6 +7,9 @@ public final class AORSBoolean {
   }
 
 	public static Boolean valueOf(String string) {
+		if(string == null || "".equals(string.trim())) {
+			return false;
+		}
 		return Boolean.valueOf(string);
 	}
 

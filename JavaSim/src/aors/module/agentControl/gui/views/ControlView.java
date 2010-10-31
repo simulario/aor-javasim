@@ -109,7 +109,7 @@ public class ControlView extends InteractiveView {
 		this.addKeyListeners(agentControlInitializer.getKeyEvents());
 	}
 
-		/**
+	/**
 	 * Calculates the URI that represents the .gui-file.
 	 * @param agentControlInitializer
 	 * @param projectPath

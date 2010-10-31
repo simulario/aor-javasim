@@ -1542,6 +1542,9 @@ public abstract class AgentSubject extends Entity implements Rollbackable,
 	 */
 	public class AgentSubjectFacade {
 
+		/**
+		 * The initializer for this agent.
+		 */
 		AgentControlInitializer agentControlInitializer;
 
 		/*******************/

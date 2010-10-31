@@ -7,6 +7,9 @@ public final class AORSInteger {
   }
 
 	public static Long valueOf(String string) {
+		if(string == null || "".equals(string.trim())) {
+			return 0L;
+		}
 		return Long.valueOf(string);
 	}
 

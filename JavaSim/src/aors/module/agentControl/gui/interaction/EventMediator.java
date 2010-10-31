@@ -69,7 +69,7 @@ public class EventMediator implements PropertyChangeListener {
     if(this.receivers != null) {
       if(this.receivers.get(propertyName) != null) {
         for(Receiver receiver : this.receivers.get(propertyName)) {
-      if(!receiver.equals(evt.getSource())) {
+          if(!receiver.equals(evt.getSource())) {
             receiver.propertyChange(evt);
           }
         }
