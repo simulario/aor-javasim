@@ -18,7 +18,7 @@
 			<dc:creator>Gerd Wagner</dc:creator>
 			<dc:created>20081001</dc:created>
 			<dc:modified>20091026</dc:modified>
-			<dc:description>Customers arrive at random times at a service desk where they have to wait in a queue when the service desk is busy. The time between two customer arrivals is uniformly distributed between 1 and 8 minutes. The times for completing a service vary from 1 to 6 minutes, with probabilities 0.1, 0.2, 0.3, 0.25, 0.1, 0.05, respectively. Two statistics are to be collected: service utilization (total service time divided by total time) and maximum queue length.</dc:description>
+			<dc:description>Customers arrive at random times at a service desk where they have to wait in a queue when the service desk is serviceDeskBusy. The time between two customer arrivals is uniformly distributed between 1 and 8 minutes. The times for completing a service vary from 1 to 6 minutes, with probabilities 0.1, 0.2, 0.3, 0.25, 0.1, 0.05, respectively. Two statistics are to be collected: service utilization (total service time divided by total time) and maximum queue length. </dc:description>
 			<processModelDiagram>BPMN-Diagram.png</processModelDiagram>
 		</documentation>
 
@@ -44,7 +44,7 @@
 		</Statistics>
 		<Globals>
 			<GlobalVariable name="queueLength" dataType="Integer"/>
-			<GlobalVariable name="busy" dataType="Boolean"/>
+			<GlobalVariable name="serviceDeskBusy" dataType="Boolean"/>
 			<GlobalFunction name="randomServiceTime" resultType="Integer">
 				<Body language="Java"><![CDATA[
 		int r = Random.uniformInt(0,99);
@@ -81,13 +81,13 @@
 			<EnvironmentRule name="ArrivalRule">
 				<!-- =================================================== -->
 				<documentation>
-					<dc:description>On CustomerArrival, if the service desk is busy, the customer has to wait in a line, so the queue length is increased by 1. Otherwise, the customer is going to be serviced and hence the service desk gets busy, and for ending the service, a CustomerDeparture event (with a delay being set to a random service time) is created .</dc:description>
+					<dc:description>On CustomerArrival, if the service desk is serviceDeskBusy, the customer has to wait in a line, so the queue length is increased by 1. Otherwise, the customer is going to be serviced and hence the service desk gets serviceDeskBusy, and for ending the service, a CustomerDeparture event (with a delay being set to a random service time) is created .</dc:description>
 				</documentation>
 				<WHEN eventType="CustomerArrival"/>
 				<FOR dataVariable="srvTm" dataType="Integer">
 					<ValueExpr language="Java">Global.randomServiceTime()</ValueExpr>
 				</FOR>
-				<IF language="Java"> Global.busy </IF>
+				<IF language="Java"> Global.serviceDeskBusy </IF>
 				<THEN>
 					<UPDATE-ENV>
 						<IncrementGlobalVariable name="queueLength" value="1"/>
@@ -95,7 +95,7 @@
 				</THEN>
 				<ELSE>
 					<UPDATE-ENV>
-						<UpdateGlobalVariable name="busy" value="true"/>
+						<UpdateGlobalVariable name="serviceDeskBusy" value="true"/>
 					</UPDATE-ENV>
 					<SCHEDULE-EVT>
 						<CausedEventExpr eventType="CustomerDeparture">
@@ -113,7 +113,7 @@
 			<EnvironmentRule name="DepartureRule">
 				<!-- =================================================== -->
 				<documentation>
-					<dc:description>On CustomerDeparture, when the queue is empty, the service desk is no longer busy. Otherwise, the next customer will be serviced, so a new future CustomerDeparture event is created (with a delay given by the random service time), and the queue size is decreased by 1.</dc:description>
+					<dc:description>On CustomerDeparture, when the queue is empty, the service desk is no longer serviceDeskBusy. Otherwise, the next customer will be serviced, so a new future CustomerDeparture event is created (with a delay given by the random service time), and the queue size is decreased by 1.</dc:description>
 				</documentation>
 				<WHEN eventType="CustomerDeparture" eventVariable="dep"/>
 				<FOR dataVariable="srvTm" dataType="Integer">
@@ -131,7 +131,7 @@
 				<IF language="Java"> Global.getQueueLength() == 0 </IF>
 				<THEN>
 					<UPDATE-ENV>
-						<UpdateGlobalVariable name="busy" value="false"/>
+						<UpdateGlobalVariable name="serviceDeskBusy" value="false"/>
 					</UPDATE-ENV>
 				</THEN>
 				<ELSE>
@@ -156,7 +156,7 @@
 	<!-- =================================================== -->
 	<InitialState>
 		<!-- =================================================== -->
-		<GlobalVariable name="busy" value="false"/>
+		<GlobalVariable name="serviceDeskBusy" value="false"/>
 		<GlobalVariable name="queueLength" value="0"/>
 		<ExogenousEvent type="CustomerArrival" occurrenceTime="1"/>
 	</InitialState>
