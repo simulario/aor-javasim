@@ -64,6 +64,7 @@ import aors.data.evt.sim.SimulationEventListener;
 import aors.data.evt.sim.SimulationStepEvent;
 import aors.data.evt.sim.SimulationStepEventListener;
 import aors.data.java.helper.AbstractSimState;
+import aors.exceptions.SimulatorException;
 import aors.gui.helper.FileListener;
 import aors.gui.helper.FileMonitor;
 import aors.model.envevt.EnvironmentEvent;
@@ -110,9 +111,7 @@ public class AORJavaGui extends JFrame implements ActionListener,
       + File.separator
       + "ext"
       + File.separator
-      + "documents"
-      + File.separator
-      + "nojavacompiler.htm";
+      + "documents" + File.separator + "nojavacompiler.htm";
 
   private final SimulationManager simulationManager;
   private ExecutorService backgroundExecution;
@@ -415,25 +414,25 @@ public class AORJavaGui extends JFrame implements ActionListener,
     }
 
     // wrap an PrintStream around the text pane object (=> decorator pattern)
-    this.out = new PrintStream(new OutputStreamTextPane(this.tabAORSL
-        .getOutputTextPane(), new Color(0, 20, 0), new Font("SansSerif",
-        Font.PLAIN, 12)));
+    this.out = new PrintStream(new OutputStreamTextPane(
+        this.tabAORSL.getOutputTextPane(), new Color(0, 20, 0), new Font(
+            "SansSerif", Font.PLAIN, 12)));
 
-    this.err = new PrintStream(new OutputStreamTextPane(this.tabAORSL
-        .getOutputTextPane(), new Color(240, 0, 0), new Font("SansSerif",
-        Font.BOLD | Font.ITALIC, 12)));
+    this.err = new PrintStream(new OutputStreamTextPane(
+        this.tabAORSL.getOutputTextPane(), new Color(240, 0, 0), new Font(
+            "SansSerif", Font.BOLD | Font.ITALIC, 12)));
 
-    this.success = new PrintStream(new OutputStreamTextPane(this.tabAORSL
-        .getOutputTextPane(), new Color(0, 120, 0), new Font("SansSerif",
-        Font.BOLD, 12)));
+    this.success = new PrintStream(new OutputStreamTextPane(
+        this.tabAORSL.getOutputTextPane(), new Color(0, 120, 0), new Font(
+            "SansSerif", Font.BOLD, 12)));
 
     // this.statistic = new PrintStream(new OutputStreamTextPane(
     // this.tabStatistics.getOutputTextPane(), new Color(0, 0, 0), new Font(
     // "SansSerif", Font.PLAIN, 12)));
 
-    this.warning = new PrintStream(new OutputStreamTextPane(this.tabAORSL
-        .getOutputTextPane(), new Color(0, 0, 220), new Font("SansSerif",
-        Font.BOLD, 12)));
+    this.warning = new PrintStream(new OutputStreamTextPane(
+        this.tabAORSL.getOutputTextPane(), new Color(0, 0, 220), new Font(
+            "SansSerif", Font.BOLD, 12)));
 
     this.getContentPane().add(this.tabPane);
 
@@ -693,15 +692,17 @@ public class AORJavaGui extends JFrame implements ActionListener,
       this.progressBar.setString("Valid.");
 
       // enable all previously may not usable menu items
-      ((Menu) this.getJMenuBar()).switchMenuItems(Arrays
-          .asList(Menu.Item.GENERATE_ONLY), true);
+      ((Menu) this.getJMenuBar()).switchMenuItems(
+          Arrays.asList(Menu.Item.GENERATE_ONLY), true);
     } else {
       System.err.println("Failed!");
       this.progressBar.setString("Invalid.");
 
       // disable all not usable menu items
-      ((Menu) this.getJMenuBar()).switchMenuItems(Arrays.asList(
-          Menu.Item.GENERATE_ONLY, Menu.Item.COMPILE_ONLY), false);
+      ((Menu) this.getJMenuBar())
+          .switchMenuItems(
+              Arrays.asList(Menu.Item.GENERATE_ONLY, Menu.Item.COMPILE_ONLY),
+              false);
     }
 
     return result;
@@ -872,7 +873,12 @@ public class AORJavaGui extends JFrame implements ActionListener,
           // The simulation is already builded. Initialize it and
           // announce modules. This is the point when the modules are
           // asked to initialize on an build project is open.
-          simulationManager.getProject().instantiateSimulation();
+          try {
+            simulationManager.instantiateCurrentSimulation();
+          } catch (SimulatorException e) {
+            // TODO Auto-generated catch block
+            e.printStackTrace();
+          }
 
           // initialize data from XML for module
           simulationManager.initializeDom(simulationManager.getProject()
@@ -895,14 +901,14 @@ public class AORJavaGui extends JFrame implements ActionListener,
                 success.println("Ok");
                 // enable the run button for the simulation
                 toolBarSimulation.enableButton(Menu.Item.RUN, true);
-                ((Menu) getJMenuBar()).switchMenuItems(Arrays.asList(
-                    Menu.Item.EXPORT_JAR, Menu.Item.RUN), true);
+                ((Menu) getJMenuBar()).switchMenuItems(
+                    Arrays.asList(Menu.Item.EXPORT_JAR, Menu.Item.RUN), true);
               } else {
                 progressBar.setString("Compilation failed!");
                 System.err.println("Failed!");
                 toolBarSimulation.enableButton(Menu.Item.RUN, false);
-                ((Menu) getJMenuBar()).switchMenuItems(Arrays.asList(
-                    Menu.Item.EXPORT_JAR, Menu.Item.RUN), false);
+                ((Menu) getJMenuBar()).switchMenuItems(
+                    Arrays.asList(Menu.Item.EXPORT_JAR, Menu.Item.RUN), false);
               }
 
               // when the compilation started and created a diagnostic collector
@@ -995,7 +1001,12 @@ public class AORJavaGui extends JFrame implements ActionListener,
                     // The simulation is already builded. Initialize it and
                     // announce modules. This is the point when the modules are
                     // asked to initialize on an build project is open.
-                    simulationManager.getProject().instantiateSimulation();
+                    try {
+                      simulationManager.instantiateCurrentSimulation();
+                    } catch (SimulatorException e) {
+                      // TODO Auto-generated catch block
+                      e.printStackTrace();
+                    }
 
                     // initialize data from XML for module
                     simulationManager.initializeDom(simulationManager
@@ -1029,8 +1040,8 @@ public class AORJavaGui extends JFrame implements ActionListener,
 
                       // enable the run button for the simulation
                       toolBarSimulation.enableButton(Menu.Item.RUN, true);
-                      ((Menu) getJMenuBar()).switchMenuItems(Arrays
-                          .asList(Menu.Item.RUN), true);
+                      ((Menu) getJMenuBar()).switchMenuItems(
+                          Arrays.asList(Menu.Item.RUN), true);
 
                       // enable editable simulation elements on tool-bar
                       toolBarSimulation
@@ -1039,8 +1050,8 @@ public class AORJavaGui extends JFrame implements ActionListener,
                       progressBar.setString("Built failed!");
                       System.err.println("Failed!");
                       toolBarSimulation.enableButton(Menu.Item.RUN, false);
-                      ((Menu) getJMenuBar()).switchMenuItems(Arrays
-                          .asList(Menu.Item.RUN), false);
+                      ((Menu) getJMenuBar()).switchMenuItems(
+                          Arrays.asList(Menu.Item.RUN), false);
                     }
 
                     // when the compilation started and created a diagnostic
@@ -1080,8 +1091,8 @@ public class AORJavaGui extends JFrame implements ActionListener,
       if (isPaused) {
 
         // continue the simulation
-        this.simulationManager.getProject().getSimulation().pauseSimulation(
-            false);
+        this.simulationManager.getProject().getSimulation()
+            .pauseSimulation(false);
 
         // nothing to do next on this function
         return;
@@ -1101,7 +1112,7 @@ public class AORJavaGui extends JFrame implements ActionListener,
         try {
 
           // instantiate the simulation
-          simulationManager.getProject().instantiateSimulation();
+          simulationManager.instantiateCurrentSimulation();
 
           // initialize data from XML (and other) for modules
           // TODO: check whats happen if something is changed in the editor
@@ -1113,6 +1124,9 @@ public class AORJavaGui extends JFrame implements ActionListener,
               .getSimulation().getTotalSimulationSteps());
           progressBar.setMaximum(maxValue);
 
+        } catch (SimulatorException e) {
+          // TODO Auto-generated catch block
+          e.printStackTrace();
         } finally {
 
           progressBar.setIndeterminate(false);
@@ -1258,8 +1272,8 @@ public class AORJavaGui extends JFrame implements ActionListener,
                 .getSimulation().getStepTimeDelay();
 
             // delay the simulation step to 2 seconds
-            simulationManager.getProject().getSimulation().setStepTimeDelay(
-                1000);
+            simulationManager.getProject().getSimulation()
+                .setStepTimeDelay(1000);
 
             // get the current step
             long step = simulationManager.getProject().getSimulation()
@@ -1271,8 +1285,8 @@ public class AORJavaGui extends JFrame implements ActionListener,
             progressBar.setMaximum(new Long(step).intValue());
 
             // set the simulation step to it previous setting
-            simulationManager.getProject().getSimulation().setStepTimeDelay(
-                previousStepTimeDelay);
+            simulationManager.getProject().getSimulation()
+                .setStepTimeDelay(previousStepTimeDelay);
 
           }
         } finally {
@@ -1306,8 +1320,8 @@ public class AORJavaGui extends JFrame implements ActionListener,
           this.simulationManager.getProject().setSaved(true);
 
           // enable the tab, when no external is used
-          this.tabPane.setEnabledAt(tabAORSLIndex, !this.preferences
-              .isExternalXMLEditor());
+          this.tabPane.setEnabledAt(tabAORSLIndex,
+              !this.preferences.isExternalXMLEditor());
 
           // enable the internal editor, when no external is used
           this.tabAORSL.getEditorPane().setEnabled(
@@ -1458,15 +1472,21 @@ public class AORJavaGui extends JFrame implements ActionListener,
             if (simulationManager.getProject().isCompiled()) {
 
               // instantiate the simulation
-              simulationManager.getProject().instantiateSimulation();
+              try {
+                simulationManager.instantiateCurrentSimulation();
 
-              // initialize data from XML for module
-              simulationManager.initializeDom(simulationManager.getProject()
-                  .getSimulationDescription());
+                // initialize data from XML for module
+                simulationManager.initializeDom(simulationManager.getProject()
+                    .getSimulationDescription());
 
-              // prepare the simulation project
-              simulationManager.getProject().prepareSimulationWithoutLogFile();
+                // prepare the simulation project
+                simulationManager.getProject()
+                    .prepareSimulationWithoutLogFile();
 
+              } catch (SimulatorException e) {
+                System.err.println(e.getMessage());
+                System.out.println("Please try to rebuild your project!");
+              }
             }
 
             // switch the list of menu items on
@@ -1480,9 +1500,11 @@ public class AORJavaGui extends JFrame implements ActionListener,
 
             // when the project is already generated, switch on the compile
             // command
-            ((Menu) this.getJMenuBar()).getMenuItemByName(
-                Menu.Item.COMPILE_ONLY).setEnabled(
-                simulationManager.getProject().isGenerated());
+            if (simulationManager.getProject().isGenerated()) {
+              ((Menu) this.getJMenuBar()).getMenuItemByName(
+                  Menu.Item.COMPILE_ONLY).setEnabled(
+                  simulationManager.getProject().isGenerated());
+            }
 
             // when the project is already compiled
             if (simulationManager.getProject().isCompiled()) {
@@ -1490,14 +1512,13 @@ public class AORJavaGui extends JFrame implements ActionListener,
               toolBarSimulation.enableButton(Menu.Item.RUN, true);
 
               // allow project export as JAR file & enable run menu item
-              ((Menu) this.getJMenuBar()).switchMenuItems(Arrays.asList(
-                  Menu.Item.EXPORT_JAR, Menu.Item.RUN), true);
+              ((Menu) this.getJMenuBar()).switchMenuItems(
+                  Arrays.asList(Menu.Item.EXPORT_JAR, Menu.Item.RUN), true);
 
             } else {
               toolBarSimulation.enableButton(Menu.Item.RUN, false);
-              ((Menu) this.getJMenuBar()).switchMenuItems(Arrays
-                  .asList(Menu.Item.RUN), false);
-
+              ((Menu) this.getJMenuBar()).switchMenuItems(
+                  Arrays.asList(Menu.Item.RUN), false);
             }
 
             // enable all tabs
@@ -1662,7 +1683,7 @@ public class AORJavaGui extends JFrame implements ActionListener,
             // to type in an project name again
             this.simulationManager.getProject().setName("");
           }// if
-          // when there is not yet a project with this name
+           // when there is not yet a project with this name
         } else {
           // ready save the project
           readyToSave = true;
@@ -1846,8 +1867,8 @@ public class AORJavaGui extends JFrame implements ActionListener,
         this.toolBarFile.enableButton(Menu.Item.SAVE, true);
 
         // disable some menu items
-        ((Menu) this.getJMenuBar()).switchMenuItems(Arrays
-            .asList(Menu.Item.COMPILE_ONLY), false);
+        ((Menu) this.getJMenuBar()).switchMenuItems(
+            Arrays.asList(Menu.Item.COMPILE_ONLY), false);
 
         return true;
         // if nothing was loaded
@@ -2039,8 +2060,8 @@ public class AORJavaGui extends JFrame implements ActionListener,
       if (this.preferences.isExternalXMLEditor()) {
         // disable the save functions, to avoid overwriting the AORSL from the
         // GUI
-        ((Menu) this.getJMenuBar()).switchMenuItems(Arrays.asList(
-            Menu.Item.SAVE, Menu.Item.SAVE_AS), false);
+        ((Menu) this.getJMenuBar()).switchMenuItems(
+            Arrays.asList(Menu.Item.SAVE, Menu.Item.SAVE_AS), false);
 
         this.tabAORSL.getEditorPane().setEnabled(false);
         this.tabPane.setTitleAt(this.tabAORSLIndex,
@@ -2050,8 +2071,8 @@ public class AORJavaGui extends JFrame implements ActionListener,
         if (this.simulationManager.getProject() != null) {
 
           // enable some menu items
-          ((Menu) this.getJMenuBar()).switchMenuItems(Arrays.asList(
-              Menu.Item.SAVE, Menu.Item.SAVE_AS), true);
+          ((Menu) this.getJMenuBar()).switchMenuItems(
+              Arrays.asList(Menu.Item.SAVE, Menu.Item.SAVE_AS), true);
           this.tabPane.setEnabledAt(this.tabAORSLIndex, true);
           this.tabAORSL.getEditorPane().setEnabled(true);
         }
@@ -2108,8 +2129,8 @@ public class AORJavaGui extends JFrame implements ActionListener,
       if (this.simulationManager.getProject().isCreatedOnDisk()) {
         if (this.preferences.getExternalXMLEditorLocation() != "") {
 
-          File externalEditor = new File(this.preferences
-              .getExternalXMLEditorLocation());
+          File externalEditor = new File(
+              this.preferences.getExternalXMLEditorLocation());
 
           if (externalEditor.exists()) {
 
@@ -2131,8 +2152,8 @@ public class AORJavaGui extends JFrame implements ActionListener,
                     }
 
                     ProcessBuilder processBuilder = new ProcessBuilder();
-                    processBuilder.command(Arrays.asList(preferences
-                        .getExternalXMLEditorLocation(),
+                    processBuilder.command(Arrays.asList(
+                        preferences.getExternalXMLEditorLocation(),
                         pathToSimulationDescription));
 
                     process = processBuilder.start();
@@ -2184,8 +2205,8 @@ public class AORJavaGui extends JFrame implements ActionListener,
       if (!this.simulationManager.getProject().getLogFileName().equals("")) {
         if (this.preferences.getExternalXMLEditorLocation() != "") {
 
-          File externalEditor = new File(this.preferences
-              .getExternalXMLEditorLocation());
+          File externalEditor = new File(
+              this.preferences.getExternalXMLEditorLocation());
 
           if (externalEditor.exists()) {
 
@@ -2212,8 +2233,9 @@ public class AORJavaGui extends JFrame implements ActionListener,
                     }
 
                     ProcessBuilder processBuilder = new ProcessBuilder();
-                    processBuilder.command(Arrays.asList(preferences
-                        .getExternalXMLEditorLocation(), pathToLatestLogFile));
+                    processBuilder.command(Arrays.asList(
+                        preferences.getExternalXMLEditorLocation(),
+                        pathToLatestLogFile));
 
                     process = processBuilder.start();
 
@@ -2362,16 +2384,16 @@ public class AORJavaGui extends JFrame implements ActionListener,
             .getEnvironmentSimulator() != null) {
 
       List<Objekt> objList = this.simulationManager.getProject()
-          .getSimulation().getEnvironmentSimulator().getObjectsByType(
-              Objekt.class);
+          .getSimulation().getEnvironmentSimulator()
+          .getObjectsByType(Objekt.class);
       objList.addAll(this.simulationManager.getProject().getSimulation()
           .getEnvironmentSimulator().getObjectsByType(AgentObject.class));
       objList.addAll(this.simulationManager.getProject().getSimulation()
-          .getEnvironmentSimulator().getObjectsByType(
-              aors.model.envsim.PhysicalObject.class));
+          .getEnvironmentSimulator()
+          .getObjectsByType(aors.model.envsim.PhysicalObject.class));
       objList.addAll(this.simulationManager.getProject().getSimulation()
-          .getEnvironmentSimulator().getObjectsByType(
-              aors.model.envsim.PhysicalAgentObject.class));
+          .getEnvironmentSimulator()
+          .getObjectsByType(aors.model.envsim.PhysicalAgentObject.class));
 
       ArrayList<Objekt> usedObjAsRes = new ArrayList<Objekt>();
       for (Objekt o : objList) {

@@ -29,6 +29,7 @@ import java.io.File;
 
 import aors.controller.SimulationManager;
 import aors.data.DataBus;
+import aors.exceptions.SimulatorException;
 
 /**
  * TestManager - used to run and execute a set of test cases
@@ -158,7 +159,12 @@ public class TestManager {
       e.printStackTrace();
     }
 
-    this.simulationManager.getProject().instantiateSimulation();
+    try {
+      this.simulationManager.getProject().instantiateSimulation();
+    } catch (SimulatorException e) {
+      // TODO Auto-generated catch block
+      e.printStackTrace();
+    }
     this.simulationManager.getProject().prepareSimulation(file.getName(), null,
         true);
     if (simulationManager.getProject().getSimulation() != null) {
