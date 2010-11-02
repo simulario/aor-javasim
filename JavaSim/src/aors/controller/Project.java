@@ -24,6 +24,7 @@ import javax.tools.StandardJavaFileManager;
 import javax.tools.ToolProvider;
 
 import aors.data.DataBus;
+import aors.exceptions.SimulatorException;
 import aors.gui.helper.MD5Generator;
 
 /**
@@ -302,7 +303,7 @@ public class Project implements ProjectInterface {
       this.simulationDescriptionMD5 = MD5Generator.getMD5(this
           .getSimulationDescription());
     }
-    this.save();
+    //this.save();
   }
 
   /**
@@ -850,7 +851,7 @@ public class Project implements ProjectInterface {
    * Create an instance of the current simulation class in order to be ready to
    * run the simulation.
    */
-  public void instantiateSimulation() {
+  public void instantiateSimulation() throws SimulatorException {
 
     try {
       // create URL from the class folder
@@ -866,9 +867,14 @@ public class Project implements ProjectInterface {
           .loadClass(simPackageAndClassName);
 
     } catch (MalformedURLException e) {
-      e.printStackTrace();
+      //System.err.println("ERROR: " + e.getClass().getCanonicalName());
+      //e.printStackTrace();
+      throw new SimulatorException(e.getClass().getSimpleName()+ ": " + e.getMessage());
     } catch (ClassNotFoundException e) {
-      e.printStackTrace();
+//      System.err.println("ERROR: " + e.getClass().getCanonicalName());
+//      System.out.println("Message: " + e.getMessage());
+//      e.printStackTrace();
+      throw new SimulatorException(e.getClass().getSimpleName()+ ": " + e.getMessage());
     }
 
     // try to instantiate the simulation
@@ -881,9 +887,15 @@ public class Project implements ProjectInterface {
       }
 
     } catch (IllegalAccessException e) {
-      e.printStackTrace();
+      //System.err.println("ERROR: " + e.getClass().getSimpleName() + ": " + e.getMessage());
+      //e.printStackTrace();
+      throw new SimulatorException(e.getClass().getSimpleName() + ": " + e.getMessage());
     } catch (InstantiationException e) {
-      e.printStackTrace();
+      //System.err.println("ERROR: " + e.getClass().getCanonicalName());
+      //e.printStackTrace();
+      throw new SimulatorException(e.getClass().getSimpleName() + ": " + e.getMessage());
+    } catch (NoClassDefFoundError error) {
+      throw new SimulatorException(error.getClass().getSimpleName() + ": " + error.getMessage());
     }
 
   }

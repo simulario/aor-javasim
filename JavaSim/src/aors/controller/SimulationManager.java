@@ -11,7 +11,7 @@ import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.io.StringReader;
 import java.net.URL;
-import java.net.URLClassLoader;
+//import java.net.URLClassLoader;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
@@ -35,6 +35,7 @@ import org.xml.sax.SAXException;
 import aors.codegen.XSLT2Processor;
 import aors.data.DataBus;
 import aors.data.DataBusInterface;
+import aors.exceptions.SimulatorException;
 import aors.module.Constants;
 import aors.module.GUIModule;
 import aors.module.Module;
@@ -352,10 +353,10 @@ public class SimulationManager {
       String modulesGroup = moduleGeneralProperties
           .getProperty(Module.PROP_MODULES_GROUP);
 
-      Module moduleInstance = instantiateModule(properties
-          .getProperty(Module.PROP_BASE_MODULE_CLASS), properties
-          .getProperty(GUIModule.PROP_GUI_TITLE), properties
-          .getProperty(GUIModule.PROP_GUI_TITLE));
+      Module moduleInstance = instantiateModule(
+          properties.getProperty(Module.PROP_BASE_MODULE_CLASS),
+          properties.getProperty(GUIModule.PROP_GUI_TITLE),
+          properties.getProperty(GUIModule.PROP_GUI_TITLE));
 
       // add module to the right modules list
       if (modulesGroup == null
@@ -653,8 +654,8 @@ public class SimulationManager {
     // notice that an GUI may added already different properties as well!
     this.properties.put(this.propertyLoggerFileName, this.loggerFileName);
     this.properties.put(this.propertyLoggerPath, this.loggerPath);
-    this.properties.put(this.propertyAutoMultithreading, String
-        .valueOf(autoMultithreading));
+    this.properties.put(this.propertyAutoMultithreading,
+        String.valueOf(autoMultithreading));
     this.properties.put(this.propertyXMLSchemaFileName, this.AORSLSchemaName);
     this.properties.put(this.propertyXMLSchemaFilePath, this.AORSLDirectory);
     this.properties.put(this.propertyXSLTFileName, this.codeGenXsltName);
@@ -821,7 +822,7 @@ public class SimulationManager {
     File schemaFile = this.getXMLSchema();
 
     SchemaFactory factory;
-    
+
     try {
       factory = SchemaFactory
           .newInstance("http://www.w3.org/XML/XMLSchema/v1.1");
@@ -829,7 +830,8 @@ public class SimulationManager {
     } catch (IllegalArgumentException iae) {
       // lookup a factory for the W3C XML Schema language
       factory = SchemaFactory.newInstance(XMLConstants.W3C_XML_SCHEMA_NS_URI);
-      System.out.println("Loaded schema validation provider " + factory.getClass().getName());
+      System.out.println("Loaded schema validation provider "
+          + factory.getClass().getName());
     }
 
     try {
@@ -902,9 +904,10 @@ public class SimulationManager {
     // out = switch generation to memory on, java = switch write to disk on
     this.xsltParameter.put("output.fileExtension", "java");
 
-    this.xsltParameter.put("sim.package.root", "file:///"
-        + project.getDirectory() + File.separator + project.getName()
-        + File.separator + Project.SRC_FOLDER_NAME);
+    this.xsltParameter.put(
+        "sim.package.root",
+        "file:///" + project.getDirectory() + File.separator
+            + project.getName() + File.separator + Project.SRC_FOLDER_NAME);
 
     // set the package name, we use ALWAYS the same
     this.xsltParameter.put("sim.package", "");
@@ -988,20 +991,25 @@ public class SimulationManager {
    * 
    * @return the project URLCLassLoader object
    */
-  public static URLClassLoader getProjectUrlClassLoader() {
-    /**
-     * The URL class loader requires that the project is instantiated, this
-     * meaning that the simulation needs to be instantiated too. The
-     * instantiation does not happens if it is already done this being checked
-     * inside the instanciateSimulation() method.
-     */
-    if (isProjectReady()) {
-      project.instantiateSimulation();
-    }
-
-    // get the class loader of this project
-    return project.getUrlClassLoader();
-  }
+  // public static URLClassLoader getProjectUrlClassLoader() {
+  // /**
+  // * The URL class loader requires that the project is instantiated, this
+  // * meaning that the simulation needs to be instantiated too. The
+  // * instantiation does not happens if it is already done this being checked
+  // * inside the instanciateSimulation() method.
+  // */
+  // if (isProjectReady()) {
+  // try {
+  // project.instantiateSimulation();
+  // } catch (SimulatorException e) {
+  // // TODO Auto-generated catch block
+  // e.printStackTrace();
+  // }
+  // }
+  //
+  // // get the class loader of this project
+  // return project.getUrlClassLoader();
+  // }
 
   /**
    * Gets the existing modules - non-grouped ones only.
@@ -1092,7 +1100,16 @@ public class SimulationManager {
 
     }
   }
-  
+
+  public void instantiateCurrentSimulation() throws SimulatorException {
+    try {
+      this.getProject().instantiateSimulation();
+    } catch (SimulatorException e) {
+      this.getProject().setGenerated(false);
+      throw e;
+    }
+  }
+
   public void runSimulation() {
     SimulationManager.project.runSimulation(this.autoMultithreading);
   }
