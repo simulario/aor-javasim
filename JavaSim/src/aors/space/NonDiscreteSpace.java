@@ -4,6 +4,13 @@ public abstract class NonDiscreteSpace extends Space {
 
   public abstract NonDiscretePositionData getRandomPosition();
 
+  protected NonDiscreteSpace(boolean autoKinematics,
+      boolean autoCollisionHandling, boolean autoCollisionDetection,
+      boolean gravitation) {
+    super(autoKinematics, autoCollisionHandling, autoCollisionDetection,
+        gravitation);
+  }
+
   public abstract class NonDiscretePositionData {
 
     protected double x;

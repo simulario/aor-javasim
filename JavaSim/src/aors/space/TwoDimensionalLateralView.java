@@ -45,8 +45,12 @@ public class TwoDimensionalLateralView extends TwoDimensional {
    * @param xSize
    * @param ySize
    */
-  public TwoDimensionalLateralView(double xSize, double ySize) {
-    super(xSize, ySize);
+  public TwoDimensionalLateralView(double xSize, double ySize,
+      boolean autoKinematics, boolean autoCollisionHandling,
+      boolean autoCollisionDetection, boolean gravitation) {
+    super(xSize, ySize, autoKinematics, autoCollisionHandling,
+        autoCollisionDetection, gravitation);
+
   }
 
   /**

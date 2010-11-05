@@ -17,7 +17,11 @@ public class ThreeDimensionalGrid extends DiscreteSpace {
   private int ySize = 0;
   private int zSize = 0;
 
-  public ThreeDimensionalGrid(int xSize, int ySize, int zSize, int maxOccupancy) {
+  public ThreeDimensionalGrid(int xSize, int ySize, int zSize,
+      int maxOccupancy, boolean autoKinematics, boolean autoCollisionHandling,
+      boolean autoCollisionDetection, boolean gravitation) {
+    super(autoKinematics, autoCollisionHandling, autoCollisionDetection,
+        gravitation);
 
     this.xSize = xSize;
     this.ySize = ySize;

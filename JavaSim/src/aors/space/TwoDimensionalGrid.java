@@ -25,7 +25,11 @@ public class TwoDimensionalGrid extends DiscreteSpace {
    * @param xSize
    * @param ySize
    */
-  public TwoDimensionalGrid(int xSize, int ySize, int maxOccupancy) {
+  public TwoDimensionalGrid(int xSize, int ySize, int maxOccupancy,
+      boolean autoKinematics, boolean autoCollisionHandling,
+      boolean autoCollisionDetection, boolean gravitation) {
+    super(autoKinematics, autoCollisionHandling, autoCollisionDetection,
+        gravitation);
 
     this.spaceCell = new AbstractCell[xSize][ySize];
     this.xSize = xSize;

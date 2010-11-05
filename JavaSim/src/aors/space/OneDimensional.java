@@ -13,8 +13,11 @@ public class OneDimensional extends NonDiscreteSpace {
 
   private double xSize = 0;
 
-  public OneDimensional(double xSize) {
-
+  public OneDimensional(double xSize, boolean autoKinematics,
+      boolean autoCollisionHandling, boolean autoCollisionDetection,
+      boolean gravitation) {
+    super(autoKinematics, autoCollisionHandling, autoCollisionDetection,
+        gravitation);
     this.xSize = xSize;
   }
 

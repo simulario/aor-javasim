@@ -501,6 +501,39 @@
                                 <xsl:with-param name="inLine" select="true()"/>
                               </xsl:call-template>
                             </xsl:if>
+                            <!-- set autoKinematics,  autoCollisionHandling, autoCollisionDetection and gravitation-->
+                            <xsl:choose>
+                              <xsl:when test="aorsl:*/@autoKinematics">
+                                <xsl:value-of select="aorsl:*/@autoKinematics"/>
+                              </xsl:when>
+                              <xsl:otherwise>
+                                <xsl:value-of select="'false'"/>
+                              </xsl:otherwise>
+                            </xsl:choose>
+                            <xsl:choose>
+                              <xsl:when test="aorsl:*/@autoCollisionHandling">
+                                <xsl:value-of select="aorsl:*/@autoCollisionHandling"/>
+                              </xsl:when>
+                              <xsl:otherwise>
+                                <xsl:value-of select="'false'"/>
+                              </xsl:otherwise>
+                            </xsl:choose>
+                            <xsl:choose>
+                              <xsl:when test="aorsl:*/@autoCollisionDetection">
+                                <xsl:value-of select="aorsl:*/@autoCollisionDetection"/>
+                              </xsl:when>
+                              <xsl:otherwise>
+                                <xsl:value-of select="'false'"/>
+                              </xsl:otherwise>
+                            </xsl:choose>
+                            <xsl:choose>
+                              <xsl:when test="aorsl:*/@gravitation">
+                                <xsl:value-of select="aorsl:*/@gravitation"/>
+                              </xsl:when>
+                              <xsl:otherwise>
+                                <xsl:value-of select="'false'"/>
+                              </xsl:otherwise>
+                            </xsl:choose>               
                           </xsl:with-param>
                         </xsl:call-template>
                       </xsl:with-param>
