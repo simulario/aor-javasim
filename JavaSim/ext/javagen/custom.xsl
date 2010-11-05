@@ -482,10 +482,6 @@
   <!-- if you change here someone, please change it in the info.aors.GeneralSimulationModel.java too -->
   <xsl:param name="final.modelName">MODEL_NAME</xsl:param>
   <xsl:param name="final.modelTitle">MODEL_TITLE</xsl:param>
-  <xsl:param name="final.autoKinematics">AUTO_KINEMATICS</xsl:param>
-  <xsl:param name="final.autoGravitation">AUTO_GRAVITATION</xsl:param>
-  <xsl:param name="final.autoImpulse">AUTO_IMPULSE</xsl:param>
-  <xsl:param name="final.autoCollision">AUTO_COLLISION</xsl:param>
   <xsl:param name="final.baseURI">BASE_URI</xsl:param>
 
   <!-- symbol for an empty string quotation -->

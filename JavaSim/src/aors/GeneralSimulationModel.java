@@ -58,7 +58,7 @@ public class GeneralSimulationModel {
   // if you change here someone, please change it in the custom.xsl too
   public enum ModelParameter {
 
-    MODEL_NAME, MODEL_TITLE, AUTO_KINEMATICS, AUTO_GRAVITATION, AUTO_IMPULSE, AUTO_COLLISION, BASE_URI;
+    MODEL_NAME, MODEL_TITLE, BASE_URI;
 
     static final Map<String, ModelParameter> modelParameterMap = new HashMap<String, ModelParameter>();
 
