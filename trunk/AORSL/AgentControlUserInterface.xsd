@@ -23,7 +23,10 @@
         <xs:element ref="aors:ControllableAgentType" maxOccurs="unbounded"/>
       </xs:sequence>
     	<xs:attribute name="waitForUserInput" type="xs:boolean" use="optional" default="false">
-    		<xs:annotation><xs:documentation>Interrupt the simulation while waiting for the user input. In the case of a single-user simulation this will not be combined with a time-out, while in the case of a multi-user simulation it will be combined with a time-out. </xs:documentation></xs:annotation>
+    		<xs:annotation><xs:documentation>Interrupt the simulation while waiting for the user input. In the case of a single-user simulation this will not be combined with a timeout, while in the case of a multi-user simulation it will be combined with a timeout. </xs:documentation></xs:annotation>
+    	</xs:attribute>
+    	<xs:attribute name="timeoutSec" type="xs:positiveInteger" use="optional">
+    		<xs:annotation><xs:documentation>The timeout for the human-controlled agents' response time in number of seconds. </xs:documentation></xs:annotation>
     	</xs:attribute>
     	<xs:attribute name="roundEventType" type="aors:CanonicalName" use="optional">
     		<xs:annotation><xs:documentation>If waitForUserInput is true, then this attribute specifies the type of exogenous event that defines the start of a new round when the simulator would ask the user-controlled agent simulators for their user inputs. </xs:documentation></xs:annotation>
@@ -43,7 +46,10 @@
         </xs:element>
       </xs:sequence>
       <xs:attribute name="type" type="aors:CanonicalName" use="required"/>
-      <xs:attribute name="controllableAgents" type="aors:ListOfLong" use="optional"/>
+    	<xs:attribute name="playableAgents" type="aors:ListOfCanonicalName" use="optional">
+    		<xs:annotation><xs:documentation>A list of agent names specifying those agents (defined in the initial state) that are playable by a human user. </xs:documentation></xs:annotation>
+    	</xs:attribute>
+    	<xs:attribute name="controllableAgents" type="aors:ListOfLong" use="optional"/>
       <xs:attribute name="suspendRules" type="aors:ListOfCanonicalName" use="optional"/>
     </xs:complexType>
   </xs:element>
@@ -152,9 +158,6 @@
       <xs:element name="h1" type="aors:AgentControlUI.GUI.InlineContent.monolingual.type"/>
       <xs:element name="h2" type="aors:AgentControlUI.GUI.InlineContent.monolingual.type"/>
       <xs:element name="h3" type="aors:AgentControlUI.GUI.InlineContent.monolingual.type"/>
-      <xs:element name="h4" type="aors:AgentControlUI.GUI.InlineContent.monolingual.type"/>
-      <xs:element name="h5" type="aors:AgentControlUI.GUI.InlineContent.monolingual.type"/>
-      <xs:element name="h6" type="aors:AgentControlUI.GUI.InlineContent.monolingual.type"/>
     </xs:choice>   
   </xs:group>
   <xs:group name="AgentControlUI.GUI.HeadingElements">
@@ -162,9 +165,6 @@
       <xs:element name="h1" type="aors:AgentControlUI.GUI.InlineContent.type"/>
       <xs:element name="h2" type="aors:AgentControlUI.GUI.InlineContent.type"/>
       <xs:element name="h3" type="aors:AgentControlUI.GUI.InlineContent.type"/>
-      <xs:element name="h4" type="aors:AgentControlUI.GUI.InlineContent.type"/>
-      <xs:element name="h5" type="aors:AgentControlUI.GUI.InlineContent.type"/>
-      <xs:element name="h6" type="aors:AgentControlUI.GUI.InlineContent.type"/>
     </xs:choice>   
   </xs:group>
   
@@ -191,6 +191,7 @@
   
   <xs:group name="AgentControlUI.GUI.ListElements.monolingual">
     <xs:choice>
+    	<!--
       <xs:element name="dl">
         <xs:complexType>
           <xs:complexContent>
@@ -203,12 +204,14 @@
           </xs:complexContent>
         </xs:complexType>
       </xs:element>
+    	-->
       <xs:element name="ol" type="aors:AgentControlUI.GUI.ListContent.monolingual.type"/>
       <xs:element name="ul" type="aors:AgentControlUI.GUI.ListContent.monolingual.type"/>
     </xs:choice>
   </xs:group>
   <xs:group name="AgentControlUI.GUI.ListElements">
     <xs:choice>
+    	<!--
       <xs:element name="dl">
         <xs:complexType>
           <xs:complexContent>
@@ -221,6 +224,7 @@
           </xs:complexContent>
         </xs:complexType>
       </xs:element>
+    	-->
       <xs:element name="ol" type="aors:AgentControlUI.GUI.ListContent.type"/>
       <xs:element name="ul" type="aors:AgentControlUI.GUI.ListContent.type"/>
     </xs:choice>    
@@ -329,9 +333,8 @@
       <xs:element name="br" type="aors:AgentControlUI.GUI.EmptyContent.type"/>
       <xs:element name="code" type="aors:AgentControlUI.GUI.InlineContent.monolingual.type"/>
       <xs:element name="em" type="aors:AgentControlUI.GUI.InlineContent.monolingual.type"/>
-      <xs:element name="q" type="aors:AgentControlUI.GUI.InlineContent.monolingual.type"/>
-      <xs:element name="span" type="aors:AgentControlUI.GUI.InlineContent.monolingual.type"/>
-      <xs:element name="strong" type="aors:AgentControlUI.GUI.InlineContent.monolingual.type"/>
+    	<xs:element name="strong" type="aors:AgentControlUI.GUI.InlineContent.monolingual.type"/>
+    	<xs:element name="span" type="aors:AgentControlUI.GUI.InlineContent.monolingual.type"/>
     </xs:choice>
   </xs:group>
   <xs:group name="AgentControlUI.GUI.InlineTextElements">
@@ -339,9 +342,8 @@
       <xs:element name="br" type="aors:AgentControlUI.GUI.EmptyContent.type"/>
       <xs:element name="code" type="aors:AgentControlUI.GUI.InlineContent.type"/>
       <xs:element name="em" type="aors:AgentControlUI.GUI.InlineContent.type"/>
-      <xs:element name="q" type="aors:AgentControlUI.GUI.InlineContent.type"/>
-      <xs:element name="span" type="aors:AgentControlUI.GUI.InlineContent.type"/>
-      <xs:element name="strong" type="aors:AgentControlUI.GUI.InlineContent.type"/>
+    	<xs:element name="strong" type="aors:AgentControlUI.GUI.InlineContent.type"/>
+    	<xs:element name="span" type="aors:AgentControlUI.GUI.InlineContent.type"/>
     </xs:choice>
   </xs:group>
   
@@ -403,8 +405,10 @@
   <xs:group name="AgentControlUI.GUI.BlockElements.monolingual">
     <xs:choice>
       <xs:group ref="aors:AgentControlUI.GUI.BlockTextElements.monolingual"/>
+    	<!--
       <xs:group ref="aors:AgentControlUI.GUI.TableElements.monolingual"/>
-      <!--xs:group ref="aors:AgentControlUI.GUI.FormElements.monolingual"/-->
+      <xs:group ref="aors:AgentControlUI.GUI.FormElements.monolingual"/>
+      -->
     </xs:choice>
   </xs:group>
   <xs:group name="AgentControlUI.GUI.BlockElements.multilingual">
@@ -422,8 +426,10 @@
   <xs:group name="AgentControlUI.GUI.BlockElements">
     <xs:choice>
       <xs:group ref="aors:AgentControlUI.GUI.BlockTextElements"/>
+    	<!--
       <xs:group ref="aors:AgentControlUI.GUI.TableElements"/>
-      <!--xs:group ref="aors:AgentControlUI.GUI.FormElements"/-->
+      <xs:group ref="aors:AgentControlUI.GUI.FormElements"/
+    	-->
     </xs:choice>
   </xs:group>
  
@@ -443,9 +449,9 @@
       <xs:element name="pre" type="aors:AgentControlUI.GUI.InlineContent.type"/>
     </xs:choice>
   </xs:group>
-  
-  <!-- table (monolingual) -->
-  
+	
+<!--  TABLE
+	
   <xs:group name="AgentControlUI.GUI.TableElements.monolingual">
     <xs:sequence>
       <xs:element name="table">
@@ -547,8 +553,6 @@
     </xs:complexContent>
   </xs:complexType>
   
-  <!-- table -->
-  
   <xs:group name="AgentControlUI.GUI.TableElements">
     <xs:sequence>
       <xs:element name="table">
@@ -624,8 +628,9 @@
       </xs:extension>
     </xs:complexContent>
   </xs:complexType>
-  
-  <!--############-->
+-->  
+
+	<!--############-->
   <!--### form ###-->
   <!--############-->
   
@@ -884,10 +889,87 @@
           </xs:complexContent>
         </xs:complexType>
       </xs:element>      
+    	<xs:element name="EventList">
+    		<xs:annotation><xs:documentation>For showing views of current and past internal events (based on the agent's event memory). </xs:documentation></xs:annotation>
+    		<xs:complexType>
+    			<xs:choice>
+    				<xs:element name="PerceptionEventView" minOccurs="0" maxOccurs="unbounded">
+    					<xs:annotation><xs:documentation>For showing plain perception events. </xs:documentation></xs:annotation>
+    					<xs:complexType>
+    						<xs:sequence>
+    							<xs:element name="Property" type="aors:EventView.Property.type" minOccurs="0" maxOccurs="unbounded"/>    							
+    						</xs:sequence>
+    						<xs:attribute name="perceptionEventType" type="aors:CanonicalName" use="optional"/>
+    						<xs:attribute name="icon" type="xs:anyURI" use="optional">
+    							<xs:annotation><xs:documentation xml:lang="en">The icon file from the media folder. </xs:documentation></xs:annotation>
+    						</xs:attribute>
+    					</xs:complexType>
+    				</xs:element>
+    				<xs:element name="PhysicalObjectPerceptionEventView" minOccurs="0" maxOccurs="unbounded">
+    					<xs:annotation><xs:documentation>For showing physical object perception events. </xs:documentation></xs:annotation>
+    					<xs:complexType>
+    						<xs:sequence>
+    							<xs:element name="ObjectProperty" type="aors:EventView.Property.type" minOccurs="0" maxOccurs="unbounded"/>    							
+    						</xs:sequence>
+    						<xs:attribute name="objectType" type="aors:CanonicalName" use="optional"/>
+    						<xs:attribute name="showObjectId" type="xs:boolean" use="optional" default="false"/>
+    						<xs:attribute name="showObjectName" type="xs:boolean" use="optional" default="false"/>
+    						<xs:attribute name="showDistance" type="xs:boolean" use="optional" default="false"/>
+    						<xs:attribute name="showPerceptionAngle" type="xs:boolean" use="optional" default="false"/>
+    						<xs:attribute name="showPhysicsAttributes" type="xs:string" use="optional"/>
+    						<xs:attribute name="icon" type="xs:anyURI" use="optional">
+    							<xs:annotation><xs:documentation xml:lang="en">The icon file from the media folder. </xs:documentation></xs:annotation>
+    						</xs:attribute>
+    					</xs:complexType>
+    				</xs:element>
+    				<xs:element name="InMessageEventView" minOccurs="0" maxOccurs="unbounded">
+    					<xs:annotation><xs:documentation>For showing in-message events. </xs:documentation></xs:annotation>
+    					<xs:complexType>
+    						<xs:sequence>
+    							<xs:element name="MessageProperty" type="aors:EventView.Property.type" minOccurs="0" maxOccurs="unbounded"/>    							
+    						</xs:sequence>
+    						<xs:attribute name="messageType" type="aors:CanonicalName" use="optional"/>
+    						<xs:attribute name="showSender" type="xs:boolean" use="optional" default="false"/>
+    						<xs:attribute name="icon" type="xs:anyURI" use="optional">
+    							<xs:annotation><xs:documentation xml:lang="en">The icon file from the media folder. </xs:documentation></xs:annotation>
+    						</xs:attribute>
+    					</xs:complexType>
+    				</xs:element>
+    				<xs:element name="PeriodicTimeEventView" minOccurs="0" maxOccurs="unbounded">
+    					<xs:annotation><xs:documentation>For showing periodic time events. </xs:documentation></xs:annotation>
+    					<xs:complexType>
+    						<xs:attribute name="periodicTimeEventType" type="aors:CanonicalName" use="optional"/>
+    						<xs:attribute name="icon" type="xs:anyURI" use="optional">
+    							<xs:annotation><xs:documentation xml:lang="en">The icon file from the media folder. </xs:documentation></xs:annotation>
+    						</xs:attribute>
+    					</xs:complexType>
+    				</xs:element>
+    				<xs:element name="ReminderEventView" minOccurs="0" maxOccurs="unbounded">
+    					<xs:annotation><xs:documentation>For showing reminder events. </xs:documentation></xs:annotation>
+    					<xs:complexType>
+    						<xs:attribute name="icon" type="xs:anyURI" use="optional">
+    							<xs:annotation><xs:documentation xml:lang="en">The icon file from the media folder. </xs:documentation></xs:annotation>
+    						</xs:attribute>
+    					</xs:complexType>
+    				</xs:element>
+    			</xs:choice>
+    			<xs:attributeGroup ref="aors:AgentControlUI.GUI.CommonAttributes"/>
+    		</xs:complexType>
+    	</xs:element>      
     </xs:choice>
   </xs:group>
   
-  <!-- flow + perceptionlist -->
+	<xs:complexType name="EventView.Property.type">
+		<xs:sequence>
+			<xs:element ref="aors:Label"/>
+		</xs:sequence>
+		<xs:attribute name="name" type="aors:CanonicalName" use="required"/>
+		<xs:attribute name="displayLength" type="xs:string" use="optional">
+			<xs:annotation><xs:documentation>TO BE DEFINED: Some kind of CSS length expression. </xs:documentation></xs:annotation>
+		</xs:attribute>
+	</xs:complexType>
+
+	<!-- flow + perceptionlist -->
   
   <xs:complexType name="AgentControlUI.GUI.FlowPerceptionlistContent.monolingual.type">
     <xs:complexContent mixed="true">
@@ -1023,8 +1105,10 @@
   <xs:group name="AgentControlUI.GUI.BlockPerceptionlistElements.monolingual">
     <xs:choice>
       <xs:group ref="aors:AgentControlUI.GUI.BlockTextPerceptionlistElements.monolingual"/>
+    	<!--
       <xs:group ref="aors:AgentControlUI.GUI.TablePerceptionlistElements.monolingual"/>
-      <!--xs:group ref="aors:AgentControlUI.GUI.FormElements.monolingual"/-->
+      <xs:group ref="aors:AgentControlUI.GUI.FormElements.monolingual"/>
+    	-->
     </xs:choice>
   </xs:group>
   <xs:group name="AgentControlUI.GUI.BlockPerceptionlistElements.multilingual">
@@ -1042,8 +1126,10 @@
   <xs:group name="AgentControlUI.GUI.BlockPerceptionlistElements">
     <xs:choice>
       <xs:group ref="aors:AgentControlUI.GUI.BlockTextPerceptionlistElements"/>
+    	<!--
       <xs:group ref="aors:AgentControlUI.GUI.TablePerceptionlistElements"/>
-      <!--xs:group ref="aors:AgentControlUI.GUI.FormElements"/-->
+      <xs:group ref="aors:AgentControlUI.GUI.FormElements"/>
+    	-->
     </xs:choice>
   </xs:group>
   
@@ -1064,7 +1150,7 @@
     </xs:choice>
   </xs:group>
   
-  <!-- table  + perceptionlist (monolingual) -->
+  <!-- table  + perceptionlist (monolingual) 
   
   <xs:group name="AgentControlUI.GUI.TablePerceptionlistElements.monolingual">
     <xs:sequence>
@@ -1142,7 +1228,6 @@
     </xs:complexContent>
   </xs:complexType>
   
-  <!-- table + perceptionlist -->
   
   <xs:group name="AgentControlUI.GUI.TablePerceptionlistElements">
     <xs:sequence>
@@ -1219,6 +1304,7 @@
       </xs:extension>
     </xs:complexContent>
   </xs:complexType>
+  -->
   
   <!--#####################################-->
   <!--### User-Interface-Event-Listener ###-->
@@ -1227,7 +1313,8 @@
   <xs:complexType name="AgentControlUI.UserInterfaceEventListener.type">
     <xs:sequence>
       <xs:element name="WHEN">
-        <xs:complexType>
+      	<xs:annotation><xs:documentation>User interface events are defined in the DOM3-Spezifikation [http://www.w3.org/TR/DOM-Level-3-Events]. </xs:documentation></xs:annotation>
+      	<xs:complexType>
           <xs:choice maxOccurs="unbounded">
             <xs:element ref="aors:KeyboardEvent"/>
             <xs:element name="MouseEvent">              
