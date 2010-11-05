@@ -40,13 +40,6 @@
 			<xs:attribute ref="xml:lang" use="optional" default="en"/>
 		</xs:complexType>
 	</xs:element>
-	<!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->
-	<xs:complexType name="AnyXHTML.type" mixed="true">
-	<!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->
-		<xs:sequence>
-			<xs:any namespace="http://www.w3.org/1999/xhtml" processContents="skip" minOccurs="0" maxOccurs="unbounded"/>
-		</xs:sequence>
-	</xs:complexType>
 	<!-- =================================================================== -->
 	<xs:group name="include">
 	<!-- =================================================================== -->
@@ -60,13 +53,28 @@
 		<xs:attribute ref="xml:id" use="optional"/>
 		<xs:attribute ref="xml:base" use="optional"/>
 	</xs:attributeGroup>
-	<!-- =================================================================== -->
+  <!-- =================================================================== -->
+  <xs:attributeGroup name="lang_optional">
+  <!-- =================================================================== -->
+    <xs:attribute ref="xml:lang" use="optional"/>
+  </xs:attributeGroup>
+  <!-- =================================================================== -->
+  <xs:attributeGroup name="lang_default_en">
+    <!-- =================================================================== -->
+    <xs:attribute ref="xml:lang" use="optional" default="en"/>
+  </xs:attributeGroup>
+  <!-- =================================================================== -->
+  <xs:attributeGroup name="lang_mandatory">
+  <!-- =================================================================== -->
+    <xs:attribute ref="xml:lang" use="required"/>
+  </xs:attributeGroup>  
+  <!-- =================================================================== -->
 	<!-- *** Property *** -->
 	<!-- =================================================================== -->
 	<xs:element name="Property" type="ers:Property.type" abstract="true"/>
 	<xs:complexType name="Property.type">
 		<xs:attribute name="name" type="ers:CanonicalName" use="required"/>
-		<xs:attribute name="type" type="ers:CanonicalName" use="required"/>
+		<xs:attribute name="type" type="ers:PathName" use="required"/>
 		<xs:attribute name="upperMultiplicity" type="ers:UpperMultiplicity" use="optional" default="1"/>
 		<xs:attribute name="lowerMultiplicity" type="xs:nonNegativeInteger" use="optional" default="1"/>
 		<xs:attribute name="isStatic" type="xs:boolean" use="optional" default="false"/>
@@ -96,7 +104,7 @@
 		</xs:complexContent>
 	</xs:complexType>
 	<xs:simpleType name="PrimitiveDataType">
-		<xs:restriction base="ers:CanonicalName">
+		<xs:restriction base="ers:PathName">
 			<xs:enumeration value="String"/>
 			<xs:enumeration value="Integer"/>
 			<xs:enumeration value="Float"/>
@@ -137,6 +145,9 @@
 	<xs:complexType name="Parameter.type">
 		<xs:attribute name="name" type="ers:CanonicalName" use="required"/>
 		<xs:attribute name="type" type="ers:JavaTypeName" use="required"/>
+		<xs:attribute name="itemType" type="ers:JavaTypeName" use="optional">
+			<xs:annotation><xs:documentation>The type of the items of a collection/list. Requires that type="List". </xs:documentation></xs:annotation>
+		</xs:attribute>
 	</xs:complexType>
 	<!-- =================================================================== -->
 	<xs:complexType name="OpaqueExpression">
@@ -193,17 +204,32 @@
 				<xs:element name="Add">
 					<xs:complexType>
 						<xs:sequence>
-							<xs:element name="ItemRefExpr" type="ers:OpaqueExpression" minOccurs="0"/>
+							<xs:element ref="ers:ValueExpr" minOccurs="0" maxOccurs="unbounded"/>
 						</xs:sequence>
-						<xs:attribute name="itemVariable" type="ers:CanonicalName" use="optional"/>
+						<xs:attribute name="itemVariable" type="ers:CanonicalName" use="optional">
+							<xs:annotation><xs:documentation>An object variable that holds the item to be added. </xs:documentation></xs:annotation>
+						</xs:attribute>
+					</xs:complexType>
+				</xs:element>
+				<xs:element name="AddAll">
+					<xs:annotation><xs:documentation>For adding a list/array of vlues. </xs:documentation></xs:annotation>
+					<xs:complexType>
+						<xs:sequence>
+							<xs:element ref="ers:ValueExpr" minOccurs="0" maxOccurs="unbounded"/>
+						</xs:sequence>
+						<xs:attribute name="listVariable" type="ers:CanonicalName" use="optional">
+							<xs:annotation><xs:documentation>An object variable that holds the list to be added. </xs:documentation></xs:annotation>
+						</xs:attribute>
 					</xs:complexType>
 				</xs:element>
 				<xs:element name="Remove">
 					<xs:complexType>
 						<xs:sequence>
-							<xs:element name="ItemRefExpr" type="ers:OpaqueExpression" minOccurs="0"/>
+							<xs:element ref="ers:ValueExpr" minOccurs="0" maxOccurs="unbounded"/>
 						</xs:sequence>
-						<xs:attribute name="itemVariable" type="ers:CanonicalName" use="optional"/>
+						<xs:attribute name="itemVariable" type="ers:CanonicalName" use="optional">
+							<xs:annotation><xs:documentation>An object variable that holds the item to be removed. </xs:documentation></xs:annotation>
+						</xs:attribute>
 					</xs:complexType>
 				</xs:element>
 			</xs:choice>
@@ -218,28 +244,55 @@
 		<xs:complexType>
 			<xs:simpleContent>
 				<xs:extension base="xs:string">
-					<xs:attribute ref="xml:lang" use="optional" default="en"/>
+				  <xs:attributeGroup ref="ers:lang_default_en"/>
 				</xs:extension>
 			</xs:simpleContent>
 		</xs:complexType>		
 	</xs:element>
 	<!-- =================================================================== -->
-	<xs:element name="SelectionCondition" type="ers:OpaqueExpression"/>
+	<xs:element name="HtmlText">
+	<!-- =================================================================== -->
+		<xs:complexType>
+			<xs:sequence>
+				<xs:any namespace="http://www.w3.org/1999/xhtml" processContents="skip" minOccurs="0" maxOccurs="unbounded"/>
+			</xs:sequence>
+			<xs:attribute ref="xml:lang" use="optional" default="en"/>
+		</xs:complexType>		
+	</xs:element>
+	<!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->
+	<xs:complexType name="AnyXHTML.type" mixed="true">
+	<!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->
+		<xs:sequence>
+			<xs:any namespace="http://www.w3.org/1999/xhtml" processContents="skip" minOccurs="0" maxOccurs="unbounded"/>
+		</xs:sequence>
+	</xs:complexType>
+	<!-- ==================================================================== -->
+	<xs:element name="Condition" type="ers:Condition.type"/>
+	<!-- ==================================================================== -->
+	<xs:complexType name="Condition.type">
+		<xs:simpleContent>
+			<xs:extension base="ers:OpaqueExpression"/>
+		</xs:simpleContent>
+	</xs:complexType>
 	<!-- =================================================================== -->
 	<xs:element name="ValueExpr" type="ers:OpaqueExpression"/>
 	<!-- =================================================================== -->
 	<xs:complexType name="ValueExpr.type">
 		<xs:simpleContent>
 			<xs:extension base="ers:OpaqueExpression">
-			<!--
-				<xs:attribute name="objectVariable" type="ers:CanonicalName" use="optional"/>
-				<xs:attribute name="objectIdRef" type="xs:long" use="optional"/>
-				<xs:attribute name="objectName" type="xs:NCName" use="optional"/>
-			-->
 			</xs:extension>
 		</xs:simpleContent>
 	</xs:complexType>
-	<!-- ======================================================= -->
+	<!-- =================================================================== -->
+	<xs:element name="Selection">
+	<!-- =================================================================== -->
+		<xs:complexType>
+			<xs:sequence>
+				<xs:element ref="ers:Condition" maxOccurs="unbounded"/>
+			</xs:sequence>
+			<xs:attribute name="copyToList" type="ers:PathName" use="optional"/>
+		</xs:complexType>
+	</xs:element>	<!-- ======================================================= -->
 	<xs:element name="Enumeration" type="ers:Enumeration.type"/>
 	<!-- ======================================================= -->
 	<xs:complexType name="Enumeration.type">
@@ -600,11 +653,13 @@
 		</xs:restriction>
 	</xs:simpleType>
 	<xs:simpleType name="CanonicalName">
+		<xs:annotation><xs:documentation>A simple string consisting of letters, digits and the underscore sign, only.</xs:documentation></xs:annotation>
 		<xs:restriction base="xs:string">
 		  <xs:pattern value="(_|(((_([A-Z]|[a-z]|[0-9]))|([A-Z]|[a-z]))(_([A-Z]|[a-z]|[0-9])|([A-Z]|[a-z]|[0-9]))*)_?)"/>
 		</xs:restriction>
 	</xs:simpleType>
 	<xs:simpleType name="PathName">
+		<xs:annotation><xs:documentation>A path name such as "name1.name2".</xs:documentation></xs:annotation>
 		<xs:restriction base="xs:string">
 			<xs:pattern value="([A-Z]|[a-z]|_)([A-Z]|[a-z]|_|[0-9]|.)*"/>
 		</xs:restriction>
@@ -744,6 +799,8 @@
 			<xs:enumeration value="N"><xs:annotation><xs:documentation>Newton</xs:documentation></xs:annotation></xs:enumeration>
 			<xs:enumeration value="J"><xs:annotation><xs:documentation>Joule</xs:documentation></xs:annotation></xs:enumeration>
 			<xs:enumeration value="Pa"><xs:annotation><xs:documentation>Pascal</xs:documentation></xs:annotation></xs:enumeration>
+			<xs:enumeration value="m/s"><xs:annotation><xs:documentation>Velocity (metters per second)</xs:documentation></xs:annotation></xs:enumeration>
+			<xs:enumeration value="m/s²"><xs:annotation><xs:documentation>Acceleration (metters per second square)</xs:documentation></xs:annotation></xs:enumeration>
 		</xs:restriction>
 	</xs:simpleType>
 </xs:schema>
