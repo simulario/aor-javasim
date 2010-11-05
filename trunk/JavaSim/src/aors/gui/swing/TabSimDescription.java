@@ -167,7 +167,7 @@ public class TabSimDescription extends JSplitPane {
     });
 
     XMLEditorKit xmlEditorKit = new XMLEditorKit();
-    // this.xmlEditorKit.setLineWrappingEnabled(lineWrapping);
+    //this.xmlEditorKit.setLineWrappingEnabled(lineWrapping);
     xmlEditorKit.setAutoIndentation(true);
     // xmlEditorKit.setTagCompletion(true);
     this.editorPane.setEditorKit(xmlEditorKit);

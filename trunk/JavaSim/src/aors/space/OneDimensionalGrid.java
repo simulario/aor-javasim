@@ -15,8 +15,11 @@ public class OneDimensionalGrid extends DiscreteSpace {
 
   private int xSize = 0;
 
-  public OneDimensionalGrid(int xSize, int maxOccupancy) {
-
+  public OneDimensionalGrid(int xSize, int maxOccupancy, boolean autoKinematics,
+      boolean autoCollisionHandling, boolean autoCollisionDetection,
+      boolean gravitation) {
+    super(autoKinematics, autoCollisionHandling, autoCollisionDetection,
+        gravitation);
     this.xSize = xSize;
     this.maxOccupancy = maxOccupancy;
 

@@ -876,8 +876,12 @@ public class AORJavaGui extends JFrame implements ActionListener,
           try {
             simulationManager.instantiateCurrentSimulation();
           } catch (SimulatorException e) {
-            // TODO Auto-generated catch block
+            System.out.println();
+            System.err.println("Stacktrace ++++++ Start ++++++");
             e.printStackTrace();
+            System.err.println("Stacktrace ++++++ End ++++++");
+            System.err.println(e.getMessage());
+            System.out.println("Please try to rebuild your project!");
           }
 
           // initialize data from XML for module
@@ -1484,6 +1488,9 @@ public class AORJavaGui extends JFrame implements ActionListener,
                     .prepareSimulationWithoutLogFile();
 
               } catch (SimulatorException e) {
+                System.err.println("Stacktrace ++++++ Start ++++++");
+                e.printStackTrace();
+                System.err.println("Stacktrace ++++++ End ++++++");
                 System.err.println(e.getMessage());
                 System.out.println("Please try to rebuild your project!");
               }

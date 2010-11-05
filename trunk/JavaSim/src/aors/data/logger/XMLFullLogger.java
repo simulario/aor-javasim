@@ -484,33 +484,34 @@ public class XMLFullLogger extends SimObserver {
             String modelTitle = modelParamMap.get(key);
             if (!modelTitle.equals(""))
               simulationModel.setModelTitle(modelTitle);
-          } else if (key
-              .equals(aors.GeneralSimulationModel.ModelParameter.AUTO_KINEMATICS
-                  .toString())) {
-            simulationModel.setAutoKinematics(Boolean.valueOf(modelParamMap
-                .get(key)));
-          } else if (key
-              .equals(aors.GeneralSimulationModel.ModelParameter.AUTO_GRAVITATION
-                  .toString())) {
-            simulationModel.setAutoGravitation(Boolean.valueOf(modelParamMap
-                .get(key)));
-          } else if (key
-              .equals(aors.GeneralSimulationModel.ModelParameter.AUTO_IMPULSE
-                  .toString())) {
-            simulationModel.setAutoImpulse(Boolean.valueOf(modelParamMap
-                .get(key)));
-          } else if (key
-              .equals(aors.GeneralSimulationModel.ModelParameter.AUTO_COLLISION
-                  .toString())) {
-            simulationModel.setAutoCollision(Boolean.valueOf(modelParamMap
-                .get(key)));
-          } else if (key
-              .equals(aors.GeneralSimulationModel.ModelParameter.BASE_URI
-                  .toString())) {
-            String baseURI = modelParamMap.get(key);
-            if (!baseURI.equals(""))
-              simulationModel.setBaseURI(baseURI);
           }
+//          else if (key
+//              .equals(aors.GeneralSimulationModel.ModelParameter.AUTO_KINEMATICS
+//                  .toString())) {
+//            simulationModel.setAutoKinematics(Boolean.valueOf(modelParamMap
+//                .get(key)));
+//          } else if (key
+//              .equals(aors.GeneralSimulationModel.ModelParameter.AUTO_GRAVITATION
+//                  .toString())) {
+//            simulationModel.setAutoGravitation(Boolean.valueOf(modelParamMap
+//                .get(key)));
+//          } else if (key
+//              .equals(aors.GeneralSimulationModel.ModelParameter.AUTO_IMPULSE
+//                  .toString())) {
+//            simulationModel.setAutoImpulse(Boolean.valueOf(modelParamMap
+//                .get(key)));
+//          } else if (key
+//              .equals(aors.GeneralSimulationModel.ModelParameter.AUTO_COLLISION
+//                  .toString())) {
+//            simulationModel.setAutoCollision(Boolean.valueOf(modelParamMap
+//                .get(key)));
+//          } else if (key
+//              .equals(aors.GeneralSimulationModel.ModelParameter.BASE_URI
+//                  .toString())) {
+//            String baseURI = modelParamMap.get(key);
+//            if (!baseURI.equals(""))
+//              simulationModel.setBaseURI(baseURI);
+//          }
         } catch (IllegalArgumentException iae) {
           // TODO: handle exception
         }
@@ -543,6 +544,10 @@ public class XMLFullLogger extends SimObserver {
       spaceModel.setYMax((double) aorSpaceModel.getYMax());
       spaceModel.setZMax((double) aorSpaceModel.getZMax());
       spaceModel.setDiscrete(aorSpaceModel.isDiscrete());
+      spaceModel.setAutoKinematics(aorSpaceModel.getSpace().isAutoKinematics());
+      spaceModel.setAutoCollisionDetection(aorSpaceModel.getSpace().isAutoCollisionDetection());
+      spaceModel.setAutoCollisionHandling(aorSpaceModel.getSpace().isAutoCollisionHandling());
+      spaceModel.setGravitation(aorSpaceModel.getSpace().isGravitation());
 
       this.printOutput(spaceModel);
     }

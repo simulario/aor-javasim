@@ -15,6 +15,13 @@ public abstract class DiscreteSpace extends Space {
   protected int maxOccupancy;
 
   protected List<DiscretePositionData> positionList;
+  
+  protected DiscreteSpace(boolean autoKinematics,
+      boolean autoCollisionHandling, boolean autoCollisionDetection,
+      boolean gravitation) {
+    super(autoKinematics, autoCollisionHandling, autoCollisionDetection,
+        gravitation);
+  }
 
   /**
    * 

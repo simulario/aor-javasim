@@ -868,7 +868,7 @@ public class Project implements ProjectInterface {
 
     } catch (MalformedURLException e) {
       //System.err.println("ERROR: " + e.getClass().getCanonicalName());
-      //e.printStackTrace();
+      e.printStackTrace();
       throw new SimulatorException(e.getClass().getSimpleName()+ ": " + e.getMessage());
     } catch (ClassNotFoundException e) {
 //      System.err.println("ERROR: " + e.getClass().getCanonicalName());

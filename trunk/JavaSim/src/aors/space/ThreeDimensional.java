@@ -15,7 +15,11 @@ public class ThreeDimensional extends NonDiscreteSpace {
   private double ySize = 0;
   private double zSize = 0;
 
-  public ThreeDimensional(double xSize, double ySize, double zSize) {
+  public ThreeDimensional(double xSize, double ySize, double zSize,
+      boolean autoKinematics, boolean autoCollisionHandling,
+      boolean autoCollisionDetection, boolean gravitation) {
+    super(autoKinematics, autoCollisionHandling, autoCollisionDetection,
+        gravitation);
 
     this.xSize = xSize;
     this.ySize = ySize;
@@ -25,8 +29,8 @@ public class ThreeDimensional extends NonDiscreteSpace {
 
   @Override
   public NonDiscretePositionData getRandomPosition() {
-    return new ThreeDimNonDiscretePositionData(Random.uniform(0, xSize), Random
-        .uniform(0, ySize), Random.uniform(0, zSize));
+    return new ThreeDimNonDiscretePositionData(Random.uniform(0, xSize),
+        Random.uniform(0, ySize), Random.uniform(0, zSize));
   }
 
   /**
