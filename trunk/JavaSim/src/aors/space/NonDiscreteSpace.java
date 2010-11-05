@@ -6,7 +6,7 @@ public abstract class NonDiscreteSpace extends Space {
 
   protected NonDiscreteSpace(boolean autoKinematics,
       boolean autoCollisionHandling, boolean autoCollisionDetection,
-      boolean gravitation) {
+      double gravitation) {
     super(autoKinematics, autoCollisionHandling, autoCollisionDetection,
         gravitation);
   }

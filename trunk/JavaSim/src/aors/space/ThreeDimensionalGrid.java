@@ -19,7 +19,7 @@ public class ThreeDimensionalGrid extends DiscreteSpace {
 
   public ThreeDimensionalGrid(int xSize, int ySize, int zSize,
       int maxOccupancy, boolean autoKinematics, boolean autoCollisionHandling,
-      boolean autoCollisionDetection, boolean gravitation) {
+      boolean autoCollisionDetection, double gravitation) {
     super(autoKinematics, autoCollisionHandling, autoCollisionDetection,
         gravitation);
 

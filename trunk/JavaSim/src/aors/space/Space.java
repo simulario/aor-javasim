@@ -22,13 +22,13 @@ public abstract class Space {
    * is simpler to defined it so (for code creation and the structure here)
    */
   private boolean autoKinematics = false;
-  private boolean gravitation = false;
+  private double gravitation = 9.81D;
   private boolean autoCollisionHandling = false;
   private boolean autoCollisionDetection = false;
   
   protected Space(boolean autoKinematics,
       boolean autoCollisionHandling, boolean autoCollisionDetection,
-      boolean gravitation) {
+      double gravitation) {
     
     this.autoKinematics = autoKinematics;
     this.autoCollisionHandling = autoCollisionHandling;
@@ -40,7 +40,7 @@ public abstract class Space {
   public boolean isAutoKinematics() {
     return autoKinematics;
   }
-  public boolean isGravitation() {
+  public double getGravitation() {
     return gravitation;
   }
   public boolean isAutoCollisionHandling() {

@@ -27,7 +27,7 @@ public class TwoDimensionalGrid extends DiscreteSpace {
    */
   public TwoDimensionalGrid(int xSize, int ySize, int maxOccupancy,
       boolean autoKinematics, boolean autoCollisionHandling,
-      boolean autoCollisionDetection, boolean gravitation) {
+      boolean autoCollisionDetection, double gravitation) {
     super(autoKinematics, autoCollisionHandling, autoCollisionDetection,
         gravitation);
 

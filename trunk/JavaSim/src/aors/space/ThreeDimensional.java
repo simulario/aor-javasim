@@ -17,7 +17,7 @@ public class ThreeDimensional extends NonDiscreteSpace {
 
   public ThreeDimensional(double xSize, double ySize, double zSize,
       boolean autoKinematics, boolean autoCollisionHandling,
-      boolean autoCollisionDetection, boolean gravitation) {
+      boolean autoCollisionDetection, double gravitation) {
     super(autoKinematics, autoCollisionHandling, autoCollisionDetection,
         gravitation);
 

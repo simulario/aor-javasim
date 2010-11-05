@@ -18,7 +18,7 @@ public abstract class DiscreteSpace extends Space {
   
   protected DiscreteSpace(boolean autoKinematics,
       boolean autoCollisionHandling, boolean autoCollisionDetection,
-      boolean gravitation) {
+      double gravitation) {
     super(autoKinematics, autoCollisionHandling, autoCollisionDetection,
         gravitation);
   }
