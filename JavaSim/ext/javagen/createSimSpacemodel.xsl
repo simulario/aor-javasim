@@ -531,7 +531,7 @@
                                 <xsl:value-of select="aorsl:*/@gravitation"/>
                               </xsl:when>
                               <xsl:otherwise>
-                                <xsl:value-of select="'false'"/>
+                                <xsl:value-of select="'9.81D'"/>
                               </xsl:otherwise>
                             </xsl:choose>               
                           </xsl:with-param>

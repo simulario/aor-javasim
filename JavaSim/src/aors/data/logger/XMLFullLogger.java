@@ -549,7 +549,7 @@ public class XMLFullLogger extends SimObserver {
           .isAutoCollisionDetection());
       spaceModel.setAutoCollisionHandling(aorSpaceModel.getSpace()
           .isAutoCollisionHandling());
-      spaceModel.setGravitation(aorSpaceModel.getSpace().isGravitation());
+      spaceModel.setGravitation(aorSpaceModel.getSpace().getGravitation());
 
       this.printOutput(spaceModel);
     }
