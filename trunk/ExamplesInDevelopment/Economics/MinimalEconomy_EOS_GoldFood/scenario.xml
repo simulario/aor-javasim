@@ -74,13 +74,13 @@
 				<Parameter name="name" type="String"/>
 				<Parameter name="assets" type="List" itemType="aors.util.economics.Quantity"/>
 				<Body language="Java"><![CDATA[
-					int i;
-					for(i=0; i < assets.size(); i++){
-						if(((aors.util.economics.ContinuousQuantity)assets.get(i)).getContinuousQuantityType().getName().equals(name)){
-							break;
-						}	
-					}
-					return assets.get(i);
+int i;
+for (i=0; i < assets.size(); i++) {
+	if (((aors.util.economics.ContinuousQuantity)assets.get(i)).getContinuousQuantityType().getName().equals(name)){
+		break;
+	}	
+}
+return assets.get(i);
 					]]></Body>	
 			</GlobalFunction>
 			<!--====================================-->
@@ -90,17 +90,17 @@
 				<Parameter name="unit" type="String"/>
 				<Parameter name="assets" type="List" itemType="aors.util.economics.Quantity"/>
 				<Body language="Java"><![CDATA[
-					aors.util.economics.ContinuousQuantityType assetType = new aors.util.economics.ContinuousQuantityType(name, unit);
-				  	aors.util.economics.ContinuousQuantity asset = new aors.util.economics.ContinuousQuantity(quantity, assetType);
-				  	assets.add(asset);
-				  	return quantity;
+aors.util.economics.ContinuousQuantityType assetType = new aors.util.economics.ContinuousQuantityType(name, unit);
+aors.util.economics.ContinuousQuantity asset = new aors.util.economics.ContinuousQuantity(quantity, assetType);
+assets.add(asset);
+return quantity;
 				]]></Body>
 			</GlobalFunction>
 		</Globals>
 		
 		<EntityTypes>
 			<!--====================================-->
-			<MessageType name="StartOfDay_msg">
+			<MessageType name="StartOfDay_Notification">
 				<!--====================================-->
 				<Attribute name="price" type="Float"/>
 				<Attribute name="marketType" type="String" />
@@ -276,7 +276,7 @@
 					<documentation>
 						<dc:description>price is updated and decides to produce food or gold</dc:description>
 					</documentation>
-					<WHEN eventType="InMessageEvent" messageType="StartOfDay_msg" messageVariable="msg"/>
+					<WHEN eventType="InMessageEvent" messageType="StartOfDay_Notification" messageVariable="msg"/>
 					<DO>
 						<UPDATE-AGT>
 							<Slot property="lastFoodPrice">
@@ -350,10 +350,10 @@
 					<DO>
 						<UPDATE-AGT>
 							<Slot property="goldAmount">
-								<ValueExpr language="Java">p.updateGold(msg.getOffer())</ValueExpr>
+								<ValueExpr language="Java">p.updateGold( msg.getOffer())</ValueExpr>
 							</Slot>
 							<Slot property="foodAmount">
-								<ValueExpr language="Java">p.updateFood(msg.getOffer())</ValueExpr>
+								<ValueExpr language="Java">p.updateFood( msg.getOffer())</ValueExpr>
 							</Slot>
 						</UPDATE-AGT>
 					</DO>
@@ -374,7 +374,7 @@
 				<!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~-->
 				<Function name="clear" resultType="Boolean">
 					<documentation>
-						<dc:description>Calculates the marketprice and adds the corresponding buy- and selloffers to the transactionlist</dc:description>
+						<dc:description>Calculates the marketprice and adds the corresponding buy and selloffers to the transactionlist</dc:description>
 					</documentation>
 					<!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~-->
 					<Body language="Java"><![CDATA[
@@ -562,7 +562,7 @@
 						return true;
 					]]></Body>
 				</Function>
-				<!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~-->
+				<!-- ~~~~~~~~~~~ TODO: move to ContinousQuantity ~~~~~~~~~~~~~~~~~~~~~~~~~~-->
 				<Function name="equal" resultType="Boolean">
 					<!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~-->
 					<documentation>
@@ -581,7 +581,7 @@
         				return true;
 					]]></Body>
 				</Function>
-				<!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~-->
+				<!-- ~~~~~~~~~~~ TODO: move to ContinousQuantity ~~~~~~~~~~~~~~~~~~~~~~~~~~-->
 				<Function name="less" resultType="Boolean">
 					<!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~-->
 					<documentation>
@@ -703,8 +703,8 @@
 			<FOR objectVariable="p" objectType="Person" />
 			<DO>
 				<SCHEDULE-EVT>
-					<InMessageEventExpr messageType="StartOfDay_msg">
-					    <SenderIdRef language="Java">m.getId()</SenderIdRef>
+					<InMessageEventExpr messageType="StartOfDay_Notification">
+						<SenderIdRef language="Java">m.getId()</SenderIdRef>
 						<ReceiverIdRef language="Java">p.getId()</ReceiverIdRef>
 						<Slot property="price">
 							<ValueExpr language="Java">m.getLastMarketPrice()</ValueExpr>

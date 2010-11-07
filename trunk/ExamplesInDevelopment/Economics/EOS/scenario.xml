@@ -87,19 +87,19 @@
 				<Parameter name="name" type="String"/>
 				<Parameter name="assets" type="List" itemType="aors.util.economics.Quantity"/>
 				<Body language="Java"><![CDATA[
-					int i;
-					for(i=0; i < assets.size(); i++){
-						if(!assets.get(i).isDiscrete()){
-							if(((aors.util.economics.ContinuousQuantity)assets.get(i)).getContinuousQuantityType().getName().equals(name)){
-								break;
-							}
-						}else{
-							if(((aors.util.economics.DiscreteQuantity)assets.get(i)).getType().equals(name)){
-								break;
-							}
-						}
-					}
-					return assets.get(i);
+int i;
+for (i=0; i < assets.size(); i++){
+	if (!assets.get(i).isDiscrete()) {
+		if (((aors.util.economics.ContinuousQuantity)assets.get(i)).getContinuousQuantityType().getName().equals( name)){
+			break;
+		}
+	} else {
+		if (((aors.util.economics.DiscreteQuantity)assets.get(i)).getType().equals(name)){
+			break;
+		}
+	}
+}
+return assets.get(i);
 					]]></Body>	
 			</GlobalFunction>
 			<!--====================================-->
@@ -112,10 +112,10 @@
 				<Parameter name="unit" type="String"/>
 				<Parameter name="assets" type="List" itemType="aors.util.economics.Quantity"/>
 				<Body language="Java"><![CDATA[
-					aors.util.economics.ContinuousQuantityType assetType = new aors.util.economics.ContinuousQuantityType(name, unit);
-				  	aors.util.economics.ContinuousQuantity asset = new aors.util.economics.ContinuousQuantity(quantity, assetType);
-				  	assets.add(asset);
-				  	return quantity;
+aors.util.economics.ContinuousQuantityType assetType = new aors.util.economics.ContinuousQuantityType(name, unit);
+aors.util.economics.ContinuousQuantity asset = new aors.util.economics.ContinuousQuantity(quantity, assetType);
+assets.add(asset);
+return quantity;
 				]]></Body>
 			</GlobalFunction>
 			<!--====================================-->
@@ -127,16 +127,16 @@
 				<Parameter name="name" type="String"/>
 				<Parameter name="assets" type="List" itemType="aors.util.economics.Quantity"/>
 				<Body language="Java"><![CDATA[
-					aors.util.economics.DiscreteQuantity asset = new aors.util.economics.DiscreteQuantity(name, (int)quantity);
-				  	assets.add(asset);
-				  	return quantity;
+aors.util.economics.DiscreteQuantity asset = new aors.util.economics.DiscreteQuantity( name, (int)quantity);
+assets.add( asset);
+return quantity;
 				]]></Body>
 			</GlobalFunction>
 		</Globals>
 		
 		<EntityTypes>
 			<!--====================================-->
-			<MessageType name="StartOfDay_msg">
+			<MessageType name="StartOfDay_Notification">
 				<!--====================================-->
 				<Attribute name="price" type="Float"/>
 				<Attribute name="marketType" type="String" />
@@ -277,7 +277,7 @@
 					<documentation>
 						<dc:description>The price of the foodmarket is updated</dc:description>
 					</documentation>
-					<WHEN eventType="InMessageEvent" messageType="StartOfDay_msg" messageVariable="msg"/>
+					<WHEN eventType="InMessageEvent" messageType="StartOfDay_Notification" messageVariable="msg"/>
 					<IF language="Java">msg.getMarketType().equals("Food")</IF>
 					<THEN>
 						<UPDATE-AGT>
@@ -293,7 +293,7 @@
 					<documentation>
 						<dc:description>The price of the labormarket is updated</dc:description>
 					</documentation>
-					<WHEN eventType="InMessageEvent" messageType="StartOfDay_msg" messageVariable="msg"/>
+					<WHEN eventType="InMessageEvent" messageType="StartOfDay_Notification" messageVariable="msg"/>
 					<IF language="Java">msg.getMarketType().equals("Labor")</IF>
 					<THEN>
 						<UPDATE-AGT>
@@ -309,7 +309,7 @@
 					<documentation>
 						<dc:description>The price of the utilitymarket is updated</dc:description>
 					</documentation>
-					<WHEN eventType="InMessageEvent" messageType="StartOfDay_msg" messageVariable="msg"/>
+					<WHEN eventType="InMessageEvent" messageType="StartOfDay_Notification" messageVariable="msg"/>
 					<IF language="Java">msg.getMarketType().equals("Utility")</IF>
 					<THEN>
 						<UPDATE-AGT>
@@ -949,11 +949,9 @@
 					</documentation>
 					<!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~-->
 					<Body language="Java"><![CDATA[
-						
 						getTransactions().clear();
-						
-				        java.util.Comparator<TradeOffer> comparator;
-				        comparator = new java.util.Comparator<TradeOffer>() {
+						java.util.Comparator<TradeOffer> comparator;
+				    comparator = new java.util.Comparator<TradeOffer>() {
 							public int compare (TradeOffer a, TradeOffer b) {
 							  double p1 = a.getPrice();
 							  double p2 = b.getPrice(); 
@@ -962,7 +960,6 @@
 								            return 0;	             		
 							}		
 						};
-						
 						java.util.Collections.shuffle(getBuyOffers());
 						java.util.Collections.shuffle(getSellOffers());
 						java.util.Collections.sort(getBuyOffers(), comparator);
@@ -1384,7 +1381,7 @@
 			<FOR objectVariable="p" objectType="EconomicAgent" />
 			<DO>
 				<SCHEDULE-EVT>
-					<InMessageEventExpr messageType="StartOfDay_msg">
+					<InMessageEventExpr messageType="StartOfDay_Notification">
 					    <SenderIdRef language="Java">m.getId()</SenderIdRef>
 						<ReceiverIdRef language="Java">p.getId()</ReceiverIdRef>
 						<Slot property="price">
@@ -1556,20 +1553,21 @@
 		</Agents>
 		<Agents type="Factory" rangeStartID="4000" rangeEndID="4004">
 			<Slot property="assets">
-				<ValueExpr language="Java"><![CDATA[new ArrayList<aors.util.economics.Quantity>(){
-				        {	
-				        	Global.addContinuous(0.0d, "Food", "Stk", this);
-				            Global.addContinuous(100.0d, "Money", "Stk", this);
-				            Global.addContinuous(0.0d, "Labor", "Stk", this);
-				            Global.addDiscrete(0, "Utility", this);
-				        }
+				<ValueExpr language="Java"><![CDATA[
+new ArrayList<aors.util.economics.Quantity>(){
+  {	
+    Global.addContinuous(0.0d, "Food", "Stk", this);
+    Global.addContinuous(100.0d, "Money", "Stk", this);
+    Global.addContinuous(0.0d, "Labor", "Stk", this);
+    Global.addDiscrete(0, "Utility", this);
+  }
 				    }]]></ValueExpr>
 			</Slot>
 			<Slot property="buyList">
-				<ValueExpr language="Java"><![CDATA[new ArrayList<TradeOffer>()]]></ValueExpr>
+				<ValueExpr language="Java"><![CDATA[ new ArrayList<TradeOffer>() ]]></ValueExpr>
 			</Slot>
 			<Slot property="sellList">
-				<ValueExpr language="Java"><![CDATA[new ArrayList<TradeOffer>()]]></ValueExpr>
+				<ValueExpr language="Java"><![CDATA[ new ArrayList<TradeOffer>() ]]></ValueExpr>
 			</Slot>
 			<Slot property="goldAmount" value="100" />
 			<Slot property="utilityAmount" value="5" />
