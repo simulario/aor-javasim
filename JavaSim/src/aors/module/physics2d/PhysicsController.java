@@ -26,6 +26,7 @@ import aors.model.envsim.Objekt;
 import aors.model.envsim.PhysicalAgentObject;
 import aors.model.envsim.PhysicalObject;
 import aors.module.Module;
+import aors.space.Space;
 import aors.util.XMLLoader;
 import aors.util.jar.JarUtil;
 
@@ -39,364 +40,315 @@ import aors.util.jar.JarUtil;
  */
 public class PhysicsController implements Module {
 
-  /**
-   * The specific physics simulator used in the simulation.
-   */
-  private PhysicsSimulator simulator;
+	/**
+	 * The specific physics simulator used in the simulation.
+	 */
+	private PhysicsSimulator simulator;
 
-  /**
-   * The gravitation value (only used in 2D LateralView).
-   */
-  private double gravitation = -9.81;
+	/**
+	 * The gravitation value (only used in 2D LateralView).
+	 */
+	private double gravitation = -9.81;
 
-  /**
-   * If true, the movements are calculated by the simulator.
-   */
-  private boolean autoKinematics = false;
+	/**
+	 * If true, the movements are calculated by the simulator.
+	 */
+	private boolean autoKinematics = false;
 
-  /**
-   * If true, the collision detection is performed by the simulator.
-   */
-  private boolean autoCollisionDetection = false;
+	/**
+	 * If true, the collision detection is performed by the simulator.
+	 */
+	private boolean autoCollisionDetection = false;
 
-  /**
-   * If true, the collision handling is performed by the simulator.
-   */
-  private boolean autoCollisionHandling = false;
+	/**
+	 * If true, the collision handling is performed by the simulator.
+	 */
+	private boolean autoCollisionHandling = false;
 
-  /**
-   * Creates a new PhysicsController.
-   */
-  public PhysicsController() {
-    initModuleLibraries();
-  }
+	/**
+	 * Creates a new PhysicsController.
+	 */
+	public PhysicsController() {
+		initModuleLibraries();
+	}
 
-  /*
-   * (non-Javadoc)
-   * 
-   * @see aors.module.Module#getGUIComponent()
-   */
-  @Override
-  public Object getGUIComponent() {
-    return null;
-  }
+	/*
+	 * (non-Javadoc)
+	 * 
+	 * @see aors.module.Module#getGUIComponent()
+	 */
+	@Override
+	public Object getGUIComponent() {
+		return null;
+	}
 
-  /*
-   * (non-Javadoc)
-   * 
-   * @see
-   * aors.data.java.SimulationStepEventListener#simulationStepEnd(aors.data.
-   * java.SimulationStepEvent)
-   */
-  @Override
-  public void simulationStepEnd(SimulationStepEvent simulationStepEvent) {
-    if (simulator != null) {
-      simulator.simulationStepEnd(simulationStepEvent);
-    }
-  }
+	/*
+	 * (non-Javadoc)
+	 * 
+	 * @see
+	 * aors.data.java.SimulationStepEventListener#simulationStepEnd(aors.data.
+	 * java.SimulationStepEvent)
+	 */
+	@Override
+	public void simulationStepEnd(SimulationStepEvent simulationStepEvent) {
+		if (simulator != null) {
+			simulator.simulationStepEnd(simulationStepEvent);
+		}
+	}
 
-  /*
-   * (non-Javadoc)
-   * 
-   * @see aors.data.java.SimulationStepEventListener#simulationStepStart(long)
-   */
-  @Override
-  public void simulationStepStart(long stepNumber) {
-    if (simulator != null) {
-      simulator.simulationStepStart(stepNumber);
-    }
-  }
+	/*
+	 * (non-Javadoc)
+	 * 
+	 * @see aors.data.java.SimulationStepEventListener#simulationStepStart(long)
+	 */
+	@Override
+	public void simulationStepStart(long stepNumber) {
+		if (simulator != null) {
+			simulator.simulationStepStart(stepNumber);
+		}
+	}
 
-  /*
-   * (non-Javadoc)
-   * 
-   * @see aors.data.java.SimulationEventListener#simulationEnded()
-   */
-  @Override
-  public void simulationEnded() {
-  }
+	/*
+	 * (non-Javadoc)
+	 * 
+	 * @see aors.data.java.SimulationEventListener#simulationEnded()
+	 */
+	@Override
+	public void simulationEnded() {
+	}
 
-  /*
-   * (non-Javadoc)
-   * 
-   * @see
-   * aors.data.java.SimulationEventListener#simulationEnvironmentEventOccured
-   * (aors.model.envevt.EnvironmentEvent)
-   */
-  @Override
-  public void simulationEnvironmentEventOccured(
-      EnvironmentEvent environmentEvent) {
-  }
+	/*
+	 * (non-Javadoc)
+	 * 
+	 * @see
+	 * aors.data.java.SimulationEventListener#simulationEnvironmentEventOccured
+	 * (aors.model.envevt.EnvironmentEvent)
+	 */
+	@Override
+	public void simulationEnvironmentEventOccured(
+			EnvironmentEvent environmentEvent) {
+	}
 
-  /*
-   * (non-Javadoc)
-   * 
-   * @see
-   * aors.data.java.SimulationEventListener#simulationInfosEvent(aors.data.java
-   * .SimulationEvent)
-   */
-  @Override
-  public void simulationInfosEvent(SimulationEvent simulationEvent) {
-  }
+	/*
+	 * (non-Javadoc)
+	 * 
+	 * @see
+	 * aors.data.java.SimulationEventListener#simulationInfosEvent(aors.data
+	 * .java .SimulationEvent)
+	 */
+	@Override
+	public void simulationInfosEvent(SimulationEvent simulationEvent) {
+	}
 
-  /*
-   * (non-Javadoc)
-   * 
-   * @see
-   * aors.data.java.SimulationEventListener#simulationInitialize(aors.module
-   * .InitialState)
-   */
-  @Override
-  public void simulationInitialize(InitialState initialState) {
-    // get needed parameters
-    GeneralSpaceModel spaceModel = initialState.getSpaceModel();
-    SimulationParameters simParams = getSimulationParameters(initialState);
-    getSpaceTypeAttributes(initialState);
+	/*
+	 * (non-Javadoc)
+	 * 
+	 * @see
+	 * aors.data.java.SimulationEventListener#simulationInitialize(aors.module
+	 * .InitialState)
+	 */
+	@Override
+	public void simulationInitialize(InitialState initialState) {
+		// get needed parameters
+		GeneralSpaceModel spaceModel = initialState.getSpaceModel();
+		SimulationParameters simParams = getSimulationParameters(initialState);
+		
+		// no space model -> no simulator
+		if (spaceModel == null) {
+			return;
+		}
 
-    // get objects and agents
-    List<Objekt> objectList = initialState
-        .getObjectsByType(PhysicalObject.class);
-    List<Objekt> agentList = initialState
-        .getObjectsByType(PhysicalAgentObject.class);
+		// initialize properties that comes from space
+		Space space = spaceModel.getSpace();
+		this.autoKinematics = space.isAutoKinematics();
+		this.autoCollisionDetection = space.isAutoCollisionDetection();
+		this.autoCollisionHandling = space.isAutoCollisionHandling();
+		this.gravitation = -space.getGravitation();
 
-    List<PhysicalObject> objects = new ArrayList<PhysicalObject>();
+		// get objects and agents
+		List<Objekt> objectList = initialState
+				.getObjectsByType(PhysicalObject.class);
+		List<Objekt> agentList = initialState
+				.getObjectsByType(PhysicalAgentObject.class);
 
-    for (Objekt o : objectList) {
-      objects.add((PhysicalObject) o);
-    }
+		List<PhysicalObject> objects = new ArrayList<PhysicalObject>();
 
-    List<PhysicalAgentObject> agents = new ArrayList<PhysicalAgentObject>();
+		for (Objekt o : objectList) {
+			objects.add((PhysicalObject) o);
+		}
 
-    for (Objekt a : agentList) {
-      agents.add((PhysicalAgentObject) a);
-    }
+		List<PhysicalAgentObject> agents = new ArrayList<PhysicalAgentObject>();
 
-    // no space model -> no simulator
-    if (spaceModel == null) {
-      return;
-    }
+		for (Objekt a : agentList) {
+			agents.add((PhysicalAgentObject) a);
+		}
 
-    // the space type used by the space model
-    SpaceType spaceType = spaceModel.getSpaceType();
+		// the space type used by the space model
+		SpaceType spaceType = spaceModel.getSpaceType();
 
-    // create specific simulator depending on SpaceType
-    if (spaceType.equals(SpaceType.TwoD)
-        || spaceType.equals(SpaceType.TwoDLateralView)) {
-      simulator = new Box2DSimulator(simParams, spaceModel, autoKinematics,
-          autoCollisionDetection, autoCollisionHandling, gravitation,
-          initialState.getDatabus(), objects, agents);
-    }
+		// create specific simulator depending on SpaceType
+		if (spaceType.equals(SpaceType.TwoD)
+				|| spaceType.equals(SpaceType.TwoDLateralView)) {
+			simulator = new Box2DSimulator(simParams, spaceModel,
+					autoKinematics, autoCollisionDetection,
+					autoCollisionHandling, gravitation,
+					initialState.getDatabus(), objects, agents);
+		}
 
-    // 2D grid space uses only perceptions and kinematics (no collision or
-    // gravitation is suitable for this space type)
-    if (spaceType.equals(SpaceType.TwoDGrid)) {
-      simulator = new Simulator2DGridOld(simParams, spaceModel, autoKinematics,
-          false, false, 0, initialState.getDatabus(), objects, agents);
-    }
+		// 2D grid space uses only perceptions and kinematics (no collision or
+		// gravitation is suitable for this space type)
+		if (spaceType.equals(SpaceType.TwoDGrid)) {
+			simulator = new Simulator2DGridOld(simParams, spaceModel,
+					autoKinematics, false, false, 0, initialState.getDatabus(),
+					objects, agents);
+		}
 
-    if (spaceType.equals(SpaceType.OneD)) {
-      simulator = new Simulator1D(simParams, spaceModel, autoKinematics,
-          autoCollisionDetection, autoCollisionHandling, gravitation,
-          initialState.getDatabus(), objects, agents);
-    }
-  }
+		if (spaceType.equals(SpaceType.OneD)) {
+			simulator = new Simulator1D(simParams, spaceModel, autoKinematics,
+					autoCollisionDetection, autoCollisionHandling, gravitation,
+					initialState.getDatabus(), objects, agents);
+		}
+	}
 
-  /*
-   * (non-Javadoc)
-   * 
-   * @see aors.data.java.SimulationEventListener#simulationPaused(boolean)
-   */
-  @Override
-  public void simulationPaused(boolean pauseState) {
-  }
+	/*
+	 * (non-Javadoc)
+	 * 
+	 * @see aors.data.java.SimulationEventListener#simulationPaused(boolean)
+	 */
+	@Override
+	public void simulationPaused(boolean pauseState) {
+	}
 
-  /*
-   * (non-Javadoc)
-   * 
-   * @see
-   * aors.data.java.SimulationEventListener#simulationProjectDirectoryChanged
-   * (java.io.File)
-   */
-  @Override
-  public void simulationProjectDirectoryChanged(File projectDirectory) {
-    // in this point the simulator does not exist while a new scenario is
-    // opened, and the simulator must be created later when the simulation
-    // initialize!
-    this.simulator = null;
+	/*
+	 * (non-Javadoc)
+	 * 
+	 * @see
+	 * aors.data.java.SimulationEventListener#simulationProjectDirectoryChanged
+	 * (java.io.File)
+	 */
+	@Override
+	public void simulationProjectDirectoryChanged(File projectDirectory) {
+		// in this point the simulator does not exist while a new scenario is
+		// opened, and the simulator must be created later when the simulation
+		// initialize!
+		this.simulator = null;
 
-    // reset parameters
-    this.gravitation = -9.81;
-    this.autoKinematics = false;
-    this.autoCollisionDetection = false;
-    this.autoCollisionHandling = false;
-  }
+		// reset parameters
+		this.gravitation = -9.81;
+		this.autoKinematics = false;
+		this.autoCollisionDetection = false;
+		this.autoCollisionHandling = false;
+	}
 
-  /*
-   * (non-Javadoc)
-   * 
-   * @see aors.data.java.SimulationEventListener#simulationStarted()
-   */
-  @Override
-  public void simulationStarted() {
-    if (simulator != null) {
-      simulator.simulationStarted();
-    }
-  }
+	/*
+	 * (non-Javadoc)
+	 * 
+	 * @see aors.data.java.SimulationEventListener#simulationStarted()
+	 */
+	@Override
+	public void simulationStarted() {
+		if (simulator != null) {
+			simulator.simulationStarted();
+		}
+	}
 
-  /**
-   * Returns the simulation model of the simulation after retrieving it from the
-   * DOM. This method should be moved into initialState!
-   * 
-   * @param initialState
-   * @return the simulation model of the simulation
-   */
-  private void getSpaceTypeAttributes(InitialState initialState) {
-    if (initialState.getSpaceModel() == null) {
-      return;
-    }
+	/**
+	 * Returns the simulation parameters of the simulation after retrieving them
+	 * from the DOM. This method should be moved into initialState!
+	 * 
+	 * @param initialState
+	 * @return the simulation parameters of the simulation
+	 */
+	private SimulationParameters getSimulationParameters(
+			InitialState initialState) {
+		SimulationParameters simParams = new SimulationParameters();
 
-    XMLLoader.loadXML(initialState.getSimulationDescription().getDom());
+		XMLLoader.loadXML(initialState.getSimulationDescription().getDom());
 
-    // Retrieve the specific SpaceType element from the XML description
-    String spaceType = null;
-    switch (initialState.getSpaceModel().getSpaceType()) {
-    case OneD:
-      spaceType = "OneDimensional";
-      gravitation = 0;
-      break;
-    case TwoD:
-      spaceType = "TwoDimensional";
-      gravitation = 0;
-      break;
-    case TwoDGrid:
-      spaceType = "TwoDimensionalGrid";
-      gravitation = 0;
-      break;
-    case TwoDLateralView:
-      spaceType = "TwoDimensional_LateralView";
-      break;
-    }
+		// Retrieve the "SimulationParameters" element from the XML description
+		NodeList simParamsList = XMLLoader.getNodeList("SimulationParameters");
 
-    NodeList spaceTypeList = XMLLoader.getNodeList(spaceType);
+		if (simParamsList != null) {
+			for (int j = 0; j < simParamsList.getLength(); j++) {
+				// Retrieve all attributes of the "SimulationParameters" element
+				NamedNodeMap attributes = simParamsList.item(j).getAttributes();
 
-    if (spaceTypeList != null) {
-      for (int j = 0; j < spaceTypeList.getLength(); j++) {
-        // Retrieve all attributes of the SpaceType element
-        NamedNodeMap attributes = spaceTypeList.item(j).getAttributes();
+				// Retrieve the attribute values for each specified attribute
+				for (int i = 0; i < attributes.getLength(); i++) {
+					String attributeName = attributes.item(i).getNodeName();
+					String attributeValue = attributes.item(i).getNodeValue();
 
-        // Retrieve the attribute values for each specified attribute
-        for (int i = 0; i < attributes.getLength(); i++) {
-          String attributeName = attributes.item(i).getNodeName();
-          String attributeValue = attributes.item(i).getNodeValue();
+					// Set the attributes
+					if (attributeName.equals("simulationSteps")) {
+						simParams.setSimulationSteps(Long
+								.valueOf(attributeValue));
+					} else if (attributeName.equals("stepDuration")) {
+						simParams.setStepDuration(Double
+								.valueOf(attributeValue));
+					} else if (attributeName.equals("timeUnit")) {
+						simParams.setTimeUnit(attributeValue);
+					} else if (attributeName.equals("stepTimeDelay")) {
+						simParams.setStepTimeDelay(Double
+								.valueOf(attributeValue));
+					}
+				}
+			}
+		} else {
 
-          // Set the auto switches
-          if (attributeName.equals("autoKinematics")) {
-            autoKinematics = Boolean.valueOf(attributeValue);
-          } else if (attributeName.equals("autoCollisionDetection")) {
-            autoCollisionDetection = Boolean.valueOf(attributeValue);
-          } else if (attributeName.equals("autoCollisionHandling")) {
-            autoCollisionHandling = Boolean.valueOf(attributeValue);
-          } else if (attributeName.equals("gravitation")) {
-            gravitation = Double.valueOf(attributeValue);
-          }
-        }
-      }
-    }
-  }
+			return null;
+		}
 
-  /**
-   * Returns the simulation parameters of the simulation after retrieving them
-   * from the DOM. This method should be moved into initialState!
-   * 
-   * @param initialState
-   * @return the simulation parameters of the simulation
-   */
-  private SimulationParameters getSimulationParameters(InitialState initialState) {
-    SimulationParameters simParams = new SimulationParameters();
+		return simParams;
+	}
 
-    XMLLoader.loadXML(initialState.getSimulationDescription().getDom());
+	/**
+	 * Initialize the module libraries by unpacking the Jars, loading and
+	 * setting class paths.
+	 */
+	private void initModuleLibraries() {
+		// local path in the temporarily directory for this module
+		String localTmpPath = "physicsModule";
 
-    // Retrieve the "SimulationParameters" element from the XML description
-    NodeList simParamsList = XMLLoader.getNodeList("SimulationParameters");
+		// path to jar
+		String jarPath = System.getProperty("user.dir") + File.separator
+				+ "modules" + File.separator + "physicsModule.jar";
 
-    if (simParamsList != null) {
-      for (int j = 0; j < simParamsList.getLength(); j++) {
-        // Retrieve all attributes of the "SimulationParameters" element
-        NamedNodeMap attributes = simParamsList.item(j).getAttributes();
+		// extract the jar files for sound module
+		try {
+			JarUtil.extractFileFromJar(jarPath, localTmpPath, "lib",
+					"jbox2d-2.0.1-library-only.jar");
+		} catch (IOException ex) {
+			ex.printStackTrace();
+		}
 
-        // Retrieve the attribute values for each specified attribute
-        for (int i = 0; i < attributes.getLength(); i++) {
-          String attributeName = attributes.item(i).getNodeName();
-          String attributeValue = attributes.item(i).getNodeValue();
+		// add this path in the library path...
+		JarUtil.setLibraryPath(localTmpPath);
 
-          // Set the attributes
-          if (attributeName.equals("simulationSteps")) {
-            simParams.setSimulationSteps(Long.valueOf(attributeValue));
-          } else if (attributeName.equals("stepDuration")) {
-            simParams.setStepDuration(Double.valueOf(attributeValue));
-          } else if (attributeName.equals("timeUnit")) {
-            simParams.setTimeUnit(attributeValue);
-          } else if (attributeName.equals("stepTimeDelay")) {
-            simParams.setStepTimeDelay(Double.valueOf(attributeValue));
-          }
-        }
-      }
-    } else {
+		// load jars from that temporarily directory (physics required jars)
+		JarUtil.loadJar(localTmpPath, "jbox2d-2.0.1-library-only.jar");
+	}
 
-      return null;
-    }
+	@Override
+	public void simulationDomOnlyInitialization(
+			SimulationDescription simulationDescription) {
+	}
 
-    return simParams;
-  }
+	@Override
+	public void objektDestroyEvent(ObjektDestroyEvent objektDestroyEvent) {
+		if (simulator != null) {
+			simulator.objektDestroyEvent(objektDestroyEvent);
+		}
+	}
 
-  /**
-   * Initialize the module libraries by unpacking the Jars, loading and setting
-   * class paths.
-   */
-  private void initModuleLibraries() {
-    // local path in the temporarily directory for this module
-    String localTmpPath = "physicsModule";
+	@Override
+	public void objektInitEvent(ObjektInitEvent objInitEvent) {
+		if (simulator != null) {
+			simulator.objektInitEvent(objInitEvent);
+		}
+	}
 
-    // path to jar
-    String jarPath = System.getProperty("user.dir") + File.separator
-        + "modules" + File.separator + "physicsModule.jar";
-
-    // extract the jar files for sound module
-    try {
-      JarUtil.extractFileFromJar(jarPath, localTmpPath, "lib",
-          "jbox2d-2.0.1-library-only.jar");
-    } catch (IOException ex) {
-      ex.printStackTrace();
-    }
-
-    // add this path in the library path...
-    JarUtil.setLibraryPath(localTmpPath);
-
-    // load jars from that temporarily directory (physics required jars)
-    JarUtil.loadJar(localTmpPath, "jbox2d-2.0.1-library-only.jar");
-  }
-
-  @Override
-  public void simulationDomOnlyInitialization(
-      SimulationDescription simulationDescription) {
-  }
-
-  @Override
-  public void objektDestroyEvent(ObjektDestroyEvent objektDestroyEvent) {
-    if (simulator != null) {
-      simulator.objektDestroyEvent(objektDestroyEvent);
-    }
-  }
-
-  @Override
-  public void objektInitEvent(ObjektInitEvent objInitEvent) {
-    if (simulator != null) {
-      simulator.objektInitEvent(objInitEvent);
-    }
-  }
-
-  @Override
-  public void notifyEvent(ControllerEvent event) {
-    // TODO Auto-generated method stub
-  }
+	@Override
+	public void notifyEvent(ControllerEvent event) {
+		// TODO Auto-generated method stub
+	}
 }
