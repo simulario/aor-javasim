@@ -81,7 +81,7 @@
 			<EnvironmentRule name="ArrivalRule">
 				<!-- =================================================== -->
 				<documentation>
-					<dc:description>On CustomerArrival, if the service desk is serviceDeskBusy, the customer has to wait in a line, so the queue length is increased by 1. Otherwise, the customer is going to be serviced and hence the service desk gets serviceDeskBusy, and for ending the service, a CustomerDeparture event (with a delay being set to a random service time) is created .</dc:description>
+					<dc:description>When a new customer arrives, if the service desk is busy, the customer has to wait in a line, so the queue length is increased by 1. Otherwise, the customer is going to be serviced and hence the service desk gets busy, and for ending the service, a CustomerDeparture event (with a delay being set to a random service time) is created .</dc:description>
 				</documentation>
 				<WHEN eventType="CustomerArrival"/>
 				<FOR dataVariable="srvTm" dataType="Integer">
@@ -113,7 +113,7 @@
 			<EnvironmentRule name="DepartureRule">
 				<!-- =================================================== -->
 				<documentation>
-					<dc:description>On CustomerDeparture, when the queue is empty, the service desk is no longer serviceDeskBusy. Otherwise, the next customer will be serviced, so a new future CustomerDeparture event is created (with a delay given by the random service time), and the queue size is decreased by 1.</dc:description>
+					<dc:description>When a customer departs, if the queue is empty, the service desk is no longer busy. Otherwise, the next customer will be serviced, so a new future CustomerDeparture event is created (with a delay given by the random service time), and the queue size is decreased by 1.</dc:description>
 				</documentation>
 				<WHEN eventType="CustomerDeparture" eventVariable="dep"/>
 				<FOR dataVariable="srvTm" dataType="Integer">
@@ -128,7 +128,7 @@
 						</UpdateStatisticsVariable>
 					</UPDATE-ENV>
 				</DO>
-				<IF language="Java"> Global.getQueueLength() == 0 </IF>
+				<IF language="Java"> Global.queueLength == 0 </IF>
 				<THEN>
 					<UPDATE-ENV>
 						<UpdateGlobalVariable name="serviceDeskBusy" value="false"/>
