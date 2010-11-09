@@ -3,8 +3,9 @@
 <!-- ================================================================
 AORS-Log 0.6 created on 08-MDec-2008 by Gerd Wagner and Jens Werner
 =================================================================== -->
-<xs:schema xmlns:xs="http://www.w3.org/2001/XMLSchema" xmlns:log="http://aor-simulation.org/log" xmlns:aors="http://aor-simulation.org" xmlns:ers="http://aor-simulation.org"
-  targetNamespace="http://aor-simulation.org/log" elementFormDefault="qualified" attributeFormDefault="unqualified">
+<xs:schema xmlns:xs="http://www.w3.org/2001/XMLSchema" xmlns:log="http://aor-simulation.org/log" xmlns:aors="http://aor-simulation.org"
+  xmlns:ers="http://aor-simulation.org" targetNamespace="http://aor-simulation.org/log" elementFormDefault="qualified"
+  attributeFormDefault="unqualified">
   <!--xs:import namespace="http://aor-simulation.org" schemaLocation="ERSL/Views.xsd"/-->
   <xs:import namespace="http://aor-simulation.org" schemaLocation="ERSL/UMLetc.xsd"/>
   <xs:element name="SimulationLog">
@@ -47,10 +48,10 @@ AORS-Log 0.6 created on 08-MDec-2008 by Gerd Wagner and Jens Werner
     <xs:complexType>
       <xs:attribute name="modelName" type="xs:NCName" use="required"/>
       <xs:attribute name="modelTitle" type="xs:normalizedString" use="optional"/>
-      <xs:attribute name="autoKinematics" type="xs:boolean" use="optional" default="false"/>
+      <!--xs:attribute name="autoKinematics" type="xs:boolean" use="optional" default="false"/>
       <xs:attribute name="autoGravitation" type="xs:boolean" use="optional" default="false"/>
       <xs:attribute name="autoImpulse" type="xs:boolean" use="optional" default="false"/>
-      <xs:attribute name="autoCollision" type="xs:boolean" use="optional" default="false"/>
+      <xs:attribute name="autoCollision" type="xs:boolean" use="optional" default="false"/-->
       <xs:attribute name="baseURI" type="xs:anyURI" use="optional"/>
     </xs:complexType>
   </xs:element>
@@ -81,6 +82,10 @@ AORS-Log 0.6 created on 08-MDec-2008 by Gerd Wagner and Jens Werner
       <xs:attribute name="xMax" type="xs:double" use="required"/>
       <xs:attribute name="yMax" type="xs:double"/>
       <xs:attribute name="zMax" type="xs:double"/>
+      <xs:attribute name="autoKinematics" type="xs:boolean" use="optional" default="false"/>
+      <xs:attribute name="gravitation" type="xs:double" use="optional" default="9.81"/>
+      <xs:attribute name="autoCollisionHandling" type="xs:boolean" use="optional" default="false"/>
+      <xs:attribute name="autoCollisionDetection" type="xs:boolean" use="optional" default="false"/>
     </xs:complexType>
   </xs:element>
   <xs:element name="InitialState">
@@ -130,7 +135,7 @@ AORS-Log 0.6 created on 08-MDec-2008 by Gerd Wagner and Jens Werner
   <xs:element name="PhysicsSimulation" type="log:PhysicsSimulation.type"/>
   <xs:complexType name="PhysicsSimulation.type">
     <xs:sequence>
-      <xs:element name="ResultingStateChanges"  minOccurs="0" maxOccurs="unbounded">
+      <xs:element name="ResultingStateChanges" minOccurs="0" maxOccurs="unbounded">
         <xs:complexType>
           <xs:sequence>
             <xs:element ref="log:Objects" minOccurs="0"/>
@@ -140,7 +145,7 @@ AORS-Log 0.6 created on 08-MDec-2008 by Gerd Wagner and Jens Werner
           </xs:sequence>
         </xs:complexType>
       </xs:element>
-      <xs:element name="ResultingEvents"  minOccurs="0" maxOccurs="unbounded">
+      <xs:element name="ResultingEvents" minOccurs="0" maxOccurs="unbounded">
         <xs:complexType>
           <xs:choice minOccurs="0" maxOccurs="unbounded">
             <xs:element ref="log:CausedEvent" minOccurs="0" maxOccurs="unbounded"/>
@@ -165,7 +170,7 @@ AORS-Log 0.6 created on 08-MDec-2008 by Gerd Wagner and Jens Werner
     <xs:complexContent>
       <xs:extension base="log:AtomicEvent.type">
         <xs:sequence>
-          <xs:element name="Activities"  minOccurs="0" maxOccurs="1">
+          <xs:element name="Activities" minOccurs="0" maxOccurs="1">
             <xs:complexType>
               <xs:sequence>
                 <xs:element name="StartActivity" minOccurs="0" maxOccurs="unbounded">
@@ -182,7 +187,7 @@ AORS-Log 0.6 created on 08-MDec-2008 by Gerd Wagner and Jens Werner
                     <xs:complexContent>
                       <xs:extension base="log:Activity.type">
                         <xs:sequence>
-                          <xs:element name="ResultingEvents"  minOccurs="0" maxOccurs="1">
+                          <xs:element name="ResultingEvents" minOccurs="0" maxOccurs="1">
                             <xs:complexType>
                               <xs:sequence>
                                 <xs:element name="CausedEvent" maxOccurs="unbounded">
@@ -206,7 +211,7 @@ AORS-Log 0.6 created on 08-MDec-2008 by Gerd Wagner and Jens Werner
             </xs:complexType>
           </xs:element>
           <xs:element ref="log:ResultingStateChanges" minOccurs="0" maxOccurs="unbounded"/>
-          <xs:element name="ResultingEvents"  minOccurs="0" maxOccurs="unbounded">
+          <xs:element name="ResultingEvents" minOccurs="0" maxOccurs="unbounded">
             <xs:complexType>
               <xs:choice minOccurs="0" maxOccurs="unbounded">
                 <xs:element ref="log:CausedEvent" minOccurs="0" maxOccurs="unbounded"/>
@@ -241,7 +246,7 @@ AORS-Log 0.6 created on 08-MDec-2008 by Gerd Wagner and Jens Werner
         </xs:complexType>
       </xs:element>
       <xs:element ref="log:Collections" minOccurs="0"/>
-      <xs:element name="DestroyObjects"  minOccurs="0">
+      <xs:element name="DestroyObjects" minOccurs="0">
         <xs:complexType>
           <xs:sequence>
             <xs:element ref="log:DestroyObj" minOccurs="0" maxOccurs="unbounded"/>
@@ -334,17 +339,17 @@ AORS-Log 0.6 created on 08-MDec-2008 by Gerd Wagner and Jens Werner
     <xs:complexContent>
       <xs:extension base="log:AtomicEvent.type">
         <xs:sequence>
-          <xs:element name="ResultingEvents"  minOccurs="0" maxOccurs="unbounded">
+          <xs:element name="ResultingEvents" minOccurs="0" maxOccurs="unbounded">
             <xs:complexType>
               <xs:choice minOccurs="0" maxOccurs="unbounded">
-                <xs:element name="ActionEvent"  minOccurs="0" maxOccurs="unbounded">
+                <xs:element name="ActionEvent" minOccurs="0" maxOccurs="unbounded">
                   <xs:complexType>
                     <xs:complexContent>
                       <xs:extension base="log:AtomicEvent.type"/>
                     </xs:complexContent>
                   </xs:complexType>
                 </xs:element>
-                <xs:element name="OutMessageEvent"  minOccurs="0" maxOccurs="unbounded">
+                <xs:element name="OutMessageEvent" minOccurs="0" maxOccurs="unbounded">
                   <xs:complexType>
                     <xs:attribute name="messageType" type="ers:CanonicalName" use="required"/>
                     <xs:attribute name="id" type="xs:long" use="optional"/>
@@ -356,7 +361,7 @@ AORS-Log 0.6 created on 08-MDec-2008 by Gerd Wagner and Jens Werner
               <xs:attribute name="resultingFromRule" type="xs:NCName" use="required"/>
             </xs:complexType>
           </xs:element>
-          <xs:element name="ResultingStateChanges"  minOccurs="0" maxOccurs="unbounded">
+          <xs:element name="ResultingStateChanges" minOccurs="0" maxOccurs="unbounded">
             <xs:complexType>
               <xs:sequence>
                 <xs:element ref="log:SelfBeliefSlot" minOccurs="0" maxOccurs="unbounded"/>
