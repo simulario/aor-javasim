@@ -34,7 +34,7 @@ public class View {
   // String constant for the "PhysicalObjectView" and "ObjectView" node
   public static final String PHYSICAL_OBJECT_VIEW = "PhysicalObjectView";
   public static final String OBJECT_VIEW = "ObjectView";
-  public static final String EMBEDDED_VIEW = "EmbeddedShape2D";
+  public static final String EMBEDDED_VIEW = "AttachedShape2D";
 
   // String constants for attributes of a "PhysicalObjectView" node
   public static final String PHYSICAL_OBJECT_TYPE = "physicalObjectType";
