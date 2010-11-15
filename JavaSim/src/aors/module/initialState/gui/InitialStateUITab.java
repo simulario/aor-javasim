@@ -2911,7 +2911,7 @@ public class InitialStateUITab extends JScrollPane implements GUIModule {
 	               
 	             for(Iterator<String> properties = tempContent.iterator(); properties.hasNext();){   
 	             
-	                 String tempString = (String) properties.next();
+	                 String tempString = properties.next();
 	                 String label = labelMap.get(tempString);
 	                 if (label.equals(colHeadValue)) {
 	                   
