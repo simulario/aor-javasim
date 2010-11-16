@@ -16,7 +16,13 @@
    <dc:creator>Gerd Wagner</dc:creator>
    <dc:contributor>Oana Nicolae</dc:contributor>
    <dc:modified>20100415</dc:modified>
-   <description xmlns:h="http://www.w3.org/1999/xhtml"><h:p>Thomas C. Schelling, who is a co-recipient of the 2005 Nobel Prize in Economics, published a paper proposing a theory about the persistence of racial or ethnic segregation despite an environment of growing tolerance ("Dynamic Models of Segregation", Journal of Mathematical Sociology 1, 1971, 143-186.). He suggested that even if individuals tolerate racial diversity, if they also remain uneasy about being a minority in the locality, segregation will still be the equilibrium situation.</h:p><h:p>Schelling placed pennies and dimes on a chess board and moved them around according to various rules. He interpreted the board as a city, with each square of the board representing a house or a lot. He interpreted the pennies and dimes as residents representing any two groups in society, such as two different races of people, boys and girls, smokers and non-smokers, etc. The neighborhood of a resident occupying any location on the board consisted of the squares adjacent to this location. Thus, interior (non-edge) residents could have up to eight neighbors, non-corner edge residents could have a maximum of five neighbors, and corner edge residents could have a maximum of three neighbors. Rules could be specified that determined whether a particular resident was happy in its current location. If it was unhappy, it would try to move to another location on the board, or possibly just exit the board entirely. As can be expected, Schelling found that the board quickly evolved into a strongly segregated location pattern if the residents' &quot;happiness rules&quot; were specified so that segregation was heavily favored. Surprisingly, however, he also found that initially integrated boards tipped into full segregation even if the residents' happiness rules expressed only a mild preference for having neighbors of their own type.</h:p><h:p>This problem description has been extracted from the paper <h:a href="http://www.soc.surrey.ac.uk/staff/ngilbert/ngpub/paper148_NG.pdf">Varieties of Emergence</h:a> by Nigel Gilbert and from the page <h:a href="http://www.econ.iastate.edu/tesfatsi/abmread.htm#Modeling">On-Line Guide for Newcomers to Agent-Based Modeling in the Social Sciences</h:a> by Robert Axelrod and Leigh Tesfatsion.</h:p>
+   <description xmlns:h="http://www.w3.org/1999/xhtml">
+   	<h:p>Thomas C. Schelling, who is a co-recipient of the 2005 Nobel Prize in Economics, 
+   		published a paper proposing a theory about the persistence of racial or ethnic 
+   		segregation despite an environment of growing tolerance ("Dynamic Models of Segregation", 
+   		Journal of Mathematical Sociology 1, 1971, 143-186.). He suggested that even 
+   		if individuals tolerate racial diversity, if they also remain uneasy about being 
+   		a minority in the locality, segregation will still be the equilibrium situation.</h:p><h:p>Schelling placed pennies and dimes on a chess board and moved them around according to various rules. He interpreted the board as a city, with each square of the board representing a house or a lot. He interpreted the pennies and dimes as residents representing any two groups in society, such as two different races of people, boys and girls, smokers and non-smokers, etc. The neighborhood of a resident occupying any location on the board consisted of the squares adjacent to this location. Thus, interior (non-edge) residents could have up to eight neighbors, non-corner edge residents could have a maximum of five neighbors, and corner edge residents could have a maximum of three neighbors. Rules could be specified that determined whether a particular resident was happy in its current location. If it was unhappy, it would try to move to another location on the board, or possibly just exit the board entirely. As can be expected, Schelling found that the board quickly evolved into a strongly segregated location pattern if the residents' &quot;happiness rules&quot; were specified so that segregation was heavily favored. Surprisingly, however, he also found that initially integrated boards tipped into full segregation even if the residents' happiness rules expressed only a mild preference for having neighbors of their own type.</h:p><h:p>This problem description has been extracted from the paper <h:a href="http://www.soc.surrey.ac.uk/staff/ngilbert/ngpub/paper148_NG.pdf">Varieties of Emergence</h:a> by Nigel Gilbert and from the page <h:a href="http://www.econ.iastate.edu/tesfatsi/abmread.htm#Modeling">On-Line Guide for Newcomers to Agent-Based Modeling in the Social Sciences</h:a> by Robert Axelrod and Leigh Tesfatsion.</h:p>
    </description>
   </documentation>
 
@@ -150,12 +156,14 @@ return i;
 		<ON-EACH-SIMULATION-STEP/>
 		<DO>
 			<UPDATE-ENV>
-				<UpdateGridCells gridCellVariable="gc">
-				  <SelectionCondition language="Java"><![CDATA[
+				<ForEachGridCell gridCellVariable="gc">
+					<Selection>
+						<Condition language="Java"><![CDATA[
 						gc.getKindOfResident() > -1 && ! gc.isHappyOnCurrentLocation(1) 
 						&& gc.getPosX()%10 == Random.uniformInt(0,9)  // slow down the segregation
-						]]></SelectionCondition>
-				  <Code language="Java"><![CDATA[ 
+						]]></Condition>
+					</Selection>
+					<Code language="Java"><![CDATA[ 
 aors.util.reftypes.Position newPos = gc.getSuitableLocation();
 if (newPos != null) {
   Simulator.spaceModel.getGridCell( (int)newPos.getX(), (int)newPos.getY()).setKindOfResident( gc.getKindOfResident());
@@ -165,7 +173,7 @@ else {
   Simulator.spaceModel.getGridCell( (int)gc.getPosX(), (int)gc.getPosY()).setKindOfResident(-1);
 }
 				]]></Code>	
-				</UpdateGridCells>
+				</ForEachGridCell>
 			</UPDATE-ENV>
 		</DO>
 	</EnvironmentRule>
@@ -182,8 +190,8 @@ else {
 		</Slot>
 	</GridCells>
 	<GlobalVariable name="intoleranceLevel0" value="0.1"/>
-	<GlobalVariable name="intoleranceLevel1" value="0.1"/>
-	<GlobalVariable name="intoleranceLevel2" value="0.2"/>
+	<GlobalVariable name="intoleranceLevel1" value="0.3"/>
+	<GlobalVariable name="intoleranceLevel2" value="0.5"/>
 </InitialState>
 <!-- =================================================================== -->
 <UserInterface>
@@ -218,6 +226,18 @@ else {
 		</GlobalVariableUI>
 	</InitialStateUI>
 	<AnimationUI>
+		<DisplayDescription>
+			<HtmlText xml:lang="en" xmlns:h="http://www.w3.org/1999/xhtml">
+				<h:h1>Schelling Segregation Model</h:h1>
+				<h:p>Even if individuals tolerate racial diversity, if they also<br/>remain uneasy about being a minority in the locality,<br/> 
+					segregation will still be the equilibrium situation.<br/>In the model there are three kinds of residents:</h:p>
+				<h:ol>
+					<h:li>Group 0 (green) has intolerance level 10%</h:li>
+					<h:li>Group 1 (yellow) has intolerance level 30%</h:li>
+					<h:li>Group 2 (red) has intolerance level 50%</h:li>
+				</h:ol>
+			</HtmlText>
+		</DisplayDescription>
 		<Views>
 			<SpaceView>
 				<TwoDimensionalGridSpaceView2D>
