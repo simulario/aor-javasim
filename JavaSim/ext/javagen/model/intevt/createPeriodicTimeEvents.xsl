@@ -144,8 +144,8 @@
           <xsl:with-param name="indent" select="$indent + 1"/>
           <xsl:with-param name="value">
             <xsl:choose>
-              <xsl:when test="fn:exists(aorsl:StopCondition[@language = $output.language])">
-                <xsl:value-of select="aorsl:StopCondition[@language = $output.language][1]"/>
+              <xsl:when test="fn:exists(aorsl:StopCondition[matches(@language, $output.lang.RegExpr)])">
+                <xsl:value-of select="aorsl:StopCondition[matches(@language, $output.lang.RegExpr)][1]"/>
               </xsl:when>
               <xsl:otherwise>
                 <xsl:value-of select="'false'"/>

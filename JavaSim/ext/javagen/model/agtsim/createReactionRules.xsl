@@ -300,7 +300,7 @@
 
         <!-- The IF condition part -->
         <xsl:choose>
-          <xsl:when test="fn:exists(aorsl:IF[@language = $output.language]) and fn:normalize-space(aorsl:IF[@language = $output.language]) != ''">
+          <xsl:when test="fn:exists(aorsl:IF[matches(@language, $output.lang.RegExpr)]) and fn:normalize-space(aorsl:IF[matches(@language, $output.lang.RegExpr)]) != ''">
             <xsl:call-template name="java:tryCatch">
               <xsl:with-param name="indent" select="$indent + 1"/>
               <xsl:with-param name="exceptionType" select="'Exception'"/>
@@ -309,7 +309,7 @@
 
                 <xsl:call-template name="java:return">
                   <xsl:with-param name="indent" select="$indent + 2"/>
-                  <xsl:with-param name="value" select="fn:normalize-space(aorsl:IF[@language = $output.language][1])"/>
+                  <xsl:with-param name="value" select="fn:normalize-space(aorsl:IF[matches(@language, $output.lang.RegExpr)][1])"/>
                 </xsl:call-template>
 
               </xsl:with-param>
@@ -457,9 +457,9 @@
             <xsl:variable name="entityIdRefVar">
               <xsl:choose>
                 <xsl:when
-                  test="fn:exists(aorsl:BeliefEntityIdRef[@language = $output.language]) 
-                    and fn:normalize-space(aorsl:BeliefEntityIdRef[@language = $output.language]) != ''">
-                  <xsl:value-of select="aorsl:BeliefEntityIdRef[@language = $output.language]"/>
+                  test="fn:exists(aorsl:BeliefEntityIdRef[matches(@language, $output.lang.RegExpr)]) 
+                    and fn:normalize-space(aorsl:BeliefEntityIdRef[matches(@language, $output.lang.RegExpr)]) != ''">
+                  <xsl:value-of select="aorsl:BeliefEntityIdRef[matches(@language, $output.lang.RegExpr)]"/>
                 </xsl:when>
                 <xsl:when test="fn:exists(@beliefEntityIdRef) and @beliefEntityIdRef!=''">
                   <xsl:value-of select="@beliefEntityIdRef"/>
@@ -490,9 +490,9 @@
                   <xsl:value-of>
                     <xsl:choose>
                       <xsl:when
-                        test="fn:exists(aorsl:ValueExpr[@language = $output.language]) 
-                                        and fn:normalize-space(aorsl:ValueExpr[@language = $output.language]) != ''">
-                        <xsl:value-of select="aorsl:ValueExpr[@language = $output.language]"/>
+                        test="fn:exists(aorsl:ValueExpr[matches(@language, $output.lang.RegExpr)]) 
+                                        and fn:normalize-space(aorsl:ValueExpr[matches(@language, $output.lang.RegExpr)]) != ''">
+                        <xsl:value-of select="aorsl:ValueExpr[matches(@language, $output.lang.RegExpr)]"/>
                       </xsl:when>
                       <xsl:when test="fn:exists(@value) and @value!=''">
                         <xsl:value-of select="@value"/>
@@ -543,9 +543,9 @@
                   <xsl:value-of select="@beliefEntityId"/>
                 </xsl:when>
                 <xsl:when
-                  test="fn:exists(aorsl:BeliefEntityIdRef[@language = $output.language]) 
-                    and fn:normalize-space(aorsl:BeliefEntityIdRef[@language = $output.language])!=''">
-                  <xsl:value-of select="aorsl:BeliefEntityIdRef[@language = $output.language]"/>
+                  test="fn:exists(aorsl:BeliefEntityIdRef[matches(@language, $output.lang.RegExpr)]) 
+                    and fn:normalize-space(aorsl:BeliefEntityIdRef[matches(@language, $output.lang.RegExpr)])!=''">
+                  <xsl:value-of select="aorsl:BeliefEntityIdRef[matches(@language, $output.lang.RegExpr)]"/>
                 </xsl:when>
                 <xsl:otherwise>
                   <xsl:value-of select="'generateUniqueBeliefId()'"/>
@@ -564,7 +564,7 @@
                     <xsl:with-param name="args" select="$beliefIdVar"/>
                   </xsl:call-template>
                 </xsl:when>
-                <xsl:when test="fn:exists(aorsl:BeliefEntityType[@language = $output.language])">
+                <xsl:when test="fn:exists(aorsl:BeliefEntityType[matches(@language, $output.lang.RegExpr)])">
                   <xsl:call-template name="java:callMethod">
                     <xsl:with-param name="method" select="'createBeliefEntity'"/>
                     <xsl:with-param name="inLine" select="true()"/>
@@ -573,7 +573,7 @@
                     </xsl:with-param>
                     <xsl:with-param name="args" as="xs:string*">
                       <xsl:value-of select="'this.getAgentSubject()'"/>
-                      <xsl:value-of select="aorsl:BeliefEntityType[@language = $output.language]"/>
+                      <xsl:value-of select="aorsl:BeliefEntityType[matches(@language, $output.lang.RegExpr)]"/>
                       <xsl:value-of select="$beliefIdVar"/>
                     </xsl:with-param>
                   </xsl:call-template>
@@ -617,12 +617,12 @@
                       <xsl:value-of select="$beliefTmpVar"/>
                       <xsl:text>)</xsl:text>
                     </xsl:with-param>
-                    <xsl:with-param name="value" select="aorsl:ValueExpr[@language = $output.language]"/>
+                    <xsl:with-param name="value" select="aorsl:ValueExpr[matches(@language, $output.lang.RegExpr)]"/>
                   </xsl:call-template>
                 </xsl:when>
                 <xsl:when
-                  test="fn:exists(../aorsl:BeliefEntityType[@language = $output.language]) 
-                    and fn:normalize-space(../aorsl:BeliefEntityType[@language = $output.language])!=''">
+                  test="fn:exists(../aorsl:BeliefEntityType[matches(@language, $output.lang.RegExpr)]) 
+                    and fn:normalize-space(../aorsl:BeliefEntityType[matches(@language, $output.lang.RegExpr)])!=''">
                   <xsl:call-template name="java:callMethod">
                     <xsl:with-param name="indent" select="$indent+2"/>
                     <xsl:with-param name="method" select="'updateBeliefEntityProperty'"/>
@@ -630,7 +630,7 @@
                     <xsl:with-param name="args" as="xs:string*">
                       <xsl:value-of select="$beliefIdVar"/>
                       <xsl:value-of select="jw:quote(@property)"/>
-                      <xsl:value-of select="aorsl:ValueExpr[@language = $output.language]"/>
+                      <xsl:value-of select="aorsl:ValueExpr[matches(@language, $output.lang.RegExpr)]"/>
                     </xsl:with-param>
                   </xsl:call-template>
                 </xsl:when>
@@ -656,9 +656,9 @@
               <xsl:with-param name="args">
                 <xsl:choose>
                   <xsl:when
-                    test="fn:exists(aorsl:BeliefEntityIdRef[@language = $output.language]) 
-                      and fn:normalize-space(aorsl:BeliefEntityIdRef[@language = $output.language]) != ''">
-                    <xsl:value-of select="aorsl:BeliefEntityIdRef[@language = $output.language]"/>
+                    test="fn:exists(aorsl:BeliefEntityIdRef[matches(@language, $output.lang.RegExpr)]) 
+                      and fn:normalize-space(aorsl:BeliefEntityIdRef[matches(@language, $output.lang.RegExpr)]) != ''">
+                    <xsl:value-of select="aorsl:BeliefEntityIdRef[matches(@language, $output.lang.RegExpr)]"/>
                   </xsl:when>
                   <xsl:when test="fn:exists(@beliefEntityIdRef) and @beliefEntityIdRef!=''">
                     <xsl:value-of select="@beliefEntityIdRef"/>
@@ -792,8 +792,8 @@
       </xsl:with-param>
       <xsl:with-param name="args" as="xs:string*">
         <xsl:for-each select="aorsl:Argument">
-          <xsl:if test="aorsl:ValueExpr[@language eq $output.language]">
-            <xsl:value-of select="aorsl:ValueExpr[@language eq $output.language][1]"/>
+          <xsl:if test="aorsl:ValueExpr[matches(@language, $output.lang.RegExpr)]">
+            <xsl:value-of select="aorsl:ValueExpr[matches(@language, $output.lang.RegExpr)][1]"/>
           </xsl:if>
         </xsl:for-each>
       </xsl:with-param>
@@ -985,7 +985,7 @@
 
               <xsl:variable name="output">
                 <xsl:variable name="block-indent"
-                  select="if (fn:exists(aorsl:Condition[@language eq $output.language])) then $indent + 1 else $indent"/>
+                  select="if (fn:exists(aorsl:Condition[matches(@language, $output.lang.RegExpr)])) then $indent + 1 else $indent"/>
 
                 <xsl:variable name="actionVarName" select="fn:concat(jw:lowerWord(@actionEventType), '_', position())"/>
 
@@ -1173,7 +1173,7 @@
         </xsl:apply-templates>
 
         <xsl:variable name="for-beliefs"
-          select="aorsl:FOR[@beliefEntityVariable][fn:exists(aorsl:BeliefEntityType[@language = $output.language]) or
+          select="aorsl:FOR[@beliefEntityVariable][fn:exists(aorsl:BeliefEntityType[matches(@language, $output.lang.RegExpr)]) or
           fn:exists(@beliefEntityType)]"/>
         <xsl:variable name="for-ListItemVariable" select="aorsl:FOR-ListItemVariable"/>
 
@@ -1254,7 +1254,7 @@
 
         <!-- generate for cycles - if neded 
         <xsl:for-each select="aorsl:FOR[@beliefEntityVariable]">
-          <xsl:if test="fn:exists(aorsl:BeliefEntityType[@language = $output.language]) or
+          <xsl:if test="fn:exists(aorsl:BeliefEntityType[matches(@language, $output.lang.RegExpr)]) or
             fn:exists(@beliefEntityType)">
             <xsl:variable name="contor" select="fn:concat('_i', position())"/>
             <xsl:variable name="beliefVar" select="fn:concat($createdVariablesNamePrefix, @beliefEntityVariable)"/>
@@ -1285,7 +1285,7 @@
 
         <!-- instantiate variables with the corresponding value from list 
         <xsl:for-each select="aorsl:FOR[@beliefEntityVariable]">
-          <xsl:if test="fn:exists(@beliefEntityType) or fn:exists(aorsl:BeliefEntityType[@language = $output.language])">
+          <xsl:if test="fn:exists(@beliefEntityType) or fn:exists(aorsl:BeliefEntityType[matches(@language, $output.lang.RegExpr)])">
             <xsl:call-template name="java:variable">
               <xsl:with-param name="indent" select="$newIndent + 2"/>
               <xsl:with-param name="name" select="@beliefEntityVariable"/>
@@ -1657,13 +1657,13 @@
     <xsl:variable name="messageNode" select="//aorsl:MessageType[@name = current()/@messageType]"/>
 
     <xsl:choose>
-      <xsl:when test="(@receiverIdRefs and not(@receiverIdRefs eq '')) or fn:exists(aorsl:ReceiverIdRef[@language = $output.language])">
+      <xsl:when test="(@receiverIdRefs and not(@receiverIdRefs eq '')) or fn:exists(aorsl:ReceiverIdRef[matches(@language, $output.lang.RegExpr)])">
 
         <xsl:choose>
           <xsl:when test="fn:exists($messageNode)">
 
             <xsl:variable name="output">
-              <xsl:variable name="block-indent" select="if (fn:exists(aorsl:Condition[@language eq $output.language])) then $indent + 1 else $indent"/>
+              <xsl:variable name="block-indent" select="if (fn:exists(aorsl:Condition[matches(@language, $output.lang.RegExpr)])) then $indent + 1 else $indent"/>
 
               <!-- create a new message -->
               <xsl:variable name="messageVarName" select="fn:concat(jw:lowerWord($messageNode/@name), '_', position())"/>
@@ -1703,7 +1703,7 @@
                   </xsl:if>
                 </xsl:for-each>
               </xsl:variable>
-              <xsl:variable name="receivers2" select="aorsl:ReceiverIdRef[@language = $output.language]/text()"/>
+              <xsl:variable name="receivers2" select="aorsl:ReceiverIdRef[matches(@language, $output.lang.RegExpr)]/text()"/>
               <xsl:variable name="omMessageType" select="$core.class.outMessageEvent"/>
               <xsl:variable name="omVarName" select="fn:concat(jw:lowerWord($omMessageType), '_', position())"/>
 
@@ -1846,7 +1846,7 @@
     <xsl:variable name="remEvtVarName" select="jw:createInternalVarName(fn:concat(jw:lowerWord($core.class.reminderEvent), '_', position()))"/>
 
     <xsl:variable name="output">
-      <xsl:variable name="block-indent" select="if (fn:exists(aorsl:Condition[@language eq $output.language])) then $indent + 1 else $indent"/>
+      <xsl:variable name="block-indent" select="if (fn:exists(aorsl:Condition[matches(@language, $output.lang.RegExpr)])) then $indent + 1 else $indent"/>
 
       <xsl:call-template name="java:newObject">
         <xsl:with-param name="indent" select="$block-indent"/>
@@ -1869,8 +1869,8 @@
           </xsl:variable>
           <xsl:variable name="reminderMsgVar">
             <xsl:choose>
-              <xsl:when test="fn:exists(aorsl:ReminderMsg[@language eq $output.language])">
-                <xsl:value-of select="aorsl:ReminderMsg[@language eq $output.language][1]"/>
+              <xsl:when test="fn:exists(aorsl:ReminderMsg[matches(@language, $output.lang.RegExpr)])">
+                <xsl:value-of select="aorsl:ReminderMsg[matches(@language, $output.lang.RegExpr)][1]"/>
               </xsl:when>
               <xsl:when test="@reminderMsg">
                 <xsl:value-of select="jw:quote(@reminderMsg)"/>
@@ -1907,7 +1907,7 @@
     <xsl:param name="indent" as="xs:integer" required="yes"/>
 
     <xsl:choose>
-      <xsl:when test="fn:exists(@beliefEntityIdRef) or fn:exists(aorsl:BeliefEntityIdRef[@language = $output.language])">
+      <xsl:when test="fn:exists(@beliefEntityIdRef) or fn:exists(aorsl:BeliefEntityIdRef[matches(@language, $output.lang.RegExpr)])">
         <!-- create belief entity based on the ID -->
         <xsl:call-template name="java:variable">
           <xsl:with-param name="indent" select="$indent + 1"/>
@@ -1916,7 +1916,7 @@
           <xsl:with-param name="name" select="@beliefEntityVariable"/>
         </xsl:call-template>
       </xsl:when>
-      <xsl:when test="fn:exists(aorsl:BeliefEntityType[@language = $output.language])">
+      <xsl:when test="fn:exists(aorsl:BeliefEntityType[matches(@language, $output.lang.RegExpr)])">
         <!-- create belief entity variable based on type -->
         <xsl:call-template name="java:variable">
           <xsl:with-param name="indent" select="$indent"/>
@@ -1967,8 +1967,8 @@
 
     <!-- cannot have both the id and the type ... -->
     <xsl:if
-      test="(fn:exists(@beliefEntityIdRef) and (fn:exists(aorsl:BeliefEntityType[@language = $output.language]) or fn:exists(@beliefEntityType))) 
-      or (fn:exists(@beliefEntityType) and (fn:exists(aorsl:BeliefEntityIdRef[@language = $output.language]) or fn:exists(@beliefEntityIdRef)))">
+      test="(fn:exists(@beliefEntityIdRef) and (fn:exists(aorsl:BeliefEntityType[matches(@language, $output.lang.RegExpr)]) or fn:exists(@beliefEntityType))) 
+      or (fn:exists(@beliefEntityType) and (fn:exists(aorsl:BeliefEntityIdRef[matches(@language, $output.lang.RegExpr)]) or fn:exists(@beliefEntityIdRef)))">
       <xsl:message>
         <xsl:text>[ERROR] in variable instantiation in AgentRule [</xsl:text>
         <xsl:value-of select="../@name"/>
@@ -1978,7 +1978,7 @@
     </xsl:if>
 
     <xsl:choose>
-      <xsl:when test="fn:exists(aorsl:BeliefEntityIdRef[@language = $output.language]) or fn:exists(@beliefEntityIdRef)">
+      <xsl:when test="fn:exists(aorsl:BeliefEntityIdRef[matches(@language, $output.lang.RegExpr)]) or fn:exists(@beliefEntityIdRef)">
 
         <xsl:call-template name="java:variable">
           <xsl:with-param name="indent" select="$indent + 1"/>
@@ -1999,8 +1999,8 @@
               <xsl:with-param name="method" select="'getBeliefEntityById'"/>
               <xsl:with-param name="args">
                 <xsl:choose>
-                  <xsl:when test="fn:exists(aorsl:BeliefEntityIdRef[@language = $output.language])">
-                    <xsl:value-of select="aorsl:BeliefEntityIdRef[@language = $output.language][1]"/>
+                  <xsl:when test="fn:exists(aorsl:BeliefEntityIdRef[matches(@language, $output.lang.RegExpr)])">
+                    <xsl:value-of select="aorsl:BeliefEntityIdRef[matches(@language, $output.lang.RegExpr)][1]"/>
                   </xsl:when>
                   <xsl:otherwise>
                     <xsl:value-of select="@beliefEntityIdRef"/>
@@ -2021,7 +2021,7 @@
         </xsl:apply-templates>
 
       </xsl:when>
-      <xsl:when test="fn:exists(aorsl:BeliefEntityType[@language = $output.language]) or fn:exists(@beliefEntityType)">
+      <xsl:when test="fn:exists(aorsl:BeliefEntityType[matches(@language, $output.lang.RegExpr)]) or fn:exists(@beliefEntityType)">
 
         <xsl:call-template name="java:newArrayListObject">
           <xsl:with-param name="indent" select="$indent + 1"/>
@@ -2048,8 +2048,8 @@
               <xsl:with-param name="args">
 
                 <xsl:choose>
-                  <xsl:when test="fn:exists(aorsl:BeliefEntityType[@language = $output.language])">
-                    <xsl:value-of select="aorsl:BeliefEntityType[@language = $output.language][1]"/>
+                  <xsl:when test="fn:exists(aorsl:BeliefEntityType[matches(@language, $output.lang.RegExpr)])">
+                    <xsl:value-of select="aorsl:BeliefEntityType[matches(@language, $output.lang.RegExpr)][1]"/>
                   </xsl:when>
                   <xsl:otherwise>
                     <xsl:value-of select="jw:quote(@beliefEntityType)"/>
@@ -2091,8 +2091,8 @@
       <xsl:with-param name="value">
 
         <xsl:choose>
-          <xsl:when test="aorsl:ListExpr[@language eq $output.language]">
-            <xsl:value-of select="aorsl:ListExpr[@language eq $output.language][1]"/>
+          <xsl:when test="aorsl:ListExpr[matches(@language, $output.lang.RegExpr)]">
+            <xsl:value-of select="aorsl:ListExpr[matches(@language, $output.lang.RegExpr)][1]"/>
           </xsl:when>
           <xsl:when test="@listValuedAgentProperty">
             <xsl:variable name="methodPrefix" select="jw:upperWord(@listValuedAgentProperty)"/>
@@ -2168,7 +2168,7 @@
     <xsl:param name="indent" as="xs:integer" required="yes"/>
     <xsl:param name="agentClassName" as="xs:string" required="yes"/>
 
-    <xsl:if test="fn:exists(aorsl:BeliefEntityIdRef[@language = $output.language]) or fn:exists(@beliefEntityIdRef)">
+    <xsl:if test="fn:exists(aorsl:BeliefEntityIdRef[matches(@language, $output.lang.RegExpr)]) or fn:exists(@beliefEntityIdRef)">
       <xsl:call-template name="java:if">
         <xsl:with-param name="indent" select="$indent"/>
         <xsl:with-param name="condition">

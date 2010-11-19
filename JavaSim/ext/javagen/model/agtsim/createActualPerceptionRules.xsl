@@ -191,8 +191,8 @@
           <xsl:with-param name="indent" select="$indent + 1"/>
           <xsl:with-param name="value">
             <xsl:choose>
-              <xsl:when test="fn:exists(aorsl:IF[@language = $output.language]) and fn:normalize-space(aorsl:IF[@language = $output.language]) != ''">
-                <xsl:value-of select="aorsl:IF[@language = $output.language]"/>
+              <xsl:when test="fn:exists(aorsl:IF[matches(@language, $output.lang.RegExpr)]) and fn:normalize-space(aorsl:IF[matches(@language, $output.lang.RegExpr)]) != ''">
+                <xsl:value-of select="aorsl:IF[matches(@language, $output.lang.RegExpr)]"/>
               </xsl:when>
               <xsl:otherwise>
                 <xsl:value-of select="'true'"/>

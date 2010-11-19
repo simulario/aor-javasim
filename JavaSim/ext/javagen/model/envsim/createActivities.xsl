@@ -354,8 +354,8 @@
             <xsl:with-param name="args" as="xs:string*">
               <xsl:choose>
                 <!-- this.setActor(aorsl:ActorRef); -->
-                <xsl:when test="fn:exists(aorsl:ActorRef[@language eq $output.language])">
-                  <xsl:value-of select="aorsl:ActorRef[@language eq $output.language][1]"/>
+                <xsl:when test="fn:exists(aorsl:ActorRef[matches(@language, $output.lang.RegExpr)])">
+                  <xsl:value-of select="aorsl:ActorRef[matches(@language, $output.lang.RegExpr)][1]"/>
                 </xsl:when>
                 <xsl:otherwise>
                   <!-- this.setActor(this.getEnvironmentSimulator().getActivityActorById(ActorIdRef or @actorIdRef)); -->
@@ -370,8 +370,8 @@
                     <xsl:with-param name="method" select="'getActivityActorById'"/>
                     <xsl:with-param name="args">
                       <xsl:choose>
-                        <xsl:when test="fn:exists(aorsl:ActorIdRef[@language eq $output.language])">
-                          <xsl:value-of select="aorsl:ActorIdRef[@language eq $output.language]"/>
+                        <xsl:when test="fn:exists(aorsl:ActorIdRef[matches(@language, $output.lang.RegExpr)])">
+                          <xsl:value-of select="aorsl:ActorIdRef[matches(@language, $output.lang.RegExpr)]"/>
                         </xsl:when>
                         <xsl:otherwise>
                           <xsl:value-of select="@actorIdRef"/>
@@ -457,7 +457,7 @@
 
         <!-- *********** Resources **************** -->
         <!-- set the resources -->
-        <xsl:for-each select="aorsl:ResourceIdRef[@language eq $output.language]">
+        <xsl:for-each select="aorsl:ResourceIdRef[matches(@language, $output.lang.RegExpr)]">
 
           <xsl:variable name="resourceType" as="xs:string">
             <xsl:choose>
@@ -551,7 +551,7 @@
 
         </xsl:for-each>
 
-        <xsl:for-each select="aorsl:ResourceRef[@language eq $output.language]">
+        <xsl:for-each select="aorsl:ResourceRef[matches(@language, $output.lang.RegExpr)]">
 
           <xsl:if test="@resourceVariable and @type">
 
@@ -811,8 +811,8 @@
               <xsl:value-of select="@duration"/>
             </xsl:when>
 
-            <xsl:when test="fn:exists(aorsl:Duration/aorsl:ValueExpr[@language eq $output.language])">
-              <xsl:value-of select="aorsl:Duration/aorsl:ValueExpr[@language eq $output.language][1]"/>
+            <xsl:when test="fn:exists(aorsl:Duration/aorsl:ValueExpr[matches(@language, $output.lang.RegExpr)])">
+              <xsl:value-of select="aorsl:Duration/aorsl:ValueExpr[matches(@language, $output.lang.RegExpr)][1]"/>
             </xsl:when>
 
             <xsl:when test="exists(aorsl:Duration/aorsl:DiscreteRandomVariable)">
@@ -894,8 +894,8 @@
                 <xsl:value-of select="jw:quote(@activityName)"/>
                 <xsl:variable name="duration">
                   <xsl:choose>
-                    <xsl:when test="fn:exists(aorsl:Delay[@language eq $output.language])">
-                      <xsl:value-of select="aorsl:Delay[@language eq $output.language][1]"/>
+                    <xsl:when test="fn:exists(aorsl:Delay[matches(@language, $output.lang.RegExpr)])">
+                      <xsl:value-of select="aorsl:Delay[matches(@language, $output.lang.RegExpr)][1]"/>
                     </xsl:when>
                     <xsl:when test="fn:exists(@delay)">
                       <xsl:value-of select="@delay"/>
@@ -916,8 +916,8 @@
               <xsl:with-param name="instVariable" select="'correlationValue'"/>
               <xsl:with-param name="value">
                 <xsl:choose>
-                  <xsl:when test="fn:exists(aorsl:StartEventCorrelationProperty[@language eq $output.language])">
-                    <xsl:value-of select="aorsl:StartEventCorrelationProperty[@language eq $output.language][1]"/>
+                  <xsl:when test="fn:exists(aorsl:StartEventCorrelationProperty[matches(@language, $output.lang.RegExpr)])">
+                    <xsl:value-of select="aorsl:StartEventCorrelationProperty[matches(@language, $output.lang.RegExpr)][1]"/>
                   </xsl:when>
                   <xsl:otherwise>
                     <xsl:call-template name="java:callGetterMethod">
@@ -940,8 +940,8 @@
               <xsl:with-param name="args">
                 <xsl:variable name="duration">
                   <xsl:choose>
-                    <xsl:when test="fn:exists(aorsl:Delay[@language eq $output.language])">
-                      <xsl:value-of select="aorsl:Delay[@language eq $output.language][1]"/>
+                    <xsl:when test="fn:exists(aorsl:Delay[matches(@language, $output.lang.RegExpr)])">
+                      <xsl:value-of select="aorsl:Delay[matches(@language, $output.lang.RegExpr)][1]"/>
                     </xsl:when>
                     <xsl:when test="fn:exists(@delay)">
                       <xsl:value-of select="@delay"/>

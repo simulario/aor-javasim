@@ -44,7 +44,7 @@
               
               <!-- for class definitions -->
               <xsl:when test="fn:exists(aorsl:ClassDef)">
-                <xsl:value-of select="aorsl:ClassDef[@language eq $output.language]"/>
+                <xsl:value-of select="aorsl:ClassDef[matches(@language, $output.lang.RegExpr)]"/>
               </xsl:when>
               <xsl:otherwise>
 
@@ -102,7 +102,7 @@
       </xsl:with-param>
       <xsl:with-param name="content">
         
-        <xsl:value-of select="aorsl:DefaultConstructor/aorsl:Def[@language eq $output.language]"/>
+        <xsl:value-of select="aorsl:DefaultConstructor/aorsl:Def[matches(@language, $output.lang.RegExpr)]"/>
 
        <!-- <xsl:for-each select="aorsl:Attribute | aorsl:ComplexDataProperty | aorsl:ReferenceProperty | aorsl:EnumerationProperty">
           <xsl:call-template name="java:variable">

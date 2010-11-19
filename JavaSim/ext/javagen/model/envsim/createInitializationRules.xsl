@@ -124,8 +124,8 @@
             </xsl:if>
             <xsl:choose>
               <xsl:when
-                test="fn:exists(aorsl:IF[@language = $output.language]) and fn:normalize-space(aorsl:IF[@language = $output.language]) != ''">
-                <xsl:value-of select="fn:normalize-space(aorsl:IF[@language = $output.language])"/>
+                test="fn:exists(aorsl:IF[matches(@language, $output.lang.RegExpr)]) and fn:normalize-space(aorsl:IF[matches(@language, $output.lang.RegExpr)]) != ''">
+                <xsl:value-of select="fn:normalize-space(aorsl:IF[matches(@language, $output.lang.RegExpr)])"/>
               </xsl:when>
               <xsl:otherwise>
                 <xsl:value-of select="'true'"/>

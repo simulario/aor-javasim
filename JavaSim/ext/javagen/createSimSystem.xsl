@@ -1783,7 +1783,7 @@
     <xsl:param name="statisticVarName" as="xs:string" required="yes"/>
     <xsl:param name="statVarName" as="xs:string" required="yes"/>
 
-    <xsl:if test="@language eq $output.language">
+    <xsl:if test="matches(@language, $output.lang.RegExpr)">
 
       <xsl:variable name="computeOnlyAtEnd" as="xs:boolean">
         <xsl:choose>

@@ -799,12 +799,12 @@
       <!-- its only used for downwards compatible -->
       <xsl:when
         test="((resolve-QName(@xsi:type, .) eq QName('http://aor-simulation.org', 'OpaqueExprSlot')) and 
-        fn:exists(aorsl:ValueExpr[@language = $output.language])) or
-        fn:exists(aorsl:ValueExpr[@language = $output.language])">
-        <xsl:value-of select="fn:normalize-space(aorsl:ValueExpr[@language = $output.language][1])"/>
+        fn:exists(aorsl:ValueExpr[matches(@language, $output.lang.RegExpr)])) or
+        fn:exists(aorsl:ValueExpr[matches(@language, $output.lang.RegExpr)])">
+        <xsl:value-of select="fn:normalize-space(aorsl:ValueExpr[matches(@language, $output.lang.RegExpr)][1])"/>
       </xsl:when>
-      <xsl:when test="fn:exists(aorsl:ValueExpr[@language = $output.language])">
-        <xsl:value-of select="fn:normalize-space(aorsl:ValueExpr[@language = $output.language][1])"/>
+      <xsl:when test="fn:exists(aorsl:ValueExpr[matches(@language, $output.lang.RegExpr)])">
+        <xsl:value-of select="fn:normalize-space(aorsl:ValueExpr[matches(@language, $output.lang.RegExpr)][1])"/>
       </xsl:when>
       <xsl:when test="fn:exists(aorsl:RandomVariable)">
         <xsl:apply-templates select="aorsl:RandomVariable/aorsl:*" mode="assistents.distribution"/>
@@ -887,8 +887,8 @@
           <xsl:when test="@itemVariable | @listVariable">
             <xsl:value-of select="jw:checkProperty(@itemVariable | @listVariable)"/>
           </xsl:when>
-          <xsl:when test="exists(aorsl:ValueExpr[@language = $output.language])">
-            <xsl:value-of select="aorsl:ValueExpr[@language = $output.language][1]"/>
+          <xsl:when test="exists(aorsl:ValueExpr[matches(@language, $output.lang.RegExpr)])">
+            <xsl:value-of select="aorsl:ValueExpr[matches(@language, $output.lang.RegExpr)][1]"/>
           </xsl:when>
           <xsl:otherwise>
             <xsl:message>
@@ -938,20 +938,20 @@
 
   <!-- for all expressionvalues -->
   <xsl:template match="aorsl:XCoordinate | aorsl:YCoordinate" mode="assistents.getExpression">
-    <xsl:value-of select=".[@language eq $output.language]"/>
+    <xsl:value-of select=".[matches(@language, $output.lang.RegExpr)]"/>
   </xsl:template>
 
   <!-- calls by objectVariablesDeclaration -->
   <xsl:template match="aorsl:FOR" mode="assistents.getEntityRef">
     <xsl:choose>
-      <xsl:when test="fn:exists(aorsl:ObjectIdRef[@language eq $output.language])">
-        <xsl:value-of select="aorsl:ObjectIdRef[@language eq $output.language]"/>
+      <xsl:when test="fn:exists(aorsl:ObjectIdRef[matches(@language, $output.lang.RegExpr)])">
+        <xsl:value-of select="aorsl:ObjectIdRef[matches(@language, $output.lang.RegExpr)]"/>
       </xsl:when>
       <xsl:when test="fn:exists(@objectIdRef)">
         <xsl:value-of select="@objectIdRef"/>
       </xsl:when>
       <xsl:otherwise>
-        <xsl:value-of select="aorsl:ObjectRef[@language = $output.language]"/>
+        <xsl:value-of select="aorsl:ObjectRef[matches(@language, $output.lang.RegExpr)]"/>
       </xsl:otherwise>
     </xsl:choose>
   </xsl:template>
@@ -962,8 +962,8 @@
       <xsl:when test="fn:exists(@rangeStartID)">
         <xsl:value-of select="@rangeStartID"/>
       </xsl:when>
-      <xsl:when test="fn:exists(aorsl:RangeStartID[@language = $output.language])">
-        <xsl:value-of select="aorsl:RangeStartID[@language = $output.language]"/>
+      <xsl:when test="fn:exists(aorsl:RangeStartID[matches(@language, $output.lang.RegExpr)])">
+        <xsl:value-of select="aorsl:RangeStartID[matches(@language, $output.lang.RegExpr)]"/>
       </xsl:when>
       <xsl:otherwise>
         <xsl:message>
@@ -982,8 +982,8 @@
       <xsl:when test="fn:exists(@rangeEndID)">
         <xsl:value-of select="@rangeEndID"/>
       </xsl:when>
-      <xsl:when test="fn:exists(aorsl:RangeEndID[@language = $output.language])">
-        <xsl:value-of select="aorsl:RangeEndID[@language = $output.language]"/>
+      <xsl:when test="fn:exists(aorsl:RangeEndID[matches(@language, $output.lang.RegExpr)])">
+        <xsl:value-of select="aorsl:RangeEndID[matches(@language, $output.lang.RegExpr)]"/>
       </xsl:when>
       <xsl:otherwise>
         <xsl:message>
@@ -1080,8 +1080,8 @@
           </xsl:when>
           <xsl:otherwise>
             <xsl:choose>
-              <xsl:when test="fn:exists(aorsl:ValueExpr[@language eq $output.language])">
-                <xsl:value-of select="fn:normalize-space(aorsl:ValueExpr[@language eq $output.language])"/>
+              <xsl:when test="fn:exists(aorsl:ValueExpr[matches(@language, $output.lang.RegExpr)])">
+                <xsl:value-of select="fn:normalize-space(aorsl:ValueExpr[matches(@language, $output.lang.RegExpr)])"/>
               </xsl:when>
               <xsl:otherwise>
                 <xsl:message>No value for SelfBeliefSlot</xsl:message>
@@ -1202,8 +1202,8 @@
     aorsl:ActivityStartEventExpr | aorsl:ActivityEndEventExpr"
     mode="assistents.getDelay">
     <xsl:choose>
-      <xsl:when test="fn:exists(aorsl:Delay/aorsl:ValueExpr[@language eq $output.language])">
-        <xsl:value-of select="aorsl:Delay/aorsl:ValueExpr[@language eq $output.language][1]"/>
+      <xsl:when test="fn:exists(aorsl:Delay/aorsl:ValueExpr[matches(@language, $output.lang.RegExpr)])">
+        <xsl:value-of select="aorsl:Delay/aorsl:ValueExpr[matches(@language, $output.lang.RegExpr)][1]"/>
       </xsl:when>
       <xsl:when test="fn:exists(aorsl:Delay/aorsl:DiscreteRandomVariable)">
         <xsl:apply-templates select="aorsl:Delay/aorsl:DiscreteRandomVariable/aorsl:*" mode="assistents.distribution"/>
@@ -1520,7 +1520,7 @@
   <xsl:template match="aorsl:FOR" mode="assistents.setDataVariableDeclaration">
     <xsl:param name="indent" required="yes" as="xs:integer"/>
 
-    <xsl:if test="fn:exists(aorsl:ValueExpr[@language eq $output.language])">
+    <xsl:if test="fn:exists(aorsl:ValueExpr[matches(@language, $output.lang.RegExpr)])">
       <xsl:call-template name="java:variable">
         <xsl:with-param name="indent" select="$indent"/>
         <xsl:with-param name="name">
@@ -1529,7 +1529,7 @@
           </xsl:call-template>
         </xsl:with-param>
         <xsl:with-param name="value">
-          <xsl:value-of select="aorsl:ValueExpr[@language eq $output.language]"/>
+          <xsl:value-of select="aorsl:ValueExpr[matches(@language, $output.lang.RegExpr)]"/>
         </xsl:with-param>
       </xsl:call-template>
     </xsl:if>
@@ -1595,12 +1595,12 @@
     <xsl:param name="envEvtVarName" required="yes" as="xs:string"/>
 
     <xsl:choose>
-      <xsl:when test="$eventExpr/aorsl:CorrelationValue[@language eq $output.language]">
+      <xsl:when test="$eventExpr/aorsl:CorrelationValue[matches(@language, $output.lang.RegExpr)]">
         <xsl:call-template name="java:callSetterMethod">
           <xsl:with-param name="indent" select="$indent"/>
           <xsl:with-param name="objInstance" select="$envEvtVarName"/>
           <xsl:with-param name="instVariable" select="'correlationValue'"/>
-          <xsl:with-param name="value" select="$eventExpr/aorsl:CorrelationValue[@language eq $output.language][1]"/>
+          <xsl:with-param name="value" select="$eventExpr/aorsl:CorrelationValue[matches(@language, $output.lang.RegExpr)][1]"/>
         </xsl:call-template>
       </xsl:when>
       <xsl:when test="$eventExpr/@correlationValue">
@@ -1621,12 +1621,12 @@
     <xsl:param name="envEvtVarName" required="yes" as="xs:string"/>
 
     <xsl:choose>
-      <xsl:when test="$eventExpr/aorsl:EndEventCorrelation[@language eq $output.language][1]">
+      <xsl:when test="$eventExpr/aorsl:EndEventCorrelation[matches(@language, $output.lang.RegExpr)][1]">
         <xsl:call-template name="java:callSetterMethod">
           <xsl:with-param name="indent" select="$indent"/>
           <xsl:with-param name="objInstance" select="$envEvtVarName"/>
           <xsl:with-param name="instVariable" select="'correlationValue'"/>
-          <xsl:with-param name="value" select="$eventExpr/aorsl:EndEventCorrelation[@language eq $output.language][1]"/>
+          <xsl:with-param name="value" select="$eventExpr/aorsl:EndEventCorrelation[matches(@language, $output.lang.RegExpr)][1]"/>
         </xsl:call-template>
       </xsl:when>
       <xsl:when test="$eventExpr/@endEventCorrelation">
@@ -1778,10 +1778,10 @@
             </xsl:apply-templates>
           </xsl:for-each>
 
-          <xsl:if test="$forElement/aorsl:SelectionCondition[@language eq $output.language]">
+          <xsl:if test="$forElement/aorsl:SelectionCondition[matches(@language, $output.lang.RegExpr)]">
             <xsl:call-template name="java:if">
               <xsl:with-param name="indent" select="$nextIndent"/>
-              <xsl:with-param name="condition" select="fn:concat('!(', $forElement/aorsl:SelectionCondition[@language eq $output.language][1], ')')"/>
+              <xsl:with-param name="condition" select="fn:concat('!(', $forElement/aorsl:SelectionCondition[matches(@language, $output.lang.RegExpr)][1], ')')"/>
               <xsl:with-param name="thenContent">
                 <xsl:call-template name="java:codeLine">
                   <xsl:with-param name="indent" select="$nextIndent + 1"/>
@@ -2119,7 +2119,7 @@
           <xsl:with-param name="varName" select="@objectVariable"/>
         </xsl:call-template>
       </xsl:with-param>
-      <xsl:with-param name="value" select="aorsl:ObjectRef[@language = $output.language]"/>
+      <xsl:with-param name="value" select="aorsl:ObjectRef[matches(@language, $output.lang.RegExpr)]"/>
     </xsl:call-template>
 
   </xsl:template>
@@ -2992,11 +2992,11 @@
     <xsl:param name="output" as="xs:string"/>
 
     <xsl:choose>
-      <xsl:when test="fn:exists(aorsl:Condition[@language eq $output.language])">
+      <xsl:when test="fn:exists(aorsl:Condition[matches(@language, $output.lang.RegExpr)])">
 
         <xsl:call-template name="java:if">
           <xsl:with-param name="indent" select="$indent"/>
-          <xsl:with-param name="condition" select="aorsl:Condition[@language eq $output.language][1]"/>
+          <xsl:with-param name="condition" select="aorsl:Condition[matches(@language, $output.lang.RegExpr)][1]"/>
 
           <xsl:with-param name="thenContent">
             <xsl:value-of select="$output"/>
@@ -3021,8 +3021,8 @@
         <xsl:when test="@lowerBound">
           <xsl:value-of select="@lowerBound"/>
         </xsl:when>
-        <xsl:when test="exists(aorsl:LowerBoundExpr[@language eq $output.language])">
-          <xsl:value-of select="aorsl:LowerBoundExpr[@language eq $output.language][1]"/>
+        <xsl:when test="exists(aorsl:LowerBoundExpr[matches(@language, $output.lang.RegExpr)])">
+          <xsl:value-of select="aorsl:LowerBoundExpr[matches(@language, $output.lang.RegExpr)][1]"/>
         </xsl:when>
         <xsl:otherwise>
           <!-- set the default value 0 -->
@@ -3037,8 +3037,8 @@
         <xsl:when test="@upperBound">
           <xsl:value-of select="@upperBound"/>
         </xsl:when>
-        <xsl:when test="exists(aorsl:UpperBoundExpr[@language eq $output.language])">
-          <xsl:value-of select="aorsl:UpperBoundExpr[@language eq $output.language][1]"/>
+        <xsl:when test="exists(aorsl:UpperBoundExpr[matches(@language, $output.lang.RegExpr)])">
+          <xsl:value-of select="aorsl:UpperBoundExpr[matches(@language, $output.lang.RegExpr)][1]"/>
         </xsl:when>
         <xsl:otherwise>
           <!-- set the default value 1 -->
@@ -3075,8 +3075,8 @@
         <xsl:when test="@mean">
           <xsl:value-of select="@mean"/>
         </xsl:when>
-        <xsl:when test="exists(aorsl:MeanExpr[@language eq $output.language])">
-          <xsl:value-of select="aorsl:MeanExpr[@language eq $output.language][1]"/>
+        <xsl:when test="exists(aorsl:MeanExpr[matches(@language, $output.lang.RegExpr)])">
+          <xsl:value-of select="aorsl:MeanExpr[matches(@language, $output.lang.RegExpr)][1]"/>
         </xsl:when>
         <xsl:otherwise>
           <xsl:value-of select="'0'"/>
@@ -3090,8 +3090,8 @@
         <xsl:when test="@standardDeviation">
           <xsl:value-of select="@standardDeviation"/>
         </xsl:when>
-        <xsl:when test="exists(aorsl:StandardDeviationExpr[@language eq $output.language])">
-          <xsl:value-of select="aorsl:StandardDeviationExpr[@language eq $output.language][1]"/>
+        <xsl:when test="exists(aorsl:StandardDeviationExpr[matches(@language, $output.lang.RegExpr)])">
+          <xsl:value-of select="aorsl:StandardDeviationExpr[matches(@language, $output.lang.RegExpr)][1]"/>
         </xsl:when>
         <xsl:otherwise>
           <xsl:value-of select="'1'"/>
@@ -3127,8 +3127,8 @@
         <xsl:when test="@n">
           <xsl:value-of select="@n"/>
         </xsl:when>
-        <xsl:when test="exists(aorsl:N-Expr[@language eq $output.language])">
-          <xsl:value-of select="aorsl:N-Expr[@language eq $output.language][1]"/>
+        <xsl:when test="exists(aorsl:N-Expr[matches(@language, $output.lang.RegExpr)])">
+          <xsl:value-of select="aorsl:N-Expr[matches(@language, $output.lang.RegExpr)][1]"/>
         </xsl:when>
         <xsl:otherwise>
           <!-- set the default value 25 -->
@@ -3143,8 +3143,8 @@
         <xsl:when test="@p">
           <xsl:value-of select="@p"/>
         </xsl:when>
-        <xsl:when test="exists(aorsl:P-Expr[@language eq $output.language])">
-          <xsl:value-of select="aorsl:P-Expr[@language eq $output.language][1]"/>
+        <xsl:when test="exists(aorsl:P-Expr[matches(@language, $output.lang.RegExpr)])">
+          <xsl:value-of select="aorsl:P-Expr[matches(@language, $output.lang.RegExpr)][1]"/>
         </xsl:when>
         <xsl:otherwise>
           <!-- set the default value 0.5 -->
@@ -3172,8 +3172,8 @@
         <xsl:when test="@r">
           <xsl:value-of select="@r"/>
         </xsl:when>
-        <xsl:when test="exists(aorsl:R-Expr[@language eq $output.language])">
-          <xsl:value-of select="aorsl:R-Expr[@language eq $output.language][1]"/>
+        <xsl:when test="exists(aorsl:R-Expr[matches(@language, $output.lang.RegExpr)])">
+          <xsl:value-of select="aorsl:R-Expr[matches(@language, $output.lang.RegExpr)][1]"/>
         </xsl:when>
         <xsl:otherwise>
           <!-- set the default value ??? -->
@@ -3188,8 +3188,8 @@
         <xsl:when test="@p">
           <xsl:value-of select="@p"/>
         </xsl:when>
-        <xsl:when test="exists(aorsl:P-Expr[@language eq $output.language])">
-          <xsl:value-of select="aorsl:P-Expr[@language eq $output.language][1]"/>
+        <xsl:when test="exists(aorsl:P-Expr[matches(@language, $output.lang.RegExpr)])">
+          <xsl:value-of select="aorsl:P-Expr[matches(@language, $output.lang.RegExpr)][1]"/>
         </xsl:when>
         <xsl:otherwise>
           <!-- set the default value ..5 -->
@@ -3217,8 +3217,8 @@
         <xsl:when test="@lambda">
           <xsl:value-of select="@lambda"/>
         </xsl:when>
-        <xsl:when test="exists(aorsl:LambdaExpr[@language eq $output.language])">
-          <xsl:value-of select="aorsl:LambdaExpr[@language eq $output.language][1]"/>
+        <xsl:when test="exists(aorsl:LambdaExpr[matches(@language, $output.lang.RegExpr)])">
+          <xsl:value-of select="aorsl:LambdaExpr[matches(@language, $output.lang.RegExpr)][1]"/>
         </xsl:when>
         <xsl:otherwise>
           <!-- set the default value 1.0 -->
@@ -3246,8 +3246,8 @@
         <xsl:when test="@lambda">
           <xsl:value-of select="@lambda"/>
         </xsl:when>
-        <xsl:when test="exists(aorsl:LambdaExpr[@language eq $output.language])">
-          <xsl:value-of select="aorsl:LambdaExpr[@language eq $output.language][1]"/>
+        <xsl:when test="exists(aorsl:LambdaExpr[matches(@language, $output.lang.RegExpr)])">
+          <xsl:value-of select="aorsl:LambdaExpr[matches(@language, $output.lang.RegExpr)][1]"/>
         </xsl:when>
         <xsl:otherwise>
           <!-- set the default value 1.0 -->
@@ -3284,8 +3284,8 @@
         <xsl:when test="@degreesOfFreedom">
           <xsl:value-of select="@degreesOfFreedom"/>
         </xsl:when>
-        <xsl:when test="exists(aorsl:DegreesOfFreedomExpr[@language eq $output.language])">
-          <xsl:value-of select="aorsl:DegreesOfFreedomExpr[@language eq $output.language][1]"/>
+        <xsl:when test="exists(aorsl:DegreesOfFreedomExpr[matches(@language, $output.lang.RegExpr)])">
+          <xsl:value-of select="aorsl:DegreesOfFreedomExpr[matches(@language, $output.lang.RegExpr)][1]"/>
         </xsl:when>
         <xsl:otherwise>
           <!-- set the default value ??? -->
@@ -3313,8 +3313,8 @@
         <xsl:when test="@p">
           <xsl:value-of select="@p"/>
         </xsl:when>
-        <xsl:when test="exists(aorsl:P-Expr[@language eq $output.language])">
-          <xsl:value-of select="aorsl:P-Expr[@language eq $output.language][1]"/>
+        <xsl:when test="exists(aorsl:P-Expr[matches(@language, $output.lang.RegExpr)])">
+          <xsl:value-of select="aorsl:P-Expr[matches(@language, $output.lang.RegExpr)][1]"/>
         </xsl:when>
         <xsl:otherwise>
           <!-- set the default value ??? -->
@@ -3342,8 +3342,8 @@
         <xsl:when test="@degreesOfFreedom">
           <xsl:value-of select="@degreesOfFreedom"/>
         </xsl:when>
-        <xsl:when test="exists(aorsl:DegreesOfFreedomExpr[@language eq $output.language])">
-          <xsl:value-of select="aorsl:DegreesOfFreedomExpr[@language eq $output.language][1]"/>
+        <xsl:when test="exists(aorsl:DegreesOfFreedomExpr[matches(@language, $output.lang.RegExpr)])">
+          <xsl:value-of select="aorsl:DegreesOfFreedomExpr[matches(@language, $output.lang.RegExpr)][1]"/>
         </xsl:when>
         <xsl:otherwise>
           <!-- set the default value ??? -->
@@ -3372,8 +3372,8 @@
         <xsl:when test="@mean">
           <xsl:value-of select="@mean"/>
         </xsl:when>
-        <xsl:when test="exists(aorsl:MeanExpr[@language eq $output.language])">
-          <xsl:value-of select="aorsl:MeanExpr[@language eq $output.language][1]"/>
+        <xsl:when test="exists(aorsl:MeanExpr[matches(@language, $output.lang.RegExpr)])">
+          <xsl:value-of select="aorsl:MeanExpr[matches(@language, $output.lang.RegExpr)][1]"/>
         </xsl:when>
         <xsl:otherwise>
           <xsl:value-of select="'0'"/>
@@ -3387,8 +3387,8 @@
         <xsl:when test="@standardDeviation">
           <xsl:value-of select="@standardDeviation"/>
         </xsl:when>
-        <xsl:when test="exists(aorsl:StandardDeviationExpr[@language eq $output.language])">
-          <xsl:value-of select="aorsl:StandardDeviationExpr[@language eq $output.language][1]"/>
+        <xsl:when test="exists(aorsl:StandardDeviationExpr[matches(@language, $output.lang.RegExpr)])">
+          <xsl:value-of select="aorsl:StandardDeviationExpr[matches(@language, $output.lang.RegExpr)][1]"/>
         </xsl:when>
         <xsl:otherwise>
           <xsl:value-of select="'1'"/>
@@ -3424,8 +3424,8 @@
         <xsl:when test="@totalPopulationSize">
           <xsl:value-of select="@totalPopulationSize"/>
         </xsl:when>
-        <xsl:when test="exists(aorsl:TotalPopulationSizeExpr[@language eq $output.language])">
-          <xsl:value-of select="aorsl:TotalPopulationSizeExpr[@language eq $output.language][1]"/>
+        <xsl:when test="exists(aorsl:TotalPopulationSizeExpr[matches(@language, $output.lang.RegExpr)])">
+          <xsl:value-of select="aorsl:TotalPopulationSizeExpr[matches(@language, $output.lang.RegExpr)][1]"/>
         </xsl:when>
         <xsl:otherwise>
           <xsl:value-of select="'10'"/>
@@ -3439,8 +3439,8 @@
         <xsl:when test="@successPopulationSize">
           <xsl:value-of select="@successPopulationSize"/>
         </xsl:when>
-        <xsl:when test="exists(aorsl:SuccessesPopulationSizeExpr[@language eq $output.language])">
-          <xsl:value-of select="aorsl:SuccessesPopulationSizeExpr[@language eq $output.language][1]"/>
+        <xsl:when test="exists(aorsl:SuccessesPopulationSizeExpr[matches(@language, $output.lang.RegExpr)])">
+          <xsl:value-of select="aorsl:SuccessesPopulationSizeExpr[matches(@language, $output.lang.RegExpr)][1]"/>
         </xsl:when>
         <xsl:otherwise>
           <xsl:value-of select="'1'"/>
@@ -3454,8 +3454,8 @@
         <xsl:when test="@numberOfDraws">
           <xsl:value-of select="@numberOfDraws"/>
         </xsl:when>
-        <xsl:when test="exists(aorsl:NumberOfDrawsExpr[@language eq $output.language])">
-          <xsl:value-of select="aorsl:NumberOfDrawsExpr[@language eq $output.language][1]"/>
+        <xsl:when test="exists(aorsl:NumberOfDrawsExpr[matches(@language, $output.lang.RegExpr)])">
+          <xsl:value-of select="aorsl:NumberOfDrawsExpr[matches(@language, $output.lang.RegExpr)][1]"/>
         </xsl:when>
         <xsl:otherwise>
           <xsl:value-of select="'10'"/>
@@ -3482,8 +3482,8 @@
         <xsl:when test="@shape">
           <xsl:value-of select="@shape"/>
         </xsl:when>
-        <xsl:when test="exists(aorsl:ShapeExpr[@language eq $output.language])">
-          <xsl:value-of select="aorsl:ShapeExpr[@language eq $output.language][1]"/>
+        <xsl:when test="exists(aorsl:ShapeExpr[matches(@language, $output.lang.RegExpr)])">
+          <xsl:value-of select="aorsl:ShapeExpr[matches(@language, $output.lang.RegExpr)][1]"/>
         </xsl:when>
         <xsl:otherwise>
           <xsl:value-of select="'1'"/>
@@ -3497,8 +3497,8 @@
         <xsl:when test="@rate">
           <xsl:value-of select="@rate"/>
         </xsl:when>
-        <xsl:when test="exists(aorsl:RateExpr[@language eq $output.language])">
-          <xsl:value-of select="aorsl:RateExpr[@language eq $output.language][1]"/>
+        <xsl:when test="exists(aorsl:RateExpr[matches(@language, $output.lang.RegExpr)])">
+          <xsl:value-of select="aorsl:RateExpr[matches(@language, $output.lang.RegExpr)][1]"/>
         </xsl:when>
         <xsl:otherwise>
           <xsl:value-of select="'1'"/>
@@ -3534,8 +3534,8 @@
         <xsl:when test="@shape">
           <xsl:value-of select="@shape"/>
         </xsl:when>
-        <xsl:when test="exists(aorsl:ShapeExpr[@language eq $output.language])">
-          <xsl:value-of select="aorsl:ShapeExpr[@language eq $output.language][1]"/>
+        <xsl:when test="exists(aorsl:ShapeExpr[matches(@language, $output.lang.RegExpr)])">
+          <xsl:value-of select="aorsl:ShapeExpr[matches(@language, $output.lang.RegExpr)][1]"/>
         </xsl:when>
         <xsl:otherwise>
           <xsl:value-of select="'1'"/>
@@ -3549,8 +3549,8 @@
         <xsl:when test="@rate">
           <xsl:value-of select="@rate"/>
         </xsl:when>
-        <xsl:when test="exists(aorsl:ShapeExpr[@language eq $output.language])">
-          <xsl:value-of select="aorsl:ShapeExpr[@language eq $output.language][1]"/>
+        <xsl:when test="exists(aorsl:ShapeExpr[matches(@language, $output.lang.RegExpr)])">
+          <xsl:value-of select="aorsl:ShapeExpr[matches(@language, $output.lang.RegExpr)][1]"/>
         </xsl:when>
         <xsl:otherwise>
           <xsl:value-of select="'1'"/>
@@ -3586,8 +3586,8 @@
         <xsl:when test="@shape">
           <xsl:value-of select="@shape"/>
         </xsl:when>
-        <xsl:when test="exists(aorsl:ShapeExpr[@language eq $output.language])">
-          <xsl:value-of select="aorsl:ShapeExpr[@language eq $output.language][1]"/>
+        <xsl:when test="exists(aorsl:ShapeExpr[matches(@language, $output.lang.RegExpr)])">
+          <xsl:value-of select="aorsl:ShapeExpr[matches(@language, $output.lang.RegExpr)][1]"/>
         </xsl:when>
         <xsl:otherwise>
           <xsl:value-of select="'1'"/>
@@ -3601,8 +3601,8 @@
         <xsl:when test="@scale">
           <xsl:value-of select="@scale"/>
         </xsl:when>
-        <xsl:when test="exists(aorsl:ScaleExpr[@language eq $output.language])">
-          <xsl:value-of select="aorsl:ScaleExpr[@language eq $output.language][1]"/>
+        <xsl:when test="exists(aorsl:ScaleExpr[matches(@language, $output.lang.RegExpr)])">
+          <xsl:value-of select="aorsl:ScaleExpr[matches(@language, $output.lang.RegExpr)][1]"/>
         </xsl:when>
         <xsl:otherwise>
           <xsl:value-of select="'1'"/>
@@ -3638,8 +3638,8 @@
         <xsl:when test="@lowerBound">
           <xsl:value-of select="@lowerBound"/>
         </xsl:when>
-        <xsl:when test="exists(aorsl:LowerBoundExpr[@language eq $output.language])">
-          <xsl:value-of select="aorsl:LowerBoundExpr[@language eq $output.language][1]"/>
+        <xsl:when test="exists(aorsl:LowerBoundExpr[matches(@language, $output.lang.RegExpr)])">
+          <xsl:value-of select="aorsl:LowerBoundExpr[matches(@language, $output.lang.RegExpr)][1]"/>
         </xsl:when>
         <xsl:otherwise>
           <xsl:value-of select="'0'"/>
@@ -3653,8 +3653,8 @@
         <xsl:when test="@upperBound">
           <xsl:value-of select="@upperBound"/>
         </xsl:when>
-        <xsl:when test="exists(aorsl:UpperBoundExpr[@language eq $output.language])">
-          <xsl:value-of select="aorsl:UpperBoundExpr[@language eq $output.language][1]"/>
+        <xsl:when test="exists(aorsl:UpperBoundExpr[matches(@language, $output.lang.RegExpr)])">
+          <xsl:value-of select="aorsl:UpperBoundExpr[matches(@language, $output.lang.RegExpr)][1]"/>
         </xsl:when>
         <xsl:otherwise>
           <xsl:value-of select="'1'"/>
@@ -3668,8 +3668,8 @@
         <xsl:when test="@mode">
           <xsl:value-of select="@mode"/>
         </xsl:when>
-        <xsl:when test="exists(aorsl:ModeExpr[@language eq $output.language])">
-          <xsl:value-of select="aorsl:ModeExpr[@language eq $output.language][1]"/>
+        <xsl:when test="exists(aorsl:ModeExpr[matches(@language, $output.lang.RegExpr)])">
+          <xsl:value-of select="aorsl:ModeExpr[matches(@language, $output.lang.RegExpr)][1]"/>
         </xsl:when>
         <xsl:otherwise>
           <xsl:value-of select="'0'"/>
@@ -3700,8 +3700,8 @@
   <xsl:template match="aorsl:Periodicity" mode="assistents.periodicity">
 
     <xsl:choose>
-      <xsl:when test="fn:exists(aorsl:ValueExpr[@language eq $output.language])">
-        <xsl:value-of select="aorsl:ValueExpr[@language eq $output.language][1]"/>
+      <xsl:when test="fn:exists(aorsl:ValueExpr[matches(@language, $output.lang.RegExpr)])">
+        <xsl:value-of select="aorsl:ValueExpr[matches(@language, $output.lang.RegExpr)][1]"/>
       </xsl:when>
       <xsl:when test="fn:exists(aorsl:RandomVariable)">
         <xsl:apply-templates select="aorsl:RandomVariable/aorsl:*" mode="assistents.distribution"/>
@@ -3719,8 +3719,8 @@
       </xsl:when>
       <xsl:when test="fn:exists(aorsl:Periodicity)">
         <xsl:choose>
-          <xsl:when test="fn:exists(aorsl:Periodicity/aorsl:ValueExpr[@language eq $output.language])">
-            <xsl:value-of select="aorsl:Periodicity/aorsl:ValueExpr[@language eq $output.language][1]"/>
+          <xsl:when test="fn:exists(aorsl:Periodicity/aorsl:ValueExpr[matches(@language, $output.lang.RegExpr)])">
+            <xsl:value-of select="aorsl:Periodicity/aorsl:ValueExpr[matches(@language, $output.lang.RegExpr)][1]"/>
           </xsl:when>
           <xsl:when test="fn:exists(aorsl:Periodicity/aorsl:DiscreteRandomVariable)">
             <xsl:apply-templates select="aorsl:Periodicity/aorsl:DiscreteRandomVariable/aorsl:*" mode="assistents.distribution"/>
@@ -3768,8 +3768,8 @@
                         </xsl:otherwise>
                       </xsl:choose>
                     </xsl:when>
-                    <xsl:when test="exists($argument/aorsl:ValueExpr[@language = $output.language])">
-                      <xsl:value-of select="$argument/aorsl:ValueExpr[@language = $output.language][1]"/>
+                    <xsl:when test="exists($argument/aorsl:ValueExpr[matches(@language, $output.lang.RegExpr)])">
+                      <xsl:value-of select="$argument/aorsl:ValueExpr[matches(@language, $output.lang.RegExpr)][1]"/>
                     </xsl:when>
                     <xsl:otherwise>
                       <xsl:message>

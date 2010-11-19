@@ -19,6 +19,7 @@
 
   <!-- used language in expressions -->
   <xsl:param name="output.language" as="xs:string">Java</xsl:param>
+  <xsl:variable name="output.lang.RegExpr" select="concat('(^', $output.language, '$|^', $output.language, '\s)')"/>
 
   <!-- file extension for created files -->
   <xsl:param name="output.fileExtension" as="xs:string">java</xsl:param>

@@ -1049,8 +1049,8 @@
             <xsl:with-param name="method" select="'addObjekt'"/>
             <xsl:with-param name="args">
               <xsl:choose>
-                <xsl:when test="aorsl:ItemObjectRef[@language eq $output.language]">
-                  <xsl:value-of select="aorsl:ItemObjectRef[@language eq $output.language][1]"/>
+                <xsl:when test="aorsl:ItemObjectRef[matches(@language, $output.lang.RegExpr)]">
+                  <xsl:value-of select="aorsl:ItemObjectRef[matches(@language, $output.lang.RegExpr)][1]"/>
                 </xsl:when>
                 <xsl:when test="@itemObjectVariable">
                   <xsl:value-of select="@itemObjectVariable"/>
@@ -1148,8 +1148,8 @@
             <xsl:with-param name="method" select="'addObjekt'"/>
             <xsl:with-param name="args">
               <xsl:choose>
-                <xsl:when test="aorsl:ItemObjectRef[@language eq $output.language]">
-                  <xsl:value-of select="aorsl:ItemObjectRef[@language eq $output.language][1]"/>
+                <xsl:when test="aorsl:ItemObjectRef[matches(@language, $output.lang.RegExpr)]">
+                  <xsl:value-of select="aorsl:ItemObjectRef[matches(@language, $output.lang.RegExpr)][1]"/>
                 </xsl:when>
                 <xsl:when test="@itemObjectVariable">
                   <xsl:value-of select="@itemObjectVariable"/>
@@ -1193,10 +1193,10 @@
           <xsl:with-param name="method" select="'getGridCell'"/>
           <xsl:with-param name="args" as="xs:string*">
             <xsl:variable name="xCoord" as="xs:string">
-              <xsl:apply-templates select="aorsl:XCoordinate[@language eq $output.language]" mode="assistents.getExpression"/>
+              <xsl:apply-templates select="aorsl:XCoordinate[matches(@language, $output.lang.RegExpr)]" mode="assistents.getExpression"/>
             </xsl:variable>
             <xsl:variable name="yCoord" as="xs:string">
-              <xsl:apply-templates select="aorsl:YCoordinate[@language eq $output.language]" mode="assistents.getExpression"/>
+              <xsl:apply-templates select="aorsl:YCoordinate[matches(@language, $output.lang.RegExpr)]" mode="assistents.getExpression"/>
             </xsl:variable>
             <xsl:value-of select="$xCoord"/>
             <xsl:value-of select="$yCoord"/>
@@ -1243,7 +1243,7 @@
 
     <xsl:variable name="indentOffset" as="xs:integer">
       <xsl:choose>
-        <xsl:when test="fn:exists(aorsl:Selection/aorsl:Condition[@language eq $output.language])">
+        <xsl:when test="fn:exists(aorsl:Selection/aorsl:Condition[matches(@language, $output.lang.RegExpr)])">
           <xsl:value-of select="1"/>
         </xsl:when>
         <xsl:otherwise>
@@ -1254,7 +1254,7 @@
 
     <xsl:variable name="content">
 
-      <xsl:for-each select="aorsl:Code[@language eq $output.language]">
+      <xsl:for-each select="aorsl:Code[matches(@language, $output.lang.RegExpr)]">
         <xsl:copy-of select="."/>
       </xsl:for-each>
 
@@ -1310,7 +1310,7 @@
 
     <xsl:choose>
 
-      <xsl:when test="fn:exists(aorsl:Selection/aorsl:Condition[@language eq $output.language])">
+      <xsl:when test="fn:exists(aorsl:Selection/aorsl:Condition[matches(@language, $output.lang.RegExpr)])">
 
         <xsl:variable name="selectedCellsArrayVarName" select="fn:concat($createdVariablesNamePrefix, 'selectedCells_', position())"/>
 
@@ -1321,7 +1321,7 @@
           <xsl:with-param name="withDeclaration" select="false()"/>
         </xsl:call-template>
 
-        <xsl:for-each select="aorsl:Selection/aorsl:Condition[@language eq $output.language]">
+        <xsl:for-each select="aorsl:Selection/aorsl:Condition[matches(@language, $output.lang.RegExpr)]">
 
           <xsl:call-template name="java:newArrayListObject">
             <xsl:with-param name="indent" select="$indent"/>
@@ -1644,8 +1644,8 @@
               <xsl:value-of select="') &amp;&amp; '"/>
             </xsl:if>
             <xsl:choose>
-              <xsl:when test="fn:exists(aorsl:IF[@language = $output.language]) and fn:normalize-space(aorsl:IF[@language = $output.language]) != ''">
-                <xsl:value-of select="fn:normalize-space(aorsl:IF[@language = $output.language][1])"/>
+              <xsl:when test="fn:exists(aorsl:IF[matches(@language, $output.lang.RegExpr)]) and fn:normalize-space(aorsl:IF[matches(@language, $output.lang.RegExpr)]) != ''">
+                <xsl:value-of select="fn:normalize-space(aorsl:IF[matches(@language, $output.lang.RegExpr)][1])"/>
               </xsl:when>
               <xsl:otherwise>
                 <xsl:value-of select="'true'"/>
@@ -2243,17 +2243,17 @@
 
     <xsl:variable name="physObjId">
       <xsl:choose>
-        <xsl:when test="aorsl:ObjectRef[@language = $output.language]">
+        <xsl:when test="aorsl:ObjectRef[matches(@language, $output.lang.RegExpr)]">
           <xsl:call-template name="java:callGetterMethod">
             <xsl:with-param name="inLine" select="true()"/>
             <xsl:with-param name="objInstance">
-              <xsl:value-of select="aorsl:ObjectRef[@language = $output.language]"/>
+              <xsl:value-of select="aorsl:ObjectRef[matches(@language, $output.lang.RegExpr)]"/>
             </xsl:with-param>
             <xsl:with-param name="instVariable" select="'id'"/>
           </xsl:call-template>
         </xsl:when>
-        <xsl:when test="aorsl:ObjectIdRef[@language = $output.language]">
-          <xsl:value-of select="aorsl:ObjectIdRef[@language = $output.language][1]"/>
+        <xsl:when test="aorsl:ObjectIdRef[matches(@language, $output.lang.RegExpr)]">
+          <xsl:value-of select="aorsl:ObjectIdRef[matches(@language, $output.lang.RegExpr)][1]"/>
         </xsl:when>
         <xsl:when test="fn:exists(@objectIdRef)">
           <xsl:value-of select="@objectIdRef"/>
@@ -2451,21 +2451,21 @@
         <xsl:when test="fn:exists(@objectVariable)">
           <xsl:value-of select="@objectVariable"/>
         </xsl:when>
-        <xsl:when test="fn:exists(aorsl:ObjectRef[@language = $output.language])">
+        <xsl:when test="fn:exists(aorsl:ObjectRef[matches(@language, $output.lang.RegExpr)])">
           <!-- @objectType is required, but still we check it  for potential changes-->
           <xsl:choose>
             <!-- TODO: delete this part, if the changes in repo maked-->
             <xsl:when test="@objectType">
-              <xsl:value-of select="fn:concat('((', @objectType, ')', aorsl:ObjectRef[@language = $output.language],')')"/>
+              <xsl:value-of select="fn:concat('((', @objectType, ')', aorsl:ObjectRef[matches(@language, $output.lang.RegExpr)],')')"/>
             </xsl:when>
             <!-- ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++ -->
-            <xsl:when test="aorsl:ObjectRef[@language = $output.language]/@objectType">
+            <xsl:when test="aorsl:ObjectRef[matches(@language, $output.lang.RegExpr)]/@objectType">
               <xsl:value-of
-                select="fn:concat('((', aorsl:ObjectRef[@language = $output.language]/@objectType, ')', aorsl:ObjectRef[@language = $output.language],')')"
+                select="fn:concat('((', aorsl:ObjectRef[matches(@language, $output.lang.RegExpr)]/@objectType, ')', aorsl:ObjectRef[matches(@language, $output.lang.RegExpr)],')')"
               />
             </xsl:when>
             <xsl:otherwise>
-              <xsl:value-of select="fn:concat('(', aorsl:ObjectRef[@language = $output.language],')')"/>
+              <xsl:value-of select="fn:concat('(', aorsl:ObjectRef[matches(@language, $output.lang.RegExpr)],')')"/>
             </xsl:otherwise>
           </xsl:choose>
         </xsl:when>
@@ -2481,8 +2481,8 @@
             <xsl:value-of select="ancestor::aorsl:EnvironmentRule/aorsl:FOR[@objectVariable =
               current()/@objectVariable][1]/@objectType"/>
           </xsl:when>
-          <xsl:when test="exists(aorsl:ObjectRef[@language eq $output.language])">
-            <xsl:value-of select="aorsl:ObjectRef[@language eq $output.language][1]/@objectType"/>
+          <xsl:when test="exists(aorsl:ObjectRef[matches(@language, $output.lang.RegExpr)])">
+            <xsl:value-of select="aorsl:ObjectRef[matches(@language, $output.lang.RegExpr)][1]/@objectType"/>
           </xsl:when>
         </xsl:choose>
       </xsl:with-param>
@@ -2508,8 +2508,8 @@
               <xsl:with-param name="varName" select="@objectVariable"/>
             </xsl:call-template>
           </xsl:when>
-          <xsl:when test="exists(aorsl:ObjectRef[@language = $output.language])">
-            <xsl:value-of select="jw:parenthesise(aorsl:ObjectRef[@language = $output.language][1])"/>
+          <xsl:when test="exists(aorsl:ObjectRef[matches(@language, $output.lang.RegExpr)])">
+            <xsl:value-of select="jw:parenthesise(aorsl:ObjectRef[matches(@language, $output.lang.RegExpr)][1])"/>
           </xsl:when>
         </xsl:choose>
 
@@ -2586,8 +2586,8 @@
                             </xsl:otherwise>
                           </xsl:choose>
                         </xsl:when>
-                        <xsl:when test="exists($argument/aorsl:ValueExpr[@language = $output.language])">
-                          <xsl:value-of select="$argument/aorsl:ValueExpr[@language = $output.language][1]"/>
+                        <xsl:when test="exists($argument/aorsl:ValueExpr[matches(@language, $output.lang.RegExpr)])">
+                          <xsl:value-of select="$argument/aorsl:ValueExpr[matches(@language, $output.lang.RegExpr)][1]"/>
                         </xsl:when>
                         <xsl:otherwise>
                           <xsl:message>
@@ -2788,7 +2788,7 @@
     </xsl:variable>
 
     <xsl:variable name="output">
-      <xsl:variable name="block-indent" select="if (fn:exists(aorsl:Condition[@language eq $output.language])) then $indent + 1 else $indent"/>
+      <xsl:variable name="block-indent" select="if (fn:exists(aorsl:Condition[matches(@language, $output.lang.RegExpr)])) then $indent + 1 else $indent"/>
 
       <xsl:call-template name="java:newObject">
         <xsl:with-param name="indent" select="$block-indent"/>
@@ -2894,10 +2894,10 @@
         </xsl:if>
       </xsl:for-each>
     </xsl:variable>
-    <xsl:variable name="perceiverIdRef2" select="aorsl:PerceiverIdRef[@language = $output.language]"/>
+    <xsl:variable name="perceiverIdRef2" select="aorsl:PerceiverIdRef[matches(@language, $output.lang.RegExpr)]"/>
 
     <xsl:variable name="output">
-      <xsl:variable name="block-indent" select="if (fn:exists(aorsl:Condition[@language eq $output.language])) then $indent + 1 else $indent"/>
+      <xsl:variable name="block-indent" select="if (fn:exists(aorsl:Condition[matches(@language, $output.lang.RegExpr)])) then $indent + 1 else $indent"/>
 
       <xsl:call-template name="java:newObject">
         <xsl:with-param name="indent" select="$block-indent"/>
@@ -2987,7 +2987,7 @@
 
 
         <xsl:variable name="output">
-          <xsl:variable name="block-indent" select="if (fn:exists(aorsl:Condition[@language eq $output.language])) then $indent + 1 else $indent"/>
+          <xsl:variable name="block-indent" select="if (fn:exists(aorsl:Condition[matches(@language, $output.lang.RegExpr)])) then $indent + 1 else $indent"/>
 
           <xsl:call-template name="java:newObject">
             <xsl:with-param name="indent" select="$block-indent"/>
@@ -3034,8 +3034,8 @@
                   <xsl:when test="fn:exists(@delay)">
                     <xsl:value-of select="@delay"/>
                   </xsl:when>
-                  <xsl:when test="fn:exists(aorsl:Delay/aorsl:ValueExpr[@language eq $output.language])">
-                    <xsl:value-of select="aorsl:Delay/aorsl:ValueExpr[@language eq $output.language][1]"/>
+                  <xsl:when test="fn:exists(aorsl:Delay/aorsl:ValueExpr[matches(@language, $output.lang.RegExpr)])">
+                    <xsl:value-of select="aorsl:Delay/aorsl:ValueExpr[matches(@language, $output.lang.RegExpr)][1]"/>
                   </xsl:when>
                   <xsl:when test="fn:exists(aorsl:Delay/aorsl:DiscreteRandomVariable)">
                     <xsl:apply-templates select="aorsl:Delay/aorsl:DiscreteRandomVariable/aorsl:*" mode="assistents.distribution"/>
@@ -3119,14 +3119,14 @@
                   </xsl:if>
                 </xsl:for-each>
               </xsl:variable>
-              <xsl:variable name="receiverIdRefs2" select="aorsl:ReceiverIdRef[@language = $output.language]"/>
+              <xsl:variable name="receiverIdRefs2" select="aorsl:ReceiverIdRef[matches(@language, $output.lang.RegExpr)]"/>
               <xsl:variable name="senderIdRef" as="xs:string">
                 <xsl:choose>
                   <xsl:when test="fn:exists(@senderIdRef)">
                     <xsl:value-of select="@senderIdRef"/>
                   </xsl:when>
-                  <xsl:when test="fn:exists(aorsl:SenderIdRef[@language = $output.language])">
-                    <xsl:value-of select="aorsl:SenderIdRef[@language = $output.language]"/>
+                  <xsl:when test="fn:exists(aorsl:SenderIdRef[matches(@language, $output.lang.RegExpr)])">
+                    <xsl:value-of select="aorsl:SenderIdRef[matches(@language, $output.lang.RegExpr)]"/>
                   </xsl:when>
                   <xsl:otherwise>
                     <xsl:message>No sender defined for <xsl:value-of select="local-name()"/></xsl:message>
@@ -3234,7 +3234,7 @@
     </xsl:variable>
 
     <xsl:variable name="output">
-      <xsl:variable name="block-indent" select="if (fn:exists(aorsl:Condition[@language eq $output.language])) then $indent + 1 else $indent"/>
+      <xsl:variable name="block-indent" select="if (fn:exists(aorsl:Condition[matches(@language, $output.lang.RegExpr)])) then $indent + 1 else $indent"/>
 
       <xsl:call-template name="java:newObject">
         <xsl:with-param name="indent" select="$block-indent"/>
@@ -3253,7 +3253,7 @@
       </xsl:call-template>
 
       <xsl:if
-        test="fn:exists(aorsl:ActorRef[@language eq $output.language]) or fn:exists(aorsl:ActorIdRef[@language eq $output.language]) or @actorIdRef">
+        test="fn:exists(aorsl:ActorRef[matches(@language, $output.lang.RegExpr)]) or fn:exists(aorsl:ActorIdRef[matches(@language, $output.lang.RegExpr)]) or @actorIdRef">
 
         <xsl:call-template name="java:callSetterMethod">
           <xsl:with-param name="indent" select="$block-indent"/>
@@ -3261,8 +3261,8 @@
           <xsl:with-param name="instVariable" select="'activityActor'"/>
           <xsl:with-param name="value">
             <xsl:choose>
-              <xsl:when test="fn:exists(aorsl:ActorRef[@language eq $output.language])">
-                <xsl:value-of select="aorsl:ActorRef[@language eq $output.language][1]"/>
+              <xsl:when test="fn:exists(aorsl:ActorRef[matches(@language, $output.lang.RegExpr)])">
+                <xsl:value-of select="aorsl:ActorRef[matches(@language, $output.lang.RegExpr)][1]"/>
               </xsl:when>
               <xsl:otherwise>
                 <xsl:call-template name="java:callMethod">
@@ -3276,8 +3276,8 @@
                   <xsl:with-param name="method" select="'getActivityActorById'"/>
                   <xsl:with-param name="args">
                     <xsl:choose>
-                      <xsl:when test="aorsl:ActorIdRef[@language eq $output.language]">
-                        <xsl:value-of select="aorsl:ActorIdRef[@language eq $output.language][1]"/>
+                      <xsl:when test="aorsl:ActorIdRef[matches(@language, $output.lang.RegExpr)]">
+                        <xsl:value-of select="aorsl:ActorIdRef[matches(@language, $output.lang.RegExpr)][1]"/>
                       </xsl:when>
                       <xsl:otherwise>
                         <xsl:value-of select="@actorIdRef"/>
@@ -3338,7 +3338,7 @@
     </xsl:variable>
 
     <xsl:variable name="output">
-      <xsl:variable name="block-indent" select="if (fn:exists(aorsl:Condition[@language eq $output.language])) then $indent + 1 else $indent"/>
+      <xsl:variable name="block-indent" select="if (fn:exists(aorsl:Condition[matches(@language, $output.lang.RegExpr)])) then $indent + 1 else $indent"/>
 
       <xsl:call-template name="java:newObject">
         <xsl:with-param name="indent" select="$block-indent"/>
