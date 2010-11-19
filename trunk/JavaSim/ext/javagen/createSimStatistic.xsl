@@ -718,7 +718,7 @@
       <xsl:with-param name="name" select="'computeVar'"/>
       <xsl:with-param name="content">
 
-        <xsl:if test="fn:exists(aorsl:Source/aorsl:ValueExpr[@language = $output.language])">
+        <xsl:if test="fn:exists(aorsl:Source/aorsl:ValueExpr[matches(@language, $output.lang.RegExpr)])">
           <xsl:call-template name="java:variable">
             <xsl:with-param name="indent" select="$indent + 1"/>
             <xsl:with-param name="name">
@@ -727,7 +727,7 @@
               </xsl:call-template>
             </xsl:with-param>
             <xsl:with-param name="value">
-              <xsl:value-of select="fn:normalize-space(aorsl:Source/aorsl:ValueExpr[@language eq $output.language][1])"/>
+              <xsl:value-of select="fn:normalize-space(aorsl:Source/aorsl:ValueExpr[matches(@language, $output.lang.RegExpr)][1])"/>
             </xsl:with-param>
           </xsl:call-template>
         </xsl:if>

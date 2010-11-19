@@ -114,14 +114,14 @@
                       <xsl:choose>
                         <!-- depricated -->
                         <xsl:when
-                          test="fn:exists($objNode/aorsl:Slot[resolve-QName(@xsi:type, .) eq QName('http://aor-simulation.org', 'OpaqueExprSlot')][@property eq current()/@name]/aorsl:ValueExpr[@language eq $output.language])">
+                          test="fn:exists($objNode/aorsl:Slot[resolve-QName(@xsi:type, .) eq QName('http://aor-simulation.org', 'OpaqueExprSlot')][@property eq current()/@name]/aorsl:ValueExpr[matches(@language, $output.lang.RegExpr)])">
                           <xsl:value-of
-                            select="$objNode/aorsl:Slot[resolve-QName(@xsi:type, .) eq QName('http://aor-simulation.org', 'OpaqueExprSlot')][@property eq current()/@name]/aorsl:ValueExpr[@language eq $output.language][1]"
+                            select="$objNode/aorsl:Slot[resolve-QName(@xsi:type, .) eq QName('http://aor-simulation.org', 'OpaqueExprSlot')][@property eq current()/@name]/aorsl:ValueExpr[matches(@language, $output.lang.RegExpr)][1]"
                           />
                         </xsl:when>
                         <!-- new -->
-                        <xsl:when test="fn:exists($objNode/aorsl:Slot[@property eq current()/@name]/aorsl:ValueExpr[@language eq $output.language])">
-                          <xsl:value-of select="$objNode/aorsl:Slot[@property eq current()/@name]/aorsl:ValueExpr[@language eq $output.language][1]"/>
+                        <xsl:when test="fn:exists($objNode/aorsl:Slot[@property eq current()/@name]/aorsl:ValueExpr[matches(@language, $output.lang.RegExpr)])">
+                          <xsl:value-of select="$objNode/aorsl:Slot[@property eq current()/@name]/aorsl:ValueExpr[matches(@language, $output.lang.RegExpr)][1]"/>
                         </xsl:when>
                         <!-- depricated -->
                         <xsl:when
@@ -208,14 +208,14 @@
                       <xsl:choose>
                         <!-- depricated -->
                         <xsl:when
-                          test="fn:exists($objNode/aorsl:Slot[resolve-QName(@xsi:type, .) eq QName('http://aor-simulation.org', 'OpaqueExprSlot')][@property eq current()/@name]/aorsl:ValueExpr[@language eq $output.language])">
+                          test="fn:exists($objNode/aorsl:Slot[resolve-QName(@xsi:type, .) eq QName('http://aor-simulation.org', 'OpaqueExprSlot')][@property eq current()/@name]/aorsl:ValueExpr[matches(@language, $output.lang.RegExpr)])">
                           <xsl:value-of
-                            select="$objNode/aorsl:Slot[resolve-QName(@xsi:type, .) eq QName('http://aor-simulation.org', 'OpaqueExprSlot')][@property eq current()/@name]/aorsl:ValueExpr[@language eq $output.language][1]"
+                            select="$objNode/aorsl:Slot[resolve-QName(@xsi:type, .) eq QName('http://aor-simulation.org', 'OpaqueExprSlot')][@property eq current()/@name]/aorsl:ValueExpr[matches(@language, $output.lang.RegExpr)][1]"
                           />
                         </xsl:when>
                         <!-- new -->
-                        <xsl:when test="fn:exists($objNode/aorsl:Slot[@property eq current()/@name]/aorsl:ValueExpr[@language eq $output.language])">
-                          <xsl:value-of select="$objNode/aorsl:Slot[@property eq current()/@name]/aorsl:ValueExpr[@language eq $output.language][1]"/>
+                        <xsl:when test="fn:exists($objNode/aorsl:Slot[@property eq current()/@name]/aorsl:ValueExpr[matches(@language, $output.lang.RegExpr)])">
+                          <xsl:value-of select="$objNode/aorsl:Slot[@property eq current()/@name]/aorsl:ValueExpr[matches(@language, $output.lang.RegExpr)][1]"/>
                         </xsl:when>
                         <!-- depricated -->
                         <xsl:when
@@ -254,7 +254,7 @@
                         </xsl:when>
                         <xsl:otherwise>
                           <xsl:if
-                            test="not(root($objNode)//aorsl:DataTypes/aorsl:ComplexDataType[@name eq current()/@type][1]/aorsl:ClassDef[@language eq $output.language])">
+                            test="not(root($objNode)//aorsl:DataTypes/aorsl:ComplexDataType[@name eq current()/@type][1]/aorsl:ClassDef[matches(@language, $output.lang.RegExpr)])">
                             <xsl:call-template name="java:setDefaultValue">
                               <xsl:with-param name="type" select="@type"/>
                             </xsl:call-template>
@@ -301,14 +301,14 @@
                       <xsl:choose>
                         <!-- depricated -->
                         <xsl:when
-                          test="fn:exists($objNode/aorsl:Slot[resolve-QName(@xsi:type, .) eq QName('http://aor-simulation.org', 'OpaqueExprSlot')][@property eq current()/@name]/aorsl:ValueExpr[@language eq $output.language])">
+                          test="fn:exists($objNode/aorsl:Slot[resolve-QName(@xsi:type, .) eq QName('http://aor-simulation.org', 'OpaqueExprSlot')][@property eq current()/@name]/aorsl:ValueExpr[matches(@language, $output.lang.RegExpr)])">
                           <xsl:value-of
-                            select="$objNode/aorsl:Slot[resolve-QName(@xsi:type, .) eq QName('http://aor-simulation.org', 'OpaqueExprSlot')][@property eq current()/@name]/aorsl:ValueExpr[@language eq $output.language][1]"
+                            select="$objNode/aorsl:Slot[resolve-QName(@xsi:type, .) eq QName('http://aor-simulation.org', 'OpaqueExprSlot')][@property eq current()/@name]/aorsl:ValueExpr[matches(@language, $output.lang.RegExpr)][1]"
                           />
                         </xsl:when>
                         <!-- new -->
-                        <xsl:when test="fn:exists($objNode/aorsl:Slot[@property eq current()/@name]/aorsl:ValueExpr[@language eq $output.language])">
-                          <xsl:value-of select="$objNode/aorsl:Slot[@property eq current()/@name]/aorsl:ValueExpr[@language eq $output.language][1]"/>
+                        <xsl:when test="fn:exists($objNode/aorsl:Slot[@property eq current()/@name]/aorsl:ValueExpr[matches(@language, $output.lang.RegExpr)])">
+                          <xsl:value-of select="$objNode/aorsl:Slot[@property eq current()/@name]/aorsl:ValueExpr[matches(@language, $output.lang.RegExpr)][1]"/>
                         </xsl:when>
                         <!-- depricated -->
                         <xsl:when
@@ -346,7 +346,7 @@
                           </xsl:apply-templates>
                         </xsl:when>
                         <xsl:otherwise>
-                          <xsl:if test="not(aorsl:ClassDef[@language eq $output.language])">
+                          <xsl:if test="not(aorsl:ClassDef[matches(@language, $output.lang.RegExpr)])">
                             <xsl:call-template name="java:setDefaultValue">
                               <xsl:with-param name="type" select="@type"/>
                             </xsl:call-template>
@@ -393,14 +393,14 @@
                       <xsl:choose>
                         <!-- depricated -->
                         <xsl:when
-                          test="fn:exists($objNode/aorsl:Slot[resolve-QName(@xsi:type, .) eq QName('http://aor-simulation.org', 'OpaqueExprSlot')][@property eq current()/@name]/aorsl:ValueExpr[@language eq $output.language])">
+                          test="fn:exists($objNode/aorsl:Slot[resolve-QName(@xsi:type, .) eq QName('http://aor-simulation.org', 'OpaqueExprSlot')][@property eq current()/@name]/aorsl:ValueExpr[matches(@language, $output.lang.RegExpr)])">
                           <xsl:value-of
-                            select="$objNode/aorsl:Slot[resolve-QName(@xsi:type, .) eq QName('http://aor-simulation.org', 'OpaqueExprSlot')][@property eq current()/@name]/aorsl:ValueExpr[@language eq $output.language][1]"
+                            select="$objNode/aorsl:Slot[resolve-QName(@xsi:type, .) eq QName('http://aor-simulation.org', 'OpaqueExprSlot')][@property eq current()/@name]/aorsl:ValueExpr[matches(@language, $output.lang.RegExpr)][1]"
                           />
                         </xsl:when>
                         <!-- new -->
-                        <xsl:when test="fn:exists($objNode/aorsl:Slot[@property eq current()/@name]/aorsl:ValueExpr[@language eq $output.language])">
-                          <xsl:value-of select="$objNode/aorsl:Slot[@property eq current()/@name]/aorsl:ValueExpr[@language eq $output.language][1]"/>
+                        <xsl:when test="fn:exists($objNode/aorsl:Slot[@property eq current()/@name]/aorsl:ValueExpr[matches(@language, $output.lang.RegExpr)])">
+                          <xsl:value-of select="$objNode/aorsl:Slot[@property eq current()/@name]/aorsl:ValueExpr[matches(@language, $output.lang.RegExpr)][1]"/>
                         </xsl:when>
                         <!-- depricated -->
                         <xsl:when
@@ -438,7 +438,7 @@
                           </xsl:apply-templates>
                         </xsl:when>
                         <xsl:otherwise>
-                          <xsl:if test="not(aorsl:ClassDef[@language eq $output.language])">
+                          <xsl:if test="not(aorsl:ClassDef[matches(@language, $output.lang.RegExpr)])">
                             <xsl:call-template name="java:setDefaultValue">
                               <xsl:with-param name="type" select="@type"/>
                             </xsl:call-template>
@@ -582,7 +582,7 @@
         <xsl:when test="fn:exists($complexDataType)">
 
           <xsl:choose>
-            <xsl:when test="fn:exists($complexDataType/aorsl:ClassDef[@language eq $output.language])">
+            <xsl:when test="fn:exists($complexDataType/aorsl:ClassDef[matches(@language, $output.lang.RegExpr)])">
               <xsl:call-template name="java:newObject">
                 <xsl:with-param name="inLine" select="true()"/>
                 <xsl:with-param name="isVariable" select="true()"/>
@@ -1232,8 +1232,8 @@
                   <xsl:text> + </xsl:text>
                 </xsl:if>
                 <xsl:choose>
-                  <xsl:when test="fn:exists(aorsl:OccurrenceTime[@language eq $output.language])">
-                    <xsl:value-of select="aorsl:OccurrenceTime[@language eq $output.language]"/>
+                  <xsl:when test="fn:exists(aorsl:OccurrenceTime[matches(@language, $output.lang.RegExpr)])">
+                    <xsl:value-of select="aorsl:OccurrenceTime[matches(@language, $output.lang.RegExpr)]"/>
                   </xsl:when>
                   <xsl:otherwise>
                     <xsl:value-of select="@occurrenceTime"/>
@@ -1275,8 +1275,8 @@
         <xsl:text> + </xsl:text>
       </xsl:if>
       <xsl:choose>
-        <xsl:when test="fn:exists(aorsl:OccurrenceTime[@language eq $output.language])">
-          <xsl:value-of select="aorsl:OccurrenceTime[@language eq $output.language]"/>
+        <xsl:when test="fn:exists(aorsl:OccurrenceTime[matches(@language, $output.lang.RegExpr)])">
+          <xsl:value-of select="aorsl:OccurrenceTime[matches(@language, $output.lang.RegExpr)]"/>
         </xsl:when>
         <xsl:otherwise>
           <xsl:value-of select="@occurrenceTime"/>
@@ -1286,8 +1286,8 @@
 
     <xsl:variable name="reminderMsg">
       <xsl:choose>
-        <xsl:when test="fn:exists(aorsl:ReminderMsg[@language eq $output.language])">
-          <xsl:value-of select="aorsl:ReminderMsg[@language eq $output.language][1]"/>
+        <xsl:when test="fn:exists(aorsl:ReminderMsg[matches(@language, $output.lang.RegExpr)])">
+          <xsl:value-of select="aorsl:ReminderMsg[matches(@language, $output.lang.RegExpr)][1]"/>
         </xsl:when>
         <xsl:when test="@reminderMsg">
           <xsl:value-of select="jw:quote(@reminderMsg)"/>
@@ -1345,8 +1345,8 @@
                 <xsl:when test="@idRef">
                   <xsl:value-of select="@idRef"/>
                 </xsl:when>
-                <xsl:when test="fn:exists(aorsl:IdRef[@language eq $output.language])">
-                  <xsl:value-of select="aorsl:IdRef[@language eq $output.language]"/>
+                <xsl:when test="fn:exists(aorsl:IdRef[matches(@language, $output.lang.RegExpr)])">
+                  <xsl:value-of select="aorsl:IdRef[matches(@language, $output.lang.RegExpr)]"/>
                 </xsl:when>
                 <xsl:otherwise>
                   <xsl:message>
@@ -1362,14 +1362,14 @@
                 <!-- depricated -->
                 <xsl:when
                   test="fn:exists(aorsl:BeliefSlot[resolve-QName(@xsi:type, .) eq QName('http://aor-simulation.org', 'OpaqueExprSlot')]
-                  [@property eq 'name' and fn:exists(aorsl:ValueExpr[@language eq $output.language])])">
+                  [@property eq 'name' and fn:exists(aorsl:ValueExpr[matches(@language, $output.lang.RegExpr)])])">
                   <xsl:value-of
-                    select="aorsl:BeliefSlot[@property eq 'name' and @xsi:type eq 'aors:OpaqueExprSlot']/aorsl:ValueExpr[@language eq $output.language]"
+                    select="aorsl:BeliefSlot[@property eq 'name' and @xsi:type eq 'aors:OpaqueExprSlot']/aorsl:ValueExpr[matches(@language, $output.lang.RegExpr)]"
                   />
                 </xsl:when>
                 <!-- new -->
-                <xsl:when test="fn:exists(aorsl:BeliefSlot[@property eq 'name' and fn:exists(aorsl:ValueExpr[@language eq $output.language])])">
-                  <xsl:value-of select="aorsl:BeliefSlot/aorsl:ValueExpr[@language eq $output.language][1]"/>
+                <xsl:when test="fn:exists(aorsl:BeliefSlot[@property eq 'name' and fn:exists(aorsl:ValueExpr[matches(@language, $output.lang.RegExpr)])])">
+                  <xsl:value-of select="aorsl:BeliefSlot/aorsl:ValueExpr[matches(@language, $output.lang.RegExpr)][1]"/>
                 </xsl:when>
                 <!-- depricated -->
                 <xsl:when
@@ -1538,8 +1538,8 @@
           <xsl:with-param name="size" select="$indent + 1"/>
         </xsl:call-template>
         <xsl:choose>
-          <xsl:when test="fn:exists(aorsl:Body[@language = $output.language])">
-            <xsl:value-of select="aorsl:Body[@language = $output.language]"/>
+          <xsl:when test="fn:exists(aorsl:Body[matches(@language, $output.lang.RegExpr)])">
+            <xsl:value-of select="aorsl:Body[matches(@language, $output.lang.RegExpr)]"/>
           </xsl:when>
           <xsl:otherwise>
             <xsl:message>No Body for created function available.</xsl:message>
@@ -1646,7 +1646,7 @@
         </xsl:call-template>
       </xsl:with-param>
       <xsl:with-param name="instVariable" select="'value'"/>
-      <xsl:with-param name="value" select="fn:normalize-space(aorsl:ValueExpr[@language = $output.language])"/>
+      <xsl:with-param name="value" select="fn:normalize-space(aorsl:ValueExpr[matches(@language, $output.lang.RegExpr)])"/>
     </xsl:call-template>
 
   </xsl:template>
@@ -1901,15 +1901,15 @@
   <xsl:template match="aorsl:UpdateGlobalVariable | aorsl:GlobalVariable" mode="shared.updateGlobalVariable">
     <xsl:param name="indent" required="yes" as="xs:integer"/>
 
-    <xsl:if test="@value or fn:exists(aorsl:ValueExpr[@language eq $output.language])">
+    <xsl:if test="@value or fn:exists(aorsl:ValueExpr[matches(@language, $output.lang.RegExpr)])">
       <xsl:call-template name="java:callSetterMethod">
         <xsl:with-param name="indent" select="$indent"/>
         <xsl:with-param name="objInstance" select="$sim.class.simGlobal"/>
         <xsl:with-param name="instVariable" select="@name"/>
         <xsl:with-param name="value">
           <xsl:choose>
-            <xsl:when test="fn:exists(aorsl:ValueExpr[@language eq $output.language])">
-              <xsl:value-of select="aorsl:ValueExpr[@language eq $output.language][1]"/>
+            <xsl:when test="fn:exists(aorsl:ValueExpr[matches(@language, $output.lang.RegExpr)])">
+              <xsl:value-of select="aorsl:ValueExpr[matches(@language, $output.lang.RegExpr)][1]"/>
             </xsl:when>
             <xsl:when test="@value">
               <xsl:choose>
