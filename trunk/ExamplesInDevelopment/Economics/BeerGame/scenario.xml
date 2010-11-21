@@ -1,9 +1,9 @@
 <?xml version="1.0"?>
 <?xml-stylesheet type="text/xsl" href="prettyprint.xsl"?>
 <SimulationScenario xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
- xsi:schemaLocation="http://aor-simulation.org ../../../../../Simulario-PHP/trunk/web/html/ext/aorsl/AORSL_0-8-4.xsd"
- xmlns="http://aor-simulation.org"
+ xsi:schemaLocation="http://aor-simulation.org ../../../AORSL/AORSL_0-8-4.xsd"
  xmlns:dc="http://purl.org/dc/elements/1.1/"
+ xmlns="http://aor-simulation.org"
  xmlns:aors="http://aor-simulation.org"
  scenarioName="BeerGame"
  scenarioTitle="The MIT Beer Game"
@@ -1068,7 +1068,7 @@
 							  display: block;
 							  margin: 25px auto;
 							  border: 1px solid black;
-							  width: 34em;
+							  width: 35em;
 							  background-color: white;
 							  padding: 0.5em 0.5em 0.5em 170px;
 							  /* this image is taken from: http://duff-bier.com/cms/ */
@@ -1098,7 +1098,7 @@
 								
 							div#properties {
 							  position: relative;
-							  width: 25em;
+							  width: 26em;
 							  display: block;
 							  margin: 0.5em 0 0 -1px;
 							  padding: 0.5em 5px 0.25em;
@@ -1112,13 +1112,13 @@
 							  display: block;
 							  position: relative;
 							  clear: both;
-							  padding: 0;
-							  margin: 0;
+							  padding: 0px;
+							  margin: 0px;
 							}
 							
 							div#properties dt {
 							  display: inline-block;
-							  width: 10em;
+							  width: 15em;
 							  margin: 4px 0px;
 							  margin-left: 5px;
 							  padding: 4px;
@@ -1137,9 +1137,12 @@
 							
 							div#properties .textfield {
 							  display: inline-block;
-							  width: 3em;
+							  padding:0px;
+							  margin:0px;
+							  width: 3.3em;
+							  height: 1em;
+							  font-size: 13px;
 							  margin-right: 0.5em;
-							  height: 0.9em;
 							  border: none;
 							}
 
@@ -1149,7 +1152,7 @@
 							
 							div#actions {
 							  position: relative;
-							  width: 25em;
+							  width: 26em;
 							  display: block;
 							  margin: 1.5em 0 0 -1px;
 							  padding: 0.5em 5px 0.25em;
@@ -1193,7 +1196,7 @@
 							
 							div#incoming {
 							  position: relative;
-							  width: 25em;
+							  width: 26em;
 							  display: block;
 							  margin: 1.5em 0 0 -1px;
 							  padding: 1em 5px 0.25em;
@@ -1252,17 +1255,6 @@
                         readonly="true" type="Integer" style="background-color: rgb(221, 221, 221);"/>
                       <multilingualContent xml:lang="en"> bottles</multilingualContent>
                     </dd>
-                    <dt>
-                      <label for="outdelivery">
-                        <multilingualContent xml:lang="en">Your last delivery:
-                        </multilingualContent>
-                      </label>
-                    </dt>
-                    <dd>
-                      <textfield class="textfield" id="outdelivery" property="outDelivery"
-                        readonly="true" type="Integer" />
-                      <multilingualContent xml:lang="en"> bottles</multilingualContent>
-                    </dd>
                     <dt style="background: rgb(255, 220, 220);">
                       <label for="backorderQuantity">
                         <multilingualContent xml:lang="en">Backorder: </multilingualContent>
@@ -1275,13 +1267,35 @@
                       <multilingualContent xml:lang="en"> bottles</multilingualContent>
                     </dd>
                     <dt>
+                      <label for="outdelivery">
+                        <multilingualContent xml:lang="en">Last delivery to customer:
+                        </multilingualContent>
+                      </label>
+                    </dt>
+                    <dd>
+                      <textfield class="textfield" id="outdelivery" property="outDelivery"
+                        readonly="true" type="Integer" />
+                      <multilingualContent xml:lang="en"> bottles</multilingualContent>
+                    </dd>
+                    <dt>
+                      <label for="outdelivery">
+                        <multilingualContent xml:lang="en">Your last order:
+                        </multilingualContent>
+                      </label>
+                    </dt>
+                    <dd>
+                      <textfield class="textfield" id="myLastOrder" property="myLastOrder"
+                        readonly="true" type="Integer" />
+                      <multilingualContent xml:lang="en"> bottles</multilingualContent>
+                    </dd>
+                    <dt style="background: rgb(220, 255, 220);">
                       <label for="costs">
                         <multilingualContent xml:lang="en">Costs: </multilingualContent>
                       </label>
                     </dt>
-                    <dd>
+                    <dd style="background: rgb(220, 255, 220);">
                       <textfield class="textfield" id="costs" property="costs" readonly="true"
-                        type="Integer" />
+                        type="Integer"  style="background: rgb(220, 255, 220);" />
                       <multilingualContent xml:lang="en"> €</multilingualContent>
                     </dd>
                   </dl>
@@ -1337,7 +1351,8 @@
                   </p>
                   <p style="margin-top: 7px; margin-bottom:7px; font-size:9px;" >
                     <multilingualContent xml:lang="en">
-                      *You need to push the &#160;<code style="background: rgb(220, 220, 220);">&#160;send beer order&#160;</code>&#160; button to place an order.
+                      *You need to push the &#160;<code style="background: rgb(220, 220, 220);">
+                        &#160;send beer order&#160;</code>&#160; button to place an order.
                     </multilingualContent>
                   </p>
                 </div>
@@ -1349,6 +1364,12 @@
               <MouseEvent mouseEventType="click" targetName="orderBeer" />
             </WHEN>
             <DO>
+              <!--<UPDATE-AGT>
+                <Slot property="myLastOrder">
+                  <ValueExpr language="Java">gui.getOrderBeerValue()</ValueExpr>
+                  <ValueExpr language="JavaScript">this.gui.getOrderBeerValue()</ValueExpr>
+                </Slot>
+              </UPDATE-AGT>-->
               <SCHEDULE-EVT>
                 <OutMessageEventExpr messageType="Order">
                   <ReceiverIdRef language="Java">node.getId() - 1</ReceiverIdRef>
