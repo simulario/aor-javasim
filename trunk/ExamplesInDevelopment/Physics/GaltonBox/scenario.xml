@@ -16,7 +16,7 @@
 				<h:ul class="incrementa small3l">
 					<h:li>The Galton Box is a device invented by Sir Francis Galton to demonstrate the central limit theorem and the normal distribution</h:li>
 					<h:li>The machine consists of a vertical board with interleaved rows of pins. Balls are dropped from the top, and bounce left and right as they hit the pins.</h:li>
-					<h:li>Eventually, they are collected into one-ball-wide bins at the bottom</h:li>
+					<h:li>Eventually, they are collected into bins at the bottom</h:li>
 					<h:li>The height of ball columns in the bins approximates a bell curve.</h:li>
 				</h:ul>
 				<h:p>Compare the visualizaion of this simulation with the corresponding 
@@ -31,8 +31,8 @@
 		</SpaceModel>
 
 		<Globals>
-			<GlobalVariable name="HPinGap" dataType="Float" />
-			<GlobalVariable name="VPinGap" dataType="Float" />
+			<GlobalVariable name="HorizontalPinGap" dataType="Float" />
+			<GlobalVariable name="VerticalPinGap" dataType="Float" />
 			<GlobalVariable name="BarHeight" dataType="Float" />
 			<GlobalVariable name="BarStartX" dataType="Float" />
 			<GlobalVariable name="PinsPerRow" dataType="Float" />
@@ -47,42 +47,30 @@
 			</ExogenousEventType>
 
 			<PhysicalObjectType name="Ground">
-				<InitialAttributeValue attribute="width"
-					value="300" />
-				<InitialAttributeValue attribute="height"
-					value="5" />
-				<InitialAttributeValue attribute="shape2D"
-					value="rectangle" />
+				<InitialAttributeValue attribute="width" value="300" />
+				<InitialAttributeValue attribute="height" value="5" />
+				<InitialAttributeValue attribute="shape2D" value="rectangle" />
 				<InitialAttributeValue attribute="m" value="1000" />
 			</PhysicalObjectType>
 
 			<PhysicalObjectType name="Wall">
-				<InitialAttributeValue attribute="width"
-					value="5" />
-				<InitialAttributeValue attribute="height"
-					value="200" />
-				<InitialAttributeValue attribute="shape2D"
-					value="rectangle" />
+				<InitialAttributeValue attribute="width" value="5" />
+				<InitialAttributeValue attribute="height" value="200" />
+				<InitialAttributeValue attribute="shape2D" value="rectangle" />
 				<InitialAttributeValue attribute="m" value="1000" />
 			</PhysicalObjectType>
 
 			<PhysicalObjectType name="Ball">
-				<InitialAttributeValue attribute="width"
-					value="4" />
-				<InitialAttributeValue attribute="height"
-					value="4" />
-				<InitialAttributeValue attribute="shape2D"
-					value="circle" />
+				<InitialAttributeValue attribute="width" value="4" />
+				<InitialAttributeValue attribute="height" value="4" />
+				<InitialAttributeValue attribute="shape2D" value="circle" />
 				<InitialAttributeValue attribute="m" value="1" />
 			</PhysicalObjectType>
 
 			<PhysicalAgentType name="Pin">
-				<InitialAttributeValue attribute="width"
-					value="2" />
-				<InitialAttributeValue attribute="height"
-					value="2" />
-				<InitialAttributeValue attribute="shape2D"
-					value="circle" />
+				<InitialAttributeValue attribute="width" value="2" />
+				<InitialAttributeValue attribute="height" value="2" />
+				<InitialAttributeValue attribute="shape2D" value="circle" />
 				<InitialAttributeValue attribute="m" value="100" />
 				<Attribute name="initX" type="Float" />
 				<Attribute name="initY" type="Float" />
@@ -91,14 +79,18 @@
 					<ON-EACH-SIMULATION-STEP />
 					<DO>
 						<UPDATE-AGT>
-			<Slot property="x">
-				<ValueExpr language="Java">(getId() % Global.getPinsPerRow()) * Global.getHPinGap() + ((int) (getId() / Global.getPinsPerRow()) % 2) * Global.getHPinGap()/2
-				</ValueExpr>
-			</Slot>
-			<Slot property="y">
-				<ValueExpr language="Java">Global.getBarHeight() + ((int)(getId() / Global.getPinsPerRow()) + 1) * Global.getVPinGap()
-				</ValueExpr>
-			</Slot>
+							<Slot property="x">
+								<ValueExpr language="Java">
+									(getId() % Global.getPinsPerRow()) * Global.getHorizontalPinGap() 
+									+ ((int) (getId() / Global.getPinsPerRow()) % 2) * Global.getHorizontalPinGap()/2
+							</ValueExpr>
+							</Slot>
+							<Slot property="y">
+								<ValueExpr language="Java">
+									Global.getBarHeight() 
+									+ ((int)(getId() / Global.getPinsPerRow()) + 1) * Global.getVerticalPinGap()
+								</ValueExpr>
+							</Slot>
 							<Slot property="vx" value="0" />
 							<Slot property="vy" value="0" />
 							<Slot property="rotZ" value="0" />
@@ -109,13 +101,9 @@
 			</PhysicalAgentType>
 
 			<PhysicalAgentType name="Bar">
-				<InitialAttributeValue attribute="width"
-					value="0.5" />
-				<InitialAttributeValue attribute="height"
-					value="Global.getBarHeight()" />
-
-				<InitialAttributeValue attribute="shape2D"
-					value="rectangle" />
+				<InitialAttributeValue attribute="width" value="0.5" />
+				<InitialAttributeValue attribute="height"	value="Global.getBarHeight()" />
+				<InitialAttributeValue attribute="shape2D" value="rectangle" />
 				<InitialAttributeValue attribute="m" value="1000" />
 				<Attribute name="initX" type="Float" />
 				<Attribute name="initY" type="Float" />
@@ -126,7 +114,7 @@
 						<UPDATE-AGT>
 							<Slot property="x">
 								<ValueExpr language="Java">Global.getBarStartX()
-									+ (getId() - 500) * Global.getHPinGap()
+									+ (getId() - 500) * Global.getHorizontalPinGap()
 								</ValueExpr>
 							</Slot>
 							<Slot property="y">
@@ -142,12 +130,9 @@
 			</PhysicalAgentType>
 
 			<PhysicalAgentType name="StartBar">
-				<InitialAttributeValue attribute="width"
-					value="50" />
-				<InitialAttributeValue attribute="height"
-					value="1" />
-				<InitialAttributeValue attribute="shape2D"
-					value="rectangle" />
+				<InitialAttributeValue attribute="width" value="50" />
+				<InitialAttributeValue attribute="height" value="2" />
+				<InitialAttributeValue attribute="shape2D" value="rectangle" />
 				<InitialAttributeValue attribute="m" value="1000" />
 				<Attribute name="initX" type="Float" />
 				<Attribute name="initY" type="Float" />
@@ -173,9 +158,7 @@
 						</UPDATE-AGT>
 					</DO>
 				</ReactionRule>
-
 			</PhysicalAgentType>
-
 		</EntityTypes>
 
 		<EnvironmentRules>
@@ -189,8 +172,7 @@
 						<Create>
 							<PhysicalObject type="Ball" y="185" ay="-9.81">
 								<Slot property="x">
-									<ValueExpr language="Java">Random.uniformInt(120,180)
-									</ValueExpr>
+									<RandomVariable><UniformInt lowerBound="120" upperBound="180"/></RandomVariable>
 								</Slot>
 							</PhysicalObject>
 						</Create>
@@ -202,18 +184,17 @@
 	</SimulationModel>
 
 	<InitialState>
-		<GlobalVariable name="HPinGap" value="10" />
-		<GlobalVariable name="VPinGap" value="8" />
+		<GlobalVariable name="HorizontalPinGap" value="10" />
+		<GlobalVariable name="VerticalPinGap" value="8" />
 		<GlobalVariable name="BarHeight" value="70" />
 		<GlobalVariable name="BarStartX" value="10" />
 		<GlobalVariable name="PinsPerRow" value="30" />
-
 
 		<PhysicalAgents type="Bar" rangeStartID="500"
 			rangeEndID="528">
 			<Slot property="x">
 				<ValueExpr language="Java">Global.getBarStartX()
-					+ (bar.getId() - 500) * Global.getHPinGap()
+					+ (bar.getId() - 500) * Global.getHorizontalPinGap()
 				</ValueExpr>
 			</Slot>
 			<Slot property="y">
@@ -225,15 +206,18 @@
 		<PhysicalAgents type="Pin" rangeStartID="1"
 			rangeEndID="299">
 			<Slot property="x">
-				<ValueExpr language="Java">(pin.getId() % Global.getPinsPerRow()) * Global.getHPinGap() + ((int) (pin.getId() / Global.getPinsPerRow()) % 2) * Global.getHPinGap()/2
+				<ValueExpr language="Java">
+					(pin.getId() % Global.getPinsPerRow()) * Global.getHorizontalPinGap() 
+					+ ((int) (pin.getId() / Global.getPinsPerRow()) % 2) * Global.getHorizontalPinGap()/2
 				</ValueExpr>
 			</Slot>
 			<Slot property="y">
-				<ValueExpr language="Java">Global.getBarHeight() + ((int)(pin.getId() / Global.getPinsPerRow()) + 1) * Global.getVPinGap()
+				<ValueExpr language="Java">
+					Global.getBarHeight() + ((int)(pin.getId() / Global.getPinsPerRow()) + 1) 
+					* Global.getVerticalPinGap()
 				</ValueExpr>
 			</Slot>
 		</PhysicalAgents>
-
 
 		<PhysicalAgent id="900" type="StartBar" x="125" y="170"
 			rotZ="-30">
@@ -241,14 +225,14 @@
 			<Slot property="initY" value="170" />
 			<Slot property="initRotZ" value="-30" />
 		</PhysicalAgent>
-
+		
 		<PhysicalAgent id="901" type="StartBar" x="175" y="170"
 			rotZ="30">
 			<Slot property="initX" value="175" />
 			<Slot property="initY" value="170" />
 			<Slot property="initRotZ" value="30" />
 		</PhysicalAgent>
-
+		
 		<PhysicalObject id="1000" type="Ground" x="150" y="0" />
 		<PhysicalObject id="1001" type="Wall" x="0" y="100" />
 		<PhysicalObject id="1002" type="Wall" x="300" y="100" />
@@ -264,7 +248,7 @@
 					<ul>
 						<li>The Galton Box is a device invented by Sir Francis<br/> Galton to demonstrate the central limit theorem<br/> and the normal distribution</li>
 						<li>The machine consists of a vertical board with<br/> interleaved rows of pins. Balls are dropped<br/>from the top, and bounce left and right<br/> as they hit the pins.</li>
-						<li>Eventually, they are collected into one-ball-wide<br/> bins at the bottom</li>
+						<li>Eventually, they are collected into bins<br/> at the bottom</li>
 						<li>The height of ball columns in the bins approximates<br/> a bell curve.</li>
 					</ul>
 					<p>Compare the visualizaion of this simulation with the<br/> corresponding 
@@ -273,9 +257,8 @@
 			</DisplayDescription>
 			
 			<Views>
-				<SpaceView>
-					<TwoDimensionalSpaceView2D
-						backgroundColor="grey" />
+				<SpaceView canvasColor="silver">
+					<TwoDimensionalSpaceView2D backgroundColor="grey" />
 				</SpaceView>
 				<PhysicalObjectView physicalObjectType="Ball">
 					<PhysicalShape2D>
@@ -284,12 +267,12 @@
 				</PhysicalObjectView>
 				<PhysicalObjectView physicalObjectType="Pin">
 					<PhysicalShape2D>
-						<Circle fill="blue" />
+						<Circle fill="black" />
 					</PhysicalShape2D>
 				</PhysicalObjectView>
 				<PhysicalObjectView physicalObjectType="Bar">
 					<PhysicalShape2D>
-						<Rectangle fill="blue" />
+						<Rectangle fill="black" />
 					</PhysicalShape2D>
 				</PhysicalObjectView>
 				<PhysicalObjectView physicalObjectType="StartBar">
@@ -299,12 +282,12 @@
 				</PhysicalObjectView>
 				<PhysicalObjectView physicalObjectType="Ground">
 					<PhysicalShape2D>
-						<Rectangle fill="blue" />
+						<Rectangle fill="black" />
 					</PhysicalShape2D>
 				</PhysicalObjectView>
 				<PhysicalObjectView physicalObjectType="Wall">
 					<PhysicalShape2D>
-						<Rectangle fill="blue" />
+						<Rectangle fill="black" />
 					</PhysicalShape2D>
 				</PhysicalObjectView>
 			</Views>
