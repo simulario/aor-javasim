@@ -138,16 +138,37 @@ public interface Physical {
    * Constant that defines the String name of the perceptionRadius property
    */
   public static final String PROP_PERCEPTION_RADIUS = "perceptionRadius";
-  
+
   /**
    * Constant that defines the String name of the perceptionAngle property
    */
   public static final String PROP_PERCEPTION_ANGLE = "perceptionAngle";
-  
+
   /**
    * Constant that defines the String name of the perceptionDirection property
    */
   public static final String PROP_PERCEPTION_DIRECTION = "perceptionDirection";
+  
+  /**
+   * Constant that defines the String name of the physicsType property
+   */
+  public static final String PROP_PHYSICS_TYPE = "physicsType";
+
+  /** enumeration used to specify certain categories of physic objects */
+  public enum PhysicsType {
+
+    // normal physics behavior
+    NORMAL,
+
+    // non move-able objects
+    INFINITE_MASS,
+
+    // immaterial object
+    IMMATERIAL,
+
+    // does not participate to the physics laws even if it is a physical
+    PHANTOM
+  }
 
   /**
    * NOTICE: We use this interface as a supertype of every implementation of
@@ -803,4 +824,19 @@ public interface Physical {
    * Set a new acceleration vector
    */
   public abstract void setA(Vector a);
+
+  /**
+   * Set the physics type value
+   * 
+   * @param physicsType
+   *          the type of new physics category to set
+   */
+  public void setPhysicsType(PhysicsType physicsType);
+  
+  /**
+   * Get the physics type value
+   * 
+   * @return the value of physicsType
+   */
+  public PhysicsType getPhysicsType();
 }
