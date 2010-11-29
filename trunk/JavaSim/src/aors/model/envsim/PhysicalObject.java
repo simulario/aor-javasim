@@ -29,9 +29,9 @@
 package aors.model.envsim;
 
 import java.beans.PropertyChangeEvent;
+import java.util.Map;
 
 import aors.util.Vector;
-import java.util.Map;
 
 /**
  * PhysicalObjectImpl comprise mainly the predefined physical properties
@@ -72,6 +72,8 @@ public class PhysicalObject extends Objekt implements Physical {
   private Shape3D shape3D;
 
   private String points = "";
+  
+  private PhysicsType physicsType = PhysicsType.NORMAL;
 
   /**
    * 
@@ -673,6 +675,21 @@ public class PhysicalObject extends Objekt implements Physical {
       this.propertyChangeSupport.firePropertyChange(new PropertyChangeEvent(
           this, Physical.PROP_POINTS, null, this.points));
     }
+  }
+  
+  @Override
+  public void setPhysicsType(PhysicsType physicsType) {
+    if (!this.physicsType.equals(physicsType)) {
+      this.physicsType = physicsType;
+      
+      this.propertyChangeSupport.firePropertyChange(new PropertyChangeEvent(
+          this, Physical.PROP_PHYSICS_TYPE, null, this.physicsType));
+    }
+  }
+
+  @Override
+  public PhysicsType getPhysicsType() {
+    return this.physicsType;
   }
 
   @Override

@@ -75,6 +75,8 @@ public class PhysicalAgentObject extends AgentObject implements Physical {
   private double perceptionAngle = 360;
 
   private String points = "";
+  
+  private PhysicsType physicsType = PhysicsType.NORMAL;
 
   /**
    * 
@@ -781,5 +783,20 @@ public class PhysicalAgentObject extends AgentObject implements Physical {
     properties.put(PROP_Y, this.getY());
     properties.put(PROP_Z, this.getZ());
     return properties;
+  }
+
+  @Override
+  public void setPhysicsType(PhysicsType physicsType) {
+    if (!this.physicsType.equals(physicsType)) {
+      this.physicsType = physicsType;
+      
+      this.propertyChangeSupport.firePropertyChange(new PropertyChangeEvent(
+          this, Physical.PROP_PHYSICS_TYPE, null, this.physicsType));
+    }
+  }
+
+  @Override
+  public PhysicsType getPhysicsType() {
+    return this.physicsType;
   }
 }
