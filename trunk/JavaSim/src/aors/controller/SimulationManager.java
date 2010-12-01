@@ -9,9 +9,7 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
-import java.io.StringReader;
 import java.net.URL;
-//import java.net.URLClassLoader;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
@@ -23,16 +21,7 @@ import java.util.jar.JarFile;
 
 import javax.swing.JOptionPane;
 import javax.swing.JScrollPane;
-import javax.xml.XMLConstants;
-import javax.xml.transform.Source;
-import javax.xml.transform.stream.StreamSource;
-import javax.xml.validation.Schema;
-import javax.xml.validation.SchemaFactory;
-import javax.xml.validation.Validator;
 
-import org.xml.sax.SAXException;
-
-import aors.codegen.XSLT2Processor;
 import aors.data.DataBus;
 import aors.data.DataBusInterface;
 import aors.exceptions.SimulatorException;
@@ -40,6 +29,7 @@ import aors.module.Constants;
 import aors.module.GUIModule;
 import aors.module.Module;
 import aors.util.jar.JarUtil;
+import aors.webservice.client.CodeGenClient;
 
 /**
  * This class represents the manager of the simulation.
@@ -55,10 +45,6 @@ import aors.util.jar.JarUtil;
  * 
  */
 public class SimulationManager {
-
-  private XSLT2Processor xslt2Processor;
-
-  private HashMap<String, String> xsltParameter;
 
   private SimulationDescription simulationDescription;
 
@@ -76,16 +62,6 @@ public class SimulationManager {
 
   public final static String PROJECT_DIRECTORY = "projects";
 
-  private String AORSLDirectory;
-  private String AORSLSchemaName;
-
-  private String codeGenXsltDirectory;
-  private String codeGenXsltName;
-
-  // the current (used as default) schema name
-  private final String CURRENT_AORSL_SCHEMA_NAME = "AORSL_0-8-4.xsd";
-  private final String DEFAULT_CODEGEN_XSLT_FILE = "aorsl2java.xsl";
-
   // the project properties object
   private Properties properties;
 
@@ -96,15 +72,8 @@ public class SimulationManager {
   private final String propertyLoggerFileName = "logger.file.name";
   private final String propertyLoggerPath = "logger.path";
   private final String propertyAutoMultithreading = "auto.multithreading";
-  private final String propertyXMLSchemaFileName = "XML-Schema.file.name";
-  private final String propertyXMLSchemaFilePath = "XML-Schema.file.path";
-  private final String propertyXSLTFileName = "CodeGen.XSLT.file.name";
-  private final String propertyXSLTFilePath = "CodeGen.XSLT.file.path";
 
   public static final String propertyLogger = "logger";
-
-  // used by the AOR-WebSim Controller component - need to be public and static,
-  public static final String PROPERTY_XML_SCHEMA_FILE_NAME = "XML Schema file name";
 
   // property values (default values)
   private String loggerFileName = "output.xml";
@@ -119,7 +88,8 @@ public class SimulationManager {
    * Create a new simulation manager.
    */
   public SimulationManager() {
-    // create the data bus that will be the data bus of all components/listeners
+    // create the data bus that will be the data bus of all
+    // components/listeners
     this.dataBus = new DataBus();
 
     this.simulationDescription = new SimulationDescription();
@@ -134,17 +104,12 @@ public class SimulationManager {
     // initialize the modules/plugins
     this.initModules();
 
-    // create the XSLT procesor ibject
-    this.xslt2Processor = new XSLT2Processor();
-
-    // the mapt with XSLT parameters
-    this.xsltParameter = new HashMap<String, String>();
-
     // set the project directory
     this.projectDirectory = new File(APP_ROOT_DIRECTORY + File.separator
         + PROJECT_DIRECTORY);
 
-    // create the project directory in the current path if not exists already
+    // create the project directory in the current path if not exists
+    // already
     if (!this.projectDirectory.exists()) {
       this.projectDirectory.mkdir();
     }
@@ -254,7 +219,8 @@ public class SimulationManager {
           int pos = Integer.parseInt(modulesGeneralProperties
               .getProperty(moduleFileName));
 
-          // using 0 or negative for positioning will have as effect that the
+          // using 0 or negative for positioning will have as effect
+          // that the
           // module will not be loaded
           if (pos > 0) {
             // add module in the right position
@@ -266,9 +232,12 @@ public class SimulationManager {
           resultModuleJars.add(moduleFile);
         }
       } catch (NumberFormatException nfex) {
-        // just a backup in case that you provide by mistake a "non-number"
-        // position in the properties list for this module, so in this case it
-        // will be a "non-ordered" one as when the position is not given at all
+        // just a backup in case that you provide by mistake a
+        // "non-number"
+        // position in the properties list for this module, so in this
+        // case it
+        // will be a "non-ordered" one as when the position is not given
+        // at all
         resultModuleJars.add(moduleFile);
       }
     }
@@ -461,7 +430,8 @@ public class SimulationManager {
 
     System.out.print("\n");
 
-    // if we are here, the module is OS/Bits compatible with the current system
+    // if we are here, the module is OS/Bits compatible with the current
+    // system
     return true;
   }
 
@@ -584,21 +554,7 @@ public class SimulationManager {
     } catch (IOException ioe) {
       System.err.println("Can not load the file " + this.PROPERTY_FILE_NAME
           + ". Using the default values.");
-      this.setDefaultProperties();
     }
-
-  }
-
-  /*
-   * this values are used when no property file exists
-   */
-  private void setDefaultProperties() {
-    this.AORSLDirectory = "ext" + File.separator + "aorsl";
-    this.AORSLSchemaName = CURRENT_AORSL_SCHEMA_NAME;
-
-    this.codeGenXsltDirectory = APP_ROOT_DIRECTORY + File.separator + "ext"
-        + File.separator + "javagen";
-    this.codeGenXsltName = DEFAULT_CODEGEN_XSLT_FILE;
   }
 
   private void setProperties() {
@@ -607,36 +563,6 @@ public class SimulationManager {
     if (value != null && value.equals("true")) {
       this.autoMultithreading = true;
     }
-
-    value = this.properties.getProperty(propertyXMLSchemaFileName);
-    if (value != null) {
-      this.AORSLSchemaName = value;
-    } else {
-      this.AORSLSchemaName = CURRENT_AORSL_SCHEMA_NAME;
-    }
-
-    value = this.properties.getProperty(propertyXMLSchemaFilePath);
-    if (value != null) {
-      this.AORSLDirectory = value;
-    } else {
-      this.AORSLDirectory = "ext" + File.separator + "aorsl";
-    }
-
-    value = this.properties.getProperty(propertyXSLTFileName);
-    if (value != null) {
-      this.codeGenXsltName = value;
-    } else {
-      this.codeGenXsltName = DEFAULT_CODEGEN_XSLT_FILE;
-    }
-
-    value = this.properties.getProperty(propertyXSLTFilePath);
-    if (value != null) {
-      this.codeGenXsltDirectory = value;
-    } else {
-      this.codeGenXsltDirectory = APP_ROOT_DIRECTORY + File.separator + "ext"
-          + File.separator + "javagen";
-    }
-
   }
 
   /**
@@ -656,10 +582,6 @@ public class SimulationManager {
     this.properties.put(this.propertyLoggerPath, this.loggerPath);
     this.properties.put(this.propertyAutoMultithreading,
         String.valueOf(autoMultithreading));
-    this.properties.put(this.propertyXMLSchemaFileName, this.AORSLSchemaName);
-    this.properties.put(this.propertyXMLSchemaFilePath, this.AORSLDirectory);
-    this.properties.put(this.propertyXSLTFileName, this.codeGenXsltName);
-    this.properties.put(this.propertyXSLTFilePath, this.codeGenXsltDirectory);
   }
 
   private void saveProperties() {
@@ -815,73 +737,11 @@ public class SimulationManager {
    * @return true if valid, false otherwise
    */
   public boolean validateSimulation() {
-    boolean result = false;
-
     String xml = this.getProject().getSimulationDescription();
 
-    File schemaFile = this.getXMLSchema();
+    CodeGenClient wsClient = new CodeGenClient();
 
-    SchemaFactory factory;
-
-    try {
-      factory = SchemaFactory
-          .newInstance("http://www.w3.org/XML/XMLSchema/v1.1");
-      System.out.println("Xerces with XML-Schema 1.1 Support is loaded.");
-    } catch (IllegalArgumentException iae) {
-      // lookup a factory for the W3C XML Schema language
-      factory = SchemaFactory.newInstance(XMLConstants.W3C_XML_SCHEMA_NS_URI);
-      System.out.println("Loaded schema validation provider "
-          + factory.getClass().getName());
-    }
-
-    try {
-      // System.out.println("Is 1.1: " +
-      // factory.isSchemaLanguageSupported("http://www.w3.org/XML/XMLSchema/v1.1"));
-
-      // create a new Schema instance
-      Schema schema = factory.newSchema(schemaFile);
-
-      // get a validator from the schema.
-      Validator validator = schema.newValidator();
-
-      // parse the document you want to check.
-      Source source = new StreamSource(new StringReader(xml));
-
-      // validate it
-      validator.validate(source);
-
-      // indicate when valid
-      result = true;
-
-    } catch (SAXException e) {
-      // indicate when invalid
-      System.err.println("The simulation is not valid because:");
-      System.err.println(e.getMessage());
-
-      result = false;
-    } catch (IOException e) {
-      e.printStackTrace();
-    }
-
-    return result;
-  }
-
-  private File getXMLSchema() {
-
-    File schemaLocation = new File(System.getProperty("user.dir")
-        + File.separator + this.AORSLDirectory + File.separator
-        + this.AORSLSchemaName);
-
-    if (!schemaLocation.exists()) {
-      System.err.println("The XML-Schema [" + this.AORSLSchemaName
-          + "] was not found. Try with [" + this.CURRENT_AORSL_SCHEMA_NAME
-          + "].");
-      this.AORSLSchemaName = this.CURRENT_AORSL_SCHEMA_NAME;
-      schemaLocation = new File(System.getProperty("user.dir") + File.separator
-          + this.AORSLDirectory + File.separator + this.AORSLSchemaName);
-    }
-
-    return schemaLocation;
+    return wsClient.validate(xml);
   }
 
   /**
@@ -894,40 +754,20 @@ public class SimulationManager {
   public boolean generate() {
     boolean result = false;
 
-    File xsltFile = new File(this.codeGenXsltDirectory + File.separator
-        + this.codeGenXsltName);
-    if (!xsltFile.exists()) {
-      System.err.println("No transformation file found!");
-      return false;
-    }
-
-    // out = switch generation to memory on, java = switch write to disk on
-    this.xsltParameter.put("output.fileExtension", "java");
-
-    this.xsltParameter.put(
-        "sim.package.root",
-        "file:///" + project.getDirectory() + File.separator
-            + project.getName() + File.separator + Project.SRC_FOLDER_NAME);
-
-    // set the package name, we use ALWAYS the same
-    this.xsltParameter.put("sim.package", "");
-
     if (!this.getProject().isGenerated()) {
 
-      // transform the simulation description -> generate Java code
-      this.xslt2Processor.transformFromURL(this.getProject()
-          .getSimulationDescription(), xsltFile.toURI(), this.xsltParameter);
+      // the root path where the files will be generated
+      File pathForSource = new File(project.getDirectory() + File.separator
+          + project.getName() + File.separator + Project.SRC_FOLDER_NAME);
 
-      // test if the Java code generation succeed
-      if (this.xslt2Processor.getMessages().isEmpty()) {
-        result = true;
-        this.getProject().setGenerated(true);
-      } else {
-        for (String message : this.xslt2Processor.getMessages()) {
-          System.err.println(message);
-        }
-        result = false;
-      }
+      // create the translation WS client instance
+      CodeGenClient wsClient = new CodeGenClient();
+
+      // invoke the translation WS for generating Java source files
+      result = wsClient.generateSource(this.getProject()
+          .getSimulationDescription(), pathForSource);
+
+      this.getProject().setGenerated(result);
     } else {
       // project is already generated
       result = true;
@@ -1077,7 +917,8 @@ public class SimulationManager {
         + "\n"
         + "     java -jar AOR-Simulator_console.jar [options]\n" + "\n";
 
-    // if the application is running without console, e.g. double click on the
+    // if the application is running without console, e.g. double click on
+    // the
     // JAR file
     if (console == null) {
       JOptionPane.showMessageDialog(null, messageNoConsole, "Error",
