@@ -674,6 +674,7 @@ public class AORJavaGui extends JFrame implements ActionListener,
    * @return
    */
   private boolean validateXML() {
+
     boolean result = false;
 
     // update the simulation description depending on the current XML editor
@@ -706,6 +707,7 @@ public class AORJavaGui extends JFrame implements ActionListener,
     }
 
     return result;
+
   }
 
   private void generate() {
@@ -741,97 +743,89 @@ public class AORJavaGui extends JFrame implements ActionListener,
 
       if (saved == true) {
 
-        // check if the XML markup is valid against the XML Schema
-        if (this.validateXML()) {
+        if (this.simulationManager.getProject().isGenerated()) {
+          // ask the user if to compile again?
+          int status = JOptionPane.showConfirmDialog(this,
+              this.messageGenerateAgain, "", JOptionPane.YES_OPTION,
+              JOptionPane.QUESTION_MESSAGE);
+          // user clicked yes, set project in the not yet generated state
+          if (status == JOptionPane.YES_OPTION) {
+            this.simulationManager.getProject().setGenerated(false);
+            toolBarSimulation.enableButton(Menu.Item.RUN, false);
 
-          if (this.simulationManager.getProject().isGenerated()) {
-            // ask the user if to compile again?
-            int status = JOptionPane.showConfirmDialog(this,
-                this.messageGenerateAgain, "", JOptionPane.YES_OPTION,
-                JOptionPane.QUESTION_MESSAGE);
-            // user clicked yes, set project in the not yet generated state
-            if (status == JOptionPane.YES_OPTION) {
-              this.simulationManager.getProject().setGenerated(false);
-              toolBarSimulation.enableButton(Menu.Item.RUN, false);
-
-            }
           }
+        }
 
-          // disable all not usable menu items
-          ((Menu) this.getJMenuBar()).switchMenuItems(Arrays.asList(
-              Menu.Item.SAVE, Menu.Item.SAVE_AS, Menu.Item.EXPORT_XML,
-              Menu.Item.EXPORT_JAR), false);
-          this.toolBarFile.enableButton(Menu.Item.SAVE, false);
+        // disable all not usable menu items
+        ((Menu) this.getJMenuBar()).switchMenuItems(Arrays.asList(
+            Menu.Item.SAVE, Menu.Item.SAVE_AS, Menu.Item.EXPORT_XML,
+            Menu.Item.EXPORT_JAR), false);
+        this.toolBarFile.enableButton(Menu.Item.SAVE, false);
 
-          // when an external XML editor is used
-          if (this.preferences.isExternalXMLEditor()) {
-            this.simulationManager.getProject().loadSimulationDescription();
-            this.tabAORSL.getEditorPane().setText(
-                this.simulationManager.getProject().getSimulationDescription());
-            // when the internal editor is used
-          } else {
-            // update the simulation description in the project
-            this.simulationManager.getProject().setSimulationDescription(
-                this.tabAORSL.getEditorPane().getText());
-            // save the project
-            this.simulationManager.getProject().save();
-          }
+        // when an external XML editor is used
+        if (this.preferences.isExternalXMLEditor()) {
+          this.simulationManager.getProject().loadSimulationDescription();
+          this.tabAORSL.getEditorPane().setText(
+              this.simulationManager.getProject().getSimulationDescription());
+          // when the internal editor is used
+        } else {
+          // update the simulation description in the project
+          this.simulationManager.getProject().setSimulationDescription(
+              this.tabAORSL.getEditorPane().getText());
+          // save the project
+          this.simulationManager.getProject().save();
+        }
 
-          // indicate it in the progress bar the beginning of the generation
-          // process
-          this.progressBar.setIndeterminate(true);
-          this.progressBar.setString("Generating...");
-          this.progressBar.setStringPainted(true);
+        // indicate it in the progress bar the beginning of the generation
+        // process
+        this.progressBar.setIndeterminate(true);
+        this.progressBar.setString("Generating...");
+        this.progressBar.setStringPainted(true);
 
-          // start a thread in the background
-          this.backgroundExecution.execute(new Runnable() {
-            public void run() {
-              try {
-                // generate the simulation project
-                simulationManager.generate();
-              } finally {
-                // when finished, indicate it in the progress bar
-                GuiExecutor.instance().execute(new Runnable() {
-                  public void run() {
-                    progressBar.setIndeterminate(false);
+        // start a thread in the background
+        this.backgroundExecution.execute(new Runnable() {
+          public void run() {
+            try {
+              // generate the simulation project
+              simulationManager.generate();
+            } finally {
+              // when finished, indicate it in the progress bar
+              GuiExecutor.instance().execute(new Runnable() {
+                public void run() {
+                  progressBar.setIndeterminate(false);
 
-                    System.out.print(messageGeneration);
+                  System.out.print(messageGeneration);
 
-                    if (simulationManager.getProject().isGenerated()) {
-                      progressBar.setString("Generated.");
-                      success.println("Ok");
-
-                      // enable some disabled menu items
-                      ((Menu) getJMenuBar()).switchMenuItems(Arrays.asList(
-                          Menu.Item.EXPORT_JAR, Menu.Item.COMPILE_ONLY), true);
-
-                    } else {
-                      progressBar.setString("Generation failed.");
-                      System.err.println("Failed!");
-
-                      // disable menu items
-                      ((Menu) getJMenuBar()).switchMenuItems(Arrays.asList(
-                          Menu.Item.EXPORT_JAR, Menu.Item.COMPILE_ONLY), true);
-                    }
+                  if (simulationManager.getProject().isGenerated()) {
+                    progressBar.setString("Generated.");
+                    success.println("Ok");
 
                     // enable some disabled menu items
-                    ((Menu) getJMenuBar()).switchMenuItems(Arrays
-                        .asList(Menu.Item.SAVE, Menu.Item.SAVE_AS,
-                            Menu.Item.EXPORT_XML), true);
+                    ((Menu) getJMenuBar()).switchMenuItems(Arrays.asList(
+                        Menu.Item.EXPORT_JAR, Menu.Item.COMPILE_ONLY), true);
 
-                  }// execute()
-                });// run()
-              }// finally
-            }// run()
-          });// execute()
-          // if not valid XML
-          this.tempSimSteps = -1;
-          this.tempStepTimeDelay = -1;
+                  } else {
+                    progressBar.setString("Generation failed.");
+                    System.err.println("Failed!");
 
-        } else {
-          System.err
-              .println("The simulation can not be generated as long as the simulation description is not valid.");
-        }
+                    // disable menu items
+                    ((Menu) getJMenuBar()).switchMenuItems(Arrays.asList(
+                        Menu.Item.EXPORT_JAR, Menu.Item.COMPILE_ONLY), true);
+                  }
+
+                  // enable some disabled menu items
+                  ((Menu) getJMenuBar()).switchMenuItems(Arrays.asList(
+                      Menu.Item.SAVE, Menu.Item.SAVE_AS, Menu.Item.EXPORT_XML),
+                      true);
+
+                }// execute()
+              });// run()
+            }// finally
+          }// run()
+        });// execute()
+        // if not valid XML
+        this.tempSimSteps = -1;
+        this.tempStepTimeDelay = -1;
       }// if saved
 
     }// while not saved
@@ -965,120 +959,109 @@ public class AORJavaGui extends JFrame implements ActionListener,
 
       // when the project was saved
       if (saved == true) {
-        // if the validation of the description.xml file(!) was successful
-        if (this.validateXML()) {
 
-          // update the simulation description depending on the external editor
-          // settings
-          // this.updateSimulationDescription();
+        // update the simulation description depending on the external editor
+        // settings
+        // this.updateSimulationDescription();
 
-          // always build everything from scratch
-          this.simulationManager.getProject().setGenerated(false);
+        // always build everything from scratch
+        this.simulationManager.getProject().setGenerated(false);
 
-          // disable all not usable menu items
-          ((Menu) this.getJMenuBar()).switchMenuItems(Arrays.asList(
-              Menu.Item.SAVE, Menu.Item.SAVE_AS, Menu.Item.EXPORT_XML,
-              Menu.Item.EXPORT_JAR, Menu.Item.COMPILE_ONLY), false);
+        // disable all not usable menu items
+        ((Menu) this.getJMenuBar()).switchMenuItems(Arrays.asList(
+            Menu.Item.SAVE, Menu.Item.SAVE_AS, Menu.Item.EXPORT_XML,
+            Menu.Item.EXPORT_JAR, Menu.Item.COMPILE_ONLY), false);
 
-          this.toolBarFile.enableButton(Menu.Item.SAVE, false);
-          // this.toolBarFile.enableButton(Menu.Item.RUN, false);
-          // this.toolBarFile.enableButton(Menu.Item.NEW, false);
-          // this.toolBarFile.enableButton(Menu.Item.OPEN, false);
+        this.toolBarFile.enableButton(Menu.Item.SAVE, false);
+        // this.toolBarFile.enableButton(Menu.Item.RUN, false);
+        // this.toolBarFile.enableButton(Menu.Item.NEW, false);
+        // this.toolBarFile.enableButton(Menu.Item.OPEN, false);
 
-          // indicate it in the progress bar the beginning of the build process
-          this.progressBar.setIndeterminate(true);
-          this.progressBar.setString("building...");
-          this.progressBar.setStringPainted(true);
+        // indicate it in the progress bar the beginning of the build process
+        this.progressBar.setIndeterminate(true);
+        this.progressBar.setString("building...");
+        this.progressBar.setStringPainted(true);
 
-          // start one thread in the background
-          this.backgroundExecution.execute(new Runnable() {
-            public void run() {
+        // start one thread in the background
+        this.backgroundExecution.execute(new Runnable() {
+          public void run() {
 
-              try {
-                System.out.print(messageGeneration);
-                // if the generation of the simulation project was successful
-                if (simulationManager.generate()) {
-                  success.println("Ok");
-                  // compile the simulator project
-                  if (simulationManager.getProject().compile()) {
+            try {
+              System.out.print(messageGeneration);
+              // if the generation of the simulation project was successful
+              if (simulationManager.generate()) {
+                success.println("Ok");
+                // compile the simulator project
+                if (simulationManager.getProject().compile()) {
 
-                    // The simulation is already builded. Initialize it and
-                    // announce modules. This is the point when the modules are
-                    // asked to initialize on an build project is open.
-                    try {
-                      simulationManager.instantiateCurrentSimulation();
-                    } catch (SimulatorException e) {
-                      // TODO Auto-generated catch block
-                      e.printStackTrace();
-                    }
-
-                    // initialize data from XML for module
-                    simulationManager.initializeDom(simulationManager
-                        .getProject().getSimulationDescription());
-
-                    simulationManager.getProject()
-                        .prepareSimulationWithoutLogFile();
-                  } else {
-                    System.err.println("Compilation failed!");
+                  // The simulation is already builded. Initialize it and
+                  // announce modules. This is the point when the modules are
+                  // asked to initialize on an build project is open.
+                  try {
+                    simulationManager.instantiateCurrentSimulation();
+                  } catch (SimulatorException e) {
+                    // TODO Auto-generated catch block
+                    e.printStackTrace();
                   }
+
+                  // initialize data from XML for module
+                  simulationManager.initializeDom(simulationManager
+                      .getProject().getSimulationDescription());
+
+                  simulationManager.getProject()
+                      .prepareSimulationWithoutLogFile();
                 } else {
-                  System.err.println("Failed!");
-
+                  System.err.println("Compilation failed!");
                 }
-              } finally { // when finished, indicate it in the progress bar
-                GuiExecutor.instance().execute(new Runnable() {
-                  public void run() {
-                    progressBar.setIndeterminate(false);
+              } else {
+                System.err.println("Failed!");
 
-                    System.out.print(messageBuilt);
-
-                    // enable all previously disabled menu items
-                    ((Menu) getJMenuBar()).switchMenuItems(Arrays.asList(
-                        Menu.Item.SAVE, Menu.Item.SAVE_AS,
-                        Menu.Item.EXPORT_XML, Menu.Item.EXPORT_JAR,
-                        Menu.Item.COMPILE_ONLY), true);
-
-                    if (simulationManager.getProject().isCompiled()) {
-                      progressBar.setString("Built.");
-                      success.println("Ok");
-
-                      // enable the run button for the simulation
-                      toolBarSimulation.enableButton(Menu.Item.RUN, true);
-                      ((Menu) getJMenuBar()).switchMenuItems(
-                          Arrays.asList(Menu.Item.RUN), true);
-
-                      // enable editable simulation elements on tool-bar
-                      toolBarSimulation
-                          .enableSimulationToolBarEditableComponents(true);
-                    } else {
-                      progressBar.setString("Built failed!");
-                      System.err.println("Failed!");
-                      toolBarSimulation.enableButton(Menu.Item.RUN, false);
-                      ((Menu) getJMenuBar()).switchMenuItems(
-                          Arrays.asList(Menu.Item.RUN), false);
-                    }
-
-                    // when the compilation started and created a diagnostic
-                    // collector
-                    if (simulationManager.getProject().getDiagnosticCollector() != null) {
-                      // print the diagnostics if there are any
-                      // simulator.getProject().printDiagnostics();
-                      printDiagnostics();
-                    }
-                  }
-                });
               }
+            } finally { // when finished, indicate it in the progress bar
+              GuiExecutor.instance().execute(new Runnable() {
+                public void run() {
+                  progressBar.setIndeterminate(false);
 
+                  System.out.print(messageBuilt);
+
+                  // enable all previously disabled menu items
+                  ((Menu) getJMenuBar()).switchMenuItems(Arrays.asList(
+                      Menu.Item.SAVE, Menu.Item.SAVE_AS, Menu.Item.EXPORT_XML,
+                      Menu.Item.EXPORT_JAR, Menu.Item.COMPILE_ONLY), true);
+
+                  if (simulationManager.getProject().isCompiled()) {
+                    progressBar.setString("Built.");
+                    success.println("Ok");
+
+                    // enable the run button for the simulation
+                    toolBarSimulation.enableButton(Menu.Item.RUN, true);
+                    ((Menu) getJMenuBar()).switchMenuItems(
+                        Arrays.asList(Menu.Item.RUN), true);
+
+                    // enable editable simulation elements on tool-bar
+                    toolBarSimulation
+                        .enableSimulationToolBarEditableComponents(true);
+                  } else {
+                    progressBar.setString("Built failed!");
+                    System.err.println("Failed!");
+                    toolBarSimulation.enableButton(Menu.Item.RUN, false);
+                    ((Menu) getJMenuBar()).switchMenuItems(
+                        Arrays.asList(Menu.Item.RUN), false);
+                  }
+
+                  // when the compilation started and created a diagnostic
+                  // collector
+                  if (simulationManager.getProject().getDiagnosticCollector() != null) {
+                    // print the diagnostics if there are any
+                    // simulator.getProject().printDiagnostics();
+                    printDiagnostics();
+                  }
+                }
+              });
             }
-          });// execute()
 
-        } else {
-
-          System.out.print(messageValidation);
-          System.err.println("Failed!");
-          System.out.print(messageBuilt);
-          System.err.println("Failed!");
-        }
+          }
+        });// execute()
       }
     }
   }
