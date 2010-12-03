@@ -16,6 +16,8 @@ public class ContinuousQuantity extends Quantity {
 
   private double quantity;
   private ContinuousQuantityType continuousQuantityType;
+  // thr property "unit" is only used if the quantity is not expressed in terms of 
+  // the default unit as defined by the continuousQuantityType
   private String unit; // optional / ISSUE: better define as a suitable enum?
 
   /**
