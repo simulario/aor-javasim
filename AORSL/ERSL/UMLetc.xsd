@@ -118,7 +118,9 @@
 	<!-- =================================================================== -->
 	<!-- *** ReferenceProperty ***  -->
 	<!-- =================================================================== -->
-	<xs:element name="ReferenceProperty" type="ers:ReferenceProperty.type" substitutionGroup="ers:Property"/>
+	<xs:element name="ReferenceProperty" type="ers:ReferenceProperty.type" substitutionGroup="ers:Property">
+		<xs:annotation><xs:documentation> The type attribute references an Object Type.</xs:documentation></xs:annotation>
+	</xs:element>
 	<xs:complexType name="ReferenceProperty.type">
 		<xs:complexContent>
 			<xs:extension base="ers:Property.type"/>
@@ -127,7 +129,36 @@
 	<!-- =================================================================== -->
 	<!-- *** ComplexDataProperty *** -->
 	<!-- =================================================================== -->
-	<xs:element name="ComplexDataProperty" type="ers:ReferenceProperty.type" substitutionGroup="ers:Property"/>
+	<xs:element name="ComplexDataProperty" type="ers:ReferenceProperty.type" substitutionGroup="ers:Property">
+		<xs:annotation><xs:documentation> The type attribute references a Complex Data Type.</xs:documentation></xs:annotation>		
+	</xs:element>
+	<!-- =================================================================== -->
+	<!-- *** CollectionValuedProperty *** -->
+	<!-- =================================================================== -->
+	<xs:element name="CollectionValuedProperty" type="ers:CollectionValuedProperty.type" substitutionGroup="ers:Property">
+		<xs:annotation><xs:documentation>The type attribute references a Collection Type.</xs:documentation></xs:annotation>		
+	</xs:element>
+	<xs:complexType name="CollectionValuedProperty.type">
+		<xs:complexContent>
+			<xs:extension base="ers:CollectionValuedProperty0.type">
+				<xs:attribute name="itemType" type="ers:PathName" use="required"/>
+			</xs:extension>
+		</xs:complexContent>
+	</xs:complexType>
+	<xs:complexType name="CollectionValuedProperty0.type">
+		<xs:complexContent>
+			<xs:restriction base="ers:Property.type">
+				<xs:attribute name="type" use="required">
+					<xs:simpleType>
+						<xs:restriction base="ers:PathName">
+							<xs:enumeration value="List"/>
+							<xs:enumeration value="Set"/>
+						</xs:restriction>
+					</xs:simpleType>										
+				</xs:attribute>
+			</xs:restriction>
+		</xs:complexContent>
+	</xs:complexType>
 	<!-- =================================================================== -->
 	<!-- *** EnumerationProperty *** -->
 	<!-- =================================================================== -->
@@ -171,30 +202,14 @@
 	<xs:element name="Slot" type="ers:Slot.type"/>
 	<!-- =================================================================== -->
 	<xs:complexType name="Slot.type">
-		<xs:choice>
-			<xs:element ref="ers:RandomVariable" minOccurs="0"/>
-			<xs:element ref="ers:ValueExpr" minOccurs="0" maxOccurs="unbounded"/>
-		</xs:choice>
-		<xs:attribute name="property" type="ers:PathName" use="required"/>
-		<xs:attribute name="value" type="xs:string" use="optional"/>
-	</xs:complexType>
-	<xs:complexType name="SimpleSlot">
 		<xs:complexContent>
-			<xs:restriction base="ers:Slot.type">
-				<xs:attribute name="property" type="ers:PathName" use="required"/>
-				<xs:attribute name="value" type="xs:string" use="required"/>
-			</xs:restriction>
-		</xs:complexContent>
-	</xs:complexType>
-	<xs:complexType name="OpaqueExprSlot">
-		<xs:complexContent>
-			<xs:restriction base="ers:Slot.type">
+			<xs:extension base="ers:RandomVariable-OR-ValueExpr">
 				<xs:choice>
-					<xs:element ref="ers:RandomVariable" minOccurs="0"/>
-					<xs:element ref="ers:ValueExpr" minOccurs="0" maxOccurs="unbounded"/>
+					<xs:element ref="ers:ObjectValueExpr" minOccurs="0"/>
 				</xs:choice>
 				<xs:attribute name="property" type="ers:PathName" use="required"/>
-			</xs:restriction>
+				<xs:attribute name="value" type="xs:string" use="optional"/>
+			</xs:extension>
 		</xs:complexContent>
 	</xs:complexType>
 	<!-- =================================================================== -->
@@ -285,6 +300,28 @@
 		</xs:simpleContent>
 	</xs:complexType>
 	<!-- =================================================================== -->
+	<xs:element name="PropertyValueExpr">
+	<!-- =================================================================== -->
+		<xs:complexType>
+			<xs:attribute name="objectVariable" type="ers:CanonicalName" use="required"/>
+			<xs:attribute name="property" type="ers:CanonicalName" use="required"/>
+		</xs:complexType>
+	</xs:element>
+	<!-- =================================================================== -->
+	<xs:element name="GlobalPropertyValueExpr">
+		<!-- =================================================================== -->
+		<xs:complexType>
+			<xs:attribute name="property" type="ers:CanonicalName" use="required"/>
+		</xs:complexType>
+	</xs:element>
+	<!-- =================================================================== -->
+	<xs:element name="ObjectValueExpr">
+		<!-- =================================================================== -->
+		<xs:complexType>
+			<xs:attribute name="objectVariable" type="ers:CanonicalName" use="required"/>
+		</xs:complexType>
+	</xs:element>
+	<!-- =================================================================== -->
 	<xs:element name="Selection">
 	<!-- =================================================================== -->
 		<xs:complexType>
@@ -293,7 +330,8 @@
 			</xs:sequence>
 			<xs:attribute name="copyToList" type="ers:PathName" use="optional"/>
 		</xs:complexType>
-	</xs:element>	<!-- ======================================================= -->
+	</xs:element>	
+	<!-- ======================================================= -->
 	<xs:element name="Enumeration" type="ers:Enumeration.type"/>
 	<!-- ======================================================= -->
 	<xs:complexType name="Enumeration.type">
@@ -322,6 +360,8 @@
 		<xs:choice>
 			<xs:element ref="ers:RandomVariable" minOccurs="0"/>
 			<xs:element ref="ers:ValueExpr" minOccurs="0" maxOccurs="unbounded"/>
+			<xs:element ref="ers:PropertyValueExpr" minOccurs="0"/>
+			<xs:element ref="ers:GlobalPropertyValueExpr" minOccurs="0"/>
 		</xs:choice>
 	</xs:complexType>
 	<!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->
@@ -330,6 +370,7 @@
 		<xs:choice>
 			<xs:element ref="ers:DiscreteRandomVariable" minOccurs="0"/>
 			<xs:element ref="ers:ValueExpr" minOccurs="0" maxOccurs="unbounded"/>
+			<xs:element ref="ers:PropertyValueExpr" minOccurs="0"/>
 		</xs:choice>
 	</xs:complexType>
 	<!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->
