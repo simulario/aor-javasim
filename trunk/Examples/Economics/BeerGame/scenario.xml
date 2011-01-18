@@ -120,7 +120,7 @@
   			<DO>
   				<UPDATE-AGT>
   					<Slot property="currentSalesOrderQuantity">
-  						<ValueExpr language="Java">msg.getQuantity()</ValueExpr>
+  					  <PropertyValueExpr objectVariable="msg" property="quantity"/>
   					</Slot>
   				</UPDATE-AGT>
   			</DO>
@@ -143,7 +143,7 @@
   			<THEN>
   				<UPDATE-AGT>
   					<Slot property="outDelivery">
-  						<ValueExpr language="Java">node.getCurrentSalesOrderQuantity()</ValueExpr>
+  					  <PropertyValueExpr objectVariable="node" property="currentSalesOrderQuantity"/>
   					</Slot>
   					<Slot property="currentSalesOrderQuantity" value="0"/>
   				</UPDATE-AGT>
@@ -151,7 +151,7 @@
   					<OutMessageEventExpr messageType="BeerDelivery" delay="13">
   						<ReceiverIdRef language="Java">node.getId() + 1</ReceiverIdRef>
   						<Slot property="quantity">
-  							<ValueExpr language="Java">node.getOutDelivery()</ValueExpr>
+  						  <PropertyValueExpr objectVariable="node" property="outDelivery"/>
   						</Slot>
   					</OutMessageEventExpr>
   				</SCHEDULE-EVT>
@@ -179,7 +179,7 @@
        <DO>
        	<UPDATE-AGT>
        		<Slot property="currentSalesOrderQuantity">
-       			<ValueExpr language="Java">msg.getQuantity()</ValueExpr>
+       		  <PropertyValueExpr objectVariable="msg" property="quantity"/>
        		</Slot>
        	</UPDATE-AGT>
        </DO>
@@ -311,7 +311,7 @@
   					<OutMessageEventExpr messageType="Order" delay="6">
   						<ReceiverIdRef language="Java">node.getId() - 1</ReceiverIdRef>
   						<Slot property="quantity">
-  							<ValueExpr language="Java">node.getCurrentSalesOrderQuantity()</ValueExpr>
+  						  <PropertyValueExpr objectVariable="node" property="currentSalesOrderQuantity"/>
   						</Slot>
   					</OutMessageEventExpr>
   				</SCHEDULE-EVT>
@@ -356,7 +356,7 @@
        		<OutMessageEventExpr messageType="BeerDelivery" delay="13">            
        			<ReceiverIdRef language="Java">node.getId() + 1</ReceiverIdRef>
        			<Slot property="quantity">
-       				<ValueExpr language="Java">node.getOutDelivery()</ValueExpr>
+       			  <PropertyValueExpr objectVariable="node" property="outDelivery"/>
        			</Slot>
        		</OutMessageEventExpr>
        	</SCHEDULE-EVT>
@@ -382,7 +382,7 @@
        <THEN>
        	<UPDATE-AGT>
        		<Slot property="outDelivery">
-       			<ValueExpr language="Java">node.getInventory()</ValueExpr>
+       		  <PropertyValueExpr objectVariable="node" property="inventory"/>
        		</Slot>
        		<Slot property="backorderQuantity">
        			<ValueExpr language="Java">
@@ -398,7 +398,7 @@
        		<OutMessageEventExpr messageType="BeerDelivery" delay="13">
        			<ReceiverIdRef language="Java">node.getId() + 1</ReceiverIdRef>
        			<Slot property="quantity">
-       				<ValueExpr language="Java">node.getOutDelivery()</ValueExpr>
+       			  <PropertyValueExpr objectVariable="node" property="outDelivery"/>
        			</Slot>
        		</OutMessageEventExpr>
        	</SCHEDULE-EVT>
@@ -447,7 +447,7 @@
   			<DO>
   				<UPDATE-AGT>
   					<Slot property="currentSalesOrderQuantity">
-  						<ValueExpr language="Java">msg.getQuantity()</ValueExpr>
+  					  <PropertyValueExpr objectVariable="msg" property="quantity"/>
   					</Slot>
   				</UPDATE-AGT>
   			</DO>
@@ -579,7 +579,7 @@
   					<OutMessageEventExpr messageType="Order" delay="6">
   						<ReceiverIdRef language="Java">node.getId() - 1</ReceiverIdRef>
   						<Slot property="quantity">
-  							<ValueExpr language="Java">node.getCurrentSalesOrderQuantity()</ValueExpr>
+  						  <PropertyValueExpr objectVariable="node" property="currentSalesOrderQuantity"/>
   						</Slot>
   					</OutMessageEventExpr>
   				</SCHEDULE-EVT>
@@ -625,7 +625,7 @@
   					<OutMessageEventExpr messageType="BeerDelivery" delay="13">            
   						<ReceiverIdRef language="Java">node.getId() + 1</ReceiverIdRef>
   						<Slot property="quantity">
-  							<ValueExpr language="Java">node.getOutDelivery()</ValueExpr>
+  						  <PropertyValueExpr objectVariable="node" property="outDelivery"/>
   						</Slot>
   					</OutMessageEventExpr>
   				</SCHEDULE-EVT>
@@ -651,7 +651,7 @@
   			<THEN>
   				<UPDATE-AGT>
   					<Slot property="outDelivery">
-  						<ValueExpr language="Java">node.getInventory()</ValueExpr>
+  					  <PropertyValueExpr objectVariable="node" property="inventory"/>
   					</Slot>
   					<Slot property="backorderQuantity">
   						<ValueExpr language="Java">
@@ -667,7 +667,7 @@
   					<OutMessageEventExpr messageType="BeerDelivery" delay="13">
   						<ReceiverIdRef language="Java">node.getId() + 1</ReceiverIdRef>
   						<Slot property="quantity">
-  							<ValueExpr language="Java">node.getOutDelivery()</ValueExpr>
+  						  <PropertyValueExpr objectVariable="node" property="outDelivery"/>
   						</Slot>
   					</OutMessageEventExpr>
   				</SCHEDULE-EVT>
@@ -717,16 +717,14 @@
         <THEN>
 	        <UPDATE-ENV>
 	          <UpdateObject objectVariable="customer">
-	            <Slot property="order">
-	              <ValueExpr language="Java">2</ValueExpr>
-	            </Slot>
+	            <Slot property="order" value="2"/>
 	          </UpdateObject>
 	        </UPDATE-ENV>
 	          <SCHEDULE-EVT>
 	          <InMessageEventExpr messageType="Order" senderIdRef="5">
 	            <ReceiverIdRef language="Java">retailer.getId()</ReceiverIdRef>
 	            <Slot property="quantity">
-	              <ValueExpr language="Java">customer.getOrder()</ValueExpr>
+	              <PropertyValueExpr objectVariable="customer" property="order"/>
 	            </Slot>
 	          </InMessageEventExpr>
 	        </SCHEDULE-EVT>
@@ -735,7 +733,9 @@
           <UPDATE-ENV>
             <UpdateObject objectVariable="customer">
               <Slot property="order">
-                <ValueExpr language="Java">Random.uniformInt(3,5)</ValueExpr>
+                <RandomVariable>
+                  <UniformInt lowerBound="3" upperBound="5"/>
+                </RandomVariable>
               </Slot>
             </UpdateObject>
           </UPDATE-ENV>
@@ -743,7 +743,7 @@
             <InMessageEventExpr messageType="Order" senderIdRef="5">
               <ReceiverIdRef language="Java">retailer.getId()</ReceiverIdRef>
               <Slot property="quantity">
-                <ValueExpr language="Java">customer.getOrder()</ValueExpr>
+                <PropertyValueExpr objectVariable="customer" property="order"/>
               </Slot>
             </InMessageEventExpr>
           </SCHEDULE-EVT>
