@@ -19,16 +19,16 @@
 			<dc:modified>20100104</dc:modified>
 			<dc:description>Customers arrive at random times at a service desk where they have to wait in a queue when the service desk is busy. The time between two customer arrivals is uniformly distributed between 1 and 8 minutes. The times for completing a service vary from 1 to 6 minutes, with probabilities 0.1, 0.2, 0.3, 0.25, 0.1, 0.05, respectively. Two statistics are to be collected: mean response time (length of time a customer spends in the system) and mean proportion of customers who spend 5 or more minutes in the system (the latter is not yet implemented). An arriving customer is represented by a newly generated object, which is destryoed again, when this customer leaves the system. The customer in service is represented by the first/topmost item in the First-In-First-Out queue, while the remaining items of the queue represent the waiting line.</dc:description>
 			<processModelDiagram>BPMN-diagram.png</processModelDiagram>
-		</documentation>		
+		</documentation>
 		<Statistics>
 			<Variable name="serviceDeskUtilization" dataType="Float">
 				<Source>
-					<ResourceUtilization activityType="PerformService" resourceObjectType="ServiceDesk" />
+					<ResourceUtilization activityType="PerformService" resourceObjectType="ServiceDesk" resourceObjectIdRef="2"/>
 				</Source>
 			</Variable>
 			<Variable name="maxQueueLength" dataType="Integer">
 				<Source aggregationFunction="max">
-					<ObjectProperty property="queueLength" objectType="CustomerQueue" />
+					<ObjectProperty property="queueLength" objectType="CustomerQueue" objectIdRef="1"/>
 				</Source>
 			</Variable>
 		</Statistics>	
@@ -65,7 +65,7 @@
 			</ActivityType>	
 			<!-- ====================================== -->
 			<ObjectType name="CustomerQueue">
-				<!-- ==================================== -->
+			<!-- ==================================== -->
 				<Attribute name="queueLength" type="Integer"/>
 			</ObjectType>	
 			<!-- ====================================== -->
@@ -132,7 +132,7 @@ cq.getQueueLength() > 0
 						</UpdateObject>
 					</UPDATE-ENV>
 					<SCHEDULE-EVT>
-						<ActivityStartEventExpr activityType="PerformService" >
+						<ActivityStartEventExpr activityType="PerformService">
 							<CorrelationValue language="Java">evt.getId()</CorrelationValue>
 						</ActivityStartEventExpr>
 					</SCHEDULE-EVT>
@@ -220,6 +220,7 @@ cq.getQueueLength() > 0
 					<Text xml:lang="es">Cual es el maximo longitud de la cola?</Text>
 					<Text xml:lang="ro">Care este dimensiunea maxima a listei de asteptare?</Text>
 				</Hint>
+				<Format decimalPlaces="0"/>
 			</StatisticsVariableUI>
 		</StatisticsUI>
 		<AnimationUI>
