@@ -375,6 +375,7 @@ public class Track implements SpaceComponent {
       // Bottom line segment
       if (x < spaceLength) {
         vertex[0] = x1 + ((worldLength * x) / spaceLength);
+        //y1 - radius ?
         vertex[1] = -radius;
       }
 
@@ -413,6 +414,7 @@ public class Track implements SpaceComponent {
       else if (x < 2 * spaceLength + spaceCircumference) {
         vertex[0] = x2
             - (worldLength * (x - spaceLength - spaceCircumference) / spaceLength);
+        //y1 + radius ?
         vertex[1] = radius;
       }
 

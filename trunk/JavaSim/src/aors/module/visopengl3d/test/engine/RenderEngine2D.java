@@ -13,6 +13,14 @@ import javax.media.opengl.GLAutoDrawable;
 import javax.media.opengl.GLEventListener;
 import javax.media.opengl.glu.GLU;
 
+import aors.module.visopengl3d.shape.Cone;
+import aors.module.visopengl3d.shape.Cube;
+import aors.module.visopengl3d.shape.Cuboid;
+import aors.module.visopengl3d.shape.Cylinder;
+import aors.module.visopengl3d.shape.Pyramid;
+import aors.module.visopengl3d.shape.RegularTriangularPrism;
+import aors.module.visopengl3d.shape.Sphere;
+import aors.module.visopengl3d.shape.Tetrahedra;
 import aors.module.visopengl3d.test.gui.StatusPanel;
 import aors.module.visopengl3d.test.shapes.Circle;
 import aors.module.visopengl3d.test.shapes.Ellipse;
@@ -20,9 +28,12 @@ import aors.module.visopengl3d.test.shapes.Rectangle;
 import aors.module.visopengl3d.test.shapes.RegularPolygon;
 import aors.module.visopengl3d.test.shapes.Triangle;
 import aors.module.visopengl3d.test.utility.Camera2D;
-import aors.module.visopengl3d.test.utility.Color;
+//import aors.module.visopengl3d.test.utility.Color;
+import aors.module.visopengl3d.utility.Color;
+import aors.module.visopengl3d.test.utility.TextureLoader;
 
 import com.sun.opengl.util.BufferUtil;
+import com.sun.opengl.util.texture.Texture;
 
 /**
  * The RenderEngine2D class provides all methods that are required for drawing
@@ -57,12 +68,20 @@ public class RenderEngine2D implements GLEventListener, MouseMotionListener,
   // Flag indicating if the user wants to select something
   private boolean pickingMode;
 
-  // Test polygons
-  Rectangle rect = new Rectangle(50, 50, 4);
+  // Test Shapes
+  Cube cube = new Cube();
+  Cuboid cuboid = new Cuboid();
+  Cylinder cylinder = new Cylinder();
+  Cone cone = new Cone();
+  Sphere sphere = new Sphere();
+  RegularTriangularPrism prism = new RegularTriangularPrism();
+  Pyramid pyramid = new Pyramid();
+  Tetrahedra tetrahedra = new Tetrahedra();
+  /*Rectangle rect = new Rectangle(50, 50, 4);
   Circle circ = new Circle(20, 7);
   Triangle tri = new Triangle(50, 5);
   Ellipse ell = new Ellipse(50, 25, 3);
-  RegularPolygon reg = new RegularPolygon(30, 6, 2);
+  RegularPolygon reg = new RegularPolygon(30, 6, 2);*/
 
   /**
    * Process the hits that where returned from a selection operation.
@@ -99,7 +118,14 @@ public class RenderEngine2D implements GLEventListener, MouseMotionListener,
    *          the OpenGL pipeline object
    */
   private void displayObjects(GL2 gl) {
-    gl.glTranslated(0, 0, 95);
+	gl.glPushName(1);
+	//gl.glRotated(-90, 1, 0, 0);
+	//gl.glRotated(-45, 0, 1, 0);
+	//gl.glRotated(-90, 1, 0, 0);
+	cylinder.display(gl, glu);
+	gl.glPopName();
+	  
+    /*gl.glTranslated(0, 0, 95);
     gl.glPushName(1);
     rect.display(gl);
     gl.glPopName();
@@ -116,7 +142,7 @@ public class RenderEngine2D implements GLEventListener, MouseMotionListener,
     gl.glTranslated(0, 0, 99);
     gl.glPushName(3);
     tri.display(gl);
-    gl.glPopName();
+    gl.glPopName();*/
 
     // gl.glTranslated(100, 0, 0);
     // gl.glPushName(4);
@@ -129,7 +155,7 @@ public class RenderEngine2D implements GLEventListener, MouseMotionListener,
     // gl.glPopName();
   }
 
-  /**
+/**
    * Switches rendering into selection mode. A name stack and projection matrix
    * for object selection are established and all objects are displayed.
    * 
@@ -240,8 +266,52 @@ public class RenderEngine2D implements GLEventListener, MouseMotionListener,
 
     // Enable depth testing
     gl.glEnable(GL2.GL_DEPTH_TEST);
+    gl.glDepthFunc(GL2.GL_LEQUAL);
+    
+    // Set the shading model to smooth shading
+    gl.glShadeModel(GL2.GL_SMOOTH);
+    
+    // Color of global ambient light
+    float[] globalAmbient = {0.4f, 0.4f, 0.4f, 1.0f};
+    
+    // Position and colors of light source 0
+    float[] lightPosition = {1.0f, 1.0f, 1.0f, 0.0f};
+    //float[] lightAmbient = {0.3f, 0.3f, 0.3f, 1.0f};
+    float[] lightDiffuse = {0.8f, 0.8f, 0.8f, 1.0f};
+    float[] lightSpecular = {1.0f, 1.0f, 1.0f, 1.0f};
+    
+    // Specular material properties
+    float[] specularRef = {1.0f, 1.0f, 1.0f, 1.0f};
+    
+    // Set global ambient light
+    gl.glLightModelfv(GL2.GL_LIGHT_MODEL_AMBIENT, globalAmbient, 0);
+    
+    // Set position and colors of light source 0
+    gl.glLightfv(GL2.GL_LIGHT0, GL2.GL_POSITION, lightPosition, 0);
+    //gl.glLightfv(GL2.GL_LIGHT0, GL2.GL_AMBIENT, lightAmbient, 0);
+    gl.glLightfv(GL2.GL_LIGHT0, GL2.GL_DIFFUSE, lightDiffuse, 0);
+    gl.glLightfv(GL2.GL_LIGHT0, GL2.GL_SPECULAR, lightSpecular, 0);
+    
+    // Set specular material properties and shininess
+    gl.glMaterialfv(GL2.GL_FRONT, GL2.GL_SPECULAR, specularRef, 0);
+    gl.glMateriali(GL2.GL_FRONT, GL2.GL_SHININESS, 20);
+    
+    // Enable color tracking
+    gl.glEnable(GL2.GL_COLOR_MATERIAL);
+    // Set ambient and diffuse material properties to follow glColor values  
+    gl.glColorMaterial(GL2.GL_FRONT, GL2.GL_AMBIENT_AND_DIFFUSE);
+    
+    // Multiply texture color by primitive color, so that textured geometry appears lit
+    gl.glTexEnvi(GL2.GL_TEXTURE_ENV, GL2.GL_TEXTURE_ENV_MODE, GL2.GL_MODULATE);
+    // Apply specular highlights after texturing
+    gl.glLightModeli(GL2.GL_LIGHT_MODEL_COLOR_CONTROL, GL2.GL_SEPARATE_SPECULAR_COLOR);
+    
+    // Enable lighting
+    gl.glEnable(GL2.GL_LIGHTING);
+    // Enable light source 0
+    gl.glEnable(GL2.GL_LIGHT0);
 
-    rect.setFillColor(new Color(Color.RED));
+ /*   rect.setFillColor(new Color(Color.RED));
     circ.setFillColor(new Color(Color.TEAL));
     tri.setFillColor(new Color(Color.GREEN));
     ell.setFillColor(new Color(Color.NAVY));
@@ -251,7 +321,52 @@ public class RenderEngine2D implements GLEventListener, MouseMotionListener,
     circ.generateDisplayList(gl, glu);
     tri.generateDisplayList(gl, glu);
     ell.generateDisplayList(gl, glu);
-    reg.generateDisplayList(gl, glu);
+    reg.generateDisplayList(gl, glu);*/
+    
+    Texture texture = TextureLoader.load("C:\\Users\\Susi\\workspace\\AOR-JavaSIM\\media\\images\\backgrounds\\Sunflower.jpg");
+    //sphere.setTexture(texture);
+    
+    cube.setWidth(100);
+    cube.setFill(Color.RED);
+    cube.generateDisplayList(gl, glu);
+    
+    cuboid.setWidth(50);
+    cuboid.setHeight(100);
+    cuboid.setDepth(80);
+    cuboid.setFill(Color.RED);
+    cuboid.generateDisplayList(gl, glu);
+    
+    cylinder.setWidth(50);
+    cylinder.setHeight(100);
+    cylinder.setFill(Color.RED);
+    cylinder.generateDisplayList(gl, glu);
+    
+    cone.setWidth(50);
+    cone.setHeight(100);
+    cone.setFill(Color.RED);
+    cone.generateDisplayList(gl, glu);
+    
+    sphere.setWidth(100);
+    sphere.setFill(Color.BLUE);
+    sphere.generateDisplayList(gl, glu);
+    
+    prism.setWidth(100);
+    prism.setHeight(200);
+    prism.setDepth(100);
+    prism.setFill(Color.RED);
+    prism.generateDisplayList(gl, glu);
+    
+    pyramid.setWidth(100);
+    pyramid.setHeight(100);
+    pyramid.setDepth(100);
+    pyramid.setFill(Color.RED);
+    pyramid.generateDisplayList(gl, glu);
+    
+    tetrahedra.setWidth(100);
+    tetrahedra.setHeight(100);
+    tetrahedra.setDepth(100);
+    tetrahedra.setFill(Color.RED);
+    tetrahedra.generateDisplayList(gl, glu);
 
     // Create the scene camera
     camera = new Camera2D();
@@ -276,11 +391,19 @@ public class RenderEngine2D implements GLEventListener, MouseMotionListener,
     gl.glLoadIdentity();
 
     // Establish an orthogonal clipping volume
-    gl.glOrtho(-width / 2, width / 2, -height / 2, height / 2, 1, -100);
+    //gl.glOrtho(-width / 2, width / 2, -height / 2, height / 2, 1, -100);
+    
+    //gl.glTranslated(0, 0, -100);
+    //gl.glFrustum(-width/2, width/2, -height/2, height/2, 1000, 2000);
+    double aspect = ((double)width)/((double)height);
+    glu.gluPerspective(45, aspect, 1, 1001);
+    //System.out.println(width + "/" + height + " = " + aspect);
+    glu.gluLookAt(0, 0, 501, 0, 0, 0, 0, 1, 0);
 
     // Reset model view matrix stack
     gl.glMatrixMode(GL2.GL_MODELVIEW);
     gl.glLoadIdentity();
+    //glu.gluLookAt(0, 0, 400, 0, 0, 0, 0, 1, 0);
   }
 
   // MouseMotionListener -------------------------------------------------------

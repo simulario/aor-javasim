@@ -3,10 +3,11 @@ package aors.module.visopengl3d.shape;
 /**
  * This enumeration lists all possible shape types.
  * 
- * @author Sebastian Mucha
- * @since February 3rd, 2010
+ * @author Susanne Schölzel
+ * @since November 25th, 2010
  * 
  */
 public enum ShapeType {
-  Rectangle, Circle, Triangle, Square, Ellipse, RegularPolygon, Polygon, Polyline
+  Cube, Cuboid, Cone, Cylinder, Mesh, Pyramid, RegularTriangularPrism, Sphere, Tetrahedra,
+  Circle, Ellipse, Polygon, Polyline, Rectangle, RegularPolygon, Square, Triangle
 }

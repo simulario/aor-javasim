@@ -20,7 +20,7 @@ public class Main {
 
     // Path to jar
     String jarPath = System.getProperty("user.dir") + File.separator
-        + "modules" + File.separator + "visOpenGLModule.jar";
+        + "modules" + File.separator + "visOpenGLModule_win32.jar";
 
     // Libraries for Win32
     String[] libsWin = { "gluegen-rt.dll", "jogl_gl2.dll",

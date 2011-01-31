@@ -14,7 +14,7 @@ import com.sun.opengl.util.texture.Texture;
 public class TwoDimSpaceView extends SpaceView {
 
   // TwoDimensional node
-  public static final String TWO_DIMENSIONAL = "TwoDimensionalSpaceView2D";
+  public static final String TWO_DIMENSIONAL = "TwoDimensionalSpaceView3D";
 
   // TwoDimensional node attributes
   public static final String BACKGROUND_IMG = "backgroundImage";
