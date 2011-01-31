@@ -12,7 +12,7 @@ import aors.module.visopengl3d.utility.Color;
 public class OneDimSpaceView extends SpaceView {
 
   // OneDimensional node
-  public static final String ONE_DIMENSIONAL = "OneDimensionalSpaceView2D";
+  public static final String ONE_DIMENSIONAL = "OneDimensionalSpaceView3D";
 
   // OneDimensional node attributes
   public static final String MODE = "mode";

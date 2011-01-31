@@ -264,7 +264,7 @@ public class Color {
   }
 
   /**
-   * Returns the color as an array with 4 elements.
+   * Returns the color as a double array with 4 elements.
    */
   public double[] getColor() {
     // Create the color array and initialize it to the color's components
@@ -274,6 +274,21 @@ public class Color {
     color[1] = green;
     color[2] = blue;
     color[3] = alpha;
+
+    return color;
+  }
+  
+  /**
+   * Returns the color as a float array with 4 elements.
+   */
+  public float[] getColorFloat() {
+    // Create the color array and initialize it to the color's components
+    float[] color = new float[4];
+
+    color[0] = (float)red;
+    color[1] = (float)green;
+    color[2] = (float)blue;
+    color[3] = (float)alpha;
 
     return color;
   }

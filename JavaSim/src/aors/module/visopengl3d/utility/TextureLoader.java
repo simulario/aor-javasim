@@ -36,6 +36,9 @@ public class TextureLoader {
       // Set texture scaling filters
       texture.setTexParameteri(GL2.GL_TEXTURE_MAG_FILTER, GL2.GL_NEAREST);
       texture.setTexParameteri(GL2.GL_TEXTURE_MIN_FILTER, GL2.GL_NEAREST);
+      
+      texture.setTexParameteri(GL2.GL_TEXTURE_WRAP_S, GL2.GL_REPEAT);
+      texture.setTexParameteri(GL2.GL_TEXTURE_WRAP_T, GL2.GL_REPEAT);
     } catch (Exception e) {
       // System.out.println("Visualization Error: Cannot load texture!");
       e.printStackTrace();

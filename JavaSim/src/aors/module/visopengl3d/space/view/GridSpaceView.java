@@ -14,7 +14,7 @@ import com.sun.opengl.util.texture.Texture;
 public class GridSpaceView extends SpaceView {
 
   // TwoDimensionalGrid node
-  public static final String TWO_DIMENSIONAL_GRID = "TwoDimensionalGridSpaceView2D";
+  public static final String TWO_DIMENSIONAL_GRID = "TwoDimensionalGridSpaceView3D";
 
   // TwoDimensionalGrid node attributes
   public static final String FILL1 = "fill1";

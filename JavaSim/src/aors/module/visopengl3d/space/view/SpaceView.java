@@ -7,7 +7,7 @@ import aors.module.visopengl3d.utility.Color;
 /**
  * Associated view of a space model.
  * 
- * @author Sebastian Mucha
+ * @author Sebastian Mucha, Susanne Schölzel
  * @since March 17th, 2010
  * 
  */
@@ -25,6 +25,9 @@ public abstract class SpaceView {
 
   // Property maps (only for grids)
   protected ArrayList<PropertyMap> propertyMaps;
+  
+  // Skybox
+  protected Skybox skybox;
 
   public Color getCanvasColor() {
     return canvasColor;
@@ -40,5 +43,13 @@ public abstract class SpaceView {
 
   public void setPropertyMaps(ArrayList<PropertyMap> propertyMaps) {
     this.propertyMaps = propertyMaps;
+  }
+  
+  public Skybox getSkybox() {
+    return skybox;
+  }
+
+  public void setSkybox(Skybox skybox) {
+	this.skybox = skybox;
   }
 }

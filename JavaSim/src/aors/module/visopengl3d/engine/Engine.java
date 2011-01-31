@@ -3,7 +3,7 @@ package aors.module.visopengl3d.engine;
 import java.awt.Point;
 import java.io.File;
 import java.nio.IntBuffer;
-import java.util.ArrayList;
+//import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Map;
 
@@ -19,9 +19,9 @@ import aors.model.envsim.PhysicalAgentObject;
 import aors.model.envsim.PhysicalObject;
 import aors.module.visopengl3d.gui.VisualizationPanel;
 import aors.module.visopengl3d.shape.DisplayInfo;
-import aors.module.visopengl3d.shape.Positioning;
-import aors.module.visopengl3d.shape.Shape2D;
-import aors.module.visopengl3d.shape.ShapeType;
+//import aors.module.visopengl3d.shape.Positioning;
+import aors.module.visopengl3d.shape.Shape3D;
+//import aors.module.visopengl3d.shape.ShapeType;
 import aors.module.visopengl3d.shape.View;
 import aors.module.visopengl3d.space.component.SpaceComponent;
 import aors.module.visopengl3d.space.model.GridSpaceModel;
@@ -145,7 +145,50 @@ public class Engine implements GLEventListener {
     // Enable depth testing
     gl.glEnable(GL2.GL_DEPTH_TEST);
     gl.glDepthFunc(GL2.GL_LEQUAL);
-
+    
+    // Set the shading model to smooth shading
+    gl.glShadeModel(GL2.GL_SMOOTH);
+    
+    // Color of global ambient light
+    float[] globalAmbient = {0.4f, 0.4f, 0.4f, 1.0f};
+    
+    // Position and colors of light source 0
+    float[] lightPosition = {1.0f, 1.0f, 1.0f, 0.0f};
+    //float[] lightAmbient = {0.3f, 0.3f, 0.3f, 1.0f};
+    float[] lightDiffuse = {0.8f, 0.8f, 0.8f, 1.0f};
+    float[] lightSpecular = {1.0f, 1.0f, 1.0f, 1.0f};
+    
+    // Specular material properties
+    float[] specularRef = {1.0f, 1.0f, 1.0f, 1.0f};
+    
+    // Set global ambient light
+    gl.glLightModelfv(GL2.GL_LIGHT_MODEL_AMBIENT, globalAmbient, 0);
+    
+    // Set position and colors of light source 0
+    gl.glLightfv(GL2.GL_LIGHT0, GL2.GL_POSITION, lightPosition, 0);
+    //gl.glLightfv(GL2.GL_LIGHT0, GL2.GL_AMBIENT, lightAmbient, 0);
+    gl.glLightfv(GL2.GL_LIGHT0, GL2.GL_DIFFUSE, lightDiffuse, 0);
+    gl.glLightfv(GL2.GL_LIGHT0, GL2.GL_SPECULAR, lightSpecular, 0);
+    
+    // Set specular material properties and shininess
+    gl.glMaterialfv(GL2.GL_FRONT, GL2.GL_SPECULAR, specularRef, 0);
+    gl.glMateriali(GL2.GL_FRONT, GL2.GL_SHININESS, 20);
+    
+    // Enable color tracking
+    gl.glEnable(GL2.GL_COLOR_MATERIAL);
+    // Set ambient and diffuse material properties to follow glColor values  
+    gl.glColorMaterial(GL2.GL_FRONT, GL2.GL_AMBIENT_AND_DIFFUSE);
+    
+    // Multiply texture color by primitive color, so that textured geometry appears lit
+    gl.glTexEnvi(GL2.GL_TEXTURE_ENV, GL2.GL_TEXTURE_ENV_MODE, GL2.GL_MODULATE);
+    // Apply specular highlights after texturing
+    gl.glLightModeli(GL2.GL_LIGHT_MODEL_COLOR_CONTROL, GL2.GL_SEPARATE_SPECULAR_COLOR);
+    
+    // Enable lighting
+    gl.glEnable(GL2.GL_LIGHTING);
+    // Enable light source 0
+    gl.glEnable(GL2.GL_LIGHT0);
+    
     // Enable texture support
     gl.glEnable(GL2.GL_TEXTURE);
 
@@ -183,8 +226,15 @@ public class Engine implements GLEventListener {
     gl.glLoadIdentity();
 
     // Establish an orthogonal clipping volume
-    gl.glOrtho(-width / 2, width / 2, -height / 2, height / 2, -100, 1);
+    //gl.glOrtho(-width / 2, width / 2, -height / 2, height / 2, -100, 1);
 
+    // ratio of width to height
+    double aspect = ((double)width)/((double)height);
+    // Define a perspective viewing volume
+    glu.gluPerspective(45, aspect, 1, 1000);
+    // Set the camera position
+    glu.gluLookAt(0, 0, 400, 0, 0, 0, 0, 1, 0);
+    
     // Reset model view matrix stack
     gl.glMatrixMode(GL2.GL_MODELVIEW);
     gl.glLoadIdentity();
@@ -294,7 +344,7 @@ public class Engine implements GLEventListener {
 
       if (view != null) {
         // Get the associated shape
-        Shape2D shape = view.getShape();
+        Shape3D shape = view.getShape();
 
         if (shape != null) {
           // Load texture
@@ -305,8 +355,8 @@ public class Engine implements GLEventListener {
         }
 
         // Load embedded views textures
-        if (view.getEmbeddedList() != null) {
-          for (View embeddedView : view.getEmbeddedList()) {
+        if (view.getAttachedList() != null) {
+          for (View embeddedView : view.getAttachedList()) {
             if (embeddedView.getShape() != null) {
               // Load texture
               if (embeddedView.getShape().getTextureFilename() != null
@@ -317,8 +367,8 @@ public class Engine implements GLEventListener {
               }
             }
 
-            if (embeddedView.getEmbeddedList() != null) {
-              for (View embeddedView2 : embeddedView.getEmbeddedList()) {
+            if (embeddedView.getAttachedList() != null) {
+              for (View embeddedView2 : embeddedView.getAttachedList()) {
                 if (embeddedView2.getShape() != null) {
                   // Load texture
                   if (embeddedView2.getShape().getTextureFilename() != null
@@ -454,16 +504,16 @@ public class Engine implements GLEventListener {
 
     if (view != null) {
       if (view.getShape() != null) {
-        Shape2D shape = view.getShape();
+        Shape3D shape = view.getShape();
 
         // Parse the point string for polygons or polylines
-        if (shape.getType().equals(ShapeType.Polygon)
+/*        if (shape.getType().equals(ShapeType.Polygon)
             || shape.getType().equals(ShapeType.Polyline)) {
           if (shape.isParsePointString()) {
             shape.setPointList(parsePointString(phy.getPoints()));
           }
         }
-
+*/
         // Get the display info
         DisplayInfo displayInfo = view.getDisplayInfo();
 
@@ -513,7 +563,7 @@ public class Engine implements GLEventListener {
           displayInfo.setX(pos[0]);
           displayInfo.setZ(pos[2]);
 
-          if (shape.getHeight() > 0) {
+/*          if (shape.getHeight() > 0) {
             if (shape.getPositioning().equals(Positioning.CenterCenter)
                 || shape.getPositioning().equals(Positioning.LeftCenter)
                 || shape.getPositioning().equals(Positioning.RightCenter)) {
@@ -542,6 +592,7 @@ public class Engine implements GLEventListener {
               displayInfo.setY(pos[1] + 3);
             }
           }
+*/
         }
 
         // Get the physical's rotation
@@ -552,14 +603,14 @@ public class Engine implements GLEventListener {
           // Display the physical object
           displaySingleObject(pos, rot, shape, gl, glu);
 
-          if (view.getEmbeddedList() != null) {
-            for (View embeddedView : view.getEmbeddedList()) {
+          if (view.getAttachedList() != null) {
+            for (View embeddedView : view.getAttachedList()) {
               double[] embeddedOffset = null;
               embeddedOffset = displayEmbeddedView(embeddedView, shape, pos,
                   null, rot, gl, glu);
 
-              if (embeddedView.getEmbeddedList() != null) {
-                for (View embeddedView2 : embeddedView.getEmbeddedList()) {
+              if (embeddedView.getAttachedList() != null) {
+                for (View embeddedView2 : embeddedView.getAttachedList()) {
                   displayEmbeddedView(embeddedView2, embeddedView.getShape(),
                       pos, embeddedOffset, rot, gl, glu);
                 }
@@ -576,10 +627,10 @@ public class Engine implements GLEventListener {
     }
   }
 
-  private double[] displayEmbeddedView(View embeddedView, Shape2D parent,
+  private double[] displayEmbeddedView(View embeddedView, Shape3D parent,
       double[] pos, double[] offset, double rot, GL2 gl, GLU glu) {
     // Get the shape
-    Shape2D embeddedShape = embeddedView.getShape();
+    Shape3D embeddedShape = embeddedView.getShape();
 
     if (embeddedShape != null) {
 
@@ -633,7 +684,7 @@ public class Engine implements GLEventListener {
 
       // Display embedded shape
       displayEmbeddedObject(pos, embeddedOffset, rot, embeddedShape,
-          embeddedView.getEmbeddedLabel(), gl, glu);
+          embeddedView.getAttachedLabel(), gl, glu);
 
       return embeddedOffset;
     }
@@ -654,7 +705,7 @@ public class Engine implements GLEventListener {
 
     if (view != null) {
       // Get the associated shape
-      Shape2D shape = view.getShape();
+      Shape3D shape = view.getShape();
 
       if (shape != null) {
         // Get the display info
@@ -705,7 +756,7 @@ public class Engine implements GLEventListener {
         if (displayInfo.isEnabled()) {
           displayInfo.setX(pos[0]);
           displayInfo.setZ(pos[2]);
-
+/*
           if (shape.getHeight() > 0) {
             if (shape.getPositioning().equals(Positioning.CenterCenter)
                 || shape.getPositioning().equals(Positioning.LeftCenter)
@@ -735,6 +786,7 @@ public class Engine implements GLEventListener {
               displayInfo.setY(pos[1] + 3);
             }
           }
+*/
         }
 
         // Display only if the object is visible
@@ -742,14 +794,14 @@ public class Engine implements GLEventListener {
           // Display the non-physical
           displaySingleObject(pos, 0, shape, gl, glu);
 
-          if (view.getEmbeddedList() != null) {
-            for (View embeddedView : view.getEmbeddedList()) {
+          if (view.getAttachedList() != null) {
+            for (View embeddedView : view.getAttachedList()) {
               double[] embeddedOffset = null;
               embeddedOffset = displayEmbeddedView(embeddedView, shape, pos,
                   null, 0, gl, glu);
 
-              if (embeddedView.getEmbeddedList() != null) {
-                for (View embeddedView2 : embeddedView.getEmbeddedList()) {
+              if (embeddedView.getAttachedList() != null) {
+                for (View embeddedView2 : embeddedView.getAttachedList()) {
                   displayEmbeddedView(embeddedView2, embeddedView.getShape(),
                       pos, embeddedOffset, 0, gl, glu);
                 }
@@ -773,9 +825,9 @@ public class Engine implements GLEventListener {
    * @param shape
    * @param gl
    */
-  private void mapNonPhysicals(Shape2D shape) {
-    if (!shape.getType().equals(ShapeType.Polygon)
-        && !shape.getType().equals(ShapeType.Polyline)) {
+  private void mapNonPhysicals(Shape3D shape) {
+//    if (!shape.getType().equals(ShapeType.Polygon)
+//        && !shape.getType().equals(ShapeType.Polyline)) {
       if (shape.isHeightRelative()) {
         shape.setHeight((shape.getRelativeHeight() / 100)
             * spaceModel.getDrawingArea().getHeight());
@@ -785,6 +837,7 @@ public class Engine implements GLEventListener {
         shape.setWidth((shape.getRelativeWidth() / 100)
             * spaceModel.getDrawingArea().getWidth());
       }
+/*
     } else if (shape.getType().equals(ShapeType.Polygon)
         || shape.getType().equals(ShapeType.Polyline)) {
       // Determine the width and height of a polygon
@@ -823,11 +876,12 @@ public class Engine implements GLEventListener {
       shape.setWidth(maxX - minX);
       shape.setHeight(maxY - minY);
     }
+*/
   }
 
-  private void mapEmbedded(Shape2D embeddedShape, Shape2D parent) {
-    if (!embeddedShape.getType().equals(ShapeType.Polygon)
-        && !embeddedShape.getType().equals(ShapeType.Polyline)) {
+  private void mapEmbedded(Shape3D embeddedShape, Shape3D parent) {
+//    if (!embeddedShape.getType().equals(ShapeType.Polygon)
+//        && !embeddedShape.getType().equals(ShapeType.Polyline)) {
       if (embeddedShape.isHeightRelative()) {
         embeddedShape.setHeight((embeddedShape.getRelativeHeight() / 100)
             * parent.getHeight());
@@ -839,6 +893,7 @@ public class Engine implements GLEventListener {
             * parent.getWidth());
         embeddedShape.setRecompile(true);
       }
+/*
     } else if (embeddedShape.getType().equals(ShapeType.Polygon)
         || embeddedShape.getType().equals(ShapeType.Polyline)) {
       // Determine the width and height of a polygon
@@ -877,6 +932,7 @@ public class Engine implements GLEventListener {
       embeddedShape.setWidth(maxX - minX);
       embeddedShape.setHeight(maxY - minY);
     }
+*/
   }
 
   /**
@@ -884,7 +940,7 @@ public class Engine implements GLEventListener {
    * 
    * @param shape
    */
-  private double[] getNonPhysicalObjectPosition(Shape2D shape) {
+  private double[] getNonPhysicalObjectPosition(Shape3D shape) {
     double[] position = new double[3];
     double x = 0;
     double y = 0;
@@ -934,7 +990,7 @@ public class Engine implements GLEventListener {
     return -1;
   }
 
-  private void updateShapeDimensions(int index, Shape2D shape, Physical phy) {
+  private void updateShapeDimensions(int index, Shape3D shape, Physical phy) {
     // Get the space component the physical is placed onto
     SpaceComponent comp = spaceModel.getSpaceComponents().get(index);
 
@@ -942,12 +998,12 @@ public class Engine implements GLEventListener {
      * Update the shape's dimensions (and those of embedded shapes) if they have
      * changed and regenerate the shape's display list if necessary.
      */
-    if (shape.getType().equals(ShapeType.Rectangle)
+/*    if (shape.getType().equals(ShapeType.Rectangle)
         || shape.getType().equals(ShapeType.Square)
         || shape.getType().equals(ShapeType.Triangle)
         || shape.getType().equals(ShapeType.Circle)
         || shape.getType().equals(ShapeType.Ellipse)
-        || shape.getType().equals(ShapeType.RegularPolygon)) {
+        || shape.getType().equals(ShapeType.RegularPolygon)) {*/
       /*
        * Map the dimensions of the physical (which are in space coordinate
        * system) into the world coordinate system.
@@ -961,17 +1017,17 @@ public class Engine implements GLEventListener {
         shape.setHeight(mappedHeight);
 
         // Update embedded shapes as well
-        if (shape.getEmbeddedShape() != null) {
+        if (shape.getAttachedShape() != null) {
 
-          if (shape.getEmbeddedShape().getEmbeddedShape() != null) {
+          if (shape.getAttachedShape().getAttachedShape() != null) {
 
           }
         }
 
         shape.setRecompile(true);
       }
-    }
-
+//    }
+/*
     if (shape.getType().equals(ShapeType.Polygon)
         || shape.getType().equals(ShapeType.Polyline)) {
       if (shape.isParsePointString()) {
@@ -1009,10 +1065,10 @@ public class Engine implements GLEventListener {
             double width = maxX - minX;
             double height = maxY - minY;
 
-            /*
-             * Map the dimensions of the physical (which are in space coordinate
-             * system) into the world coordinate system.
-             */
+            
+            // Map the dimensions of the physical (which are in space coordinate
+            // system) into the world coordinate system.
+            
             double mappedWidth = comp.getObjectWidth(width);
             double mappedHeight = comp.getObjectHeight(height);
 
@@ -1040,9 +1096,9 @@ public class Engine implements GLEventListener {
               }
 
               // Update embedded shapes as well
-              if (shape.getEmbeddedShape() != null) {
+              if (shape.getAttachedShape() != null) {
 
-                if (shape.getEmbeddedShape().getEmbeddedShape() != null) {
+                if (shape.getAttachedShape().getAttachedShape() != null) {
 
                 }
               }
@@ -1054,6 +1110,7 @@ public class Engine implements GLEventListener {
         }
       }
     }
+*/
   }
 
   /**
@@ -1106,7 +1163,7 @@ public class Engine implements GLEventListener {
    * @param glu
    */
   private void displaySingleObject(double[] position, double rotation,
-      Shape2D shape, GL2 gl, GLU glu) {
+      Shape3D shape, GL2 gl, GLU glu) {
     // Save the current model view matrix
     gl.glPushMatrix();
 
@@ -1124,7 +1181,7 @@ public class Engine implements GLEventListener {
   }
 
   private void displayEmbeddedObject(double[] position, double[] offset,
-      double rotation, Shape2D shape, String label, GL2 gl, GLU glu) {
+      double rotation, Shape3D shape, String label, GL2 gl, GLU glu) {
     // Save the current model view matrix
     gl.glPushMatrix();
 
@@ -1146,7 +1203,7 @@ public class Engine implements GLEventListener {
       gl.glPushMatrix();
       gl.glLoadIdentity();
 
-      if (shape.getPositioning().equals(Positioning.CenterCenter)
+/*      if (shape.getPositioning().equals(Positioning.CenterCenter)
           || shape.getPositioning().equals(Positioning.LeftCenter)
           || shape.getPositioning().equals(Positioning.RightCenter)) {
         gl.glRasterPos2d(position[0] + offset[0], position[1] + offset[1]
@@ -1161,6 +1218,7 @@ public class Engine implements GLEventListener {
         gl.glRasterPos2d(position[0] + offset[0], position[1] + offset[1]
             - shape.getHeight() - 15);
       }
+*/
       glut.glutBitmapString(GLUT.BITMAP_HELVETICA_12, label);
 
       gl.glPopMatrix();
@@ -1251,9 +1309,9 @@ public class Engine implements GLEventListener {
    * 
    * @param str
    */
-  private ArrayList<double[]> parsePointString(String str) {
+/*  private ArrayList<double[]> parsePointString(String str) {
     ArrayList<double[]> pointList = new ArrayList<double[]>();
-
+*/
     // Check if the point string is valid
     // NOTE: check the regular expression while does not works fine...
     /*
@@ -1263,7 +1321,7 @@ public class Engine implements GLEventListener {
      * .println("Visualization Error: Point description is not valid! (" + str +
      * ")"); return null; }
      */
-
+/*
     // get the points list
     String[] points = str.split(" ");
 
@@ -1306,6 +1364,7 @@ public class Engine implements GLEventListener {
    
     return pointList;
   }
+*/
 
   public KeyboardEventHandler getKeyboardEvtHandler() {
     return keyboardEvtHandler;

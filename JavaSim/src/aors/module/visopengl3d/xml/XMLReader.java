@@ -14,25 +14,27 @@ import org.w3c.dom.NodeList;
 
 import aors.GeneralSpaceModel.SpaceType;
 import aors.module.visopengl3d.lang.LanguageManager;
-import aors.module.visopengl3d.shape.Circle;
+import aors.module.visopengl3d.shape.Cube;
+import aors.module.visopengl3d.shape.Cuboid;
+import aors.module.visopengl3d.shape.Cone;
+import aors.module.visopengl3d.shape.Cylinder;
 import aors.module.visopengl3d.shape.DisplayInfo;
-import aors.module.visopengl3d.shape.Ellipse;
-import aors.module.visopengl3d.shape.PolyLine;
-import aors.module.visopengl3d.shape.Polygon;
-import aors.module.visopengl3d.shape.Positioning;
-import aors.module.visopengl3d.shape.Rectangle;
-import aors.module.visopengl3d.shape.RegularPolygon;
-import aors.module.visopengl3d.shape.Shape2D;
-import aors.module.visopengl3d.shape.Shape2DMap;
+import aors.module.visopengl3d.shape.Mesh;
+import aors.module.visopengl3d.shape.Pyramid;
+import aors.module.visopengl3d.shape.RegularTriangularPrism;
+import aors.module.visopengl3d.shape.Shape3D;
+import aors.module.visopengl3d.shape.Shape3DMap;
 import aors.module.visopengl3d.shape.ShapePropertyVisualizationMap;
-import aors.module.visopengl3d.shape.Square;
-import aors.module.visopengl3d.shape.Triangle;
+import aors.module.visopengl3d.shape.Sphere;
+import aors.module.visopengl3d.shape.Tetrahedra;
 import aors.module.visopengl3d.shape.View;
 import aors.module.visopengl3d.space.view.Alignment;
+import aors.module.visopengl3d.space.view.Face;
 import aors.module.visopengl3d.space.view.GridSpaceView;
 import aors.module.visopengl3d.space.view.MapType;
 import aors.module.visopengl3d.space.view.OneDimSpaceView;
 import aors.module.visopengl3d.space.view.PropertyMap;
+import aors.module.visopengl3d.space.view.Skybox;
 import aors.module.visopengl3d.space.view.SpaceView;
 import aors.module.visopengl3d.space.view.TwoDimSpaceView;
 import aors.module.visopengl3d.utility.Color;
@@ -42,7 +44,7 @@ import aors.util.XMLLoader;
  * With the help of this classes methods its possible to read certain
  * information directly from an XML document.
  * 
- * @author Sebastian Mucha
+ * @author Sebastian Mucha, Susanne Schölzel
  * @since January 3rd, 2010
  * 
  */
@@ -173,6 +175,7 @@ public class XMLReader {
                 OneDimSpaceView.ONE_DIMENSIONAL)) {
               if (spaceType.equals(SpaceType.OneD)) {
                 spaceView = getOneDimSpaceView(spaceViewChildNodes.item(j));
+                spaceView.setSkybox(getSkybox(spaceViewChildNodes.item(j)));
               }
             }
 
@@ -182,6 +185,7 @@ public class XMLReader {
                 spaceView = getGridSpaceView(spaceViewChildNodes.item(j));
                 spaceView.setPropertyMaps(getPropertyMaps(spaceViewChildNodes
                     .item(j)));
+                spaceView.setSkybox(getSkybox(spaceViewChildNodes.item(j)));
               }
             }
 
@@ -190,8 +194,10 @@ public class XMLReader {
               if (spaceType.equals(SpaceType.TwoD)
                   || spaceType.equals(SpaceType.TwoDLateralView)) {
                 spaceView = getTwoDimSpaceView(spaceViewChildNodes.item(j));
+                spaceView.setSkybox(getSkybox(spaceViewChildNodes.item(j)));
               }
             }
+            
           }
         }
       }
@@ -393,7 +399,7 @@ public class XMLReader {
         spaceView.setBorderColor(new Color(value));
       }
     }
-
+    
     return spaceView;
   }
 
@@ -419,6 +425,67 @@ public class XMLReader {
     else {
       return null;
     }
+  }
+  
+  /*
+   * Returns skybox of the SpaceView3D as read from the XML
+   * simulation description.
+   * 
+   * @param node SpaceView3D node
+   * 
+   * @return skybox
+   */
+  private Skybox getSkybox(Node node) {
+	
+	Skybox skybox = null;
+	
+	// Retrieve child nodes of the "SpaceView3D" node
+	NodeList childNodes = node.getChildNodes();
+
+	// Search for Skybox node and if necessary initialize Skybox
+	for (int i = 0; i < childNodes.getLength(); i++) {
+	  if (childNodes.item(i).getNodeName().equals(Skybox.SKYBOX)) {
+	    skybox = new Skybox();
+	    // Retrieve the attributes of a "Skybox" node
+	    NamedNodeMap skyboxAttributes = childNodes.item(i).getAttributes();
+	        
+	    /*
+	     * Retrieve the name and value of each attribute and initialize the class
+	     * members accordingly.
+	     */
+	    for (int j = 0; j < skyboxAttributes.getLength(); j++) {
+	      String name = skyboxAttributes.item(j).getNodeName();
+	      String value = skyboxAttributes.item(j).getNodeValue();
+
+	      // Check which attributes where found and initialize the members
+	      if (name.equals(Skybox.TOP))
+	        skybox.setTextureFilename(Face.top, value);
+
+	      else if (name.equals(Skybox.BOTTOM)) {
+	        skybox.setTextureFilename(Face.bottom, value);
+	      }
+	          
+	      else if (name.equals(Skybox.LEFT)) {
+	        skybox.setTextureFilename(Face.left, value);
+	      }
+	          
+	      else if (name.equals(Skybox.RIGHT)) {
+	        skybox.setTextureFilename(Face.right, value);
+	      }
+	          
+	      else if (name.equals(Skybox.FRONT)) {
+	        skybox.setTextureFilename(Face.front, value);
+	      }
+	          
+	      else if (name.equals(Skybox.BACK)) {
+	        skybox.setTextureFilename(Face.back, value);
+	      }
+	        	  
+	    }
+	  }
+	}
+	
+	return skybox;
   }
 
   /**
@@ -581,10 +648,10 @@ public class XMLReader {
    */
   public View readPhysicalObjectView(Node node) {
     View view = null;
-    Shape2D topLevelShape = null;
-    ArrayList<View> embeddedList = new ArrayList<View>();
+    Shape3D topLevelShape = null;
+    ArrayList<View> attachedList = new ArrayList<View>();
     DisplayInfo displayInfo = new DisplayInfo();
-    Shape2DMap shape2DMap = null;
+    Shape3DMap shape3DMap = null;
 
     // Retrieve all attributes of the "PhysicalObjectView" node
     NamedNodeMap attributes = node.getAttributes();
@@ -608,9 +675,9 @@ public class XMLReader {
     NodeList childNodes = node.getChildNodes();
 
     for (int i = 0; i < childNodes.getLength(); i++) {
-      if (childNodes.item(i).getNodeName().equals(Shape2D.PHYSICAL_SHAPE_2D)) {
-        // Read a "PhysicalShape2D" node
-        topLevelShape = readPhysicalShape2D(childNodes.item(i));
+      if (childNodes.item(i).getNodeName().equals(Shape3D.PHYSICAL_SHAPE_3D)) {
+        // Read a "PhysicalShape3D" node
+        topLevelShape = readPhysicalShape3D(childNodes.item(i));
       }
 
       if (childNodes.item(i).getNodeName().equals(DisplayInfo.DISPLAY_INFO)) {
@@ -619,37 +686,37 @@ public class XMLReader {
       }
 
       if (childNodes.item(i).getNodeName().equals(
-          Shape2DMap.PHYSICAL_SHAPE2D_MAP)) {
-        // Read a "PhysicalShape2DMap" node
-        shape2DMap = readShape2DMap(childNodes.item(i));
+          Shape3DMap.PHYSICAL_SHAPE3D_MAP)) {
+        // Read a "PhysicalShape3DMap" node
+        shape3DMap = readShape3DMap(childNodes.item(i));
       }
     }
 
     if (topLevelShape != null) {
       for (int i = 0; i < childNodes.getLength(); i++) {
-        if (childNodes.item(i).getNodeName().equals(View.EMBEDDED_VIEW)) {
-          // Get embedded view
-          embeddedList.add(getEmbeddedShape(childNodes.item(i)));
+        if (childNodes.item(i).getNodeName().equals(View.ATTACHED_SHAPE)) {
+          // Get attached shapes
+          attachedList.add(getAttachedShape(childNodes.item(i)));
         }
       }
 
       view = new View();
-      view.setShape2D(topLevelShape);
-      view.setEmbeddedList(embeddedList);
+      view.setShape3D(topLevelShape);
+      view.setAttachedList(attachedList);
       view.setDisplayInfo(displayInfo);
     }
 
-    if (shape2DMap != null) {
+    if (shape3DMap != null) {
       for (int i = 0; i < childNodes.getLength(); i++) {
-        if (childNodes.item(i).getNodeName().equals(View.EMBEDDED_VIEW)) {
-          // Get embedded shapes
-          embeddedList.add(getEmbeddedShape(childNodes.item(i)));
+        if (childNodes.item(i).getNodeName().equals(View.ATTACHED_SHAPE)) {
+          // Get attached shapes
+          attachedList.add(getAttachedShape(childNodes.item(i)));
         }
       }
 
       view = new View();
-      view.setShape2DMap(shape2DMap);
-      view.setEmbeddedList(embeddedList);
+      view.setShape3DMap(shape3DMap);
+      view.setAttachedList(attachedList);
       view.setDisplayInfo(displayInfo);
     }
 
@@ -677,64 +744,70 @@ public class XMLReader {
   }
 
   /**
-   * Reads a shape definition from a "PhysicalShape2D" node.
+   * Reads a shape definition from a "PhysicalShape3D" node.
    * 
    * @param node
    */
-  private Shape2D readPhysicalShape2D(Node node) {
-    Shape2D shape = null;
+  private Shape3D readPhysicalShape3D(Node node) {
+    Shape3D shape = null;
 
-    // Retrieve child nodes of "PhysicalShape2D"
+    // Retrieve child nodes of "PhysicalShape3D"
     NodeList childNodes = node.getChildNodes();
 
     // Search for the actual shape definitions
     for (int i = 0; i < childNodes.getLength(); i++) {
-      // Found "Rectangle" node
-      if (childNodes.item(i).getNodeName().equals(Shape2D.RECTANGLE)) {
-        // Read all data from "Rectangle" node
-        shape = readRectangle(childNodes.item(i));
+      // Found "Cube" node
+      if (childNodes.item(i).getNodeName().equals(Shape3D.CUBE)) {
+        // Read all data from "Cube" node
+        shape = readCube(childNodes.item(i));
       }
 
-      // Found "Square" node
-      else if (childNodes.item(i).getNodeName().equals(Shape2D.SQUARE)) {
-        // Read all data from "Square" node
-        shape = readSquare(childNodes.item(i));
+      // Found "Cuboid" node
+      else if (childNodes.item(i).getNodeName().equals(Shape3D.CUBOID)) {
+        // Read all data from "Cuboid" node
+        shape = readCuboid(childNodes.item(i));
       }
 
-      // Found "Circle" node
-      else if (childNodes.item(i).getNodeName().equals(Shape2D.CIRCLE)) {
-        // Read all data from "Circle" node
-        shape = readCircle(childNodes.item(i));
+      // Found "Cone" node
+      else if (childNodes.item(i).getNodeName().equals(Shape3D.CONE)) {
+        // Read all data from "Cone" node
+        shape = readCone(childNodes.item(i));
       }
 
-      // Found "Triangle" node
-      else if (childNodes.item(i).getNodeName().equals(Shape2D.TRIANGLE)) {
-        // Read all data from "Circle" node
-        shape = readTriangle(childNodes.item(i));
+      // Found "Cylinder" node
+      else if (childNodes.item(i).getNodeName().equals(Shape3D.CYLINDER)) {
+        // Read all data from "Cylinder" node
+        shape = readCylinder(childNodes.item(i));
       }
 
-      // Found "Ellipse" node
-      else if (childNodes.item(i).getNodeName().equals(Shape2D.ELLIPSE)) {
-        // Read all data from "Ellipse" node
-        shape = readEllipse(childNodes.item(i));
+      // Found "Mesh" node
+      else if (childNodes.item(i).getNodeName().equals(Shape3D.MESH)) {
+        // Read all data from "Mesh" node
+        shape = readMesh(childNodes.item(i));
       }
 
-      // Found "RegularPolygon" node
-      else if (childNodes.item(i).getNodeName().equals(Shape2D.REGULAR_POLYGON)) {
-        // Read all data from "RegularPolygon" node
-        shape = readRegularPolygon(childNodes.item(i));
+      // Found "Pyramid" node
+      else if (childNodes.item(i).getNodeName().equals(Shape3D.PYRAMID)) {
+        // Read all data from "Pyramid" node
+        shape = readPyramid(childNodes.item(i));
       }
 
-      // Found "Polygon" node
-      else if (childNodes.item(i).getNodeName().equals(Shape2D.POLYGON)) {
-        // Read all data from "Polygon" node
-        shape = readPolygon(childNodes.item(i));
+      // Found "RegularTriangularPrism" node
+      else if (childNodes.item(i).getNodeName().equals(Shape3D.REGULAR_TRIANGULAR_PRISM)) {
+        // Read all data from "RegularTriangularPrism" node
+        shape = readRegularTriangularPrism(childNodes.item(i));
       }
 
-      // Found "PolyLine" node
-      else if (childNodes.item(i).getNodeName().equals(Shape2D.POLYLINE)) {
-        // Read all data from "PolyLine" node
-        shape = readPolyLine(childNodes.item(i));
+      // Found "Sphere" node
+      else if (childNodes.item(i).getNodeName().equals(Shape3D.SPHERE)) {
+        // Read all data from "Sphere" node
+        shape = readSphere(childNodes.item(i));
+      }
+        
+      // Found "Tetrahedra" node
+      else if (childNodes.item(i).getNodeName().equals(Shape3D.TETRAHEDRA)) {
+        // Read all data from "Tetrahedra" node
+        shape = readTetrahedra(childNodes.item(i));
       }
     }
 
@@ -742,16 +815,16 @@ public class XMLReader {
   }
 
   /**
-   * Returns a view that was defined by a ObjectView node.
+   * Returns a view that was defined by an ObjectView node.
    * 
    * @param node
    */
   public View readObjectView(Node node) {
     View view = null;
-    Shape2D topLevelShape = null;
-    ArrayList<View> embeddedList = new ArrayList<View>();
+    Shape3D topLevelShape = null;
+    ArrayList<View> attachedList = new ArrayList<View>();
     DisplayInfo displayInfo = new DisplayInfo();
-    Shape2DMap shape2DMap = null;
+    Shape3DMap shape3DMap = null;
 
     // Retrieve all attributes of the "ObjectView" node
     NamedNodeMap attributes = node.getAttributes();
@@ -774,48 +847,49 @@ public class XMLReader {
     // Retrieve child nodes of "ObjectView"
     NodeList childNodes = node.getChildNodes();
 
-    // Search for the "Shape2D" node inside "ObjectView"
+    // Search for the "Shape3D" node inside "ObjectView"
     for (int i = 0; i < childNodes.getLength(); i++) {
-      if (childNodes.item(i).getNodeName().equals(Shape2D.SHAPE_2D)) {
-        // Read a "Shape2D" node
-        topLevelShape = readShape2D(childNodes.item(i));
+      if (childNodes.item(i).getNodeName().equals(Shape3D.SHAPE_3D)) {
+        // Read a "Shape3D" node
+        topLevelShape = readShape3D(childNodes.item(i));
       }
 
       if (childNodes.item(i).getNodeName().equals(DisplayInfo.DISPLAY_INFO)) {
+    	// Read a "DisplayInfo" node
         readDisplayInfo(childNodes.item(i), displayInfo);
       }
 
-      if (childNodes.item(i).getNodeName().equals(Shape2DMap.SHAPE2D_MAP)) {
-        // Read a "Shape2dVisualizationMap" node
-        shape2DMap = readShape2DMap(childNodes.item(i));
+      if (childNodes.item(i).getNodeName().equals(Shape3DMap.SHAPE3D_MAP)) {
+        // Read a "Shape3dVisualizationMap" node
+        shape3DMap = readShape3DMap(childNodes.item(i));
       }
     }
 
     if (topLevelShape != null) {
       for (int i = 0; i < childNodes.getLength(); i++) {
-        if (childNodes.item(i).getNodeName().equals(View.EMBEDDED_VIEW)) {
-          // Get embedded shapes
-          embeddedList.add(getEmbeddedShape(childNodes.item(i)));
+        if (childNodes.item(i).getNodeName().equals(View.ATTACHED_SHAPE)) {
+          // Get attached shapes
+          attachedList.add(getAttachedShape(childNodes.item(i)));
         }
       }
 
       view = new View();
-      view.setShape2D(topLevelShape);
-      view.setEmbeddedList(embeddedList);
+      view.setShape3D(topLevelShape);
+      view.setAttachedList(attachedList);
       view.setDisplayInfo(displayInfo);
     }
 
-    if (shape2DMap != null) {
+    if (shape3DMap != null) {
       for (int i = 0; i < childNodes.getLength(); i++) {
-        if (childNodes.item(i).getNodeName().equals(View.EMBEDDED_VIEW)) {
-          // Get embedded shapes
-          embeddedList.add(getEmbeddedShape(childNodes.item(i)));
+        if (childNodes.item(i).getNodeName().equals(View.ATTACHED_SHAPE)) {
+          // Get attached shapes
+          attachedList.add(getAttachedShape(childNodes.item(i)));
         }
       }
 
       view = new View();
-      view.setShape2DMap(shape2DMap);
-      view.setEmbeddedList(embeddedList);
+      view.setShape3DMap(shape3DMap);
+      view.setAttachedList(attachedList);
       view.setDisplayInfo(displayInfo);
     }
 
@@ -823,76 +897,82 @@ public class XMLReader {
   }
 
   /**
-   * Reads a shape definition from a "Shape2D" node.
+   * Reads a shape definition from a "Shape3D" node.
    * 
    * @param node
    */
-  private Shape2D readShape2D(Node node) {
-    Shape2D shape = null;
+  private Shape3D readShape3D(Node node) {
+    Shape3D shape = null;
 
-    // Retrieve child nodes of "Shape2D"
+    // Retrieve child nodes of "Shape3D"
     NodeList childNodes = node.getChildNodes();
 
     // Search for the actual shape definitions
     for (int j = 0; j < childNodes.getLength(); j++) {
-      // Found "Rectangle" node
-      if (childNodes.item(j).getNodeName().equals(Shape2D.RECTANGLE)) {
-        // Read all data from "Rectangle" node
-        shape = readRectangle(childNodes.item(j));
+      // Found "Cube" node
+      if (childNodes.item(j).getNodeName().equals(Shape3D.CUBE)) {
+        // Read all data from "Cube" node
+        shape = readCube(childNodes.item(j));
       }
 
-      // Found "Square" node
-      else if (childNodes.item(j).getNodeName().equals(Shape2D.SQUARE)) {
-        // Read all data from "Square" node
-        shape = readSquare(childNodes.item(j));
+      // Found "Cuboid" node
+      else if (childNodes.item(j).getNodeName().equals(Shape3D.CUBOID)) {
+        // Read all data from "Cuboid" node
+        shape = readCuboid(childNodes.item(j));
       }
 
-      // Found "Circle" node
-      else if (childNodes.item(j).getNodeName().equals(Shape2D.CIRCLE)) {
-        // Read all data from "Circle" node
-        shape = readCircle(childNodes.item(j));
+      // Found "Cone" node
+      else if (childNodes.item(j).getNodeName().equals(Shape3D.CONE)) {
+        // Read all data from "Cone" node
+        shape = readCone(childNodes.item(j));
       }
 
-      // Found "Triangle" node
-      else if (childNodes.item(j).getNodeName().equals(Shape2D.TRIANGLE)) {
-        // Read all data from "Triangle" node
-        shape = readTriangle(childNodes.item(j));
+      // Found "Cylinder" node
+      else if (childNodes.item(j).getNodeName().equals(Shape3D.CYLINDER)) {
+        // Read all data from "Cylinder" node
+        shape = readCylinder(childNodes.item(j));
       }
 
-      // Found "Ellipse" node
-      else if (childNodes.item(j).getNodeName().equals(Shape2D.ELLIPSE)) {
-        // Read all data from "Ellipse" node
-        shape = readEllipse(childNodes.item(j));
+      // Found "Mesh" node
+      else if (childNodes.item(j).getNodeName().equals(Shape3D.MESH)) {
+        // Read all data from "Mesh" node
+        shape = readMesh(childNodes.item(j));
       }
 
-      // Found "RegularPolygon" node
-      else if (childNodes.item(j).getNodeName().equals(Shape2D.REGULAR_POLYGON)) {
-        // Read all data from "RegularPolygon" node
-        shape = readRegularPolygon(childNodes.item(j));
+      // Found "Pyramid" node
+      else if (childNodes.item(j).getNodeName().equals(Shape3D.PYRAMID)) {
+        // Read all data from "Pyramid" node
+        shape = readPyramid(childNodes.item(j));
       }
 
-      // Found "Polygon" node
-      else if (childNodes.item(j).getNodeName().equals(Shape2D.POLYGON)) {
-        // Read all data from "Polygon" node
-        shape = readPolygon(childNodes.item(j));
+      // Found "RegularTriangularPrism" node
+      else if (childNodes.item(j).getNodeName().equals(Shape3D.REGULAR_TRIANGULAR_PRISM)) {
+        // Read all data from "RegularTriangularPrism" node
+        shape = readRegularTriangularPrism(childNodes.item(j));
       }
 
-      // Found "PolyLine" node
-      else if (childNodes.item(j).getNodeName().equals(Shape2D.POLYLINE)) {
-        // Read all data from "PolyLine" node
-        shape = readPolyLine(childNodes.item(j));
+      // Found "Sphere" node
+      else if (childNodes.item(j).getNodeName().equals(Shape3D.SPHERE)) {
+        // Read all data from "Sphere" node
+        shape = readSphere(childNodes.item(j));
+      }
+      
+      // Found "Tetrahedra" node
+      else if (childNodes.item(j).getNodeName().equals(Shape3D.TETRAHEDRA)) {
+        // Read all data from "Tetrahedra" node
+        shape = readTetrahedra(childNodes.item(j));
       }
     }
 
     if (shape != null) {
-      // Retrieve all attributes of the "Shape2D" node
+      // Retrieve all attributes of the "Shape3D" node
       NamedNodeMap attributes = node.getAttributes();
 
       for (int j = 0; j < attributes.getLength(); j++) {
         String name = attributes.item(j).getNodeName();
         String value = attributes.item(j).getNodeValue();
 
-        if (name.equals(Shape2D.X)) {
+        if (name.equals(Shape3D.X)) {
           // Check if the position is relative or absolute
           if (value.contains("%")) {
             shape.setX(Double.valueOf(value.substring(0, value.length() - 1)));
@@ -906,7 +986,7 @@ public class XMLReader {
           }
         }
 
-        else if (name.equals(Shape2D.Y)) {
+        else if (name.equals(Shape3D.Y)) {
           // Check if the position is relative or absolute
           if (value.contains("%")) {
             shape.setY(Double.valueOf(value.substring(0, value.length() - 1)));
@@ -919,6 +999,30 @@ public class XMLReader {
             shape.setY(Double.valueOf(value));
           }
         }
+        
+        else if (name.equals(Shape3D.Z)) {
+          // Check if the position is relative or absolute
+          if (value.contains("%")) {
+            shape.setZ(Double.valueOf(value.substring(0, value.length() - 1)));
+            shape.setRelativeZ(Double.valueOf(value.substring(0,
+                value.length() - 1)));
+             shape.setzRelative(true);
+          } else if (value.contains("px")) {
+            shape.setZ(Double.valueOf(value.substring(0, value.length() - 2)));
+          } else {
+            shape.setZ(Double.valueOf(value));
+          }
+        }
+        
+        else if (name.equals(Shape3D.ROT_X))
+          shape.setRotX(Double.valueOf(value));
+        
+        else if (name.equals(Shape3D.ROT_Y))
+          shape.setRotY(Double.valueOf(value));
+               
+        else if (name.equals(Shape3D.ROT_Z))
+          shape.setRotZ(Double.valueOf(value));
+        
       }
     }
 
@@ -931,43 +1035,39 @@ public class XMLReader {
    * @param node
    * @param shape
    */
-  private void readShapeAttributes(Node node, Shape2D shape) {
+  private void readShapeAttributes(Node node, Shape3D shape) {
     // Retrieve all attributes
     NamedNodeMap attributes = node.getAttributes();
 
     // Color flag
     boolean fillSet = false;
-    boolean strokeSet = false;
 
     for (int i = 0; i < attributes.getLength(); i++) {
       // Get attribute name and value
       String name = attributes.item(i).getNodeName();
       String value = attributes.item(i).getNodeValue();
 
-      if (name.equals(Shape2D.FILL)) {
+      if (name.equals(Shape3D.FILL)) {
         shape.setFill(new Color(value));
         fillSet = true;
       }
-
-      else if (name.equals(Shape2D.STROKE)) {
-        shape.setStroke(new Color(value));
-        strokeSet = true;
+      
+      else if (name.equals(Shape3D.FILL_RGB) && !fillSet) {
+        shape.setFill(new Color(value));
       }
 
-      else if (name.equals(Shape2D.FILL_OPACITY))
+      else if (name.equals(Shape3D.FILL_OPACITY))
         shape.setFillOpacity(Double.valueOf(value));
 
-      else if (name.equals(Shape2D.STROKE_OPACITY))
-        shape.setStrokeOpacity(Double.valueOf(value));
-
-      else if (name.equals(Shape2D.STROKE_WIDTH))
-        shape.setStrokeWidth(Double.valueOf(value));
-
-      else if (name.equals(Shape2D.TEXTURE)) {
+      else if (name.equals(Shape3D.TEXTURE)) {
         shape.setTextureFilename(value);
       }
 
-      else if (name.equals(Shape2D.WIDTH)) {
+      else if (name.equals(Shape3D.FILE)) {
+        shape.setMeshFilename(value);
+      }
+      
+      else if (name.equals(Shape3D.WIDTH)) {
         // Check if the width is relative or absolute
         if (value.contains("%")) {
           shape
@@ -983,7 +1083,7 @@ public class XMLReader {
         }
       }
 
-      else if (name.equals(Shape2D.HEIGHT)) {
+      else if (name.equals(Shape3D.HEIGHT)) {
         // Check if the height is relative or absolute
         if (value.contains("%")) {
           shape.setHeight(Double
@@ -998,8 +1098,24 @@ public class XMLReader {
           shape.setHeight(Double.valueOf(value));
         }
       }
+      
+      else if (name.equals(Shape3D.DEPTH)) {
+        // Check if the depth is relative or absolute
+        if (value.contains("%")) {
+          shape.setDepth(Double
+              .valueOf(value.substring(0, value.length() - 1)));
+          shape.setRelativeDepth(Double.valueOf(value.substring(0, value
+              .length() - 1)));
+          shape.setDepthRelative(true);
+        } else if (value.contains("px")) {
+          shape.setDepth(Double
+              .valueOf(value.substring(0, value.length() - 2)));
+        } else {
+          shape.setDepth(Double.valueOf(value));
+        }
+      }
 
-      else if (name.equals(Shape2D.R)) {
+      else if (name.equals(Shape3D.R)) {
         // Check if the value is relative or absolute
         if (value.contains("%")) {
           double radius = Double
@@ -1014,95 +1130,6 @@ public class XMLReader {
         } else {
           shape.setWidth(Double.valueOf(value) * 2);
         }
-      }
-
-      else if (name.equals(Shape2D.RX)) {
-        // Check if the value is relative or absolute
-        if (value.contains("%")) {
-          double radius = Double
-              .valueOf(value.substring(0, value.length() - 1));
-          shape.setWidth(radius * 2);
-          shape.setRelativeWidth(radius * 2);
-          shape.setWidthRelative(true);
-        } else if (value.contains("px")) {
-          double radius = Double
-              .valueOf(value.substring(0, value.length() - 2));
-          shape.setWidth(radius * 2);
-        } else {
-          shape.setWidth(Double.valueOf(value) * 2);
-        }
-      }
-
-      else if (name.equals(Shape2D.RY)) {
-        // Check if the value is relative or absolute
-        if (value.contains("%")) {
-          double radius = Double
-              .valueOf(value.substring(0, value.length() - 1));
-          shape.setHeight(radius * 2);
-          shape.setRelativeHeight(radius * 2);
-          shape.setHeightRelative(true);
-        } else if (value.contains("px")) {
-          double radius = Double
-              .valueOf(value.substring(0, value.length() - 2));
-          shape.setHeight(radius * 2);
-        } else {
-          shape.setHeight(Double.valueOf(value) * 2);
-        }
-      }
-
-      else if (name.equals(Shape2D.NUMBER_OF_POINTS)) {
-        shape.setNumberOfPoints(Double.valueOf(value));
-      }
-
-      else if (name.equals(Shape2D.FILL_RGB) && !fillSet) {
-        shape.setFill(new Color(value));
-      }
-
-      else if (name.equals(Shape2D.STROKE_RGB) && !strokeSet) {
-        shape.setStroke(new Color(value));
-      }
-
-      else if (name.equals(Shape2D.POSITIONING)) {
-        // Determine the positioning
-        if (value.equals(Positioning.CenterBottom.name())) {
-          shape.setPositioning(Positioning.CenterBottom);
-        }
-
-        else if (value.equals(Positioning.CenterCenter.name())) {
-          shape.setPositioning(Positioning.CenterCenter);
-        }
-
-        else if (value.equals(Positioning.CenterTop.name())) {
-          shape.setPositioning(Positioning.CenterTop);
-        }
-
-        else if (value.equals(Positioning.LeftBottom.name())) {
-          shape.setPositioning(Positioning.LeftBottom);
-        }
-
-        else if (value.equals(Positioning.LeftCenter.name())) {
-          shape.setPositioning(Positioning.LeftCenter);
-        }
-
-        else if (value.equals(Positioning.LeftTop.name())) {
-          shape.setPositioning(Positioning.LeftTop);
-        }
-
-        else if (value.equals(Positioning.RightBottom.name())) {
-          shape.setPositioning(Positioning.RightBottom);
-        }
-
-        else if (value.equals(Positioning.RightCenter.name())) {
-          shape.setPositioning(Positioning.RightCenter);
-        }
-
-        else if (value.equals(Positioning.RightTop.name())) {
-          shape.setPositioning(Positioning.RightTop);
-        }
-      }
-
-      else if (name.equals(Shape2D.POINTS)) {
-        shape.setPointList(readPointString(value));
       }
     }
 
@@ -1111,123 +1138,138 @@ public class XMLReader {
   }
 
   /**
-   * Reads all data from a "Rectangle" node.
+   * Reads all data from a "Cube" node.
    * 
    * @param node
    */
-  private Shape2D readRectangle(Node node) {
-    // Create a new Rectangle instance
-    Rectangle rectangle = new Rectangle();
+  private Shape3D readCube(Node node) {
+    // Create a new Cube instance
+    Cube cube = new Cube();
 
     // Get shape attributes
-    readShapeAttributes(node, rectangle);
+    readShapeAttributes(node, cube);
 
-    return rectangle;
+    return cube;
   }
-
+  
   /**
-   * Reads all data from a "Square" node.
+   * Reads all data from a "Cuboid" node.
    * 
    * @param node
    */
-  private Shape2D readSquare(Node node) {
-    // Create a new Square instance
-    Square square = new Square();
+  private Shape3D readCuboid(Node node) {
+    // Create a new Cuboid instance
+    Cuboid cuboid = new Cuboid();
 
     // Get shape attributes
-    readShapeAttributes(node, square);
+    readShapeAttributes(node, cuboid);
 
-    return square;
+    return cuboid;
   }
-
+  
   /**
-   * Reads all data from a "Circle" node.
+   * Reads all data from a "Cone" node.
    * 
    * @param node
    */
-  private Shape2D readCircle(Node node) {
-    // Create a new Circle instance
-    Circle circle = new Circle();
+  private Shape3D readCone(Node node) {
+    // Create a new Cone instance
+    Cone cone = new Cone();
 
     // Get shape attributes
-    readShapeAttributes(node, circle);
+    readShapeAttributes(node, cone);
 
-    return circle;
+    return cone;
   }
-
+  
   /**
-   * Reads all data from a "Triangle" node.
+   * Reads all data from a "Cylinder" node.
    * 
    * @param node
    */
-  private Shape2D readTriangle(Node node) {
-    // Create a new Triangle instance
-    Triangle triangle = new Triangle();
+  private Shape3D readCylinder(Node node) {
+    // Create a new Cylinder instance
+	Cylinder cylinder = new Cylinder();
 
     // Get shape attributes
-    readShapeAttributes(node, triangle);
+    readShapeAttributes(node, cylinder);
 
-    return triangle;
+    return cylinder;
   }
-
+  
   /**
-   * Reads all data from a "Ellipse" node.
+   * Reads all data from a "Mesh" node.
    * 
    * @param node
    */
-  private Shape2D readEllipse(Node node) {
-    // Create a new Ellipse instance
-    Ellipse ellipse = new Ellipse();
+  private Shape3D readMesh(Node node) {
+    // Create a new Mesh instance
+	Mesh mesh = new Mesh();
 
     // Get shape attributes
-    readShapeAttributes(node, ellipse);
+    readShapeAttributes(node, mesh);
 
-    return ellipse;
+    return mesh;
   }
-
+  
   /**
-   * Reads all data from a "RegularPolygon" node.
+   * Reads all data from a "Pyramid" node.
    * 
    * @param node
    */
-  private Shape2D readRegularPolygon(Node node) {
-    // Create a new RegularPolygon instance
-    RegularPolygon regPoly = new RegularPolygon();
+  private Shape3D readPyramid(Node node) {
+    // Create a new Pyramid instance
+	Pyramid pyramid = new Pyramid();
 
     // Get shape attributes
-    readShapeAttributes(node, regPoly);
+    readShapeAttributes(node, pyramid);
 
-    return regPoly;
+    return pyramid;
   }
-
+  
   /**
-   * Reads all data from a "Polygon" node.
+   * Reads all data from a "RegularTriangularPrism" node.
    * 
    * @param node
    */
-  private Shape2D readPolygon(Node node) {
-    // Create a new Polygon instance
-    Polygon poly = new Polygon();
+  private Shape3D readRegularTriangularPrism(Node node) {
+    // Create a new RegularTriangularPrism instance
+	RegularTriangularPrism regularTriangularPrism = new RegularTriangularPrism();
 
     // Get shape attributes
-    readShapeAttributes(node, poly);
+    readShapeAttributes(node, regularTriangularPrism);
 
-    return poly;
+    return regularTriangularPrism;
   }
-
+  
   /**
-   * Reads all data from a "PolyLine" node.
+   * Reads all data from a "Sphere" node.
    * 
    * @param node
    */
-  private Shape2D readPolyLine(Node node) {
-    // Create a new PolyLine instance
-    PolyLine polyLine = new PolyLine();
+  private Shape3D readSphere(Node node) {
+    // Create a new Sphere instance
+	Sphere sphere = new Sphere();
 
     // Get shape attributes
-    readShapeAttributes(node, polyLine);
+    readShapeAttributes(node, sphere);
 
-    return polyLine;
+    return sphere;
+  }
+  
+  /**
+   * Reads all data from a "Tetrahedra" node.
+   * 
+   * @param node
+   */
+  private Shape3D readTetrahedra(Node node) {
+    // Create a new Tetrahedra instance
+	Tetrahedra tetrahedra = new Tetrahedra();
+
+    // Get shape attributes
+    readShapeAttributes(node, tetrahedra);
+
+    return tetrahedra;
   }
 
   /**
@@ -1330,22 +1372,24 @@ public class XMLReader {
   }
 
   /**
-   * Reads the definition of an embedded shape.
+   * Reads the definition of an attached shape.
    * 
    * @param node
    */
-  private View getEmbeddedShape(Node node) {
-    View embeddedView = new View();
+  private View getAttachedShape(Node node) {
+    View attachedView = new View();
 
-    ArrayList<View> embeddedList = new ArrayList<View>();
+    ArrayList<View> attachedList = new ArrayList<View>();
 
     double offsetX = 0;
     double offsetY = 0;
+    double offsetZ = 0;
     boolean offsetXRelative = false;
     boolean offsetYRelative = false;
+    boolean offsetZRelative = false;
 
     /*
-     * Retrieve the attributes of the "EmbeddedView" node
+     * Retrieve the attributes of the "AttachedShape3D" node
      */
     NamedNodeMap attributes = node.getAttributes();
 
@@ -1357,7 +1401,7 @@ public class XMLReader {
       String name = attributes.item(i).getNodeName();
       String value = attributes.item(i).getNodeValue();
 
-      if (name.equals(Shape2D.OFFSET_X)) {
+      if (name.equals(Shape3D.OFFSET_X)) {
         if (value.contains("%")) {
           offsetX = Double.valueOf(value.substring(0, value.length() - 1));
           offsetXRelative = true;
@@ -1368,7 +1412,7 @@ public class XMLReader {
         }
       }
 
-      else if (name.equals(Shape2D.OFFSET_Y)) {
+      else if (name.equals(Shape3D.OFFSET_Y)) {
         if (value.contains("%")) {
           offsetY = Double.valueOf(value.substring(0, value.length() - 1));
           offsetYRelative = true;
@@ -1378,60 +1422,75 @@ public class XMLReader {
           offsetY = Double.valueOf(value);
         }
       }
+      
+      else if (name.equals(Shape3D.OFFSET_Z)) {
+        if (value.contains("%")) {
+          offsetZ = Double.valueOf(value.substring(0, value.length() - 1));
+          offsetZRelative = true;
+        } else if (value.contains("px")) {
+          offsetZ = Double.valueOf(value.substring(0, value.length() - 2));
+        } else {
+          offsetZ = Double.valueOf(value);
+        }
+      }
 
-      else if (name.equals(View.EMB_VIEW_LABEL)) {
-        embeddedView.setEmbeddedLabel(value);
+      else if (name.equals(View.ATTACHED_SHAPE_LABEL)) {
+        attachedView.setAttachedLabel(value);
       }
     }
 
-    // Retrieve child nodes of "EmbeddedView"
+    // Retrieve child nodes of "AttachedShape3D"
     NodeList childNodes = node.getChildNodes();
 
     for (int i = 0; i < childNodes.getLength(); i++) {
-      if (childNodes.item(i).getNodeName().equals(Shape2D.PHYSICAL_SHAPE_2D)) {
-        embeddedView.setShape2D(readPhysicalShape2D(childNodes.item(i)));
+      if (childNodes.item(i).getNodeName().equals(Shape3D.PHYSICAL_SHAPE_3D)) {
+        attachedView.setShape3D(readPhysicalShape3D(childNodes.item(i)));
       }
 
-      if (childNodes.item(i).getNodeName().equals(Shape2D.SHAPE_2D)) {
-        embeddedView.setShape2D(readShape2D(childNodes.item(i)));
+      if (childNodes.item(i).getNodeName().equals(Shape3D.SHAPE_3D)) {
+        attachedView.setShape3D(readShape3D(childNodes.item(i)));
       }
 
       if (childNodes.item(i).getNodeName().equals(
-          Shape2DMap.PHYSICAL_SHAPE2D_MAP)
-          || childNodes.item(i).getNodeName().equals(Shape2DMap.SHAPE2D_MAP)) {
-        embeddedView.setShape2DMap(readShape2DMap(childNodes.item(i)));
+          Shape3DMap.PHYSICAL_SHAPE3D_MAP)
+          || childNodes.item(i).getNodeName().equals(Shape3DMap.SHAPE3D_MAP)) {
+        attachedView.setShape3DMap(readShape3DMap(childNodes.item(i)));
       }
 
-      if (childNodes.item(i).getNodeName().equals(View.EMBEDDED_VIEW)) {
-        embeddedList.add(getEmbeddedShape(childNodes.item(i)));
+      if (childNodes.item(i).getNodeName().equals(View.ATTACHED_SHAPE)) {
+        attachedList.add(getAttachedShape(childNodes.item(i)));
       }
     }
 
-    if (embeddedView.getShape2DMap() != null) {
-      Collection<Shape2D> collection = embeddedView.getShape2DMap().getMap()
+    if (attachedView.getShape3DMap() != null) {
+      Collection<Shape3D> collection = attachedView.getShape3DMap().getMap()
           .values();
 
-      for (Shape2D shape : collection) {
+      for (Shape3D shape : collection) {
         shape.setOffsetX(offsetX);
         shape.setOffsetY(offsetY);
+        shape.setOffsetZ(offsetZ);
         shape.setOffsetXRelative(offsetXRelative);
         shape.setOffsetYRelative(offsetYRelative);
+        shape.setOffsetZRelative(offsetZRelative);
       }
     }
 
-    else if (embeddedView.getShape() != null) {
-      embeddedView.getShape().setOffsetX(offsetX);
-      embeddedView.getShape().setOffsetY(offsetY);
-      embeddedView.getShape().setOffsetXRelative(offsetXRelative);
-      embeddedView.getShape().setOffsetYRelative(offsetYRelative);
+    else if (attachedView.getShape() != null) {
+      attachedView.getShape().setOffsetX(offsetX);
+      attachedView.getShape().setOffsetY(offsetY);
+      attachedView.getShape().setOffsetZ(offsetZ);
+      attachedView.getShape().setOffsetXRelative(offsetXRelative);
+      attachedView.getShape().setOffsetYRelative(offsetYRelative);
+      attachedView.getShape().setOffsetZRelative(offsetZRelative);
     }
 
-    embeddedView.setEmbeddedList(embeddedList);
+    attachedView.setAttachedList(attachedList);
 
-    return embeddedView;
+    return attachedView;
   }
 
-  public ArrayList<double[]> readPointString(String str) {
+  /*public ArrayList<double[]> readPointString(String str) {
     ArrayList<double[]> pointList = new ArrayList<double[]>();
 
     // Check if the point string is valid
@@ -1522,12 +1581,12 @@ public class XMLReader {
     }
 
     return pointList;
-  }
+  }*/
 
-  private Shape2DMap readShape2DMap(Node node) {
-    Shape2DMap s2dm = new Shape2DMap();
+  private Shape3DMap readShape3DMap(Node node) {
+    Shape3DMap s3dm = new Shape3DMap();
 
-    // Retrieve all attributes of the "Shape2dVisualizationMap" or "PhysicalShape2DMap"
+    // Retrieve all attributes of the "Shape3dVisualizationMap" or "PhysicalShape3dVisualizationMap"
     // node
     NamedNodeMap attributes = node.getAttributes();
 
@@ -1536,18 +1595,18 @@ public class XMLReader {
       String name = attributes.item(i).getNodeName();
       String value = attributes.item(i).getNodeValue();
 
-      if (name.equals(Shape2DMap.PROPERTY)) {
-        s2dm.setPropertyName(value);
+      if (name.equals(Shape3DMap.PROPERTY)) {
+        s3dm.setPropertyName(value);
       }
     }
 
-    // Retrieve child nodes the "Shape2dVisualizationMap" or "PhysicalShape2DMap" node
+    // Retrieve child nodes the "Shape3dVisualizationMap" or "PhysicalShape3dVisualizationMap" node
     NodeList childNodes = node.getChildNodes();
 
     for (int i = 0; i < childNodes.getLength(); i++) {
-      if (childNodes.item(i).getNodeName().equals(Shape2DMap.CASE)) {
+      if (childNodes.item(i).getNodeName().equals(Shape3DMap.CASE)) {
         String propertyValue = null;
-        Shape2D shape = null;
+        Shape3D shape = null;
 
         // Retrieve all attributes of the "Case" node
         NamedNodeMap caseAttributes = childNodes.item(i).getAttributes();
@@ -1557,7 +1616,7 @@ public class XMLReader {
           String attributeName = caseAttributes.item(j).getNodeName();
           String attributeValue = caseAttributes.item(j).getNodeValue();
 
-          if (attributeName.equals(Shape2DMap.VALUE)) {
+          if (attributeName.equals(Shape3DMap.VALUE)) {
             if (attributeValue.matches("[\\d]+")) {
               propertyValue = String.valueOf(Double.valueOf(attributeValue));
             }
@@ -1577,24 +1636,24 @@ public class XMLReader {
 
         for (int j = 0; j < caseChildNodes.getLength(); j++) {
           if (caseChildNodes.item(j).getNodeName().equals(
-              Shape2D.PHYSICAL_SHAPE_2D)) {
-            // Read a "PhysicalShape2D" node
-            shape = readPhysicalShape2D(caseChildNodes.item(j));
+              Shape3D.PHYSICAL_SHAPE_3D)) {
+            // Read a "PhysicalShape3D" node
+            shape = readPhysicalShape3D(caseChildNodes.item(j));
           }
 
-          if (caseChildNodes.item(j).getNodeName().equals(Shape2D.SHAPE_2D)) {
-            // Read a "Shape2D" node
-            shape = readShape2D(caseChildNodes.item(j));
+          if (caseChildNodes.item(j).getNodeName().equals(Shape3D.SHAPE_3D)) {
+            // Read a "Shape3D" node
+            shape = readShape3D(caseChildNodes.item(j));
           }
         }
 
         if (shape != null && propertyValue != null) {
-          s2dm.getMap().put(propertyValue, shape);
+          s3dm.getMap().put(propertyValue, shape);
         }
       }
     }
 
-    return s2dm;
+    return s3dm;
   }
 
   /**

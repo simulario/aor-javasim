@@ -7,34 +7,34 @@ import java.util.ArrayList;
  * object. This means it contains a description of how an object will be
  * displayed on screen.
  * 
- * @author Sebstian Mucha
+ * @author Sebstian Mucha, Susanne Schölzel
  * @since January 19th, 2010
  * 
  */
 public class View {
 
-  // Two dimensional shape
-  private Shape2D shape2D;
+  // Three dimensional shape
+  private Shape3D shape3D;
 
   // ShapeMap
-  private Shape2DMap shape2DMap;
+  private Shape3DMap shape3DMap;
 
   // Display info
   private DisplayInfo displayInfo;
 
-  // EmbeddedView
-  private ArrayList<View> embeddedList;
+  // AttachedViews
+  private ArrayList<View> attachedList;
   
   // Flag indicating if the object associated to this view will be displayed
   private boolean visible;
   
-  // Label for embedded views
-  private String embeddedLabel;
+  // Label for attached views
+  private String attachedLabel;
 
   // String constant for the "PhysicalObjectView" and "ObjectView" node
   public static final String PHYSICAL_OBJECT_VIEW = "PhysicalObjectView";
   public static final String OBJECT_VIEW = "ObjectView";
-  public static final String EMBEDDED_VIEW = "EmbeddedShape2D";
+  public static final String ATTACHED_SHAPE = "AttachedShape3D";
 
   // String constants for attributes of a "PhysicalObjectView" node
   public static final String PHYSICAL_OBJECT_TYPE = "physicalObjectType";
@@ -48,15 +48,15 @@ public class View {
   public static final String OBJECT_START_ID = "objectStartID";
   public static final String OBJECT_END_ID = "objectEndID";
   
-  // String constants for attributes of an "EmbeddedView" node
-  public static final String EMB_VIEW_LABEL = "label";
+  // String constants for attributes of an "AttachedShape3D" node
+  public static final String ATTACHED_SHAPE_LABEL = "label";
 
-  public Shape2D getShape() {
-    return shape2D;
+  public Shape3D getShape() {
+    return shape3D;
   }
 
-  public void setShape2D(Shape2D shape2D) {
-    this.shape2D = shape2D;
+  public void setShape3D(Shape3D shape3D) {
+    this.shape3D = shape3D;
   }
 
   public DisplayInfo getDisplayInfo() {
@@ -67,20 +67,20 @@ public class View {
     this.displayInfo = displayInfo;
   }
 
-  public Shape2DMap getShape2DMap() {
-    return shape2DMap;
+  public Shape3DMap getShape3DMap() {
+    return shape3DMap;
   }
 
-  public void setShape2DMap(Shape2DMap shape2dMap) {
-    shape2DMap = shape2dMap;
+  public void setShape3DMap(Shape3DMap shape3dMap) {
+    shape3DMap = shape3dMap;
   }
 
-  public ArrayList<View> getEmbeddedList() {
-    return embeddedList;
+  public ArrayList<View> getAttachedList() {
+    return attachedList;
   }
 
-  public void setEmbeddedList(ArrayList<View> embeddedList) {
-    this.embeddedList = embeddedList;
+  public void setAttachedList(ArrayList<View> attachedList) {
+    this.attachedList = attachedList;
   }
 
 	public boolean isVisible() {
@@ -91,12 +91,12 @@ public class View {
 		this.visible = visible;
 	}
 
-	public String getEmbeddedLabel() {
-		return embeddedLabel;
+	public String getAttachedLabel() {
+		return attachedLabel;
 	}
 
-	public void setEmbeddedLabel(String embeddedLabel) {
-		this.embeddedLabel = embeddedLabel;
+	public void setAttachedLabel(String attachedLabel) {
+		this.attachedLabel = attachedLabel;
 	}
 
 }
