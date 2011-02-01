@@ -22,11 +22,6 @@ import aors.module.visopengl3d.shape.RegularTriangularPrism;
 import aors.module.visopengl3d.shape.Sphere;
 import aors.module.visopengl3d.shape.Tetrahedra;
 import aors.module.visopengl3d.test.gui.StatusPanel;
-import aors.module.visopengl3d.test.shapes.Circle;
-import aors.module.visopengl3d.test.shapes.Ellipse;
-import aors.module.visopengl3d.test.shapes.Rectangle;
-import aors.module.visopengl3d.test.shapes.RegularPolygon;
-import aors.module.visopengl3d.test.shapes.Triangle;
 import aors.module.visopengl3d.test.utility.Camera2D;
 //import aors.module.visopengl3d.test.utility.Color;
 import aors.module.visopengl3d.utility.Color;
@@ -324,7 +319,7 @@ public class RenderEngine2D implements GLEventListener, MouseMotionListener,
     reg.generateDisplayList(gl, glu);*/
     
     Texture texture = TextureLoader.load("C:\\Users\\Susi\\workspace\\AOR-JavaSIM\\media\\images\\backgrounds\\Sunflower.jpg");
-    //sphere.setTexture(texture);
+    cylinder.setTexture(texture);
     
     cube.setWidth(100);
     cube.setFill(Color.RED);
