@@ -96,11 +96,24 @@ public class Perception {
   }
 
   /**
-   * Calculates the perception angle for the 1D space.
+   * Calculates the perception angle for the 1D space. The result will be 0 if
+   * the object is in front and Pi if the object is in back of the perceiver. If
+   * both objects are on different lanes, a value of Pi/2 resp. 3/2*Pi is returned.
+   * is returned.
    * 
    * @return the angle
    */
   public double getAngle1D() {
+    // different lanes
+    if (perceiver.getY() > perceived.getY()) {
+      return Math.PI / 2;
+    }
+
+    if (perceiver.getY() < perceived.getY()) {
+      return 3 * Math.PI / 2;
+    }
+
+    // same lane
     double distance = perceived.getX() - perceiver.getX();
     distance += (distance > 0) ? -perceived.getWidth() / 2 : perceived
         .getWidth() / 2;
@@ -214,11 +227,11 @@ public class Perception {
     if (spaceModel.getSpaceType().equals(SpaceType.OneD)) {
       return "Perception: " + perceiver + " -> " + perceived + "\nDist: "
           + getDistance1D() + " Angle: " + (getAngle1D() * 180 / Math.PI)
-          + "Â°";
+          + "°";
     }
 
     return "Perception: " + perceiver + " -> " + perceived + "\nDist: "
         + getDistance2DGrid() + " Angle2D: " + (getAngle2D() * 180 / Math.PI)
-        + "Â°";
+        + "°";
   }
 }

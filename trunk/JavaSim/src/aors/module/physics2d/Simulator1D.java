@@ -31,7 +31,6 @@ import aors.module.physics2d.util.IntervalList;
 import aors.module.physics2d.util.MaterialConstants;
 import aors.module.physics2d.util.Perception;
 import aors.module.physics2d.util.UnitConverter;
-import aors.space.Space;
 
 /**
  * A physics simulator for 1D simulation.
@@ -41,21 +40,16 @@ import aors.space.Space;
  * 
  */
 public class Simulator1D extends PhysicsSimulator {
-  
+
   /**
    * A unit converter.
    */
   private UnitConverter unitConverter;
 
   /**
-   * Used for collision detection. Every lane gets its own list.
+   * Used for collision detection.
    */
-  private List<IntervalList> intervalLists;
-
-  /**
-   * Stores the current lane of each object.
-   */
-  private Map<Physical, Double> currentLanes;
+  private IntervalList intervalList;
 
   /**
    * This map stores the calculated new positions of all objects. This is needed
@@ -98,36 +92,12 @@ public class Simulator1D extends PhysicsSimulator {
     super(simParams, spaceModel, autoKinematics, autoCollisionDetection,
         autoCollisionHandling, gravitation, databus, objects, agents);
 
-    unitConverter = new UnitConverter(simParams.getTimeUnit(), spaceModel.getSpatialDistanceUnit());
+    unitConverter = new UnitConverter(simParams.getTimeUnit(), spaceModel
+        .getSpatialDistanceUnit());
     stepDuration = unitConverter.timeToSeconds(simParams.getStepDuration());
-    
+
     newPositions = new HashMap<Physical, Double>();
-    currentLanes = new HashMap<Physical, Double>();
-
-    intervalLists = new ArrayList<IntervalList>();
-
-    // put all objects in separate interval lists for each lane, then initialize
-    // each interval list
-    if (spaceModel.getMultiplicity() == 1) {
-      for (Physical object : getPhysicals()) {
-        currentLanes.put(object, object.getY());
-      }
-      intervalLists.add(new IntervalList(getPhysicals(), spaceModel));
-    } else {
-      ArrayList<ArrayList<Physical>> objLists = new ArrayList<ArrayList<Physical>>();
-      for (int i = 0; i < spaceModel.getMultiplicity(); i++) {
-        objLists.add(new ArrayList<Physical>());
-      }
-
-      for (Physical object : getPhysicals()) {
-        currentLanes.put(object, object.getY());
-        objLists.get((int) object.getY() - Space.ORDINATEBASE).add(object);
-      }
-
-      for (int i = 0; i < spaceModel.getMultiplicity(); i++) {
-        intervalLists.add(new IntervalList(objLists.get(i), spaceModel));
-      }
-    }
+    intervalList = new IntervalList(getPhysicals(), spaceModel);
 
     // multiple iterations only needed for autoCollisionHandling
     if (!autoCollisionHandling) {
@@ -162,9 +132,6 @@ public class Simulator1D extends PhysicsSimulator {
   public void simulationStepStart(long stepNumber) {
     this.stepNumber = stepNumber;
 
-    // check for lane changes
-    checkLanes();
-
     // calculate new positions
     if (autoKinematics) {
       determineNewVelocities();
@@ -182,10 +149,8 @@ public class Simulator1D extends PhysicsSimulator {
     do {
       List<Collision1D> collisions = new ArrayList<Collision1D>();
 
-      for (IntervalList intervalList : intervalLists) {
-        intervalList.update(newPositions);
-        intervalList.detectCollisions(collisions, perceptions, borderReached);
-      }
+      intervalList.update(newPositions);
+      intervalList.detectCollisions(collisions, perceptions, borderReached);
 
       if (spaceModel.getGeometry().equals(Geometry.Euclidean)) {
         handleBorderContact(borderReached);
@@ -286,7 +251,8 @@ public class Simulator1D extends PhysicsSimulator {
   private void determineNewPositions() {
 
     for (Physical object : getPhysicals()) {
-      double pos = object.getX() + unitConverter.distanceToUser(object.getVx() * stepDuration);
+      double pos = object.getX()
+          + unitConverter.distanceToUser(object.getVx() * stepDuration);
 
       // toroidal: adjust values if out of bounds
       if (spaceModel.getGeometry().equals(Geometry.Toroidal)) {
@@ -315,6 +281,13 @@ public class Simulator1D extends PhysicsSimulator {
     for (Collision1D collision : collisions) {
       Physical object1 = collision.getObject1();
       Physical object2 = collision.getObject2();
+      
+      // skip objects on different lanes
+      if (object1.getY() != object2.getY()) {
+        continue;
+      }
+
+//      System.out.println(stepNumber + ": " + collision);
 
       if (autoCollisionDetection) {
         // create event
@@ -340,10 +313,16 @@ public class Simulator1D extends PhysicsSimulator {
         double newV2 = (m1 * v1 + m2 * v2 - m1 * (v2 - v1) * restitution)
             / (m1 + m2);
 
-        double newPos1 = collision.getPosition() - object1.getWidth() / 2
-            + unitConverter.distanceToUser(newV1 * (stepDuration - collision.getTime()));
-        double newPos2 = collision.getPosition() + object2.getWidth() / 2
-            + unitConverter.distanceToUser(newV2 * (stepDuration - collision.getTime()));
+        double newPos1 = collision.getPosition()
+            - object1.getWidth()
+            / 2
+            + unitConverter.distanceToUser(newV1
+                * (stepDuration - collision.getTime()));
+        double newPos2 = collision.getPosition()
+            + object2.getWidth()
+            / 2
+            + unitConverter.distanceToUser(newV2
+                * (stepDuration - collision.getTime()));
 
         // System.out.println(stepNumber + ": Time: " + collision.getTime()
         // + " Position: " + collision.getPosition());
@@ -377,6 +356,12 @@ public class Simulator1D extends PhysicsSimulator {
       Physical object1 = collision.getObject1();
       Physical object2 = collision.getObject2();
 
+      // if objects are on different lanes, there is no collision
+      if (object1.getY() != object2.getY()) {
+        it.remove();
+        continue;
+      }
+
       // relative (enclosing) velocity
       double vRel = Math.abs(object1.getVx() - object2.getVx());
 
@@ -402,11 +387,14 @@ public class Simulator1D extends PhysicsSimulator {
       }
 
       // calculate time of impact
-      double time = (vRel == 0) ? 0 : stepDuration + (unitConverter.distanceToMeters(distance) / vRel);
+      double time = (vRel == 0) ? 0 : stepDuration
+          + (unitConverter.distanceToMeters(distance) / vRel);
 
       // calculate position of impact
       double position = newPositions.get(object1) + object1.getWidth() / 2;
-      position = position - unitConverter.distanceToUser(object1.getVx() * (stepDuration - time));
+      position = position
+          - unitConverter.distanceToUser(object1.getVx()
+              * (stepDuration - time));
 
       // adjust position if out of bounds
       if (spaceModel.getGeometry().equals(Geometry.Toroidal)) {
@@ -436,7 +424,7 @@ public class Simulator1D extends PhysicsSimulator {
     for (Perception perception : perceptions) {
       double distance = perception.getDistance1D();
       double angle = perception.getAngle1D();
-
+      
       PhysicalObjectPerceptionEvent event = new PhysicalObjectPerceptionEvent(
           stepNumber, perception.getPerceiver().getId(), perception
               .getPerceived().getClass().getSimpleName(), distance);
@@ -456,7 +444,7 @@ public class Simulator1D extends PhysicsSimulator {
 
       events.add(event);
 
-      // System.out.println(stepNumber + ": " + perception);
+//       System.out.println(stepNumber + ": " + perception);
     }
   }
 
@@ -473,33 +461,11 @@ public class Simulator1D extends PhysicsSimulator {
     }
   }
 
-  /**
-   * Checks if objects have changed their lane.
-   */
-  private void checkLanes() {
-    for (Physical object : getPhysicals()) {
-      if (object.getY() != currentLanes.get(object)) {
-        intervalLists
-            .get((int) (currentLanes.get(object) - Space.ORDINATEBASE)).remove(
-                object);
-        intervalLists.get((int) (object.getY() - Space.ORDINATEBASE)).add(
-            object);
-        currentLanes.put(object, object.getY());
-      }
-    }
-  }
-
   @Override
   public void objektDestroyEvent(ObjektDestroyEvent objektDestroyEvent) {
     if (objektDestroyEvent.getSource() instanceof Physical) {
       Physical object = (Physical) (objektDestroyEvent.getSource());
-
-      if (spaceModel.getMultiplicity() == 1) {
-        intervalLists.get(0).remove(object);
-      } else {
-        intervalLists.get((int) (object.getY() - Space.ORDINATEBASE)).remove(
-            object);
-      }
+      intervalList.remove(object);
     }
   }
 
@@ -507,13 +473,7 @@ public class Simulator1D extends PhysicsSimulator {
   public void objektInitEvent(ObjektInitEvent objInitEvent) {
     if (objInitEvent.getSource() instanceof Physical) {
       Physical object = (Physical) (objInitEvent.getSource());
-
-      if (spaceModel.getMultiplicity() == 1) {
-        intervalLists.get(0).add(object);
-      } else {
-        intervalLists.get((int) (object.getY() - Space.ORDINATEBASE)).add(
-            object);
-      }
+      intervalList.add(object);
     }
   }
 

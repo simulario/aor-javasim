@@ -625,7 +625,7 @@ public class IntervalList {
     }
 
     sort();
-    // System.out.println(list);
+//     System.out.println(list);
   }
 
 }
