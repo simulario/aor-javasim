@@ -160,11 +160,11 @@
 			<!-- ============================================ -->
 				<documentation>
 					<description xmlns:h="http://www.w3.org/1999/xhtml">
-						A lemonade stand makes lemonade and sells it in paper cups at a stand in a street market.
+						<h:p>A lemonade stand makes lemonade and sells it in paper cups at a stand in a street market.
 						Lemonade is made in a pitcher by adding a number of sugar cubes and the juice of a number
 						of lemons, and filling it up with water. Then, for serving the lemonade in a cup, first
 						a number of ice cubes are put into the cup, which is then filled with the lemonade from
-						the pitcher. On each day, the lemonade seller has to decide on 
+						the pitcher. On each day, the lemonade seller has to decide on</h:p>
 						<h:ol>
 							<h:li>The <strong>purchase</strong> of paper cups, lemons, sugar and ice</h:li>
 							<h:li>The <strong>production</strong> of lemonade from how many lemons, sugar cubes 
@@ -175,12 +175,12 @@
 				</documentation>
 				<Attribute name="amountOfCash" type="Float"/>
 				<Attribute name="nameOfProductType" type="String"/>
-				<Attribute name="productQuantityInStock" type="Integer"/>
 				<EnumerationProperty name="productSupplyUnit" type="SupplyUnit"/>
 				<EnumerationProperty name="productQuantityUnit" type="QuantityUnit"/>
 				<Attribute name="quantityPerProductSupplyUnit" type="Float"/>
+				<Attribute name="productQuantityInStock" type="Integer"/>
 				<!-- Batch size (unit production quantity) in quantity units -->
-				<Attribute name="batchSize" type="Integer"/>
+				<Attribute name="productBatchSize" type="Integer"/>
 				<!-- The purchase item types (cups, lemons, sugar and ice) -->
 				<ComplexDataProperty name="purchaseItemTypes" type="PurchaseItemType" lowerMultiplicity="4" upperMultiplicity="4"/>
 				<!-- The production quantity planned for the current day-->
@@ -188,9 +188,9 @@
 				<!-- Purchase decisions -->
 				<Attribute name="purchaseQuantities" type="Integer" lowerMultiplicity="4" upperMultiplicity="4"/>
 				<!-- Production decisions per batch: lemon and sugar quantities per pitcher -->
-				<Attribute name="inputQuantitiesPerBatch" type="Integer" lowerMultiplicity="4" upperMultiplicity="4"/>
+				<Attribute name="inputQuantitiesPerProductBatch" type="Integer" lowerMultiplicity="4" upperMultiplicity="4"/>
 				<!-- Production decisions per supply unit: ice cubes per cup -->
-				<Attribute name="inputQuantitiesPerSupplyUnit" type="Integer" lowerMultiplicity="4" upperMultiplicity="4"/>
+				<Attribute name="inputQuantitiesPerProductSupplyUnit" type="Integer" lowerMultiplicity="4" upperMultiplicity="4"/>
 				<!-- Sales decisions -->
 				<Attribute name="productSalesPrice" type="Float"/>
 				
@@ -201,7 +201,8 @@
 				<!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->
 				<ReactionRule name="StartOfDay_RR" agentVariable="p">
 				<!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->
-					<documentation><description>At the start of the day, purchase, production and sales planning decisions are made. </description></documentation>
+					<documentation><description>At the start of the day, purchase, production 
+						and sales planning decisions are made. </description></documentation>
 					<WHEN eventType="StartOfDay" />
 					<DO>
 						<UPDATE-AGT>
@@ -211,16 +212,59 @@
 									20
 								]]></ValueExpr>
 							</Slot>
-							<Slot property="lemonPurchaseQuantity">
+							<MultiValuedSlot property="purchaseQuantities">
+								<Set indexValue="1">
+									<!-- TODO: use a function depending on the planned production quantity and the input items in stock -->
+									<ValueExpr language="Java">
+										1
+									</ValueExpr>
+								</Set>
+								<Set indexValue="2" itemValue="3"/>
+								<Set indexValue="3" itemValue="3"/>
+								<Set indexValue="4" itemValue="3"/>
+							</MultiValuedSlot>
+							<Slot property="productSalesPrice">
 								<!-- TODO: improve formula -->
 								<ValueExpr language="Java"><![CDATA[
-									Math.ceil( getPlannedProductionQuantity() / 7) * lemonQuantityPerPitcher
+									1.80
 								]]></ValueExpr>
 							</Slot>
 						</UPDATE-AGT>
 					</DO>	
 				</ReactionRule>
-
+				<!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->
+				<ReactionRule name="EachDayAt4pm_RR" agentVariable="p">
+					<!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->
+					<documentation><description xmlns:h="http://www.w3.org/1999/xhtml">
+						<h:p>At this step, input items are purchased, and products are manufactured, as planned. 
+							More precisely, at 4 pm,</h:p> 
+						<h:ol>
+							<h:li>the purchased input items are added to the purchase items in stock,</h:li>
+							<h:li>the amount of cash is decremented accordingly,</h:li>
+							<h:li>the planned production quantity is produced, and the used input items' quantities in stock 
+								are decremented accordingly.</h:li>
+						</h:ol>						
+					</description></documentation>
+					<WHEN eventType="EachDayAt4pm" />
+					<DO>
+						<UPDATE-AGT>
+							<Call procedure="updatePurchaseItemInventory"/>
+							<Slot property="amountOfCash">
+								<!-- TODO: use a suitable function  -->
+								<ValueExpr language="Java"><![CDATA[
+									20
+								]]></ValueExpr>
+							</Slot>
+							<Slot property="productSalesPrice">
+								<!-- TODO: improve formula -->
+								<ValueExpr language="Java"><![CDATA[
+									1.80
+								]]></ValueExpr>
+							</Slot>
+						</UPDATE-AGT>
+					</DO>	
+				</ReactionRule>
+				
 			</PhysicalAgentType>
 		</EntityTypes>
 		
@@ -265,7 +309,7 @@
 			<Slot property="productSupplyUnit">
 				<ValueExpr language="Java">SupplyUnit.CUP</ValueExpr>
 			</Slot>
-			<Slot property="batchSize" value="2000" />
+			<Slot property="productBatchSize" value="2000" />
 			<Slot property="quantityPerProductSupplyUnit" value="200" />
 			<Slot property="productQuantityInStock" value="0" />
 			
@@ -275,7 +319,7 @@
 						{
 							add( new PurchaseItemType("Lemon", QuantityUnit.PIECE, SupplyUnit.CRATE, 25, 7.50, 150, 0, 2.50, 3, 100));
 							add( new PurchaseItemType("Sugar", QuantityUnit.PIECE, SupplyUnit.CRATE, 100, 1.50, 0, 0, 2.50, 3, 100));
-							add( new PurchaseItemType("Ice", QuantityUnit.PIECE, SupplyUnit.BAG, 200, 2.00, 0, 0, 2.50, 3, 100));
+							add( new PurchaseItemType("Ice", QuantityUnit.PIECE, SupplyUnit.BAG, 200, 2.00, 50, 0, 2.50, 3, 100));
 							add( new PurchaseItemType("Cup", QuantityUnit.PIECE, SupplyUnit.CRATE, 50, 2.50, 0, 0, 2.50, 3, 100));
 						}
 					}
@@ -288,37 +332,50 @@
 							eos_economy.controller.Global.getDiscrete(0, "Utility"))
 				]]></ValueExpr>
 			</Slot>
+			<Slot property="purchaseQuantities">
+				<ValueExpr language="Java"><![CDATA[ 
+					new ArrayList<Integer>(){
+						{
+							add( Integer(0));
+							add( Integer(0));
+							add( Integer(0));
+							add( Integer(0));
+						}
+					}
+					]]></ValueExpr>
+				</Slot>
+			<Slot property="inputQuantitiesPerProductSupplyUnit">
+				<ValueExpr language="Java"><![CDATA[ 
+					new ArrayList<Integer>(){
+						{
+							add( Integer(0));
+							add( Integer(0));
+							add( Integer(0));
+							add( Integer(0));
+						}
+					}
+					]]></ValueExpr>
+			</Slot>
+			<Slot property="inputQuantitiesPerProductBatch">
+				<ValueExpr language="Java"><![CDATA[ 
+					new ArrayList<Integer>(){
+						{
+							add( Integer(0));
+							add( Integer(0));
+							add( Integer(0));
+							add( Integer(0));
+						}
+					}
+					]]></ValueExpr>
+			</Slot>
 			
-			<Slot property="icePurchaseQuantity" value="10" />
-			<Slot property="cupPurchaseQuantity" value="10" />
-
-			<Slot property="lemonProductionQuantity" value="4" />
-			<Slot property="sugarProductionQuantity" value="15" />
-
-			<Slot property="salesPrice" value="1.20" />
+			<Slot property="plannedProductionQuantity" value="2" />
+			<Slot property="productSalesPrice" value="1.20" />			
 		</Agent>
-		
-		<Agent type="LemonadeStand" id="2">
-			<!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->			
-			<Slot property="lemonStock" value="0" />
-			<Slot property="sugarStock" value="0" />
-			<Slot property="iceStock" value="0" />
-			<Slot property="cupStock" value="0" />
-			
-			<Slot property="lemonPurchaseQuantity" value="10" />
-			<Slot property="sugarPurchaseQuantity" value="10" />
-			<Slot property="icePurchaseQuantity" value="10" />
-			<Slot property="cupPurchaseQuantity" value="10" />
-			
-			<Slot property="lemonProductionQuantity" value="4" />
-			<Slot property="sugarProductionQuantity" value="15" />
-			
-			<Slot property="salesPrice" value="1.20" />
-		</Agent>
 
-		<ExogenousEvent occurrenceTime="1" type="StartOfDay" />
-		<ExogenousEvent occurrenceTime="10" type="EachDayAt4pm" />
-		<ExogenousEvent occurrenceTime="50" type="EachDayAt8pm" />
+		<ExogenousEvent type="StartOfDay" occurrenceTime="1"/>
+		<ExogenousEvent type="EachDayAt4pm" occurrenceTime="10"/>
+		<ExogenousEvent type="EachDayAt8pm" occurrenceTime="50"/>
 	</InitialState>
 	
 </SimulationScenario>
