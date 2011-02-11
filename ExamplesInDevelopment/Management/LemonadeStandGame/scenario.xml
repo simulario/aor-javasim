@@ -4,7 +4,7 @@
 <SimulationScenario version="0.8.4" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
 	xsi:schemaLocation="http://aor-simulation.org ../../../AORSL/AORSL_0-8-4.xsd"
 	xmlns="http://aor-simulation.org" xmlns:aors="http://aor-simulation.org"
-	xmlns:dc="http://purl.org/dc/elements/1.1/" 
+	xmlns:dc="http://purl.org/dc/elements/1.1/"  xmlns:h="http://www.w3.org/1999/xhtml"
 	scenarioName="LemonadeStandGame"
 	scenarioTitle="Make lemonade and sell it at a street stand"
 	simulationManagerDirectory="../../..">
@@ -12,15 +12,14 @@
 	<SimulationParameters simulationSteps="4320" timeUnit="h"  stepTimeDelay="0"/>
 	<SimulationModel modelName="LemonadeStandGame">
 		<documentation>
-			<dc:created>Oct-2010</dc:created>
+			<dc:created>20110211</dc:created>
 			<dc:creator>Gerd Wagner</dc:creator>
 			<dc:modified></dc:modified>
 			<dc:source>http://en.wikipedia.org/wiki/Lemonade_Stand</dc:source>
 			<aors:description xmlns="http://www.w3.org/1999/xhtml">
-				A lemonade seller makes lemonade in 1.5 liter pitchers and sells it in 200 ml cups 
-				at a stand in a street market from 4 pm until 8 pm.
-				The work day starts at 3 pm with purchasing the ingredients and ends at 8 pm. Each
-				hour is represented by 10 time steps.
+				<p>A lemonade seller makes lemonade in 1.5 liter pitchers and sells it in 200 ml cups 
+				at a stand in a street market from 4 pm until 8 pm. The work day starts at 3 pm with 
+				purchasing the ingredients and ends at 8 pm. Each	hour is represented by 10 time steps.</p>
 			</aors:description>
 		</documentation>
 		
@@ -159,18 +158,16 @@
 			<PhysicalAgentType name="LemonadeStand">
 			<!-- ============================================ -->
 				<documentation>
-					<description xmlns:h="http://www.w3.org/1999/xhtml">
+					<description>
 						<h:p>A lemonade stand makes lemonade and sells it in paper cups at a stand in a street market.
 						Lemonade is made in a pitcher by adding a number of sugar cubes and the juice of a number
 						of lemons, and filling it up with water. Then, for serving the lemonade in a cup, first
 						a number of ice cubes are put into the cup, which is then filled with the lemonade from
-						the pitcher. On each day, the lemonade seller has to decide on</h:p>
-						<h:ol>
-							<h:li>The <strong>purchase</strong> of paper cups, lemons, sugar and ice</h:li>
-							<h:li>The <strong>production</strong> of lemonade from how many lemons, sugar cubes 
-								and ice cubes per pitcher</h:li>
-							<h:li>The <strong>sales</strong> of a cup of lemonade for how much</h:li>
-						</h:ol>						
+						the pitcher. On each day, the lemonade seller first has to make purchase, production 
+						and sales planning decisions.</h:p>
+						<h:p>During the day, the lemonade stand receives sales orders from customers passing by,
+						depending on the weather conditions. </h:p>						
+						<h:p>At the end of the day, the lemonade stand has to write off the expired input materials. </h:p>						
 					</description>
 				</documentation>
 				<Attribute name="amountOfCash" type="Float"/>
@@ -182,27 +179,58 @@
 				<!-- Batch size (unit production quantity) in quantity units -->
 				<Attribute name="productBatchSize" type="Integer"/>
 				<!-- The purchase item types (cups, lemons, sugar and ice) -->
-				<ComplexDataProperty name="purchaseItemTypes" type="PurchaseItemType" lowerMultiplicity="4" upperMultiplicity="4"/>
+				<ComplexDataProperty name="purchaseItemTypes" type="PurchaseItemType" 
+					lowerMultiplicity="4" upperMultiplicity="4"/>
+				<!-- ***  P L A N N I N G  *** -->
 				<!-- The production quantity planned for the current day-->
 				<Attribute name="plannedProductionQuantity" type="Integer"/>
-				<!-- Purchase decisions -->
+				<!-- Purchase planning decisions -->
 				<Attribute name="purchaseQuantities" type="Integer" lowerMultiplicity="4" upperMultiplicity="4"/>
-				<!-- Production decisions per batch: lemon and sugar quantities per pitcher -->
-				<Attribute name="inputQuantitiesPerProductBatch" type="Integer" lowerMultiplicity="4" upperMultiplicity="4"/>
-				<!-- Production decisions per supply unit: ice cubes per cup -->
-				<Attribute name="inputQuantitiesPerProductSupplyUnit" type="Integer" lowerMultiplicity="4" upperMultiplicity="4"/>
-				<!-- Sales decisions -->
+				<!-- Production planning decisions per batch: lemon and sugar quantities per pitcher -->
+				<Attribute name="inputQuantitiesPerProductBatch" type="Integer" 
+					lowerMultiplicity="4" upperMultiplicity="4"/>
+				<!-- Production planning decisions per supply unit: ice cubes per cup -->
+				<Attribute name="inputQuantitiesPerProductSupplyUnit" type="Integer" 
+					lowerMultiplicity="4" upperMultiplicity="4"/>
+				<!-- Sales planning decisions -->
 				<Attribute name="productSalesPrice" type="Float"/>
 				
+				<Function name="addPurchaseQuantitiesToPurchaseItemInventory" resultType="void">
+					<Body language="Java"><![CDATA[
+						for (int i=1; i <= purchaseItemTypes.length; i++) {
+							purchaseItemTypes.get(i).setQuantityInStock( 
+								purchaseItemTypes.get(i).getQuantityInStock() 
+						  	+ purchaseQuantities.get(i)
+						}
+					]]></Body>
+				</Function>
+				
+				<Function name="subtractPurchaseAmountFromAmountOfCash" resultType="Float">
+					<Body language="Java"><![CDATA[
+						int purchaseAmount = 0;
+						for (int i=1; i <= purchaseItemTypes.length; i++) {
+							purchaseAmount += purchaseQuantities.get(i) * purchaseItemTypes.get(i).getPurchasePrice() 
+						}
+						return (getAmountOfCash() - purchaseAmount);
+					]]></Body>
+				</Function>
+
 				<PeriodicTimeEventType name="StartOfDay" periodicity="50" />
 				<PeriodicTimeEventType name="EachDayAt4pm" periodicity="50" />
 				<PeriodicTimeEventType name="EachDayAt8pm" periodicity="50" />
 
 				<!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->
-				<ReactionRule name="StartOfDay_RR" agentVariable="p">
+				<ReactionRule name="StartOfDay_RR">
 				<!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->
-					<documentation><description>At the start of the day, purchase, production 
-						and sales planning decisions are made. </description></documentation>
+					<documentation><description>
+						<h:p>At the start of the day, make planning decisions on</h:p>
+						<h:ol>
+							<h:li>The <strong>purchase</strong> of paper cups, lemons, sugar and ice</h:li>
+							<h:li>The <strong>production</strong> of lemonade from how many lemons, sugar cubes 
+								and ice cubes per pitcher</h:li>
+							<h:li>The <strong>sales</strong> of a cup of lemonade for how much</h:li>
+						</h:ol>						
+					</description></documentation>
 					<WHEN eventType="StartOfDay" />
 					<DO>
 						<UPDATE-AGT>
@@ -213,15 +241,15 @@
 								]]></ValueExpr>
 							</Slot>
 							<MultiValuedSlot property="purchaseQuantities">
-								<Set indexValue="1">
+								<Assign indexValue="1">
 									<!-- TODO: use a function depending on the planned production quantity and the input items in stock -->
 									<ValueExpr language="Java">
 										1
 									</ValueExpr>
-								</Set>
-								<Set indexValue="2" itemValue="3"/>
-								<Set indexValue="3" itemValue="3"/>
-								<Set indexValue="4" itemValue="3"/>
+								</Assign>
+								<Assign indexValue="2" itemValue="3"/>
+								<Assign indexValue="3" itemValue="3"/>
+								<Assign indexValue="4" itemValue="3"/>
 							</MultiValuedSlot>
 							<Slot property="productSalesPrice">
 								<!-- TODO: improve formula -->
@@ -233,9 +261,9 @@
 					</DO>	
 				</ReactionRule>
 				<!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->
-				<ReactionRule name="EachDayAt4pm_RR" agentVariable="p">
-					<!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->
-					<documentation><description xmlns:h="http://www.w3.org/1999/xhtml">
+				<ReactionRule name="EachDayAt4pm_RR" agentVariable="lst">
+				<!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->
+					<documentation><description>
 						<h:p>At this step, input items are purchased, and products are manufactured, as planned. 
 							More precisely, at 4 pm,</h:p> 
 						<h:ol>
@@ -248,15 +276,41 @@
 					<WHEN eventType="EachDayAt4pm" />
 					<DO>
 						<UPDATE-AGT>
-							<Call procedure="updatePurchaseItemInventory"/>
+							<Call procedure="addPurchaseQuantitiesToPurchaseItemInventory"/>
 							<Slot property="amountOfCash">
-								<!-- TODO: use a suitable function  -->
 								<ValueExpr language="Java"><![CDATA[
-									20
+									lst.subtractPurchaseAmountFromAmountOfCash()
 								]]></ValueExpr>
 							</Slot>
 							<Slot property="productSalesPrice">
-								<!-- TODO: improve formula -->
+								<!-- TODO: develop an appropriate formula -->
+								<ValueExpr language="Java"><![CDATA[
+									1.80
+								]]></ValueExpr>
+							</Slot>
+						</UPDATE-AGT>
+					</DO>	
+				</ReactionRule>
+				<!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->
+				<ReactionRule name="ProcessOrder_RR" agentVariable="lst">
+				<!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->
+					<documentation><description>
+						<h:p>When the lemonade stand receives an order, it checks if it still has enough lemonade.
+						If yes, it serves the order leading to an update of the product quantity in stock and the
+						amount of cash.</h:p> 
+					</description></documentation>
+					<WHEN eventType="InMessageEvent" messageType="Order"/>
+					<IF language="Java"></IF>
+					<DO>
+						<UPDATE-AGT>
+							<Call procedure="addPurchaseQuantitiesToPurchaseItemInventory"/>
+							<Slot property="amountOfCash">
+								<ValueExpr language="Java"><![CDATA[
+									lst.subtractPurchaseAmountFromAmountOfCash()
+								]]></ValueExpr>
+							</Slot>
+							<Slot property="productSalesPrice">
+								<!-- TODO: develop an appropriate formula -->
 								<ValueExpr language="Java"><![CDATA[
 									1.80
 								]]></ValueExpr>
