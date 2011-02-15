@@ -191,10 +191,15 @@ public class PhysicsController implements Module {
     SpaceType spaceType = spaceModel.getSpaceType();
 
     // create specific simulator depending on SpaceType
-    if (spaceType.equals(SpaceType.TwoD)
-        || spaceType.equals(SpaceType.TwoDLateralView)) {
+    if (spaceType.equals(SpaceType.TwoDLateralView)) {
       simulator = new Box2DSimulator(simParams, spaceModel, autoKinematics,
           autoCollisionDetection, autoCollisionHandling, gravitation,
+          initialState.getDatabus(), objects, agents);
+    }
+
+    if (spaceType.equals(SpaceType.TwoD)) {
+      simulator = new Box2DSimulator(simParams, spaceModel, autoKinematics,
+          autoCollisionDetection, autoCollisionHandling, 0,
           initialState.getDatabus(), objects, agents);
     }
 
