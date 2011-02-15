@@ -3,6 +3,7 @@
 	xmlns:ers="http://aor-simulation.org"
 	xmlns:xs="http://www.w3.org/2001/XMLSchema"
 	xmlns:h="http://www.w3.org/1999/xhtml"
+	xmlns:saxon="http://saxon.sf.net/"
 	targetNamespace="http://aor-simulation.org"
 	elementFormDefault="qualified"
 	attributeFormDefault="unqualified">
@@ -144,7 +145,6 @@
 	<!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->
 	<xs:element name="ThreeDimensional">
 	<!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->
-		<xs:annotation><xs:documentation>This discrete space consists of cells for which properties and functions may be defined. The built-in cell properties <h:code>posX</h:code>, <h:code>posY</h:code> and <h:code>posZ</h:code> can be accessed with an expression of the form <h:code>Simulator.spaceModel.getGridCell(x,y).getPosX()</h:code>. </xs:documentation></xs:annotation>
 		<xs:complexType>
 			<xs:attribute name="xMax" type="xs:nonNegativeInteger" use="required"/>
 			<xs:attribute name="yMax" type="xs:nonNegativeInteger" use="required"/>
@@ -156,6 +156,7 @@
 	<!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->
 	<xs:element name="ThreeDimensionalGrid">
 		<!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->
+		<xs:annotation><xs:documentation>This discrete space consists of cells for which properties and functions may be defined. The built-in cell properties <h:code>posX</h:code>, <h:code>posY</h:code> and <h:code>posZ</h:code> can be accessed with an expression of the form <h:code>Simulator.spaceModel.getGridCell(x,y,z).getPosX()</h:code>. </xs:documentation></xs:annotation>
 		<xs:complexType>
 			<xs:group ref="ers:GridSpace.elements" minOccurs="0"/>
 			<xs:attribute name="xMax" type="xs:nonNegativeInteger" use="required"/>
@@ -329,7 +330,7 @@
 						<xs:attribute name="dataType" type="ers:PrimitiveDataType" use="optional"/>
 						<xs:attribute name="refDataType" type="ers:PathName" use="optional">
 							<xs:annotation>
-								<xs:documentation>A class or array type.</xs:documentation>
+								<xs:documentation>A class.</xs:documentation>
 							</xs:annotation>							
 						</xs:attribute>
 						<xs:attribute name="initialValue" type="xs:string" use="optional">
@@ -340,6 +341,7 @@
 						<xs:attribute name="minValue" type="xs:double" use="optional"/>
 						<xs:attribute name="maxValue" type="xs:double" use="optional"/>
 						<xs:attribute name="upperMultiplicity" type="ers:UpperMultiplicity" use="optional" default="1"/>
+						<xs:assert test="not(@minValue) or not(@maxValue) or (@minValue le @maxValue)" saxon:message="Attribute/@minValue must be less than Attribute/@maxValue!"/>
 					</xs:complexType>
 				</xs:element>
 				<xs:element name="GlobalFunction" type="ers:Function.type" minOccurs="0" maxOccurs="unbounded"/>
