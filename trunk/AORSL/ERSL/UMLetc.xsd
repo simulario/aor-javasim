@@ -6,6 +6,7 @@
 	xmlns:xs="http://www.w3.org/2001/XMLSchema"
 	xmlns:dc="http://purl.org/dc/elements/1.1/"
 	xmlns:h="http://www.w3.org/1999/xhtml"
+	xmlns:saxon="http://saxon.sf.net/"
 	targetNamespace="http://aor-simulation.org"
 	elementFormDefault="qualified"
 	attributeFormDefault="unqualified">
@@ -84,6 +85,7 @@
 		<xs:attribute name="isStatic" type="xs:boolean" use="optional" default="false"/>
 		<!-- 
 		<xs:attribute name="isEmergent" type="xs:boolean" use="optional" default="false"/>
+		<xs:assert test="@lowerMultiplicity le @upperMultiplicity" saxon:message="Property/@lowerMultiplicity must be less than Property/@upperMultiplicity!"/>
 		-->
 	</xs:complexType>
 	<!-- =================================================================== -->
@@ -96,7 +98,7 @@
 				<xs:attribute name="initialValue" type="xs:string" use="optional"/>
 				<xs:attribute name="minValue" type="xs:double" use="optional"/>
 				<xs:attribute name="maxValue" type="xs:double" use="optional"/>
-				<!--<xs:assert test="@minValue le @maxValue"/>-->
+				<xs:assert test="not(@minValue) or not(@maxValue) or (@minValue le @maxValue)" saxon:message="Attribute/@minValue must be less than Attribute/@maxValue!"/>
 			</xs:extension>
 		</xs:complexContent>
 	</xs:complexType>
@@ -140,7 +142,7 @@
 	<!-- *** CollectionValuedProperty *** -->
 	<!-- =================================================================== -->
 	<xs:element name="CollectionValuedProperty" type="ers:CollectionValuedProperty.type" substitutionGroup="ers:Property">
-		<xs:annotation><xs:documentation>The type attribute references a Collection Type.</xs:documentation></xs:annotation>		
+		<xs:annotation><xs:documentation>For referencing a Collection Type.</xs:documentation></xs:annotation>		
 	</xs:element>
 	<xs:complexType name="CollectionValuedProperty.type">
 		<xs:complexContent>
@@ -166,7 +168,9 @@
 	<!-- =================================================================== -->
 	<!-- *** EnumerationProperty *** -->
 	<!-- =================================================================== -->
-	<xs:element name="EnumerationProperty" type="ers:EnumerationProperty.type" substitutionGroup="ers:Property"/>
+	<xs:element name="EnumerationProperty" type="ers:EnumerationProperty.type" substitutionGroup="ers:Property">
+		<xs:annotation><xs:documentation>Admits only values that are enumeration literals of an Enumeration datatype.</xs:documentation></xs:annotation>				
+	</xs:element>
 	<xs:complexType name="EnumerationProperty.type">
 		<xs:complexContent>
 			<xs:extension base="ers:Property.type">
