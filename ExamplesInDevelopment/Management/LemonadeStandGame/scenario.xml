@@ -17,9 +17,10 @@
 			<dc:modified></dc:modified>
 			<dc:source>http://en.wikipedia.org/wiki/Lemonade_Stand</dc:source>
 			<aors:description xmlns="http://www.w3.org/1999/xhtml">
-				<p>A lemonade seller makes lemonade in 1.5 liter pitchers and sells it in 200 ml cups 
-				at a stand in a street market from 4 pm until 8 pm. The work day starts at 3 pm with 
-				purchasing the ingredients and ends at 8 pm. Each	hour is represented by 10 time steps.</p>
+				<p>A lemonade seller makes lemonade in pitchers and sells it in paper cups 
+				at a stand in a street market. The work day starts with making planning decisions
+				and placing a purchase order for getting the input materials.</p>
+				<p>In this first version, neither customers nor suppliers are explixitly modeled.</p>
 			</aors:description>
 		</documentation>
 		
@@ -30,7 +31,7 @@
 		<Statistics>			
 			<Variable name="Price" dataType="Float">				
 				<Source>
-					<ObjectProperty property="lemonadeSalesPrice" objectType="LemonadeStand"/>
+					<ObjectProperty property="productSalesPrice" objectType="LemonadeStand"/>
 				</Source>
 			</Variable>
 		</Statistics>
@@ -56,10 +57,8 @@
 				<EnumerationProperty name="quantityUnit" type="QuantityUnit"/>
 				<EnumerationProperty name="supplyUnit" type="SupplyUnit"/>
 				<Attribute name="quantityPerProductSupplyUnit" type="Integer"/>
-				<Attribute name="quantityInStock" type="Integer"/>
 				<Attribute name="purchasePrice" type="Float"/>
 				<Attribute name="expirationTimeSpan" type="Integer"/>
-				<Attribute name="quantityInStock" type="Integer"/>
 <!--
 				<Attribute name="timeToDeliver" type="Integer"/>
 				<Attribute name="minOrderSize" type="Integer"/>
@@ -70,16 +69,21 @@
 			</ComplexDataType>
 		</DataTypes>		
 		<EntityTypes>
+<!--			
 			<MessageType name="Order"/>
 			<MessageType name="OrderConfirmation">
 				<Attribute name="price" type="Float"/>
-			</MessageType>
-						
+			</MessageType>						
+-->
 			<PerceptionEventType name="PurchaseItemsDelivery"/>
+			<PerceptionEventType name="SalesOrder"/>
 			
+			<ActionEventType name="PlacePurchaseOrder"/>
 			<ActionEventType name="OpenLemonadeStand"/>
+			<ActionEventType name="FinishCustomerOrder"/>
 			<ActionEventType name="CloseLemonadeStand"/>
 
+			<!-- =================================================== 				
 			<ActionEventType name="Halt"/>
 			<ActionEventType name="Go"/>
 			<ActionEventType name="MakePayment">
@@ -92,9 +96,7 @@
 				<Attribute name="price" type="Float"/>
 			</PhysicalObjectType>
 			
-			<!-- =================================================== -->
 			<PhysicalAgentType name="Customer" autoPerception="true">
-			<!-- =================================================== -->
 				<documentation><description>Customers walk along a street and perceive the price posters 
 					of the lemonade stands.	When the price is smaller than their price limit, they halt
 					at the stand and order a lemonade. 
@@ -107,9 +109,8 @@
 				</description></documentation>
 				<Attribute name="priceLimit" type="Float"/>
 				<Attribute name="patience" type="Integer"/>					
-				<!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->
+
 				<ReactionRule name="PricePosterPerception_RR" agentVariable="cust">
-				<!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->
 					<documentation>
 						<description>When approaching a lemonade stand, the customer perceives the price poster. 
 							If the price is not above her price limit, the customer gets into the waiting line 
@@ -133,9 +134,7 @@
 						</SCHEDULE-EVT>
 					</THEN>
 				</ReactionRule>
-				<!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->
 				<ReactionRule name="OrderConfirmation_RR" agentVariable="cust">
-				<!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->
 					<documentation>
 						<description>When the customer receives an oder conformation (and the cup of lemonade), she pays the bill
 							and stays for a moment for drinking the cup of lemonade. </description>
@@ -155,6 +154,7 @@
 					</DO>
 				</ReactionRule>
 			</PhysicalAgentType>
+-->
 			<!-- ============================================ -->
 			<PhysicalAgentType name="LemonadeStand">
 			<!-- ============================================ -->
@@ -182,11 +182,14 @@
 				<!-- The purchase item types (cups, lemons, sugar and ice) -->
 				<ComplexDataProperty name="purchaseItemTypes" type="PurchaseItemType" 
 					lowerMultiplicity="4" upperMultiplicity="4"/>
+				<Attribute name="purchaseItemQuantitiesInStock" type="Integer" 
+					lowerMultiplicity="4" upperMultiplicity="4"/>
 				<!-- ***  P L A N N I N G  *** -->
 				<!-- The production quantity planned for the current day-->
 				<Attribute name="plannedProductionQuantity" type="Integer"/>
 				<!-- Purchase planning decisions -->
-				<Attribute name="purchaseQuantities" type="Integer" lowerMultiplicity="4" upperMultiplicity="4"/>
+				<Attribute name="purchaseQuantities" type="Integer" 
+					lowerMultiplicity="4" upperMultiplicity="4"/>
 				<!-- Production planning decisions per batch: lemon and sugar quantities per pitcher -->
 				<Attribute name="inputQuantitiesPerProductBatch" type="Integer" 
 					lowerMultiplicity="4" upperMultiplicity="4"/>
@@ -216,8 +219,8 @@
 					]]></Body>
 				</Function>
 
-				<PeriodicTimeEventType name="StartOfDay" periodicity="50" />
-				<PeriodicTimeEventType name="EndOfDay" periodicity="50" />
+				<PeriodicTimeEventType name="StartOfDay" periodicity="100" />
+				<PeriodicTimeEventType name="EndOfDay" periodicity="100" />
 
 				<!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->
 				<ReactionRule name="StartOfDay_RR">
@@ -259,10 +262,13 @@
 								]]></ValueExpr>
 							</Slot>
 						</UPDATE-AGT>
+						<SCHEDULE-EVT>
+							<ActionEventExpr actionEventType="PlacePurchaseOrder"/>
+						</SCHEDULE-EVT>
 					</DO>	
 				</ReactionRule>
 				<!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->
-				<ReactionRule name="PurchaseItemsDelivery_RR" agentVariable="lst">
+				<ReactionRule name="ReceiveDelivery_RR" agentVariable="lst">
 				<!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->
 					<documentation><description>
 						<h:p>At this step, purchase items are delivered, and products are manufactured, as planned. 
@@ -275,7 +281,7 @@
 						</h:ol>
 						<h:p>Finally, the lemonade stand is opened for sales.</h:p> 
 					</description></documentation>
-					<WHEN eventType="EachDayAt4pm" />
+					<WHEN eventType="PurchaseItemsDelivery" />
 					<DO>
 						<UPDATE-AGT>
 							<Call procedure="addPurchaseQuantitiesToPurchaseItemInventory"/>
@@ -297,14 +303,14 @@
 					</DO>	
 				</ReactionRule>
 				<!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->
-				<ReactionRule name="ProcessOrder_RR" agentVariable="lst">
+				<ReactionRule name="ProcessSalesOrder_RR" agentVariable="lst">
 				<!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->
 					<documentation><description>
 						<h:p>When the lemonade stand receives an order, it checks if it still has enough lemonade.
 						If yes, it serves the order leading to an update of the product quantity in stock and the
 						amount of cash.</h:p> 
 					</description></documentation>
-					<WHEN eventType="InMessageEvent" messageType="Order"/>
+					<WHEN eventType="SalesOrder"/>
 					<IF language="Java">lst.getProductQuantityInStock() > 0</IF>
 					<THEN>
 						<UPDATE-AGT>
@@ -317,36 +323,101 @@
 								]]></ValueExpr>
 							</Slot>
 						</UPDATE-AGT>
+						<SCHEDULE-EVT>
+							<ActionEventExpr actionEventType="FinishCustomerOrder"/>
+						</SCHEDULE-EVT>
 					</THEN>	
 				</ReactionRule>
-				
+				<!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->
+				<ReactionRule name="EndOfDay_RR">
+				<!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->
+					<documentation><description>
+						<h:p>At the end of the day, close the lemonade stand and depreciate the expired items in stock.
+						In this first version, only the ice cubes are depreciated.</h:p>
+					</description></documentation>
+					<WHEN eventType="EndOfDay" />
+					<DO>
+						<UPDATE-AGT>
+							<MultiValuedSlot property="purchaseItemQuantitiesInStock">
+								<Assign indexValue="3" itemValue="0"/>
+							</MultiValuedSlot>
+						</UPDATE-AGT>
+						<SCHEDULE-EVT>
+							<ActionEventExpr actionEventType="CloseLemonadeStand"/>
+						</SCHEDULE-EVT>
+					</DO>
+				</ReactionRule>
+					
 			</PhysicalAgentType>
 		</EntityTypes>
 		
-	<EnvironmentRules>
-		<!-- ====================================== -->
-		<EnvironmentRule name="StartOfDay_ER">
-		<!-- ====================================== -->
-				<WHEN eventType="StartOfDay"/>
-		</EnvironmentRule>
-		<!-- ====================================== -->
-		<EnvironmentRule name="MakePayment_RR">
-		<!-- ====================================== -->
-			<WHEN eventType="MakePayment" eventVariable="e"/>
-			<FOR objectVariable="ls" objectType="LemonadeStand">
-				<ValueExpr language="Java"> e.getReceiver() </ValueExpr>
-			</FOR>
-			<DO>
-				<UPDATE-ENV>
-					<UpdateObject objectVariable="ls">
-						<Slot property="cash">
-							<ValueExpr language="Java"> ls.getCash() + e.getAmount() </ValueExpr>
-						</Slot>
-					</UpdateObject>
-				</UPDATE-ENV>
-			</DO>
-		</EnvironmentRule>
-	</EnvironmentRules>	
+		<EnvironmentRules>
+			<!-- ====================================== -->
+			<EnvironmentRule name="PlacePurchaseOrder_ER">
+			<!-- ====================================== -->
+				<WHEN eventType="PlacePurchaseOrder"/>
+				<DO>
+					<SCHEDULE-EVT>
+						<PerceptionEventExpr eventType="PurchaseItemsDelivery" perceiverIdRefs="1"/>
+					</SCHEDULE-EVT>
+				</DO>
+			</EnvironmentRule>
+			<!-- ====================================== -->
+			<EnvironmentRule name="OpenLemonadeStand_ER">
+			<!-- ====================================== -->
+				<WHEN eventType="OpenLemonadeStand"/>
+				<DO>
+					<SCHEDULE-EVT>
+						<PerceptionEventExpr eventType="SalesOrder" perceiverIdRefs="1">
+							<Delay>
+								<DiscreteRandomVariable>
+									<ExponentialInt lambda="0.3"/>
+								</DiscreteRandomVariable>
+							</Delay>
+						</PerceptionEventExpr>
+					</SCHEDULE-EVT>
+				</DO>
+			</EnvironmentRule>
+			<!-- ====================================== -->
+			<EnvironmentRule name="FinishCustomerOrder_ER">
+			<!-- ====================================== -->
+				<WHEN eventType="FinishCustomerOrder"/>
+				<DO>
+					<SCHEDULE-EVT>
+						<PerceptionEventExpr eventType="SalesOrder" perceiverIdRefs="1">
+							<Delay>
+								<DiscreteRandomVariable>
+									<ExponentialInt lambda="0.3"/>
+								</DiscreteRandomVariable>
+							</Delay>
+						</PerceptionEventExpr>
+					</SCHEDULE-EVT>
+				</DO>
+			</EnvironmentRule>
+			<!-- ====================================== -->
+			<EnvironmentRule name="CloseLemonadeStand_ER">
+			<!-- ====================================== -->
+				<WHEN eventType="CloseLemonadeStand"/>
+			</EnvironmentRule>
+			
+			<!-- ====================================== 
+			<EnvironmentRule name="MakePayment_RR">
+				<WHEN eventType="MakePayment" eventVariable="e"/>
+				<FOR objectVariable="ls" objectType="LemonadeStand">
+					<ValueExpr language="Java"> e.getReceiver() </ValueExpr>
+				</FOR>
+				<DO>
+					<UPDATE-ENV>
+						<UpdateObject objectVariable="ls">
+							<Slot property="cash">
+								<ValueExpr language="Java"> ls.getCash() + e.getAmount() </ValueExpr>
+							</Slot>
+						</UpdateObject>
+					</UPDATE-ENV>
+				</DO>
+			</EnvironmentRule>
+-->
+		</EnvironmentRules>	
 	</SimulationModel>
 	
 	<!-- ======================= -->
@@ -354,7 +425,7 @@
 	<!-- ======================= -->
 		<Agent type="LemonadeStand" id="1">
 		<!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->			
-			<Slot property="name" value="Tom's Lemonade" />
+			<Slot property="name" value="DeliLemonade" />
 			<Slot property="nameOfProductType" value="Lemonade" />
 			<Slot property="amountOfCash" value="10" />
 			
@@ -369,13 +440,15 @@
 			<Slot property="productQuantityInStock" value="0" />
 			
 			<Slot property="purchaseItemTypes">
+				<!-- name, quantityUnit, supplyUnit, quantityPerProductSupplyUnit, purchasePrice, expirationTimeSpan, 
+							transactionCostPerOrder, reorderUpToLevel, reorderPeriod -->
 				<ValueExpr language="Java"><![CDATA[ 
 					new ArrayList<PurchaseItemType>(){
 						{
-							add( new PurchaseItemType("Lemon", QuantityUnit.PIECE, SupplyUnit.CRATE, 25, 7.50, 150, 0, 2.50, 3, 100));
-							add( new PurchaseItemType("Sugar", QuantityUnit.PIECE, SupplyUnit.CRATE, 100, 1.50, 0, 0, 2.50, 3, 100));
-							add( new PurchaseItemType("Ice", QuantityUnit.PIECE, SupplyUnit.BAG, 200, 2.00, 50, 0, 2.50, 3, 100));
-							add( new PurchaseItemType("Cup", QuantityUnit.PIECE, SupplyUnit.CRATE, 50, 2.50, 0, 0, 2.50, 3, 100));
+							add( new PurchaseItemType("Lemon", QuantityUnit.PIECE, SupplyUnit.CRATE, 25, 7.50, 150, 2.50, 3, 100));
+							add( new PurchaseItemType("Sugar", QuantityUnit.PIECE, SupplyUnit.CRATE, 100, 1.50, 0, 2.50, 3, 100));
+							add( new PurchaseItemType("Ice", QuantityUnit.PIECE, SupplyUnit.BAG, 200, 2.00, 50, 2.50, 3, 100));
+							add( new PurchaseItemType("Cup", QuantityUnit.PIECE, SupplyUnit.CRATE, 50, 2.50, 0, 2.50, 3, 100));
 						}
 					}
 				]]></ValueExpr>
@@ -397,9 +470,9 @@
 							add( Integer(0));
 						}
 					}
-					]]></ValueExpr>
-				</Slot>
-			<Slot property="inputQuantitiesPerProductSupplyUnit">
+				]]></ValueExpr>
+			</Slot>
+			<Slot property="purchaseItemQuantitiesInStock">
 				<ValueExpr language="Java"><![CDATA[ 
 					new ArrayList<Integer>(){
 						{
@@ -407,6 +480,18 @@
 							add( Integer(0));
 							add( Integer(0));
 							add( Integer(0));
+						}
+					}
+				]]></ValueExpr>
+			</Slot>
+			<Slot property="inputQuantitiesPerProductSupplyUnit">
+				<ValueExpr language="Java"><![CDATA[ 
+					new ArrayList<Integer>(){
+						{
+							add( Integer(0));
+							add( Integer(0));
+							add( Integer(5));  // ice cubes
+							add( Integer(1));  // paper cup
 						}
 					}
 					]]></ValueExpr>
@@ -415,22 +500,21 @@
 				<ValueExpr language="Java"><![CDATA[ 
 					new ArrayList<Integer>(){
 						{
-							add( Integer(0));
-							add( Integer(0));
+							add( Integer(2));  // lemons
+							add( Integer(10)); // sugar cubes
 							add( Integer(0));
 							add( Integer(0));
 						}
 					}
 					]]></ValueExpr>
-			</Slot>
+			</Slot>			
+			<Slot property="plannedProductionQuantity" value="2"/>
+			<Slot property="productSalesPrice" value="1.20"/>
 			
-			<Slot property="plannedProductionQuantity" value="2" />
-			<Slot property="productSalesPrice" value="1.20" />			
+			<PeriodicTimeEvent type="StartOfDay" occurrenceTime="1"/>
+			<PeriodicTimeEvent type="EndOfDay" occurrenceTime="100"/>
 		</Agent>
 
-		<ExogenousEvent type="StartOfDay" occurrenceTime="1"/>
-		<ExogenousEvent type="EachDayAt4pm" occurrenceTime="10"/>
-		<ExogenousEvent type="EachDayAt8pm" occurrenceTime="50"/>
 	</InitialState>
 	
 </SimulationScenario>
