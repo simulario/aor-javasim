@@ -74,11 +74,12 @@
 			<MessageType name="OrderConfirmation">
 				<Attribute name="price" type="Float"/>
 			</MessageType>
+						
+			<PerceptionEventType name="PurchaseItemsDelivery"/>
 			
-			<ExogenousEventType name="StartOfDay" periodicity="50" />
-			<ExogenousEventType name="EachDayAt4pm" periodicity="50" />
-			<ExogenousEventType name="EachDayAt8pm" periodicity="50" />
-			
+			<ActionEventType name="OpenLemonadeStand"/>
+			<ActionEventType name="CloseLemonadeStand"/>
+
 			<ActionEventType name="Halt"/>
 			<ActionEventType name="Go"/>
 			<ActionEventType name="MakePayment">
@@ -216,8 +217,7 @@
 				</Function>
 
 				<PeriodicTimeEventType name="StartOfDay" periodicity="50" />
-				<PeriodicTimeEventType name="EachDayAt4pm" periodicity="50" />
-				<PeriodicTimeEventType name="EachDayAt8pm" periodicity="50" />
+				<PeriodicTimeEventType name="EndOfDay" periodicity="50" />
 
 				<!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->
 				<ReactionRule name="StartOfDay_RR">
@@ -230,6 +230,7 @@
 								and ice cubes per pitcher</h:li>
 							<h:li>The <strong>sales</strong> of a cup of lemonade for how much</h:li>
 						</h:ol>						
+						<h:p>Finally, order the planned purchase item quantities.</h:p>
 					</description></documentation>
 					<WHEN eventType="StartOfDay" />
 					<DO>
@@ -261,17 +262,18 @@
 					</DO>	
 				</ReactionRule>
 				<!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->
-				<ReactionRule name="EachDayAt4pm_RR" agentVariable="lst">
+				<ReactionRule name="PurchaseItemsDelivery_RR" agentVariable="lst">
 				<!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->
 					<documentation><description>
-						<h:p>At this step, input items are purchased, and products are manufactured, as planned. 
-							More precisely, at 4 pm,</h:p> 
+						<h:p>At this step, purchase items are delivered, and products are manufactured, as planned. 
+							More precisely,</h:p> 
 						<h:ol>
 							<h:li>the purchased input items are added to the purchase items in stock,</h:li>
 							<h:li>the amount of cash is decremented accordingly,</h:li>
 							<h:li>the planned production quantity is produced, and the used input items' quantities in stock 
 								are decremented accordingly.</h:li>
-						</h:ol>						
+						</h:ol>
+						<h:p>Finally, the lemonade stand is opened for sales.</h:p> 
 					</description></documentation>
 					<WHEN eventType="EachDayAt4pm" />
 					<DO>
@@ -289,6 +291,9 @@
 								]]></ValueExpr>
 							</Slot>
 						</UPDATE-AGT>
+						<SCHEDULE-EVT>
+							<ActionEventExpr actionEventType="OpenLemonadeStand"/>
+						</SCHEDULE-EVT>
 					</DO>	
 				</ReactionRule>
 				<!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->
@@ -300,23 +305,19 @@
 						amount of cash.</h:p> 
 					</description></documentation>
 					<WHEN eventType="InMessageEvent" messageType="Order"/>
-					<IF language="Java"></IF>
-					<DO>
+					<IF language="Java">lst.getProductQuantityInStock() > 0</IF>
+					<THEN>
 						<UPDATE-AGT>
-							<Call procedure="addPurchaseQuantitiesToPurchaseItemInventory"/>
+							<Slot property="productQuantityInStock">
+								<ValueExpr language="Java">	lst.getProductQuantityInStock() - 1 </ValueExpr>
+							</Slot>
 							<Slot property="amountOfCash">
 								<ValueExpr language="Java"><![CDATA[
-									lst.subtractPurchaseAmountFromAmountOfCash()
-								]]></ValueExpr>
-							</Slot>
-							<Slot property="productSalesPrice">
-								<!-- TODO: develop an appropriate formula -->
-								<ValueExpr language="Java"><![CDATA[
-									1.80
+									lst.getAmountOfCash() + lst.getProductSalesPrice()
 								]]></ValueExpr>
 							</Slot>
 						</UPDATE-AGT>
-					</DO>	
+					</THEN>	
 				</ReactionRule>
 				
 			</PhysicalAgentType>
