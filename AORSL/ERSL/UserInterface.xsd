@@ -148,21 +148,23 @@
 	<!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->
 	<xs:complexType name="PropertyUI.type">
 	<!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->
+		<xs:group ref="ers:Field.CommonElem"/>
+		<xs:attribute name="property" type="ers:CanonicalName" use="required"/>
+		<xs:attributeGroup ref="ers:PropertyAndVariableInputField.attrGrp"/>
+	</xs:complexType>
+	<!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->
+	<xs:group name="Field.CommonElem">
+	<!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->
 		<xs:sequence>
 			<xs:element ref="ers:Label"/>
 			<xs:element ref="ers:Hint"/>
 			<xs:element ref="ers:Unit" minOccurs="0"/>
 		</xs:sequence>
-		<xs:attribute name="property" type="ers:CanonicalName" use="required"/>
-		<xs:attributeGroup ref="ers:PropertyAndVariable.attrGrp"/>
-	</xs:complexType>
+	</xs:group>
 	<!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->
-	<xs:attributeGroup name="PropertyAndVariable.attrGrp">
+	<xs:attributeGroup name="PropertyAndVariableInputField.attrGrp">
 	<!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->
-		<xs:attribute name="readonly" type="xs:boolean" use="optional"/>
-		<xs:attribute name="icon" type="xs:anyURI" use="optional">
-			<xs:annotation><xs:documentation>Allows to associate an icon with the variable/property. </xs:documentation></xs:annotation>
-		</xs:attribute>
+		<xs:attribute name="readonly" type="xs:boolean" use="optional" default="false"/>
 			<xs:attribute name="inputFieldLength" use="optional">
 			<xs:annotation><xs:documentation>The length of the property input field in cm. </xs:documentation></xs:annotation>
 			<xs:simpleType>
@@ -226,15 +228,9 @@
 	<xs:element name="GlobalVariableUI">
 	<!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->
 		<xs:complexType>
-			<xs:sequence>
-				<xs:sequence>
-					<xs:element ref="ers:Label"/>
-					<xs:element ref="ers:Hint"/>
-					<xs:element ref="ers:Unit" minOccurs="0"/>
-				</xs:sequence>
-			</xs:sequence>
+			<xs:group ref="ers:Field.CommonElem"/>
 			<xs:attribute name="variable" type="ers:CanonicalName" use="required"/>
-			<xs:attributeGroup ref="ers:PropertyAndVariable.attrGrp"/>
+			<xs:attributeGroup ref="ers:PropertyAndVariableInputField.attrGrp"/>
 		</xs:complexType>
 	</xs:element>
 	<!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->
@@ -260,7 +256,6 @@
 	    		</xs:sequence>
 	    	</xs:complexType>
 	    </xs:element>
-	    <!-- <xs:element ref="ers:Scales" minOccurs="0"/> -->
 	    <xs:element name="Views">
 	      <xs:complexType>
 	        <xs:sequence>
@@ -277,151 +272,4 @@
 	  </xs:attribute>
 	</xs:complexType>
   
-	<!-- =================================================================== -->
-	<xs:element name="ReactionRuleUI">
-	<!-- =================================================================== -->
-		<xs:complexType>
-			<xs:sequence>
-				<xs:element name="ActionEventUI" minOccurs="0" maxOccurs="unbounded">
-					<xs:complexType>
-						<xs:sequence>
-							<xs:element ref="ers:PropertyUI" minOccurs="0" maxOccurs="unbounded"/>
-						</xs:sequence>
-						<xs:attribute name="actionEventType" type="ers:CanonicalName" use="required"/>
-					</xs:complexType>
-				</xs:element>
-				<xs:element name="OutMessageEventUI" minOccurs="0" maxOccurs="unbounded">
-					<xs:complexType>
-						<xs:sequence>
-							<xs:element ref="ers:PropertyUI" minOccurs="0" maxOccurs="unbounded"/>
-						</xs:sequence>
-						<xs:attribute name="messageType" type="ers:CanonicalName" use="required"/>
-					</xs:complexType>
-				</xs:element>
-			</xs:sequence>
-			<xs:attribute name="rule" type="ers:CanonicalName" use="required">
-				<xs:annotation><xs:documentation>The name of the affected rule. </xs:documentation></xs:annotation>
-			</xs:attribute>
-			<xs:attribute name="activationMode" use="optional">
-				<xs:annotation><xs:documentation>Defines the way in which a reaction rule is activated or used when the agent is controlled by a human user. In case of "suspend", the rule is not used/executed at all. In case of "entryform", the rule is used in combination with an entry form that allows the user to enter a value for a paramter of the rule's action. In case of "activate", the rule is applied by the simulator, but has to be activated by the user for being fired (by a mouse-click or another kind of activation). </xs:documentation></xs:annotation>
-				<xs:simpleType>
-					<xs:restriction base="xs:string">
-						<xs:enumeration value="suspend"/>
-						<xs:enumeration value="entryform"/>
-						<xs:enumeration value="activate"/>
-					</xs:restriction>
-				</xs:simpleType>
-			</xs:attribute>
-		</xs:complexType>
-	</xs:element>
-	<!-- =================================================================== -->
-    
-  <xs:element name="KeyboardEvent">
-    <xs:complexType>
-      <xs:attribute name="keyIdentifier" type="ers:KeyIdentifiers.type" use="required"/>
-      <xs:attribute name="shiftKey" type="xs:boolean" use="optional"/>
-      <xs:attribute name="ctrlKey" type="xs:boolean" use="optional"/>
-      <!--									
-        <xs:attribute name="altKey" type="xs:boolean" use="optional">
-        <xs:annotation><xs:documentation>On Macintosh systems this key modifier corresponds to the Option key modifier. </xs:documentation></xs:annotation>
-        </xs:attribute>
-      -->									
-    </xs:complexType>
-  </xs:element>
-  
-  <xs:simpleType name="KeyIdentifiers.type">
-    <xs:annotation><xs:documentation>See http://www.w3.org/TR/2009/WD-DOM-Level-3-Events-20090908/#keyset-keyidentifiers </xs:documentation></xs:annotation>
-    <xs:restriction base="xs:string">
-      <xs:enumeration value="Down"/>
-      <xs:enumeration value="Left"/>
-      <xs:enumeration value="Right"/>
-      <xs:enumeration value="Up"/>
-      <xs:enumeration value="Enter">
-        <xs:annotation><xs:documentation>This key identifier shall be also used for the Return (Macintosh numpad) key. </xs:documentation></xs:annotation>
-      </xs:enumeration>
-      <xs:enumeration value="F1"/>
-      <xs:enumeration value="F2"/>
-      <xs:enumeration value="F3"/>
-      <xs:enumeration value="F4"/>
-      <xs:enumeration value="F5"/>
-      <xs:enumeration value="F6"/>
-      <xs:enumeration value="F7"/>
-      <xs:enumeration value="F8"/>
-      <xs:enumeration value="F9"/>
-      <xs:enumeration value="F10"/>
-      <xs:enumeration value="F11"/>
-      <xs:enumeration value="F12"/>
-      <xs:enumeration value="Insert"/>
-      <xs:enumeration value="Del">
-        <xs:annotation><xs:documentation>This key identifier shall be also used for the key labeled 'delete' MacOS keyboards when modified by the 'Fn' key.</xs:documentation></xs:annotation>
-      </xs:enumeration>
-      <xs:enumeration value="Backspace">
-        <xs:annotation><xs:documentation>This key identifier shall be also used for the key labeled 'delete' MacOS keyboards when not modified by the 'Fn' key.</xs:documentation></xs:annotation>
-      </xs:enumeration>
-      <xs:enumeration value="PageDown"/>
-      <xs:enumeration value="PageUp"/>
-      <xs:enumeration value="Tab"/>
-      <xs:enumeration value="Esc"/>
-      <xs:enumeration value="Spacebar"/>
-      <xs:enumeration value="#"/>
-      <xs:enumeration value="+"/>
-      <xs:enumeration value="-"/>
-      <xs:enumeration value="1"/>
-      <xs:enumeration value="2"/>
-      <xs:enumeration value="3"/>
-      <xs:enumeration value="4"/>
-      <xs:enumeration value="5"/>
-      <xs:enumeration value="6"/>
-      <xs:enumeration value="7"/>
-      <xs:enumeration value="8"/>
-      <xs:enumeration value="9"/>
-      <xs:enumeration value="0"/>
-      <xs:enumeration value="A"/>
-      <xs:enumeration value="B"/>
-      <xs:enumeration value="C"/>
-      <xs:enumeration value="D"/>
-      <xs:enumeration value="E"/>
-      <xs:enumeration value="F"/>
-      <xs:enumeration value="G"/>
-      <xs:enumeration value="H"/>
-      <xs:enumeration value="I"/>
-      <xs:enumeration value="J"/>
-      <xs:enumeration value="K"/>
-      <xs:enumeration value="L"/>
-      <xs:enumeration value="M"/>
-      <xs:enumeration value="N"/>
-      <xs:enumeration value="O"/>
-      <xs:enumeration value="P"/>
-      <xs:enumeration value="Q"/>
-      <xs:enumeration value="R"/>
-      <xs:enumeration value="S"/>
-      <xs:enumeration value="T"/>
-      <xs:enumeration value="U"/>
-      <xs:enumeration value="V"/>
-      <xs:enumeration value="W"/>
-      <xs:enumeration value="X"/>
-      <xs:enumeration value="Y"/>
-      <xs:enumeration value="Z"/>
-    </xs:restriction>
-  </xs:simpleType>
-  
-  <xs:element name="MouseEvent" type="ers:MouseEvent.type"/>
-  <xs:complexType name="MouseEvent.type">
-    <xs:attribute name="targetType" type="ers:CanonicalName" use="optional"/>
-    <xs:attribute name="targetIdRef" type="xs:long" use="optional"/>
-    <xs:attribute name="targetName" type="xs:string" use="optional"/>
-    <xs:attribute name="mouseEventType" type="ers:MouseEventType.type" use="required"/>
-    <xs:attribute name="eventVariable" type="ers:CanonicalName" use="optional"/>
-  </xs:complexType>
-	
-  <xs:simpleType name="MouseEventType.type">
-		<xs:annotation><xs:documentation>See http://www.w3.org/TR/2009/WD-DOM-Level-3-Events-20090908/#events-mouseevents </xs:documentation></xs:annotation>
-		<xs:restriction base="xs:string">
-			<xs:enumeration value="click"/>
-			<xs:enumeration value="dblclick"/>
-			<xs:enumeration value="mousedown"/>
-			<xs:enumeration value="mouseup"/>
-		</xs:restriction>
-	</xs:simpleType>
-
 </xs:schema>

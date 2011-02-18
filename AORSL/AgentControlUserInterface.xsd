@@ -4,8 +4,10 @@
 <xs:schema xmlns:xs="http://www.w3.org/2001/XMLSchema" xmlns:aors="http://aor-simulation.org" xmlns:xml="http://www.w3.org/XML/1998/namespace"
   targetNamespace="http://aor-simulation.org" elementFormDefault="qualified">
 
-  <xs:redefine schemaLocation="ERSL/UserInterface.xsd">
-    <xs:complexType name="AnimationUI.type">
+	<!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->
+	<xs:redefine schemaLocation="ERSL/UserInterface.xsd">
+	<!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->
+		<xs:complexType name="AnimationUI.type">
       <xs:complexContent>
         <xs:extension base="aors:AnimationUI.type">
           <xs:sequence>
@@ -17,10 +19,12 @@
   </xs:redefine>
   <xs:include schemaLocation="ActionRules.xsd"/>
   
-  <xs:element name="AgentControlUI">
-    <xs:complexType>
+	<!-- =================================================================== -->
+	<xs:element name="AgentControlUI">
+	<!-- =================================================================== -->
+		<xs:complexType>
       <xs:sequence>
-        <xs:element ref="aors:ControllableAgentType" maxOccurs="unbounded"/>
+      	<xs:element ref="aors:AgentControlByAgentType" maxOccurs="unbounded"/>
       </xs:sequence>
     	<xs:attribute name="waitForUserInput" type="xs:boolean" use="optional" default="false">
     		<xs:annotation><xs:documentation>Interrupt the simulation while waiting for the user input. In the case of a single-user simulation this will not be combined with a timeout, while in the case of a multi-user simulation it will be combined with a timeout. </xs:documentation></xs:annotation>
@@ -33,1284 +37,201 @@
     	</xs:attribute>
     </xs:complexType>
   </xs:element>
-
-  <xs:element name="ControllableAgentType">
-    <xs:complexType>
+	<!-- =================================================================== -->
+	<xs:element name="AgentControlByAgentType">
+	<!-- =================================================================== -->
+		<xs:complexType>
       <xs:sequence>
-        <xs:element name="GUI" type="aors:AgentControlUI.GUI.type"/>
-        <xs:element name="UserInterfaceEventListener" type="aors:AgentControlUI.UserInterfaceEventListener.type" minOccurs="0" maxOccurs="unbounded">
-          <!--xs:unique name="structure.unique.names">
-            <xs:selector xpath=".//aors:textfield | .//aors:checkbox | .//aors:select | .//aors:button | .//aors:textarea | .//aors:slider"/>
-            <xs:field xpath="@name"/>
-          </xs:unique-->
-        </xs:element>
+        <xs:element name="AgentControlGUI" type="aors:AgentControlGUI.type"/>        
+      	<xs:element name="AgentControlEventListener" type="aors:AgentControlEventListener.type" minOccurs="0" maxOccurs="unbounded"/>
       </xs:sequence>
       <xs:attribute name="type" type="aors:CanonicalName" use="required"/>
     	<xs:attribute name="playableAgents" type="aors:ListOfCanonicalName" use="optional">
     		<xs:annotation><xs:documentation>A list of agent names specifying those agents (defined in the initial state) that are playable by a human user. </xs:documentation></xs:annotation>
     	</xs:attribute>
-    	<xs:attribute name="controllableAgents" type="aors:ListOfLong" use="optional"/>
       <xs:attribute name="suspendRules" type="aors:ListOfCanonicalName" use="optional"/>
     </xs:complexType>
   </xs:element>
-  
-  <!--###########-->
-  <!--### GUI ###-->
-  <!--###########-->
-
-  <xs:complexType name="AgentControlUI.GUI.type">
-    <xs:sequence>
-      <xs:element name="Style" minOccurs="0">
+	<!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->
+	<xs:complexType name="AgentControlGUI.type">
+	<!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->
+		<xs:sequence>
+      <xs:element name="CssStyleRules" minOccurs="0">
         <xs:complexType>
           <xs:simpleContent>
             <xs:extension base="xs:string">
-              <xs:attribute name="type" type="xs:string" use="optional" fixed="text/css"/>
+            	<xs:attribute name="externalCssStyleRuleFile" type="xs:anyURI" use="optional"/>
             </xs:extension>
           </xs:simpleContent>
         </xs:complexType>        
       </xs:element>
-      <xs:element name="Structure" type="aors:AgentControlUI.GUI.FlowPerceptionlistContent.type"/>
-    </xs:sequence>
-  	<xs:attribute name="defaultLanguage" type="xs:language" use="optional" default="en"/>
-  </xs:complexType>
-
-
-  <!--#################-->
-  <!--### Structure ###-->
-  <!--#################-->
-
-  <!-- empty and common attributes -->
-
-  <xs:complexType name="AgentControlUI.GUI.EmptyContent.type">
-    <xs:attributeGroup ref="aors:AgentControlUI.GUI.CommonAttributes"/>    
-  </xs:complexType>
-  
-  <xs:complexType name="AgentControlUI.GUI.TextContent.monolingual.type" mixed="true"/>
-  <xs:complexType name="AgentControlUI.GUI.TextContent.multilingual.type">
-    <xs:complexContent>
-      <xs:extension base="aors:AgentControlUI.GUI.TextContent.monolingual.type">
-        <xs:attributeGroup ref="aors:lang_mandatory"/>
-      </xs:extension>
-    </xs:complexContent>    
-  </xs:complexType>
-  
-  <xs:attributeGroup name="AgentControlUI.GUI.CommonAttributes">
-    <xs:attribute name="id" type="aors:CanonicalName" use="optional"/>
-    <xs:attribute name="class" type="aors:ListOfCanonicalName" use="optional"/>
-    <xs:attribute name="style" type="xs:string" use="optional"/>
-  </xs:attributeGroup>
-    
-  <!-- flow -->
-  
-  <xs:complexType name="AgentControlUI.GUI.FlowContent.monolingual.type">
-    <xs:complexContent mixed="true">
-      <xs:extension base="aors:AgentControlUI.GUI.EmptyContent.type">
-        <xs:sequence>
-          <xs:group ref="aors:AgentControlUI.GUI.FlowElements.monolingual" minOccurs="0" maxOccurs="unbounded"/>
-        </xs:sequence>
-      </xs:extension>
-    </xs:complexContent>
-  </xs:complexType>
-  <xs:complexType name="AgentControlUI.GUI.FlowContent.type">
-    <xs:complexContent>
-      <xs:extension base="aors:AgentControlUI.GUI.EmptyContent.type">
-        <xs:choice minOccurs="0" maxOccurs="unbounded">
-          <xs:group ref="aors:AgentControlUI.GUI.FlowElements.multilingual"/>
-          <xs:group ref="aors:AgentControlUI.GUI.FlowElements"/>
-        </xs:choice>
-      </xs:extension>
-    </xs:complexContent>
-  </xs:complexType>
-  
-  <xs:group name="AgentControlUI.GUI.FlowElements.monolingual">
-    <xs:choice>
-      <xs:group ref="aors:AgentControlUI.GUI.HeadingElements.monolingual"/>
-      <xs:group ref="aors:AgentControlUI.GUI.ListElements.monolingual"/>
-      <xs:group ref="aors:AgentControlUI.GUI.BlockElements.monolingual"/>
-      <xs:group ref="aors:AgentControlUI.GUI.InlineElements.monolingual"/>        
-    </xs:choice>  
-  </xs:group>
-  <xs:group name="AgentControlUI.GUI.FlowElements.multilingual">
-    <xs:sequence>
-      <xs:element name="multilingualContent" maxOccurs="unbounded">
-        <xs:complexType mixed="true">
-          <xs:sequence>
-            <xs:group ref="aors:AgentControlUI.GUI.FlowElements.monolingual" minOccurs="0" maxOccurs="unbounded"/>
-          </xs:sequence>
-          <xs:attributeGroup ref="aors:lang_mandatory"/>
-        </xs:complexType>
-      </xs:element>          
-    </xs:sequence>
-  </xs:group>
-  <xs:group name="AgentControlUI.GUI.FlowElements">
-    <xs:choice>
-      <xs:group ref="aors:AgentControlUI.GUI.HeadingElements"/>
-      <xs:group ref="aors:AgentControlUI.GUI.ListElements"/>
-      <xs:group ref="aors:AgentControlUI.GUI.BlockElements"/>
-      <xs:group ref="aors:AgentControlUI.GUI.InlineElements"/>
-    </xs:choice>
-  </xs:group>
-  
-  <!-- heading -->
-    
-  <xs:group name="AgentControlUI.GUI.HeadingElements.monolingual">
-    <xs:choice>
-      <xs:element name="h1" type="aors:AgentControlUI.GUI.InlineContent.monolingual.type"/>
-      <xs:element name="h2" type="aors:AgentControlUI.GUI.InlineContent.monolingual.type"/>
-      <xs:element name="h3" type="aors:AgentControlUI.GUI.InlineContent.monolingual.type"/>
-    </xs:choice>   
-  </xs:group>
-  <xs:group name="AgentControlUI.GUI.HeadingElements">
-    <xs:choice>
-      <xs:element name="h1" type="aors:AgentControlUI.GUI.InlineContent.type"/>
-      <xs:element name="h2" type="aors:AgentControlUI.GUI.InlineContent.type"/>
-      <xs:element name="h3" type="aors:AgentControlUI.GUI.InlineContent.type"/>
-    </xs:choice>   
-  </xs:group>
-  
-  <!-- list -->
-
-  <xs:complexType name="AgentControlUI.GUI.ListContent.monolingual.type">
-    <xs:complexContent>
-      <xs:extension base="aors:AgentControlUI.GUI.EmptyContent.type">
-        <xs:sequence>
-          <xs:element name="li" type="aors:AgentControlUI.GUI.FlowContent.monolingual.type" maxOccurs="unbounded"/>
-        </xs:sequence>        
-      </xs:extension>
-    </xs:complexContent>
-  </xs:complexType>
-  <xs:complexType name="AgentControlUI.GUI.ListContent.type">
-    <xs:complexContent>
-      <xs:extension base="aors:AgentControlUI.GUI.EmptyContent.type">
-        <xs:sequence>
-          <xs:element name="li" type="aors:AgentControlUI.GUI.FlowContent.type" maxOccurs="unbounded"/>
-        </xs:sequence>        
-      </xs:extension>
-    </xs:complexContent>
-  </xs:complexType>
-  
-  <xs:group name="AgentControlUI.GUI.ListElements.monolingual">
-    <xs:choice>
-    	<!--
-      <xs:element name="dl">
-        <xs:complexType>
-          <xs:complexContent>
-            <xs:extension base="aors:AgentControlUI.GUI.EmptyContent.type">
-              <xs:choice maxOccurs="unbounded">
-                <xs:element name="dt" type="aors:AgentControlUI.GUI.InlineContent.monolingual.type"/>
-                <xs:element name="dd" type="aors:AgentControlUI.GUI.FlowContent.monolingual.type"/>
-              </xs:choice>
-            </xs:extension>
-          </xs:complexContent>
-        </xs:complexType>
-      </xs:element>
-    	-->
-      <xs:element name="ol" type="aors:AgentControlUI.GUI.ListContent.monolingual.type"/>
-      <xs:element name="ul" type="aors:AgentControlUI.GUI.ListContent.monolingual.type"/>
-    </xs:choice>
-  </xs:group>
-  <xs:group name="AgentControlUI.GUI.ListElements">
-    <xs:choice>
-    	<!--
-      <xs:element name="dl">
-        <xs:complexType>
-          <xs:complexContent>
-            <xs:extension base="aors:AgentControlUI.GUI.EmptyContent.type">
-              <xs:choice maxOccurs="unbounded">
-                <xs:element name="dt" type="aors:AgentControlUI.GUI.InlineContent.type"/>
-                <xs:element name="dd" type="aors:AgentControlUI.GUI.FlowContent.type"/>
-              </xs:choice>
-            </xs:extension>
-          </xs:complexContent>
-        </xs:complexType>
-      </xs:element>
-    	-->
-      <xs:element name="ol" type="aors:AgentControlUI.GUI.ListContent.type"/>
-      <xs:element name="ul" type="aors:AgentControlUI.GUI.ListContent.type"/>
-    </xs:choice>    
-  </xs:group>
-    
-  <!-- inline -->
-  
-  <xs:complexType name="AgentControlUI.GUI.InlineContent.monolingual.type">
-    <xs:complexContent mixed="true">
-      <xs:extension base="aors:AgentControlUI.GUI.EmptyContent.type">
-        <xs:sequence>
-          <xs:group ref="aors:AgentControlUI.GUI.InlineElements.monolingual" minOccurs="0" maxOccurs="unbounded"/>
-        </xs:sequence>
-      </xs:extension>
-    </xs:complexContent>
-  </xs:complexType>
-  <xs:complexType name="AgentControlUI.GUI.InlineContent.type">
-    <xs:complexContent>
-      <xs:extension base="aors:AgentControlUI.GUI.EmptyContent.type">
-        <xs:choice minOccurs="0" maxOccurs="unbounded">
-          <xs:group ref="aors:AgentControlUI.GUI.InlineElements.multilingual"/>
-          <xs:group ref="aors:AgentControlUI.GUI.InlineElements"/>
-        </xs:choice>
-      </xs:extension>
-    </xs:complexContent>
-  </xs:complexType>
-  
-  <xs:group name="AgentControlUI.GUI.InlineElements.monolingual">
-    <xs:choice>
-      <xs:group ref="aors:AgentControlUI.GUI.InlineElements-label.monolingual"/>
-      <xs:group ref="aors:AgentControlUI.GUI.LabelElements.monolingual"/>
-    </xs:choice>
-  </xs:group>
-  <xs:group name="AgentControlUI.GUI.InlineElements.multilingual">
-    <xs:sequence>
-      <xs:element name="multilingualContent" maxOccurs="unbounded">
-        <xs:complexType mixed="true">
-          <xs:sequence>
-            <xs:group ref="aors:AgentControlUI.GUI.InlineElements.monolingual" minOccurs="0" maxOccurs="unbounded"/>
-          </xs:sequence>
-          <xs:attributeGroup ref="aors:lang_mandatory"/>
-        </xs:complexType>
-      </xs:element>          
-    </xs:sequence>
-  </xs:group>
-  <xs:group name="AgentControlUI.GUI.InlineElements">
-    <xs:choice>
-      <xs:group ref="aors:AgentControlUI.GUI.InlineElements-label"/>
-      <xs:group ref="aors:AgentControlUI.GUI.LabelElements"/>
-    </xs:choice>
-  </xs:group>
-  
-  <!-- inline elements - label -->
-
-  <xs:complexType name="AgentControlUI.GUI.InlineContent-label.monolingual.type">
-    <xs:complexContent mixed="true">
-      <xs:extension base="aors:AgentControlUI.GUI.EmptyContent.type">
-        <xs:sequence>
-          <xs:group ref="aors:AgentControlUI.GUI.InlineElements-label.monolingual" minOccurs="0" maxOccurs="unbounded"/>
-        </xs:sequence>
-      </xs:extension>
-    </xs:complexContent>
-  </xs:complexType>
-  <xs:complexType name="AgentControlUI.GUI.InlineContent-label.type">
-    <xs:complexContent>
-      <xs:extension base="aors:AgentControlUI.GUI.EmptyContent.type">
-        <xs:choice minOccurs="0" maxOccurs="unbounded">
-          <xs:group ref="aors:AgentControlUI.GUI.InlineElements-label.multilingual"/>
-          <xs:group ref="aors:AgentControlUI.GUI.InlineElements-label"/>
-        </xs:choice>
-      </xs:extension>
-    </xs:complexContent>
-  </xs:complexType>
-  
-  <xs:group name="AgentControlUI.GUI.InlineElements-label.monolingual">
-    <xs:choice>
-      <xs:group ref="aors:AgentControlUI.GUI.InlineTextElements.monolingual"/>
-      <xs:group ref="aors:AgentControlUI.GUI.ImageElements.monolingual"/>
-      <xs:group ref="aors:AgentControlUI.GUI.InlineFormElements.monolingual"/>
-    </xs:choice>
-  </xs:group>
-  <xs:group name="AgentControlUI.GUI.InlineElements-label.multilingual">
-    <xs:sequence>
-      <xs:element name="multilingualContent" maxOccurs="unbounded">
-        <xs:complexType mixed="true">
-          <xs:sequence>
-            <xs:group ref="aors:AgentControlUI.GUI.InlineElements-label.monolingual" minOccurs="0" maxOccurs="unbounded"/>
-          </xs:sequence>
-          <xs:attributeGroup ref="aors:lang_mandatory"/>
-        </xs:complexType>
-      </xs:element>          
-    </xs:sequence>
-  </xs:group>
-  <xs:group name="AgentControlUI.GUI.InlineElements-label">
-    <xs:choice>
-      <xs:group ref="aors:AgentControlUI.GUI.InlineTextElements"/>
-      <xs:group ref="aors:AgentControlUI.GUI.ImageElements"/>
-      <xs:group ref="aors:AgentControlUI.GUI.InlineFormElements"/>
-    </xs:choice>
-  </xs:group>
-  
-  <!-- inline text -->
-  
-  <xs:group name="AgentControlUI.GUI.InlineTextElements.monolingual">
-    <xs:choice>
-      <xs:element name="br" type="aors:AgentControlUI.GUI.EmptyContent.type"/>
-      <xs:element name="code" type="aors:AgentControlUI.GUI.InlineContent.monolingual.type"/>
-      <xs:element name="em" type="aors:AgentControlUI.GUI.InlineContent.monolingual.type"/>
-    	<xs:element name="strong" type="aors:AgentControlUI.GUI.InlineContent.monolingual.type"/>
-    	<xs:element name="span" type="aors:AgentControlUI.GUI.InlineContent.monolingual.type"/>
-    </xs:choice>
-  </xs:group>
-  <xs:group name="AgentControlUI.GUI.InlineTextElements">
-    <xs:choice>
-      <xs:element name="br" type="aors:AgentControlUI.GUI.EmptyContent.type"/>
-      <xs:element name="code" type="aors:AgentControlUI.GUI.InlineContent.type"/>
-      <xs:element name="em" type="aors:AgentControlUI.GUI.InlineContent.type"/>
-    	<xs:element name="strong" type="aors:AgentControlUI.GUI.InlineContent.type"/>
-    	<xs:element name="span" type="aors:AgentControlUI.GUI.InlineContent.type"/>
-    </xs:choice>
-  </xs:group>
-  
-  <!-- image -->
-
-  <xs:group name="AgentControlUI.GUI.ImageElements.monolingual">
-    <xs:sequence>
-      <xs:element name="img">
-        <xs:complexType>
-          <xs:complexContent>
-            <xs:extension base="aors:AgentControlUI.GUI.EmptyContent.type">
-              <xs:attribute name="alt" type="xs:string" use="required"/>
-              <xs:attribute name="src" type="xs:anyURI" use="required"/>
-            </xs:extension>
-          </xs:complexContent>
-        </xs:complexType>
+      <xs:element name="Structure">
+      	<xs:annotation><xs:documentation>
+      		The Structure element has 5 kinds of subelements: a perception event list, 
+      		reaction elements allowing to enter parameter values for actions performed in response to certain events,
+      		action elements allowing to enter parameter values for actions that can be performed at any time,
+      		ouput fields that allow to display information about the agent itself, about other objects or about statistics,
+      		input fields that allow to change beliefs of the agent.        		
+      	</xs:documentation></xs:annotation>
+      	<xs:complexType>
+      		<xs:sequence>
+      			<xs:element name="PerceptionEventList" type="aors:PerceptionEventList.type"/>
+      			<xs:element name="ReactionUI" type="aors:ReactionUI.type"/>
+      			<xs:element name="OutPutField" type="aors:OutputField.type"/>
+      		</xs:sequence>
+      	</xs:complexType>
       </xs:element>
     </xs:sequence>
-  </xs:group>
-  <xs:group name="AgentControlUI.GUI.ImageElements">
-    <xs:sequence>
-      <xs:element name="img">
-        <xs:complexType>
-          <xs:complexContent>
-            <xs:extension base="aors:AgentControlUI.GUI.EmptyContent.type">
-              <xs:sequence>
-                <xs:element name="alt" type="aors:AgentControlUI.GUI.TextContent.multilingual.type" maxOccurs="unbounded"/>
-              </xs:sequence>
-              <xs:attribute name="src" type="xs:anyURI" use="required"/>
-            </xs:extension>
-          </xs:complexContent>
-        </xs:complexType>
-      </xs:element>
-    </xs:sequence>
-  </xs:group>
-  
-  <!-- block -->
-  
-  <xs:complexType name="AgentControlUI.GUI.BlockContent.monolingual.type">
-    <xs:complexContent mixed="true">
-      <xs:extension base="aors:AgentControlUI.GUI.EmptyContent.type">
-        <xs:sequence>
-          <xs:group ref="aors:AgentControlUI.GUI.BlockElements.monolingual" minOccurs="0" maxOccurs="unbounded"/>
-        </xs:sequence>
-      </xs:extension>
-    </xs:complexContent>
-  </xs:complexType>
-  <xs:complexType name="AgentControlUI.GUI.BlockContent.type">
-    <xs:complexContent>
-      <xs:extension base="aors:AgentControlUI.GUI.EmptyContent.type">
-        <xs:choice minOccurs="0" maxOccurs="unbounded">
-          <xs:group ref="aors:AgentControlUI.GUI.BlockElements.multilingual"/>
-          <xs:group ref="aors:AgentControlUI.GUI.BlockElements"/>
-        </xs:choice>
-      </xs:extension>
-    </xs:complexContent>
-  </xs:complexType>
-    
-  <xs:group name="AgentControlUI.GUI.BlockElements.monolingual">
-    <xs:choice>
-      <xs:group ref="aors:AgentControlUI.GUI.BlockTextElements.monolingual"/>
-    	<!--
-      <xs:group ref="aors:AgentControlUI.GUI.TableElements.monolingual"/>
-      <xs:group ref="aors:AgentControlUI.GUI.FormElements.monolingual"/>
-      -->
-    </xs:choice>
-  </xs:group>
-  <xs:group name="AgentControlUI.GUI.BlockElements.multilingual">
-    <xs:sequence>
-      <xs:element name="multilingualContent" maxOccurs="unbounded">
-        <xs:complexType mixed="true">
-          <xs:sequence>
-            <xs:group ref="aors:AgentControlUI.GUI.BlockElements.monolingual" minOccurs="0" maxOccurs="unbounded"/>
-          </xs:sequence>
-          <xs:attributeGroup ref="aors:lang_mandatory"/>
-        </xs:complexType>
-      </xs:element>          
-    </xs:sequence>
-  </xs:group>
-  <xs:group name="AgentControlUI.GUI.BlockElements">
-    <xs:choice>
-      <xs:group ref="aors:AgentControlUI.GUI.BlockTextElements"/>
-    	<!--
-      <xs:group ref="aors:AgentControlUI.GUI.TableElements"/>
-      <xs:group ref="aors:AgentControlUI.GUI.FormElements"/
-    	-->
-    </xs:choice>
-  </xs:group>
- 
- <!-- block text -->
-  
-  <xs:group name="AgentControlUI.GUI.BlockTextElements.monolingual">
-    <xs:choice>
-      <xs:element name="div" type="aors:AgentControlUI.GUI.FlowContent.monolingual.type"/>
-      <xs:element name="p" type="aors:AgentControlUI.GUI.InlineContent.monolingual.type"/>
-      <xs:element name="pre" type="aors:AgentControlUI.GUI.InlineContent.monolingual.type"/>
-    </xs:choice>
-  </xs:group>
-  <xs:group name="AgentControlUI.GUI.BlockTextElements">
-    <xs:choice>
-      <xs:element name="div" type="aors:AgentControlUI.GUI.FlowContent.type"/>
-      <xs:element name="p" type="aors:AgentControlUI.GUI.InlineContent.type"/>
-      <xs:element name="pre" type="aors:AgentControlUI.GUI.InlineContent.type"/>
-    </xs:choice>
-  </xs:group>
-	
-<!--  TABLE
-	
-  <xs:group name="AgentControlUI.GUI.TableElements.monolingual">
-    <xs:sequence>
-      <xs:element name="table">
-        <xs:complexType>
-          <xs:complexContent>
-            <xs:extension base="aors:AgentControlUI.GUI.EmptyContent.type">
-              <xs:sequence>
-                <xs:element name="caption" type="aors:AgentControlUI.GUI.InlineContent.monolingual.type" minOccurs="0"/>
-                <xs:choice>
-                  <xs:group ref="aors:AgentControlUI.GUI.Table.ColElements" minOccurs="0" maxOccurs="unbounded"/>
-                  <xs:element name="colgroup" minOccurs="0" maxOccurs="unbounded">
-                    <xs:complexType>
-                      <xs:complexContent>
-                        <xs:extension base="aors:AgentControlUI.GUI.EmptyContent.type">
-                          <xs:sequence>
-                            <xs:group ref="aors:AgentControlUI.GUI.Table.ColElements" minOccurs="0" maxOccurs="unbounded"/>
-                          </xs:sequence>
-                          <xs:attributeGroup ref="aors:AgentControlUI.GUI.Table.ColAttributes"/>
-                        </xs:extension>
-                      </xs:complexContent>
-                    </xs:complexType>
-                  </xs:element>
-                </xs:choice>
-                <xs:choice>
-                  <xs:sequence>
-                    <xs:element name="thead" type="aors:AgentControlUI.GUI.Table.RowWrapper.monolingual.type" minOccurs="0"/>
-                    <xs:element name="tfoot" type="aors:AgentControlUI.GUI.Table.RowWrapper.monolingual.type" minOccurs="0"/>
-                    <xs:element name="tbody" type="aors:AgentControlUI.GUI.Table.RowWrapper.monolingual.type" maxOccurs="unbounded"/>
-                  </xs:sequence>
-                  <xs:group ref="aors:AgentControlUI.GUI.Table.RowElements.monolingual" maxOccurs="unbounded"/>
-                </xs:choice>
-              </xs:sequence>
-              <xs:attribute name="summery" type="xs:string" use="optional"/>
-            </xs:extension>
-          </xs:complexContent>
-        </xs:complexType>
-      </xs:element>      
-    </xs:sequence>
-  </xs:group>
-  
-  <xs:group name="AgentControlUI.GUI.Table.ColElements">
-    <xs:sequence>
-      <xs:element name="col">
-        <xs:complexType>
-          <xs:complexContent>
-            <xs:extension base="aors:AgentControlUI.GUI.EmptyContent.type">
-              <xs:attributeGroup ref="aors:AgentControlUI.GUI.Table.ColAttributes"/>
-            </xs:extension>
-          </xs:complexContent>
-        </xs:complexType>
-      </xs:element>
-    </xs:sequence>
-  </xs:group>
-
-  <xs:attributeGroup name="AgentControlUI.GUI.Table.ColAttributes">
-    <xs:attribute name="span" type="xs:nonNegativeInteger" use="optional"/>
-    <xs:attribute name="width" use="optional">
-      <xs:simpleType>
-        <xs:restriction base="xs:string">
-          <xs:pattern value="[1-9][0-9]*(%|\*)?"/>
-        </xs:restriction>
-      </xs:simpleType>
-    </xs:attribute>
-  </xs:attributeGroup>
-  
-  <xs:complexType name="AgentControlUI.GUI.Table.RowWrapper.monolingual.type">
-    <xs:complexContent>
-      <xs:extension base="aors:AgentControlUI.GUI.EmptyContent.type">
-        <xs:sequence>
-          <xs:group ref="aors:AgentControlUI.GUI.Table.RowElements.monolingual" maxOccurs="unbounded"/>
-        </xs:sequence>
-      </xs:extension>
-    </xs:complexContent>
-  </xs:complexType>
-  
-  <xs:group name="AgentControlUI.GUI.Table.RowElements.monolingual">
-    <xs:sequence>
-      <xs:element name="tr">
-        <xs:complexType>
-          <xs:complexContent>
-            <xs:extension base="aors:AgentControlUI.GUI.EmptyContent.type">
-              <xs:choice maxOccurs="unbounded">
-                <xs:element name="td" type="aors:AgentControlUI.GUI.Table.CellContent.monolingual.type"/>
-                <xs:element name="th" type="aors:AgentControlUI.GUI.Table.CellContent.monolingual.type"/>
-              </xs:choice>
-            </xs:extension>
-          </xs:complexContent>
-        </xs:complexType>
-      </xs:element>
-    </xs:sequence>
-  </xs:group>
-  
-  <xs:complexType name="AgentControlUI.GUI.Table.CellContent.monolingual.type">
-    <xs:complexContent>
-      <xs:extension base="aors:AgentControlUI.GUI.FlowContent.monolingual.type">
-        <xs:attribute name="rowspan" type="xs:nonNegativeInteger" use="optional"/>
-        <xs:attribute name="colspan" type="xs:nonNegativeInteger" use="optional"/>
-      </xs:extension>
-    </xs:complexContent>
-  </xs:complexType>
-  
-  <xs:group name="AgentControlUI.GUI.TableElements">
-    <xs:sequence>
-      <xs:element name="table">
-        <xs:complexType>
-          <xs:complexContent>
-            <xs:extension base="aors:AgentControlUI.GUI.EmptyContent.type">
-              <xs:sequence>
-                <xs:element name="caption" type="aors:AgentControlUI.GUI.InlineContent.type" minOccurs="0"/>
-                <xs:element name="summery" type="aors:AgentControlUI.GUI.TextContent.multilingual.type" minOccurs="0" maxOccurs="unbounded"/>
-                <xs:choice>
-                  <xs:group ref="aors:AgentControlUI.GUI.Table.ColElements" minOccurs="0" maxOccurs="unbounded"/>
-                  <xs:element name="colgroup" minOccurs="0" maxOccurs="unbounded">
-                    <xs:complexType>
-                      <xs:complexContent>
-                        <xs:extension base="aors:AgentControlUI.GUI.EmptyContent.type">
-                          <xs:sequence>
-                            <xs:group ref="aors:AgentControlUI.GUI.Table.ColElements" minOccurs="0" maxOccurs="unbounded"/>
-                          </xs:sequence>
-                          <xs:attributeGroup ref="aors:AgentControlUI.GUI.Table.ColAttributes"/>
-                        </xs:extension>
-                      </xs:complexContent>
-                    </xs:complexType>
-                  </xs:element>
-                </xs:choice>
-                <xs:choice>
-                  <xs:sequence>
-                    <xs:element name="thead" type="aors:AgentControlUI.GUI.Table.RowWrapper.type" minOccurs="0"/>
-                    <xs:element name="tfoot" type="aors:AgentControlUI.GUI.Table.RowWrapper.type" minOccurs="0"/>
-                    <xs:element name="tbody" type="aors:AgentControlUI.GUI.Table.RowWrapper.type" maxOccurs="unbounded"/>
-                  </xs:sequence>
-                  <xs:group ref="aors:AgentControlUI.GUI.Table.RowElements" maxOccurs="unbounded"/>
-                </xs:choice>
-              </xs:sequence>
-            </xs:extension>
-          </xs:complexContent>
-        </xs:complexType>
-      </xs:element>      
-    </xs:sequence>
-  </xs:group>
-    
-  <xs:complexType name="AgentControlUI.GUI.Table.RowWrapper.type">
-    <xs:complexContent>
-      <xs:extension base="aors:AgentControlUI.GUI.EmptyContent.type">
-        <xs:sequence>
-          <xs:group ref="aors:AgentControlUI.GUI.Table.RowElements" maxOccurs="unbounded"/>
-        </xs:sequence>
-      </xs:extension>
-    </xs:complexContent>
-  </xs:complexType>
-  
-  <xs:group name="AgentControlUI.GUI.Table.RowElements">
-    <xs:sequence>
-      <xs:element name="tr">
-        <xs:complexType>
-          <xs:complexContent>
-            <xs:extension base="aors:AgentControlUI.GUI.EmptyContent.type">
-              <xs:choice maxOccurs="unbounded">
-                <xs:element name="td" type="aors:AgentControlUI.GUI.Table.CellContent.type"/>
-                <xs:element name="th" type="aors:AgentControlUI.GUI.Table.CellContent.type"/>
-              </xs:choice>
-            </xs:extension>
-          </xs:complexContent>
-        </xs:complexType>
-      </xs:element>
-    </xs:sequence>
-  </xs:group>
-  
-  <xs:complexType name="AgentControlUI.GUI.Table.CellContent.type">
-    <xs:complexContent>
-      <xs:extension base="aors:AgentControlUI.GUI.FlowContent.type">
-        <xs:attribute name="rowspan" type="xs:nonNegativeInteger" use="optional"/>
-        <xs:attribute name="colspan" type="xs:nonNegativeInteger" use="optional"/>
-      </xs:extension>
-    </xs:complexContent>
-  </xs:complexType>
--->  
-
-	<!--############-->
-  <!--### form ###-->
-  <!--############-->
-  
-  <!-- inline form -->
-  
-  <xs:complexType name="AgentControlUI.GUI.InlineFormContent.type">
-    <xs:complexContent>
-      <xs:extension base="aors:AgentControlUI.GUI.EmptyContent.type">
-        <xs:attribute name="property" type="aors:CanonicalName" use="optional"/>
-        <xs:attribute name="group" type="aors:CanonicalName" use="optional"/>
-        <xs:attribute name="name" type="aors:CanonicalName" use="optional"/>       
-        <xs:attribute name="readonly" type="xs:boolean" default="false" use="optional"/>
-      </xs:extension>
-    </xs:complexContent>
-  </xs:complexType>
-  
-  <xs:group name="AgentControlUI.GUI.InlineFormElements-select.monolingual">
-    <xs:choice>
-      <xs:element name="textfield">
-        <xs:complexType>
-          <xs:complexContent>
-            <xs:extension base="aors:AgentControlUI.GUI.InlineFormContent.type">
-              <xs:attributeGroup ref="aors:AgentControlUI.GUI.InlineFormAttributes.initialValue"/>
-              <xs:attributeGroup ref="aors:AgentControlUI.GUI.InlineFormAttributes.size"/>
-              <xs:attributeGroup ref="aors:AgentControlUI.GUI.InlineFormAttributes.type"/>
-            </xs:extension>
-          </xs:complexContent>
-        </xs:complexType>
-      </xs:element>
-      <xs:element name="checkbox">
-        <xs:complexType>
-          <xs:complexContent>
-            <xs:extension base="aors:AgentControlUI.GUI.InlineFormContent.type">
-              <xs:attributeGroup ref="aors:AgentControlUI.GUI.InlineFormAttributes.checked"/>
-              <xs:attributeGroup ref="aors:AgentControlUI.GUI.InlineFormAttributes.value"/>
-              <xs:attributeGroup ref="aors:AgentControlUI.GUI.InlineFormAttributes.type"/>
-            </xs:extension>
-          </xs:complexContent>
-        </xs:complexType>
-      </xs:element>
-      <xs:element name="radiobutton">
-        <xs:complexType>
-          <xs:complexContent>
-            <xs:extension base="aors:AgentControlUI.GUI.InlineFormContent.type">
-              <xs:attributeGroup ref="aors:AgentControlUI.GUI.InlineFormAttributes.checked"/>
-              <xs:attributeGroup ref="aors:AgentControlUI.GUI.InlineFormAttributes.value"/>
-              <xs:attributeGroup ref="aors:AgentControlUI.GUI.InlineFormAttributes.type"/>
-            </xs:extension>
-          </xs:complexContent>
-        </xs:complexType>
-      </xs:element>
-      <xs:element name="slider">
-        <xs:complexType>
-          <xs:complexContent>
-            <xs:extension base="aors:AgentControlUI.GUI.InlineFormContent.type">
-              <xs:attribute name="minValue" type="xs:integer" use="required"/>
-              <xs:attribute name="maxValue" type="xs:integer" use="required"/>
-              <xs:attribute name="initialValue" type="xs:integer" use="optional"/>
-              <xs:attribute name="type" type="aors:PrimitiveDataType" fixed="Integer" use="required"/>
-            </xs:extension>
-          </xs:complexContent>
-        </xs:complexType>
-      </xs:element>
-    </xs:choice>
-  </xs:group>
-  
-  <xs:complexType name="AgentControlUI.GUI.ButtonElement.type0">
-    <xs:complexContent>
-      <xs:restriction base="aors:AgentControlUI.GUI.InlineFormContent.type">
-        <xs:attribute name="name" type="aors:CanonicalName" use="required"/>
-        <xs:attribute name="property" type="aors:CanonicalName" use="prohibited"/>
-        <xs:attribute name="group" type="aors:CanonicalName" use="prohibited"/>
-        <xs:attribute name="readonly" type="xs:boolean" use="prohibited"/>
-      </xs:restriction>
-    </xs:complexContent>
-  </xs:complexType>
-  
-  <xs:group name="AgentControlUI.GUI.InlineFormElements.monolingual">
-    <xs:choice>
-      <xs:group ref="aors:AgentControlUI.GUI.InlineFormElements-select.monolingual"/>
-      <xs:element name="select">
-        <xs:complexType>
-          <xs:complexContent>
-            <xs:extension base="aors:AgentControlUI.GUI.InlineFormContent.type">
-              <xs:sequence>
-                <xs:element name="option" maxOccurs="unbounded">
-                  <xs:complexType>
-                    <xs:complexContent>
-                      <xs:extension base="aors:AgentControlUI.GUI.EmptyContent.type">
-                        <xs:attributeGroup ref="aors:AgentControlUI.GUI.InlineFormAttributes.label"/>
-                        <xs:attributeGroup ref="aors:AgentControlUI.GUI.InlineFormAttributes.value"/>
-                      </xs:extension>
-                    </xs:complexContent>
-                  </xs:complexType>
-                </xs:element>
-              </xs:sequence>
-              <xs:attributeGroup ref="aors:AgentControlUI.GUI.InlineFormAttributes.size"/>
-            </xs:extension>
-          </xs:complexContent>
-        </xs:complexType>
-      </xs:element>
-      <xs:element name="button">
-        <xs:complexType>
-          <xs:complexContent>
-            <xs:extension base="aors:AgentControlUI.GUI.ButtonElement.type0">
-              <xs:attribute name="title" type="xs:string" use="required"/>
-            </xs:extension>
-          </xs:complexContent>
-        </xs:complexType>
-      </xs:element>
-    </xs:choice>
-  </xs:group>
-  <xs:group name="AgentControlUI.GUI.InlineFormElements">
-    <xs:choice>
-      <xs:group ref="aors:AgentControlUI.GUI.InlineFormElements-select.monolingual"/>
-      <xs:element name="select">
-        <xs:complexType>
-          <xs:complexContent>
-            <xs:extension base="aors:AgentControlUI.GUI.InlineFormContent.type">
-              <xs:sequence>
-                <xs:element name="option" maxOccurs="unbounded">
-                  <xs:complexType>
-                    <xs:complexContent>
-                      <xs:extension base="aors:AgentControlUI.GUI.EmptyContent.type">
-                        <xs:sequence>
-                          <xs:element name="label" type="aors:AgentControlUI.GUI.TextContent.multilingual.type" minOccurs="0" maxOccurs="unbounded"/>
-                        </xs:sequence>
-                        <xs:attributeGroup ref="aors:AgentControlUI.GUI.InlineFormAttributes.value"/>
-                      </xs:extension>
-                    </xs:complexContent>
-                  </xs:complexType>
-                </xs:element>
-              </xs:sequence>
-              <xs:attributeGroup ref="aors:AgentControlUI.GUI.InlineFormAttributes.size"/>
-            </xs:extension>
-          </xs:complexContent>
-        </xs:complexType>
-      </xs:element>
-      <xs:element name="button">
-        <xs:complexType>
-          <xs:complexContent>
-            <xs:extension base="aors:AgentControlUI.GUI.ButtonElement.type0">
-              <xs:sequence>
-                <xs:element name="title" type="aors:AgentControlUI.GUI.TextContent.multilingual.type" maxOccurs="unbounded"/>
-              </xs:sequence>
-            </xs:extension>
-          </xs:complexContent>
-        </xs:complexType>
-      </xs:element>
-    </xs:choice>
-  </xs:group>
-  
-  
-  <xs:attributeGroup name="AgentControlUI.GUI.InlineFormAttributes.initialValue">
-    <xs:attribute name="initialValue" type="xs:string" use="optional"/>
-  </xs:attributeGroup>
-  <xs:attributeGroup name="AgentControlUI.GUI.InlineFormAttributes.size">
-    <xs:attribute name="size" type="xs:nonNegativeInteger" use="optional"/>
-  </xs:attributeGroup>
-  <xs:attributeGroup name="AgentControlUI.GUI.InlineFormAttributes.value">
-    <xs:attribute name="value" type="xs:string" use="required"/>
-  </xs:attributeGroup>
-  <xs:attributeGroup name="AgentControlUI.GUI.InlineFormAttributes.checked">
-    <xs:attribute name="checked" type="xs:boolean" default="false" use="optional"/>
-  </xs:attributeGroup>
-  <xs:attributeGroup name="AgentControlUI.GUI.InlineFormAttributes.type">
-    <xs:attribute name="type" type="aors:PrimitiveDataType" use="required"/>
-  </xs:attributeGroup>
-  <xs:attributeGroup name="AgentControlUI.GUI.InlineFormAttributes.label">
-    <xs:attribute name="label" type="xs:string" use="optional"/>
-  </xs:attributeGroup>
-  
-<!--
-  <xs:attributeGroup name="AgentControlUI.GUI.InlineFormAttributes.cols">
-    <xs:attribute name="cols" type="xs:nonNegativeInteger" use="required"/>
-  </xs:attributeGroup>
-  <xs:attributeGroup name="AgentControlUI.GUI.InlineFormAttributes.rows">
-    <xs:attribute name="rows" type="xs:nonNegativeInteger" use="required"/>
-  </xs:attributeGroup>
--->  
-    
-  <!-- label -->
-
-  <xs:group name="AgentControlUI.GUI.LabelElements.monolingual">
-    <xs:choice>
-      <xs:element name="label">
-        <xs:complexType>
-          <xs:complexContent>
-            <xs:extension base="aors:AgentControlUI.GUI.InlineContent-label.monolingual.type">
-              <xs:attribute name="for" type="aors:CanonicalName" use="optional"/>
-            </xs:extension>            
-          </xs:complexContent>
-        </xs:complexType>
-      </xs:element>
-    </xs:choice>
-  </xs:group>
-  <xs:group name="AgentControlUI.GUI.LabelElements">
-    <xs:choice>
-      <xs:element name="label">
-      <xs:complexType>
-        <xs:complexContent>
-          <xs:extension base="aors:AgentControlUI.GUI.InlineContent-label.type">
-            <xs:attribute name="for" type="aors:CanonicalName" use="optional"/>
-          </xs:extension>            
-        </xs:complexContent>
-      </xs:complexType>
-      </xs:element>
-    </xs:choice>
-  </xs:group>
-  
-  <!--######################-->
-  <!--### perceptionlist ###-->
-  <!--######################-->
-  
-  <xs:group name="AgentControlUI.GUI.PerceptionlistElements.monolingual">
-    <xs:choice>
-      <xs:element name="perceptionlist">
-        <xs:complexType>
-          <xs:complexContent>
-            <xs:extension base="aors:AgentControlUI.GUI.EmptyContent.type">
-              <xs:sequence>
-                <xs:element name="perception" minOccurs="1" maxOccurs="unbounded">
-                  <xs:complexType>
-                    <xs:complexContent>
-                      <xs:extension base="aors:AgentControlUI.GUI.FlowContent.monolingual.type">
-                        <xs:attribute name="entityType" type="aors:CanonicalName" use="required"/>
-                      </xs:extension>
-                    </xs:complexContent>
-                  </xs:complexType>
-                </xs:element>
-              </xs:sequence>
-            </xs:extension>
-          </xs:complexContent>
-        </xs:complexType>
-      </xs:element>      
-    </xs:choice>
-  </xs:group>
-  <xs:group name="AgentControlUI.GUI.PerceptionlistElements">
-    <xs:choice>
-      <xs:element name="perceptionlist">
-        <xs:complexType>
-          <xs:complexContent>
-            <xs:extension base="aors:AgentControlUI.GUI.EmptyContent.type">
-              <xs:sequence>
-                <xs:element name="perception" minOccurs="1" maxOccurs="unbounded">
-                  <xs:complexType>
-                    <xs:complexContent>
-                      <xs:extension base="aors:AgentControlUI.GUI.FlowContent.type">
-                        <xs:attribute name="entityType" type="aors:CanonicalName" use="required"/>
-                      </xs:extension>
-                    </xs:complexContent>
-                  </xs:complexType>
-                </xs:element>
-              </xs:sequence>
-            </xs:extension>
-          </xs:complexContent>
-        </xs:complexType>
-      </xs:element>      
-    	<xs:element name="EventList">
-    		<xs:annotation><xs:documentation>For showing views of current and past internal events (based on the agent's event memory). </xs:documentation></xs:annotation>
-    		<xs:complexType>
-    			<xs:choice maxOccurs="unbounded">
-    				<xs:element name="PerceptionEventView" minOccurs="0" maxOccurs="unbounded">
-    					<xs:annotation><xs:documentation>For showing plain perception events. </xs:documentation></xs:annotation>
-    					<xs:complexType>
-    						<xs:sequence>
-    							<xs:element name="Property" type="aors:EventView.Property.type" minOccurs="0" maxOccurs="unbounded"/>    							
-    						</xs:sequence>
-    						<xs:attribute name="perceptionEventType" type="aors:CanonicalName" use="optional"/>
-    						<xs:attributeGroup ref="aors:EventView.CommonAttributes"/>
-    					</xs:complexType>
-    				</xs:element>
-    				<xs:element name="PhysicalObjectPerceptionEventView" minOccurs="0" maxOccurs="unbounded">
-    					<xs:annotation><xs:documentation>For showing physical object perception events. </xs:documentation></xs:annotation>
-    					<xs:complexType>
-    						<xs:sequence>
-    							<xs:element name="ObjectProperty" type="aors:EventView.Property.type" minOccurs="0" maxOccurs="unbounded"/>    							
-    						</xs:sequence>
-    						<xs:attribute name="objectType" type="aors:CanonicalName" use="optional"/>
-    						<xs:attribute name="showObjectId" type="xs:boolean" use="optional" default="false"/>
-    						<xs:attribute name="showObjectName" type="xs:boolean" use="optional" default="false"/>
-    						<xs:attribute name="showDistance" type="xs:boolean" use="optional" default="false"/>
-    						<xs:attribute name="showPerceptionAngle" type="xs:boolean" use="optional" default="false"/>
-    						<xs:attribute name="showPhysicsAttributes" type="xs:string" use="optional"/>
-    						<xs:attributeGroup ref="aors:EventView.CommonAttributes"/>
-    					</xs:complexType>
-    				</xs:element>
-    				<xs:element name="InMessageEventView" minOccurs="0" maxOccurs="unbounded">
-    					<xs:annotation><xs:documentation>For showing in-message events. </xs:documentation></xs:annotation>
-    					<xs:complexType>
-    						<xs:sequence>
-    							<xs:element name="MessageProperty" type="aors:EventView.Property.type" minOccurs="0" maxOccurs="unbounded"/>    							
-    						</xs:sequence>
-    						<xs:attribute name="messageType" type="aors:CanonicalName" use="optional"/>
-    						<xs:attribute name="showSender" type="xs:boolean" use="optional" default="false"/>
-    						<xs:attributeGroup ref="aors:EventView.CommonAttributes"/>
-    					</xs:complexType>
-    				</xs:element>
-    				<xs:element name="PeriodicTimeEventView" minOccurs="0" maxOccurs="unbounded">
-    					<xs:annotation><xs:documentation>For showing periodic time events. </xs:documentation></xs:annotation>
-    					<xs:complexType>
-    						<xs:attribute name="periodicTimeEventType" type="aors:CanonicalName" use="optional"/>
-    						<xs:attributeGroup ref="aors:EventView.CommonAttributes"/>
-    					</xs:complexType>
-    				</xs:element>
-    				<xs:element name="ReminderEventView" minOccurs="0" maxOccurs="unbounded">
-    					<xs:annotation><xs:documentation>For showing reminder events. </xs:documentation></xs:annotation>
-    					<xs:complexType>
-    						<xs:attributeGroup ref="aors:EventView.CommonAttributes"/>
-    					</xs:complexType>
-    				</xs:element>
-    			</xs:choice>
-    			<xs:attributeGroup ref="aors:AgentControlUI.GUI.CommonAttributes"/>
-    		</xs:complexType>
-    	</xs:element>      
-    </xs:choice>
-  </xs:group>
-  
+	</xs:complexType>
+	<!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->	
+	<xs:complexType name="PerceptionEventList.type">
+	<!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->
+		<xs:choice maxOccurs="unbounded">
+			<xs:element name="PerceptionEventView" minOccurs="0" maxOccurs="unbounded">
+				<xs:annotation><xs:documentation>For showing generic perception events. </xs:documentation></xs:annotation>
+				<xs:complexType>
+					<xs:sequence>
+						<xs:element ref="aors:Label"/>
+						<xs:element name="EventProperty" type="aors:EventView.Property.type" minOccurs="0" maxOccurs="unbounded"/>    							
+					</xs:sequence>
+					<xs:attribute name="perceptionEventType" type="aors:CanonicalName" use="required"/>
+					<xs:attributeGroup ref="aors:EventView.CommonAttributes"/>
+				</xs:complexType>
+			</xs:element>
+			<xs:element name="PhysicalObjectPerceptionEventView" minOccurs="0" maxOccurs="unbounded">
+				<xs:annotation><xs:documentation>For showing physical object perception events. </xs:documentation></xs:annotation>
+				<xs:complexType>
+					<xs:sequence>
+						<xs:element ref="aors:Label"/>
+						<xs:element name="ObjectProperty" type="aors:EventView.Property.type" minOccurs="0" maxOccurs="unbounded"/>    							
+					</xs:sequence>
+					<xs:attribute name="objectType" type="aors:CanonicalName" use="required"/>
+					<xs:attribute name="showObjectId" type="xs:boolean" use="optional" default="false"/>
+					<xs:attribute name="showObjectName" type="xs:boolean" use="optional" default="false"/>
+					<xs:attribute name="showDistance" type="xs:boolean" use="optional" default="false"/>
+					<xs:attribute name="showPerceptionAngle" type="xs:boolean" use="optional" default="false"/>
+					<xs:attributeGroup ref="aors:EventView.CommonAttributes"/>
+				</xs:complexType>
+			</xs:element>
+			<xs:element name="InMessageEventView" minOccurs="0" maxOccurs="unbounded">
+				<xs:annotation><xs:documentation>For showing in-message events. </xs:documentation></xs:annotation>
+				<xs:complexType>
+					<xs:sequence>
+						<xs:element ref="aors:Label"/>
+						<xs:element name="MessageProperty" type="aors:EventView.Property.type" minOccurs="0" maxOccurs="unbounded"/>    							
+					</xs:sequence>
+					<xs:attribute name="messageType" type="aors:CanonicalName" use="required"/>
+					<xs:attribute name="showSender" type="xs:boolean" use="optional" default="true"/>
+					<xs:attributeGroup ref="aors:EventView.CommonAttributes"/>
+				</xs:complexType>
+			</xs:element>
+			<xs:element name="PeriodicTimeEventView" minOccurs="0" maxOccurs="unbounded">
+				<xs:annotation><xs:documentation>For showing periodic time events. </xs:documentation></xs:annotation>
+				<xs:complexType>
+					<xs:sequence>
+						<xs:element ref="aors:Label"/>						
+					</xs:sequence>
+					<xs:attribute name="periodicTimeEventType" type="aors:CanonicalName" use="required"/>
+					<xs:attributeGroup ref="aors:EventView.CommonAttributes"/>
+				</xs:complexType>
+			</xs:element>
+		</xs:choice>
+		<xs:attribute name="showReminderEvents" type="xs:boolean" use="optional" default="false"/>
+	</xs:complexType>  
+	<!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->
 	<xs:complexType name="EventView.Property.type">
+	<!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->
 		<xs:sequence>
 			<xs:element ref="aors:Label"/>
+			<xs:element ref="aors:Unit" minOccurs="0"/>
 		</xs:sequence>
 		<xs:attribute name="name" type="aors:CanonicalName" use="required"/>
-		<xs:attribute name="displayLength" type="xs:string" use="optional">
-			<xs:annotation><xs:documentation>TO BE DEFINED: Some kind of CSS length expression. </xs:documentation></xs:annotation>
+		<xs:attribute name="fieldLength" use="optional">
+			<xs:annotation><xs:documentation>The length of the property field in cm. </xs:documentation></xs:annotation>
+			<xs:simpleType>
+				<xs:restriction base="xs:float">
+					<xs:minExclusive value="0.0"/>
+				</xs:restriction>
+			</xs:simpleType>
 		</xs:attribute>
 	</xs:complexType>
-
+	<!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->
 	<xs:attributeGroup name="EventView.CommonAttributes">
-		<xs:attribute name="class" type="aors:ListOfCanonicalName" use="optional"/>
-		<xs:attribute name="style" type="xs:string" use="optional"/>
+	<!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->
 		<xs:attribute name="icon" type="xs:anyURI" use="optional">
-			<xs:annotation><xs:documentation xml:lang="en">The icon file from the media folder. </xs:documentation></xs:annotation>
+			<xs:annotation><xs:documentation xml:lang="en">An icon file from the media folder. </xs:documentation></xs:annotation>
 		</xs:attribute>
 	</xs:attributeGroup>
-	
-
-	<!-- flow + perceptionlist -->
-  
-  <xs:complexType name="AgentControlUI.GUI.FlowPerceptionlistContent.monolingual.type">
-    <xs:complexContent mixed="true">
-      <xs:extension base="aors:AgentControlUI.GUI.EmptyContent.type">
-        <xs:sequence>
-          <xs:group ref="aors:AgentControlUI.GUI.FlowPerceptionlistElements.monolingual" minOccurs="0" maxOccurs="unbounded"/>
-        </xs:sequence>
-      </xs:extension>
-    </xs:complexContent>
-  </xs:complexType>
-  <xs:complexType name="AgentControlUI.GUI.FlowPerceptionlistContent.type">
-    <xs:complexContent>
-      <xs:extension base="aors:AgentControlUI.GUI.EmptyContent.type">
-        <xs:choice minOccurs="0" maxOccurs="unbounded">
-          <xs:group ref="aors:AgentControlUI.GUI.FlowPerceptionlistElements.multilingual"/>
-          <xs:group ref="aors:AgentControlUI.GUI.FlowPerceptionlistElements"/>
-        </xs:choice>
-      </xs:extension>
-    </xs:complexContent>
-  </xs:complexType>
-  
-  <xs:group name="AgentControlUI.GUI.FlowPerceptionlistElements.monolingual">
-    <xs:choice>
-      <xs:group ref="aors:AgentControlUI.GUI.HeadingElements.monolingual"/>
-      <xs:group ref="aors:AgentControlUI.GUI.ListPerceptionlistElements.monolingual"/>
-      <xs:group ref="aors:AgentControlUI.GUI.BlockPerceptionlistElements.monolingual"/>
-      <xs:group ref="aors:AgentControlUI.GUI.InlineElements.monolingual"/>
-      <xs:group ref="aors:AgentControlUI.GUI.PerceptionlistElements.monolingual"/>
-    </xs:choice>  
-  </xs:group>
-  <xs:group name="AgentControlUI.GUI.FlowPerceptionlistElements.multilingual">
-    <xs:sequence>
-      <xs:element name="multilingualContent" maxOccurs="unbounded">
-        <xs:complexType mixed="true">
-          <xs:sequence>
-            <xs:group ref="aors:AgentControlUI.GUI.FlowPerceptionlistElements.monolingual" minOccurs="0" maxOccurs="unbounded"/>
-          </xs:sequence>
-          <xs:attributeGroup ref="aors:lang_mandatory"/>
-        </xs:complexType>
-      </xs:element>          
-    </xs:sequence>
-  </xs:group>
-  <xs:group name="AgentControlUI.GUI.FlowPerceptionlistElements">
-    <xs:choice>
-      <xs:group ref="aors:AgentControlUI.GUI.HeadingElements"/>
-      <xs:group ref="aors:AgentControlUI.GUI.ListPerceptionlistElements"/>
-      <xs:group ref="aors:AgentControlUI.GUI.BlockPerceptionlistElements"/>
-      <xs:group ref="aors:AgentControlUI.GUI.InlineElements"/>
-      <xs:group ref="aors:AgentControlUI.GUI.PerceptionlistElements"/>
-    </xs:choice>
-  </xs:group>
-  
-  <!-- list + perceptionlist -->
-  
-  <xs:complexType name="AgentControlUI.GUI.ListPerceptionlistContent.monolingual.type">
-    <xs:complexContent>
-      <xs:extension base="aors:AgentControlUI.GUI.EmptyContent.type">
-        <xs:sequence>
-          <xs:element name="li" type="aors:AgentControlUI.GUI.FlowPerceptionlistContent.monolingual.type" maxOccurs="unbounded"/>
-        </xs:sequence>        
-      </xs:extension>
-    </xs:complexContent>
-  </xs:complexType>
-  <xs:complexType name="AgentControlUI.GUI.ListPerceptionlistContent.type">
-    <xs:complexContent>
-      <xs:extension base="aors:AgentControlUI.GUI.EmptyContent.type">
-        <xs:sequence>
-          <xs:element name="li" type="aors:AgentControlUI.GUI.FlowPerceptionlistContent.type" maxOccurs="unbounded"/>
-        </xs:sequence>        
-      </xs:extension>
-    </xs:complexContent>
-  </xs:complexType>
-  
-  <xs:group name="AgentControlUI.GUI.ListPerceptionlistElements.monolingual">
-    <xs:choice>
-      <xs:element name="dl">
-        <xs:complexType>
-          <xs:complexContent>
-            <xs:extension base="aors:AgentControlUI.GUI.EmptyContent.type">
-              <xs:choice maxOccurs="unbounded">
-                <xs:element name="dt" type="aors:AgentControlUI.GUI.InlineContent.monolingual.type"/>
-                <xs:element name="dd" type="aors:AgentControlUI.GUI.FlowPerceptionlistContent.monolingual.type"/>
-              </xs:choice>
-            </xs:extension>
-          </xs:complexContent>
-        </xs:complexType>
-      </xs:element>
-      <xs:element name="ol" type="aors:AgentControlUI.GUI.ListPerceptionlistContent.monolingual.type"/>
-      <xs:element name="ul" type="aors:AgentControlUI.GUI.ListPerceptionlistContent.monolingual.type"/>
-    </xs:choice>
-  </xs:group>
-  <xs:group name="AgentControlUI.GUI.ListPerceptionlistElements">
-    <xs:choice>
-      <xs:element name="dl">
-        <xs:complexType>
-          <xs:complexContent>
-            <xs:extension base="aors:AgentControlUI.GUI.EmptyContent.type">
-              <xs:choice maxOccurs="unbounded">
-                <xs:element name="dt" type="aors:AgentControlUI.GUI.InlineContent.type"/>
-                <xs:element name="dd" type="aors:AgentControlUI.GUI.FlowPerceptionlistContent.type"/>
-              </xs:choice>
-            </xs:extension>
-          </xs:complexContent>
-        </xs:complexType>
-      </xs:element>
-      <xs:element name="ol" type="aors:AgentControlUI.GUI.ListPerceptionlistContent.type"/>
-      <xs:element name="ul" type="aors:AgentControlUI.GUI.ListPerceptionlistContent.type"/>
-    </xs:choice>    
-  </xs:group>
-
-  <!-- block + perceptionlist -->
-  
-  <xs:complexType name="AgentControlUI.GUI.BlockPerceptionlistContent.monolingual.type">
-    <xs:complexContent mixed="true">
-      <xs:extension base="aors:AgentControlUI.GUI.EmptyContent.type">
-        <xs:sequence>
-          <xs:group ref="aors:AgentControlUI.GUI.BlockPerceptionlistElements.monolingual" minOccurs="0" maxOccurs="unbounded"/>
-        </xs:sequence>
-      </xs:extension>
-    </xs:complexContent>
-  </xs:complexType>
-  <xs:complexType name="AgentControlUI.GUI.BlockPerceptionlistContent.type">
-    <xs:complexContent>
-      <xs:extension base="aors:AgentControlUI.GUI.EmptyContent.type">
-        <xs:choice minOccurs="0" maxOccurs="unbounded">
-          <xs:group ref="aors:AgentControlUI.GUI.BlockPerceptionlistElements.multilingual"/>
-          <xs:group ref="aors:AgentControlUI.GUI.BlockPerceptionlistElements"/>
-        </xs:choice>
-      </xs:extension>
-    </xs:complexContent>
-  </xs:complexType>
-  
-  <xs:group name="AgentControlUI.GUI.BlockPerceptionlistElements.monolingual">
-    <xs:choice>
-      <xs:group ref="aors:AgentControlUI.GUI.BlockTextPerceptionlistElements.monolingual"/>
-    	<!--
-      <xs:group ref="aors:AgentControlUI.GUI.TablePerceptionlistElements.monolingual"/>
-      <xs:group ref="aors:AgentControlUI.GUI.FormElements.monolingual"/>
-    	-->
-    </xs:choice>
-  </xs:group>
-  <xs:group name="AgentControlUI.GUI.BlockPerceptionlistElements.multilingual">
-    <xs:sequence>
-      <xs:element name="multilingualContent" maxOccurs="unbounded">
-        <xs:complexType mixed="true">
-          <xs:sequence>
-            <xs:group ref="aors:AgentControlUI.GUI.BlockPerceptionlistElements.monolingual" minOccurs="0" maxOccurs="unbounded"/>
-          </xs:sequence>
-          <xs:attributeGroup ref="aors:lang_mandatory"/>
-        </xs:complexType>
-      </xs:element>          
-    </xs:sequence>
-  </xs:group>
-  <xs:group name="AgentControlUI.GUI.BlockPerceptionlistElements">
-    <xs:choice>
-      <xs:group ref="aors:AgentControlUI.GUI.BlockTextPerceptionlistElements"/>
-    	<!--
-      <xs:group ref="aors:AgentControlUI.GUI.TablePerceptionlistElements"/>
-      <xs:group ref="aors:AgentControlUI.GUI.FormElements"/>
-    	-->
-    </xs:choice>
-  </xs:group>
-  
-  <!-- block text + perceptionlist-->
-  
-  <xs:group name="AgentControlUI.GUI.BlockTextPerceptionlistElements.monolingual">
-    <xs:choice>
-      <xs:element name="div" type="aors:AgentControlUI.GUI.FlowPerceptionlistContent.monolingual.type"/>
-      <xs:element name="p" type="aors:AgentControlUI.GUI.InlineContent.monolingual.type"/>
-      <xs:element name="pre" type="aors:AgentControlUI.GUI.InlineContent.monolingual.type"/>
-    </xs:choice>
-  </xs:group>
-  <xs:group name="AgentControlUI.GUI.BlockTextPerceptionlistElements">
-    <xs:choice>
-      <xs:element name="div" type="aors:AgentControlUI.GUI.FlowPerceptionlistContent.type"/>
-      <xs:element name="p" type="aors:AgentControlUI.GUI.InlineContent.type"/>
-      <xs:element name="pre" type="aors:AgentControlUI.GUI.InlineContent.type"/>
-    </xs:choice>
-  </xs:group>
-  
-  <!-- table  + perceptionlist (monolingual) 
-  
-  <xs:group name="AgentControlUI.GUI.TablePerceptionlistElements.monolingual">
-    <xs:sequence>
-      <xs:element name="table">
-        <xs:complexType>
-          <xs:complexContent>
-            <xs:extension base="aors:AgentControlUI.GUI.EmptyContent.type">
-              <xs:sequence>
-                <xs:element name="caption" type="aors:AgentControlUI.GUI.InlineContent.monolingual.type" minOccurs="0"/>
-                <xs:choice>
-                  <xs:group ref="aors:AgentControlUI.GUI.Table.ColElements" minOccurs="0" maxOccurs="unbounded"/>
-                  <xs:element name="colgroup" minOccurs="0" maxOccurs="unbounded">
-                    <xs:complexType>
-                      <xs:complexContent>
-                        <xs:extension base="aors:AgentControlUI.GUI.EmptyContent.type">
-                          <xs:sequence>
-                            <xs:group ref="aors:AgentControlUI.GUI.Table.ColElements" minOccurs="0" maxOccurs="unbounded"/>
-                          </xs:sequence>
-                          <xs:attributeGroup ref="aors:AgentControlUI.GUI.Table.ColAttributes"/>
-                        </xs:extension>
-                      </xs:complexContent>
-                    </xs:complexType>
-                  </xs:element>
-                </xs:choice>
-                <xs:choice>
-                  <xs:sequence>
-                    <xs:element name="thead" type="aors:AgentControlUI.GUI.TablePerceptionlist.RowWrapper.monolingual.type" minOccurs="0"/>
-                    <xs:element name="tfoot" type="aors:AgentControlUI.GUI.TablePerceptionlist.RowWrapper.monolingual.type" minOccurs="0"/>
-                    <xs:element name="tbody" type="aors:AgentControlUI.GUI.TablePerceptionlist.RowWrapper.monolingual.type" maxOccurs="unbounded"/>
-                  </xs:sequence>
-                  <xs:group ref="aors:AgentControlUI.GUI.TablePerceptionlist.RowElements.monolingual" maxOccurs="unbounded"/>
-                </xs:choice>
-              </xs:sequence>
-              <xs:attribute name="summery" type="xs:string" use="optional"/>
-            </xs:extension>
-          </xs:complexContent>
-        </xs:complexType>
-      </xs:element>      
-    </xs:sequence>
-  </xs:group>
-  
-  <xs:complexType name="AgentControlUI.GUI.TablePerceptionlist.RowWrapper.monolingual.type">
-    <xs:complexContent>
-      <xs:extension base="aors:AgentControlUI.GUI.EmptyContent.type">
-        <xs:sequence>
-          <xs:group ref="aors:AgentControlUI.GUI.TablePerceptionlist.RowElements.monolingual" maxOccurs="unbounded"/>
-        </xs:sequence>
-      </xs:extension>
-    </xs:complexContent>
-  </xs:complexType>
-  
-  <xs:group name="AgentControlUI.GUI.TablePerceptionlist.RowElements.monolingual">
-    <xs:sequence>
-      <xs:element name="tr">
-        <xs:complexType>
-          <xs:complexContent>
-            <xs:extension base="aors:AgentControlUI.GUI.EmptyContent.type">
-              <xs:choice maxOccurs="unbounded">
-                <xs:element name="td" type="aors:AgentControlUI.GUI.TablePerceptionlist.CellContent.monolingual.type"/>
-                <xs:element name="th" type="aors:AgentControlUI.GUI.TablePerceptionlist.CellContent.monolingual.type"/>
-              </xs:choice>
-            </xs:extension>
-          </xs:complexContent>
-        </xs:complexType>
-      </xs:element>
-    </xs:sequence>
-  </xs:group>
-  
-  <xs:complexType name="AgentControlUI.GUI.TablePerceptionlist.CellContent.monolingual.type">
-    <xs:complexContent>
-      <xs:extension base="aors:AgentControlUI.GUI.FlowPerceptionlistContent.monolingual.type">
-        <xs:attribute name="rowspan" type="xs:nonNegativeInteger" use="optional"/>
-        <xs:attribute name="colspan" type="xs:nonNegativeInteger" use="optional"/>
-      </xs:extension>
-    </xs:complexContent>
-  </xs:complexType>
-  
-  
-  <xs:group name="AgentControlUI.GUI.TablePerceptionlistElements">
-    <xs:sequence>
-      <xs:element name="table">
-        <xs:complexType>
-          <xs:complexContent>
-            <xs:extension base="aors:AgentControlUI.GUI.EmptyContent.type">
-              <xs:sequence>
-                <xs:element name="caption" type="aors:AgentControlUI.GUI.InlineContent.type" minOccurs="0"/>
-                <xs:element name="summery" type="aors:AgentControlUI.GUI.TextContent.multilingual.type" minOccurs="0" maxOccurs="unbounded"/>
-                <xs:choice>
-                  <xs:group ref="aors:AgentControlUI.GUI.Table.ColElements" minOccurs="0" maxOccurs="unbounded"/>
-                  <xs:element name="colgroup" minOccurs="0" maxOccurs="unbounded">
-                    <xs:complexType>
-                      <xs:complexContent>
-                        <xs:extension base="aors:AgentControlUI.GUI.EmptyContent.type">
-                          <xs:sequence>
-                            <xs:group ref="aors:AgentControlUI.GUI.Table.ColElements" minOccurs="0" maxOccurs="unbounded"/>
-                          </xs:sequence>
-                          <xs:attributeGroup ref="aors:AgentControlUI.GUI.Table.ColAttributes"/>
-                        </xs:extension>
-                      </xs:complexContent>
-                    </xs:complexType>
-                  </xs:element>
-                </xs:choice>
-                <xs:choice>
-                  <xs:sequence>
-                    <xs:element name="thead" type="aors:AgentControlUI.GUI.TablePerceptionlist.RowWrapper.type" minOccurs="0"/>
-                    <xs:element name="tfoot" type="aors:AgentControlUI.GUI.TablePerceptionlist.RowWrapper.type" minOccurs="0"/>
-                    <xs:element name="tbody" type="aors:AgentControlUI.GUI.TablePerceptionlist.RowWrapper.type" maxOccurs="unbounded"/>
-                  </xs:sequence>
-                  <xs:group ref="aors:AgentControlUI.GUI.TablePerceptionlist.RowElements" maxOccurs="unbounded"/>
-                </xs:choice>
-              </xs:sequence>
-            </xs:extension>
-          </xs:complexContent>
-        </xs:complexType>
-      </xs:element>      
-    </xs:sequence>
-  </xs:group>
-  
-  <xs:complexType name="AgentControlUI.GUI.TablePerceptionlist.RowWrapper.type">
-    <xs:complexContent>
-      <xs:extension base="aors:AgentControlUI.GUI.EmptyContent.type">
-        <xs:sequence>
-          <xs:group ref="aors:AgentControlUI.GUI.TablePerceptionlist.RowElements" maxOccurs="unbounded"/>
-        </xs:sequence>
-      </xs:extension>
-    </xs:complexContent>
-  </xs:complexType>
-  
-  <xs:group name="AgentControlUI.GUI.TablePerceptionlist.RowElements">
-    <xs:sequence>
-      <xs:element name="tr">
-        <xs:complexType>
-          <xs:complexContent>
-            <xs:extension base="aors:AgentControlUI.GUI.EmptyContent.type">
-              <xs:choice maxOccurs="unbounded">
-                <xs:element name="td" type="aors:AgentControlUI.GUI.TablePerceptionlist.CellContent.type"/>
-                <xs:element name="th" type="aors:AgentControlUI.GUI.TablePerceptionlist.CellContent.type"/>
-              </xs:choice>
-            </xs:extension>
-          </xs:complexContent>
-        </xs:complexType>
-      </xs:element>
-    </xs:sequence>
-  </xs:group>
-  
-  <xs:complexType name="AgentControlUI.GUI.TablePerceptionlist.CellContent.type">
-    <xs:complexContent>
-      <xs:extension base="aors:AgentControlUI.GUI.FlowPerceptionlistContent.type">
-        <xs:attribute name="rowspan" type="xs:nonNegativeInteger" use="optional"/>
-        <xs:attribute name="colspan" type="xs:nonNegativeInteger" use="optional"/>
-      </xs:extension>
-    </xs:complexContent>
-  </xs:complexType>
-  -->
-  
-  <!--#####################################-->
-  <!--### User-Interface-Event-Listener ###-->
-  <!--#####################################-->
-
-  <xs:complexType name="AgentControlUI.UserInterfaceEventListener.type">
-    <xs:sequence>
+	<!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->
+	<xs:complexType name="OutputField.type">
+	<!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->
+		<xs:sequence>
+			<xs:group ref="aors:Field.CommonElem"/>
+			<xs:element name="Source" minOccurs="0">
+				<xs:complexType>
+					<xs:choice>
+						<xs:element name="Property">
+							<xs:annotation><xs:documentation xml:lang="en">A property of the agent. </xs:documentation></xs:annotation>
+							<xs:complexType>
+								<xs:attribute name="name" type="aors:CanonicalName" use="required"/>								
+							</xs:complexType>
+						</xs:element>
+						<xs:element name="GlobalVariable">
+							<xs:complexType>
+								<xs:attribute name="name" type="aors:CanonicalName" use="required"/>
+							</xs:complexType>
+						</xs:element>	
+						<xs:element name="StatisticsVariable">
+							<xs:complexType>
+								<xs:attribute name="name" type="aors:CanonicalName" use="required"/>
+							</xs:complexType>
+						</xs:element>	
+						<xs:element name="ObjectProperty">
+							<xs:annotation><xs:documentation xml:lang="en">A property of another object/agent. </xs:documentation></xs:annotation>
+							<xs:complexType>
+								<xs:attribute name="property" type="aors:CanonicalName" use="required"/>
+								<xs:attribute name="objectType" type="aors:CanonicalName" use="required"/>
+								<xs:attribute name="objectIdRef" type="xs:long" use="required"/>
+							</xs:complexType>
+						</xs:element>
+					</xs:choice>
+				</xs:complexType>
+			</xs:element>
+		</xs:sequence>
+	</xs:complexType>
+	<!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->
+	<xs:complexType name="ReactionUI.type">
+	<!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->
+		<xs:sequence>
+			<xs:element name="ActionEventUI" minOccurs="0" maxOccurs="unbounded">
+				<xs:complexType>
+					<xs:sequence>
+						<xs:element ref="aors:Label"/>
+						<xs:element ref="aors:PropertyUI" minOccurs="0" maxOccurs="unbounded"/>
+					</xs:sequence>
+					<xs:attribute name="actionEventType" type="aors:CanonicalName" use="required"/>
+					<xs:attributeGroup ref="aors:EventView.CommonAttributes"/>
+				</xs:complexType>
+			</xs:element>
+			<xs:element name="OutMessageEventUI" minOccurs="0" maxOccurs="unbounded">
+				<xs:complexType>
+					<xs:sequence>
+						<xs:element ref="aors:Label"/>
+						<xs:element ref="aors:PropertyUI" minOccurs="0" maxOccurs="unbounded"/>
+					</xs:sequence>
+					<xs:attribute name="messageType" type="aors:CanonicalName" use="required"/>
+					<xs:attributeGroup ref="aors:EventView.CommonAttributes"/>
+				</xs:complexType>
+			</xs:element>
+		</xs:sequence>
+		<xs:attribute name="eventType" type="aors:CanonicalName" use="required">
+			<xs:annotation><xs:documentation>The type of events, in response to which the player reacts. </xs:documentation></xs:annotation>
+		</xs:attribute>
+	</xs:complexType>
+	<!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->
+	<xs:complexType name="AgentControlEventListener.type">
+	<!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->
+		<xs:sequence>
       <xs:element name="WHEN">
       	<xs:annotation><xs:documentation>User interface events are defined in the DOM3-Spezifikation [http://www.w3.org/TR/DOM-Level-3-Events]. </xs:documentation></xs:annotation>
       	<xs:complexType>
@@ -1353,4 +274,115 @@
     <xs:attribute name="guiVariable" type="aors:CanonicalName" use="optional"/>
     <xs:attributeGroup ref="aors:ActionRuleEvaluation.attributes"/>
   </xs:complexType>
+	<!-- =================================================================== -->	
+	<xs:element name="KeyboardEvent">
+	<!-- =================================================================== -->
+		<xs:complexType>
+			<xs:attribute name="keyIdentifier" type="aors:KeyIdentifiers.type" use="required"/>
+			<xs:attribute name="shiftKey" type="xs:boolean" use="optional"/>
+			<xs:attribute name="ctrlKey" type="xs:boolean" use="optional"/>
+			<!--									
+				<xs:attribute name="altKey" type="xs:boolean" use="optional">
+				<xs:annotation><xs:documentation>On Macintosh systems this key modifier corresponds to the Option key modifier. </xs:documentation></xs:annotation>
+				</xs:attribute>
+			-->									
+		</xs:complexType>
+	</xs:element>
+	<!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->
+	<xs:simpleType name="KeyIdentifiers.type">
+	<!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->
+		<xs:annotation><xs:documentation>See http://www.w3.org/TR/2009/WD-DOM-Level-3-Events-20090908/#keyset-keyidentifiers </xs:documentation></xs:annotation>
+		<xs:restriction base="xs:string">
+			<xs:enumeration value="Down"/>
+			<xs:enumeration value="Left"/>
+			<xs:enumeration value="Right"/>
+			<xs:enumeration value="Up"/>
+			<xs:enumeration value="Enter">
+				<xs:annotation><xs:documentation>This key identifier shall be also used for the Return (Macintosh numpad) key. </xs:documentation></xs:annotation>
+			</xs:enumeration>
+			<xs:enumeration value="F1"/>
+			<xs:enumeration value="F2"/>
+			<xs:enumeration value="F3"/>
+			<xs:enumeration value="F4"/>
+			<xs:enumeration value="F5"/>
+			<xs:enumeration value="F6"/>
+			<xs:enumeration value="F7"/>
+			<xs:enumeration value="F8"/>
+			<xs:enumeration value="F9"/>
+			<xs:enumeration value="F10"/>
+			<xs:enumeration value="F11"/>
+			<xs:enumeration value="F12"/>
+			<xs:enumeration value="Insert"/>
+			<xs:enumeration value="Del">
+				<xs:annotation><xs:documentation>This key identifier shall be also used for the key labeled 'delete' MacOS keyboards when modified by the 'Fn' key.</xs:documentation></xs:annotation>
+			</xs:enumeration>
+			<xs:enumeration value="Backspace">
+				<xs:annotation><xs:documentation>This key identifier shall be also used for the key labeled 'delete' MacOS keyboards when not modified by the 'Fn' key.</xs:documentation></xs:annotation>
+			</xs:enumeration>
+			<xs:enumeration value="PageDown"/>
+			<xs:enumeration value="PageUp"/>
+			<xs:enumeration value="Tab"/>
+			<xs:enumeration value="Esc"/>
+			<xs:enumeration value="Spacebar"/>
+			<xs:enumeration value="#"/>
+			<xs:enumeration value="+"/>
+			<xs:enumeration value="-"/>
+			<xs:enumeration value="1"/>
+			<xs:enumeration value="2"/>
+			<xs:enumeration value="3"/>
+			<xs:enumeration value="4"/>
+			<xs:enumeration value="5"/>
+			<xs:enumeration value="6"/>
+			<xs:enumeration value="7"/>
+			<xs:enumeration value="8"/>
+			<xs:enumeration value="9"/>
+			<xs:enumeration value="0"/>
+			<xs:enumeration value="A"/>
+			<xs:enumeration value="B"/>
+			<xs:enumeration value="C"/>
+			<xs:enumeration value="D"/>
+			<xs:enumeration value="E"/>
+			<xs:enumeration value="F"/>
+			<xs:enumeration value="G"/>
+			<xs:enumeration value="H"/>
+			<xs:enumeration value="I"/>
+			<xs:enumeration value="J"/>
+			<xs:enumeration value="K"/>
+			<xs:enumeration value="L"/>
+			<xs:enumeration value="M"/>
+			<xs:enumeration value="N"/>
+			<xs:enumeration value="O"/>
+			<xs:enumeration value="P"/>
+			<xs:enumeration value="Q"/>
+			<xs:enumeration value="R"/>
+			<xs:enumeration value="S"/>
+			<xs:enumeration value="T"/>
+			<xs:enumeration value="U"/>
+			<xs:enumeration value="V"/>
+			<xs:enumeration value="W"/>
+			<xs:enumeration value="X"/>
+			<xs:enumeration value="Y"/>
+			<xs:enumeration value="Z"/>
+		</xs:restriction>
+	</xs:simpleType>
+	
+	<xs:element name="MouseEvent" type="aors:MouseEvent.type"/>
+	<xs:complexType name="MouseEvent.type">
+		<xs:attribute name="targetType" type="aors:CanonicalName" use="optional"/>
+		<xs:attribute name="targetIdRef" type="xs:long" use="optional"/>
+		<xs:attribute name="targetName" type="xs:string" use="optional"/>
+		<xs:attribute name="mouseEventType" type="aors:MouseEventType.type" use="required"/>
+		<xs:attribute name="eventVariable" type="aors:CanonicalName" use="optional"/>
+	</xs:complexType>
+	
+	<xs:simpleType name="MouseEventType.type">
+		<xs:annotation><xs:documentation>See http://www.w3.org/TR/2009/WD-DOM-Level-3-Events-20090908/#events-mouseevents </xs:documentation></xs:annotation>
+		<xs:restriction base="xs:string">
+			<xs:enumeration value="click"/>
+			<xs:enumeration value="dblclick"/>
+			<xs:enumeration value="mousedown"/>
+			<xs:enumeration value="mouseup"/>
+		</xs:restriction>
+	</xs:simpleType>
+	
 </xs:schema>

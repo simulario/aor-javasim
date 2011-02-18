@@ -18,9 +18,18 @@
 			<dc:source>http://en.wikipedia.org/wiki/Lemonade_Stand</dc:source>
 			<aors:description xmlns="http://www.w3.org/1999/xhtml">
 				<p>A lemonade seller makes lemonade in pitchers and sells it in paper cups 
-				at a stand in a street market. The work day starts with making planning decisions
-				and placing a purchase order for getting the input materials.</p>
-				<p>In this first version, neither customers nor suppliers are explixitly modeled.</p>
+				at a stand in a street market. Each day consists of the following process steps and phases:</p>
+				<h:ol>
+					<h:li>The day starts with making planning decisions
+						and placing a purchase order for getting the input materials.</h:li>
+					<h:li>Some time later, the ordered input materials are delivered, the planned products 
+						are manufactured and the stand is opened.</h:li>
+					<h:li>After the stand has been opened, customer orders arrive with some random periodicity.
+					  As long as there are still products in stock, customer orders are served.</h:li>
+					<h:li>At the end of the day, close the lemonade stand and depreciate the expired items in stock.</h:li>
+				</h:ol>
+				<p>In this first version, neither customers nor suppliers are modeled explixitly.
+				Also, there is no physics simulation.</p>
 			</aors:description>
 		</documentation>
 		
@@ -47,25 +56,66 @@
 			<Enumeration name="SupplyUnit">
 				<EnumerationLiteral>CRATE</EnumerationLiteral>
 				<EnumerationLiteral>CAN</EnumerationLiteral>
+				<EnumerationLiteral>CUP</EnumerationLiteral>
 				<EnumerationLiteral>BAG</EnumerationLiteral>
 				<EnumerationLiteral>PIECE</EnumerationLiteral>
 			</Enumeration>
 			<!--====================================-->
 			<ComplexDataType name="PurchaseItemType">
 			<!--====================================-->
+				<ClassDef language="Java"><![CDATA[
+					
+	private String name;
+	private QuantityUnit quantityUnit; 
+	private SupplyUnit supplyUnit; 
+	private int quantityPerProductSupplyUnit; 
+	private double purchasePrice; 
+	private int expirationTimeSpan; 
+	private double transactionCostPerOrder; 
+	private int reorderUpToLevel; 
+	private int reorderPeriod; 
+
+	public PurchaseItemType(){}
+
+	/**
+	* Construct a purchase item type with all properties set
+	*/
+	public PurchaseItemType(String n, QuantityUnit qU, SupplyUnit sU, int qPSU, 
+			double pP, int eT, double tCO, int rUTL, int rP) {
+		this.name = n;
+		this.quantityUnit = qU;
+		this.supplyUnit = sU;
+		this.quantityPerProductSupplyUnit = qPSU;
+		this.purchasePrice = pP;
+		this.expirationTimeSpan = eT;
+		this.transactionCostPerOrder = tCO;
+		this.reorderUpToLevel = rUTL;
+		this.reorderPeriod = rP
+	}
+
+	public String getName() { return name;}
+	public QuantityUnit getQuantityUnit() { return quantityUnit;}
+	public SupplyUnit getSupplyUnit() { return supplyUnit;}
+	public int getQuantityPerProductSupplyUnit() { return quantityPerProductSupplyUnit;}
+	public double getPurchasePrice() { return purchasePrice;}
+	public int getExpirationTimeSpan() { return expirationTimeSpan;}
+	public double getTransactionCostPerOrder() { return transactionCostPerOrder;}
+	public int getReorderUpToLevel() { return reorderUpToLevel;}
+	public int getReorderPeriod() { return reorderPeriod;}
+							
+}																
+					]]></ClassDef>
+<!--				
 				<Attribute name="name" type="String"/>
 				<EnumerationProperty name="quantityUnit" type="QuantityUnit"/>
 				<EnumerationProperty name="supplyUnit" type="SupplyUnit"/>
 				<Attribute name="quantityPerProductSupplyUnit" type="Integer"/>
 				<Attribute name="purchasePrice" type="Float"/>
 				<Attribute name="expirationTimeSpan" type="Integer"/>
-<!--
-				<Attribute name="timeToDeliver" type="Integer"/>
-				<Attribute name="minOrderSize" type="Integer"/>
--->				
 				<Attribute name="transactionCostPerOrder" type="Float"/>
 				<Attribute name="reorderUpToLevel" type="Integer"/>
 				<Attribute name="reorderPeriod" type="Integer"/>
+-->			
 			</ComplexDataType>
 		</DataTypes>		
 		<EntityTypes>
@@ -156,7 +206,7 @@
 			</PhysicalAgentType>
 -->
 			<!-- ============================================ -->
-			<PhysicalAgentType name="LemonadeStand">
+			<AgentType name="LemonadeStand">
 			<!-- ============================================ -->
 				<documentation>
 					<description>
@@ -199,12 +249,12 @@
 				<!-- Sales planning decisions -->
 				<Attribute name="productSalesPrice" type="Float"/>
 				
-				<Function name="addPurchaseQuantitiesToPurchaseItemInventory" resultType="void">
+				<Function name="addPurchaseQuantitiesToInventory" resultType="void">
 					<Body language="Java"><![CDATA[
 						for (int i=1; i <= purchaseItemTypes.length; i++) {
 							purchaseItemTypes.get(i).setQuantityInStock( 
 								purchaseItemTypes.get(i).getQuantityInStock() 
-						  	+ purchaseQuantities.get(i)
+						  	+ purchaseQuantities.get(i));
 						}
 					]]></Body>
 				</Function>
@@ -213,7 +263,7 @@
 					<Body language="Java"><![CDATA[
 						int purchaseAmount = 0;
 						for (int i=1; i <= purchaseItemTypes.length; i++) {
-							purchaseAmount += purchaseQuantities.get(i) * purchaseItemTypes.get(i).getPurchasePrice() 
+							purchaseAmount += purchaseQuantities.get(i) * purchaseItemTypes.get(i).getPurchasePrice();
 						}
 						return (getAmountOfCash() - purchaseAmount);
 					]]></Body>
@@ -281,10 +331,10 @@
 						</h:ol>
 						<h:p>Finally, the lemonade stand is opened for sales.</h:p> 
 					</description></documentation>
-					<WHEN eventType="PurchaseItemsDelivery" />
+					<WHEN eventType="PurchaseItemsDelivery"/>
 					<DO>
 						<UPDATE-AGT>
-							<Call procedure="addPurchaseQuantitiesToPurchaseItemInventory"/>
+							<Call procedure="addPurchaseQuantitiesToInventory"/>
 							<Slot property="amountOfCash">
 								<ValueExpr language="Java"><![CDATA[
 									lst.subtractPurchaseAmountFromAmountOfCash()
@@ -311,16 +361,16 @@
 						amount of cash.</h:p> 
 					</description></documentation>
 					<WHEN eventType="SalesOrder"/>
-					<IF language="Java">lst.getProductQuantityInStock() > 0</IF>
+					<IF language="Java JavaScript"> lst.getProductQuantityInStock() > 0 </IF>
 					<THEN>
 						<UPDATE-AGT>
 							<Slot property="productQuantityInStock">
-								<ValueExpr language="Java">	lst.getProductQuantityInStock() - 1 </ValueExpr>
+								<ValueExpr language="Java JavaScript">	lst.getProductQuantityInStock() - 1 </ValueExpr>
 							</Slot>
 							<Slot property="amountOfCash">
-								<ValueExpr language="Java"><![CDATA[
+								<ValueExpr language="Java JavaScript">
 									lst.getAmountOfCash() + lst.getProductSalesPrice()
-								]]></ValueExpr>
+								</ValueExpr>
 							</Slot>
 						</UPDATE-AGT>
 						<SCHEDULE-EVT>
@@ -348,7 +398,7 @@
 					</DO>
 				</ReactionRule>
 					
-			</PhysicalAgentType>
+			</AgentType>
 		</EntityTypes>
 		
 		<EnvironmentRules>
@@ -443,7 +493,7 @@
 				<!-- name, quantityUnit, supplyUnit, quantityPerProductSupplyUnit, purchasePrice, expirationTimeSpan, 
 							transactionCostPerOrder, reorderUpToLevel, reorderPeriod -->
 				<ValueExpr language="Java"><![CDATA[ 
-					new ArrayList<PurchaseItemType>(){
+					new java.util.ArrayList<PurchaseItemType>(){
 						{
 							add( new PurchaseItemType("Lemon", QuantityUnit.PIECE, SupplyUnit.CRATE, 25, 7.50, 150, 2.50, 3, 100));
 							add( new PurchaseItemType("Sugar", QuantityUnit.PIECE, SupplyUnit.CRATE, 100, 1.50, 0, 2.50, 3, 100));
@@ -462,7 +512,7 @@
 			</Slot>
 			<Slot property="purchaseQuantities">
 				<ValueExpr language="Java"><![CDATA[ 
-					new ArrayList<Integer>(){
+					new java.util.ArrayList<Integer>(){
 						{
 							add( Integer(0));
 							add( Integer(0));
@@ -474,7 +524,7 @@
 			</Slot>
 			<Slot property="purchaseItemQuantitiesInStock">
 				<ValueExpr language="Java"><![CDATA[ 
-					new ArrayList<Integer>(){
+					new java.util.ArrayList<Integer>(){
 						{
 							add( Integer(0));
 							add( Integer(0));
@@ -486,7 +536,7 @@
 			</Slot>
 			<Slot property="inputQuantitiesPerProductSupplyUnit">
 				<ValueExpr language="Java"><![CDATA[ 
-					new ArrayList<Integer>(){
+					new java.util.ArrayList<Integer>(){
 						{
 							add( Integer(0));
 							add( Integer(0));
@@ -498,7 +548,7 @@
 			</Slot>
 			<Slot property="inputQuantitiesPerProductBatch">
 				<ValueExpr language="Java"><![CDATA[ 
-					new ArrayList<Integer>(){
+					new java.util.ArrayList<Integer>(){
 						{
 							add( Integer(2));  // lemons
 							add( Integer(10)); // sugar cubes
