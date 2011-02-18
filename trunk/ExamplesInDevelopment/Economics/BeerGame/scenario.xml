@@ -1,21 +1,16 @@
 <?xml version="1.0"?>
 <?xml-stylesheet type="text/xsl" href="prettyprint.xsl"?>
-<SimulationScenario xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
- xsi:schemaLocation="http://aor-simulation.org ../../../AORSL/AORSL_0-8-4.xsd"
- xmlns:dc="http://purl.org/dc/elements/1.1/"
- xmlns="http://aor-simulation.org"
- xmlns:aors="http://aor-simulation.org"
- scenarioName="BeerGame"
- scenarioTitle="The MIT Beer Game"
- simulationManagerDirectory="../../.."
- version="0.8.4">
-  <SimulationParameters randomSeed="100" simulationSteps="364" stepDuration="7" stepTimeDelay="1"
+<SimulationScenario scenarioName="BeerGame" scenarioTitle="The MIT Beer Game"
+  simulationManagerDirectory="../../.." version="0.8.4" xmlns="http://aor-simulation.org"
+  xmlns:aors="http://aor-simulation.org" xmlns:dc="http://purl.org/dc/elements/1.1/"
+  xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+  xsi:schemaLocation="http://aor-simulation.org ../../../../../Simulario-PHP/trunk/web/html/ext/aorsl/AORSL_0-8-4.xsd">
+  <SimulationParameters randomSeed="100" simulationSteps="364" stepDuration="7" stepTimeDelay="50"
     timeUnit="D" />
   <SimulationModel modelName="BeerGame" modelTitle="The MIT Beer Game">
     <documentation>
       <dc:creator>Oana Nicolae</dc:creator>
       <dc:contributor>Daniel Draeger</dc:contributor>
-      <dc:contributor>Mircea Diaconescu</dc:contributor>
       <dc:created>20090501</dc:created>
       <dc:modified>20100123</dc:modified>
       <description> This model describes the classical MIT Beer Game
@@ -105,8 +100,7 @@
         <!-- ==================================== -->
         <PeriodicTimeEventType name="EndOfWeek" periodicity="7" />
         <OutMessageActionRule messageType="Order" messageVariable="order">
-          <IF language="Java"><![CDATA[this.order.getQuantity() > 0]]></IF>
-          <IF language="JavaScript"><![CDATA[this.order.getQuantity() > 0]]></IF>
+          <IF language="Java JavaScript"><![CDATA[this.order.getQuantity() > 0]]></IF>
           <THEN />
         </OutMessageActionRule>
       </AgentType>
@@ -140,25 +134,15 @@
             </dc:description>
           </documentation>
           <WHEN eventType="EndOfWeek" />
-          <IF language="Java">
+          <IF language="Java JavaScript">
             <![CDATA[
-				      this.node.getCurrentSalesOrderQuantity() > 0 
-         	  ]]>
-          </IF>
-          <IF language="JavaScript">
-            <![CDATA[
-				      this.node.getCurrentSalesOrderQuantity() > 0 
-         	  ]]>
+				this.node.getCurrentSalesOrderQuantity() > 0 
+         	]]>
           </IF>
           <THEN>
             <UPDATE-AGT>
               <Slot property="outDelivery">
-                <ValueExpr language="Java">
-                  <![CDATA[
-										this.node.getCurrentSalesOrderQuantity()
-									]]>
-                </ValueExpr>
-                <ValueExpr language="JavaScript">
+                <ValueExpr language="Java JavaScript">
                   <![CDATA[
 										this.node.getCurrentSalesOrderQuantity()
 									]]>
@@ -168,11 +152,9 @@
             </UPDATE-AGT>
             <SCHEDULE-EVT>
               <OutMessageEventExpr delay="13" messageType="BeerDelivery">
-                <ReceiverIdRef language="Java">this.node.getId() + 1</ReceiverIdRef>
-                <ReceiverIdRef language="JavaScript">this.node.getId() + 1</ReceiverIdRef>
+                <ReceiverIdRef language="Java JavaScript">this.node.getId() + 1</ReceiverIdRef>
                 <Slot property="quantity">
-                  <ValueExpr language="Java">this.node.getOutDelivery()</ValueExpr>
-                  <ValueExpr language="JavaScript">this.node.getOutDelivery()</ValueExpr>
+                  <ValueExpr language="Java JavaScript">this.node.getOutDelivery()</ValueExpr>
                 </Slot>
               </OutMessageEventExpr>
             </SCHEDULE-EVT>
@@ -188,12 +170,11 @@
         <!-- backorderQuantity: orders of previous cycles that aren't fulfilled yet -->
         <Attribute name="backorderQuantity" type="Integer" />
         <!-- the last order value that this agent made -->
-        <Attribute name="myLastOrder" type="Integer"/>
+        <Attribute name="myLastOrder" type="Integer" />
         <!--  -->
-        <Attribute type="Boolean" name="sendOrder" initialValue="false"/>
+        <Attribute initialValue="false" name="sendOrder" type="Boolean" />
         <!-- costs: costs at the end of the week -->
         <Attribute name="costs" type="Float" />
-        
         <!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->
         <!-- STEP 1: InComingOrder and InComingDeliveries -->
         <ReactionRule agentVariable="node" name="Order_Rule">
@@ -206,8 +187,7 @@
           <DO>
             <UPDATE-AGT>
               <Slot property="currentSalesOrderQuantity">
-                <ValueExpr language="Java">this.msg.getQuantity()</ValueExpr>
-                <ValueExpr language="JavaScript">this.msg.getQuantity()</ValueExpr>
+                <ValueExpr language="Java JavaScript">this.msg.getQuantity()</ValueExpr>
               </Slot>
             </UPDATE-AGT>
           </DO>
@@ -223,13 +203,12 @@
           <DO>
             <UPDATE-AGT>
               <Slot property="inventory">
-                <ValueExpr language="Java">this.node.getInventory() + this.msg.getQuantity()</ValueExpr>
-                <ValueExpr language="JavaScript">this.node.getInventory() + this.msg.getQuantity()</ValueExpr>
+                <ValueExpr language="Java JavaScript">this.node.getInventory() +
+                  this.msg.getQuantity()</ValueExpr>
               </Slot>
             </UPDATE-AGT>
           </DO>
         </ReactionRule>
-        
         <!-- STEP 2: OutDeliveries -->
         <!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->
         <ReactionRule agentVariable="node" name="EndOfWeek_ShippingPartialOrder_Rule">
@@ -241,12 +220,7 @@
               corresponding beer delivery message is sent to the downstream node. </dc:description>
           </documentation>
           <WHEN eventType="EndOfWeek" />
-          <IF language="Java">
-            <![CDATA[
-							(this.node.getInventory() < (this.node.getCurrentSalesOrderQuantity() + this.node.getBackorderQuantity()))
-			      ]]>
-          </IF>
-          <IF language="JavaScript">
+          <IF language="Java JavaScript">
             <![CDATA[
 							(this.node.getInventory() < (this.node.getCurrentSalesOrderQuantity() + this.node.getBackorderQuantity()))
 			      ]]>
@@ -254,16 +228,10 @@
           <THEN>
             <UPDATE-AGT>
               <Slot property="outDelivery">
-                <ValueExpr language="Java">this.node.getInventory()</ValueExpr>
-                <ValueExpr language="JavaScript">this.node.getInventory()</ValueExpr>
+                <ValueExpr language="Java JavaScript">this.node.getInventory()</ValueExpr>
               </Slot>
               <Slot property="backorderQuantity">
-                <ValueExpr language="Java">
-                  <![CDATA[
-										(this.node.getBackorderQuantity() + this.node.getCurrentSalesOrderQuantity()) - this.node.getInventory()       				
-				       		]]>
-                </ValueExpr>
-                <ValueExpr language="JavaScript">
+                <ValueExpr language="Java JavaScript">
                   <![CDATA[
 										(this.node.getBackorderQuantity() + this.node.getCurrentSalesOrderQuantity()) - this.node.getInventory()       				
 				       		]]>
@@ -273,13 +241,10 @@
             </UPDATE-AGT>
             <SCHEDULE-EVT>
               <OutMessageEventExpr delay="13" messageType="BeerDelivery">
-                <Condition language="Java">this.node.getOutDelivery() > 0</Condition>
-                <Condition language="JavaScript">this.node.getOutDelivery() > 0</Condition>
-                <ReceiverIdRef language="Java">this.node.getId() + 1</ReceiverIdRef>
-                <ReceiverIdRef language="JavaScript">this.node.getId() + 1</ReceiverIdRef>
+                <Condition language="Java JavaScript">this.node.getOutDelivery() > 0</Condition>
+                <ReceiverIdRef language="Java JavaScript">this.node.getId() + 1</ReceiverIdRef>
                 <Slot property="quantity">
-                  <ValueExpr language="Java">this.node.getOutDelivery()</ValueExpr>
-                  <ValueExpr language="JavaScript">this.node.getOutDelivery()</ValueExpr>
+                  <ValueExpr language="Java JavaScript">this.node.getOutDelivery()</ValueExpr>
                 </Slot>
               </OutMessageEventExpr>
             </SCHEDULE-EVT>
@@ -294,13 +259,7 @@
               corresponding beer delivery message is sent to the downstream node. </dc:description>
           </documentation>
           <WHEN eventType="EndOfWeek" />
-          <IF language="Java">
-            <![CDATA[
-							this.node.getInventory() >= (this.node.getCurrentSalesOrderQuantity() + this.node.getBackorderQuantity()) 
-							&& ((this.node.getCurrentSalesOrderQuantity() + this.node.getBackorderQuantity()) >= 0)
-        		]]>
-          </IF>
-          <IF language="JavaScript">
+          <IF language="Java JavaScript">
             <![CDATA[
 							this.node.getInventory() >= (this.node.getCurrentSalesOrderQuantity() + this.node.getBackorderQuantity()) 
 							&& ((this.node.getCurrentSalesOrderQuantity() + this.node.getBackorderQuantity()) >= 0)
@@ -309,24 +268,14 @@
           <THEN>
             <UPDATE-AGT>
               <Slot property="outDelivery">
-                <ValueExpr language="Java">
-                  <![CDATA[
-										this.node.getCurrentSalesOrderQuantity() + this.node.getBackorderQuantity()       				
-				       		]]>
-                </ValueExpr>
-                <ValueExpr language="JavaScript">
+                <ValueExpr language="Java JavaScript">
                   <![CDATA[
 										this.node.getCurrentSalesOrderQuantity() + this.node.getBackorderQuantity()       				
 				       		]]>
                 </ValueExpr>
               </Slot>
               <Slot property="inventory">
-                <ValueExpr language="Java">
-                  <![CDATA[
-										this.node.getInventory() - this.node.getOutDelivery()       				
-				       		]]>
-                </ValueExpr>
-                <ValueExpr language="JavaScript">
+                <ValueExpr language="Java JavaScript">
                   <![CDATA[
 										this.node.getInventory() - this.node.getOutDelivery()       				
 				       		]]>
@@ -336,37 +285,26 @@
             </UPDATE-AGT>
             <SCHEDULE-EVT>
               <OutMessageEventExpr delay="13" messageType="BeerDelivery">
-                <ReceiverIdRef language="Java">this.node.getId() + 1</ReceiverIdRef>
-                <ReceiverIdRef language="JavaScript">this.node.getId() + 1</ReceiverIdRef>
+                <ReceiverIdRef language="Java JavaScript">this.node.getId() + 1</ReceiverIdRef>
                 <Slot property="quantity">
-                  <ValueExpr language="Java">this.node.getOutDelivery()</ValueExpr>
-                  <ValueExpr language="JavaScript">this.node.getOutDelivery()</ValueExpr>
+                  <ValueExpr language="Java JavaScript">this.node.getOutDelivery()</ValueExpr>
                 </Slot>
               </OutMessageEventExpr>
             </SCHEDULE-EVT>
           </THEN>
         </ReactionRule>
-        
         <!-- STEP 3: OutOrders -->
         <!--  #### inventory == 0  AND myLastOrder - backorder < 2 * currentSalesOrder #### -->
         <!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->
         <ReactionRule agentVariable="node" name="EndOfWeek_OrderingBeer_R1_Rule">
           <!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->
           <documentation>
-            <dc:description> 
-              This node has no inventory and no backorders for now. This is a margin case, but is very possible to appear.
-              In this case, the node will order twice as the last order request it gets plus some random beer value.
-            </dc:description>
+            <dc:description> This node has no inventory and no backorders for now. This is a margin
+              case, but is very possible to appear. In this case, the node will order twice as the
+              last order request it gets plus some random beer value. </dc:description>
           </documentation>
           <WHEN eventType="EndOfWeek" />
-          <IF language="Java">
-            <![CDATA[
-              !this.node.isSendOrder() &&
-              this.node.getInventory() == 0 && 
-							(this.node.getMyLastOrder() - this.node.getBackorderQuantity() < 2 * this.node.getCurrentSalesOrderQuantity())
-			   		]]>
-          </IF>
-          <IF language="JavaScript">
+          <IF language="Java JavaScript">
             <![CDATA[
               !this.node.isSendOrder() &&
               this.node.getInventory() == 0 && 
@@ -389,19 +327,13 @@
                   ]]>
                 </ValueExpr>
               </Slot>
-              <Slot property="sendOrder" value="true"/>
+              <Slot property="sendOrder" value="true" />
             </UPDATE-AGT>
             <SCHEDULE-EVT>
               <OutMessageEventExpr delay="6" messageType="Order">
-                <ReceiverIdRef language="Java">this.node.getId() - 1</ReceiverIdRef>
-                <ReceiverIdRef language="JavaScript">this.node.getId() - 1</ReceiverIdRef>
+                <ReceiverIdRef language="Java JavaScript">this.node.getId() - 1</ReceiverIdRef>
                 <Slot property="quantity">
-                  <ValueExpr language="Java">
-                    <![CDATA[
-											this.node.getMyLastOrder()
-										]]>
-                  </ValueExpr>
-                  <ValueExpr language="JavaScript">
+                  <ValueExpr language="Java JavaScript">
                     <![CDATA[
 											this.node.getMyLastOrder()
 										]]>
@@ -411,27 +343,18 @@
             </SCHEDULE-EVT>
           </THEN>
         </ReactionRule>
-        
         <!--  #### inventory == 0 AND myLastOrder - backorder >= 2 * currentSalesOrder #### -->
         <!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->
         <ReactionRule agentVariable="node" name="EndOfWeek_OrderingBeer_R2_Rule">
           <!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->
           <documentation>
-            <dc:description> 
-              This node has no inventory but it has backorders. 
-              In this case, the node will make an order that will try to raise the inventor to a value of twice 
-              the last order he receive from the node above plus some random extra amount.
+            <dc:description> This node has no inventory but it has backorders. In this case, the
+              node will make an order that will try to raise the inventor to a value of twice the
+              last order he receive from the node above plus some random extra amount.
             </dc:description>
           </documentation>
           <WHEN eventType="EndOfWeek" />
-          <IF language="Java">
-            <![CDATA[
-              !this.node.isSendOrder() &&
-							this.node.getInventory() == 0 && 
-							(this.node.getMyLastOrder() - this.node.getBackorderQuantity() >=  2 * this.node.getCurrentSalesOrderQuantity())
-			   		]]>
-          </IF>
-          <IF language="JavaScript">
+          <IF language="Java JavaScript">
             <![CDATA[
               !this.node.isSendOrder() &&
 							this.node.getInventory() == 0 && 
@@ -442,24 +365,17 @@
             <UPDATE-AGT>
               <Slot property="myLastOrder">
                 <RandomVariable>
-                  <UniformInt lowerBound="0" upperBound="5"/>
+                  <UniformInt lowerBound="0" upperBound="5" />
                 </RandomVariable>
               </Slot>
-              <Slot property="sendOrder" value="true"/>
+              <Slot property="sendOrder" value="true" />
             </UPDATE-AGT>
             <SCHEDULE-EVT>
               <OutMessageEventExpr delay="6" messageType="Order">
-                <Condition language="Java">this.node.getMyLastOrder() > 0</Condition>
-                <Condition language="JavaScript">this.node.getMyLastOrder() > 0</Condition>
-                <ReceiverIdRef language="Java">this.node.getId() - 1</ReceiverIdRef>
-                <ReceiverIdRef language="JavaScript">this.node.getId() - 1</ReceiverIdRef>
+                <Condition language="Java JavaScript">this.node.getMyLastOrder() > 0</Condition>
+                <ReceiverIdRef language="Java JavaScript">this.node.getId() - 1</ReceiverIdRef>
                 <Slot property="quantity">
-                  <ValueExpr language="Java">
-                    <![CDATA[
-											this.node.getMyLastOrder()
-										]]>
-                  </ValueExpr>
-                  <ValueExpr language="JavaScript">
+                  <ValueExpr language="Java JavaScript">
                     <![CDATA[
 											this.node.getMyLastOrder()
 										]]>
@@ -469,20 +385,12 @@
             </SCHEDULE-EVT>
           </THEN>
         </ReactionRule>
-        
         <!--  #### inventory > 0  AND inventory + myLastOrder < 2 * currentSalesOrderQuantity #### -->
         <!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->
         <ReactionRule agentVariable="node" name="EndOfWeek_OrderingBeer_R3_Rule">
           <!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->
           <WHEN eventType="EndOfWeek" />
-          <IF language="Java">
-            <![CDATA[
-              !this.node.isSendOrder() &&
-              this.node.getInventory() > 0  &&
-							(this.node.getInventory() + this.node.getMyLastOrder() < 2 * this.node.getCurrentSalesOrderQuantity())							
-			  	  ]]>
-          </IF>
-          <IF language="JavaScript">
+          <IF language="Java JavaScript">
             <![CDATA[
               !this.node.isSendOrder() &&
               this.node.getInventory() > 0  &&
@@ -505,19 +413,13 @@
                   ]]>
                 </ValueExpr>
               </Slot>
-              <Slot property="sendOrder" value="true"/>
+              <Slot property="sendOrder" value="true" />
             </UPDATE-AGT>
             <SCHEDULE-EVT>
               <OutMessageEventExpr delay="6" messageType="Order">
-                <ReceiverIdRef language="Java">this.node.getId() - 1</ReceiverIdRef>
-                <ReceiverIdRef language="JavaScript">this.node.getId() - 1</ReceiverIdRef>
+                <ReceiverIdRef language="Java JavaScript">this.node.getId() - 1</ReceiverIdRef>
                 <Slot property="quantity">
-                  <ValueExpr language="Java">
-                    <![CDATA[
-											this.node.getMyLastOrder()
-       							]]>
-                  </ValueExpr>
-                  <ValueExpr language="JavaScript">
+                  <ValueExpr language="Java JavaScript">
                     <![CDATA[
 											this.node.getMyLastOrder()
        							]]>
@@ -527,20 +429,12 @@
             </SCHEDULE-EVT>
           </THEN>
         </ReactionRule>
-        
         <!--  #### inventory > 0  AND inventory + myLastOrder  >= 2 * currentSalesOrderQuantity -->
         <!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->
         <ReactionRule agentVariable="node" name="EndOfWeek_OrderingBeer_R4_Rule">
           <!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->
           <WHEN eventType="EndOfWeek" />
-          <IF language="Java">
-            <![CDATA[
-              !this.node.isSendOrder() &&
-              this.node.getInventory() > 0  &&
-							(this.node.getInventory() + this.node.getMyLastOrder() >= 2 * this.node.getCurrentSalesOrderQuantity())							
-			  	  ]]>
-          </IF>
-          <IF language="JavaScript">
+          <IF language="Java JavaScript">
             <![CDATA[
               !this.node.isSendOrder() &&
               this.node.getInventory() > 0  &&
@@ -550,25 +444,18 @@
           <THEN>
             <UPDATE-AGT>
               <Slot property="myLastOrder">
-                  <RandomVariable>
-                    <UniformInt lowerBound="1" upperBound="3"/>
-                  </RandomVariable>
+                <RandomVariable>
+                  <UniformInt lowerBound="1" upperBound="3" />
+                </RandomVariable>
               </Slot>
-              <Slot property="sendOrder" value="true"/>
+              <Slot property="sendOrder" value="true" />
             </UPDATE-AGT>
             <SCHEDULE-EVT>
               <OutMessageEventExpr delay="6" messageType="Order">
-                <Condition language="Java">this.node.getMyLastOrder() > 0</Condition>
-                <Condition language="JavaScript">this.node.getMyLastOrder() > 0</Condition>
-                <ReceiverIdRef language="Java">this.node.getId() - 1</ReceiverIdRef>
-                <ReceiverIdRef language="JavaScript">this.node.getId() - 1</ReceiverIdRef>
+                <Condition language="Java JavaScript">this.node.getMyLastOrder() > 0</Condition>
+                <ReceiverIdRef language="Java JavaScript">this.node.getId() - 1</ReceiverIdRef>
                 <Slot property="quantity">
-                  <ValueExpr language="Java">
-                    <![CDATA[
-                      this.node.getMyLastOrder()
-                    ]]>
-                  </ValueExpr>
-                  <ValueExpr language="JavaScript">
+                  <ValueExpr language="Java JavaScript">
                     <![CDATA[
                       this.node.getMyLastOrder()
                     ]]>
@@ -578,7 +465,6 @@
             </SCHEDULE-EVT>
           </THEN>
         </ReactionRule>
-        
         <!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->
         <ReactionRule agentVariable="node" name="EndOfWeek_CostCalculation_Rule">
           <!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->
@@ -590,12 +476,7 @@
           <DO>
             <UPDATE-AGT>
               <Slot property="costs">
-                <ValueExpr language="Java">
-                  <![CDATA[
-										this.node.getCosts() + (1 * this.node.getInventory()) + (2 * this.node.getBackorderQuantity())        				
-			        		]]>
-                </ValueExpr>
-                <ValueExpr language="JavaScript">
+                <ValueExpr language="Java JavaScript">
                   <![CDATA[
 										this.node.getCosts() + (1 * this.node.getInventory()) + (2 * this.node.getBackorderQuantity())        				
 			        		]]>
@@ -603,7 +484,7 @@
               </Slot>
               <!-- clean up -->
               <Slot property="currentSalesOrderQuantity" value="0" />
-              <Slot property="sendOrder" value="false"/>
+              <Slot property="sendOrder" value="false" />
             </UPDATE-AGT>
           </DO>
         </ReactionRule>
@@ -632,11 +513,9 @@
           </UPDATE-ENV>
           <SCHEDULE-EVT>
             <InMessageEventExpr messageType="Order" senderIdRef="5">
-              <ReceiverIdRef language="Java">this.retailer.getId()</ReceiverIdRef>
-              <ReceiverIdRef language="JavaScript">this.retailer.getId()</ReceiverIdRef>
+              <ReceiverIdRef language="Java JavaScript">this.retailer.getId()</ReceiverIdRef>
               <Slot property="quantity">
-                <ValueExpr language="Java">this.customer.getOrder()</ValueExpr>
-                <ValueExpr language="JavaScript">this.customer.getOrder()</ValueExpr>
+                <ValueExpr language="Java JavaScript">this.customer.getOrder()</ValueExpr>
               </Slot>
             </InMessageEventExpr>
           </SCHEDULE-EVT>
@@ -690,8 +569,8 @@
       <Slot property="inventory" value="20" />
       <PeriodicTimeEvent occurrenceTime="7" type="EndOfWeek" />
     </Agent>
-    <ExogenousEvent occurrenceTime="1" type="CustomerDemand" />
     <ExogenousEvent occurrenceTime="7" type="EndOfSystemWeek" />
+    <ExogenousEvent occurrenceTime="1" type="CustomerDemand" />
   </InitialState>
   <UserInterface>
     <StatisticsUI>
@@ -1055,10 +934,7 @@
       </Views>
       <AgentControlUI roundEventType="EndOfSystemWeek" waitForUserInput="true">
         <ControllableAgentType
-          suspendRules="EndOfWeek_OrderingBeer_R1_Rule 
-          				EndOfWeek_OrderingBeer_R2_Rule 
-          				EndOfWeek_OrderingBeer_R3_Rule 
-          				EndOfWeek_OrderingBeer_R4_Rule"
+          suspendRules="EndOfWeek_OrderingBeer_R1_Rule EndOfWeek_OrderingBeer_R2_Rule EndOfWeek_OrderingBeer_R3_Rule EndOfWeek_OrderingBeer_R4_Rule"
           type="IntermediarySupplyChainNode">
           <GUI defaultLanguage="en">
             <Style type="text/css">
@@ -1066,7 +942,7 @@
 							div#documentBody {
 							  position: relative;
 							  display: block;
-							  margin: 25px auto;
+							  margin: 20px auto;
 							  border: 1px solid black;
 							  width: 35em;
 							  background-color: white;
@@ -1252,7 +1128,7 @@
                     </dt>
                     <dd style="background-color: rgb(221, 221, 221);">
                       <textfield class="textfield" id="inventory" property="inventory"
-                        readonly="true" type="Integer" style="background-color: rgb(221, 221, 221);"/>
+                        readonly="true" style="background-color: rgb(221, 221, 221);" type="Integer" />
                       <multilingualContent xml:lang="en"> bottles</multilingualContent>
                     </dd>
                     <dt style="background: rgb(255, 220, 220);">
@@ -1262,8 +1138,8 @@
                     </dt>
                     <dd style="background: rgb(255, 220, 220);">
                       <textfield class="textfield" id="backorderQuantity"
-                        property="backorderQuantity" readonly="true" type="Integer" 
-                        style="background: rgb(255, 220, 220);"/>
+                        property="backorderQuantity" readonly="true"
+                        style="background: rgb(255, 220, 220);" type="Integer" />
                       <multilingualContent xml:lang="en"> bottles</multilingualContent>
                     </dd>
                     <dt>
@@ -1279,8 +1155,7 @@
                     </dd>
                     <dt>
                       <label for="outdelivery">
-                        <multilingualContent xml:lang="en">Your last order:
-                        </multilingualContent>
+                        <multilingualContent xml:lang="en">Your last order: </multilingualContent>
                       </label>
                     </dt>
                     <dd>
@@ -1295,7 +1170,7 @@
                     </dt>
                     <dd style="background: rgb(220, 255, 220);">
                       <textfield class="textfield" id="costs" property="costs" readonly="true"
-                        type="Integer"  style="background: rgb(220, 255, 220);" />
+                        style="background: rgb(220, 255, 220);" type="Integer" />
                       <multilingualContent xml:lang="en"> €</multilingualContent>
                     </dd>
                   </dl>
@@ -1349,11 +1224,10 @@
                       <title xml:lang="en">send beer order</title>
                     </button>
                   </p>
-                  <p style="margin-top: 7px; margin-bottom:7px; font-size:9px;" >
-                    <multilingualContent xml:lang="en">
-                      *You need to push the &#160;<code style="background: rgb(220, 220, 220);">
-                        &#160;send beer order&#160;</code>&#160; button to place an order.
-                    </multilingualContent>
+                  <p style="margin-top: 7px; margin-bottom:7px; font-size:9px;">
+                    <multilingualContent xml:lang="en"> *You need to push the &#160;<code
+                        style="background: rgb(220, 220, 220);"> &#160;send beer
+                      order&#160;</code>&#160; button to place an order. </multilingualContent>
                   </p>
                 </div>
               </div>
