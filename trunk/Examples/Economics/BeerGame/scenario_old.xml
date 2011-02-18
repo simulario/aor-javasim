@@ -1,0 +1,1137 @@
+<?xml version="1.0"?>
+<?xml-stylesheet type="text/xsl" href="prettyprint.xsl"?>
+
+<SimulationScenario xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xsi:schemaLocation="http://aor-simulation.org ../../../AORSL/AORSL_0-8-4.xsd"
+	version="0.8.4"  
+  xmlns="http://aor-simulation.org" xmlns:aors="http://aor-simulation.org"
+  xmlns:dc="http://purl.org/dc/elements/1.1/"
+  scenarioName="BeerGame" scenarioTitle="The MIT Beer Game"
+  simulationManagerDirectory="../../..">
+
+  <SimulationParameters simulationSteps="364" stepDuration="1" timeUnit="D" stepTimeDelay="10"/>
+
+  <SimulationModel modelName="BeerGame" modelTitle="The MIT Beer Game">
+    <documentation>
+    	<dc:creator>Oana Nicolae</dc:creator>
+    	<dc:contributor>Daniel Draeger</dc:contributor>
+    	<dc:created>20090501</dc:created>
+    	<dc:modified>20100123</dc:modified>
+    	<description>
+    		This model describes the classical MIT Beer Game (http://web.mit.edu/jsterman/www/SDG/beergame.html). 
+    		It is a management simulation with a beer supply chain consisting of four nodes: the Retailer, the Wholesaler, 
+    		the Distributor and the Factory. 
+    		Every intermediate node has one upstream node to order and receive beer from and one downstream node to receive 
+    		orders from and to delivery beer to. An order takes 7 days and a delivery takes 14 days. 
+    		At the end of a week every node decides how much beer to order and calculates its costs for current stock and outstanding orders.
+    	</description>
+    </documentation>
+    
+    <Statistics>
+    	<Variable name="customerDemand" dataType="Integer">
+    		<Source aggregationFunction="avg">
+    			<ObjectProperty property="order" objectType="Customer"/>
+    		</Source>
+    	</Variable>
+    	<Variable name="factoryDelivery" dataType="Integer">
+    		<Source>
+    			<ObjectProperty property="currentSalesOrderQuantity" objectType="TopSupplyChainNode" objectIdRef="1" />
+    		</Source>
+    	</Variable>
+    	<Variable name="distributorInventory" dataType="Integer">
+    		<Source>
+    			<ObjectProperty property="inventory" objectType="IntermediarySupplyChainNode" objectIdRef="2" />
+    		</Source>
+    	</Variable>    	
+    	<Variable name="distributorCosts" dataType="Float">
+    		<Source>
+    			<ObjectProperty property="costs" objectType="IntermediarySupplyChainNode" objectIdRef="2" />
+    		</Source>
+    	</Variable>
+    	<Variable name="wholesalerInventory" dataType="Integer">
+    		<Source>
+    			<ObjectProperty property="inventory" objectType="IntermediarySupplyChainNode" objectIdRef="3" />
+    		</Source>
+    	</Variable>    	
+    	<Variable name="wholesalerCosts" dataType="Float">
+    		<Source>
+    			<ObjectProperty property="costs" objectType="IntermediarySupplyChainNode" objectIdRef="3" />
+    		</Source>
+    	</Variable>
+    	<Variable name="retailerInventory" dataType="Integer">
+    		<Source>
+    			<ObjectProperty property="inventory" objectType="BottomSupplyChainNode" objectIdRef="4" />
+    		</Source>
+    	</Variable>    	
+    	<Variable name="retailerCosts" dataType="Float">
+    		<Source>
+    			<ObjectProperty property="costs" objectType="BottomSupplyChainNode" objectIdRef="4" />
+    		</Source>
+    	</Variable>  	
+      <Variable name="systemCosts" dataType="Float" />     
+    </Statistics>
+    
+  <EntityTypes>
+    <!-- message types -->
+  	<!-- ==========================-->
+  	<MessageType name="Order">
+  		<!-- ==========================-->
+  		<Attribute name="quantity" type="Integer"/>
+    </MessageType>
+  	<!-- ==========================-->
+  	<MessageType name="BeerDelivery">
+  		<!-- ==========================-->
+  		<Attribute name="quantity" type="Integer"/>
+    </MessageType>
+    
+    <ExogenousEventType name="CustomerDemand" periodicity="7" />
+    <ExogenousEventType name="EndOfSystemWeek" periodicity="7" />
+    
+  	<!-- ==========================-->
+  	<AgentType name="Customer">
+  		<!-- ==========================-->
+  	  <Attribute name="order" type="Integer"/>
+    </AgentType>      
+  	<!-- ====================================-->
+    <AgentType name="AbstractSupplyChainNode">
+    	<!-- ====================================-->      
+        <!--  currentSalesOrderQuantity: the orders received in the current cycle  -->
+        <Attribute name="currentSalesOrderQuantity" type="Integer"/>
+        <!--  outDelivery: the total amount of products delivered at the end of the week  -->
+        <Attribute name="outDelivery" type="Integer"/>  
+    	<!-- ====================================-->
+        <PeriodicTimeEventType name="EndOfWeek">
+        	<!-- ====================================-->
+          <Periodicity><ValueExpr language="Java">7</ValueExpr></Periodicity>
+        </PeriodicTimeEventType>                    
+      </AgentType>
+  	<!-- ==================================================================== -->
+  	<AgentType name="TopSupplyChainNode" superType="AbstractSupplyChainNode"> 
+  		<!-- ==================================================================== -->
+  		<!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->
+  		<ReactionRule name="Order_Rule" agentVariable="node">
+  			<!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->
+  			<documentation>
+  				<dc:description>
+  					When an order comes in, the currentSalesOrderQuantity is incremented by the ordered quantity.
+  				</dc:description>
+  			</documentation>
+  			<WHEN eventType="InMessageEvent" messageType="Order" messageVariable="msg"/>
+  			<DO>
+  				<UPDATE-AGT>
+  					<Slot property="currentSalesOrderQuantity">
+  					  <PropertyValueExpr objectVariable="msg" property="quantity"/>
+  					</Slot>
+  				</UPDATE-AGT>
+  			</DO>
+  		</ReactionRule>   
+  		<!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~-->
+  		<ReactionRule name="EndOfWeek_ShippingBeer_Rule" agentVariable="node">
+  			<!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~-->
+  			<documentation>
+  				<dc:description>
+  					At the end of a week, the Factory sends the outDelivery amount of bier to the downstream node. 
+  					The outDelivery amount is equal with the currentSalesOrderQuantity. 
+  					The currentSalesOrderQuantity becames zero.
+  				</dc:description></documentation>
+  			<WHEN eventType="EndOfWeek"/>
+  			<IF language="Java">
+  				<![CDATA[
+					node.getCurrentSalesOrderQuantity() > 0 
+         		]]>
+  			</IF>
+  			<THEN>
+  				<UPDATE-AGT>
+  					<Slot property="outDelivery">
+  					  <PropertyValueExpr objectVariable="node" property="currentSalesOrderQuantity"/>
+  					</Slot>
+  					<Slot property="currentSalesOrderQuantity" value="0"/>
+  				</UPDATE-AGT>
+  				<SCHEDULE-EVT>
+  					<OutMessageEventExpr messageType="BeerDelivery" delay="13">
+  						<ReceiverIdRef language="Java">node.getId() + 1</ReceiverIdRef>
+  						<Slot property="quantity">
+  						  <PropertyValueExpr objectVariable="node" property="outDelivery"/>
+  						</Slot>
+  					</OutMessageEventExpr>
+  				</SCHEDULE-EVT>
+  			</THEN>
+  		</ReactionRule>    
+  	</AgentType>  
+  	<!-- =========================================================================== -->
+  	<AgentType name="IntermediarySupplyChainNode" superType="AbstractSupplyChainNode">
+  	<!-- =========================================================================== --> 		
+      <!--  inventory: the current beer in stock  -->
+      <Attribute name="inventory" type="Integer"/>   
+      <!--  backorderQuantity: orders of previous cycles that aren't fulfilled yet  -->
+      <Attribute name="backorderQuantity" type="Integer"/>   
+      <!--  costs: costs at the end of the week  -->
+      <Attribute name="costs" type="Float"/>    
+      <!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->
+      <ReactionRule name="Order_Rule" agentVariable="node">
+        <!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->
+        <documentation>
+        	<dc:description>
+        		When an order comes in, the currentSalesOrderQuantity is incremented by the ordered quantity.
+        	</dc:description>
+        </documentation>
+        <WHEN eventType="InMessageEvent" messageType="Order" messageVariable="msg"/>
+       <DO>
+       	<UPDATE-AGT>
+       		<Slot property="currentSalesOrderQuantity">
+       		  <PropertyValueExpr objectVariable="msg" property="quantity"/>
+       		</Slot>
+       	</UPDATE-AGT>
+       </DO>
+      </ReactionRule>        
+      <!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~-->
+      <ReactionRule name="BeerDelivery_Rule" agentVariable="node">
+        <!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~-->
+        <documentation>
+        	<dc:description>
+        		When a beer delivery message comes in, the inventory is incremented by the quantity of delivered beer.
+        	</dc:description>
+        </documentation>
+        <WHEN eventType="InMessageEvent" messageType="BeerDelivery" messageVariable="msg"/>
+        <DO>
+        	<UPDATE-AGT>
+        		<Slot property="inventory">
+        			<ValueExpr language="Java">
+        				<![CDATA[
+							node.getInventory() + msg.getQuantity()       				
+        		 		]]>
+        			</ValueExpr>
+        		</Slot>
+        	</UPDATE-AGT>
+        </DO>
+      </ReactionRule>      
+  		<!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~-->
+  		<ReactionRule name="EndOfWeek_OrderingBeer_Backorder_Rule" agentVariable="node">
+  			<!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~-->
+  			<documentation>
+  				<dc:description> 
+  					An agent rule for ordering new beer: the node orders the amount of beer ordered last turn by the customer 
+  					plus the backorder and a random amount between 0 and 5. 
+  				</dc:description>
+  			</documentation>
+  			<WHEN eventType="EndOfWeek"/>
+  			<IF language="Java">
+  				<![CDATA[
+					node.getBackorderQuantity() > 0
+			   	]]>
+  			</IF>
+  			<THEN>
+  				<SCHEDULE-EVT>
+  					<OutMessageEventExpr messageType="Order" delay="6">
+  						<ReceiverIdRef language="Java">node.getId() - 1</ReceiverIdRef>
+  						<Slot property="quantity">
+  							<ValueExpr language="Java">
+  								<![CDATA[
+									node.getCurrentSalesOrderQuantity() + node.getBackorderQuantity() + Random.uniformInt(0,5)       				
+       							]]>
+  							</ValueExpr>
+  						</Slot>
+  					</OutMessageEventExpr>
+  				</SCHEDULE-EVT>
+  			</THEN>
+  		</ReactionRule>   
+  		<!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~-->
+  		<ReactionRule name="EndOfWeek_OrderingBeer_Rule" agentVariable="node">
+  			<!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~-->
+  			<documentation>
+  				<dc:description> 
+  					An agent rule for ordering new beer: the node orders nothing, when the invetory is greater than 3 times 
+  					the last incoming order. 
+  				</dc:description>
+  			</documentation>
+  			<WHEN eventType="EndOfWeek"/>
+  			<IF language="Java">
+  				<![CDATA[
+					(node.getInventory() > (3 * node.getCurrentSalesOrderQuantity()))
+			   	]]>
+  			</IF>
+  			<THEN>
+  				<SCHEDULE-EVT>
+  					<OutMessageEventExpr messageType="Order" delay="6">
+  						<ReceiverIdRef language="Java">node.getId() - 1</ReceiverIdRef>
+  						<Slot property="quantity" value="0" />
+  					</OutMessageEventExpr>
+  				</SCHEDULE-EVT>
+  			</THEN>
+  		</ReactionRule>
+  		<!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~-->
+  		<ReactionRule name="EndOfWeek_OrderingBeer_Hoping_Rule" agentVariable="node">
+  			<!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~-->
+  			<documentation>
+  				<dc:description> 
+  					An agent rule for ordering new beer: the node hopes the incoming order doesn't change. 
+  				</dc:description>
+  			</documentation>
+  			<WHEN eventType="EndOfWeek"/>
+  			<IF language="Java">
+  				<![CDATA[
+					((2 * node.getCurrentSalesOrderQuantity() < node.getInventory()) 
+					&& ( node.getInventory() <= 3 *  node.getCurrentSalesOrderQuantity())) 
+					&& (node.getBackorderQuantity() == 0)
+			  	]]>
+  			</IF>
+  			<THEN>
+  				<SCHEDULE-EVT>
+  					<OutMessageEventExpr messageType="Order" delay="6">
+  						<ReceiverIdRef language="Java">node.getId() - 1</ReceiverIdRef>
+  						<Slot property="quantity">
+  							<ValueExpr language="Java">
+  								<![CDATA[
+									(3 * node.getCurrentSalesOrderQuantity()) - node.getInventory()       				
+       							]]>
+  							</ValueExpr>
+  						</Slot>
+  					</OutMessageEventExpr>
+  				</SCHEDULE-EVT>
+  			</THEN>
+  		</ReactionRule>    
+  		<!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~-->
+  		<ReactionRule name="EndOfWeek_OrderingBeer_Incoming_Rule" agentVariable="node">
+  			<!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~-->
+  			<documentation>
+  				<dc:description> 
+  					An agent rule for ordering new beer: the node orders the amount of the last incoming order. 
+  				</dc:description>
+  			</documentation>
+  			<WHEN eventType="EndOfWeek"/>
+  			<IF language="Java">
+  				<![CDATA[
+					(node.getCurrentSalesOrderQuantity() >= node.getInventory()) 
+					&& (node.getInventory() >= 0) 
+					&& (node.getBackorderQuantity() == 0)
+		   		]]>
+  			</IF>
+  			<THEN>
+  				<SCHEDULE-EVT>
+  					<OutMessageEventExpr messageType="Order" delay="6">
+  						<ReceiverIdRef language="Java">node.getId() - 1</ReceiverIdRef>
+  						<Slot property="quantity">
+  						  <PropertyValueExpr objectVariable="node" property="currentSalesOrderQuantity"/>
+  						</Slot>
+  					</OutMessageEventExpr>
+  				</SCHEDULE-EVT>
+  			</THEN>
+  		</ReactionRule>     
+      <!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~-->
+      <ReactionRule name="EndOfWeek_ShippingTotalOrder_Rule" agentVariable="node">
+        <!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~-->
+        <documentation>
+        	<dc:description>
+        		At the end of a week, if there is enough beer in stock for all orders, then the inventory level is decremented 
+        		by the total order quantity, and a corresponding beer delivery message is sent to the downstream node.
+        	</dc:description>
+        </documentation>
+        <WHEN eventType="EndOfWeek"/>
+        <IF language="Java">
+        	<![CDATA[
+				node.getInventory() >= (node.getCurrentSalesOrderQuantity() + node.getBackorderQuantity()) 
+				&&	((node.getCurrentSalesOrderQuantity() + node.getBackorderQuantity()) > 0)
+        	]]>
+        </IF>
+       <THEN>
+       	<UPDATE-AGT> 
+       		<Slot property="outDelivery">
+       			<ValueExpr language="Java">
+       				<![CDATA[
+						node.getCurrentSalesOrderQuantity() + node.getBackorderQuantity()       				
+       				]]>
+       			</ValueExpr>
+       		</Slot>
+       		<Slot property="inventory">
+       			<ValueExpr language="Java">
+       				<![CDATA[
+						node.getInventory() - node.getOutDelivery()       				
+       				]]>
+       			</ValueExpr>
+       		</Slot>
+       		<Slot property="backorderQuantity" value="0"/>
+       		<Slot property="currentSalesOrderQuantity" value="0"/>       
+       	</UPDATE-AGT>
+       	<SCHEDULE-EVT>
+       		<OutMessageEventExpr messageType="BeerDelivery" delay="13">            
+       			<ReceiverIdRef language="Java">node.getId() + 1</ReceiverIdRef>
+       			<Slot property="quantity">
+       			  <PropertyValueExpr objectVariable="node" property="outDelivery"/>
+       			</Slot>
+       		</OutMessageEventExpr>
+       	</SCHEDULE-EVT>
+       </THEN>
+      </ReactionRule>     
+      <!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~-->
+      <ReactionRule name="EndOfWeek_ShippingPartialOrder_Rule" agentVariable="node">
+        <!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~-->
+        <documentation>
+        	<dc:description>
+        		At the end of a week, if there is not enough beer in stock for all orders, then the the node will ship 
+        		as much beer as in stock, the inventory level is set to 0, the backorderQuantity is incremented by 
+        		the shortage quantity, and a corresponding beer delivery message is sent to the downstream node.
+        	</dc:description>
+        </documentation>
+        <WHEN eventType="EndOfWeek"/>
+        <IF language="Java">
+        	<![CDATA[
+				(node.getInventory() < (node.getCurrentSalesOrderQuantity() + node.getBackorderQuantity())) 
+				&& (node.getInventory() > 0) 
+        	]]>
+        </IF>
+       <THEN>
+       	<UPDATE-AGT>
+       		<Slot property="outDelivery">
+       		  <PropertyValueExpr objectVariable="node" property="inventory"/>
+       		</Slot>
+       		<Slot property="backorderQuantity">
+       			<ValueExpr language="Java">
+       				<![CDATA[
+						(node.getBackorderQuantity() + node.getCurrentSalesOrderQuantity()) - node.getInventory()       				
+       				]]>
+       			</ValueExpr>
+       		</Slot>       
+       		<Slot property="inventory" value="0"/>
+       		<Slot property="currentSalesOrderQuantity" value="0"/>
+       	</UPDATE-AGT>
+       	<SCHEDULE-EVT>
+       		<OutMessageEventExpr messageType="BeerDelivery" delay="13">
+       			<ReceiverIdRef language="Java">node.getId() + 1</ReceiverIdRef>
+       			<Slot property="quantity">
+       			  <PropertyValueExpr objectVariable="node" property="outDelivery"/>
+       			</Slot>
+       		</OutMessageEventExpr>
+       	</SCHEDULE-EVT>
+       </THEN>
+      </ReactionRule>    
+      <!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~-->
+      <ReactionRule name="EndOfWeek_CostCalculation_Rule" agentVariable="node">
+        <!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~-->
+        <documentation>
+        	<dc:description>
+        		An agent rule for the calculation of costs: beer in stock has costs of 1 money unit, not fulfilled orders 2 units
+        	</dc:description>
+        </documentation>
+        <WHEN eventType="EndOfWeek" eventVariable="event"/>
+        <DO>
+        	<UPDATE-AGT>      
+        		<Slot property="costs">
+        			<ValueExpr language="Java">
+        				<![CDATA[
+							node.getCosts() + (1 * node.getInventory()) + (2 * node.getBackorderQuantity())        				
+        				]]>
+        			</ValueExpr>
+        		</Slot>
+        	</UPDATE-AGT>
+        </DO>
+      </ReactionRule>      
+  	</AgentType>
+  	<!-- ====================================================================-->
+  	<AgentType name="BottomSupplyChainNode" superType="AbstractSupplyChainNode">
+  		<!-- ====================================================================-->   
+  		<!--  inventory: the current beer in stock  -->
+  		<Attribute name="inventory" type="Integer"/> 
+  		<!--  backorderQuantity: orders of previous cycles that aren't fulfilled yet  -->
+  		<Attribute name="backorderQuantity" type="Integer"/>  
+  		<!--  costs: costs at the end of the week  -->
+  		<Attribute name="costs" type="Float"/>		
+  		<!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->
+  		<ReactionRule name="Order_Rule" agentVariable="node">
+  			<!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->
+  			<documentation>
+  				<dc:description>
+  					When an order comes in, the currentSalesOrderQuantity is set to the ordered quantity.
+  				</dc:description>
+  			</documentation>
+  			<WHEN eventType="InMessageEvent" messageType="Order" messageVariable="msg"/>
+  			<DO>
+  				<UPDATE-AGT>
+  					<Slot property="currentSalesOrderQuantity">
+  					  <PropertyValueExpr objectVariable="msg" property="quantity"/>
+  					</Slot>
+  				</UPDATE-AGT>
+  			</DO>
+  		</ReactionRule>      
+  		<!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~-->
+  		<ReactionRule name="BeerDelivery_Rule" agentVariable="node">
+  			<!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->
+  			<documentation>
+  				<dc:description>
+  					When a beer delivery message comes in, the inventory is incremented by the quantity of delivered beer.
+  				</dc:description>
+  			</documentation>
+  			<WHEN eventType="InMessageEvent" messageType="BeerDelivery" messageVariable="msg"/>
+  			<DO>
+  				<UPDATE-AGT>
+  					<Slot property="inventory">
+  						<ValueExpr language="Java">
+  							<![CDATA[
+								node.getInventory() + msg.getQuantity()        				
+        					]]>
+  						</ValueExpr>
+  					</Slot>
+  				</UPDATE-AGT>
+  			</DO>
+  		</ReactionRule>    
+  		<!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~-->
+  		<ReactionRule name="EndOfWeek_OrderingBeer_Backorder_Rule" agentVariable="node">
+  			<!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~-->
+  			<documentation>
+  				<dc:description> 
+  					An agent rule for ordering new beer: the Retailer orders the amount of beer ordered last turn by 
+  					the customer plus the backorder and a random amount between 0 and 5. 
+  				</dc:description>
+  			</documentation>
+  			<WHEN eventType="EndOfWeek"/>
+  			<IF language="Java">
+  				<![CDATA[
+					(node.getBackorderQuantity() > 0)
+			    ]]>
+  			</IF>
+  			<THEN>
+  				<SCHEDULE-EVT>
+  					<OutMessageEventExpr messageType="Order" delay="6">
+  						<ReceiverIdRef language="Java">node.getId() - 1</ReceiverIdRef>
+  						<Slot property="quantity">
+  							<ValueExpr language="Java">
+  								<![CDATA[
+									node.getCurrentSalesOrderQuantity() + node.getBackorderQuantity() + Random.uniformInt(0,5)    							
+    							]]>
+  							</ValueExpr>
+  						</Slot>
+  					</OutMessageEventExpr>
+  				</SCHEDULE-EVT>
+  			</THEN>
+  		</ReactionRule>
+  		<!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~-->
+  		<ReactionRule name="EndOfWeek_OrderingBeer_Rule" agentVariable="node">
+  			<!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~-->
+  			<documentation>
+  				<dc:description> 
+  					An agent rule for ordering new beer: the Retailer orders nothing, when the invetory is greater than 3 times 
+  					the last incoming order. 
+  				</dc:description>
+  			</documentation>
+  			<WHEN eventType="EndOfWeek"/>
+  			<IF language="Java">
+  				<![CDATA[
+					(node.getInventory() > (3 * node.getCurrentSalesOrderQuantity()))
+		   		]]>
+  			</IF>
+  			<THEN>
+  				<SCHEDULE-EVT>
+  					<OutMessageEventExpr messageType="Order" delay="6">
+  						<ReceiverIdRef language="Java">node.getId() - 1</ReceiverIdRef>
+  						<Slot property="quantity" value="0" />
+  					</OutMessageEventExpr>
+  				</SCHEDULE-EVT>
+  			</THEN>
+  		</ReactionRule>    
+  		<!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~-->
+  		<ReactionRule name="EndOfWeek_OrderingBeer_Hoping_Rule" agentVariable="node">
+  			<!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~-->
+  			<documentation>
+  				<dc:description> 
+  					An agent rule for ordering new beer: the Retailer hopes the incoming order doesn't change. 
+  				</dc:description>
+  			</documentation>
+  			<WHEN eventType="EndOfWeek"/>
+  			<IF language="Java">
+  				<![CDATA[
+					((2 * node.getCurrentSalesOrderQuantity() < node.getInventory()) 
+					&& ( node.getInventory() <= 3 * node.getCurrentSalesOrderQuantity())) 
+					&& (node.getBackorderQuantity() == 0)
+		  		]]>
+  			</IF>
+  			<THEN>
+  				<SCHEDULE-EVT>
+  					<OutMessageEventExpr messageType="Order" delay="6">
+  						<ReceiverIdRef language="Java">node.getId() - 1</ReceiverIdRef>
+  						<Slot property="quantity">
+  							<ValueExpr language="Java">
+  								<![CDATA[
+									(3 * node.getCurrentSalesOrderQuantity()) - node.getInventory()       				
+       							]]>
+  							</ValueExpr>
+  						</Slot>
+  					</OutMessageEventExpr>
+  				</SCHEDULE-EVT>
+  			</THEN>
+  		</ReactionRule>   
+  		<!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~-->
+  		<ReactionRule name="EndOfWeek_OrderingBeer_Incoming_Rule" agentVariable="node">
+  			<!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~-->
+  			<documentation>
+  				<dc:description> 
+  					An agent rule for ordering new beer: the Retailer orders the amount of the last incoming order. 
+  				</dc:description>
+  			</documentation>
+  			<WHEN eventType="EndOfWeek"/>
+  			<IF language="Java">
+  				<![CDATA[
+					(node.getCurrentSalesOrderQuantity() >= node.getInventory()) 
+					&& (node.getInventory() >= 0) 
+					&& (node.getBackorderQuantity() == 0)
+			   	]]>
+  			</IF>
+  			<THEN>
+  				<SCHEDULE-EVT>
+  					<OutMessageEventExpr messageType="Order" delay="6">
+  						<ReceiverIdRef language="Java">node.getId() - 1</ReceiverIdRef>
+  						<Slot property="quantity">
+  						  <PropertyValueExpr objectVariable="node" property="currentSalesOrderQuantity"/>
+  						</Slot>
+  					</OutMessageEventExpr>
+  				</SCHEDULE-EVT>
+  			</THEN>
+  		</ReactionRule>     
+  		<!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~-->
+  		<ReactionRule name="EndOfWeek_ShippingTotalOrder_Rule" agentVariable="node">
+  			<!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~-->
+  			<documentation>
+  				<dc:description>
+  					At the end of a week, if there is enough beer in stock for all orders, then the inventory level 
+  					is decremented by the total order quantity, and a corresponding beer delivery message is sent 
+  					to the downstream node.
+  				</dc:description>
+  			</documentation>
+  			<WHEN eventType="EndOfWeek"/>
+  			<IF language="Java">
+  				<![CDATA[
+					node.getInventory() >= (node.getCurrentSalesOrderQuantity() + node.getBackorderQuantity()) 
+					&&	((node.getCurrentSalesOrderQuantity() + node.getBackorderQuantity()) > 0)
+         		]]>
+  			</IF>
+  			<THEN>
+  				<UPDATE-AGT> 
+  					<Slot property="outDelivery">
+  						<ValueExpr language="Java">
+  							<![CDATA[
+								node.getCurrentSalesOrderQuantity() + node.getBackorderQuantity()      				
+      						]]>
+  						</ValueExpr>
+  					</Slot>
+  					<Slot property="inventory">
+  						<ValueExpr language="Java">
+  							<![CDATA[
+								node.getInventory() - node.getOutDelivery()      				
+      		 				]]>
+  						</ValueExpr>
+  					</Slot>
+  					<Slot property="backorderQuantity" value="0"/>
+  					<Slot property="currentSalesOrderQuantity" value="0"/>       
+  				</UPDATE-AGT>
+  				<SCHEDULE-EVT>
+  					<OutMessageEventExpr messageType="BeerDelivery" delay="13">            
+  						<ReceiverIdRef language="Java">node.getId() + 1</ReceiverIdRef>
+  						<Slot property="quantity">
+  						  <PropertyValueExpr objectVariable="node" property="outDelivery"/>
+  						</Slot>
+  					</OutMessageEventExpr>
+  				</SCHEDULE-EVT>
+  			</THEN>
+  		</ReactionRule>     
+  		<!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~-->
+  		<ReactionRule name="EndOfWeek_ShippingPartialOrder_Rule" agentVariable="node">
+  			<!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~-->
+  			<documentation>
+  				<dc:description>
+  					At the end of a week, if there is not enough beer in stock for all orders, then the the node will ship 
+  					as much beer as in stock, the inventory level is set to 0, the backorderQuantity is incremented by  
+  					the shortage quantity, and a corresponding beer delivery message is sent to the downstream node.
+  				</dc:description>
+  			</documentation>
+  			<WHEN eventType="EndOfWeek"/>
+  			<IF language="Java">
+  				<![CDATA[
+					(node.getInventory() < (node.getCurrentSalesOrderQuantity() + node.getBackorderQuantity())) 
+					&& (node.getInventory() > 0) 
+        		]]>
+  			</IF>
+  			<THEN>
+  				<UPDATE-AGT>
+  					<Slot property="outDelivery">
+  					  <PropertyValueExpr objectVariable="node" property="inventory"/>
+  					</Slot>
+  					<Slot property="backorderQuantity">
+  						<ValueExpr language="Java">
+  							<![CDATA[
+								(node.getBackorderQuantity() + node.getCurrentSalesOrderQuantity()) - node.getInventory()       				
+       						]]>
+  						</ValueExpr>
+  					</Slot>       
+  					<Slot property="inventory" value="0"/>
+  					<Slot property="currentSalesOrderQuantity" value="0"/>
+  				</UPDATE-AGT>
+  				<SCHEDULE-EVT>
+  					<OutMessageEventExpr messageType="BeerDelivery" delay="13">
+  						<ReceiverIdRef language="Java">node.getId() + 1</ReceiverIdRef>
+  						<Slot property="quantity">
+  						  <PropertyValueExpr objectVariable="node" property="outDelivery"/>
+  						</Slot>
+  					</OutMessageEventExpr>
+  				</SCHEDULE-EVT>
+  			</THEN>
+  		</ReactionRule>  
+  		<!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~-->
+  		<ReactionRule name="EndOfWeek_CostCalculation_Rule" agentVariable="node">
+  			<!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~-->
+  			<documentation>
+  				<dc:description>
+  					An agent rule for the calculation of costs: beer in stock has costs of 1 money unit,	
+  					not fulfilled orders 2 units.
+  				</dc:description>
+  			</documentation>
+  			<WHEN eventType="EndOfWeek" eventVariable="event"/>
+  			<DO>
+  				<UPDATE-AGT>      
+  					<Slot property="costs">
+  						<ValueExpr language="Java">
+  							<![CDATA[
+								node.getCosts() + (1 * node.getInventory()) + (2 * node.getBackorderQuantity())
+        					]]>
+  						</ValueExpr>
+  					</Slot>
+  				</UPDATE-AGT>
+  			</DO>
+  		</ReactionRule>                
+  	</AgentType>  
+  </EntityTypes> 
+    <EnvironmentRules>     
+      <!-- =================================================== -->
+      <EnvironmentRule name="CustomerDemand_Rule">
+        <!-- =================================================== -->
+        <documentation>
+        	<dc:description>
+        		When an exogenous customer demand event occurs, a corresponding order message event is created.
+        	</dc:description>
+        </documentation>
+        <WHEN eventType="CustomerDemand" eventVariable="cd"/>
+        <FOR objectType="AbstractSupplyChainNode" objectVariable="retailer" objectIdRef="4" />
+      	<FOR objectVariable="customer" objectType="Customer" />
+        <IF language="Java">
+        	<![CDATA[ 
+				cd.getOccurrenceTime() < 30 
+        	]]>
+        </IF>
+        <THEN>
+	        <UPDATE-ENV>
+	          <UpdateObject objectVariable="customer">
+	            <Slot property="order" value="2"/>
+	          </UpdateObject>
+	        </UPDATE-ENV>
+	          <SCHEDULE-EVT>
+	          <InMessageEventExpr messageType="Order" senderIdRef="5">
+	            <ReceiverIdRef language="Java">retailer.getId()</ReceiverIdRef>
+	            <Slot property="quantity">
+	              <PropertyValueExpr objectVariable="customer" property="order"/>
+	            </Slot>
+	          </InMessageEventExpr>
+	        </SCHEDULE-EVT>
+        </THEN>
+        <ELSE>
+          <UPDATE-ENV>
+            <UpdateObject objectVariable="customer">
+              <Slot property="order">
+                <RandomVariable>
+                  <UniformInt lowerBound="3" upperBound="5"/>
+                </RandomVariable>
+              </Slot>
+            </UpdateObject>
+          </UPDATE-ENV>
+          <SCHEDULE-EVT>
+            <InMessageEventExpr messageType="Order" senderIdRef="5">
+              <ReceiverIdRef language="Java">retailer.getId()</ReceiverIdRef>
+              <Slot property="quantity">
+                <PropertyValueExpr objectVariable="customer" property="order"/>
+              </Slot>
+            </InMessageEventExpr>
+          </SCHEDULE-EVT>
+        </ELSE>      
+      </EnvironmentRule>    
+    	<!-- =================================================== -->
+      <EnvironmentRule name="EndOfWeek_UpdateSystemCosts_Rule">
+      	<!-- =================================================== -->
+        <WHEN eventType="EndOfSystemWeek"/>
+        <DO>
+        	<UPDATE-ENV>
+        		<UpdateStatisticsVariable variable="systemCosts">
+        			<ValueExpr language="Java">
+        				<![CDATA[
+ 							SimStatistics.retailerCosts.getValue() + SimStatistics.wholesalerCosts.getValue() + SimStatistics.distributorCosts.getValue()        				
+        				]]>
+        			</ValueExpr>
+        		</UpdateStatisticsVariable>
+        	</UPDATE-ENV>
+        </DO>
+      </EnvironmentRule>
+    </EnvironmentRules>
+  </SimulationModel>
+  <!-- =================================================== -->
+  <InitialState>
+  <!-- =================================================== -->
+    <Agent type="TopSupplyChainNode" name="Factory" id="1">
+      <Slot property="inventory" value="20"/>
+      <PeriodicTimeEvent occurrenceTime="7" type="EndOfWeek"/>
+    </Agent>  
+    
+  	<Agent type="IntermediarySupplyChainNode" name="Distributor" id="2">
+      <Slot property="inventory" value="20"/>
+      <PeriodicTimeEvent occurrenceTime="7" type="EndOfWeek"/>
+    </Agent>    
+    
+  	<Agent type="IntermediarySupplyChainNode" name="Wholesaler" id="3">
+      <Slot property="inventory" value="20"/>
+      <PeriodicTimeEvent occurrenceTime="7" type="EndOfWeek"/>
+    </Agent>  
+    
+  	<Agent type="BottomSupplyChainNode" name="Retailer" id="4">
+      <Slot property="inventory" value="20"/>
+      <PeriodicTimeEvent occurrenceTime="7" type="EndOfWeek"/>
+  	</Agent>  
+  	
+  	<Agent type="Customer" name="Customer" id="5">
+  		<Slot property="order" value="0"/>
+  	</Agent>
+  
+  	<ExogenousEvent type="CustomerDemand" occurrenceTime="1"/>  
+  	<ExogenousEvent type="EndOfSystemWeek" occurrenceTime="7"/>	
+  </InitialState>
+
+  <UserInterface>
+    <StatisticsUI>
+      	<StatisticsVariableUI variable="customerDemand" comparisonGroup="Inventar">
+        <Label>
+          <Text xml:lang="en">avg Customer Demand</Text>
+          <Text xml:lang="de">Kundenbestellung</Text>
+        	<Text xml:lang="es">La demanda promedio de los clientes</Text>
+        	<Text xml:lang="fr">La demande moyenne du client</Text>
+        	<Text xml:lang="ro">Cantitatea medie comandata</Text>
+        </Label>
+        <Hint>
+          <Text xml:lang="en">Average amount of Beer the customer has ordered</Text>
+          <Text xml:lang="de">Durchschnitt der Kundenbestellungen</Text>
+        	<Text xml:lang="es">La cantidad promedio de la cerveza que el cliente ha ordenado</Text>
+        	<Text xml:lang="fr">La demande moyenne de la bière que le client a commandé</Text>
+        	<Text xml:lang="ro">Cantitatea medie de bere comandata</Text>
+        </Hint>
+      </StatisticsVariableUI>
+      <StatisticsVariableUI variable="retailerInventory" comparisonGroup="Inventar">
+        <Label>
+          <Text xml:lang="en">Retailer Inventory</Text>
+          <Text xml:lang="de">Lagerbestand Einzelhändler</Text>
+          <Text xml:lang="es">Inventario de existencias Minorista</Text>
+        	<Text xml:lang="fr">L'inventaire pour la vente au détail</Text>
+        	<Text xml:lang="ro">Inventarul stocurilor de vanzare cu amanuntul</Text>
+        </Label>
+        <Hint>
+          <Text xml:lang="en">The quantity of beer the retailer has in stock</Text>
+          <Text xml:lang="de">Die Menge Bier, die der Einzelhaendler im Lager hat</Text>
+          <Text xml:lang="es">La cantidad de cerveza que el minorista tiene en almacén</Text>
+        	<Text xml:lang="fr">La quantité de bière que le détaillant a en stock</Text>
+        	<Text xml:lang="ro">Cantitatea de bere existenta in stocul de vanzare cu amanuntul</Text>
+        </Hint>
+      </StatisticsVariableUI>
+      	<StatisticsVariableUI variable="retailerCosts" comparisonGroup="Costs">
+        <Label>
+          <Text xml:lang="en">Retailer Costs</Text>
+          <Text xml:lang="de">Kosten Einzelhändler</Text>
+          <Text xml:lang="es">Coste Minorista</Text>
+        	<Text xml:lang="fr">Le coût de détail</Text>
+        	<Text xml:lang="ro">Costul cu amanuntul</Text>
+        </Label>
+        <Hint>
+          <Text xml:lang="en">The cumulated costs of the retailer</Text>
+          <Text xml:lang="de">Die aufsummierten Kosten des Einzelhändlers</Text>
+          <Text xml:lang="es">El coste sumado del minorista</Text>
+        	<Text xml:lang="fr">Le coût total des ventes au détail</Text>
+        	<Text xml:lang="ro">Costul total al vanzarilor cu amanuntul</Text>
+        </Hint>
+        <Format decimalPlaces="2">
+        	<Currency>EUR(€)</Currency>
+        </Format>
+      </StatisticsVariableUI>
+      <StatisticsVariableUI variable="wholesalerInventory" comparisonGroup="Inventar">
+        <Label>
+          <Text xml:lang="en">Wholesaler Inventory</Text>
+          <Text xml:lang="de">Lagerbestand Großhändler</Text>
+          <Text xml:lang="es">Inventario de existencias Mayorista</Text>
+        	<Text xml:lang="fr">L'inventaire du l'engrossiste</Text>
+        	<Text xml:lang="ro">Inventarul en gros</Text>
+        </Label>
+        <Hint>
+          <Text xml:lang="en">The quantity of beer the wholesaler has in stock</Text>
+          <Text xml:lang="de">Die Menge Bier, die der Großhändler im Lager hat</Text>
+          <Text xml:lang="es">La cantidad de cerveza que el mayorista tiene en almacén</Text>
+        	<Text xml:lang="fr">La quantité de bière que l'engrossiste a en stock</Text>
+        	<Text xml:lang="ro">Cantitatea de bere existenta in stocul en gros</Text>
+        </Hint>
+      </StatisticsVariableUI>
+      	<StatisticsVariableUI variable="wholesalerCosts" comparisonGroup="Costs">
+        <Label>
+          <Text xml:lang="en">Wholesaler Costs</Text>
+          <Text xml:lang="de">Kosten Großhändler</Text>
+          <Text xml:lang="es">Coste Mayorista</Text>
+        	<Text xml:lang="fr">Le coût en gros</Text>
+        	<Text xml:lang="ro">Costul en gros</Text>
+        </Label>
+        <Hint>
+          <Text xml:lang="en">The cumulated costs of the wholesaler</Text>
+          <Text xml:lang="de">Die aufsummierten Kosten des Großhändlers</Text>
+          <Text xml:lang="es">El coste sumado del mayorista</Text>
+        	<Text xml:lang="fr">Le coût total des ventes au gros</Text>
+        	<Text xml:lang="ro">Costul total al vanzarilor en gros</Text>
+        </Hint>
+        <Format decimalPlaces="2">
+        	<Currency>EUR(€)</Currency>
+        </Format>
+      </StatisticsVariableUI>
+      <StatisticsVariableUI variable="distributorInventory" comparisonGroup="Inventar">
+        <Label>
+          <Text xml:lang="en">Distributor Inventory</Text>
+          <Text xml:lang="de">Lagerbestand Distributeur</Text>
+          <Text xml:lang="es">Inventario de existencias Distribuidor</Text>
+        	<Text xml:lang="fr">L'inventaire du distributeur</Text>
+        	<Text xml:lang="ro">Inventarul distribuitorului</Text>
+        </Label>
+        <Hint>
+          <Text xml:lang="de">Die Menge Bier, die der Distributeur im Lager hat</Text>
+          <Text xml:lang="en">The quantity of beer the distributor has in stock</Text>
+        	<Text xml:lang="es">La cantidad de cerveza distribuida</Text>
+        	<Text xml:lang="fr">La quantité de bière distribuée</Text>
+        	<Text xml:lang="ro">Cantitatea de bere distribuita</Text>
+        </Hint>
+      </StatisticsVariableUI>
+    	<StatisticsVariableUI variable="distributorCosts" comparisonGroup="Costs">
+        <Label>
+          <Text xml:lang="en">Distributor Costs</Text>
+          <Text xml:lang="de">Kosten Distributeur</Text>
+          <Text xml:lang="es">Coste Distribuidor</Text>
+        	<Text xml:lang="fr">Le coût de distribution</Text>
+        	<Text xml:lang="ro">Cost distribuitor</Text>
+        </Label>
+        <Hint>
+          <Text xml:lang="en">The cumulated costs of the distributor</Text>
+          <Text xml:lang="de">Die aufsummierten Kosten des Distributeuers</Text>
+          <Text xml:lang="es">El coste sumado del distribuidor</Text>
+        	<Text xml:lang="fr">Le coût total de distribution de la bière</Text>
+        	<Text xml:lang="ro">Costul total al berii distribuite</Text>
+        </Hint>
+        <Format decimalPlaces="2">
+        	<Currency>EUR(€)</Currency>
+        </Format>
+      </StatisticsVariableUI>
+      <StatisticsVariableUI variable="factoryDelivery">
+        <Label>
+          <Text xml:lang="en">Factory Delivery</Text>
+          <Text xml:lang="de">Lieferung von Brauerei</Text>
+          <Text xml:lang="es">Entrega de la cervezería</Text>
+        	<Text xml:lang="fr">Livraison de la brasserie</Text>
+        	<Text xml:lang="ro">Livrarea de la fabrica de bere</Text>
+        </Label>
+        <Hint>
+          <Text xml:lang="en">The amount of rawmaterial by the factory</Text>
+          <Text xml:lang="de">Anzahl an Rohmaterial von der Fabrik</Text>
+          <Text xml:lang="es">La cantidad de materia prima de la empresa</Text>
+        	<Text xml:lang="fr">La quantité de bière livre par la brasserie</Text>
+        	<Text xml:lang="ro">Cantitatea de bere distribuita de fabrica</Text>
+        </Hint>
+      </StatisticsVariableUI>
+      <StatisticsVariableUI variable="systemCosts">
+        <Label>
+          <Text xml:lang="en">System Costs</Text>
+          <Text xml:lang="de">Gesamtkosten</Text>
+        	<Text xml:lang="es">Coste total</Text>
+        	<Text xml:lang="fr">Le coût total</Text>
+        	<Text xml:lang="ro">Cost sistem</Text>
+        </Label>
+        <Hint>
+          <Text xml:lang="en">The costs of all supplychainnodes</Text>
+          <Text xml:lang="de">Die Kosten aller Lieferkettenknoten</Text>
+        	<Text xml:lang="es">Coste total de la cadena de suministro</Text>
+        	<Text xml:lang="fr">Le coût total des noeuds de la chaîne d'approvisionnement</Text>
+        	<Text xml:lang="ro">Costul total al nodurilor din lanţul de aprovizionare</Text>
+        </Hint>
+        <Format decimalPlaces="2">
+        	<Currency>EUR(€)</Currency>
+        </Format>
+      </StatisticsVariableUI>
+    </StatisticsUI>
+  	<AnimationUI>
+  		<aors:DisplayDescription xmlns="http://www.w3.org/1999/xhtml">
+  			<aors:HtmlText>
+  				<p>Each of the supply chain nodes Retailer, Wholesaler, Distributor, Factory 
+  					is represented by a rectangle.
+  					The properties of the interemdiate nodes (Retailer, Wholesaler and Distributor)  
+  					are represented by the three bar charts:</p>
+  				<ul>
+  					<li>inventory: the beer quantity in stock [yellow bar labeled <strong>I</strong>]</li>
+  					<li>costs: the costs for current stock and backorder [red bar labeled <strong>C</strong>]</li>
+  					<li>backorder: the beer quantity that still has to be delivered [green bar labeled <strong>B</strong>]</li>
+  				</ul>
+  				<p>The Factory is described with a single bar chart:</p>
+  				<ul>
+  					<li>outDelivery: the delivered beer quantity [yellow bar labeled <strong>O</strong>]</li>
+  				</ul>
+  				<p>The square on the left side identifies the beer quantity ordered by the customer.</p>
+  			</aors:HtmlText>
+  			<aors:HtmlText xml:lang="ro">
+  				<p>Fiecare dintre nodurile reţelei Vânzătorul Final, Angrosistul, Distribuitorul sau Producătorul 
+  					sunt descrise cu ajutorul unui dreptunghi.
+  					Proprietăţile nodurilor intermediare (Vânzătorul Final, Angrosistul şi Distribuitorul)  
+  					sunt reprezentate cu ajutorul a 3 bări grafice:</p>
+  				<ul>
+  					<li>inventarul: cantitatea de bere aflată în stoc [bara galbenă cu textul <strong>I</strong>]</li>
+  					<li>costurile: costurile pentru stocul curent şi comenzile în asteptare [bara rosie cu textul <strong>C</strong>]</li>
+  					<li>returnările: cantitatea de bere care aşteaptă să fie livrată [bara verde cu textul <strong>B</strong>]</li>
+  				</ul>
+  				<p>Producătorul conţine o singură bară grafică:</p>
+  				<ul>
+  					<li>livrarile: cantitatea de bere livrată [bara galbena cu textul <strong>O</strong>]</li>
+  				</ul>
+  				<p>Pătratul aflat în partea stanga reprezintă clientul şi afisează cantitatea de bere comandată.</p>
+  			</aors:HtmlText>
+  			<aors:HtmlText xml:lang="en">
+	  			<p>Each of the supply chain nodes Retailer, Wholesaler, Distributor, Factory 
+	  			is represented by a rectangle.
+	  			The properties of the interemdiate nodes (Retailer, Wholesaler and Distributor)  
+	  			are represented by the three bar charts:</p>
+	  			<ul>
+	  				<li>inventory: the beer quantity in stock [yellow bar labeled <strong>I</strong>]</li>
+	  				<li>costs: the costs for current stock and backorder [red bar labeled <strong>C</strong>]</li>
+	  				<li>backorder: the beer quantity that still has to be delivered [green bar labeled <strong>B</strong>]</li>
+	  			</ul>
+	  	   		<p>The Factory is described with a single bar chart:</p>
+	  			<ul>
+	  				<li>outDelivery: the delivered beer quantity [yellow bar labeled <strong>O</strong>]</li>
+	  			</ul>
+	  			<p>The square on the left side identifies the beer quantity ordered by the customer.</p>
+  			</aors:HtmlText>
+  			<aors:HtmlText xml:lang="de">
+  				<p>Jeder der Supply-Chain-Knoten [<i>Retailer</i>/<i>Großhandel</i>/<i>Distributor</i>/<i>Factory</i>]
+  					wird durch ein Rechteck mit einem entsprechenden Etikett oben auf ihm vertreten, dass
+  					identifiziert die insbesondere Supply Chain Knotennamen.
+  					Die Eigenschaften der [<i>Retailer</i>/<i>Großhandel</i>/<i>Distributor</i>] Supply-Chain-Knoten
+  					werden durch drei Balkendiagramme ausgedrückt:
+  					<ul>
+  						<li> Inventar: das Bier Menge ab Lager lieferbar [<strong>I</strong> Etikett und gelben Balken color]
+  							Anfangswert: 20 </li>
+  						<li> Kosten: Die Kosten für den aktuellen Lagerbestand und Rückstandsbearbeitung [<strong>C</strong> Etikett und roter Balken color]
+  							Anfangswert: 0 </li>
+  						<li> Rückstandsbearbeitung: das Bier Menge, die noch nicht ausgeliefert [<strong>B</strong> Etikett und gelben Balken color]
+  							Anfangswert: 0 </li>
+  					</ul>
+  					Die [<i>Factory</i>] Supply Chain hat einen einzigen Knoten Balkendiagramm:
+  					<ul>
+  						<li> outDelivery: Die gelieferte Bier bestellen [<strong>O</strong> Etikett und gelben Balken color]
+  							Anfangswert: 0 </li>
+  					</ul>
+  					Die linke Seite zeigt die quadratische <i>Kunden</i> Menge der bestellten Bier Einheiten.</p>
+  			</aors:HtmlText>
+  		</aors:DisplayDescription>
+  		<Views>
+  			<SpaceView canvasColor="darkgrey">
+  				<TwoDimensionalSpaceView2D backgroundImage="backgrounds/OneDollarBill.jpg"/>
+  			</SpaceView>
+  			<ObjectView objectIdRef="1" displayName="true">
+  				<Shape2D x="800px" y="250px">
+  					<Rectangle width="80" height="400" fill="lightgrey" stroke="black" strokeWidth="2"/>
+  				</Shape2D>
+  				<AttachedShape2D label="O" offsetX="0px" offsetY="-200px">
+  					<Shape2D>
+  						<Rectangle width="10" positioning="LeftBottom" fill="yellow" stroke="black" strokeWidth="1">
+  							<ShapePropertyVisualizationMap shapeProperty="height" property="outDelivery" mapType="polynomial" a0="1" a1="4.0"/>
+  						</Rectangle>
+  					</Shape2D>
+  				</AttachedShape2D>
+  			</ObjectView>
+  			
+  			<ObjectView objectIdRef="2" displayName="true">
+  				<Shape2D x="600px" y="250px">
+  					<Rectangle width="80" height="400" fill="lightgrey" stroke="black" strokeWidth="2"/>
+  				</Shape2D>
+  				<AttachedShape2D label="I" offsetX="-20px" offsetY="-200px">
+  					<Shape2D>
+  						<Rectangle width="10" positioning="LeftBottom" fill="yellow" stroke="black" strokeWidth="1">
+  							<ShapePropertyVisualizationMap shapeProperty="height" property="inventory" mapType="polynomial" a0="1" a1="1.0"/>
+  						</Rectangle>
+  					</Shape2D>
+  				</AttachedShape2D>
+  				<AttachedShape2D label="C" offsetX="0px" offsetY="-200px">
+  					<Shape2D>
+  						<Rectangle width="10" positioning="LeftBottom" fill="red" stroke="black" strokeWidth="1">
+  							<ShapePropertyVisualizationMap shapeProperty="height" property="costs" mapType="polynomial" a0="1" a1="0.04"/>
+  						</Rectangle>
+  					</Shape2D>
+  				</AttachedShape2D>
+  				<AttachedShape2D label="B" offsetX="20px" offsetY="-200px">
+  					<Shape2D>
+  						<Rectangle width="10" positioning="LeftBottom" fill="green" stroke="black" strokeWidth="1">
+  							<ShapePropertyVisualizationMap shapeProperty="height" property="backorderQuantity" mapType="polynomial" a0="1" a1="5.0"/>
+  						</Rectangle>
+  					</Shape2D>
+  				</AttachedShape2D>
+  			</ObjectView>
+  			<ObjectView objectIdRef="3" displayName="true">
+  				<Shape2D x="400px" y="250px">
+  					<Rectangle width="80" height="400" fill="lightgrey" stroke="black" strokeWidth="2"/>
+  				</Shape2D>
+  				<AttachedShape2D label="I" offsetX="-20px" offsetY="-200px">
+  					<Shape2D>
+  						<Rectangle width="10" positioning="LeftBottom" fill="yellow" stroke="black" strokeWidth="1">
+  							<ShapePropertyVisualizationMap shapeProperty="height" property="inventory" mapType="polynomial" a0="1" a1="1.0"/>
+  						</Rectangle>
+  					</Shape2D>
+  				</AttachedShape2D>
+  				<AttachedShape2D label="C" offsetX="0px" offsetY="-200px">
+  					<Shape2D>
+  						<Rectangle width="10" positioning="LeftBottom" fill="red" stroke="black" strokeWidth="1">
+  							<ShapePropertyVisualizationMap shapeProperty="height" property="costs" mapType="polynomial" a0="1" a1="0.04"/>
+  						</Rectangle>
+  					</Shape2D>
+  				</AttachedShape2D>
+  				<AttachedShape2D label="B" offsetX="20px" offsetY="-200px">
+  					<Shape2D>
+  						<Rectangle width="10" positioning="LeftBottom" fill="green" stroke="black" strokeWidth="1">
+  							<ShapePropertyVisualizationMap shapeProperty="height" property="backorderQuantity" mapType="polynomial" a0="1" a1="5.0"/>
+  						</Rectangle>
+  					</Shape2D>
+  				</AttachedShape2D>
+  			</ObjectView>		
+  			<ObjectView objectIdRef="4" displayName="true">
+  				<Shape2D x="200px" y="250px">
+  					<Rectangle width="80" height="400" fill="lightgrey" stroke="black" strokeWidth="2"/>
+  				</Shape2D>
+  				<AttachedShape2D label="I" offsetX="-20px" offsetY="-200px">
+  					<Shape2D>
+  						<Rectangle width="10" positioning="LeftBottom" fill="yellow" stroke="black" strokeWidth="1">
+  							<ShapePropertyVisualizationMap shapeProperty="height" property="inventory" mapType="polynomial" a0="1" a1="1.0"/>
+  						</Rectangle>
+  					</Shape2D>
+  				</AttachedShape2D>
+  				<AttachedShape2D label="C" offsetX="0px" offsetY="-200px">
+  					<Shape2D>
+  						<Rectangle width="10" positioning="LeftBottom" fill="red" stroke="black" strokeWidth="1">
+  							<ShapePropertyVisualizationMap shapeProperty="height" property="costs" mapType="polynomial" a0="1" a1="0.04"/>
+  						</Rectangle>
+  					</Shape2D>
+  				</AttachedShape2D>
+  				<AttachedShape2D label="B" offsetX="20px" offsetY="-200px">
+  					<Shape2D>
+  						<Rectangle width="10" positioning="LeftBottom" fill="green" stroke="black" strokeWidth="1">
+  							<ShapePropertyVisualizationMap shapeProperty="height" property="backorderQuantity" mapType="polynomial" a0="1" a1="5.0"/>
+  						</Rectangle>
+  					</Shape2D>
+  				</AttachedShape2D>
+  			</ObjectView>			
+  			<ObjectView objectIdRef="5" displayName="true">
+  				<Shape2D x="50px" y="250px">
+  					<Square width="20" fill="olive" stroke="black" strokeWidth="2"/>
+  				</Shape2D>
+  				<DisplayInfo property="order" content="beer units"/>
+  			</ObjectView>
+  		</Views>
+  	</AnimationUI>  	
+  </UserInterface>
+</SimulationScenario>
+
