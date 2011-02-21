@@ -55,33 +55,19 @@
 	<!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->
 	<xs:complexType name="AgentControlGUI.type">
 	<!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->
+		<xs:annotation><xs:documentation>
+			The GUI element has 5 kinds of subelements: a perception event list, 
+			reaction elements allowing to enter parameter values for actions performed in response to certain events,
+			action elements allowing to enter parameter values for actions that can be performed at any time,
+			ouput fields that allow to display information about the agent itself, about other objects or about statistics,
+			input fields that allow to change beliefs of the agent.        		
+		</xs:documentation></xs:annotation>
 		<xs:sequence>
-      <xs:element name="CssStyleRules" minOccurs="0">
-        <xs:complexType>
-          <xs:simpleContent>
-            <xs:extension base="xs:string">
-            	<xs:attribute name="externalCssStyleRuleFile" type="xs:anyURI" use="optional"/>
-            </xs:extension>
-          </xs:simpleContent>
-        </xs:complexType>        
-      </xs:element>
-      <xs:element name="Structure">
-      	<xs:annotation><xs:documentation>
-      		The Structure element has 5 kinds of subelements: a perception event list, 
-      		reaction elements allowing to enter parameter values for actions performed in response to certain events,
-      		action elements allowing to enter parameter values for actions that can be performed at any time,
-      		ouput fields that allow to display information about the agent itself, about other objects or about statistics,
-      		input fields that allow to change beliefs of the agent.        		
-      	</xs:documentation></xs:annotation>
-      	<xs:complexType>
-      		<xs:sequence>
-      			<xs:element name="PerceptionEventList" type="aors:PerceptionEventList.type"/>
-      			<xs:element name="ReactionUI" type="aors:ReactionUI.type"/>
-      			<xs:element name="OutPutField" type="aors:OutputField.type"/>
-      		</xs:sequence>
-      	</xs:complexType>
-      </xs:element>
-    </xs:sequence>
+			<xs:element name="PerceptionEventList" type="aors:PerceptionEventList.type"/>
+			<xs:element name="ReactionUI" type="aors:ReactionUI.type" minOccurs="0" maxOccurs="unbounded"/>
+			<xs:element name="OutputField" type="aors:OutputField.type" minOccurs="0" maxOccurs="unbounded"/>
+		</xs:sequence>
+		<xs:attribute name="cssFile" type="xs:anyURI" use="optional"/>
 	</xs:complexType>
 	<!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->	
 	<xs:complexType name="PerceptionEventList.type">
@@ -92,7 +78,7 @@
 				<xs:complexType>
 					<xs:sequence>
 						<xs:element ref="aors:Label"/>
-						<xs:element name="EventProperty" type="aors:EventView.Property.type" minOccurs="0" maxOccurs="unbounded"/>    							
+						<xs:element name="EventProperty" type="aors:PropertyView.type" minOccurs="0" maxOccurs="unbounded"/>    							
 					</xs:sequence>
 					<xs:attribute name="perceptionEventType" type="aors:CanonicalName" use="required"/>
 					<xs:attributeGroup ref="aors:EventView.CommonAttributes"/>
@@ -103,7 +89,7 @@
 				<xs:complexType>
 					<xs:sequence>
 						<xs:element ref="aors:Label"/>
-						<xs:element name="ObjectProperty" type="aors:EventView.Property.type" minOccurs="0" maxOccurs="unbounded"/>    							
+						<xs:element name="ObjectProperty" type="aors:PropertyView.type" minOccurs="0" maxOccurs="unbounded"/>    							
 					</xs:sequence>
 					<xs:attribute name="objectType" type="aors:CanonicalName" use="required"/>
 					<xs:attribute name="showObjectId" type="xs:boolean" use="optional" default="false"/>
@@ -118,7 +104,7 @@
 				<xs:complexType>
 					<xs:sequence>
 						<xs:element ref="aors:Label"/>
-						<xs:element name="MessageProperty" type="aors:EventView.Property.type" minOccurs="0" maxOccurs="unbounded"/>    							
+						<xs:element name="MessageProperty" type="aors:PropertyView.type" minOccurs="0" maxOccurs="unbounded"/>    							
 					</xs:sequence>
 					<xs:attribute name="messageType" type="aors:CanonicalName" use="required"/>
 					<xs:attribute name="showSender" type="xs:boolean" use="optional" default="true"/>
@@ -139,13 +125,14 @@
 		<xs:attribute name="showReminderEvents" type="xs:boolean" use="optional" default="false"/>
 	</xs:complexType>  
 	<!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->
-	<xs:complexType name="EventView.Property.type">
+	<xs:complexType name="PropertyView.type">
 	<!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->
 		<xs:sequence>
 			<xs:element ref="aors:Label"/>
-			<xs:element ref="aors:Unit" minOccurs="0"/>
+			<xs:element ref="aors:Format" minOccurs="0"/>
 		</xs:sequence>
 		<xs:attribute name="name" type="aors:CanonicalName" use="required"/>
+		<xs:attribute name="label" type="xs:string" use="required"/>
 		<xs:attribute name="fieldLength" use="optional">
 			<xs:annotation><xs:documentation>The length of the property field in cm. </xs:documentation></xs:annotation>
 			<xs:simpleType>
@@ -158,6 +145,7 @@
 	<!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->
 	<xs:attributeGroup name="EventView.CommonAttributes">
 	<!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->
+		<xs:attribute name="label" type="xs:string" use="required"/>
 		<xs:attribute name="icon" type="xs:anyURI" use="optional">
 			<xs:annotation><xs:documentation xml:lang="en">An icon file from the media folder. </xs:documentation></xs:annotation>
 		</xs:attribute>
@@ -170,12 +158,6 @@
 			<xs:element name="Source" minOccurs="0">
 				<xs:complexType>
 					<xs:choice>
-						<xs:element name="Property">
-							<xs:annotation><xs:documentation xml:lang="en">A property of the agent. </xs:documentation></xs:annotation>
-							<xs:complexType>
-								<xs:attribute name="name" type="aors:CanonicalName" use="required"/>								
-							</xs:complexType>
-						</xs:element>
 						<xs:element name="GlobalVariable">
 							<xs:complexType>
 								<xs:attribute name="name" type="aors:CanonicalName" use="required"/>
@@ -198,6 +180,10 @@
 				</xs:complexType>
 			</xs:element>
 		</xs:sequence>
+		<xs:attribute name="label" type="xs:string" use="required"/>
+		<xs:attribute name="property" type="aors:CanonicalName" use="optional">
+			<xs:annotation><xs:documentation xml:lang="en">A property of the agent. </xs:documentation></xs:annotation>			
+		</xs:attribute>
 	</xs:complexType>
 	<!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->
 	<xs:complexType name="ReactionUI.type">
