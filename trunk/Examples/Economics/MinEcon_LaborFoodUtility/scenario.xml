@@ -8,13 +8,15 @@
 	xmlns:aors="http://aor-simulation.org"
 	version="0.8.4"
 	scenarioName="MinEcon_LaborFoodUtility_Scenario1"
-	scenarioTitle="Minimal Economy with Labor, Food and Utility Markets"
+	scenarioTitle="Minimal Economy with a Labor, Food and Utility Market"
 	simulationManagerDirectory="../../..">
 
 	<SimulationParameters simulationSteps="3000" timeUnit="h"  stepTimeDelay="0" randomSeed="47"/>
-	<SimulationModel modelName="MinEcon_LaborFoodUtility">
+	<SimulationModel modelName="MinEcon_LaborFoodUtility" modelTitle="Minimal Economy with a Labor, Food and Utility Market">
 		<documentation>
+			<dc:title xml:lang="de">Minimale Volkswirtschaft mit Arbeits-, Nahrungsmittel- und Luxusgütermarkt</dc:title>
 			<dc:subject>Agent-based computational economics</dc:subject>
+			<dc:subject xml:lang="de">Wirtschaftssimulation</dc:subject>
 			<dc:creator>Lars Langjahr</dc:creator>
 			<dc:created>20101031</dc:created>
 			<dc:contributor>Gerd Wagner</dc:contributor>
@@ -22,23 +24,44 @@
 			<dc:modified>20101203</dc:modified>
 			<dc:source>The Baseline 4 model from the EOS ("Economics via Object-oriented Simulation") project at Princeton University led by Ken Steiglitz, see http://eos.cs.princeton.edu/.</dc:source>
 			<aors:shortDescription xmlns="http://www.w3.org/1999/xhtml">
-				A simulation model of an economy with three commodities: food, labor, and "utility" 
-				and are four types of economic agents: laborers, owners, farms, and utility factories. 
+				Simulates an economy with three goods: labor, food, and "utility", and four types of economic agents: 
+				laborers, owners, farms, and utility factories. 
+			</aors:shortDescription>
+			<aors:shortDescription xml:lang="de" xmlns="http://www.w3.org/1999/xhtml">
+				Simuliert eine Volkswirtschaft mit drei Gütern: Arbeit, Nahrung und einem abstrakten Luxusgut, 
+				sowie vier Arten von ökonomischen Agenten: Arbeiter, Firmenbesitzer, Bauernhöfe und Luxusgutfabriken. 
 			</aors:shortDescription>
 			<aors:description xmlns="http://www.w3.org/1999/xhtml">
-				A simulation model of an economy with three commodities: food, labor, and "utility". 
-				It also implements ownership of farms and factories. There are four types of economic agents: 
-				laborers, owners, farms, and utility factories. Laborers are allotted a certain amount 
-				of labor at each step, which they can either sell to a farm or utility factory, or chose 
-				to convert to utility.  Laborers can also buy food and utility on the open market with the 
+				This model simulates an economy with three commodities: labor, food, and "utility", 
+				and four types of economic agents: laborers, firm owners, farms, and utility factories. 
+				Laborers are allotted a certain amount of labor at each step, which they can sell to a 
+				farm or utility factory. Laborers can also buy food and utility on the open market with the 
 				money that they have earned. Owners simply own a farm or a factory, and collect the profits 
 				from these endeavors, which they use to purchase food and utility. Farms hire laborers to 
 				produce food, and then sell this food on the open market, giving any profits to their 
 				owners. Utility factories operate in the same manner, but produce utility instead of food. 
-				In addition, each laborer and owner must consume a sufficient quantity of food 
-				at each step or it dies, and owners and laborers seek to purchase.
+				Laborer and owners must consume a sufficient quantity of food	at each step or they die. 
+				They also seek to purchase utility, which effectively represents all non-essential, 
+				desirable goods, with any amount of retained earnings above their target stock.
 				For more information, see <a href="http://eos.cs.princeton.edu/DeLuise_JIW05.27.10.pdf">Developing 
-					a Micro-Validated Baseline for the EOS Framework</a> by Anthony M. DeLuise.
+				a Micro-Validated Baseline for the EOS Framework</a> by Anthony M. DeLuise.
+			</aors:description>
+			<aors:description xml:lang="de" xmlns="http://www.w3.org/1999/xhtml">
+				Dieses Modell simuliert eine Volkswirtschaft mit drei Gütern: Arbeit, Nahrung und einem 
+				abstrakten Luxusgut, sowie vier Arten von ökonomischen Agenten: Arbeiter, Firmenbesitzer, 
+				Bauernhöfe und Luxusgüterfabriken. Arbeiter verfügen in jedem Simulationsschritt über eine 
+				gewisse Menge and Arbeitskraft, die sie an einen Bauernhof oder eine Fabrik verkaufen können.
+				Sie können dann mit dem verdienten Geld Nahrung und Luxusgüter auf dem offenen Markt kaufen.
+				Firmenbesitzer besitzen einen Bauernhof oder eine Luxusgüterfabrik. Ihre Einkünfte, mit denen
+				sie Nahrung und Luxusgüter kaufen, erhalten	sie aus dem Gewinn dieser Firmen. Bauernhöfe 
+				beschäftigen Arbeiter, um Nahrung herzustellen, die sie dann auf dem offenen Markt verkaufen. 
+				Die dabei anfallenen Gewinne gehen an ihre Besitzer. Luxusgüterfabriken operieren in derselben
+				Weise, außer dass sie Luxusgüter anstatt Nahrung produzieren.	Arbeiter und Firmenbesitzer
+				müssen in jedem Schritt eine aureichende Menge an Nahrung konsumieren, um nicht zu sterben. 
+				Sie versuchen auch, mit ihrem über einem gewissen Sicherheitslevel liegenden Geldvermögen 
+				Luxusgüter zu kaufen.	Weitere Informationen können folgendem Artikel entnommen werden:  
+				<a href="http://eos.cs.princeton.edu/DeLuise_JIW05.27.10.pdf">Developing 
+				a Micro-Validated Baseline for the EOS Framework</a> by Anthony M. DeLuise.
 			</aors:description>
 			<informationModelDiagram>EOS.png</informationModelDiagram>
 			<dc:license>http://creativecommons.org/licenses/by-nc-sa/2.5/</dc:license>
@@ -278,6 +301,7 @@
 			<!-- ============================================ -->
 			<AgentType name="EconomicAgent">
 			<!-- ============================================ -->
+				<documentation><description>A Laborer produces LABOR_ALLOWANCE of labor each timestep.</description></documentation>
 				<ComplexDataProperty name="assets" type="aors.util.economics.Quantity" upperMultiplicity="unbounded"/>
 				<Attribute type="Float" name="LABOR_ALLOWANCE" initialValue="1.0"/>
 				<Attribute type="Float" name="RANDOM_FACTOR" initialValue="0.01"/>
@@ -292,7 +316,7 @@
 				<Function name="updateFood" resultType="Float">
 				<!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~-->
 					<documentation>
-						<dc:description>Updates the foodamount by the quantity of the offer</dc:description>
+						<dc:description>Updates the food amount by the quantity of the offer</dc:description>
 					</documentation>
 					<Parameter name="offer" type="TradeOffer"/>
 					<Body language="Java"><![CDATA[
@@ -319,7 +343,7 @@
 				<Function name="updateGold" resultType="Float">
 					<!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~-->
 					<documentation>
-						<dc:description>Updates the gold amount by the quantity times the price of the offer</dc:description>
+						<dc:description>Updates the ???gold amount by the quantity times the price of the offer</dc:description>
 					</documentation>
 					<Parameter name="offer" type="TradeOffer"/>
 					<Body language="Java"><![CDATA[
@@ -472,11 +496,12 @@
 			</AgentType>
 			<!-- ============================================ -->
 			<AgentType name="Person" superType="EconomicAgent">
-				<!-- ============================================ -->
+			<!-- ============================================ -->
+				<documentation><description>A Person eats EAT_AMOUNT of food each timestep.</description></documentation>
+				<Attribute type="Float" name="EAT_AMOUNT" initialValue="1.0"/>
 				<Attribute type="Float" name="TARGET_FOOD_STOCK" initialValue="30.0"/>
 				<Attribute type="Float" name="TARGET_MONEY_STOCK" initialValue="60.0"/>
 				<Attribute type="Float" name="TARGET_FIRM_MONEY_STOCK" initialValue="100"/>
-				<Attribute type="Float" name="EAT_AMOUNT" initialValue="1.0"/>
 				<Attribute type="Boolean" name="owner" initialValue="false"/>
 				<Attribute type="Boolean" name="hasFirm" initialValue="false"/>
 				<Attribute type="Float" name="konto"  initialValue="0"/>
@@ -529,17 +554,14 @@
 					<Body language="JavaScript"><![CDATA[
 						assets = this.getAllAssets();
 						if (this.isOwner()) {
-							var firmMoney = eos_economy.controller.Global.getAssetByName("Money", this.getFirm().getAllAssets()).getQuantity();
-							
+							var firmMoney = eos_economy.controller.Global.getAssetByName("Money", this.getFirm().getAllAssets()).getQuantity();							
 							var moneyToWithdraw = Math.max(this.getTARGET_MONEY_STOCK() - eos_economy.controller.Global.getAssetByName("Money", assets).getQuantity(), firmMoney - this.getTARGET_FIRM_MONEY_STOCK());
 							if (moneyToWithdraw > 0.0) {
 								var moneyAsset = eos_economy.controller.Global.getAssetByName("Money", assets);
 								var firmMoneyAsset = eos_economy.controller.Global.getAssetByName("Money", this.getFirm().getAllAssets());
 								moneyAsset.deposit(firmMoneyAsset.withdraw(moneyToWithdraw));
-							}
-							
+							}						
 						}
-							
 						this.setKonto(eos_economy.controller.Global.getAssetByName("Money", assets).getQuantity());
 						this.getAllFoodBuyLists().clear();
 						var quantum = this.getEAT_AMOUNT() * 1.0;
@@ -1911,7 +1933,7 @@
 	<EnvironmentRules>
 		<!-- ============================= -->
 		<EnvironmentRule name="InitializeOwnership">
-			<!-- ============================= -->
+		<!-- ============================= -->
 			<documentation>
 				<dc:description>Finds an owner for all firms</dc:description>
 			</documentation>
