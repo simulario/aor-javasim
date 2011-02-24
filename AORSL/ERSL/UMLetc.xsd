@@ -92,7 +92,10 @@
 	<!-- =================================================================== -->
 	<!-- *** Attribute ** -->
 	<!-- =================================================================== -->
-	<xs:element name="Attribute" type="ers:Attribute.type" substitutionGroup="ers:Property"/>
+	<xs:element name="Attribute" type="ers:Attribute.type" substitutionGroup="ers:Property">
+		<xs:annotation><xs:documentation> The values of an attribute are plain data literals (integers, strings, etc.), 
+			i.e. its type is a primitive datatype.</xs:documentation></xs:annotation>		
+	</xs:element>
 	<xs:complexType name="Attribute.type">
 		<xs:complexContent>
 			<xs:extension base="ers:Attribute0.type">
@@ -126,7 +129,7 @@
 	<!-- *** ReferenceProperty ***  -->
 	<!-- =================================================================== -->
 	<xs:element name="ReferenceProperty" type="ers:ReferenceProperty.type" substitutionGroup="ers:Property">
-		<xs:annotation><xs:documentation> The type attribute references an Object Type.</xs:documentation></xs:annotation>
+		<xs:annotation><xs:documentation> The values of a reference property are object references, i.e. its type is an object type.</xs:documentation></xs:annotation>
 	</xs:element>
 	<xs:complexType name="ReferenceProperty.type">
 		<xs:complexContent>
@@ -137,11 +140,11 @@
 	<!-- *** ComplexDataProperty *** -->
 	<!-- =================================================================== -->
 	<xs:element name="ComplexDataProperty" type="ers:ReferenceProperty.type" substitutionGroup="ers:Property">
-		<xs:annotation><xs:documentation> The type attribute references a Complex Data Type.</xs:documentation></xs:annotation>		
+		<xs:annotation><xs:documentation> The values of a complex data property are complex data structures such as lists, 
+			i.e. its type is a complex data type.</xs:documentation></xs:annotation>
 	</xs:element>
 	<!-- =================================================================== -->
-	<!-- *** CollectionValuedProperty *** -->
-	<!-- =================================================================== -->
+	<!-- *** CollectionValuedProperty *** 
 	<xs:element name="CollectionValuedProperty" type="ers:CollectionValuedProperty.type" substitutionGroup="ers:Property">
 		<xs:annotation><xs:documentation>For referencing a Collection Type.</xs:documentation></xs:annotation>		
 	</xs:element>
@@ -166,11 +169,13 @@
 			</xs:restriction>
 		</xs:complexContent>
 	</xs:complexType>
+	-->
 	<!-- =================================================================== -->
 	<!-- *** EnumerationProperty *** -->
 	<!-- =================================================================== -->
 	<xs:element name="EnumerationProperty" type="ers:EnumerationProperty.type" substitutionGroup="ers:Property">
-		<xs:annotation><xs:documentation>Admits only values that are enumeration literals of an Enumeration datatype.</xs:documentation></xs:annotation>				
+		<xs:annotation><xs:documentation> The values of an enumeration property are enumeration literals (such as Sex.MALE), 
+			i.e. its type is an enumeration datatype.</xs:documentation></xs:annotation>
 	</xs:element>
 	<xs:complexType name="EnumerationProperty.type">
 		<xs:complexContent>
@@ -224,15 +229,18 @@
 	<!-- =================================================================== -->
 	<xs:element name="MultiValuedSlot">
 	<!-- =================================================================== -->
+		<xs:annotation><xs:documentation>A multi-valued slot allows to add/remove items to/from the collection, 
+			and to assign a new value to a specific item. </xs:documentation></xs:annotation>
 		<xs:complexType>
 			<xs:choice minOccurs="0" maxOccurs="unbounded">
 				<xs:element name="Add">
+					<xs:annotation><xs:documentation>For adding values as new items to the collection. </xs:documentation></xs:annotation>
 					<xs:complexType>
 						<xs:sequence>
 							<xs:element ref="ers:ValueExpr" minOccurs="0" maxOccurs="unbounded"/>
 						</xs:sequence>
 						<xs:attribute name="itemVariable" type="ers:CanonicalName" use="optional">
-							<xs:annotation><xs:documentation>An object variable that holds an object-valued item to be added. </xs:documentation></xs:annotation>
+							<xs:annotation><xs:documentation>An object variable holding an object reference that is to be added as a new item. </xs:documentation></xs:annotation>
 						</xs:attribute>
 					</xs:complexType>
 				</xs:element>
@@ -242,13 +250,13 @@
 							<xs:element ref="ers:ValueExpr" minOccurs="0" maxOccurs="unbounded"/>
 						</xs:sequence>
 						<xs:attribute name="indexValue" type="xs:int" use="required">
-							<xs:annotation><xs:documentation>The index at which the new item is to be set/assigned. </xs:documentation></xs:annotation>
+							<xs:annotation><xs:documentation>The index at which the new item is to be assigned. </xs:documentation></xs:annotation>
 						</xs:attribute>
 						<xs:attribute name="itemVariable" type="ers:CanonicalName" use="optional">
-							<xs:annotation><xs:documentation>An object variable that holds an object-valued item to be set/assigned. </xs:documentation></xs:annotation>
+							<xs:annotation><xs:documentation>An object variable holding an object reference that is to be assigned. </xs:documentation></xs:annotation>
 						</xs:attribute>
 						<xs:attribute name="itemValue" type="xs:string" use="optional">
-							<xs:annotation><xs:documentation>A literal value to be set/assigned. </xs:documentation></xs:annotation>
+							<xs:annotation><xs:documentation>A literal value to be assigned. </xs:documentation></xs:annotation>
 						</xs:attribute>
 					</xs:complexType>
 				</xs:element>
@@ -306,6 +314,7 @@
 		<xs:sequence>
 			<xs:any namespace="http://www.w3.org/1999/xhtml" processContents="skip" minOccurs="0" maxOccurs="unbounded"/>
 		</xs:sequence>
+		<xs:attributeGroup ref="ers:lang_default_en"/>
 	</xs:complexType>
 	<!-- ==================================================================== -->
 	<xs:element name="Condition" type="ers:Condition.type"/>
