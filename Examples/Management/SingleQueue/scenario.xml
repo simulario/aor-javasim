@@ -29,6 +29,9 @@
 					<ValueExpr language="Java">
 						(float) SimStatistics.totalServiceTime.getValue() / SimParameter.SIMULATION_STEPS * 100
 					</ValueExpr>
+					<ValueExpr language="JavaScript">
+						singleservicequeuewithstatistics.controller.SimStatistics.totalServiceTime.getValue() / singleservicequeuewithstatistics.controller.SimParameter.SIMULATION_STEPS * 100
+					</ValueExpr>
 				</Source>
 			</Variable>
 			<Variable name="maxQueueLength" dataType="Integer">
@@ -55,7 +58,15 @@
 		else if (r<95) return 5;		// with probability 0.10
 		else return 6;					// with probability 0.05
 		]]></Body>
-				<Body language="JavaScript"/>
+				<Body language="JavaScript"><![CDATA[
+		var r = singleservicequeuewithstatistics.controller.Random.uniformInt(0,99);
+		if (r<10) return 1; 			// with probability 0.10
+		else if (r<30) return 2;		// with probability 0.20
+		else if (r<60) return 3;		// with probability 0.30
+		else if (r<85) return 4;		// with probability 0.25
+		else if (r<95) return 5;		// with probability 0.10
+		else return 6;					// with probability 0.05
+		]]></Body>
 			</GlobalFunction>
 		</Globals>
 
@@ -86,8 +97,10 @@
 				<WHEN eventType="CustomerArrival"/>
 				<FOR dataVariable="srvTm" dataType="Integer">
 					<ValueExpr language="Java">Global.randomServiceTime()</ValueExpr>
+					<ValueExpr language="JavaScript">singleservicequeuewithstatistics.controller.Global.randomServiceTime()</ValueExpr>
 				</FOR>
-				<IF language="Java"> Global.serviceDeskBusy </IF>
+				<IF language="Java">Global.serviceDeskBusy </IF>
+				<IF language="JavaScript">singleservicequeuewithstatistics.controller.Global.serviceDeskBusy</IF>
 				<THEN>
 					<UPDATE-ENV>
 						<IncrementGlobalVariable name="queueLength" value="1"/>
@@ -100,10 +113,10 @@
 					<SCHEDULE-EVT>
 						<CausedEventExpr eventType="CustomerDeparture">
 							<Delay>
-								<ValueExpr language="Java">srvTm</ValueExpr>
+								<ValueExpr language="Java JavaScript">srvTm</ValueExpr>
 							</Delay>
 							<Slot property="serviceTime">
-								<ValueExpr language="Java">srvTm</ValueExpr>
+								<ValueExpr language="Java JavaScript">srvTm</ValueExpr>
 							</Slot>
 						</CausedEventExpr>
 					</SCHEDULE-EVT>
@@ -118,6 +131,7 @@
 				<WHEN eventType="CustomerDeparture" eventVariable="dep"/>
 				<FOR dataVariable="srvTm" dataType="Integer">
 					<ValueExpr language="Java">Global.randomServiceTime()</ValueExpr>
+					<ValueExpr language="JavaScript">singleservicequeuewithstatistics.controller.Global.randomServiceTime()</ValueExpr>
 				</FOR>
 				<DO>
 					<UPDATE-ENV>
@@ -125,10 +139,14 @@
 							<ValueExpr language="Java">
 								SimStatistics.totalServiceTime.getValue() + dep.getServiceTime()
 							</ValueExpr>
+							<ValueExpr language="JavaScript">
+								singleservicequeuewithstatistics.controller.SimStatistics.totalServiceTime.getValue() + this.dep.getServiceTime()
+							</ValueExpr>
 						</UpdateStatisticsVariable>
 					</UPDATE-ENV>
 				</DO>
-				<IF language="Java"> Global.queueLength == 0 </IF>
+				<IF language="Java">Global.queueLength == 0 </IF>
+				<IF language="JavaScript">singleservicequeuewithstatistics.controller.Global.queueLength == 0</IF>
 				<THEN>
 					<UPDATE-ENV>
 						<UpdateGlobalVariable name="serviceDeskBusy" value="false"/>
@@ -141,10 +159,10 @@
 					<SCHEDULE-EVT>
 						<CausedEventExpr eventType="CustomerDeparture">
 							<Delay>
-								<ValueExpr language="Java">srvTm</ValueExpr>
+								<ValueExpr language="Java JavaScript">srvTm</ValueExpr>
 							</Delay>
 							<Slot property="serviceTime">
-								<ValueExpr language="Java">srvTm</ValueExpr>
+								<ValueExpr language="Java JavaScript">srvTm</ValueExpr>
 							</Slot>
 						</CausedEventExpr>
 					</SCHEDULE-EVT>
@@ -173,7 +191,7 @@
 					<Text xml:lang="ro">Utilizare Serviciu</Text>
 				</Label>
 				<Hint>
-					<Text xml:lang="en">What is the average lenght of time the service is	used?</Text>
+					<Text xml:lang="en">What is the average lenght of time the service is used?</Text>
 					<Text xml:lang="de">Was ist der Nutzungsgrad des Service?</Text>
 					<Text xml:lang="fr">Quelle est la durée moyenne de service utilisation?</Text>
 					<Text xml:lang="es">Cual es el tiempo promedio de uso del servicio?</Text>
@@ -206,7 +224,7 @@
 					<Text xml:lang="ro">Dimensiunea maxima a listei de asteptare</Text>
 				</Label>
 				<Hint>
-					<Text xml:lang="en">What is the maximum length of the	service queue?</Text>
+					<Text xml:lang="en">What is the maximum length of the service queue?</Text>
 					<Text xml:lang="de">Was ist die maximale Länge der Warteschlange?</Text>
 					<Text xml:lang="fr">Quelle est la dimension maximale de la queue?</Text>
 					<Text xml:lang="es">Cual es el tamaño maximo de la cola?</Text>
