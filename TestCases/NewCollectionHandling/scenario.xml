@@ -34,6 +34,7 @@
       </Variable> 
     </Statistics>
     <Globals>
+    	<GlobalVariable name="customerQueue" refDataType="Customer" upperMultiplicity="unbounded"/>
       <GlobalFunction name="randomServiceTime" resultType="Integer">
         <Body language="Java"><![CDATA[
 		int r = Random.uniformInt(0,99);
@@ -96,6 +97,9 @@ OLD code       	<Object type="Customer" addToCollection="CustomerQueue">
                 </Slot>
               </Object>
             </Create>
+          	<UpdateMultiValuedGlobalVariable name="customerQueue">
+          		<AddLast itemVariable="c"/>          		
+          	</UpdateMultiValuedGlobalVariable>
           	<UpdateObject objectVariable="sd">
           		<MultiValuedSlot property="customerQueue">
           			<AddLast itemVariable="c"/>
@@ -136,6 +140,9 @@ OLD code       	<Object type="Customer" addToCollection="CustomerQueue">
 <!--
             <RemoveObjectFromCollection collectionName="CustomerQueue" itemObjectVariable="o"/>
 -->
+          	<UpdateMultiValuedGlobalVariable name="customerQueue">
+          		<RemoveFirst itemVariable="c"/>
+          	</UpdateMultiValuedGlobalVariable>
           	<UpdateObject objectVariable="sd">
           		<MultiValuedSlot property="customerQueue">
           			<RemoveFirst itemVariable="c"/>
@@ -183,8 +190,16 @@ SimStatistics.cumulativeResponseTime.getValue() + e.getOccurrenceTime() - c.getA
   <!-- =================================================== -->
   <InitialState>
   <!-- =================================================== -->
+  	<GlobalVariable name="customerQueue">
+  		<ValueExpr language="Java"><![CDATA[ new ArrayList<Customer>() ]]></ValueExpr>
+  		<ValueExpr language="JavaScript"> new js.util.ArrayList() </ValueExpr>
+  	</GlobalVariable>
   	<Object type="ServiceDesk" id="1" name="ServiceDesk">
   		<Slot property="isBusy" value="false"/>
+  		<Slot property="customerQueue">
+  			<ValueExpr language="Java"><![CDATA[ new ArrayList<Customer>() ]]></ValueExpr>
+  			<ValueExpr language="JavaScript"> new js.util.ArrayList() </ValueExpr>
+  		</Slot>
   	</Object>
     <ExogenousEvent type="CustomerArrival" occurrenceTime="1"/>
   </InitialState>
