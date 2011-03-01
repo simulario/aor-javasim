@@ -229,80 +229,85 @@
 	<!-- =================================================================== -->
 	<xs:element name="MultiValuedSlot">
 	<!-- =================================================================== -->
-		<xs:annotation><xs:documentation>A multi-valued slot allows to manipulate the value of a multi-valued property. 
+		<xs:annotation><xs:documentation>A multi-valued slot allows to change the value of a multi-valued property. 
 			This includes adding/removing items to/from the list,	and assigning a new value to a specific list item. </xs:documentation></xs:annotation>
 		<xs:complexType>
-			<xs:choice minOccurs="0" maxOccurs="unbounded">
-				<xs:element name="AddFirst" type="ers:AddItem.type">
-					<xs:annotation><xs:documentation>For adding a value as a new FIRST item to the list. </xs:documentation></xs:annotation>
-				</xs:element>
-				<xs:element name="AddLast" type="ers:AddItem.type">
-					<xs:annotation><xs:documentation>For adding a value as a new LAST item to the list. </xs:documentation></xs:annotation>
-				</xs:element>
-				<xs:element name="AddAll">
-					<xs:annotation><xs:documentation>For adding an entire list/array of vlues. </xs:documentation></xs:annotation>
-					<xs:complexType>
-						<xs:sequence>
-							<xs:element name="ListExpr" type="ers:OpaqueExpression" minOccurs="0" maxOccurs="unbounded">
-								<xs:annotation><xs:documentation>An expression that evaluates to a type-conform list to be appended to the list. </xs:documentation></xs:annotation>																
-							</xs:element>
-						</xs:sequence>
-						<xs:attribute name="listVariable" type="ers:CanonicalName" use="optional">
-							<xs:annotation><xs:documentation>A variable that holds an object reference to the list/array to be added. </xs:documentation></xs:annotation>
-						</xs:attribute>
-					</xs:complexType>
-				</xs:element>
-				<xs:element name="RemoveFirst">
-					<xs:annotation><xs:documentation>For removing the FIRST item from the list. </xs:documentation></xs:annotation>
-					<xs:complexType>
-						<xs:attribute name="itemVariable" type="ers:CanonicalName" use="optional">
-							<xs:annotation><xs:documentation>A variable holding an object reference to the item that was removed from the list. </xs:documentation></xs:annotation>
-						</xs:attribute>
-					</xs:complexType>
-				</xs:element>
-				<xs:element name="RemoveLast">
-					<xs:annotation><xs:documentation>For removing the LAST item from the list. </xs:documentation></xs:annotation>
-					<xs:complexType>
-						<xs:attribute name="itemVariable" type="ers:CanonicalName" use="optional">
-							<xs:annotation><xs:documentation>A variable holding an object reference to the item that was removed from the list. </xs:documentation></xs:annotation>
-						</xs:attribute>
-					</xs:complexType>
-				</xs:element>
-				<xs:element name="Remove">
-					<xs:annotation><xs:documentation>For removing a specific item from the list. </xs:documentation></xs:annotation>
-					<xs:complexType>
-						<xs:sequence>
-							<xs:element name="ItemExpr" type="ers:OpaqueExpression" minOccurs="0" maxOccurs="unbounded">
-								<xs:annotation><xs:documentation>An expression that evaluates to a type-conform value to be removed from the list. </xs:documentation></xs:annotation>								
-							</xs:element>
-						</xs:sequence>
-						<xs:attribute name="itemVariable" type="ers:CanonicalName" use="optional">
-							<xs:annotation><xs:documentation>A variable that holds an object reference to the item to be removed. </xs:documentation></xs:annotation>
-						</xs:attribute>
-					</xs:complexType>
-				</xs:element>
-				<xs:element name="Assign">
-					<xs:annotation><xs:documentation>For assigning a new value to an item at a specific index in the array/list. </xs:documentation></xs:annotation>
-					<xs:complexType>
-						<xs:sequence>
-							<xs:element name="ItemExpr" type="ers:OpaqueExpression" minOccurs="0" maxOccurs="unbounded"/>
-						</xs:sequence>
-						<xs:attribute name="indexValue" type="xs:int" use="required">
-							<xs:annotation><xs:documentation>The item index at which the new value is to be assigned. </xs:documentation></xs:annotation>
-						</xs:attribute>
-						<xs:attribute name="itemVariable" type="ers:CanonicalName" use="optional">
-							<xs:annotation><xs:documentation>A variable holding an object reference that is to be assigned. </xs:documentation></xs:annotation>
-						</xs:attribute>
-						<xs:attribute name="itemValue" type="xs:string" use="optional">
-							<xs:annotation><xs:documentation>A literal value to be assigned (in the case where the list item type is a primitive datatype). </xs:documentation></xs:annotation>
-						</xs:attribute>
-					</xs:complexType>
-				</xs:element>
-			</xs:choice>
+			<xs:group ref="ers:ChangeMultiValuedProperty.group" maxOccurs="unbounded"/>
 			<xs:attribute name="property" type="ers:PathName" use="required"/>
 		</xs:complexType>
 	</xs:element>
+	<xs:group name="ChangeMultiValuedProperty.group">
+		<xs:choice>
+			<xs:element name="AddFirst" type="ers:AddItem.type">
+				<xs:annotation><xs:documentation>For adding a value as a new FIRST item to the list. </xs:documentation></xs:annotation>
+			</xs:element>
+			<xs:element name="AddLast" type="ers:AddItem.type">
+				<xs:annotation><xs:documentation>For adding a value as a new LAST item to the list. </xs:documentation></xs:annotation>
+			</xs:element>
+			<xs:element name="AddAll">
+				<xs:annotation><xs:documentation>For adding an entire list/array of vlues. </xs:documentation></xs:annotation>
+				<xs:complexType>
+					<xs:sequence>
+						<xs:element name="ListExpr" type="ers:OpaqueExpression" minOccurs="0" maxOccurs="unbounded">
+							<xs:annotation><xs:documentation>An expression that evaluates to a type-conform list to be appended to the list. </xs:documentation></xs:annotation>																
+						</xs:element>
+					</xs:sequence>
+					<xs:attribute name="listVariable" type="ers:CanonicalName" use="optional">
+						<xs:annotation><xs:documentation>A variable that holds an object reference to the list/array to be added. </xs:documentation></xs:annotation>
+					</xs:attribute>
+				</xs:complexType>
+			</xs:element>
+			<xs:element name="RemoveFirst">
+				<xs:annotation><xs:documentation>For removing the FIRST item from the list. </xs:documentation></xs:annotation>
+				<xs:complexType>
+					<xs:attribute name="itemVariable" type="ers:CanonicalName" use="optional">
+						<xs:annotation><xs:documentation>A variable holding an object reference to the item that was removed from the list. </xs:documentation></xs:annotation>
+					</xs:attribute>
+				</xs:complexType>
+			</xs:element>
+			<xs:element name="RemoveLast">
+				<xs:annotation><xs:documentation>For removing the LAST item from the list. </xs:documentation></xs:annotation>
+				<xs:complexType>
+					<xs:attribute name="itemVariable" type="ers:CanonicalName" use="optional">
+						<xs:annotation><xs:documentation>A variable holding an object reference to the item that was removed from the list. </xs:documentation></xs:annotation>
+					</xs:attribute>
+				</xs:complexType>
+			</xs:element>
+			<xs:element name="Remove">
+				<xs:annotation><xs:documentation>For removing a specific item from the list. </xs:documentation></xs:annotation>
+				<xs:complexType>
+					<xs:sequence>
+						<xs:element name="ItemExpr" type="ers:OpaqueExpression" minOccurs="0" maxOccurs="unbounded">
+							<xs:annotation><xs:documentation>An expression that evaluates to a type-conform value to be removed from the list. </xs:documentation></xs:annotation>								
+						</xs:element>
+					</xs:sequence>
+					<xs:attribute name="itemVariable" type="ers:CanonicalName" use="optional">
+						<xs:annotation><xs:documentation>A variable that holds an object reference to the item to be removed. </xs:documentation></xs:annotation>
+					</xs:attribute>
+				</xs:complexType>
+			</xs:element>
+			<xs:element name="Assign">
+				<xs:annotation><xs:documentation>For assigning a new value to an item at a specific index in the array/list. </xs:documentation></xs:annotation>
+				<xs:complexType>
+					<xs:sequence>
+						<xs:element name="ItemExpr" type="ers:OpaqueExpression" minOccurs="0" maxOccurs="unbounded"/>
+					</xs:sequence>
+					<xs:attribute name="indexValue" type="xs:int" use="required">
+						<xs:annotation><xs:documentation>The item index at which the new value is to be assigned. </xs:documentation></xs:annotation>
+					</xs:attribute>
+					<xs:attribute name="itemVariable" type="ers:CanonicalName" use="optional">
+						<xs:annotation><xs:documentation>A variable holding an object reference that is to be assigned. </xs:documentation></xs:annotation>
+					</xs:attribute>
+					<xs:attribute name="itemValue" type="xs:string" use="optional">
+						<xs:annotation><xs:documentation>A literal value to be assigned (in the case where the list item type is a primitive datatype). </xs:documentation></xs:annotation>
+					</xs:attribute>
+				</xs:complexType>
+			</xs:element>
+		</xs:choice>
+	</xs:group>
+	<!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->
 	<xs:complexType name="AddItem.type">
+	<!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->
 		<xs:sequence>
 			<xs:element name="ItemExpr" type="ers:OpaqueExpression" minOccurs="0" maxOccurs="unbounded">
 				<xs:annotation><xs:documentation>An expression that evaluates to a type-conform value to be added as a new item. </xs:documentation></xs:annotation>								
