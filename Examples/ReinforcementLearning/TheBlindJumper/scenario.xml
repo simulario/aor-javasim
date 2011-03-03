@@ -43,35 +43,37 @@
 			<ClassDef language="Java"><![CDATA[
 			public void print( double[][] P) {
 			  int M = P.length; 	  // number of rows
-				int N = P[0].length;  // number of columns
-				for (int i=0; i < M; i++) {
-					for (int j=0; j < N; j++) System.out.print( P[i][j] + " ");
+			  int N = P[0].length;  // number of columns
+			  for (int i=0; i < M; i++) {
+			    for (int j=0; j < N; j++) {
+			      System.out.print( P[i][j] + " ");
+			    }
 			    System.out.println();
 				}
 	          System.out.println();
 			}
 			public void normalize( double[][] P, int row) {
-				double rowSum = 0;
-				for (int j=0; j < P[row].length; j++) rowSum = rowSum + P[row][j];
-				for (int j=0; j < P[row].length; j++) P[row][j] = P[row][j] / rowSum;
-		    System.out.print("Row " + row +": ");
-				for (int j=0; j < P[row].length; j++) System.out.format("%5.2f", P[row][j]);				
-		    System.out.println();
+			  double rowSum = 0;
+			  for (int j=0; j < P[row].length; j++) rowSum = rowSum + P[row][j];
+			  for (int j=0; j < P[row].length; j++) P[row][j] = P[row][j] / rowSum;
+		        System.out.print("Row " + row +": ");
+			  for (int j=0; j < P[row].length; j++) System.out.format("%5.2f", P[row][j]);				
+		        System.out.println();
 			}
 			public int maxIndex( double[][] P, long r) {
 			  int row = (int) r-1;
-				int max = 0;
-				for (int j=1; j < P[row].length; j++) { 
-					if (P[row][j] > P[row][max]) max = j;
+			  int max = 0;
+			  for (int j=1; j < P[row].length; j++) { 
+			    if (P[row][j] > P[row][max]) max = j;
 				}
-				return max+1;	
+			  return max+1;	
 			}
 			public void successUpdate( double[][] P, long r, long c) {
 			  int row = (int) r-1;
 			  int col = (int) c-1;
 				P[row][col] = P[row][col] * (1 + Global.alpha);
 				for (int j=0; j < P[row].length; j++) { 
-					if (j != col) P[row][j] = (1 - Global.alpha) * P[row][j];
+				  if (j != col) P[row][j] = (1 - Global.alpha) * P[row][j];
 				}
 				normalize( P, row);
 			}
@@ -80,64 +82,75 @@
 			  int col = (int) c-1;
 				P[row][col] = P[row][col] * (1 - Global.alpha);
 				for (int j=0; j < P[row].length; j++) { 
-					if (j != col) P[row][j] = (1 + Global.alpha) * P[row][j];
+				  if (j != col) P[row][j] = (1 + Global.alpha) * P[row][j];
 				}
 				normalize( P, row);
 			}
 			]]></ClassDef>
-			<ClassDef language="JavaScript"><![CDATA[	
-			    
+			<ClassDef language="JavaScript"><![CDATA[			    
 			this.print = function( P) {
-			    var M = P.length; 	  // number of rows
-				 var N = P[0].length;  // number of columns
-				  var i, j;
-				for (i=0; i < M; i++) {
-					for (j=0; j < N; j++) document.write( P[i][j] + " ");
-			            document.writeln();
+			  var M = P.length; 	  // number of rows
+			  var N = P[0].length;    // number of columns
+			  var i, j;
+			  for (i=0; i < M; i++) {
+				for (j=0; j < N; j++) {
+				  document.write( P[i][j] + " ");
+				  }
+			      document.writeln();
 				}
 	            document.writeln();
 			}
 			this.normalize = function( P, row) {
-				var rowSum = 0;
-				var j;
-				for (j=0; j < P[row].length; j++) rowSum = rowSum + P[row][j];
-				for (j=0; j < P[row].length; j++) P[row][j] = P[row][j] / rowSum;
-		            document.write("Row " + row +": ");
-				for (j=0; j < P[row].length; j++) {
-				     document.write(P[row][j].toFixed(2));
-				   }				
-		            document.writeln();
+			  var rowSum = 0;
+			  var j;
+			  for (j=0; j < P[row].length; j++) {
+				rowSum = rowSum + P[row][j];
+				}
+			  for (j=0; j < P[row].length; j++) {
+				P[row][j] = P[row][j] / rowSum;
+				}
+		      document.write("Row " + row +": ");
+			  for (j=0; j < P[row].length; j++) {
+				document.write(P[row][j].toFixed(2));
+				}				
+		      document.writeln();
 			}
 			
 			this.maxIndex = function( P, r) {
 			  var row = r-1;
-				var j, max = 0;
-				for (j=1; j < P[row].length; j++) { 
-					if (P[row][j] > P[row][max]) max = j;
+			  var j, max = 0;
+			  for (j=1; j < P[row].length; j++) { 
+				if (P[row][j] > P[row][max]) {
+				  max = j;
+				  }
 				}
-				return (max+1);	
+			  return (max+1);	
 			}
 			
 			this.successUpdate = function( P, r, c) {
 			  var row = r-1;
 			  var col = c-1;
 			  var j;
-				P[row][col] = P[row][col] * (1 + theblindjumper.controller.Global.alpha);
-				for (j=0; j < P[row].length; j++) { 
-					if (j != col) P[row][j] = (1 - theblindjumper.controller.Global.alpha) * P[row][j];
+			  P[row][col] = P[row][col] * (1 + theblindjumper.controller.Global.alpha);
+			  for (j=0; j < P[row].length; j++) { 
+				if (j != col) {
+				  P[row][j] = (1 - theblindjumper.controller.Global.alpha) * P[row][j];
 				}
-				normalize( P, row);
+		      }
+			  normalize( P, row);
 			}
 			
 			this.failureUpdate = function( P, r, c) {
 			  var row = r-1;
 			  var col = c-1;
 			  var j;
-				P[row][col] = P[row][col] * (1 - theblindjumper.controller.Global.alpha);
-				for (j=0; j < P[row].length; j++) { 
-					if (j != col) P[row][j] = (1 + theblindjumper.controller.Global.alpha) * P[row][j];
+			  P[row][col] = P[row][col] * (1 - theblindjumper.controller.Global.alpha);
+			  for (j=0; j < P[row].length; j++) { 
+				if (j != col) {
+				  P[row][j] = (1 + theblindjumper.controller.Global.alpha) * P[row][j];
 				}
-				normalize( P, row);
+			  }
+			  normalize( P, row);
 			}	
 			]]></ClassDef>
 		</ComplexDataType>
@@ -146,15 +159,17 @@
 			private double[][] P = new double[3][3];
 
 			public ProbabilityMatrix_3_3() {
-			    int M = P.length; 		// number of rows
-				int N = P[0].length;    // number of columns
-				double p0 = 1.0 / N; 
-				for (int i=0; i < M; i++) {
-					for (int j=0; j < N; j++) P[i][j] = p0;
-				}
+			  int M = P.length; 		// number of rows
+			  int N = P[0].length;      // number of columns
+			  double p0 = 1.0 / N; 
+			  for (int i=0; i < M; i++) {
+				for (int j=0; j < N; j++) {
+				  P[i][j] = p0;
+				  }
+			   }
 			}
 			public int maxIndex( long r) {
-				return maxIndex( this.P, r);	
+			  return maxIndex( this.P, r);	
 			}
 			public void successUpdate( long r, long c) {
 			  successUpdate( this.P, r, c);
@@ -166,7 +181,7 @@
 			<ClassDef language="JavaScript"><![CDATA[				
 			  var P = new Array(new Array(3), new Array(3), new Array(3));
 			  var M = P.length; 		// number of rows
-			  var N = P[0].length;    // number of columns
+			  var N = P[0].length;      // number of columns
 			  var i, j, p0 = 1.0 / N; 
 			  for (i=0; i < M; i++) {
 			    for (j=0; j < N; j++) {
@@ -189,12 +204,14 @@
 			private double[][] P = new double[3][4];
 
 			public ProbabilityMatrix_3_4() {
-			    int M = P.length; 		// number of rows
-				int N = P[0].length;   // number of columns
-				double p0 = 1.0 / N; 
-				for (int i=0; i < M; i++) {
-					for (int j=0; j < N; j++) P[i][j] = p0;
-				}
+			  int M = P.length; 		// number of rows
+		      int N = P[0].length;     // number of columns
+			  double p0 = 1.0 / N; 
+			  for (int i=0; i < M; i++) {
+				for (int j=0; j < N; j++) {
+				  P[i][j] = p0;
+				  }
+			   }
 			}		
 			public int maxIndex( long r) {
 			   return maxIndex( this.P, r);	
@@ -208,25 +225,24 @@
 			]]></ClassDef>
 			<ClassDef language="JavaScript"><![CDATA[
 			var P = new Array(new Array(4), new Array(4), new Array(4));
-			
-			function ProbabilityMatrix_3_4() {
-			    var M = P.length; 		// number of rows
-				var N = P[0].length;   // number of columns
-				var p0 = 1.0 / N; 
-				var i, j;
-				for (i=0; i < M; i++) {
-					for (j=0; j < N; j++) P[i][j] = p0;
-				}
+			var M = P.length; 		// number of rows
+		    var N = P[0].length;    // number of columns
+		    var p0 = 1.0 / N; 
+			var i, j;
+			for (i=0; i < M; i++) {
+		      for (j=0; j < N; j++) {
+		         P[i][j] = p0;
+		         }
+			 }
 		    this.maxIndex = function( r) {
-				return maxIndex( P, r);	
+			  return maxIndex( P, r);	
 			}
 			this.successUpdate = function( r, c) {
 			  successUpdate( P, r, c);
 			}
 			this.failureUpdate = function( r, c) {
 			  failureUpdate( P, r, c);
-			}
-	     }		
+			}		
 			]]></ClassDef>
 		</ComplexDataType>
 	</DataTypes>
