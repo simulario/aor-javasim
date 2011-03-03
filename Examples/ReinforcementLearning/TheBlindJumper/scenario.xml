@@ -42,13 +42,13 @@
 		<ComplexDataType name="ProbabilityMatrix">
 			<ClassDef language="Java"><![CDATA[
 			public void print( double[][] P) {
-			  int M = P.length; 		// number of rows
+			  int M = P.length; 	  // number of rows
 				int N = P[0].length;  // number of columns
 				for (int i=0; i < M; i++) {
 					for (int j=0; j < N; j++) System.out.print( P[i][j] + " ");
 			    System.out.println();
 				}
-	    System.out.println();
+	          System.out.println();
 			}
 			public void normalize( double[][] P, int row) {
 				double rowSum = 0;
@@ -85,14 +85,68 @@
 				normalize( P, row);
 			}
 			]]></ClassDef>
+			<ClassDef language="JavaScript"><![CDATA[	
+			function print( P) {
+			    var M = P.length; 	  // number of rows
+				 var N = P[0].length;  // number of columns
+				  var i, j;
+				for (i=0; i < M; i++) {
+					for (j=0; j < N; j++) document.write( P[i][j] + " ");
+			            document.writeln();
+				}
+	            document.writeln();
+			}
+			function normalize( P, row) {
+				var rowSum = 0;
+				var j;
+				for (j=0; j < P[row].length; j++) rowSum = rowSum + P[row][j];
+				for (j=0; j < P[row].length; j++) P[row][j] = P[row][j] / rowSum;
+		            document.write("Row " + row +": ");
+				for (int j=0; j < P[row].length; j++) {
+				     document.write(P[row][j].toFixed(2));
+				   }				
+		            document.writeln();
+			}
+			
+			function maxIndex( P, r) {
+			  var row = r-1;
+				var j, max = 0;
+				for (j=1; j < P[row].length; j++) { 
+					if (P[row][j] > P[row][max]) max = j;
+				}
+				return (max+1);	
+			}
+			
+			function successUpdate( P, r, c) {
+			  var row = r-1;
+			  var col = c-1;
+			  var j;
+				P[row][col] = P[row][col] * (1 + theblindjumper.controller.Global.alpha);
+				for (j=0; j < P[row].length; j++) { 
+					if (j != col) P[row][j] = (1 - theblindjumper.controller.Global.alpha) * P[row][j];
+				}
+				normalize( P, row);
+			}
+			
+			function failureUpdate( P, r, c) {
+			  var row = r-1;
+			  var col = c-1;
+			  var j;
+				P[row][col] = P[row][col] * (1 - theblindjumper.controller.Global.alpha);
+				for (j=0; j < P[row].length; j++) { 
+					if (j != col) P[row][j] = (1 + theblindjumper.controller.Global.alpha) * P[row][j];
+				}
+				normalize( P, row);
+			}	
+			]]></ClassDef>
 		</ComplexDataType>
 		<ComplexDataType name="ProbabilityMatrix_3_3" superType="ProbabilityMatrix">
 			<ClassDef language="Java"><![CDATA[
 			private double[][] P = new double[3][3];
 
 			public ProbabilityMatrix_3_3() {
-			  int M = P.length; 		// number of rows
-				int N = P[0].length;  // number of columns
+			    int M = P.length; 		// number of rows
+				int N = P[0].length;    // number of columns
 				double p0 = 1.0 / N; 
 				for (int i=0; i < M; i++) {
 					for (int j=0; j < N; j++) P[i][j] = p0;
@@ -108,27 +162,70 @@
 			  failureUpdate( this.P, r, c);
 			}
 			]]></ClassDef>
+			<ClassDef language="JavaScript"><![CDATA[	
+			var P = new Array(new Array(3), new Array(3), new Array(3));
+			
+			function ProbabilityMatrix_3_3() {
+			  var M = P.length; 		// number of rows
+				var N = P[0].length;    // number of columns
+				  var i, j, p0 = 1.0 / N; 
+				for (i=0; i < M; i++) {
+					for (j=0; j < N; j++) P[i][j] = p0;
+				}
+			}
+			function maxIndex( r) {
+			  return maxIndex( P, r);	
+			}
+			function successUpdate( r, c) {
+			  successUpdate( P, r, c);
+			}
+			function failureUpdate( r, c) {
+			  failureUpdate( P, r, c);
+			}
+			]]></ClassDef>
 		</ComplexDataType>
 		<ComplexDataType name="ProbabilityMatrix_3_4" superType="ProbabilityMatrix">
 			<ClassDef language="Java"><![CDATA[
 			private double[][] P = new double[3][4];
 
 			public ProbabilityMatrix_3_4() {
-			  int M = P.length; 		// number of rows
-				int N = P[0].length;  // number of columns
+			    int M = P.length; 		// number of rows
+				int N = P[0].length;   // number of columns
 				double p0 = 1.0 / N; 
 				for (int i=0; i < M; i++) {
 					for (int j=0; j < N; j++) P[i][j] = p0;
 				}
 			}		
 			public int maxIndex( long r) {
-				return maxIndex( this.P, r);	
+			   return maxIndex( this.P, r);	
 			}
 			public void successUpdate( long r, long c) {
-			  successUpdate( this.P, r, c);
+			   successUpdate( this.P, r, c);
 			}
 			public void failureUpdate( long r, long c) {
-			  failureUpdate( this.P, r, c);
+			   failureUpdate( this.P, r, c);
+			}
+			]]></ClassDef>
+			<ClassDef language="JavaScript"><![CDATA[
+			var P = new Array(new Array(4), new Array(4), new Array(4));
+			
+			function ProbabilityMatrix_3_4() {
+			    var M = P.length; 		// number of rows
+				var N = P[0].length;   // number of columns
+				var p0 = 1.0 / N; 
+				var i, j;
+				for (i=0; i < M; i++) {
+					for (j=0; j < N; j++) P[i][j] = p0;
+				}
+			}		
+			function maxIndex( r) {
+				return maxIndex( P, r);	
+			}
+			function successUpdate( r, c) {
+			  successUpdate( P, r, c);
+			}
+			function failureUpdate( r, c) {
+			  failureUpdate( P, r, c);
 			}
 			]]></ClassDef>
 		</ComplexDataType>
@@ -175,58 +272,60 @@
 			<DO>
 				<UPDATE-AGT>
 					<Slot property="currentJumpRuleStateIndex">
-						<ValueExpr language="Java"><![CDATA[
-					(m.getDistanceSymbol().equals("A")) ? 1 :
-					(m.getDistanceSymbol().equals("B")) ? 2 : 3
+						<ValueExpr language="Java JavaScript"><![CDATA[
+					(this.m.getDistanceSymbol().equals("A")) ? 1 :
+					(this.m.getDistanceSymbol().equals("B")) ? 2 : 3
 					]]></ValueExpr>
 					</Slot>
 					<Slot property="currentActionParameterValueIndex">
-						<ValueExpr language="Java"><![CDATA[
-						agt.getJumpSuccessProbMat().maxIndex( (m.getDistanceSymbol().equals("A")) ? 1 :
-					(m.getDistanceSymbol().equals("B")) ? 2 : 3)
-						]]></ValueExpr>
+						<ValueExpr language="Java JavaScript"><![CDATA[
+					(this.agt.getJumpSuccessProbMat().maxIndex( (this.m.getDistanceSymbol().equals("A")) ? 1 :
+					(this.m.getDistanceSymbol().equals("B")) ? 2 : 3))	
+				    ]]></ValueExpr>
 					</Slot>
 				</UPDATE-AGT>
 				<SCHEDULE-EVT>
 					<ActionEventExpr actionEventType="Jump" delay="5">
 						<Slot property="distance">
-							<ValueExpr language="Java">agt.getCurrentActionParameterValueIndex()</ValueExpr>
+							<ValueExpr language="Java JavaScript"><![CDATA[
+							this.agt.getCurrentActionParameterValueIndex()	
+						     ]]></ValueExpr>
 						</Slot>
 					</ActionEventExpr>
 				</SCHEDULE-EVT>
 			</DO>
 		</ReactionRule>
-		<!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->
+		<!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->
 		<ReactionRule name="OnSuccessUpdateProbabilityMatrix_AgtRule" agentVariable="agt">
-		<!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->
+		<!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->
 			<documentation><description>When the jumper receives the Success reinforcement signal, it updates its success probability matrix accordingly, i.e. the matrix value corresponding to the current state and the chosen action parameter value will be increased relativeley to the other values of the same row. </description></documentation>
 			<WHEN eventType="Success"/>
 			<DO>
 				<UPDATE-AGT>
 					<UpdateComplexDataPropertyValue complexDataProperty="jumpSuccessProbMat" procedure="successUpdate">
 						<Argument>
-							<ValueExpr language="Java">agt.getCurrentJumpRuleStateIndex()</ValueExpr>
+							<ValueExpr language="Java JavaScript">this.agt.getCurrentJumpRuleStateIndex()</ValueExpr>
 						</Argument>
 						<Argument>
-							<ValueExpr language="Java">agt.getCurrentActionParameterValueIndex()</ValueExpr>
+							<ValueExpr language="Java JavaScript">this.agt.getCurrentActionParameterValueIndex()</ValueExpr>
 						</Argument>
 					</UpdateComplexDataPropertyValue>
 				</UPDATE-AGT>
 			</DO>
 		</ReactionRule>
-		<!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->
+		<!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->
 		<ReactionRule name="OnFailureUpdateProbabilityMatrix_AgtRule" agentVariable="agt">
-		<!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->
+		<!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->
 			<documentation><description>When the jumper receives the Failure reinforcement signal, it updates its success probability matrix accordingly, i.e. the matrix value corresponding to the current state and the chosen action parameter value will be decreased relativeley to the other values of the same row. </description></documentation>
 			<WHEN eventType="Failure"/>
 			<DO>
 				<UPDATE-AGT>
 					<UpdateComplexDataPropertyValue complexDataProperty="jumpSuccessProbMat" procedure="failureUpdate">
 						<Argument>
-							<ValueExpr language="Java">agt.getCurrentJumpRuleStateIndex()</ValueExpr>
+							<ValueExpr language="Java JavaScript">this.agt.getCurrentJumpRuleStateIndex()</ValueExpr>
 						</Argument>
 						<Argument>
-							<ValueExpr language="Java">agt.getCurrentActionParameterValueIndex()</ValueExpr>
+							<ValueExpr language="Java JavaScript">this.agt.getCurrentActionParameterValueIndex()</ValueExpr>
 						</Argument>
 					</UpdateComplexDataPropertyValue>
 				</UPDATE-AGT>
@@ -246,54 +345,54 @@
 			<WHEN eventType="ObserveNewBarrier" eventVariable="e"/>
 			<DO>
 				<UPDATE-AGT>
-					<Slot property="currentTellRuleStateIndex"><ValueExpr language="Java">e.getSize()</ValueExpr></Slot>
+					<Slot property="currentTellRuleStateIndex"><ValueExpr language="Java JavaScript">this.e.getSize()</ValueExpr></Slot>
 					<Slot property="currentActionParameterValueIndex">
-						<ValueExpr language="Java">agt.getTellSuccessProbMat().maxIndex( agt.getCurrentTellRuleStateIndex())</ValueExpr>
+						<ValueExpr language="Java JavaScript">this.agt.getTellSuccessProbMat().maxIndex( this.agt.getCurrentTellRuleStateIndex())</ValueExpr>
 					</Slot>
 				</UPDATE-AGT>
 				<SCHEDULE-EVT>
 					<OutMessageEventExpr messageType="Tell" receiverIdRefs="2">
 						<Slot property="distanceSymbol">
-							<ValueExpr language="Java"><![CDATA[
-					(agt.getCurrentActionParameterValueIndex() == 1) ? "A" :
-					(agt.getCurrentActionParameterValueIndex() == 2) ? "B" : "C"
-				]]></ValueExpr>
+						  <ValueExpr language="Java JavaScript"><![CDATA[
+					(this.agt.getCurrentActionParameterValueIndex() == 1) ? "A" :
+					(this.agt.getCurrentActionParameterValueIndex() == 2) ? "B" : "C"
+				          ]]></ValueExpr>
 						</Slot>
 					</OutMessageEventExpr>
 				</SCHEDULE-EVT>
 			</DO>
 		</ReactionRule>
-		<!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->
+		<!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->
 		<ReactionRule name="OnSuccessUpdateProbabilityMatrix_AgtRule" agentVariable="agt">
-		<!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->
+		<!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->
 			<documentation><description>When the speaker receives the Success reinforcement signal, it updates its success probability matrix accordingly, i.e. the matrix value corresponding to the current state and the chosen action parameter value will be increased relatively to the other values of the same row. </description></documentation>
 			<WHEN eventType="Success"/>
 			<DO>
 				<UPDATE-AGT>
 					<UpdateComplexDataPropertyValue complexDataProperty="tellSuccessProbMat" procedure="successUpdate">
 						<Argument>
-							<ValueExpr language="Java">agt.getCurrentTellRuleStateIndex()</ValueExpr>
+							<ValueExpr language="Java JavaScript">this.agt.getCurrentTellRuleStateIndex()</ValueExpr>
 						</Argument>
 						<Argument>
-							<ValueExpr language="Java">agt.getCurrentActionParameterValueIndex()</ValueExpr>
+							<ValueExpr language="Java JavaScript">this.agt.getCurrentActionParameterValueIndex()</ValueExpr>
 						</Argument>
 					</UpdateComplexDataPropertyValue>
 				</UPDATE-AGT>
 			</DO>
 		</ReactionRule>
-		<!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->
+		<!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->
 		<ReactionRule name="OnFailureUpdateProbabilityMatrix_AgtRule" agentVariable="agt">
-		<!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->
+		<!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->
 			<documentation><description>When the speaker receives the Failure reinforcement signal, it updates its success probability matrix accordingly, i.e. the matrix value corresponding to the current state and the chosen action parameter value will be decreased relatively to the other values of the same row.</description></documentation>
 			<WHEN eventType="Failure"/>
 			<DO>
 				<UPDATE-AGT>
 					<UpdateComplexDataPropertyValue complexDataProperty="tellSuccessProbMat" procedure="failureUpdate">
 						<Argument>
-							<ValueExpr language="Java">agt.getCurrentTellRuleStateIndex()</ValueExpr>
+							<ValueExpr language="Java JavaScript">this.agt.getCurrentTellRuleStateIndex()</ValueExpr>
 						</Argument>
 						<Argument>
-							<ValueExpr language="Java">agt.getCurrentActionParameterValueIndex()</ValueExpr>
+							<ValueExpr language="Java JavaScript">this.agt.getCurrentActionParameterValueIndex()</ValueExpr>
 						</Argument>
 					</UpdateComplexDataPropertyValue>
 				</UPDATE-AGT>
@@ -312,8 +411,8 @@
 		<DO>
 			<UPDATE-ENV>
 				<UpdateObject>
-					<ObjectRef objectType="Jumper" language="Java">e.getActor()</ObjectRef>
-					<Slot property="x"><ValueExpr language="Java">((Jumper)e.getActor()).getX() + e.getDistance()</ValueExpr></Slot>
+					<ObjectRef objectType="Jumper" language="Java JavaScript">this.e.getActor()</ObjectRef>
+					<Slot property="x"><ValueExpr language="Java JavaScript">((Jumper)this.e.getActor()).getX() + this.e.getDistance()</ValueExpr></Slot>
 				</UpdateObject>
 			</UPDATE-ENV>
 			<SCHEDULE-EVT>
@@ -322,7 +421,7 @@
 				</CausedEventExpr>
 			</SCHEDULE-EVT>
 		</DO>
-		<IF language="Java">e.getDistance() == b.getSize()+1</IF>
+		<IF language="Java JavaScript">this.e.getDistance() == this.b.getSize()+1</IF>
 		<THEN>
 			<SCHEDULE-EVT>
 				<PerceptionEventExpr eventType="Success" perceiverIdRefs="2 3"/>
@@ -347,17 +446,17 @@
    				<Slot property="x" value="1"/>
    			</UpdateObject>
    			<UpdateObject objectVariable="b">
-   				<Slot property="size"><ValueExpr language="Java">e.getSize()</ValueExpr></Slot>
+   				<Slot property="size"><ValueExpr language="Java JavaScript">this.e.getSize()</ValueExpr></Slot>
    			</UpdateObject>
    			<ForEachGridCell startX="3" endX="4" startY="1" endY="1" gridCellVariable="c">
    				 <Slot property="isBarrierCell">
-   				 	<ValueExpr language="Java"> (e.getSize() + 1 >= c.getPosX()) ?  1 : 0 </ValueExpr>
+   				 	<ValueExpr language="Java JavaScript"> (this.e.getSize() + 1 >= this.c.getPosX()) ?  1 : 0 </ValueExpr>
    				 </Slot>
    			</ForEachGridCell>
    		</UPDATE-ENV>
    		<SCHEDULE-EVT>
    			<PerceptionEventExpr eventType="ObserveNewBarrier" perceiverIdRefs="3">
-   				<Slot property="size"><ValueExpr language="Java">e.getSize()</ValueExpr></Slot>
+   				<Slot property="size"><ValueExpr language="Java JavaScript">this.e.getSize()</ValueExpr></Slot>
    			</PerceptionEventExpr>
    		</SCHEDULE-EVT>
    	</DO>
@@ -400,7 +499,7 @@
 					the "speaker" who tries to communicate this<h:br />
 					to the blind jumper. However, both agents first have<h:br /> 
 					to learn which symbols to use for communicating<h:br />
-the	size of the barrier.</h:p></HtmlText>
+                    the	size of the barrier.</h:p></HtmlText>
 			</DisplayDescription>
 			<Views>
 				<SpaceView canvasColor="lightgrey">
