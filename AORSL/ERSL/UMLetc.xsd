@@ -81,9 +81,17 @@
 		</xs:sequence>
 		<xs:attribute name="name" type="ers:CanonicalName" use="required"/>
 		<xs:attribute name="type" type="ers:PathName" use="required"/>
-		<xs:attribute name="upperMultiplicity" type="ers:UpperMultiplicity" use="optional" default="1"/>
+		<xs:attribute name="upperMultiplicity" type="ers:UpperMultiplicity" use="optional" default="1">
+			<xs:annotation><xs:documentation>If set to "unbounded", the property/attribute will be multi-valued, 
+			i.e. its value will be a list/array. Such a property can be used to represent, e.g., a queue.
+			A multi-valued reference property can be used to represent a non-functional association. </xs:documentation></xs:annotation>
+		</xs:attribute>
 		<xs:attribute name="lowerMultiplicity" type="xs:nonNegativeInteger" use="optional" default="1"/>
-		<xs:attribute name="isStatic" type="xs:boolean" use="optional" default="false"/>
+		<xs:attribute name="isStatic" type="xs:boolean" use="optional" default="false">
+			<xs:annotation><xs:documentation>A 'static' property is a type-level attribute that can be accessed via the type's class name. 
+				E.g. if p is defined as a static property of some type T, then you can use the expressions T.getP() and T.setP(...) 
+			for accessing it. </xs:documentation></xs:annotation>
+		</xs:attribute>
 		<!-- 
 		<xs:attribute name="isEmergent" type="xs:boolean" use="optional" default="false"/>
 		<xs:assert test="@lowerMultiplicity le @upperMultiplicity" saxon:message="Property/@lowerMultiplicity must be less than Property/@upperMultiplicity!"/>
@@ -102,7 +110,9 @@
 				<xs:attribute name="initialValue" type="xs:string" use="optional"/>
 				<xs:attribute name="minValue" type="xs:double" use="optional"/>
 				<xs:attribute name="maxValue" type="xs:double" use="optional"/>
+<!--
 				<xs:assert test="not(@minValue) or not(@maxValue) or (@minValue le @maxValue)" saxon:message="Attribute/@minValue must be less than Attribute/@maxValue!"/>
+-->
 			</xs:extension>
 		</xs:complexContent>
 	</xs:complexType>
@@ -129,7 +139,7 @@
 	<!-- *** ReferenceProperty ***  -->
 	<!-- =================================================================== -->
 	<xs:element name="ReferenceProperty" type="ers:ReferenceProperty.type" substitutionGroup="ers:Property">
-		<xs:annotation><xs:documentation> The values of a reference property are object references, i.e. its type is an object type.</xs:documentation></xs:annotation>
+		<xs:annotation><xs:documentation>The values of a reference property are object references, i.e. its type is an object type.</xs:documentation></xs:annotation>
 	</xs:element>
 	<xs:complexType name="ReferenceProperty.type">
 		<xs:complexContent>
@@ -140,7 +150,7 @@
 	<!-- *** ComplexDataProperty *** -->
 	<!-- =================================================================== -->
 	<xs:element name="ComplexDataProperty" type="ers:ReferenceProperty.type" substitutionGroup="ers:Property">
-		<xs:annotation><xs:documentation> The values of a complex data property are complex data structures such as lists, 
+		<xs:annotation><xs:documentation>The values of a complex data property are complex data structures such as lists, 
 			i.e. its type is a complex data type.</xs:documentation></xs:annotation>
 	</xs:element>
 	<!-- =================================================================== -->
@@ -174,7 +184,7 @@
 	<!-- *** EnumerationProperty *** -->
 	<!-- =================================================================== -->
 	<xs:element name="EnumerationProperty" type="ers:EnumerationProperty.type" substitutionGroup="ers:Property">
-		<xs:annotation><xs:documentation> The values of an enumeration property are enumeration literals (such as Sex.MALE), 
+		<xs:annotation><xs:documentation>The values of an enumeration property are enumeration literals (such as Sex.MALE), 
 			i.e. its type is an enumeration datatype.</xs:documentation></xs:annotation>
 	</xs:element>
 	<xs:complexType name="EnumerationProperty.type">
@@ -215,6 +225,7 @@
 	<!-- =================================================================== -->
 	<xs:element name="Slot" type="ers:Slot.type"/>
 	<!-- =================================================================== -->
+	<xs:annotation><xs:documentation>Allows to set the value of a property. </xs:documentation></xs:annotation>
 	<xs:complexType name="Slot.type">
 		<xs:complexContent>
 			<xs:extension base="ers:RandomVariable-OR-ValueExpr">
@@ -229,14 +240,16 @@
 	<!-- =================================================================== -->
 	<xs:element name="MultiValuedSlot">
 	<!-- =================================================================== -->
-		<xs:annotation><xs:documentation>A multi-valued slot allows to change the value of a multi-valued property. 
+		<xs:annotation><xs:documentation>Allows to change the value of a multi-valued property. 
 			This includes adding/removing items to/from the list,	and assigning a new value to a specific list item. </xs:documentation></xs:annotation>
 		<xs:complexType>
 			<xs:group ref="ers:ChangeMultiValuedProperty.group" maxOccurs="unbounded"/>
 			<xs:attribute name="property" type="ers:PathName" use="required"/>
 		</xs:complexType>
 	</xs:element>
+	<!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->
 	<xs:group name="ChangeMultiValuedProperty.group">
+	<!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->
 		<xs:choice>
 			<xs:element name="AddFirst" type="ers:AddItem.type">
 				<xs:annotation><xs:documentation>For adding a value as a new FIRST item to the list. </xs:documentation></xs:annotation>
@@ -371,6 +384,8 @@
 	<!-- =================================================================== -->
 	<xs:element name="PropertyValueExpr">
 	<!-- =================================================================== -->
+		<xs:annotation><xs:documentation>Allows to specify a property value expression of the form o.p by providing 
+			an object variable o and a property p. </xs:documentation></xs:annotation>
 		<xs:complexType>
 			<xs:attribute name="objectVariable" type="ers:CanonicalName" use="required"/>
 			<xs:attribute name="property" type="ers:CanonicalName" use="required"/>
@@ -378,14 +393,18 @@
 	</xs:element>
 	<!-- =================================================================== -->
 	<xs:element name="GlobalPropertyValueExpr">
-		<!-- =================================================================== -->
+	<!-- =================================================================== -->
+		<xs:annotation><xs:documentation>Allows to specify a global property value expression of the form Global.p 
+			by providing a property p. </xs:documentation></xs:annotation>
 		<xs:complexType>
 			<xs:attribute name="property" type="ers:CanonicalName" use="required"/>
 		</xs:complexType>
 	</xs:element>
 	<!-- =================================================================== -->
 	<xs:element name="ObjectValueExpr">
-		<!-- =================================================================== -->
+	<!-- =================================================================== -->
+		<xs:annotation><xs:documentation>Allows to specify an object value expression of the form o by providing 
+			an object variable o. </xs:documentation></xs:annotation>
 		<xs:complexType>
 			<xs:attribute name="objectVariable" type="ers:CanonicalName" use="required"/>
 		</xs:complexType>
@@ -440,6 +459,7 @@
 			<xs:element ref="ers:DiscreteRandomVariable" minOccurs="0"/>
 			<xs:element ref="ers:ValueExpr" minOccurs="0" maxOccurs="unbounded"/>
 			<xs:element ref="ers:PropertyValueExpr" minOccurs="0"/>
+			<xs:element ref="ers:GlobalPropertyValueExpr" minOccurs="0"/>
 		</xs:choice>
 	</xs:complexType>
 	<!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->
