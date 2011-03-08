@@ -34,6 +34,7 @@
 					</ValueExpr>
 				</Source>
 			</Variable>
+			<!--
 			<Variable name="maxQueueLength" dataType="Integer">
 				<Source aggregationFunction="max">
 					<GlobalVariable name="queueLength"/>
@@ -44,9 +45,27 @@
 					<GlobalVariable name="queueLength"/>
 				</Source>
 			</Variable>
+			-->
+			<Variable name="maxQueueLength" dataType="Integer">
+				<Source>
+					<GlobalVariable name="maxQueueLength"/>
+				</Source>
+			</Variable>
+			<Variable name="avgQueueLength" dataType="Float">
+				<Source computeOnlyAtEnd="true">
+					<ValueExpr language="Java"><![CDATA[
+		     (float) Global.sumQueueLength / SimParameter.SIMULATION_STEPS		
+						]]></ValueExpr>
+					<ValueExpr language="JavaScript"><![CDATA[
+		     singleservicequeuewithstatistics.controller.Global.sumQueueLength / singleservicequeuewithstatistics.controller.SimParameter.SIMULATION_STEPS		
+						]]></ValueExpr>
+				</Source>
+			</Variable>		
 		</Statistics>
 		<Globals>
 			<GlobalVariable name="queueLength" dataType="Integer"/>
+			<GlobalVariable name="maxQueueLength" dataType="Integer"/>
+			<GlobalVariable name="sumQueueLength" dataType="Integer"/>
 			<GlobalVariable name="serviceDeskBusy" dataType="Boolean"/>
 			<GlobalFunction name="randomServiceTime" resultType="Integer">
 				<Body language="Java"><![CDATA[
@@ -104,6 +123,22 @@
 				<THEN>
 					<UPDATE-ENV>
 						<IncrementGlobalVariable name="queueLength" value="1"/>
+						<UpdateGlobalVariable name="sumQueueLength">
+							<ValueExpr language="Java"><![CDATA[
+				Global.sumQueueLength += Global.queueLength				
+							]]></ValueExpr>
+							<ValueExpr language="JavaScript"><![CDATA[
+				singleservicequeuewithstatistics.controller.Global.sumQueueLength += singleservicequeuewithstatistics.controller.Global.queueLength
+							]]></ValueExpr>
+						</UpdateGlobalVariable>
+						<UpdateGlobalVariable name="maxQueueLength">
+							<ValueExpr language="Java"><![CDATA[
+				(Global.maxQueueLength >= Global.queueLength)? Global.maxQueueLength : Global.queueLength				
+							]]></ValueExpr>
+							<ValueExpr language="JavaScript"><![CDATA[
+			    ( singleservicequeuewithstatistics.controller.Global.maxQueueLength >= singleservicequeuewithstatistics.controller.Global.queueLength) ? singleservicequeuewithstatistics.controller.Global.maxQueueLength : singleservicequeuewithstatistics.controller.Global.queueLength		
+							]]></ValueExpr>
+						</UpdateGlobalVariable>
 					</UPDATE-ENV>
 				</THEN>
 				<ELSE>
@@ -155,6 +190,22 @@
 				<ELSE>
 					<UPDATE-ENV>
 						<IncrementGlobalVariable name="queueLength" value="-1"/>
+						<UpdateGlobalVariable name="sumQueueLength">
+							<ValueExpr language="Java"><![CDATA[
+				Global.sumQueueLength += Global.queueLength				
+							]]></ValueExpr>
+							<ValueExpr language="JavaScript"><![CDATA[
+				singleservicequeuewithstatistics.controller.Global.sumQueueLength += singleservicequeuewithstatistics.controller.Global.queueLength
+							]]></ValueExpr>
+						</UpdateGlobalVariable>
+						<UpdateGlobalVariable name="maxQueueLength">
+							<ValueExpr language="Java"><![CDATA[
+				(Global.maxQueueLength >= Global.queueLength)? Global.maxQueueLength : Global.queueLength				
+							]]></ValueExpr>
+							<ValueExpr language="JavaScript"><![CDATA[
+			    ( singleservicequeuewithstatistics.controller.Global.maxQueueLength >= singleservicequeuewithstatistics.controller.Global.queueLength) ? singleservicequeuewithstatistics.controller.Global.maxQueueLength : singleservicequeuewithstatistics.controller.Global.queueLength		
+							]]></ValueExpr>
+						</UpdateGlobalVariable>
 					</UPDATE-ENV>
 					<SCHEDULE-EVT>
 						<CausedEventExpr eventType="CustomerDeparture">
@@ -176,6 +227,7 @@
 		<!-- =================================================== -->
 		<GlobalVariable name="serviceDeskBusy" value="false"/>
 		<GlobalVariable name="queueLength" value="0"/>
+		<GlobalVariable name="sumQueueLength" value="0"/>
 		<ExogenousEvent type="CustomerArrival" occurrenceTime="1"/>
 	</InitialState>
 	<!-- =================================================== -->
