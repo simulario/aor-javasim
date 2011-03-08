@@ -54,10 +54,10 @@
 			<Variable name="avgQueueLength" dataType="Float">
 				<Source computeOnlyAtEnd="true">
 					<ValueExpr language="Java"><![CDATA[
-		     (float) Global.sumQueueLength / SimParameter.SIMULATION_STEPS		
+		     (float) Global.sumQueueLength / Global.numberOfChanges		
 						]]></ValueExpr>
 					<ValueExpr language="JavaScript"><![CDATA[
-		     singleservicequeuewithstatistics.controller.Global.sumQueueLength / singleservicequeuewithstatistics.controller.SimParameter.SIMULATION_STEPS		
+		     singleservicequeuewithstatistics.controller.Global.sumQueueLength / singleservicequeuewithstatistics.controller.Global.numberOfChanges		
 						]]></ValueExpr>
 				</Source>
 			</Variable>		
@@ -66,6 +66,7 @@
 			<GlobalVariable name="queueLength" dataType="Integer"/>
 			<GlobalVariable name="maxQueueLength" dataType="Integer"/>
 			<GlobalVariable name="sumQueueLength" dataType="Integer"/>
+			<GlobalVariable name="numberOfChanges" dataType="Integer"/>
 			<GlobalVariable name="serviceDeskBusy" dataType="Boolean"/>
 			<GlobalFunction name="randomServiceTime" resultType="Integer">
 				<Body language="Java"><![CDATA[
@@ -123,6 +124,7 @@
 				<THEN>
 					<UPDATE-ENV>
 						<IncrementGlobalVariable name="queueLength" value="1"/>
+						<IncrementGlobalVariable name="numberOfChanges" value="1"/>
 						<UpdateGlobalVariable name="sumQueueLength">
 							<ValueExpr language="Java"><![CDATA[
 				Global.sumQueueLength += Global.queueLength				
@@ -133,7 +135,7 @@
 						</UpdateGlobalVariable>
 						<UpdateGlobalVariable name="maxQueueLength">
 							<ValueExpr language="Java"><![CDATA[
-				(Global.maxQueueLength >= Global.queueLength)? Global.maxQueueLength : Global.queueLength				
+				( Global.maxQueueLength >= Global.queueLength)? Global.maxQueueLength : Global.queueLength				
 							]]></ValueExpr>
 							<ValueExpr language="JavaScript"><![CDATA[
 			    ( singleservicequeuewithstatistics.controller.Global.maxQueueLength >= singleservicequeuewithstatistics.controller.Global.queueLength) ? singleservicequeuewithstatistics.controller.Global.maxQueueLength : singleservicequeuewithstatistics.controller.Global.queueLength		
@@ -190,6 +192,7 @@
 				<ELSE>
 					<UPDATE-ENV>
 						<IncrementGlobalVariable name="queueLength" value="-1"/>
+						<IncrementGlobalVariable name="numberOfChanges" value="1"/>
 						<UpdateGlobalVariable name="sumQueueLength">
 							<ValueExpr language="Java"><![CDATA[
 				Global.sumQueueLength += Global.queueLength				
@@ -228,6 +231,7 @@
 		<GlobalVariable name="serviceDeskBusy" value="false"/>
 		<GlobalVariable name="queueLength" value="0"/>
 		<GlobalVariable name="sumQueueLength" value="0"/>
+		<GlobalVariable name="numberOfChanges" value="0"/>
 		<ExogenousEvent type="CustomerArrival" occurrenceTime="1"/>
 	</InitialState>
 	<!-- =================================================== -->
