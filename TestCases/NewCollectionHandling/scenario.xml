@@ -2,7 +2,7 @@
 <?xml-stylesheet type="text/xsl" href="prettyprint.xsl"?>
 
 <SimulationScenario xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
- xsi:schemaLocation="http://aor-simulation.org ../../../AOR-JSim_v.2.1/AORSL/AORSL_0-8-4.xsd"
+	xsi:schemaLocation="http://aor-simulation.org ../../AORSL/AORSL_0-8-4.xsd"
  xmlns:dc="http://purl.org/dc/elements/1.1/"
  xmlns="http://aor-simulation.org"
  xmlns:aors="http://aor-simulation.org"
@@ -70,7 +70,7 @@
     	<!-- =================================================== -->
     	<ObjectType name="ServiceDesk">
    		<!-- =================================================== -->
-    		<Attribute name="isBusy" type="Boolean"/>
+    		<Attribute name="busy" type="Boolean"/>
     		<ReferenceProperty name="customerQueue" type="Customer" upperMultiplicity="unbounded"/>
     	</ObjectType>
     </EntityTypes>
@@ -85,7 +85,7 @@
           	and for ending the service, a departure event (with a delay being set to a random service time) is scheduled.</dc:description>
         </documentation>
         <WHEN eventType="CustomerArrival" eventVariable="e"/>
-      	<FOR-ObjectVariable variable="sd" objectName="ServiceDesk"/>
+      	<FOR-ObjectVariable variable="sd" objectIdRef="1"/>
         <DO>
           <UPDATE-ENV>
             <Create>
@@ -109,11 +109,11 @@ OLD code       	<Object type="Customer" addToCollection="CustomerQueue">
           	</UpdateObject>
           </UPDATE-ENV>
         </DO>
-        <IF language="Java">! sd.isIsBusy() </IF>
+        <IF language="Java"> ! sd.isBusy() </IF>
         <THEN>
           <UPDATE-ENV>
           	<UpdateObject objectVariable="sd">
-          		<Slot property="isBusy" value="true"/>
+          		<Slot property="busy" value="true"/>
           	</UpdateObject>
           </UPDATE-ENV>
           <SCHEDULE-EVT>
@@ -133,7 +133,7 @@ OLD code       	<Object type="Customer" addToCollection="CustomerQueue">
           	and the queue size is decremented by 1.</dc:description>
         </documentation>
         <WHEN eventType="CustomerDeparture" eventVariable="e"/>
-      	<FOR-ObjectVariable variable="sd" objectName="ServiceDesk"/>
+      	<FOR-ObjectVariable variable="sd" objectIdRef="1"/>
 <!--
       	<FOR objectType="Collection" objectVariable="q" objectName="CustomerQueue"/>
 -->
@@ -169,7 +169,7 @@ SimStatistics.cumulativeResponseTime.getValue() + e.getOccurrenceTime() - c.getA
         <THEN>
           <UPDATE-ENV>
           	<UpdateObject objectVariable="sd">
-          		<Slot property="isBusy" value="false"/>
+          		<Slot property="busy" value="false"/>
           	</UpdateObject>
           </UPDATE-ENV>
         </THEN>
@@ -197,7 +197,7 @@ SimStatistics.cumulativeResponseTime.getValue() + e.getOccurrenceTime() - c.getA
   		<ValueExpr language="JavaScript"> new js.util.ArrayList() </ValueExpr>
   	</GlobalVariable>
   	<Object type="ServiceDesk" id="1" name="ServiceDesk">
-  		<Slot property="isBusy" value="false"/>
+  		<Slot property="busy" value="false"/>
   		<Slot property="customerQueue">
   			<ValueExpr language="Java"><![CDATA[ new ArrayList<Customer>() ]]></ValueExpr>
   			<ValueExpr language="JavaScript"> new js.util.ArrayList() </ValueExpr>
