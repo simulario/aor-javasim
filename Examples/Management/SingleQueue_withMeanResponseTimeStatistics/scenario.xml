@@ -1,13 +1,15 @@
 <?xml version="1.0"?>
 <?xml-stylesheet type="text/xsl" href="prettyprint.xsl"?>
 
-<SimulationScenario version="0.8.4" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-  xsi:schemaLocation="http://aor-simulation.org ../../../AORSL/ERSL/ERSL_0-8-4.xsd" 
-  xmlns="http://aor-simulation.org" xmlns:aors="http://aor-simulation.org"
-  xmlns:dc="http://purl.org/dc/elements/1.1/"
-  scenarioName="SingleServiceQueue_withMeanResponseTimeStatistics"
-  scenarioTitle="A single service queue with customer objects creation using a FIFO buffer for the service queue."
-  simulationManagerDirectory="../../..">
+<SimulationScenario xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xsi:schemaLocation="http://aor-simulation.org ../../../AORSL/AORSL_0-8-4.xsd"
+ xmlns:dc="http://purl.org/dc/elements/1.1/"
+ xmlns="http://aor-simulation.org"
+ xmlns:aors="http://aor-simulation.org"
+ version="0.8.4"
+ scenarioName="SingleServiceQueue_withMeanResponseTimeStatistics"
+ scenarioTitle="A single service queue with customer objects creation using a FIFO buffer for the service queue."
+ simulationManagerDirectory="../../..">
 
   <SimulationParameters simulationSteps="10000" stepDuration="1" timeUnit="min"/>
 
@@ -28,13 +30,12 @@
       <Variable name="cumulativeResponseTime" dataType="Integer"/>
       <Variable name="meanResponseTime" dataType="Float">
         <Source computeOnlyAtEnd="true">
-        <ValueExpr language="Java"> (float)SimStatistics.cumulativeResponseTime.getValue()
+        <ValueExpr language="Java"> (double) SimStatistics.cumulativeResponseTime.getValue()
         / SimStatistics.nmrOfDepartures.getValue() </ValueExpr>
         </Source>
       </Variable> 
     </Statistics>
     <Globals>
-      <GlobalVariable name="serviceDeskBusy" dataType="Boolean"/>
       <GlobalFunction name="randomServiceTime" resultType="Integer">
         <Body language="Java"><![CDATA[
 		int r = Random.uniformInt(0,99);
@@ -62,34 +63,50 @@
       <CausedEventType name="CustomerDeparture"/>
       <!-- =================================================== -->
       <ObjectType name="Customer">
-        <!-- =================================================== -->
+      <!-- =================================================== -->
         <Attribute name="arrivalTime" type="Integer"/>
       </ObjectType>
+    	<!-- =================================================== -->
+    	<ObjectType name="ServiceDesk">
+   		<!-- =================================================== -->
+    		<Attribute name="busy" type="Boolean"/>
+    		<ReferenceProperty name="waitingCustomers" type="Customer" upperMultiplicity="unbounded"/>
+    	</ObjectType>
     </EntityTypes>
 
     <EnvironmentRules>
       <!-- =================================================== -->
       <EnvironmentRule name="ArrivalRule">
-        <!-- =================================================== -->
+      <!-- =================================================== -->
         <documentation>
-          <dc:description>When a new customer arrives, a new customer object is created and added to the customer queue. When the service desk is busy, nothing else happens. Otherwise, the customer is going to be serviced and hence the service desk gets busy, and for ending the service, a departure event (with a delay being set to a random service time) is created.</dc:description>
+          <dc:description>When a new customer arrives, a new customer object is created and added to the customer queue. 
+          	Then, if the service desk is not busy, the customer is going to be serviced and hence the service desk gets busy, 
+          	and for ending the service, a departure event (with a delay being set to a random service time) is scheduled.</dc:description>
         </documentation>
         <WHEN eventType="CustomerArrival" eventVariable="e"/>
+      	<FOR-ObjectVariable variable="sd" objectType="ServiceDesk" objectIdRef="1"/>
         <DO>
           <UPDATE-ENV>
             <Create>
-              <Object type="Customer" addToCollection="CustomerQueue">
-                <Slot property="arrivalTime">
+            		<Object type="Customer" objectVariable="c">
+              		<Slot property="arrivalTime">
                   <ValueExpr language="Java">e.getOccurrenceTime()</ValueExpr>
                 </Slot>
               </Object>
             </Create>
+          	<UpdateObject objectVariable="sd">
+          		<MultiValuedSlot property="waitingCustomers">
+          			<AddLast itemVariable="c"/>
+          		</MultiValuedSlot>
+          	</UpdateObject>
           </UPDATE-ENV>
         </DO>
-        <IF language="Java">! Global.serviceDeskBusy </IF>
+        <IF language="Java"> ! sd.isBusy() </IF>
         <THEN>
           <UPDATE-ENV>
-            <UpdateGlobalVariable name="serviceDeskBusy" value="true"/>
+          	<UpdateObject objectVariable="sd">
+          		<Slot property="busy" value="true"/>
+          	</UpdateObject>
           </UPDATE-ENV>
           <SCHEDULE-EVT>
             <CausedEventExpr eventType="CustomerDeparture">
@@ -100,33 +117,41 @@
       </EnvironmentRule>
       <!-- =================================================== -->
       <EnvironmentRule name="DepartureRule">
-        <!-- =================================================== -->
+      <!-- =================================================== -->
         <documentation>
-          <dc:description>When a customer departs, if the waiting line is empty (the queue size is equal to 0), the service desk is no longer busy. Otherwise, the next customer will be serviced, so a new future departure event is created (with a delay given by the random service time), and the queue size is decremented by 1.</dc:description>
+          <dc:description>When a customer departs, she is removed rom the queue and the statistics isnupdated. 
+          	If the waiting line then is empty (the queue size is equal to 0), 
+          	the service desk is no longer busy. Otherwise, the next customer will be serviced, 
+          	so a new future departure event is created (with a delay given by the random service time). </dc:description>
         </documentation>
         <WHEN eventType="CustomerDeparture" eventVariable="e"/>
-        <FOR objectType="Collection" objectVariable="q" objectName="CustomerQueue"/>
-        <DO>
+      	<FOR-ObjectVariable variable="sd" objectType="ServiceDesk" objectIdRef="1"/>
+      	<DO>
           <UPDATE-ENV>
-            <RemoveObjectFromCollection collectionName="CustomerQueue"
-              itemObjectVariable="o"/>
+          	<UpdateObject objectVariable="sd">
+          		<MultiValuedSlot property="waitingCustomers">
+          			<RemoveFirst itemVariable="c"/>
+          		</MultiValuedSlot>
+          	</UpdateObject>          	
             <UpdateStatisticsVariable variable="nmrOfDepartures">
-              <ValueExpr language="Java"><![CDATA[
-SimStatistics.nmrOfDepartures.getValue() + 1             	
-              	]]></ValueExpr>
+              <ValueExpr language="Java">
+SimStatistics.nmrOfDepartures.getValue() + 1
+              </ValueExpr>
             </UpdateStatisticsVariable>
             <UpdateStatisticsVariable variable="cumulativeResponseTime">
-              <ValueExpr language="Java"><![CDATA[
-SimStatistics.cumulativeResponseTime.getValue() + e.getOccurrenceTime() - o.getArrivalTime()              	
-              	]]></ValueExpr>
+              <ValueExpr language="Java">
+SimStatistics.cumulativeResponseTime.getValue() + e.getOccurrenceTime() - c.getArrivalTime()              	
+              	</ValueExpr>
             </UpdateStatisticsVariable>
-            <DestroyObject objectType="Customer" objectVariable="o"/>
+            <DestroyObject objectType="Customer" objectVariable="c"/>
           </UPDATE-ENV>
         </DO>
-        <IF language="Java"> q.size() == 0 </IF>
+        <IF language="Java"> sd.getAllWaitingCustomers().size() == 0 </IF>
         <THEN>
           <UPDATE-ENV>
-            <UpdateGlobalVariable name="serviceDeskBusy" value="false"/>
+          	<UpdateObject objectVariable="sd">
+          		<Slot property="busy" value="false"/>
+          	</UpdateObject>
           </UPDATE-ENV>
         </THEN>
         <ELSE>
@@ -138,32 +163,33 @@ SimStatistics.cumulativeResponseTime.getValue() + e.getOccurrenceTime() - o.getA
         </ELSE>
       </EnvironmentRule>
     </EnvironmentRules>
-    <Collections>
-      <!-- ====================================================================== -->
-      <Collection id="2" name="CustomerQueue" type="FIFO_QUEUE" itemType="Customer"/>
-      <!-- ====================================================================== -->
-    </Collections>
   </SimulationModel>
 
   <!-- =================================================== -->
   <InitialState>
-    <!-- =================================================== -->
-    <GlobalVariable name="serviceDeskBusy" value="false"/>
+  <!-- =================================================== -->
+  	<Object type="ServiceDesk" id="1" name="ServiceDesk">
+  		<Slot property="busy" value="false"/>
+  		<Slot property="waitingCustomers">
+  			<ValueExpr language="Java"><![CDATA[ new ArrayList<Customer>() ]]></ValueExpr>
+  			<ValueExpr language="JavaScript"> new js.util.ArrayList() </ValueExpr>
+  		</Slot>
+  	</Object>
     <ExogenousEvent type="CustomerArrival" occurrenceTime="1"/>
   </InitialState>
   
   <!-- =================================================== -->
   <UserInterface>
-    <!-- =================================================== -->
+  <!-- =================================================== -->
     <StatisticsUI>
       <StatisticsVariableUI variable="meanResponseTime">
         <Label>
-          <Text xml:lang="en">Mean Response Time</Text>
+          <Text xml:lang="en">Mean response time</Text>
         </Label>
         <Hint>
-          <Text xml:lang="en">What is the average lenght of time the customer spends in the system ?</Text>
+          <Text xml:lang="en">What is the average lenght of time the customer spends in the system?</Text>
         </Hint>
-        <Format decimalPlaces="1" />
+        <Format decimalPlaces="1"><Time>min</Time></Format>
       </StatisticsVariableUI>
     </StatisticsUI>
   </UserInterface>
