@@ -59,9 +59,6 @@
 			  double rowSum = 0;
 			  for (int j=0; j < P[row].length; j++) rowSum = rowSum + P[row][j];
 			  for (int j=0; j < P[row].length; j++) P[row][j] = P[row][j] / rowSum;
-		        System.out.print("Row " + row +": ");
-			  for (int j=0; j < P[row].length; j++) System.out.format("%5.2f", P[row][j]);				
-		        System.out.println();
 			}
 			public int maxIndex( double[][] P, long r) {
 			  int row = (int) r-1;
@@ -91,43 +88,41 @@
 			}
 			]]></ClassDef>
 			<ClassDef language="JavaScript"><![CDATA[			    
-			theblindjumper.model.dataTypes.ProbabilityMatrix.prototype.print = function( P) {
+			theblindjumper.model.dataTypes.ProbabilityMatrix.prototype.print = function(P) {
 			  var M = P.length; 	  // number of rows
 			  var N = P[0].length;    // number of columns
 			  var i, j;
 			  for (i=0; i < M; i++) {
+			  	var outputMess = "";
 				for (j=0; j < N; j++) {
-				  simConsole.message( P[i][j] + " ");
-				  }
-			    }
+				  outputMess += (P[i][j] + ", ");
+				}
+				simConsole.message(outputMess);
+			  }
 			}
-			theblindjumper.model.dataTypes.ProbabilityMatrix.prototype.normalize = function( P, row) {
+			theblindjumper.model.dataTypes.ProbabilityMatrix.prototype.normalize = function(P, row) {
 			  var rowSum = 0;
 			  var j;
 			  for (j=0; j < P[row].length; j++) {
 				rowSum = rowSum + P[row][j];
-				}
+			  }
 			  for (j=0; j < P[row].length; j++) {
 				P[row][j] = P[row][j] / rowSum;
-				}
-		      simConsole.message("Row " + row +": ");
-			  for (j=0; j < P[row].length; j++) {
-				simConsole.message(P[row][j].toFixed(2));
-				}				
+			  }
 			}
 			
-			theblindjumper.model.dataTypes.ProbabilityMatrix.prototype.maxIndex = function( P, r) {
+			theblindjumper.model.dataTypes.ProbabilityMatrix.prototype.maxIndex = function(P, r) {
 			  var row = r-1;
 			  var j, max = 0;
 			  for (j=1; j < P[row].length; j++) { 
 				if (P[row][j] > P[row][max]) {
 				  max = j;
-				  }
 				}
+			  }
 			  return (max+1);	
 			}
 			
-			theblindjumper.model.dataTypes.ProbabilityMatrix.prototype.successUpdate = function( P, r, c) {
+			theblindjumper.model.dataTypes.ProbabilityMatrix.prototype.successUpdate = function(P, r, c) {
 			  var row = r-1;
 			  var col = c-1;
 			  var j;
@@ -137,10 +132,10 @@
 				  P[row][j] = (1 - theblindjumper.controller.Global.alpha) * P[row][j];
 				}
 		      }
-			  theblindjumper.model.dataTypes.ProbabilityMatrix.prototype.normalize( P, row);
+			  this.normalize( P, row);
 			}
 			
-			theblindjumper.model.dataTypes.ProbabilityMatrix.prototype.failureUpdate = function( P, r, c) {
+			theblindjumper.model.dataTypes.ProbabilityMatrix.prototype.failureUpdate = function(P, r, c) {
 			  var row = r-1;
 			  var col = c-1;
 			  var j;
@@ -150,7 +145,7 @@
 				  P[row][j] = (1 + theblindjumper.controller.Global.alpha) * P[row][j];
 				}
 			  }
-			  theblindjumper.model.dataTypes.ProbabilityMatrix.prototype.normalize( P, row);
+			  this.normalize( P, row);
 			}	
 			]]></ClassDef>
 		</ComplexDataType>
@@ -165,8 +160,8 @@
 			  for (int i=0; i < M; i++) {
 				for (int j=0; j < N; j++) {
 				  P[i][j] = p0;
-				  }
-			   }
+				}
+			  }
 			}
 			public int maxIndex( long r) {
 			  return maxIndex( this.P, r);	
@@ -179,23 +174,23 @@
 			}
 			]]></ClassDef>
 			<ClassDef language="JavaScript"><![CDATA[	
-			  var P = new Array(new Array(3), new Array(3), new Array(3));
-			  var M = P.length; 		// number of rows
-			  var N = P[0].length;      // number of columns
-			  var i, j, p0 = 1.0 / N; 
-			  for (i=0; i < M; i++) {
-			    for (j=0; j < N; j++) {
-			      P[i][j] = p0;
+			  var __P1 = new Array(new Array(3), new Array(3), new Array(3));
+			  var __M1 = __P1.length; 		// number of rows
+			  var __N1 = __P1[0].length;      // number of columns
+			  var __i1, __j1, __p01 = 1.0 / __N1; 
+			  for (__i1=0; __i1 < __M1; __i1++) {
+			    for (__j1=0; __j1 < __N1; __j1++) {
+			      __P1[__i1][__j1] = __p01;
 			    }
 			  }		
-			  theblindjumper.model.dataTypes.ProbabilityMatrix_3_3.prototype.maxIndex = function( r) {
-			  	return theblindjumper.model.dataTypes.ProbabilityMatrix.prototype.maxIndex( P, r);	
+			  theblindjumper.model.dataTypes.ProbabilityMatrix_3_3.prototype.maxIndex = function(r) {
+			  	return this.maxIndex(__P1, r);	
 			  }
-			  theblindjumper.model.dataTypes.ProbabilityMatrix_3_3.prototype.successUpdate = function( r, c) {
-			    theblindjumper.model.dataTypes.ProbabilityMatrix.prototype.successUpdate( P, r, c);
+			  theblindjumper.model.dataTypes.ProbabilityMatrix_3_3.prototype.successUpdate = function(r, c) {
+			    this.successUpdate(__P1, r, c);
 			  }
-			  theblindjumper.model.dataTypes.ProbabilityMatrix_3_3.prototype.failureUpdate = function( r, c) {
-			    theblindjumper.model.dataTypes.ProbabilityMatrix.prototype.failureUpdate( P, r, c);
+			  theblindjumper.model.dataTypes.ProbabilityMatrix_3_3.prototype.failureUpdate = function(r, c) {
+			    this.failureUpdate(__P1, r, c);
 			  }
 			]]></ClassDef>
 		</ComplexDataType>
@@ -224,24 +219,24 @@
 			}
 			]]></ClassDef>
 			<ClassDef language="JavaScript"><![CDATA[	
-			var P = new Array(new Array(4), new Array(4), new Array(4));
-			var M = P.length; 		// number of rows
-		    var N = P[0].length;    // number of columns
-		    var p0 = 1.0 / N; 
-			var i, j;
-			for (i=0; i < M; i++) {
-		      for (j=0; j < N; j++) {
-		         P[i][j] = p0;
-		         }
-			 }
-		    theblindjumper.model.dataTypes.ProbabilityMatrix_3_4.prototype.maxIndex = function( r) {
-			  return theblindjumper.model.dataTypes.ProbabilityMatrix.prototype.maxIndex( P, r);	
+			var __P2 = new Array(new Array(4), new Array(4), new Array(4));
+			var __M2 = __P2.length; 		// number of rows
+		    var __N2 = __P2[0].length;    // number of columns
+		    var __p02 = 1.0 / __N2; 
+			var __i2, __j2;
+			for (__i2=0; __i2 < __M2; __i2++) {
+		      for (__j2 = 0; __j2 < __N2; __j2++) {
+		         __P2[__i2][__j2] = __p02;
+		      }
 			}
-			theblindjumper.model.dataTypes.ProbabilityMatrix_3_4.prototype.successUpdate = function( r, c) {
-			  theblindjumper.model.dataTypes.ProbabilityMatrix.prototype.successUpdate( P, r, c);
+		    theblindjumper.model.dataTypes.ProbabilityMatrix_3_4.prototype.maxIndex = function(r) {
+			  return this.maxIndex(__P2, r);	
 			}
-			theblindjumper.model.dataTypes.ProbabilityMatrix_3_4.prototype.failureUpdate = function( r, c) {
-			  theblindjumper.model.dataTypes.ProbabilityMatrix.prototype.failureUpdate( P, r, c);
+			theblindjumper.model.dataTypes.ProbabilityMatrix_3_4.prototype.successUpdate = function(r, c) {
+			  this.successUpdate(__P2, r, c);
+			}
+			theblindjumper.model.dataTypes.ProbabilityMatrix_3_4.prototype.failureUpdate = function(r, c) {
+			  this.failureUpdate(__P2, r, c);
 			}	
 			]]></ClassDef>
 		</ComplexDataType>
@@ -498,11 +493,7 @@
 <!-- =================================================================== -->
 	<GlobalVariable name="alpha" value="0.1"/> <!-- learning factor -->	
 	<CausedEvent type="CreateNewBarrier" occurrenceTime="1">
-		<Slot property="size">
-			<RandomVariable>
-				<UniformInt lowerBound="1" upperBound="3"/>
-			</RandomVariable>
-		</Slot>
+		<Slot property="size" value="1"/>
 	</CausedEvent>  
 	<PhysicalObject type="Barrier" id="1" x="2" y="1">
 		<Slot property="size" value="1"/>
@@ -542,7 +533,15 @@
 					<PhysicalShape2D><Rectangle texture="media/Blind_Man.jpg"/></PhysicalShape2D>
 				</PhysicalObjectView>
 				<PhysicalObjectView physicalObjectType="Speaker" displayName="true">
-					<PhysicalShape2D><Rectangle texture="media/cartoon-man-wearing-suit.png"/></PhysicalShape2D>
+					<PhysicalShape2D>
+						<Rectangle>
+							<ShapePropertyVisualizationMap shapeProperty="texture" property="currentTellRuleStateIndex" mapType="equalityCaseWise" 
+								a0="0" v0="media/cartoon-man-wearing-suit.png" 
+								a1="1" v1="media/cartoon-man-wearing-suit_1.jpg" 
+								a2="2" v2="media/cartoon-man-wearing-suit_2.jpg"
+								a3="3" v3="media/cartoon-man-wearing-suit_3.jpg"/> 
+						</Rectangle>
+					</PhysicalShape2D>
 				</PhysicalObjectView>
 				<EventAppearance eventType="Failure">
 					<MidiSound instrumentName="REED_BaritoneSax" noteSequence="24/500/120"/>
