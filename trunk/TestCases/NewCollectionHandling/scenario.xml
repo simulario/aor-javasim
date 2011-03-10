@@ -30,13 +30,12 @@
       <Variable name="cumulativeResponseTime" dataType="Integer"/>
       <Variable name="meanResponseTime" dataType="Float">
         <Source computeOnlyAtEnd="true">
-        <ValueExpr language="Java"> (float)SimStatistics.cumulativeResponseTime.getValue()
+        <ValueExpr language="Java"> (double) SimStatistics.cumulativeResponseTime.getValue()
         / SimStatistics.nmrOfDepartures.getValue() </ValueExpr>
         </Source>
       </Variable> 
     </Statistics>
     <Globals>
-    	<GlobalVariable name="customerQueue" refDataType="Customer" upperMultiplicity="unbounded"/>
       <GlobalFunction name="randomServiceTime" resultType="Integer">
         <Body language="Java"><![CDATA[
 		int r = Random.uniformInt(0,99);
@@ -71,39 +70,32 @@
     	<ObjectType name="ServiceDesk">
    		<!-- =================================================== -->
     		<Attribute name="busy" type="Boolean"/>
-    		<ReferenceProperty name="customerQueue" type="Customer" upperMultiplicity="unbounded"/>
+    		<ReferenceProperty name="waitingCustomers" type="Customer" upperMultiplicity="unbounded"/>
     	</ObjectType>
     </EntityTypes>
 
     <EnvironmentRules>
       <!-- =================================================== -->
       <EnvironmentRule name="ArrivalRule">
-        <!-- =================================================== -->
+      <!-- =================================================== -->
         <documentation>
           <dc:description>When a new customer arrives, a new customer object is created and added to the customer queue. 
           	Then, if the service desk is not busy, the customer is going to be serviced and hence the service desk gets busy, 
           	and for ending the service, a departure event (with a delay being set to a random service time) is scheduled.</dc:description>
         </documentation>
         <WHEN eventType="CustomerArrival" eventVariable="e"/>
-      	<FOR-ObjectVariable variable="sd" objectName="ServiceDesk" objectIdRef="1"/>
+      	<FOR-ObjectVariable variable="sd" objectType="ServiceDesk" objectIdRef="1"/>
         <DO>
           <UPDATE-ENV>
             <Create>
-<!--
-OLD code       	<Object type="Customer" addToCollection="CustomerQueue">
-                                        ******************************
--->
             		<Object type="Customer" objectVariable="c">
               		<Slot property="arrivalTime">
                   <ValueExpr language="Java">e.getOccurrenceTime()</ValueExpr>
                 </Slot>
               </Object>
             </Create>
-          	<UpdateMultiValuedGlobalVariable name="customerQueue">
-          		<AddLast itemVariable="c"/>          		
-          	</UpdateMultiValuedGlobalVariable>
           	<UpdateObject objectVariable="sd">
-          		<MultiValuedSlot property="customerQueue">
+          		<MultiValuedSlot property="waitingCustomers">
           			<AddLast itemVariable="c"/>
           		</MultiValuedSlot>
           	</UpdateObject>
@@ -125,47 +117,36 @@ OLD code       	<Object type="Customer" addToCollection="CustomerQueue">
       </EnvironmentRule>
       <!-- =================================================== -->
       <EnvironmentRule name="DepartureRule">
-        <!-- =================================================== -->
+      <!-- =================================================== -->
         <documentation>
-          <dc:description>When a customer departs, if the waiting line is empty (the queue size is equal to 0), 
+          <dc:description>When a customer departs, she is removed rom the queue and the statistics isnupdated. 
+          	If the waiting line then is empty (the queue size is equal to 0), 
           	the service desk is no longer busy. Otherwise, the next customer will be serviced, 
-          	so a new future departure event is created (with a delay given by the random service time), 
-          	and the queue size is decremented by 1.</dc:description>
+          	so a new future departure event is created (with a delay given by the random service time). </dc:description>
         </documentation>
         <WHEN eventType="CustomerDeparture" eventVariable="e"/>
-      	<FOR-ObjectVariable variable="sd" objectName="ServiceDesk" objectIdRef="1"/>
-<!--
-      	<FOR objectType="Collection" objectVariable="q" objectName="CustomerQueue"/>
--->
+      	<FOR-ObjectVariable variable="sd" objectType="ServiceDesk" objectIdRef="1"/>
       	<DO>
           <UPDATE-ENV>
-<!--
-            <RemoveObjectFromCollection collectionName="CustomerQueue" itemObjectVariable="o"/>
--->
-          	<UpdateMultiValuedGlobalVariable name="customerQueue">
-          		<RemoveFirst itemVariable="c"/>
-          	</UpdateMultiValuedGlobalVariable>
           	<UpdateObject objectVariable="sd">
-          		<MultiValuedSlot property="customerQueue">
+          		<MultiValuedSlot property="waitingCustomers">
           			<RemoveFirst itemVariable="c"/>
           		</MultiValuedSlot>
-          	</UpdateObject>
-          	
+          	</UpdateObject>          	
             <UpdateStatisticsVariable variable="nmrOfDepartures">
               <ValueExpr language="Java">
 SimStatistics.nmrOfDepartures.getValue() + 1
               </ValueExpr>
             </UpdateStatisticsVariable>
             <UpdateStatisticsVariable variable="cumulativeResponseTime">
-              <ValueExpr language="Java"><![CDATA[
+              <ValueExpr language="Java">
 SimStatistics.cumulativeResponseTime.getValue() + e.getOccurrenceTime() - c.getArrivalTime()              	
-              	]]></ValueExpr>
+              	</ValueExpr>
             </UpdateStatisticsVariable>
-          	
             <DestroyObject objectType="Customer" objectVariable="c"/>
           </UPDATE-ENV>
         </DO>
-        <IF language="Java"> sd.getAllCustomerQueues().size() == 0 </IF>
+        <IF language="Java"> sd.getAllWaitingCustomers().size() == 0 </IF>
         <THEN>
           <UPDATE-ENV>
           	<UpdateObject objectVariable="sd">
@@ -182,23 +163,14 @@ SimStatistics.cumulativeResponseTime.getValue() + e.getOccurrenceTime() - c.getA
         </ELSE>
       </EnvironmentRule>
     </EnvironmentRules>
-<!--
-  	<Collections>
-      <Collection id="2" name="CustomerQueue" type="FIFO_QUEUE" itemType="Customer"/>
-    </Collections>
--->
   </SimulationModel>
 
   <!-- =================================================== -->
   <InitialState>
   <!-- =================================================== -->
-  	<GlobalVariable name="customerQueue">
-  		<ValueExpr language="Java"><![CDATA[ new ArrayList<Customer>() ]]></ValueExpr>
-  		<ValueExpr language="JavaScript"> new js.util.ArrayList() </ValueExpr>
-  	</GlobalVariable>
   	<Object type="ServiceDesk" id="1" name="ServiceDesk">
   		<Slot property="busy" value="false"/>
-  		<Slot property="customerQueue">
+  		<Slot property="waitingCustomers">
   			<ValueExpr language="Java"><![CDATA[ new ArrayList<Customer>() ]]></ValueExpr>
   			<ValueExpr language="JavaScript"> new js.util.ArrayList() </ValueExpr>
   		</Slot>
@@ -212,12 +184,12 @@ SimStatistics.cumulativeResponseTime.getValue() + e.getOccurrenceTime() - c.getA
     <StatisticsUI>
       <StatisticsVariableUI variable="meanResponseTime">
         <Label>
-          <Text xml:lang="en">Mean Response Time</Text>
+          <Text xml:lang="en">Mean response time</Text>
         </Label>
         <Hint>
-          <Text xml:lang="en">What is the average lenght of time the customer spends in the system ?</Text>
+          <Text xml:lang="en">What is the average lenght of time the customer spends in the system?</Text>
         </Hint>
-        <Format decimalPlaces="1" />
+        <Format decimalPlaces="1"><Time>min</Time></Format>
       </StatisticsVariableUI>
     </StatisticsUI>
   </UserInterface>

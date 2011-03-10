@@ -32,11 +32,11 @@
 				Also, there is no physics simulation.</p>
 			</aors:description>
 		</documentation>
-		
+<!--		
 		<SpaceModel geometry="Euclidean" spatialDistanceUnit="m">
 			<TwoDimensionalGrid xMax="30" yMax="1"/>
 		</SpaceModel>
-		
+-->		
 		<Statistics>			
 			<Variable name="Price" dataType="Float">				
 				<Source>
@@ -44,6 +44,7 @@
 				</Source>
 			</Variable>
 		</Statistics>
+		
 		<DataTypes>
 			<Enumeration name="QuantityUnit">
 				<EnumerationLiteral>PIECE</EnumerationLiteral>
@@ -90,7 +91,7 @@
 		this.expirationTimeSpan = eT;
 		this.transactionCostPerOrder = tCO;
 		this.reorderUpToLevel = rUTL;
-		this.reorderPeriod = rP
+		this.reorderPeriod = rP;
 	}
 
 	public String getName() { return name;}
@@ -102,8 +103,7 @@
 	public double getTransactionCostPerOrder() { return transactionCostPerOrder;}
 	public int getReorderUpToLevel() { return reorderUpToLevel;}
 	public int getReorderPeriod() { return reorderPeriod;}
-							
-}																
+																					
 					]]></ClassDef>
 <!--				
 				<Attribute name="name" type="String"/>
@@ -230,28 +230,23 @@
 				<!-- Batch size (unit production quantity) in quantity units -->
 				<Attribute name="productBatchSize" type="Integer"/>
 				<!-- The purchase item types (cups, lemons, sugar and ice) -->
-				<ComplexDataProperty name="purchaseItemTypes" type="PurchaseItemType" 
-					lowerMultiplicity="4" upperMultiplicity="4"/>
-				<Attribute name="purchaseItemQuantitiesInStock" type="Integer" 
-					lowerMultiplicity="4" upperMultiplicity="4"/>
+				<ComplexDataProperty name="purchaseItemTypes" type="PurchaseItemType" upperMultiplicity="unbounded"/>
+				<Attribute name="purchaseItemQuantitiesInStock" type="Integer" upperMultiplicity="unbounded"/>
 				<!-- ***  P L A N N I N G  *** -->
 				<!-- The production quantity planned for the current day-->
 				<Attribute name="plannedProductionQuantity" type="Integer"/>
 				<!-- Purchase planning decisions -->
-				<Attribute name="purchaseQuantities" type="Integer" 
-					lowerMultiplicity="4" upperMultiplicity="4"/>
+				<Attribute name="purchaseQuantities" type="Integer" upperMultiplicity="unbounded"/>
 				<!-- Production planning decisions per batch: lemon and sugar quantities per pitcher -->
-				<Attribute name="inputQuantitiesPerProductBatch" type="Integer" 
-					lowerMultiplicity="4" upperMultiplicity="4"/>
+				<Attribute name="inputQuantitiesPerProductBatch" type="Integer" upperMultiplicity="unbounded"/>
 				<!-- Production planning decisions per supply unit: ice cubes per cup -->
-				<Attribute name="inputQuantitiesPerProductSupplyUnit" type="Integer" 
-					lowerMultiplicity="4" upperMultiplicity="4"/>
+				<Attribute name="inputQuantitiesPerProductSupplyUnit" type="Integer" upperMultiplicity="unbounded"/>
 				<!-- Sales planning decisions -->
 				<Attribute name="productSalesPrice" type="Float"/>
 				
 				<Function name="addPurchaseQuantitiesToInventory" resultType="void">
 					<Body language="Java"><![CDATA[
-						for (int i=1; i <= purchaseItemTypes.length; i++) {
+						for (int i=1; i <= purchaseItemTypes.size(); i++) {
 							purchaseItemTypes.get(i).setQuantityInStock( 
 								purchaseItemTypes.get(i).getQuantityInStock() 
 						  	+ purchaseQuantities.get(i));
@@ -262,15 +257,15 @@
 				<Function name="subtractPurchaseAmountFromAmountOfCash" resultType="Float">
 					<Body language="Java"><![CDATA[
 						int purchaseAmount = 0;
-						for (int i=1; i <= purchaseItemTypes.length; i++) {
+						for (int i=1; i <= purchaseItemTypes.size(); i++) {
 							purchaseAmount += purchaseQuantities.get(i) * purchaseItemTypes.get(i).getPurchasePrice();
 						}
 						return (getAmountOfCash() - purchaseAmount);
 					]]></Body>
 				</Function>
 
-				<PeriodicTimeEventType name="StartOfDay" periodicity="100" />
-				<PeriodicTimeEventType name="EndOfDay" periodicity="100" />
+				<PeriodicTimeEventType name="StartOfDay" periodicity="100"/>
+				<PeriodicTimeEventType name="EndOfDay" periodicity="100"/>
 
 				<!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->
 				<ReactionRule name="StartOfDay_RR">
@@ -279,13 +274,13 @@
 						<h:p>At the start of the day, make planning decisions on</h:p>
 						<h:ol>
 							<h:li>The <strong>purchase</strong> of paper cups, lemons, sugar and ice</h:li>
-							<h:li>The <strong>production</strong> of lemonade from how many lemons, sugar cubes 
-								and ice cubes per pitcher</h:li>
-							<h:li>The <strong>sales</strong> of a cup of lemonade for how much</h:li>
+							<h:li>The <strong>production</strong> of lemonade: how many pitchers from how many lemons, sugar cubes 
+								and ice cubes per pitcher?</h:li>
+							<h:li>The <strong>sales price</strong> of a cup of lemonade</h:li>
 						</h:ol>						
 						<h:p>Finally, order the planned purchase item quantities.</h:p>
 					</description></documentation>
-					<WHEN eventType="StartOfDay" />
+					<WHEN eventType="StartOfDay"/>
 					<DO>
 						<UPDATE-AGT>
 							<Slot property="plannedProductionQuantity">
@@ -297,9 +292,7 @@
 							<MultiValuedSlot property="purchaseQuantities">
 								<Assign indexValue="1">
 									<!-- TODO: use a function depending on the planned production quantity and the input items in stock -->
-									<ValueExpr language="Java">
-										1
-									</ValueExpr>
+									<ItemExpr language="Java">1</ItemExpr>
 								</Assign>
 								<Assign indexValue="2" itemValue="3"/>
 								<Assign indexValue="3" itemValue="3"/>
@@ -397,7 +390,6 @@
 						</SCHEDULE-EVT>
 					</DO>
 				</ReactionRule>
-					
 			</AgentType>
 		</EntityTypes>
 		
@@ -473,9 +465,8 @@
 	<!-- ======================= -->
 	<InitialState>
 	<!-- ======================= -->
-		<Agent type="LemonadeStand" id="1">
+		<Agent type="LemonadeStand" id="1" name="DeliLemonade">
 		<!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->			
-			<Slot property="name" value="DeliLemonade" />
 			<Slot property="nameOfProductType" value="Lemonade" />
 			<Slot property="amountOfCash" value="10" />
 			
@@ -514,10 +505,10 @@
 				<ValueExpr language="Java"><![CDATA[ 
 					new java.util.ArrayList<Integer>(){
 						{
-							add( Integer(0));
-							add( Integer(0));
-							add( Integer(0));
-							add( Integer(0));
+							add( new Integer(0));
+							add( new Integer(0));
+							add( new Integer(0));
+							add( new Integer(0));
 						}
 					}
 				]]></ValueExpr>
@@ -526,10 +517,10 @@
 				<ValueExpr language="Java"><![CDATA[ 
 					new java.util.ArrayList<Integer>(){
 						{
-							add( Integer(0));
-							add( Integer(0));
-							add( Integer(0));
-							add( Integer(0));
+							add( new Integer(0));
+							add( new Integer(0));
+							add( new Integer(0));
+							add( new Integer(0));
 						}
 					}
 				]]></ValueExpr>
@@ -538,10 +529,10 @@
 				<ValueExpr language="Java"><![CDATA[ 
 					new java.util.ArrayList<Integer>(){
 						{
-							add( Integer(0));
-							add( Integer(0));
-							add( Integer(5));  // ice cubes
-							add( Integer(1));  // paper cup
+							add( new Integer(0));
+							add( new Integer(0));
+							add( new Integer(5));  // ice cubes
+							add( new Integer(1));  // paper cup
 						}
 					}
 					]]></ValueExpr>
@@ -550,10 +541,10 @@
 				<ValueExpr language="Java"><![CDATA[ 
 					new java.util.ArrayList<Integer>(){
 						{
-							add( Integer(2));  // lemons
-							add( Integer(10)); // sugar cubes
-							add( Integer(0));
-							add( Integer(0));
+							add( new Integer(2));  // lemons
+							add( new Integer(10)); // sugar cubes
+							add( new Integer(0));
+							add( new Integer(0));
 						}
 					}
 					]]></ValueExpr>
