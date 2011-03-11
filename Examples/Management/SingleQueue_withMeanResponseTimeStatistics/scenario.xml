@@ -8,20 +8,26 @@
  xmlns:aors="http://aor-simulation.org"
  version="0.8.4"
  scenarioName="SingleServiceQueue_withMeanResponseTimeStatistics"
- scenarioTitle="A single service queue with customer objects creation using a FIFO buffer for the service queue."
  simulationManagerDirectory="../../..">
 
   <SimulationParameters simulationSteps="10000" stepDuration="1" timeUnit="min"/>
 
   <SimulationModel modelName="SingleServiceQueue_withMeanResponseTimeStatistics"
-    modelTitle="A single service queue with customer objects creation using a FIFO buffer for the service queue including the customer in service as the first/topmost item">
+    modelTitle="A single service queue with customer objects creation and destruction">
 
     <documentation>
       <dc:creator>Gerd Wagner</dc:creator>
       <dc:created>20081001</dc:created>
       <dc:contributor>Jens Werner</dc:contributor>
-      <dc:modified>20081105</dc:modified>
-      <dc:description>Customers arrive at random times at a service desk where they have to wait in a queue when the service desk is busy. The time between two customer arrivals is uniformly distributed between 1 and 8 minutes. The times for completing a service vary from 1 to 6 minutes, with probabilities 0.1, 0.2, 0.3, 0.25, 0.1, 0.05, respectively. Two statistics are to be collected: mean response time (length of time a customer spends in the system) and mean proportion of customers who spend 5 or more minutes in the system (the latter is not yet implemented). An arriving customer is represented by a newly generated object, which is destroyed again, when this customer leaves the system. The customer in service is represented by the first/topmost item in the First-In-First-Out queue, while the remaining items of the queue represent the waiting line.</dc:description>
+      <dc:modified>20110311</dc:modified>
+      <dc:description>Customers arrive at random times at a service desk where they have to wait in a queue when the service desk is busy. 
+      	The time between two customer arrivals is uniformly distributed between 1 and 8 minutes. The times for completing a service 
+      	vary from 1 to 6 minutes, with probabilities 0.1, 0.2, 0.3, 0.25, 0.1, 0.05, respectively. Two statistics are to be collected: 
+      	the "mean response time" (the length of time a customer spends in the system) and the mean proportion of customers 
+      	who spend 5 or more minutes in the system (the latter is not yet implemented). An arriving customer is represented by 
+      	a newly generated object, which is destroyed again, when this customer leaves the system. The customer in service 
+      	is represented by the first/topmost item in the First-In-First-Out queue, while the remaining items of the queue 
+      	represent the waiting line.</dc:description>
       <processModelDiagram>BPMN-Diagram.png</processModelDiagram>
     </documentation>
 
@@ -35,24 +41,10 @@
         </Source>
       </Variable> 
     </Statistics>
-    <Globals>
-      <GlobalFunction name="randomServiceTime" resultType="Integer">
-        <Body language="Java"><![CDATA[
-		int r = Random.uniformInt(0,99);
-		if (r<10) return 1; 		// with probability 0.10
-		else if (r<30) return 2;	// with probability 0.20
-		else if (r<60) return 3;	// with probability 0.30
-		else if (r<85) return 4;	// with probability 0.25
-		else if (r<95) return 5;	// with probability 0.10
-		else return 6;				// with probability 0.05
-        ]]></Body>
-      </GlobalFunction>
-    </Globals>
-
     <EntityTypes>
       <!-- =================================================== -->
       <ExogenousEventType name="CustomerArrival">
-        <!-- =================================================== -->
+      <!-- =================================================== -->
         <Periodicity>
           <DiscreteRandomVariable>
           	<UniformInt lowerBound="1" upperBound="8" />
@@ -73,6 +65,18 @@
     		<ReferenceProperty name="waitingCustomers" type="Customer" upperMultiplicity="unbounded">
     			<description>This property represents a first-in-first-out queue. </description>
     		</ReferenceProperty>
+    		<Function name="randomServiceTime" resultType="Integer">
+    			<Body language="Java"><![CDATA[
+		int r = Random.uniformInt(0,99);
+		if (r<10) return 1; 		// with probability 0.10
+		else if (r<30) return 2;	// with probability 0.20
+		else if (r<60) return 3;	// with probability 0.30
+		else if (r<85) return 4;	// with probability 0.25
+		else if (r<95) return 5;	// with probability 0.10
+		else return 6;				// with probability 0.05
+        ]]></Body>
+    		</Function>
+    		
     	</ObjectType>
     </EntityTypes>
 
@@ -93,9 +97,6 @@
             		<Object type="Customer" objectVariable="c">
               		<Slot property="arrivalTime">
               			<PropertyValueExpr objectVariable="e" property="occurrenceTime"/>
-<!--
-              			<ValueExpr language="Java">e.getOccurrenceTime()</ValueExpr>
--->
               		</Slot>
               </Object>
             </Create>
@@ -115,7 +116,7 @@
           </UPDATE-ENV>
           <SCHEDULE-EVT>
             <CausedEventExpr eventType="CustomerDeparture">
-            	<Delay><ValueExpr language="Java">Global.randomServiceTime()</ValueExpr></Delay>
+            	<Delay><ValueExpr language="Java">sd.randomServiceTime()</ValueExpr></Delay>
             </CausedEventExpr>
           </SCHEDULE-EVT>
         </THEN>
@@ -162,7 +163,7 @@ SimStatistics.cumulativeResponseTime.getValue() + e.getOccurrenceTime() - c.getA
         <ELSE>
           <SCHEDULE-EVT>
             <CausedEventExpr eventType="CustomerDeparture">
-            	<Delay><ValueExpr language="Java">Global.randomServiceTime()</ValueExpr></Delay>
+            	<Delay><ValueExpr language="Java">sd.randomServiceTime()</ValueExpr></Delay>
             </CausedEventExpr>
           </SCHEDULE-EVT>
         </ELSE>
