@@ -504,7 +504,6 @@
 				<Attribute name="TARGET_FOOD_STOCK" type="Float" initialValue="30.0"/>
 				<Attribute name="TARGET_MONEY_STOCK" type="Float" initialValue="60.0"/>
 				<Attribute name="konto"  type="Float" initialValue="0"/>
-				<ReferenceProperty name="firm" type="Firm"/>
 				<ComplexDataProperty name="foodBuyList" type="TradeOffer" upperMultiplicity="unbounded"/>
 				<ComplexDataProperty name="foodSellList" type="TradeOffer" upperMultiplicity="unbounded"/>
 				<ComplexDataProperty name="utilityBuyList" type="TradeOffer" upperMultiplicity="unbounded"/>
@@ -732,29 +731,25 @@
 					</documentation>
 					<Parameter name="bidderIdRef" type="long"/>
 					<Body language="Java"><![CDATA[
-						if (isOwner() == false){
-							double price;
-							getAllLaborSellList().clear();
-							if (getLastLaborPrice() > getLastFoodPrice() && controller.Global.getAssetByName("Food", getAllAssets()).getQuantity() < getTARGET_FOOD_STOCK()){
-					        	price = (getLastLaborPrice() - getLastFoodPrice()) * ((controller.Global.getAssetByName("Food", getAllAssets()).getQuantity()*controller.Global.getAssetByName("Food", getAllAssets()).getQuantity()) / (getTARGET_FOOD_STOCK()*getTARGET_FOOD_STOCK())) + getLastFoodPrice();
-					        	price = Math.min(price, getLastLaborPrice() * 1.1);
-					        }else{
-					            price = getLastLaborPrice();
-					            final double frac = 0.95;
-					            double mod =((Math.max(Math.min(aors.util.Random.normal(0.0, 1.0), 2.0), -2.0) / 2) * (1 - frac) + 1);
-					        	price *= mod;
-					        }
-								model.dataTypes.TradeOffer o = new model.dataTypes.TradeOffer();
-					            o.setProduct("Labor");
-				            	o.setQuantity(getLABOR_ALLOWANCE());
-				            	o.setPrice(price);
-				            	o.setBuy(false);
-				            	o.setBidderIdRef(bidderIdRef);
-				            	getAllLaborSellList().add(o);
-				            	return true;
-				            
-				      }
-				      return false;
+						double price;
+						getAllLaborSellList().clear();
+						if (getLastLaborPrice() > getLastFoodPrice() && controller.Global.getAssetByName("Food", getAllAssets()).getQuantity() < getTARGET_FOOD_STOCK()){
+				        	price = (getLastLaborPrice() - getLastFoodPrice()) * ((controller.Global.getAssetByName("Food", getAllAssets()).getQuantity()*controller.Global.getAssetByName("Food", getAllAssets()).getQuantity()) / (getTARGET_FOOD_STOCK()*getTARGET_FOOD_STOCK())) + getLastFoodPrice();
+				        	price = Math.min(price, getLastLaborPrice() * 1.1);
+				        }else{
+				            price = getLastLaborPrice();
+				            final double frac = 0.95;
+				            double mod =((Math.max(Math.min(aors.util.Random.normal(0.0, 1.0), 2.0), -2.0) / 2) * (1 - frac) + 1);
+				        	price *= mod;
+				        }
+							model.dataTypes.TradeOffer o = new model.dataTypes.TradeOffer();
+				            o.setProduct("Labor");
+			            	o.setQuantity(getLABOR_ALLOWANCE());
+			            	o.setPrice(price);
+			            	o.setBuy(false);
+			            	o.setBidderIdRef(bidderIdRef);
+			            	getAllLaborSellList().add(o);
+			            	return true;
 					]]></Body>
 					<Body language="JavaScript"><![CDATA[
 						if (!this.isOwner()){ 
@@ -827,7 +822,7 @@
 			<AgentType name="Owner" superType="Person">
 				<!-- ============================================ -->
 				<Attribute name="TARGET_FIRM_MONEY_STOCK" type="Float" initialValue="100"/>
-				<Attribute name="hasFirm" type="Boolean" initialValue="false"/>
+				<ReferenceProperty name="firm" type="Firm"/>
 				<!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~-->
 				<Function name="buyFood" resultType="Boolean">
 					<!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~-->
@@ -836,10 +831,12 @@
 					</documentation>
 					<Parameter name="bidder" type="long"/>
 					<Body language="Java"><![CDATA[
-						double firmMoney = controller.Global.getAssetByName("Money",getFirm().getAllAssets()).getQuantity();
-						double moneyToWithdraw = Math.max(getTARGET_MONEY_STOCK() - controller.Global.getAssetByName("Money", getAllAssets()).getQuantity() , firmMoney - getTARGET_FIRM_MONEY_STOCK());
-						if (moneyToWithdraw > 0.0) {
-							controller.Global.getAssetByName("Money", getAllAssets()).deposit(controller.Global.getAssetByName("Money", getFirm().getAllAssets()).withdraw(moneyToWithdraw));
+						if(getFirm() != null){
+							double firmMoney = controller.Global.getAssetByName("Money",getFirm().getAllAssets()).getQuantity();
+							double moneyToWithdraw = Math.max(getTARGET_MONEY_STOCK() - controller.Global.getAssetByName("Money", getAllAssets()).getQuantity() , firmMoney - getTARGET_FIRM_MONEY_STOCK());
+							if (moneyToWithdraw > 0.0) {
+								controller.Global.getAssetByName("Money", getAllAssets()).deposit(controller.Global.getAssetByName("Money", getFirm().getAllAssets()).withdraw(moneyToWithdraw));
+	                    	}
                     	}
                     	setKonto(controller.Global.getAssetByName("Money", getAllAssets()).getQuantity());
 						getAllFoodBuyList().clear();
@@ -929,56 +926,6 @@
 				<ReferenceProperty name="owner" type="Person"/>
 				<ComplexDataProperty name="buyList" type="TradeOffer" upperMultiplicity="unbounded"/>
 				<ComplexDataProperty name="sellList" type="TradeOffer" upperMultiplicity="unbounded"/>
-				<!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~-->
-				<Function name="initializeOwnership" resultType="Person">
-					<!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~-->
-					<documentation>
-						<dc:description>Finds an owner for a firm</dc:description>
-					</documentation>
-					<Parameter name="firm" type="Firm"/>
-					<Parameter name="owners" type="java.util.List" itemType="aors.model.envsim.Owner"/>
-					<Body language="Java"><![CDATA[
-						model.envsim.Owner person = null;
-						System.out.println(owners);
-						/*for (Object o : owners){
-							if (((model.envsim.Person)o).isOwner() && !((model.envsim.Person)o).isHasFirm()) {
-								person = (model.envsim.Person) o;
-								((model.envsim.Person) o).setOwner(true);  //???  why? p is owner, already!
-								((model.envsim.Person) o).setHasFirm(true);  //???  why both hasFirm and firm?
-								((model.envsim.Person) o).setFirm(firm);
-								break;
-							}
-						}*/	
-						return person;
-					]]></Body>
-					<Body language="JavaScript"><![CDATA[
-						var person = null;
-						for (var i = 0; i < owners.size(); i++){
-							var o = owners.get(i);
-							if (o.isOwner() == true && !(o.isHasFirm())){
-								person = o;
-								o.setOwner(true);
-								o.setHasFirm(true);
-								o.setFirm(firm);
-								break;
-							}
-						}	
-
-						return person;
-					]]></Body>
-				</Function>
-				<!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~-->
-				<Function name="changeOwner" resultType="Person">
-					<!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~-->
-					<documentation>
-						<dc:description>removes an owner from a firm</dc:description>
-					</documentation>
-					<Body language="Java JavaScript"><![CDATA[
-						//this.getOwner().setOwner(false);
-						this.setOwner(null);
-						return this.getOwner();
-					]]></Body>
-				</Function>
 			</AgentType>
 			<!-- ============================================ -->
 			<AgentType name="Farm" superType="Firm">
@@ -1386,7 +1333,7 @@
 					<documentation>
 						<dc:description>converts all labor to utility</dc:description>
 					</documentation>
-					<Body language="Java"><![CDATA[					
+					<Body language="Java"><![CDATA[	
 						long utility = convertToUtility(controller.Global.getAssetByName("Labor", getAllAssets()).getQuantity());
 						double labor = controller.Global.getAssetByName("Labor", getAllAssets()).getQuantity();
 						controller.Global.getAssetByName("Labor", getAllAssets()).withdraw(labor);
@@ -2023,17 +1970,17 @@
 			<WHEN eventType="Init"/>
 			<FOR objectVariable="f" objectType="Firm" />
 			<FOR objectVariable="o" objectType="Owner" />
-			<DO>
+			<IF language="Java JavaScript"><![CDATA[ (this.o.getFirm() == null) && (this.f.getOwner() == null) ]]></IF>
+			<THEN>
 				<UPDATE-ENV>
 					<UpdateObject objectVariable="f">
-					<Slot property="owner">
-						<!--<ValueExpr language="Java">this.f.initializeOwnership(this.f, getEnvironmentSimulator().getObjectsByType(Person.class))</ValueExpr>-->
-						<ValueExpr language="Java">this.f.initializeOwnership(o)</ValueExpr>
-						<ValueExpr language="JavaScript">this.f.initializeOwnership(this.f, this.getEnvironmentSimulator().getObjectsByType("Person"))</ValueExpr>
-					 </Slot>
+					<Slot property="owner" value="o" />
+					</UpdateObject>
+					<UpdateObject objectVariable="o">
+						<Slot property="firm" value="f"></Slot>
 					</UpdateObject>
 				</UPDATE-ENV>
-			</DO>
+			</THEN>
 		</EnvironmentRule>
 		<!-- ============================= -->
 		<EnvironmentRule name="AtStartOfDayEat_ER">
@@ -2064,9 +2011,7 @@
 			<THEN>
 				<UPDATE-ENV>
 					<UpdateObject objectVariable="f">
-						<Slot property="owner">
-							<ValueExpr language="Java JavaScript">this.f.changeOwner()</ValueExpr>
-						</Slot>
+						<Slot property="owner" value="null" />
 					</UpdateObject>
 					<DestroyObject objectVariable="f"/>
 				</UPDATE-ENV>
@@ -2272,7 +2217,7 @@
 				<ValueExpr language="Java"><![CDATA[ new ArrayList<TradeOffer>() ]]></ValueExpr>
 				<ValueExpr language="JavaScript"><![CDATA[ new js.util.ArrayList() ]]></ValueExpr>
 			</Slot>
-			<Slot property="owner" value="true"></Slot>
+			<Slot property="firm" value="null"></Slot>
 			<Slot property="foodAmount" value="33" />
 			<Slot property="moneyAmount" value="90" />
 			<Slot property="utilityAmount" value="0" />
