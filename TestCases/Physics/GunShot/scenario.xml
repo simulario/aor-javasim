@@ -1,9 +1,9 @@
 <?xml version="1.0" encoding="UTF-8"?>
 
 <SimulationScenario xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
- xsi:schemaLocation="http://aor-simulation.org ../../../../../../AOR-JSim-Complete/AORSL/AORSL_0-8-4.xsd"
- xmlns:dc="http://purl.org/dc/elements/1.1/"
+ xsi:schemaLocation="http://aor-simulation.org ../../../../../../AOR-JSim-Google-Code-Complete/AORSL/AORSL_0-8-4.xsd"
  xmlns="http://aor-simulation.org"
+ xmlns:dc="http://purl.org/dc/elements/1.1/"
  xmlns:aors="http://aor-simulation.org"
  version="0.8.4"
  scenarioName="GunShot">
@@ -11,7 +11,7 @@
 
   <SimulationModel modelName="GunShot" modelTitle="Gun Shot with Gravitation Effect">
     <documentation>
-      <dc:description>Emulate a gun shot by following Physics lows and using gravitation.</dc:description>
+      <dc:description>Emulate a gun shot by following Physics laws and using gravitation.</dc:description>
       <dc:creator>Mircea Diaconescu</dc:creator>
     </documentation>
 
@@ -21,72 +21,68 @@
 
     <Statistics>
       <Variable name="maxHeight" dataType="Float" initialValue="0"/>
-      <Variable name="height" dataType="Float">
-        <Source>
-          <ObjectProperty property="y" objectType="Bullet" objectIdRef="2"/>
-        </Source>
-      </Variable>
     </Statistics>
-
+    
     <Globals>
       <GlobalVariable name="simluationSlowDownRatio" dataType="Float" minValue="1" maxValue="5"/>
       <GlobalVariable name="gravitation" dataType="Float"/>
-      <GlobalVariable name="shotAngle" dataType="Float"/>
-      <GlobalVariable name="startVelocity" dataType="Float"/>
       <GlobalVariable name="gunRectRadius" dataType="Float"/>
       <GlobalVariable name="gunRectCenterX" dataType="Float"/>
-      <GlobalVariable name="gunRectCenterY" dataType="Float"/>
-      <GlobalFunction name="getShotAngleInRadians" resultType="double">
-        <Body language="Java">
-          <![CDATA[
-            return (Global.getShotAngle() * Math.PI) / 180;
-          ]]>
-        </Body>
-        <Body language="JavaScript">
-          <![CDATA[
-            return (gunshot.controller.Global.getShotAngle() * Math.PI) / 180;
-          ]]>
-        </Body>
-      </GlobalFunction>
-      
+      <GlobalVariable name="gunRectCenterY" dataType="Float"/>      
     </Globals>
-
-
+    
+    
     <EntityTypes>
-      <ExogenousEventType name="Shot" periodicity="1"/>
+      <ExogenousEventType name="Shot" periodicity="1">
+        <StopCondition language="Java JavaScript"><![CDATA[this.getOccurrenceTime() > 1]]></StopCondition>
+      </ExogenousEventType>
       <ExogenousEventType name="Step" periodicity="1"/>
+      <CausedEventType name="MaxHeightReached">
+        <Attribute type="Float" name="maxHeight"/>
+      </CausedEventType>
+      <PhysicalObjectType name ="Ground" />
       <PhysicalObjectType name="Bullet">
         <Attribute type="Float" name="distance"/>
         <Attribute type="Boolean" name="maxHeightReached" initialValue="false"/>
         <Attribute type="Boolean" name="vMaxSliderCreated" initialValue="false"/>
       </PhysicalObjectType>
-      <PhysicalObjectType name="Gun"/>
+      <PhysicalObjectType name="Gun">
+        <Attribute type="Float" name="rotZ" minValue="0" maxValue="180"/>
+        <Attribute type="Float" name="shotVelocity" minValue="100" maxValue="500"/>
+        <Function name="getShotAngleInRadians" resultType="double">
+          <Body language="Java JavaScript">
+            <![CDATA[
+              return (this.getRotZ() * Math.PI) / 180;
+            ]]>
+          </Body>
+        </Function>
+        
+      </PhysicalObjectType>
       <PhysicalObjectType name="PathPoint"/>
-
+      
       <PhysicalObjectType name="HorizontalBar"/>
       <PhysicalObjectType name="HorizontalSlider"/>
-
+      
       <PhysicalObjectType name="VerticalBar"/>
       <PhysicalObjectType name="VerticalSlider"/>
     </EntityTypes>
-
+    
     <EnvironmentRules>
       <EnvironmentRule name="ShotBulletRule">
         <WHEN eventType="Shot" eventVariable="shotEvent"/>
-        <IF language="Java">shotEvent.getOccurrenceTime() == 1</IF>
-        <IF language="JavaScript">this.shotEvent.getOccurrenceTime() == 1</IF>
-        <THEN>
+        <FOR objectVariable="gun" objectType="Gun" objectIdRef="1"/>
+        <DO>
           <UPDATE-ENV>
             <Create>
               <PhysicalObject type="Bullet" id="2">
                 <Slot property="distance" value="0"/>
                 <Slot property="x">
-                  <ValueExpr language="Java"><![CDATA[Global.getGunRectCenterX() + Global.getGunRectRadius() * Math.cos(Global.getShotAngleInRadians())]]></ValueExpr>
-                  <ValueExpr language="JavaScript"><![CDATA[gunshot.controller.Global.getGunRectCenterX() + gunshot.controller.Global.getGunRectRadius() * Math.cos(gunshot.controller.Global.getShotAngleInRadians())]]></ValueExpr>
+                  <ValueExpr language="JavaScript"><![CDATA[gunshot.controller.Global.getGunRectCenterX() + gunshot.controller.Global.getGunRectRadius() * Math.cos(this.gun.getShotAngleInRadians())]]></ValueExpr>
+                  <ValueExpr language="Java"><![CDATA[Global.getGunRectCenterX() + Global.getGunRectRadius() * Math.cos(this.gun.getShotAngleInRadians())]]></ValueExpr>
                 </Slot>
                 <Slot property="y">
-                  <ValueExpr language="Java"><![CDATA[Global.getGunRectCenterY() + Global.getGunRectRadius() * Math.sin(Global.getShotAngleInRadians())]]></ValueExpr>
-                  <ValueExpr language="JavaScript"><![CDATA[gunshot.controller.Global.getGunRectCenterY() + gunshot.controller.Global.getGunRectRadius() * Math.sin(gunshot.controller.Global.getShotAngleInRadians())]]></ValueExpr>
+                  <ValueExpr language="JavaScript"><![CDATA[gunshot.controller.Global.getGunRectCenterY() + gunshot.controller.Global.getGunRectRadius() * Math.sin(this.gun.getShotAngleInRadians())]]></ValueExpr>
+                  <ValueExpr language="Java"><![CDATA[Global.getGunRectCenterY() + Global.getGunRectRadius() * Math.sin(this.gun.getShotAngleInRadians())]]></ValueExpr>
                 </Slot>
                 <Slot property="vx" value="100"/>
                 <Slot property="width" value="300"/>
@@ -94,58 +90,53 @@
               </PhysicalObject>
             </Create>
           </UPDATE-ENV>
-        </THEN>
+        </DO>
       </EnvironmentRule>
-
+      
       <EnvironmentRule name="MoveBulletRule">
         <WHEN eventType="Step" eventVariable="stepEvent"/>
         <FOR objectVariable="bullet" objectType="Bullet" objectIdRef="2"/>
         <FOR objectVariable="hSlider" objectType="HorizontalSlider" objectIdRef="101"/>
         <FOR objectVariable="vSlider" objectType="VerticalSlider" objectIdRef="201"/>
+        <FOR objectVariable="gun" objectType="Gun" objectIdRef="1"/>
         <FOR dataVariable="currentTime" dataType="Float">
-          <ValueExpr language="Java"><![CDATA[stepEvent.getOccurrenceTime()/Global.getSimluationSlowDownRatio()]]></ValueExpr>
           <ValueExpr language="JavaScript"><![CDATA[this.stepEvent.getOccurrenceTime()/gunshot.controller.Global.getSimluationSlowDownRatio()]]></ValueExpr>
+          <ValueExpr language="Java"><![CDATA[this.stepEvent.getOccurrenceTime()/Global.getSimluationSlowDownRatio()]]></ValueExpr>
         </FOR>
-        <IF language="Java"><![CDATA[bullet.getY() - bullet.getHeight() / 2 > 0 ]]></IF>
-        <IF language="JavaScript"><![CDATA[this.bullet.getY() - this.bullet.getHeight() / 2.0 > 0]]></IF>
+        <IF language="Java JavaScript"><![CDATA[this.bullet.getY() - this.bullet.getHeight() / 2.0 > 0]]></IF>
         <THEN>
           <UPDATE-ENV>
             <UpdateObject objectVariable="bullet">
               <Slot property="distance">
-                <ValueExpr language="Java"><![CDATA[bullet.getVx() * currentTime]]></ValueExpr>
-                <ValueExpr language="JavaScript"><![CDATA[this.bullet.getVx() * this.currentTime]]></ValueExpr>
+                <ValueExpr language="Java JavaScript"><![CDATA[this.bullet.getVx() * this.currentTime]]></ValueExpr>
               </Slot>
               <Slot property="x">
-                <ValueExpr language="Java">
-                  <![CDATA[Global.getGunRectCenterX() + Global.getGunRectRadius() * Math.cos(Global.getShotAngleInRadians()) + Global.getStartVelocity() *  Math.cos(Global.getShotAngleInRadians()) * currentTime]]>
-                </ValueExpr>
-
                 <ValueExpr language="JavaScript">
-                  <![CDATA[gunshot.controller.Global.getGunRectCenterX() + gunshot.controller.Global.getGunRectRadius() * Math.cos(gunshot.controller.Global.getShotAngleInRadians()) + gunshot.controller.Global.getStartVelocity() *  Math.cos(gunshot.controller.Global.getShotAngleInRadians()) * this.currentTime]]>
+                  <![CDATA[gunshot.controller.Global.getGunRectCenterX() + gunshot.controller.Global.getGunRectRadius() * Math.cos(this.gun.getShotAngleInRadians()) + this.gun.getShotVelocity() *  Math.cos(this.gun.getShotAngleInRadians()) * this.currentTime]]>
+                </ValueExpr>
+                <ValueExpr language="Java">
+                  <![CDATA[Global.getGunRectCenterX() + Global.getGunRectRadius() * Math.cos(this.gun.getShotAngleInRadians()) + this.gun.getShotVelocity() *  Math.cos(this.gun.getShotAngleInRadians()) * this.currentTime]]>
                 </ValueExpr>
               </Slot>
               <Slot property="y">
-                <ValueExpr language="Java">
-                  <![CDATA[Global.getGunRectCenterY() + Global.getGunRectRadius() * Math.sin(Global.getShotAngleInRadians()) + Global.getStartVelocity() *  Math.sin(Global.getShotAngleInRadians()) * currentTime - (Global.getGravitation() / 2.0f) * currentTime * currentTime]]>
-                </ValueExpr>
-
                 <ValueExpr language="JavaScript">
-                  <![CDATA[gunshot.controller.Global.getGunRectCenterY() + gunshot.controller.Global.getGunRectRadius() * Math.sin(gunshot.controller.Global.getShotAngleInRadians()) + gunshot.controller.Global.getStartVelocity() *  Math.sin(gunshot.controller.Global.getShotAngleInRadians()) * this.currentTime - (gunshot.controller.Global.getGravitation() / 2.0) * this.currentTime * this.currentTime]]>
+                  <![CDATA[gunshot.controller.Global.getGunRectCenterY() + gunshot.controller.Global.getGunRectRadius() * Math.sin(this.gun.getShotAngleInRadians()) + this.gun.getShotVelocity() *  Math.sin(this.gun.getShotAngleInRadians()) * this.currentTime - (gunshot.controller.Global.getGravitation() / 2.0) * this.currentTime * this.currentTime]]>
+                </ValueExpr>
+                <ValueExpr language="Java">
+                  <![CDATA[Global.getGunRectCenterY() + Global.getGunRectRadius() * Math.sin(this.gun.getShotAngleInRadians()) + this.gun.getShotVelocity() *  Math.sin(this.gun.getShotAngleInRadians()) * this.currentTime - (Global.getGravitation() / 2.0) * this.currentTime * this.currentTime]]>
                 </ValueExpr>
               </Slot>
             </UpdateObject>
-
+            
             <UpdateObject objectVariable="hSlider">
               <Slot property="x">
-                <ValueExpr language="Java"><![CDATA[bullet.getX()]]></ValueExpr>
-                <ValueExpr language="JavaScript"><![CDATA[this.bullet.getX()]]></ValueExpr>
+                <ValueExpr language="Java JavaScript"><![CDATA[this.bullet.getX()]]></ValueExpr>
               </Slot>
             </UpdateObject>
-
+            
             <UpdateObject objectVariable="vSlider">
               <Slot property="y">
-                <ValueExpr language="Java"><![CDATA[bullet.getY()]]></ValueExpr>
-                <ValueExpr language="JavaScript"><![CDATA[this.bullet.getY()]]></ValueExpr>
+                <ValueExpr language="Java JavaScript"><![CDATA[this.bullet.getY()]]></ValueExpr>
               </Slot>
             </UpdateObject>
           </UPDATE-ENV>
@@ -154,8 +145,7 @@
           <UPDATE-ENV>
             <UpdateObject objectVariable="bullet">
               <Slot property="y">
-                <ValueExpr language="Java"><![CDATA[bullet.getHeight()/2]]></ValueExpr>
-                <ValueExpr language="JavaScript"><![CDATA[this.bullet.getHeight()/2]]></ValueExpr>
+                <ValueExpr language="Java JavaScript"><![CDATA[this.bullet.getHeight()/2]]></ValueExpr>
               </Slot>
             </UpdateObject>
             <UpdateObject objectVariable="vSlider">
@@ -167,17 +157,16 @@
           </SCHEDULE-EVT>
         </ELSE>
       </EnvironmentRule>
-
+      
       <EnvironmentRule name="MaxHeightReachedRule">
         <WHEN eventType="Step" eventVariable="stepEvent"/>
         <FOR objectVariable="bullet" objectIdRef="2" objectType="Bullet"/>
-        <IF language="Java"><![CDATA[SimStatistics.maxHeight.getValue() < bullet.getY()]]></IF>
         <IF language="JavaScript"><![CDATA[gunshot.controller.SimStatistics.maxHeight.getValue() < this.bullet.getY()]]></IF>
+        <IF language="Java"><![CDATA[SimStatistics.maxHeight.getValue() < this.bullet.getY()]]></IF>
         <THEN>
           <UPDATE-ENV>
             <UpdateStatisticsVariable variable="maxHeight">
-              <ValueExpr language="Java"><![CDATA[bullet.getY()]]></ValueExpr>
-              <ValueExpr language="JavaScript"><![CDATA[this.bullet.getY()]]></ValueExpr>
+              <ValueExpr language="Java JavaScript"><![CDATA[this.bullet.getY()]]></ValueExpr>
             </UpdateStatisticsVariable>
           </UPDATE-ENV>
         </THEN>
@@ -189,51 +178,52 @@
           </UPDATE-ENV>
         </ELSE>
       </EnvironmentRule>
-
+      
       <EnvironmentRule name="CreateMaxHeightSliderRule">
         <WHEN eventType="Step" eventVariable="stepEvent"/>
         <FOR objectVariable="bullet" objectIdRef="2" objectType="Bullet"/>
-        <IF language="Java"><![CDATA[bullet.isMaxHeightReached() && !bullet.isVMaxSliderCreated()]]></IF>
-        <IF language="JavaScript"><![CDATA[this.bullet.isMaxHeightReached()  && !this.bullet.isVMaxSliderCreated()]]></IF>
+        <IF language="Java JavaScript"><![CDATA[this.bullet.isMaxHeightReached()  && !this.bullet.isVMaxSliderCreated()]]></IF>
         <THEN>
           <UPDATE-ENV>
             <Create>
               <PhysicalObject type="VerticalSlider">
                 <Slot property="x">
-                  <ValueExpr language="Java"><![CDATA[bullet.getX()]]></ValueExpr>
-                  <ValueExpr language="JavaScript"><![CDATA[this.bullet.getX()]]></ValueExpr>
+                  <ValueExpr language="Java JavaScript"><![CDATA[this.bullet.getX()]]></ValueExpr>
                 </Slot>
                 <Slot property="y">
-                  <ValueExpr language="Java"><![CDATA[bullet.getY()]]></ValueExpr>
-                  <ValueExpr language="JavaScript"><![CDATA[this.bullet.getY()]]></ValueExpr>
+                  <ValueExpr language="Java JavaScript"><![CDATA[this.bullet.getY()]]></ValueExpr>
                 </Slot>
-                <Slot property="width" value="500"/>
-                <Slot property="height" value="40"/>
+                <Slot property="width" value="100"/>
               </PhysicalObject>
             </Create>
             <UpdateObject objectVariable="bullet">
               <Slot property="vMaxSliderCreated" value="true"/>
             </UpdateObject>
           </UPDATE-ENV>
+          <SCHEDULE-EVT>
+            <CausedEventExpr eventType="MaxHeightReached" >
+              <Slot property="maxHeight">
+                <ValueExpr language="JavaScript"><![CDATA[gunshot.controller.SimStatistics.maxHeight.getValue()]]></ValueExpr>
+                <ValueExpr language="Java"><![CDATA[SimStatistics.maxHeight.getValue()]]></ValueExpr>
+              </Slot>
+            </CausedEventExpr>
+          </SCHEDULE-EVT>
         </THEN>
       </EnvironmentRule>
-
+      
       <EnvironmentRule name="DrawBulletPathRule">
         <WHEN eventType="Step" eventVariable="stepEvent"/>
         <FOR objectVariable="bullet" objectType="Bullet" objectIdRef="2"/>
-        <IF language="Java"><![CDATA[stepEvent.getOccurrenceTime() % 5 == 0]]></IF>
-        <IF language="JavaScript"><![CDATA[this.stepEvent.getOccurrenceTime() % 5 == 0]]></IF>
+        <IF language="Java JavaScript"><![CDATA[this.stepEvent.getOccurrenceTime() % 5 == 0]]></IF>
         <THEN>
           <UPDATE-ENV>
             <Create>
               <PhysicalObject type="PathPoint">
                 <Slot property="x">
-                  <ValueExpr language="Java"><![CDATA[bullet.getX()]]></ValueExpr>
-                  <ValueExpr language="JavaScript"><![CDATA[this.bullet.getX()]]></ValueExpr>
+                  <ValueExpr language="Java JavaScript"><![CDATA[this.bullet.getX()]]></ValueExpr>
                 </Slot>
                 <Slot property="y">
-                  <ValueExpr language="Java"><![CDATA[bullet.getY()]]></ValueExpr>
-                  <ValueExpr language="JavaScript"><![CDATA[this.bullet.getY()]]></ValueExpr>
+                  <ValueExpr language="Java JavaScript"><![CDATA[this.bullet.getY()]]></ValueExpr>
                 </Slot>
                 <Slot property="width" value="30"/>
               </PhysicalObject>
@@ -242,39 +232,36 @@
         </THEN>
       </EnvironmentRule>
     </EnvironmentRules>
-
+    
   </SimulationModel>
+  
 
   <InitialState>
-    <GlobalVariable name="startVelocity" value="240"/>
     <GlobalVariable name="simluationSlowDownRatio" value="3"/>
-    <GlobalVariable name="shotAngle" value="45"/>
     <GlobalVariable name="gunRectRadius" value="750"/>
     <GlobalVariable name="gunRectCenterX" value="750"/>
     <GlobalVariable name="gunRectCenterY" value="570"/>
     <GlobalVariable name="gravitation" value="9.81"/>
   
     
-    <PhysicalObject type="Gun" id="1" x="750" y="570" width="1500" height="1140">
-      <Slot property="rotZ">
-        <ValueExpr language="Java"><![CDATA[Global.getShotAngle()]]></ValueExpr>
-        <ValueExpr language="JavaScript"><![CDATA[gunshot.controller.Global.getShotAngle()]]></ValueExpr>
-      </Slot>
+    <PhysicalObject objectVariable="gun" type="Gun" name="Gun" id="1" x="750" y="570" width="1500" height="1140">
+      <Slot property="shotVelocity" value="240"/>
+      <Slot property="rotZ" value="45"/>
     </PhysicalObject>
 
-    <PhysicalObject type="HorizontalBar" id="100" x="7500" y="4500" z="1" width="15000" height="150"/>
-    <PhysicalObject type="HorizontalSlider" id="101" y="4500" z="2" width="75" height="300">
+    <PhysicalObject type="HorizontalBar" name="HorizontalBar" id="100" x="7500" y="4500" z="1" width="15000" height="150"/>
+    <PhysicalObject type="HorizontalSlider" name="HorizontalSlider" id="101" y="4500" z="2" width="75" height="300">
       <Slot property="x">
-        <ValueExpr language="Java"><![CDATA[Global.getGunRectCenterX() + Global.getGunRectRadius() * Math.cos(Global.getShotAngleInRadians())]]></ValueExpr>
-        <ValueExpr language="JavaScript"><![CDATA[gunshot.controller.Global.getGunRectCenterX() + gunshot.controller.Global.getGunRectRadius() * Math.cos(gunshot.controller.Global.getShotAngleInRadians())]]></ValueExpr>
+        <ValueExpr language="JavaScript"><![CDATA[gunshot.controller.Global.getGunRectCenterX() + gunshot.controller.Global.getGunRectRadius() * Math.cos(gun.getShotAngleInRadians())]]></ValueExpr>
+        <ValueExpr language="Java"><![CDATA[Global.getGunRectCenterX() + Global.getGunRectRadius() * Math.cos(gun.getShotAngleInRadians())]]></ValueExpr>
       </Slot>
     </PhysicalObject>
 
-    <PhysicalObject type="VerticalBar" id="200" x="14500" z="1" y="2500" width="150" height="5000"/>
-    <PhysicalObject type="VerticalSlider" id="201" x="14500" z="2" width="300" height="75">
+    <PhysicalObject type="VerticalBar" name="VerticalBar" id="200" x="14500" z="1" y="2500" width="150" height="5000"/>
+    <PhysicalObject type="VerticalSlider" name="VerticalSlider" id="201" x="14500" z="2" width="300" height="75">
       <Slot property="y">
-        <ValueExpr language="Java"><![CDATA[Global.getGunRectCenterY() + Global.getGunRectRadius() * Math.sin(Global.getShotAngleInRadians())]]></ValueExpr>
-        <ValueExpr language="JavaScript"><![CDATA[gunshot.controller.Global.getGunRectCenterY() + gunshot.controller.Global.getGunRectRadius() * Math.sin(gunshot.controller.Global.getShotAngleInRadians())]]></ValueExpr>
+        <ValueExpr language="JavaScript"><![CDATA[gunshot.controller.Global.getGunRectCenterY() + gunshot.controller.Global.getGunRectRadius() * Math.sin(gun.getShotAngleInRadians())]]></ValueExpr>
+        <ValueExpr language="Java"><![CDATA[Global.getGunRectCenterY() + Global.getGunRectRadius() * Math.sin(gun.getShotAngleInRadians())]]></ValueExpr>    
       </Slot>
     </PhysicalObject>
 
@@ -300,22 +287,6 @@
         </Hint>
       </GlobalVariableUI>
       
-      <GlobalVariableUI variable="startVelocity" widget="Slider" sliderStepSize="5">
-        <Label>
-          <Text>Velocity</Text>
-          <Text xml:lang="de">Geschwindigkeit</Text>
-          <Text xml:lang="en">Velocity</Text>
-        </Label>
-        <Hint>
-          <Text>The shoot velocity of the bullet</Text>
-          <Text xml:lang="de">Das Shooting Geschwindigkeit der Kugel</Text>
-          <Text xml:lang="en">The shoot velocity of the bullet</Text>
-        </Hint>
-        <Unit>
-          <Physics>m/s</Physics>
-        </Unit>
-      </GlobalVariableUI>
-      
       <GlobalVariableUI variable="gravitation">
         <Label>
           <Text xml:lang="de">Gravitation</Text>
@@ -326,29 +297,92 @@
           <Text xml:lang="de">Die Gravitation in die Umwelt</Text>
           <Text xml:lang="en">The gravitation in the environment</Text>
         </Hint>
-        <Unit>
+        <Format decimalPlaces="2">
           <Physics>m/s²</Physics>
-        </Unit>
+        </Format>
       </GlobalVariableUI>
       
-      <GlobalVariableUI variable="shotAngle">
+      <ObjectUI objectType="Gun">
+        <PropertyUI property="rotZ" widget="Slider">
+          <Label>
+            <Text xml:lang="de">Schusswinkel</Text>
+            <Text xml:lang="en">Shot Angle</Text>
+          </Label>
+          <Hint>
+            <Text>The shot angle for the bullet</Text>
+            <Text xml:lang="de">Der Schuss Winkel für die Kugel</Text>
+            <Text xml:lang="en">The shot angle for the bullet</Text>
+          </Hint>
+          <Format decimalPlaces="0">
+            <Math>°</Math>
+          </Format>
+        </PropertyUI>
+        <PropertyUI property="shotVelocity" widget="Slider" sliderStepSize="5">
+          <Label>
+            <Text>Velocity</Text>
+            <Text xml:lang="de">Geschwindigkeit</Text>
+            <Text xml:lang="en">Velocity</Text>
+          </Label>
+          <Hint>
+            <Text>The shoot velocity of the bullet</Text>
+            <Text xml:lang="de">Das Shooting Geschwindigkeit der Kugel</Text>
+            <Text xml:lang="en">The shoot velocity of the bullet</Text>
+          </Hint>
+          <Format decimalPlaces="0">
+            <Physics>m/s</Physics>
+          </Format>
+        </PropertyUI>
+      </ObjectUI>      
+    </InitialStateUI>
+      
+    <StatisticsUI>
+      <StatisticsVariableUI variable="height">
         <Label>
-          <Text xml:lang="de">Schusswinkel</Text>
-          <Text xml:lang="en">Shot Angle</Text>
+          <Text xml:lang="en">height</Text>
         </Label>
         <Hint>
-          <Text>The shot angle for the bullet</Text>
-          <Text xml:lang="de">Der Schuss Winkel für die Kugel</Text>
-          <Text xml:lang="en">The shot angle for the bullet</Text>
+          <Text xml:lang="en">bla</Text>
         </Hint>
-        <Unit>
-          <Math>°</Math>
-        </Unit>
-      </GlobalVariableUI>
-      
-    </InitialStateUI>
+      </StatisticsVariableUI>
+    </StatisticsUI>
     
     <AnimationUI>
+      <aors:DisplayDescription  xmlns="http://www.w3.org/1999/xhtml">
+        <aors:HtmlText>
+          <p>The example provides a easy way to understand basic kinematics rules under the effect of gravitation.
+          When the simulation starts, the bomb is thrown by the cannon under a specified angle and with a specified speed.</p>
+          <p>A set of parameters allow you to change the simulation behavior. The following parameters are under your control:</p>
+          <ul>
+            <li><i>Slow Down Ratio</i> : helps to observe the movement of the bomb with a slow motion effect or with an increased speed.</li>
+            <li><i>Velocity</i> : allows to specify the initial velocity for the bomb. This will decrease under gravitation effect.</li>
+            <li><i>Gravitation</i> : the gravitation that exists on environment (e.g. you are able to simulate the movement of the bomb on Earth or on Moon).</li>
+            <li><i>Shot Angle</i> : the angle under which the bomb is thrown by the gun. Changing this parameter will provide different ranges of the bomb for the same initial velocity.</li>         
+          </ul>
+        </aors:HtmlText>
+        <aors:HtmlText xml:lang="en">
+          <p>The example provides a easy way to understand basic kinematics rules under the effect of gravitation.
+            When the simulation starts, the bomb is thrown by the cannon under a specified angle and with a specified speed.</p>
+          <p>A set of parameters allow you to change the simulation behavior. The following parameters are under your control:</p>
+          <ul>
+            <li><i>Slow Down Ratio</i> : helps to observe the movement of the bomb with a slow motion effect or with an increased speed.</li>
+            <li><i>Velocity</i> : allows to specify the initial velocity for the bomb. This will decrease under gravitation effect.</li>
+            <li><i>Gravitation</i> : the gravitation that exists on environment (e.g. you are able to simulate the movement of the bomb on Earth or on Moon).</li>
+            <li><i>Shot Angle</i> : the angle under which the bomb is thrown by the gun. Changing this parameter will provide different ranges of the bomb for the same initial velocity.</li>         
+          </ul>
+        </aors:HtmlText>
+        <aors:HtmlText xml:lang="de">
+          <p> Das Beispiel stellt eine einfache Möglichkeit, grundlegende Regeln Kinematik unter der Wirkung der Gravitation zu verstehen. 
+            Wenn die Simulation gestartet wird, wird die Bombe durch die Kanone unter einem bestimmten Winkel und mit einer vorgegebenen Geschwindigkeit geworfen</p>
+          <p>Eine Reihe von Parametern können Sie die Simulation Verhalten zu ändern. Die folgenden Parameter sind unter Ihrer Kontrolle:</p>
+          <ul>
+            <li><i>Verlangsamen Verhältnis</i>: hilft bei der Bewegung der Bombe mit einer langsamen mottion Wirkung oder mit erhöhter Geschwindigkeit zu beobachten.</li>
+            <li><i>Geschwindigkeit</i>: ermöglicht die Anfangsgeschwindigkeit für die Bombe zu spezifizieren. Dies wird unter Wirkung der Gravitation zu verringern.</li>
+            <li><i>Gravitation</i>: die Gravitation, die auf die Umwelt besteht (zB können Sie simulieren die Bewegung der Bombe auf der Erde oder auf dem Mond).</li>
+            <li><i>Schusswinkel</i>: der Winkel, unter denen die Bombe, die von der Pistole trown ist. Das Ändern dieses Parameters stellt verschiedene Bereiche der Bombe für die gleiche Anfangsgeschwindigkeit.</li>
+           </ul>
+        </aors:HtmlText>
+      </aors:DisplayDescription>
+      
       <Views>
         <SpaceView canvasColorRGB="220 220 220">
           <TwoDimensionalSpaceView2D backgroundColor="lightgrey"/>
@@ -387,7 +421,7 @@
 
         <PhysicalObjectView physicalObjectType="VerticalSlider">
           <PhysicalShape2D>
-            <Rectangle fill="red" stroke="blue" strokeWidth="1"/>
+            <Rectangle fill="red" stroke="blue" strokeWidth="1" positioning="CenterBottom"/>
           </PhysicalShape2D>
           <DisplayInfo property="y" content="m"/>
         </PhysicalObjectView>
