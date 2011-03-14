@@ -247,20 +247,20 @@
 				<Function name="addPurchaseQuantitiesToInventory" resultType="void">
 					<Body language="Java"><![CDATA[
 						for (int i=1; i <= purchaseItemTypes.size(); i++) {
-							purchaseItemTypes.get(i).setQuantityInStock( 
-								purchaseItemTypes.get(i).getQuantityInStock() 
-						  	+ purchaseQuantities.get(i));
+							aors.util.AORArrayList<PurchaseItemType> pitlist = this.getAllPurchaseItemTypes();
+							pitlist.get(i).setQuantityInStock(	pitlist.get(i).getQuantityInStock()+ this.getAllPurchaseQuantities.get(i));
 						}
 					]]></Body>
 				</Function>
 				
 				<Function name="subtractPurchaseAmountFromAmountOfCash" resultType="Float">
 					<Body language="Java"><![CDATA[
-						int purchaseAmount = 0;
-						for (int i=1; i <= purchaseItemTypes.size(); i++) {
-							purchaseAmount += purchaseQuantities.get(i) * purchaseItemTypes.get(i).getPurchasePrice();
+						double purchaseAmount = 0;
+						aors.util.AORArrayList<PurchaseItemType> pitlist = this.getAllPurchaseItemTypes();
+						for (int i=1; i <= pitlist.size(); i++) {
+							purchaseAmount += this.getAllPurchaseQuantities.get(i) * pitlist.get(i).getPurchasePrice();
 						}
-						return (getAmountOfCash() - purchaseAmount);
+						return (this.getAmountOfCash() - purchaseAmount);
 					]]></Body>
 				</Function>
 
@@ -484,7 +484,7 @@
 				<!-- name, quantityUnit, supplyUnit, quantityPerProductSupplyUnit, purchasePrice, expirationTimeSpan, 
 							transactionCostPerOrder, reorderUpToLevel, reorderPeriod -->
 				<ValueExpr language="Java"><![CDATA[ 
-					new java.util.ArrayList<PurchaseItemType>(){
+					new aors.util.AORArrayList<PurchaseItemType>(){
 						{
 							add( new PurchaseItemType("Lemon", QuantityUnit.PIECE, SupplyUnit.CRATE, 25, 7.50, 150, 2.50, 3, 100));
 							add( new PurchaseItemType("Sugar", QuantityUnit.PIECE, SupplyUnit.CRATE, 100, 1.50, 0, 2.50, 3, 100));
@@ -493,58 +493,51 @@
 						}
 					}
 				]]></ValueExpr>
-				<ValueExpr language="JavaScript"><![CDATA[
-					new js.util.ArrayList(
-							eos_economy.controller.Global.getContinuous(33.0, "Food", "Stk"), 
-							eos_economy.controller.Global.getContinuous(60.0, "Money", "Stk"), 
-							eos_economy.controller.Global.getContinuous(0.0, "Labor", "Stk"), 
-							eos_economy.controller.Global.getDiscrete(0, "Utility"))
-				]]></ValueExpr>
 			</Slot>
 			<Slot property="purchaseQuantities">
 				<ValueExpr language="Java"><![CDATA[ 
-					new java.util.ArrayList<Integer>(){
+					new aors.util.AORArrayList<Long>(){
 						{
-							add( new Integer(0));
-							add( new Integer(0));
-							add( new Integer(0));
-							add( new Integer(0));
+							add( new Long(0));
+							add( new Long(0));
+							add( new Long(0));
+							add( new Long(0));
 						}
 					}
 				]]></ValueExpr>
 			</Slot>
 			<Slot property="purchaseItemQuantitiesInStock">
 				<ValueExpr language="Java"><![CDATA[ 
-					new java.util.ArrayList<Integer>(){
+					new aors.util.AORArrayList<Long>(){
 						{
-							add( new Integer(0));
-							add( new Integer(0));
-							add( new Integer(0));
-							add( new Integer(0));
+							add( new Long(0));
+							add( new Long(0));
+							add( new Long(0));
+							add( new Long(0));
 						}
 					}
 				]]></ValueExpr>
 			</Slot>
 			<Slot property="inputQuantitiesPerProductSupplyUnit">
 				<ValueExpr language="Java"><![CDATA[ 
-					new java.util.ArrayList<Integer>(){
+					new aors.util.AORArrayList<Long>(){
 						{
-							add( new Integer(0));
-							add( new Integer(0));
-							add( new Integer(5));  // ice cubes
-							add( new Integer(1));  // paper cup
+							add( new Long(0));
+							add( new Long(0));
+							add( new Long(5));  // ice cubes
+							add( new Long(1));  // paper cup
 						}
 					}
 					]]></ValueExpr>
 			</Slot>
 			<Slot property="inputQuantitiesPerProductBatch">
 				<ValueExpr language="Java"><![CDATA[ 
-					new java.util.ArrayList<Integer>(){
+					new aors.util.AORArrayList<Long>(){
 						{
-							add( new Integer(2));  // lemons
-							add( new Integer(10)); // sugar cubes
-							add( new Integer(0));
-							add( new Integer(0));
+							add( new Long(2));  // lemons
+							add( new Long(10)); // sugar cubes
+							add( new Long(0));
+							add( new Long(0));
 						}
 					}
 					]]></ValueExpr>
