@@ -1,5 +1,6 @@
 package aors.util;
 
+import java.util.Collection;
 import java.util.List;
 import java.util.NoSuchElementException;
 
@@ -11,9 +12,22 @@ import java.util.NoSuchElementException;
  * @version $Revision: 1.0 $
  */
 public class ArrayList<E> extends java.util.ArrayList<E> implements
-    AORArrayList<E>, List<E> {
+    ArrayListInterface<E> {
 
   private static final long serialVersionUID = 1430027927105074835L;
+  
+  public ArrayList() {
+    super();
+  }
+  
+  public ArrayList(int initialCapacity) {
+    super(initialCapacity);
+  }
+  
+  public ArrayList(Collection<? extends E> c) {
+    super(c);
+  }
+  
 
   /**
    * Inserts the specified element at the beginning of this list.
