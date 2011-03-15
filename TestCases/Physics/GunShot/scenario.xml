@@ -44,6 +44,7 @@
       <PhysicalObjectType name="Bullet">
         <Attribute type="Float" name="distance"/>
         <Attribute type="Boolean" name="maxHeightReached" initialValue="false"/>
+        <Attribute type="Boolean" name="vMaxSliderCreated" initialValue="false"/>
       </PhysicalObjectType>
       <PhysicalObjectType name="Gun">
         <Attribute type="Float" name="rotZ" minValue="0" maxValue="180"/>
@@ -73,7 +74,7 @@
         <DO>
           <UPDATE-ENV>
             <Create>
-              <PhysicalObject type="Bullet" id="2" name="Bullet">
+              <PhysicalObject type="Bullet" id="2">
                 <Slot property="distance" value="0"/>
                 <Slot property="x">
                   <ValueExpr language="JavaScript"><![CDATA[gunshot.controller.Global.getGunRectCenterX() + gunshot.controller.Global.getGunRectRadius() * Math.cos(this.gun.getShotAngleInRadians())]]></ValueExpr>
@@ -181,8 +182,24 @@
       <EnvironmentRule name="CreateMaxHeightSliderRule">
         <WHEN eventType="Step" eventVariable="stepEvent"/>
         <FOR objectVariable="bullet" objectIdRef="2" objectType="Bullet"/>
-        <IF language="Java JavaScript"><![CDATA[this.bullet.isMaxHeightReached()]]></IF>
+        <IF language="Java JavaScript"><![CDATA[this.bullet.isMaxHeightReached()  && !this.bullet.isVMaxSliderCreated()]]></IF>
         <THEN>
+          <UPDATE-ENV>
+            <Create>
+              <PhysicalObject type="VerticalSlider">
+                <Slot property="x">
+                  <ValueExpr language="Java JavaScript"><![CDATA[this.bullet.getX()]]></ValueExpr>
+                </Slot>
+                <Slot property="y">
+                  <ValueExpr language="Java JavaScript"><![CDATA[this.bullet.getY()]]></ValueExpr>
+                </Slot>
+                <Slot property="width" value="100"/>
+              </PhysicalObject>
+            </Create>
+            <UpdateObject objectVariable="bullet">
+              <Slot property="vMaxSliderCreated" value="true"/>
+            </UpdateObject>
+          </UPDATE-ENV>
           <SCHEDULE-EVT>
             <CausedEventExpr eventType="MaxHeightReached" >
               <Slot property="maxHeight">
@@ -303,9 +320,9 @@
         </PropertyUI>
         <PropertyUI property="shotVelocity" widget="Slider" sliderStepSize="5">
           <Label>
-            <Text>Velocity</Text>
-            <Text xml:lang="en">Velocity</Text>
-            <Text xml:lang="de">Geschwindigkeit</Text>
+            <Text>Shot Velocity</Text>
+            <Text xml:lang="en">Shot Velocity</Text>
+            <Text xml:lang="de">Schussgeschwindigkeit</Text>
           </Label>
           <Hint>
             <Text>The shoot velocity of the bomb</Text>
