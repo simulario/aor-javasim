@@ -9,7 +9,7 @@ import java.util.List;
  * @since 28.02.2011
  * @version $Revision: 1.0 $
  */
-public interface AORArrayList<E> extends List<E> {
+public interface ArrayListInterface<E> extends List<E> {
   
   public void addFirst(E element);
   public E removeFirst();
