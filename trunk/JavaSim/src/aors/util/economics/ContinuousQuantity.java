@@ -38,6 +38,7 @@ public class ContinuousQuantity extends Quantity {
   }
 
   // Implements abstract supertype method.
+  @Override
   public double getQuantity() {
     return quantity;
   }
@@ -53,6 +54,7 @@ public class ContinuousQuantity extends Quantity {
   /**
    * Returns false, since a continuous quantity is a non-discrete commodity.
    */
+  @Override
   public final boolean isDiscrete() {
     return false;
   }
@@ -60,6 +62,7 @@ public class ContinuousQuantity extends Quantity {
   /**
    * Returns the type as a string.
    */
+  @Override
   public String getType() {
     return this.continuousQuantityType.getName();
   }
@@ -68,6 +71,7 @@ public class ContinuousQuantity extends Quantity {
    * Add an amount of this type of continuous quantity. A RuntimeException will
    * be thrown if amount is negative.
    */
+  @Override
   public void deposit(double amount) {
     if (amount < 0)
       throw new RuntimeException("Amount must be >= 0");
@@ -79,6 +83,7 @@ public class ContinuousQuantity extends Quantity {
    * smaller than amount, quantity is set to 0. Returns the amount successfully
    * withdrawn. A RuntimeException will be thrown if amount is negative.
    */
+  @Override
   public double withdraw(double amount) {
     if (amount < 0)
       throw new RuntimeException("Amount must be >= 0");
