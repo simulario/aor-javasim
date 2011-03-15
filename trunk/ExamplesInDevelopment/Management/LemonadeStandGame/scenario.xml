@@ -246,9 +246,9 @@
 				
 				<Function name="addPurchaseQuantitiesToInventory" resultType="void">
 					<Body language="Java"><![CDATA[
-						for (int i=1; i <= purchaseItemTypes.size(); i++) {
-							aors.util.AORArrayList<PurchaseItemType> pitlist = this.getAllPurchaseItemTypes();
-							pitlist.get(i).setQuantityInStock(	pitlist.get(i).getQuantityInStock()+ this.getAllPurchaseQuantities.get(i));
+						for (int i=1; i <= this.getAllPurchaseItemTypes().size(); i++) {
+							aors.util.ArrayListInterface<Long> qL = this.getAllPurchaseItemQuantitiesInStock(); 
+							qL.set( i, qL.get(i)+ this.getAllPurchaseQuantities().get(i));
 						}
 					]]></Body>
 				</Function>
@@ -256,9 +256,9 @@
 				<Function name="subtractPurchaseAmountFromAmountOfCash" resultType="Float">
 					<Body language="Java"><![CDATA[
 						double purchaseAmount = 0;
-						aors.util.AORArrayList<PurchaseItemType> pitlist = this.getAllPurchaseItemTypes();
+						aors.util.ArrayListInterface<PurchaseItemType> pitlist = this.getAllPurchaseItemTypes();
 						for (int i=1; i <= pitlist.size(); i++) {
-							purchaseAmount += this.getAllPurchaseQuantities.get(i) * pitlist.get(i).getPurchasePrice();
+							purchaseAmount += this.getAllPurchaseQuantities().get(i) * pitlist.get(i).getPurchasePrice();
 						}
 						return (this.getAmountOfCash() - purchaseAmount);
 					]]></Body>
@@ -484,7 +484,7 @@
 				<!-- name, quantityUnit, supplyUnit, quantityPerProductSupplyUnit, purchasePrice, expirationTimeSpan, 
 							transactionCostPerOrder, reorderUpToLevel, reorderPeriod -->
 				<ValueExpr language="Java"><![CDATA[ 
-					new aors.util.AORArrayList<PurchaseItemType>(){
+					new aors.util.ArrayList<PurchaseItemType>(){
 						{
 							add( new PurchaseItemType("Lemon", QuantityUnit.PIECE, SupplyUnit.CRATE, 25, 7.50, 150, 2.50, 3, 100));
 							add( new PurchaseItemType("Sugar", QuantityUnit.PIECE, SupplyUnit.CRATE, 100, 1.50, 0, 2.50, 3, 100));
@@ -496,7 +496,7 @@
 			</Slot>
 			<Slot property="purchaseQuantities">
 				<ValueExpr language="Java"><![CDATA[ 
-					new aors.util.AORArrayList<Long>(){
+					new aors.util.ArrayList<Long>(){
 						{
 							add( new Long(0));
 							add( new Long(0));
@@ -508,7 +508,7 @@
 			</Slot>
 			<Slot property="purchaseItemQuantitiesInStock">
 				<ValueExpr language="Java"><![CDATA[ 
-					new aors.util.AORArrayList<Long>(){
+					new aors.util.ArrayList<Long>(){
 						{
 							add( new Long(0));
 							add( new Long(0));
@@ -520,7 +520,7 @@
 			</Slot>
 			<Slot property="inputQuantitiesPerProductSupplyUnit">
 				<ValueExpr language="Java"><![CDATA[ 
-					new aors.util.AORArrayList<Long>(){
+					new aors.util.ArrayList<Long>(){
 						{
 							add( new Long(0));
 							add( new Long(0));
@@ -532,7 +532,7 @@
 			</Slot>
 			<Slot property="inputQuantitiesPerProductBatch">
 				<ValueExpr language="Java"><![CDATA[ 
-					new aors.util.AORArrayList<Long>(){
+					new aors.util.ArrayList<Long>(){
 						{
 							add( new Long(2));  // lemons
 							add( new Long(10)); // sugar cubes
