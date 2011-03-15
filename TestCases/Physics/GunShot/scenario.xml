@@ -1,9 +1,9 @@
 <?xml version="1.0" encoding="UTF-8"?>
 
 <SimulationScenario xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
- xsi:schemaLocation="http://aor-simulation.org ../../../../../../AOR-JSim-Google-Code-Complete/AORSL/AORSL_0-8-4.xsd"
- xmlns="http://aor-simulation.org"
+ xsi:schemaLocation="http://aor-simulation.org ../../../AORSL/AORSL_0-8-4.xsd"
  xmlns:dc="http://purl.org/dc/elements/1.1/"
+ xmlns="http://aor-simulation.org"
  xmlns:aors="http://aor-simulation.org"
  version="0.8.4"
  scenarioName="GunShot">
@@ -44,7 +44,6 @@
       <PhysicalObjectType name="Bullet">
         <Attribute type="Float" name="distance"/>
         <Attribute type="Boolean" name="maxHeightReached" initialValue="false"/>
-        <Attribute type="Boolean" name="vMaxSliderCreated" initialValue="false"/>
       </PhysicalObjectType>
       <PhysicalObjectType name="Gun">
         <Attribute type="Float" name="rotZ" minValue="0" maxValue="180"/>
@@ -74,7 +73,7 @@
         <DO>
           <UPDATE-ENV>
             <Create>
-              <PhysicalObject type="Bullet" id="2">
+              <PhysicalObject type="Bullet" id="2" name="Bullet">
                 <Slot property="distance" value="0"/>
                 <Slot property="x">
                   <ValueExpr language="JavaScript"><![CDATA[gunshot.controller.Global.getGunRectCenterX() + gunshot.controller.Global.getGunRectRadius() * Math.cos(this.gun.getShotAngleInRadians())]]></ValueExpr>
@@ -182,24 +181,8 @@
       <EnvironmentRule name="CreateMaxHeightSliderRule">
         <WHEN eventType="Step" eventVariable="stepEvent"/>
         <FOR objectVariable="bullet" objectIdRef="2" objectType="Bullet"/>
-        <IF language="Java JavaScript"><![CDATA[this.bullet.isMaxHeightReached()  && !this.bullet.isVMaxSliderCreated()]]></IF>
+        <IF language="Java JavaScript"><![CDATA[this.bullet.isMaxHeightReached()]]></IF>
         <THEN>
-          <UPDATE-ENV>
-            <Create>
-              <PhysicalObject type="VerticalSlider">
-                <Slot property="x">
-                  <ValueExpr language="Java JavaScript"><![CDATA[this.bullet.getX()]]></ValueExpr>
-                </Slot>
-                <Slot property="y">
-                  <ValueExpr language="Java JavaScript"><![CDATA[this.bullet.getY()]]></ValueExpr>
-                </Slot>
-                <Slot property="width" value="100"/>
-              </PhysicalObject>
-            </Create>
-            <UpdateObject objectVariable="bullet">
-              <Slot property="vMaxSliderCreated" value="true"/>
-            </UpdateObject>
-          </UPDATE-ENV>
           <SCHEDULE-EVT>
             <CausedEventExpr eventType="MaxHeightReached" >
               <Slot property="maxHeight">
@@ -277,13 +260,13 @@
       <GlobalVariableUI variable="simluationSlowDownRatio" widget="Slider" sliderStepSize="1">
         <Label>
           <Text>Slow Down Ratio</Text>
-          <Text xml:lang="de">Verlangsamen Verhältnis</Text>
           <Text xml:lang="en">Slow Down Ratio</Text>
+          <Text xml:lang="de">Verlangsamen Verhältnis</Text>
         </Label>
         <Hint>
           <Text>The ratio for slowing down the simulation</Text>
-          <Text xml:lang="de">Das Verhältnis zur Verlangsamung der Simulation</Text>
           <Text xml:lang="en">The ratio for slowing down the simulation</Text>
+          <Text xml:lang="de">Das Verhältnis zur Verlangsamung der Simulation</Text>
         </Hint>
       </GlobalVariableUI>
       
@@ -294,8 +277,8 @@
         </Label>
         <Hint>
           <Text>The gravitation in the environment</Text>
-          <Text xml:lang="de">Die Gravitation in die Umwelt</Text>
           <Text xml:lang="en">The gravitation in the environment</Text>
+          <Text xml:lang="de">Die Gravitation in die Umwelt</Text>
         </Hint>
         <Format decimalPlaces="2">
           <Physics>m/s²</Physics>
@@ -305,13 +288,14 @@
       <ObjectUI objectType="Gun">
         <PropertyUI property="rotZ" widget="Slider">
           <Label>
-            <Text xml:lang="de">Schusswinkel</Text>
+            <Text>Shot Angle</Text>
             <Text xml:lang="en">Shot Angle</Text>
+            <Text xml:lang="de">Schusswinkel</Text>
           </Label>
           <Hint>
-            <Text>The shot angle for the bullet</Text>
-            <Text xml:lang="de">Der Schuss Winkel für die Kugel</Text>
-            <Text xml:lang="en">The shot angle for the bullet</Text>
+            <Text>The shot angle for the bomb</Text>
+            <Text xml:lang="de">Der Schuss Winkel für die Bombe</Text>
+            <Text xml:lang="en">The shot angle for the bomb</Text>
           </Hint>
           <Format decimalPlaces="0">
             <Math>°</Math>
@@ -320,13 +304,13 @@
         <PropertyUI property="shotVelocity" widget="Slider" sliderStepSize="5">
           <Label>
             <Text>Velocity</Text>
-            <Text xml:lang="de">Geschwindigkeit</Text>
             <Text xml:lang="en">Velocity</Text>
+            <Text xml:lang="de">Geschwindigkeit</Text>
           </Label>
           <Hint>
-            <Text>The shoot velocity of the bullet</Text>
-            <Text xml:lang="de">Das Shooting Geschwindigkeit der Kugel</Text>
-            <Text xml:lang="en">The shoot velocity of the bullet</Text>
+            <Text>The shoot velocity of the bomb</Text>
+            <Text xml:lang="en">The shoot velocity of the bomb</Text>
+            <Text xml:lang="de">Das Shooting Geschwindigkeit für die Bombe</Text>
           </Hint>
           <Format decimalPlaces="0">
             <Physics>m/s</Physics>
@@ -350,36 +334,29 @@
       <aors:DisplayDescription  xmlns="http://www.w3.org/1999/xhtml">
         <aors:HtmlText>
           <p>The example provides a easy way to understand basic kinematics rules under the effect of gravitation.
-          When the simulation starts, the bomb is thrown by the cannon under a specified angle and with a specified speed.</p>
-          <p>A set of parameters allow you to change the simulation behavior. The following parameters are under your control:</p>
-          <ul>
-            <li><i>Slow Down Ratio</i> : helps to observe the movement of the bomb with a slow motion effect or with an increased speed.</li>
-            <li><i>Velocity</i> : allows to specify the initial velocity for the bomb. This will decrease under gravitation effect.</li>
-            <li><i>Gravitation</i> : the gravitation that exists on environment (e.g. you are able to simulate the movement of the bomb on Earth or on Moon).</li>
-            <li><i>Shot Angle</i> : the angle under which the bomb is thrown by the gun. Changing this parameter will provide different ranges of the bomb for the same initial velocity.</li>         
-          </ul>
+          When the simulation starts, the bomb is thrown by the cannon under a specified angle and with a specified speed. 
+          The gravitation as well as the shot initial velocity has impact over the trajectory and determine the maximum distance reached by the bomb.</p>
+          <p> The following parameters allows you to control the cannon and the simulation behavior:
+            <ul style="margin: 20px;">
+              <li><i>Slow Down Ratio</i> : helps to observe the movement of the bomb with a slow motion effect or with an increased speed.</li>
+              <li><i>Velocity</i> : lets you specifying the initial velocity for the bomb. Note that the velocity decreases under gravitation effect.</li>
+              <li><i>Gravitation</i> : the gravitation of the environment (e.g. you are able to simulate the movement of the bomb on Earth or on Moon).</li>
+              <li><i>Shot Angle</i> : the angle under which the bomb is thrown by the cannon.</li>         
+            </ul>
+          </p>
         </aors:HtmlText>
         <aors:HtmlText xml:lang="en">
           <p>The example provides a easy way to understand basic kinematics rules under the effect of gravitation.
-            When the simulation starts, the bomb is thrown by the cannon under a specified angle and with a specified speed.</p>
-          <p>A set of parameters allow you to change the simulation behavior. The following parameters are under your control:</p>
-          <ul>
-            <li><i>Slow Down Ratio</i> : helps to observe the movement of the bomb with a slow motion effect or with an increased speed.</li>
-            <li><i>Velocity</i> : allows to specify the initial velocity for the bomb. This will decrease under gravitation effect.</li>
-            <li><i>Gravitation</i> : the gravitation that exists on environment (e.g. you are able to simulate the movement of the bomb on Earth or on Moon).</li>
-            <li><i>Shot Angle</i> : the angle under which the bomb is thrown by the gun. Changing this parameter will provide different ranges of the bomb for the same initial velocity.</li>         
-          </ul>
-        </aors:HtmlText>
-        <aors:HtmlText xml:lang="de">
-          <p> Das Beispiel stellt eine einfache Möglichkeit, grundlegende Regeln Kinematik unter der Wirkung der Gravitation zu verstehen. 
-            Wenn die Simulation gestartet wird, wird die Bombe durch die Kanone unter einem bestimmten Winkel und mit einer vorgegebenen Geschwindigkeit geworfen</p>
-          <p>Eine Reihe von Parametern können Sie die Simulation Verhalten zu ändern. Die folgenden Parameter sind unter Ihrer Kontrolle:</p>
-          <ul>
-            <li><i>Verlangsamen Verhältnis</i>: hilft bei der Bewegung der Bombe mit einer langsamen mottion Wirkung oder mit erhöhter Geschwindigkeit zu beobachten.</li>
-            <li><i>Geschwindigkeit</i>: ermöglicht die Anfangsgeschwindigkeit für die Bombe zu spezifizieren. Dies wird unter Wirkung der Gravitation zu verringern.</li>
-            <li><i>Gravitation</i>: die Gravitation, die auf die Umwelt besteht (zB können Sie simulieren die Bewegung der Bombe auf der Erde oder auf dem Mond).</li>
-            <li><i>Schusswinkel</i>: der Winkel, unter denen die Bombe, die von der Pistole trown ist. Das Ändern dieses Parameters stellt verschiedene Bereiche der Bombe für die gleiche Anfangsgeschwindigkeit.</li>
-           </ul>
+            When the simulation starts, the bomb is thrown by the cannon under a specified angle and with a specified speed. 
+            The gravitation as well as the shot initial velocity has impact over the trajectory and determine the maximum distance reached by the bomb.</p>
+          <p> The following parameters allows you to control the cannon and the simulation behavior:
+            <ul style="margin: 20px;">
+              <li><i>Slow Down Ratio</i> : helps to observe the movement of the bomb with a slow motion effect or with an increased speed.</li>
+              <li><i>Velocity</i> : lets you specifying the initial velocity for the bomb. Note that the velocity decreases under gravitation effect.</li>
+              <li><i>Gravitation</i> : the gravitation of the environment (e.g. you are able to simulate the movement of the bomb on Earth or on Moon).</li>
+              <li><i>Shot Angle</i> : the angle under which the bomb is thrown by the cannon.</li>         
+            </ul>
+          </p>
         </aors:HtmlText>
       </aors:DisplayDescription>
       
