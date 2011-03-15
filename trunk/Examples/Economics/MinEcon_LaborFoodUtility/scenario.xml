@@ -305,16 +305,52 @@
 			<!-- ============================================ -->
 				<documentation><description>A Laborer produces LABOR_ALLOWANCE of labor each timestep.</description></documentation>
 				<ComplexDataProperty name="assets" type="aors.util.economics.Quantity" upperMultiplicity="unbounded"/>
+				<ComplexDataProperty name="asd" type="Integer" upperMultiplicity="unbounded"></ComplexDataProperty>
 				<Attribute name="LABOR_ALLOWANCE" type="Float" initialValue="1.0"/>
 				<Attribute name="RANDOM_FACTOR" type="Float" initialValue="0.01"/>
 				<Attribute name="lastFoodPrice" type="Float"  initialValue="0"/>
 				<Attribute name="lastLaborPrice" type="Float"  initialValue="0"/>
 				<Attribute name="lastUtilityPrice" type="Float"  initialValue="0"/>
-				<Attribute name="foodAmount" type="Float"  initialValue="0"/>
-				<Attribute name="moneyAmount" type="Float"  initialValue="0"/>
-				<Attribute name="laborAmount" type="Float"  initialValue="0"/>
-				<Attribute name="utilityAmount" type="Float"  initialValue="0"/>
-				
+				<Attribute name="moneyAmount" type="Float" />
+				<Attribute type="Integer" name="index"/>
+				<!--====================================-->
+				<Function name="getAssetByName" resultType="Integer">
+					<documentation>
+						<dc:description> Find an asset from a Quantitylist by String</dc:description>
+					</documentation>
+					<Parameter name="name" type="String"/>
+					<Parameter name="assets" type="List" itemType="aors.util.economics.Quantity"/>
+					<Body language="Java"><![CDATA[
+					int i;
+					for (i=0; i < assets.size(); i++){
+						if (!assets.get(i).isDiscrete()) {
+							if (((aors.util.economics.ContinuousQuantity)assets.get(i)).getContinuousQuantityType().getName().equals( name)){
+								break;
+							}
+						} else {
+							if (((aors.util.economics.DiscreteQuantity)assets.get(i)).getType().equals(name)){
+								break;
+							}
+						}
+					}
+					return i;
+					]]></Body>	
+					<Body language="JavaScript"><![CDATA[
+					var i = 0;
+					for (i = 0; i < assets.size(); i++) {
+						if (!assets.get(i).isDiscrete()) {
+							if (assets.get(i).getContinuousQuantityType().getName() == name)
+								break;
+						}
+						else {
+							if (assets.get(i).getType() == name)
+								break;
+						}
+					}
+					return assets.get(i);
+					]]></Body>	
+				</Function>
+				<!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~-->
 				<Function name="updateFood" resultType="Float">
 				<!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~-->
 					<documentation>
@@ -345,7 +381,7 @@
 				<Function name="updateMoney" resultType="Float">
 					<!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~-->
 					<documentation>
-						<dc:description>Updates the ???gold amount by the quantity times the price of the offer</dc:description>
+						<dc:description>Updates the money amount by the quantity times the price of the offer</dc:description>
 					</documentation>
 					<Parameter name="offer" type="TradeOffer"/>
 					<Body language="Java"><![CDATA[
@@ -480,20 +516,51 @@
 					<WHEN eventType="InMessageEvent" messageType="MatchingOffer" messageVariable="msg"/>
 					<DO>
 						<UPDATE-AGT>
-							<Slot property="moneyAmount">
-								<ValueExpr language="Java JavaScript">this.p.updateMoney(this.msg.getOffer())</ValueExpr>
-							</Slot>
-							<Slot property="foodAmount">
-								<ValueExpr language="Java JavaScript">this.p.updateFood(this.msg.getOffer())</ValueExpr>
-							</Slot>
-							<Slot property="laborAmount">
-								<ValueExpr language="Java JavaScript">this.p.updateLabor(this.msg.getOffer())</ValueExpr>
-							</Slot>
-							<Slot property="utilityAmount">
-								<ValueExpr language="Java JavaScript">this.p.updateUtility(this.msg.getOffer())</ValueExpr>
-							</Slot>
+							<Call procedure="updateMoney">
+								<Argument parameter="offer">
+									<ValueExpr language="Java JavaScript">this.msg.getOffer()</ValueExpr>
+								</Argument>
+							</Call>
+							<Call procedure="updateFood">
+								<Argument parameter="offer">
+									<ValueExpr language="Java JavaScript">this.msg.getOffer()</ValueExpr>
+								</Argument>
+							</Call>
+							<Call procedure="updateLabor">
+								<Argument parameter="offer">
+									<ValueExpr language="Java JavaScript">this.msg.getOffer()</ValueExpr>
+								</Argument>
+							</Call>
+							<Call procedure="updateUtility">
+								<Argument parameter="offer">
+									<ValueExpr language="Java JavaScript">this.msg.getOffer()</ValueExpr>
+								</Argument>
+							</Call>
 						</UPDATE-AGT>
 					</DO>
+				</ReactionRule>
+				<ReactionRule name="Deposit_Utility_Rule" agentVariable="p">
+					<WHEN eventType="InMessageEvent" messageType="MatchingOffer" messageVariable="msg" />
+					<FOR-ListItemVariable variable="a" listItemType="Quantity">
+						<ListExpr language="Java">this.p.getAllAssets()</ListExpr>
+					</FOR-ListItemVariable>
+					<IF language="Java JavaScript"><![CDATA[ msg.getOffer().getProduct() == "Utility" && msg.getOffer().isBuy() && a.getType() == "Utility" ]]></IF>
+					<THEN>
+						<UPDATE-AGT>
+							<Call procedure="deposit" contextObjectVariable="a">
+								<Argument parameter="q">
+									<ValueExpr language="Java">msg.getOffer().getQuantity()</ValueExpr>
+								</Argument>	
+							</Call>
+							<!--<MultiValuedSlot property="assets">
+								<Assign indexValue="3">
+								<ItemExpr language="Java"><![CDATA[
+								new aors.util.economics.DiscreteQuantity( "Utility", (int)(getAssets(3).getQuantity() + msg.getOffer().getQuantity()))
+								]]></ItemExpr>
+								</Assign>
+								</MultiValuedSlot>-->
+						</UPDATE-AGT>
+					</THEN>
 				</ReactionRule>
 			</AgentType>
 			<!-- ============================================ -->
@@ -1981,6 +2048,18 @@
 					</UpdateObject>
 				</UPDATE-ENV>
 			</THEN>
+		</EnvironmentRule>
+		<!-- ============================= -->
+		<EnvironmentRule name="InitializeLaborer">
+			<!-- ============================= -->
+			<documentation>
+				<dc:description>Finds an owner for all firms</dc:description>
+			</documentation>
+			<WHEN eventType="Init"/>
+			<FOR objectVariable="l" objectType="Laborer" />
+			<DO>
+				
+			</DO>
 		</EnvironmentRule>
 		<!-- ============================= -->
 		<EnvironmentRule name="AtStartOfDayEat_ER">
