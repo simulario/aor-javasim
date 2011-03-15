@@ -47,6 +47,7 @@ public class DiscreteQuantity extends Quantity {
   }
 
   // Implements abstract supertype method.
+  @Override
   public double getQuantity() {
     return quantity;
   }
@@ -58,6 +59,7 @@ public class DiscreteQuantity extends Quantity {
   /**
    * Implements abstract supertype method.
    */
+  @Override
   public final boolean isDiscrete() {
     return true;
   }
@@ -65,6 +67,7 @@ public class DiscreteQuantity extends Quantity {
   /**
    * Returns the type as a string. Implements abstract supertype method.
    */
+  @Override
   public String getType() {
     return this.getObjectType();
   }
@@ -73,6 +76,7 @@ public class DiscreteQuantity extends Quantity {
    * Add a certain quantity of this type of object. A RuntimeException will be
    * thrown if quantity is negative.
    */
+  @Override
   public void deposit(double q) {
     if (q < 0)
       throw new RuntimeException(
@@ -86,6 +90,7 @@ public class DiscreteQuantity extends Quantity {
    * quantity successfully withdrawn. A RuntimeException will be thrown if
    * quantity is negative.
    */
+  @Override
   public double withdraw(double q) {
     if (q < 0)
       throw new RuntimeException(
