@@ -508,7 +508,7 @@
 					</THEN>
 				</ReactionRule>
 				<!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->
-				<ReactionRule name="Update_Rule" agentVariable="p">	
+				<ReactionRule name="Update_Rule" agentVariable="agt">	
 					<!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->
 					<documentation>
 						<dc:description>Succesful transactions are received from the market, food, labor, utility and money are updated</dc:description>
@@ -516,22 +516,22 @@
 					<WHEN eventType="InMessageEvent" messageType="MatchingOffer" messageVariable="msg"/>
 					<DO>
 						<UPDATE-AGT>
-							<Call procedure="updateMoney">
+							<Call procedure="updateMoney" contextObjectVariable="agt">
 								<Argument parameter="offer">
 									<ValueExpr language="Java JavaScript">this.msg.getOffer()</ValueExpr>
 								</Argument>
 							</Call>
-							<Call procedure="updateFood">
+							<Call procedure="updateFood" contextObjectVariable="agt">
 								<Argument parameter="offer">
 									<ValueExpr language="Java JavaScript">this.msg.getOffer()</ValueExpr>
 								</Argument>
 							</Call>
-							<Call procedure="updateLabor">
+							<Call procedure="updateLabor" contextObjectVariable="agt">
 								<Argument parameter="offer">
 									<ValueExpr language="Java JavaScript">this.msg.getOffer()</ValueExpr>
 								</Argument>
 							</Call>
-							<Call procedure="updateUtility">
+							<Call procedure="updateUtility" contextObjectVariable="agt">
 								<Argument parameter="offer">
 									<ValueExpr language="Java JavaScript">this.msg.getOffer()</ValueExpr>
 								</Argument>
@@ -544,7 +544,9 @@
 					<FOR-ListItemVariable variable="a" listItemType="Quantity">
 						<ListExpr language="Java">this.p.getAllAssets()</ListExpr>
 					</FOR-ListItemVariable>
-					<IF language="Java JavaScript"><![CDATA[ msg.getOffer().getProduct() == "Utility" && msg.getOffer().isBuy() && a.getType() == "Utility" ]]></IF>
+					<IF language="Java JavaScript"><![CDATA[ 
+						msg.getOffer().getProduct() == "Utility" && msg.getOffer().isBuy() && a.getType() == "Utility" 
+					]]></IF>
 					<THEN>
 						<UPDATE-AGT>
 							<Call procedure="deposit" contextObjectVariable="a">
@@ -2464,10 +2466,26 @@
 		</StatisticsUI>
 		<AnimationUI>
 			<DisplayDescription>
-				<HtmlText></HtmlText>
+				<aors:HtmlText xmlns="http://www.w3.org/1999/xhtml"><p>This is just an experimental<br/>
+				visualization!</p></aors:HtmlText>
 			</DisplayDescription>
 			
-			<Views></Views>
+			<Views>
+				<ObjectView objectType="Farm" objectIdRef="3000">
+					<Shape2D x="50" y="30">
+						<Rectangle width="50" positioning="LeftBottom" texture="backgrounds\GreenLeaves.jpg">
+							<ShapePropertyVisualizationMap shapeProperty="height" property="amountProduced" mapType="polynomial" a0="20" a1="2"/>
+						</Rectangle>
+					</Shape2D>
+				</ObjectView>
+				<ObjectView objectType="Factory" objectIdRef="4000">
+					<Shape2D x="50" y="230">
+						<Rectangle width="50" positioning="LeftBottom" texture="backgrounds\Marble2.gif">
+							<ShapePropertyVisualizationMap shapeProperty="height" property="amountProduced" mapType="polynomial" a0="20" a1="2"/>
+						</Rectangle>
+					</Shape2D>
+				</ObjectView>
+			</Views>
 		</AnimationUI>
 		
 	</UserInterface>
