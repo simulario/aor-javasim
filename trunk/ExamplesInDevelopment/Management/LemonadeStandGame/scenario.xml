@@ -12,10 +12,12 @@
 	<SimulationParameters simulationSteps="4320" timeUnit="h"  stepTimeDelay="0"/>
 	<SimulationModel modelName="LemonadeStandGame">
 		<documentation>
+			<dc:title>Lemonade Stand Game</dc:title>
+			<dc:title xml:lang="de">Limonadenstand-Spiel</dc:title>
 			<dc:created>20110211</dc:created>
 			<dc:creator>Gerd Wagner</dc:creator>
 			<dc:modified></dc:modified>
-			<dc:source>http://en.wikipedia.org/wiki/Lemonade_Stand</dc:source>
+			<dc:source>See http://en.wikipedia.org/wiki/Lemonade_Stand</dc:source>
 			<aors:description xmlns="http://www.w3.org/1999/xhtml">
 				<p>A lemonade seller makes lemonade in pitchers and sells it in paper cups 
 				at a stand in a street market. Each day consists of the following process steps and phases:</p>
@@ -31,6 +33,8 @@
 				<p>In this first version, neither customers nor suppliers are modeled explixitly.
 				Also, there is no physics simulation.</p>
 			</aors:description>
+			<dc:license>Creative Commons Attribution-NonCommercial-ShareAlike 3.0, 
+				see http://creativecommons.org/licenses/by-nc-sa/3.0/</dc:license>
 		</documentation>
 <!--		
 		<SpaceModel geometry="Euclidean" spatialDistanceUnit="m">
@@ -214,11 +218,12 @@
 						Lemonade is made in a pitcher by adding a number of sugar cubes and the juice of a number
 						of lemons, and filling it up with water. Then, for serving the lemonade in a cup, first
 						a number of ice cubes are put into the cup, which is then filled with the lemonade from
-						the pitcher. On each day, the lemonade seller first has to make purchase, production 
+						the pitcher. On each day, the lemonade seller first has to make production, purchase 
 						and sales planning decisions.</h:p>
 						<h:p>During the day, the lemonade stand receives sales orders from customers passing by,
 						depending on the weather conditions. </h:p>						
-						<h:p>At the end of the day, the lemonade stand has to write off the expired input materials. </h:p>						
+						<h:p>At the end of the day, the lemonade stand has to write off the expired input materials 
+							(all ice cubes and possibly some lemons). </h:p>						
 					</description>
 				</documentation>
 				<Attribute name="amountOfCash" type="Float"/>
@@ -238,15 +243,15 @@
 				<!-- Purchase planning decisions -->
 				<Attribute name="purchaseQuantities" type="Integer" upperMultiplicity="unbounded"/>
 				<!-- Production planning decisions per batch: lemon and sugar quantities per pitcher -->
-				<Attribute name="inputQuantitiesPerProductBatch" type="Integer" upperMultiplicity="unbounded"/>
+				<Attribute name="inputQuantitiesPerBatch" type="Integer" upperMultiplicity="unbounded"/>
 				<!-- Production planning decisions per supply unit: ice cubes per cup -->
-				<Attribute name="inputQuantitiesPerProductSupplyUnit" type="Integer" upperMultiplicity="unbounded"/>
+				<Attribute name="inputQuantitiesPerSupplyUnit" type="Integer" upperMultiplicity="unbounded"/>
 				<!-- Sales planning decisions -->
 				<Attribute name="productSalesPrice" type="Float"/>
 				
 				<Function name="addPurchaseQuantitiesToInventory" resultType="void">
 					<Body language="Java"><![CDATA[
-						for (int i=1; i <= this.getAllPurchaseItemTypes().size(); i++) {
+						for (int i=0; i < this.getAllPurchaseItemTypes().size(); i++) {
 							aors.util.ArrayListInterface<Long> qL = this.getAllPurchaseItemQuantitiesInStock(); 
 							qL.set( i, qL.get(i)+ this.getAllPurchaseQuantities().get(i));
 						}
@@ -257,7 +262,7 @@
 					<Body language="Java"><![CDATA[
 						double purchaseAmount = 0;
 						aors.util.ArrayListInterface<PurchaseItemType> pitlist = this.getAllPurchaseItemTypes();
-						for (int i=1; i <= pitlist.size(); i++) {
+						for (int i=0; i < pitlist.size(); i++) {
 							purchaseAmount += this.getAllPurchaseQuantities().get(i) * pitlist.get(i).getPurchasePrice();
 						}
 						return (this.getAmountOfCash() - purchaseAmount);
@@ -273,10 +278,12 @@
 					<documentation><description>
 						<h:p>At the start of the day, make planning decisions on</h:p>
 						<h:ol>
-							<h:li>The <strong>purchase</strong> of paper cups, lemons, sugar and ice</h:li>
-							<h:li>The <strong>production</strong> of lemonade: how many pitchers from how many lemons, sugar cubes 
-								and ice cubes per pitcher?</h:li>
-							<h:li>The <strong>sales price</strong> of a cup of lemonade</h:li>
+							<h:li>the <strong>production quantity</strong>: how many pitchers of lemonade is to be produced?</h:li>
+							<h:li>the <strong>product quality</strong>: how many lemons and how much sugar per pitcher, 
+								and how many ice cubes per cup?</h:li>
+							<h:li>the <strong>purchase quantities</strong>: how many paper cups, how many lemons, how much sugar and 
+								how many ice cubes are to be purchased?</h:li>
+							<h:li>the <strong>sales price</strong>: for how much is a cup of lemonade to be sold?</h:li>
 						</h:ol>						
 						<h:p>Finally, order the planned purchase item quantities.</h:p>
 					</description></documentation>
@@ -327,7 +334,7 @@
 					<WHEN eventType="PurchaseItemsDelivery"/>
 					<DO>
 						<UPDATE-AGT>
-							<Call procedure="addPurchaseQuantitiesToInventory"/>
+							<Call procedure="addPurchaseQuantitiesToInventory" contextObjectVariable="lst"/>
 							<Slot property="amountOfCash">
 								<ValueExpr language="Java"><![CDATA[
 									lst.subtractPurchaseAmountFromAmountOfCash()
@@ -468,7 +475,7 @@
 		<Agent type="LemonadeStand" id="1" name="DeliLemonade">
 		<!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->			
 			<Slot property="nameOfProductType" value="Lemonade" />
-			<Slot property="amountOfCash" value="10" />
+			<Slot property="amountOfCash" value="200" />
 			
 			<Slot property="productQuantityUnit">
 				<ValueExpr language="Java">QuantityUnit.ML</ValueExpr>
@@ -518,7 +525,7 @@
 					}
 				]]></ValueExpr>
 			</Slot>
-			<Slot property="inputQuantitiesPerProductSupplyUnit">
+			<Slot property="inputQuantitiesPerSupplyUnit">
 				<ValueExpr language="Java"><![CDATA[ 
 					new aors.util.ArrayList<Long>(){
 						{
@@ -530,7 +537,7 @@
 					}
 					]]></ValueExpr>
 			</Slot>
-			<Slot property="inputQuantitiesPerProductBatch">
+			<Slot property="inputQuantitiesPerBatch">
 				<ValueExpr language="Java"><![CDATA[ 
 					new aors.util.ArrayList<Long>(){
 						{
@@ -548,7 +555,24 @@
 			<PeriodicTimeEvent type="StartOfDay" occurrenceTime="1"/>
 			<PeriodicTimeEvent type="EndOfDay" occurrenceTime="100"/>
 		</Agent>
-
 	</InitialState>
-	
+	<UserInterface>
+		<AnimationUI>
+			<DisplayDescription>
+				<aors:HtmlText xmlns="http://www.w3.org/1999/xhtml"><p>This is just an experimental<br/>
+					visualization!</p></aors:HtmlText>
+			</DisplayDescription>
+			
+			<Views>
+				<ObjectView objectType="LemonadeStand" objectIdRef="1">
+					<Shape2D x="50" y="30">
+						<Rectangle width="20" fill="green" positioning="LeftBottom">
+							<ShapePropertyVisualizationMap shapeProperty="height" property="amountOfCash" mapType="polynomial" a0="10" a1="0.1"/>
+						</Rectangle>
+					</Shape2D>
+				</ObjectView>
+			</Views>
+		</AnimationUI>
+		
+	</UserInterface>
 </SimulationScenario>
