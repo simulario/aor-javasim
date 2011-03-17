@@ -292,6 +292,8 @@
 				<!--====================================-->
 				<ComplexDataProperty name="offer" type="TradeOffer"/>
 			</MessageType>
+			<!-- =================================== -->
+			<ExogenousEventType name="Init" />
 			<!--=======================================================-->
 			<ExogenousEventType name="StartOfDay" periodicity="9" />
 			<!--=======================================================-->
@@ -299,55 +301,49 @@
 			<!--=======================================================-->
 			<ExogenousEventType name="CloseMarket" periodicity="9" />
 			<!--=======================================================-->
-			<ExogenousEventType name="Init" />
-			<!-- ============================================ -->
 			<AgentType name="EconomicAgent">
 			<!-- ============================================ -->
 				<documentation><description>A Laborer produces LABOR_ALLOWANCE of labor each timestep.</description></documentation>
 				<ComplexDataProperty name="assets" type="aors.util.economics.Quantity" upperMultiplicity="unbounded"/>
-				<ComplexDataProperty name="asd" type="Integer" upperMultiplicity="unbounded"></ComplexDataProperty>
 				<Attribute name="LABOR_ALLOWANCE" type="Float" initialValue="1.0"/>
 				<Attribute name="RANDOM_FACTOR" type="Float" initialValue="0.01"/>
 				<Attribute name="lastFoodPrice" type="Float"  initialValue="0"/>
 				<Attribute name="lastLaborPrice" type="Float"  initialValue="0"/>
 				<Attribute name="lastUtilityPrice" type="Float"  initialValue="0"/>
-				<Attribute name="moneyAmount" type="Float" />
-				<Attribute type="Integer" name="index"/>
+				<Attribute type="String" name="test"/>
 				<!--====================================-->
-				<Function name="getAssetByName" resultType="Integer">
+				<Function name="getAssetByName" resultType="aors.util.economics.Quantity">
 					<documentation>
 						<dc:description> Find an asset from a Quantitylist by String</dc:description>
 					</documentation>
 					<Parameter name="name" type="String"/>
-					<Parameter name="assets" type="List" itemType="aors.util.economics.Quantity"/>
 					<Body language="Java"><![CDATA[
-					int i;
-					for (i=0; i < assets.size(); i++){
-						if (!assets.get(i).isDiscrete()) {
-							if (((aors.util.economics.ContinuousQuantity)assets.get(i)).getContinuousQuantityType().getName().equals( name)){
-								break;
-							}
-						} else {
-							if (((aors.util.economics.DiscreteQuantity)assets.get(i)).getType().equals(name)){
-								break;
+						int i;
+						aors.util.ArrayListInterface<aors.util.economics.Quantity> assets = getAllAssets();
+						for (i=0; i < assets.size(); i++){
+							if (!assets.get(i).isDiscrete()) {
+								if (((aors.util.economics.ContinuousQuantity )assets.get(i)).getContinuousQuantityType().getName().equals(name)){
+									break;
+								}
+							} else {
+								if (((aors.util.economics.DiscreteQuantity )assets.get(i)).getType().equals(name)){
+									break;
+								}
 							}
 						}
-					}
-					return i;
+						return assets.get(i);
 					]]></Body>	
 					<Body language="JavaScript"><![CDATA[
-					var i = 0;
-					for (i = 0; i < assets.size(); i++) {
-						if (!assets.get(i).isDiscrete()) {
-							if (assets.get(i).getContinuousQuantityType().getName() == name)
-								break;
+						var i;
+						var assets = this.getAllAssets();
+						for (i=0; i < assets.size(); i++){
+							if(!assets.get(i).isDiscrete()) {
+								if (assets.get(i).getContinuousQuantityType().getName() === name) break;
+							} else {
+								if (assets.get(i).getType() === name) break;
+							}
 						}
-						else {
-							if (assets.get(i).getType() == name)
-								break;
-						}
-					}
-					return assets.get(i);
+						return assets.get(i);
 					]]></Body>	
 				</Function>
 				<!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~-->
@@ -360,21 +356,20 @@
 					<Body language="Java"><![CDATA[
 						if (offer.getProduct().equals("Food")){
 							if (offer.isBuy()) 
-								controller.Global.getAssetByName("Food", getAllAssets()).deposit(offer.getQuantity());	
+								getAssetByName("Food").deposit(offer.getQuantity());	
 							 else 
-								controller.Global.getAssetByName("Food", getAllAssets()).withdraw(offer.getQuantity());
+								getAssetByName("Food").withdraw(offer.getQuantity());
 						}
-						return controller.Global.getAssetByName("Food", getAllAssets()).getQuantity();
+						return getAssetByName("Food").getQuantity();
 					]]></Body>
 					<Body language="JavaScript"><![CDATA[
-						var assets = this.getAllAssets();
 						if (offer.getProduct() == "Food") {
 							if (offer.isBuy())
-								minecon_laborfoodutility_scenario1.controller.Global.getAssetByName("Food", assets).deposit(offer.getQuantity());	
+								this.getAssetByName("Food").deposit(offer.getQuantity());	
 							else 
-								minecon_laborfoodutility_scenario1.controller.Global.getAssetByName("Food", assets).withdraw(offer.getQuantity());
+								this.getAssetByName("Food").withdraw(offer.getQuantity());
 						}
-						return minecon_laborfoodutility_scenario1.controller.Global.getAssetByName("Food", assets).getQuantity();
+						return this.getAssetByName("Food").getQuantity();
 					]]></Body>
 				</Function>
 				<!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~-->
@@ -386,20 +381,19 @@
 					<Parameter name="offer" type="TradeOffer"/>
 					<Body language="Java"><![CDATA[
 						if (offer.isBuy())
-							controller.Global.getAssetByName("Money", getAllAssets()).withdraw(offer.getQuantity() * offer.getPrice());					
+							getAssetByName("Money").withdraw(offer.getQuantity() * offer.getPrice());					
 						else
-							controller.Global.getAssetByName("Money", getAllAssets()).deposit(offer.getQuantity() * offer.getPrice());
+							getAssetByName("Money").deposit(offer.getQuantity() * offer.getPrice());
 						
-						return controller.Global.getAssetByName("Money",getAllAssets()).getQuantity();
+						return getAssetByName("Money").getQuantity();
 					]]></Body>
 					<Body language="JavaScript"><![CDATA[
-						var assets = this.getAllAssets();
 						if (offer.isBuy()) 
-							minecon_laborfoodutility_scenario1.controller.Global.getAssetByName("Money", assets).withdraw(offer.getQuantity() * offer.getPrice());					
+							this.getAssetByName("Money").withdraw(offer.getQuantity() * offer.getPrice());					
 						else 
-							minecon_laborfoodutility_scenario1.controller.Global.getAssetByName("Money", assets).deposit(offer.getQuantity() * offer.getPrice());
+							this.getAssetByName("Money").deposit(offer.getQuantity() * offer.getPrice());
 						
-						return minecon_laborfoodutility_scenario1.controller.Global.getAssetByName("Money", assets).getQuantity();
+						return this.getAssetByName("Money").getQuantity();
 					]]></Body>
 				</Function>
 				<!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~-->
@@ -412,21 +406,21 @@
 					<Body language="Java"><![CDATA[
 						if (offer.getProduct().equals("Labor")) {
 							if (offer.isBuy()) 
-								controller.Global.getAssetByName("Labor", getAllAssets()).deposit(offer.getQuantity());
+								getAssetByName("Labor").deposit(offer.getQuantity());
 							else 
-								controller.Global.getAssetByName("Labor", getAllAssets()).withdraw(offer.getQuantity());
+								getAssetByName("Labor").withdraw(offer.getQuantity());
 						}
-						return controller.Global.getAssetByName("Labor", getAllAssets()).getQuantity();
+						return getAssetByName("Labor").getQuantity();
 					]]></Body>
 					<Body language="JavaScript"><![CDATA[
 						var assets = this.getAllAssets();
 						if (offer.getProduct() == "Labor") {
 							if (offer.isBuy()) 
-								minecon_laborfoodutility_scenario1.controller.Global.getAssetByName("Labor", assets).deposit(offer.getQuantity());
+								this.getAssetByName("Labor").deposit(offer.getQuantity());
 							else 
-								minecon_laborfoodutility_scenario1.controller.Global.getAssetByName("Labor", assets).withdraw(offer.getQuantity());
+								this.getAssetByName("Labor").withdraw(offer.getQuantity());
 						}
-						return minecon_laborfoodutility_scenario1.controller.Global.getAssetByName("Labor", assets).getQuantity();
+						return this.getAssetByName("Labor").getQuantity();
 					]]></Body>
 				</Function>
 				<!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~-->
@@ -439,25 +433,24 @@
 					<Body language="Java"><![CDATA[
 						if (offer.getProduct().equals("Utility")){
 							if (offer.isBuy())
-								controller.Global.getAssetByName("Utility",getAllAssets()).deposit(offer.getQuantity());
+								getAssetByName("Utility").deposit(offer.getQuantity());
 							else
-								controller.Global.getAssetByName("Utility",getAllAssets()).withdraw(offer.getQuantity());
+								getAssetByName("Utility").withdraw(offer.getQuantity());
 						}
-						return controller.Global.getAssetByName("Utility",getAllAssets()).getQuantity();										
+						return getAssetByName("Utility").getQuantity();										
 					]]></Body>
 					<Body language="JavaScript"><![CDATA[
-						var assets = this.getAllAssets();
 						if (offer.getProduct() == "Utility") {
 							if (offer.isBuy())
-								minecon_laborfoodutility_scenario1.controller.Global.getAssetByName("Utility", assets).deposit(offer.getQuantity());
+								this.getAssetByName("Utility").deposit(offer.getQuantity());
 						    else 
-								minecon_laborfoodutility_scenario1.controller.Global.getAssetByName("Utility", assets).withdraw(offer.getQuantity());
+								this.getAssetByName("Utility").withdraw(offer.getQuantity());
 						}
-						return minecon_laborfoodutility_scenario1.controller.Global.getAssetByName("Utility", assets).getQuantity();									
+						return this.getAssetByName("Utility").getQuantity();									
 					]]></Body>
 				</Function>
 				<!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~-->
-				<ReactionRule name="StartOfDay_Food_Rule">
+				<ReactionRule name="StartOfDay_Food_Rule" agentVariable="a">
 					<!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~-->
 					<documentation>
 						<dc:description>The price of the food market is updated</dc:description>
@@ -539,31 +532,6 @@
 						</UPDATE-AGT>
 					</DO>
 				</ReactionRule>
-				<ReactionRule name="Deposit_Utility_Rule" agentVariable="p">
-					<WHEN eventType="InMessageEvent" messageType="MatchingOffer" messageVariable="msg" />
-					<FOR-ListItemVariable variable="a" listItemType="Quantity">
-						<ListExpr language="Java">this.p.getAllAssets()</ListExpr>
-					</FOR-ListItemVariable>
-					<IF language="Java JavaScript"><![CDATA[ 
-						msg.getOffer().getProduct() == "Utility" && msg.getOffer().isBuy() && a.getType() == "Utility" 
-					]]></IF>
-					<THEN>
-						<UPDATE-AGT>
-							<Call procedure="deposit" contextObjectVariable="a">
-								<Argument parameter="q">
-									<ValueExpr language="Java">msg.getOffer().getQuantity()</ValueExpr>
-								</Argument>	
-							</Call>
-							<!--<MultiValuedSlot property="assets">
-								<Assign indexValue="3">
-								<ItemExpr language="Java"><![CDATA[
-								new aors.util.economics.DiscreteQuantity( "Utility", (int)(getAssets(3).getQuantity() + msg.getOffer().getQuantity()))
-								]]></ItemExpr>
-								</Assign>
-								</MultiValuedSlot>-->
-						</UPDATE-AGT>
-					</THEN>
-				</ReactionRule>
 			</AgentType>
 			<!-- ============================================ -->
 			<AgentType name="Person" superType="EconomicAgent">
@@ -575,7 +543,73 @@
 				<Attribute name="konto"  type="Float" initialValue="0"/>
 				<ComplexDataProperty name="foodBuyList" type="TradeOffer" upperMultiplicity="unbounded"/>
 				<ComplexDataProperty name="foodSellList" type="TradeOffer" upperMultiplicity="unbounded"/>
-				<ComplexDataProperty name="utilityBuyList" type="TradeOffer" upperMultiplicity="unbounded"/>
+				<ComplexDataProperty name="utilityBuyList" type="TradeOffer" upperMultiplicity="unbounded"/>	
+			</AgentType>
+			<!-- ============================================ -->
+			<AgentType name="Laborer" superType="Person">
+				<!-- ============================================ -->
+				<ComplexDataProperty name="laborSellList" type="TradeOffer" upperMultiplicity="unbounded"/>
+				<!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~-->
+				<Function name="buyFood" resultType="Boolean">
+					<!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~-->
+					<documentation>
+						<dc:description>Calculates the buyoffers and adds them to the foodBuyList</dc:description>
+					</documentation>
+					<Parameter name="bidder" type="long"/>
+					<Body language="Java"><![CDATA[
+                    	setKonto(getAssetByName("Money").getQuantity());
+						getAllFoodBuyList().clear();
+						final double quantum = getEAT_AMOUNT() * 1.0;
+			          	double purse = getAssetByName("Money").getQuantity();
+			          	for (double x = getAssetByName("Food").getQuantity(); x <= 1.5 * getTARGET_FOOD_STOCK(); x += quantum) {
+			            	if (x == 0.0) x = 0.00000000001;
+			            	double mod = 0.1 * Math.pow(getTARGET_FOOD_STOCK() / x, 0.2) + 0.90 + aors.util.Random.uniform(0.0, 1.0) * getRANDOM_FACTOR();
+			            	double price = mod * getLastFoodPrice();
+			            	price = Math.min(price, purse);
+			            	if (price <= 0.0) break;
+			            	
+			              	purse = purse - (quantum*price);
+			            	if (purse < 0.0) break;
+			            	
+			            	model.dataTypes.TradeOffer o = new model.dataTypes.TradeOffer();
+			            	o.setProduct("Food");
+			            	o.setQuantity(quantum);
+			            	o.setPrice(price);
+			            	o.setBuy(true);
+			            	o.setBidderIdRef(bidder);
+			            	getAllFoodBuyList().add(o);
+			            	setKonto(getKonto()-price);
+			          	}
+						return true;
+					]]></Body>
+					<Body language="JavaScript"><![CDATA[
+						this.setKonto(this.getAssetByName("Money").getQuantity());
+						this.getAllFoodBuyList().clear();
+						var quantum = this.getEAT_AMOUNT() * 1.0;
+						var purse = this.getAssetByName("Money").getQuantity();
+						for (var x = this.getAssetByName("Food").getQuantity(); x <= 1.5 * this.getTARGET_FOOD_STOCK(); x += quantum) {
+							if (x == 0.0) x = 0.00000000001;
+							var random_value = js.util.Random.uniform(0.0, 1.0);
+							var mod = 0.1 * Math.pow(this.getTARGET_FOOD_STOCK() / x, 0.2) + 0.90 + random_value * this.getRANDOM_FACTOR();
+							var price = mod * this.getLastFoodPrice();
+							price = Math.min(price, purse);
+							if (price <= 0.0) break;
+							
+							purse = purse - (quantum * price);
+							if (purse < 0.0) break;
+							
+							var o = new minecon_laborfoodutility_scenario1.model.dataTypes.TradeOffer();
+							o.setProduct("Food");
+							o.setQuantity(quantum);
+							o.setPrice(price);
+							o.setBuy(true);
+							o.setBidderIdRef(bidder);
+							this.getAllFoodBuyList().add(o);
+							this.setKonto(this.getKonto() - price);
+						}
+						return true;
+					]]></Body>
+				</Function>
 				<!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~-->
 				<Function name="sellFood" resultType="Boolean">
 					<!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~-->
@@ -585,9 +619,9 @@
 					<Parameter name="bidderIdRef" type="long"/>
 					<Body language="Java"><![CDATA[
 						getAllFoodSellList().clear();
-						if (controller.Global.getAssetByName("Food", getAllAssets()).getQuantity() > 1.5 * getTARGET_FOOD_STOCK()){
+						if (getAssetByName("Food").getQuantity() > 1.5 * getTARGET_FOOD_STOCK()){
 				        	final double quantum = getEAT_AMOUNT() * 1.0;
-				          	for (double x = controller.Global.getAssetByName("Food", getAllAssets()).getQuantity(); x > 1.5 * getTARGET_FOOD_STOCK(); x -= quantum) {
+				          	for (double x = getAssetByName("Food").getQuantity(); x > 1.5 * getTARGET_FOOD_STOCK(); x -= quantum) {
 								if (x == 0.0) x = 0.00000000001;
 					            double mod = 0.1 * Math.pow(getTARGET_FOOD_STOCK() / (x - getTARGET_FOOD_STOCK()), .2) + 0.90 + aors.util.Random.uniform(0.0, 1.0) * getRANDOM_FACTOR();
 					            double price = mod * getLastFoodPrice();
@@ -606,12 +640,10 @@
 						return false;
 					]]></Body>
 					<Body language="JavaScript"><![CDATA[
-						var assets = this.getAllAssets();
-						this.getAllFoodSellLists().clear();
-						
-						if (minecon_laborfoodutility_scenario1.controller.Global.getAssetByName("Food", assets).getQuantity() > 1.5 * this.getTARGET_FOOD_STOCK()) {
+						this.getAllFoodSellList().clear();
+						if (this.getAssetByName("Food").getQuantity() > 1.5 * this.getTARGET_FOOD_STOCK()) {
 							var quantum = this.getEAT_AMOUNT() * 1.0;
-							for (var x = minecon_laborfoodutility_scenario1.controller.Global.getAssetByName("Food", assets).getQuantity(); x > 1.5 * this.getTARGET_FOOD_STOCK(); x -= quantum) {
+							for (var x = this.getAssetByName("Food").getQuantity(); x > 1.5 * this.getTARGET_FOOD_STOCK(); x -= quantum) {
 								if (x == 0.0) x = 0.00000000001;
 								var random_value = js.util.Random.uniform(0.0, 1.0);
 								var mod = 0.1 * Math.pow(this.getTARGET_FOOD_STOCK() / (x - this.getTARGET_FOOD_STOCK()), 0.2) + 0.90 + random_value * this.getRANDOM_FACTOR();
@@ -625,11 +657,62 @@
 								o.setBuy(false);
 								
 								o.setBidderIdRef(bidderIdRef);
-								this.getAllFoodSellLists().add(o);
+								this.getAllFoodSellList().add(o);
 							}
 							return true;
 						}
 						return false;
+					]]></Body>
+				</Function>
+				<!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~-->
+				<Function name="sellLabor" resultType="Boolean">
+					<!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~-->
+					<documentation>
+						<dc:description>Calculates the sell offers and adds them to the laborSellList</dc:description>
+					</documentation>
+					<Parameter name="bidderIdRef" type="long"/>
+					<Body language="Java"><![CDATA[
+						double price;
+						getAllLaborSellList().clear();
+						if (getLastLaborPrice() > getLastFoodPrice() && getAssetByName("Food").getQuantity() < getTARGET_FOOD_STOCK()){
+				        	price = (getLastLaborPrice() - getLastFoodPrice()) * ((getAssetByName("Food").getQuantity()*getAssetByName("Food").getQuantity()) / (getTARGET_FOOD_STOCK()*getTARGET_FOOD_STOCK())) + getLastFoodPrice();
+				        	price = Math.min(price, getLastLaborPrice() * 1.1);
+				        }else{
+				            price = getLastLaborPrice();
+				            final double frac = 0.95;
+				            double mod =((Math.max(Math.min(aors.util.Random.normal(0.0, 1.0), 2.0), -2.0) / 2) * (1 - frac) + 1);
+				        	price *= mod;
+				        }
+						model.dataTypes.TradeOffer o = new model.dataTypes.TradeOffer();
+			            o.setProduct("Labor");
+		            	o.setQuantity(getLABOR_ALLOWANCE());
+		            	o.setPrice(price);
+		            	o.setBuy(false);
+		            	o.setBidderIdRef(bidderIdRef);
+		            	getAllLaborSellList().add(o);
+		            	return true;
+					]]></Body>
+					<Body language="JavaScript"><![CDATA[ 
+						var price = 0;
+						this.getAllLaborSellList().clear();
+						if (this.getLastLaborPrice() > this.getLastFoodPrice() && this.getAssetByName("Food").getQuantity() < this.getTARGET_FOOD_STOCK()){
+							price = (this.getLastLaborPrice() - this.getLastFoodPrice()) * ((this.getAssetByName("Food").getQuantity() * this.getAssetByName("Food").getQuantity()) / (this.getTARGET_FOOD_STOCK() * this.getTARGET_FOOD_STOCK())) + this.getLastFoodPrice();
+							price = Math.min(price, this.getLastLaborPrice() * 1.1);
+						} else {
+							price = this.getLastLaborPrice();
+							var frac = 0.95;
+							var random_value = js.util.Random.normal(0.0, 1.0);
+							var mod = (Math.max(Math.min(random_value, 2.0), -2) / 2) * (1 - frac) + 1;
+							price *= mod;
+						}
+						var o = new minecon_laborfoodutility_scenario1.model.dataTypes.TradeOffer();
+						o.setProduct("Labor");
+						o.setQuantity(this.getLABOR_ALLOWANCE());
+						o.setPrice(price);
+						o.setBuy(false);
+						o.setBidderIdRef(bidderIdRef);
+						this.getAllLaborSellList().add(o);
+						return true;
 					]]></Body>
 				</Function>
 				<!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~-->
@@ -642,7 +725,7 @@
 					<Body language="Java"><![CDATA[
 						getAllUtilityBuyList().clear();
 						double purse = getKonto();
-						if (purse > getTARGET_MONEY_STOCK() && controller.Global.getAssetByName("Food", getAllAssets()).getQuantity() > getTARGET_FOOD_STOCK()) {
+						if (purse > getTARGET_MONEY_STOCK() && getAssetByName("Food").getQuantity() > getTARGET_FOOD_STOCK()) {
 					      	final double frac = 0.95;
 					      	double factor = ((Math.max(Math.min(aors.util.Random.normal(0.0, 1.0), 2.0), -2.0) / 2) * (1 - frac) + 1);
 					      	double uPrice = getLastUtilityPrice() * factor;
@@ -662,11 +745,9 @@
 			            return true;
 					]]></Body>
 					<Body language="JavaScript"><![CDATA[
-						this.getAllUtilityBuyLists().clear();
-						var assets = this.getAllAssets();
+						this.getAllUtilityBuyList().clear();
 						var purse = this.getKonto();
-						
-						if (purse > this.getTARGET_MONEY_STOCK() && minecon_laborfoodutility_scenario1.controller.Global.getAssetByName("Food", assets).getQuantity() > this.getTARGET_FOOD_STOCK()) {
+						if (purse > this.getTARGET_MONEY_STOCK() && this.getAssetByName("Food").getQuantity() > this.getTARGET_FOOD_STOCK()) {
 							var frac = 0.95;
 							var random_value = js.util.Random.normal(0.0, 1.0); 
 							var factor = ((Math.max(Math.min(random_value, 2.0), -2.0) / 2) * (1 - frac) + 1);
@@ -680,172 +761,11 @@
 									o.setPrice(uPrice);
 									o.setBuy(true);
 									o.setBidderIdRef(bidderIdRef);
-									this.getAllUtilityBuyLists().add(o);
+									this.getAllUtilityBuyList().add(o);
 								}
 							}
 						}
-
 						return true;
-					]]></Body>
-				</Function>
-				<!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->
-				<ReactionRule name="SellFood_Rule" agentVariable="p">
-					<!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->
-					<documentation>
-						<description> The person decides how much food he wants to sell</description>
-					</documentation>
-					<WHEN eventType="InMessageEvent" messageType="Act_msg"/>
-					<IF language="Java JavaScript">this.p.sellFood(this.p.getId())</IF>
-					<THEN>
-						<SCHEDULE-EVT>
-							<OutMessageEventExpr messageType="OfferToSellFood" receiverIdRefs="2">
-								<Slot property="sellOffers">
-									<ValueExpr language="Java">this.p.getAllFoodSellList()</ValueExpr>
-									<ValueExpr language="JavaScript">this.p.getAllFoodSellLists()</ValueExpr>
-								</Slot>
-							</OutMessageEventExpr>
-						</SCHEDULE-EVT>
-					</THEN>
-				</ReactionRule>
-				<!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->
-				<ReactionRule name="BuyUtility_Rule" agentVariable="p">
-					<documentation>
-						<description> The person decides how much utility he wants to buy</description>
-					</documentation>
-					<WHEN eventType="InMessageEvent" messageType="Act_msg"/>
-					<IF language="Java JavaScript">this.p.buyUtility(this.p.getId())</IF>
-					<THEN>
-						<SCHEDULE-EVT>
-							<OutMessageEventExpr messageType="OfferToBuyUtility" receiverIdRefs="4">
-								<Slot property="buyOffers">
-									<ValueExpr language="Java">this.p.getAllUtilityBuyList()</ValueExpr>
-									<ValueExpr language="JavaScript">this.p.getAllUtilityBuyLists()</ValueExpr>
-								</Slot>
-							</OutMessageEventExpr>
-						</SCHEDULE-EVT>
-					</THEN>
-				</ReactionRule>
-			</AgentType>
-			<!-- ============================================ -->
-			<AgentType name="Laborer" superType="Person">
-				<!-- ============================================ -->
-				<ComplexDataProperty name="laborSellList" type="TradeOffer" upperMultiplicity="unbounded"/>
-				<!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~-->
-				<Function name="buyFood" resultType="Boolean">
-					<!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~-->
-					<documentation>
-						<dc:description>Calculates the buyoffers and adds them to the foodBuyList</dc:description>
-					</documentation>
-					<Parameter name="bidder" type="long"/>
-					<Body language="Java"><![CDATA[
-                    	setKonto(controller.Global.getAssetByName("Money", getAllAssets()).getQuantity());
-						getAllFoodBuyList().clear();
-						final double quantum = getEAT_AMOUNT() * 1.0;
-			          	double purse = controller.Global.getAssetByName("Money", getAllAssets()).getQuantity();
-			          	for (double x = controller.Global.getAssetByName("Food", getAllAssets()).getQuantity(); x <= 1.5 * getTARGET_FOOD_STOCK(); x += quantum) {
-			            	if (x == 0.0) x = 0.00000000001;
-			            	double mod = 0.1 * Math.pow(getTARGET_FOOD_STOCK() / x, 0.2) + 0.90 + aors.util.Random.uniform(0.0, 1.0) * getRANDOM_FACTOR();
-			            	double price = mod * getLastFoodPrice();
-			            	price = Math.min(price, purse);
-			            	if (price <= 0.0) break;
-			            	
-			              	purse = purse - (quantum*price);
-			            	if (purse < 0.0) break;
-			            	
-			            	model.dataTypes.TradeOffer o = new model.dataTypes.TradeOffer();
-			            	o.setProduct("Food");
-			            	o.setQuantity(quantum);
-			            	o.setPrice(price);
-			            	o.setBuy(true);
-			            	o.setBidderIdRef(bidder);
-			            	getAllFoodBuyList().add(o);
-			            	setKonto(getKonto()-price);
-			          	}
-						return true;
-					]]></Body>
-					<Body language="JavaScript"><![CDATA[
-						assets = this.getAllAssets();
-						this.setKonto(minecon_laborfoodutility_scenario1.controller.Global.getAssetByName("Money", assets).getQuantity());
-						this.getAllFoodBuyLists().clear();
-						var quantum = this.getEAT_AMOUNT() * 1.0;
-						var purse = minecon_laborfoodutility_scenario1.controller.Global.getAssetByName("Money", assets).getQuantity();
-						for (var x = minecon_laborfoodutility_scenario1.controller.Global.getAssetByName("Food", assets).getQuantity(); x <= 1.5 * this.getTARGET_FOOD_STOCK(); x += quantum) {
-							if (x == 0.0) x = 0.00000000001;
-							var random_value = js.util.Random.uniform(0.0, 1.0);
-							var mod = 0.1 * Math.pow(this.getTARGET_FOOD_STOCK() / x, 0.2) + 0.90 + random_value * this.getRANDOM_FACTOR();
-							var price = mod * this.getLastFoodPrice();
-							price = Math.min(price, purse);
-							if (price <= 0.0) break;
-							
-							purse = purse - (quantum * price);
-							if (purse < 0.0) break;
-							
-							var o = new minecon_laborfoodutility_scenario1.model.dataTypes.TradeOffer();
-							o.setProduct("Food");
-							o.setQuantity(quantum);
-							o.setPrice(price);
-							o.setBuy(true);
-							o.setBidderIdRef(bidder);
-							this.getAllFoodBuyLists().add(o);
-							this.setKonto(this.getKonto() - price);
-						}
-						return true;
-					]]></Body>
-				</Function>
-				<!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~-->
-				<Function name="sellLabor" resultType="Boolean">
-					<!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~-->
-					<documentation>
-						<dc:description>Calculates the sell offers and adds them to the laborSellList</dc:description>
-					</documentation>
-					<Parameter name="bidderIdRef" type="long"/>
-					<Body language="Java"><![CDATA[
-						double price;
-						getAllLaborSellList().clear();
-						if (getLastLaborPrice() > getLastFoodPrice() && controller.Global.getAssetByName("Food", getAllAssets()).getQuantity() < getTARGET_FOOD_STOCK()){
-				        	price = (getLastLaborPrice() - getLastFoodPrice()) * ((controller.Global.getAssetByName("Food", getAllAssets()).getQuantity()*controller.Global.getAssetByName("Food", getAllAssets()).getQuantity()) / (getTARGET_FOOD_STOCK()*getTARGET_FOOD_STOCK())) + getLastFoodPrice();
-				        	price = Math.min(price, getLastLaborPrice() * 1.1);
-				        }else{
-				            price = getLastLaborPrice();
-				            final double frac = 0.95;
-				            double mod =((Math.max(Math.min(aors.util.Random.normal(0.0, 1.0), 2.0), -2.0) / 2) * (1 - frac) + 1);
-				        	price *= mod;
-				        }
-							model.dataTypes.TradeOffer o = new model.dataTypes.TradeOffer();
-				            o.setProduct("Labor");
-			            	o.setQuantity(getLABOR_ALLOWANCE());
-			            	o.setPrice(price);
-			            	o.setBuy(false);
-			            	o.setBidderIdRef(bidderIdRef);
-			            	getAllLaborSellList().add(o);
-			            	return true;
-					]]></Body>
-					<Body language="JavaScript"><![CDATA[
-						if (!this.isOwner()){ 
-							var price = 0;
-							var assets = this.getAllAssets();
-							this.getAllLaborSellLists().clear();
-							if (this.getLastLaborPrice() > this.getLastFoodPrice() && minecon_laborfoodutility_scenario1.controller.Global.getAssetByName("Food", assets).getQuantity() < this.getTARGET_FOOD_STOCK()){
-								price = (this.getLastLaborPrice() - this.getLastFoodPrice()) * ((minecon_laborfoodutility_scenario1.controller.Global.getAssetByName("Food", assets).getQuantity() * minecon_laborfoodutility_scenario1.controller.Global.getAssetByName("Food", assets).getQuantity()) / (this.getTARGET_FOOD_STOCK() * this.getTARGET_FOOD_STOCK())) + this.getLastFoodPrice();
-								price = Math.min(price, this.getLastLaborPrice() * 1.1);
-							} else {
-								price = this.getLastLaborPrice();
-								var frac = 0.95;
-								var random_value = js.util.Random.normal(0.0, 1.0);
-								var mod = (Math.max(Math.min(random_value, 2.0), -2) / 2) * (1 - frac) + 1;
-								price *= mod;
-							}
-								var o = new minecon_laborfoodutility_scenario1.model.dataTypes.TradeOffer();
-								o.setProduct("Labor");
-								o.setQuantity(this.getLABOR_ALLOWANCE());
-								o.setPrice(price);
-								o.setBuy(false);
-								o.setBidderIdRef(bidderIdRef);
-								this.getAllLaborSellLists().add(o);
-
-								return true;
-					  }
-					  return false; 
 					]]></Body>
 				</Function>
 				<!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~-->
@@ -860,8 +780,25 @@
 						<SCHEDULE-EVT>
 							<OutMessageEventExpr messageType="OfferToBuyFood" receiverIdRefs="2">
 								<Slot property="buyOffers">
-									<ValueExpr language="Java">this.p.getAllFoodBuyList()</ValueExpr>
-									<ValueExpr language="JavaScript">this.p.getAllFoodBuyLists()</ValueExpr>
+									<ValueExpr language="Java JavaScript">this.p.getAllFoodBuyList()</ValueExpr>
+								</Slot>
+							</OutMessageEventExpr>
+						</SCHEDULE-EVT>
+					</THEN>
+				</ReactionRule>
+				<!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->
+				<ReactionRule name="SellFood_Rule" agentVariable="p">
+					<!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->
+					<documentation>
+						<description> The person decides how much food he wants to sell</description>
+					</documentation>
+					<WHEN eventType="InMessageEvent" messageType="Act_msg"/>
+					<IF language="Java JavaScript">this.p.sellFood(this.p.getId())</IF>
+					<THEN>
+						<SCHEDULE-EVT>
+							<OutMessageEventExpr messageType="OfferToSellFood" receiverIdRefs="2">
+								<Slot property="sellOffers">
+									<ValueExpr language="Java JavaScript">this.p.getAllFoodSellList()</ValueExpr>
 								</Slot>
 							</OutMessageEventExpr>
 						</SCHEDULE-EVT>
@@ -879,8 +816,24 @@
 						<SCHEDULE-EVT>
 							<OutMessageEventExpr messageType="OfferToSellLabor" receiverIdRefs="3">
 								<Slot property="sellOffers">
-									<ValueExpr language="Java">this.p.getAllLaborSellList()</ValueExpr>
-									<ValueExpr language="JavaScript">this.p.getAllLaborSellLists()</ValueExpr>
+									<ValueExpr language="Java JavaScript">this.p.getAllLaborSellList()</ValueExpr>
+								</Slot>
+							</OutMessageEventExpr>
+						</SCHEDULE-EVT>
+					</THEN>
+				</ReactionRule>
+				<!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->
+				<ReactionRule name="BuyUtility_Rule" agentVariable="p">
+					<documentation>
+						<description> The person decides how much utility he wants to buy</description>
+					</documentation>
+					<WHEN eventType="InMessageEvent" messageType="Act_msg"/>
+					<IF language="Java JavaScript">this.p.buyUtility(this.p.getId())</IF>
+					<THEN>
+						<SCHEDULE-EVT>
+							<OutMessageEventExpr messageType="OfferToBuyUtility" receiverIdRefs="4">
+								<Slot property="buyOffers">
+									<ValueExpr language="Java JavaScript">this.p.getAllUtilityBuyList()</ValueExpr>
 								</Slot>
 							</OutMessageEventExpr>
 						</SCHEDULE-EVT>
@@ -900,18 +853,18 @@
 					</documentation>
 					<Parameter name="bidder" type="long"/>
 					<Body language="Java"><![CDATA[
-						if(getFirm() != null){
-							double firmMoney = controller.Global.getAssetByName("Money",getFirm().getAllAssets()).getQuantity();
-							double moneyToWithdraw = Math.max(getTARGET_MONEY_STOCK() - controller.Global.getAssetByName("Money", getAllAssets()).getQuantity() , firmMoney - getTARGET_FIRM_MONEY_STOCK());
+						if (getFirm() != null){
+							double firmMoney = getFirm().getAssetByName("Money").getQuantity();
+							double moneyToWithdraw = Math.max(getTARGET_MONEY_STOCK() - getAssetByName("Money").getQuantity() , firmMoney - getTARGET_FIRM_MONEY_STOCK());
 							if (moneyToWithdraw > 0.0) {
-								controller.Global.getAssetByName("Money", getAllAssets()).deposit(controller.Global.getAssetByName("Money", getFirm().getAllAssets()).withdraw(moneyToWithdraw));
+								getAssetByName("Money").deposit((getFirm().getAssetByName("Money")).withdraw(moneyToWithdraw));
 	                    	}
                     	}
-                    	setKonto(controller.Global.getAssetByName("Money", getAllAssets()).getQuantity());
+                    	setKonto(getAssetByName("Money").getQuantity());
 						getAllFoodBuyList().clear();
 						final double quantum = getEAT_AMOUNT() * 1.0;
-			          	double purse = controller.Global.getAssetByName("Money", getAllAssets()).getQuantity();
-			          	for (double x = controller.Global.getAssetByName("Food", getAllAssets()).getQuantity(); x <= 1.5 * getTARGET_FOOD_STOCK(); x += quantum) {
+			          	double purse = getAssetByName("Money").getQuantity();
+			          	for (double x = getAssetByName("Food").getQuantity(); x <= 1.5 * getTARGET_FOOD_STOCK(); x += quantum) {
 			            	if (x == 0.0) x = 0.00000000001;
 			            	double mod = 0.1 * Math.pow(getTARGET_FOOD_STOCK() / x, 0.2) + 0.90 + aors.util.Random.uniform(0.0, 1.0) * getRANDOM_FACTOR();
 			            	double price = mod * getLastFoodPrice();
@@ -933,19 +886,18 @@
 						return true;
 					]]></Body>
 					<Body language="JavaScript"><![CDATA[
-						assets = this.getAllAssets();
-						var firmMoney = minecon_laborfoodutility_scenario1.controller.Global.getAssetByName("Money", this.getFirm().getAllAssets()).getQuantity();							
-						var moneyToWithdraw = Math.max(this.getTARGET_MONEY_STOCK() - minecon_laborfoodutility_scenario1.controller.Global.getAssetByName("Money", assets).getQuantity(), firmMoney - this.getTARGET_FIRM_MONEY_STOCK());
+						var firmMoney = this.getFirm().getAssetByName("Money", this.getFirm().getAllAssets()).getQuantity();
+						var moneyToWithdraw = Math.max(this.getTARGET_MONEY_STOCK() - this.getAssetByName("Money").getQuantity(), firmMoney - this.getTARGET_FIRM_MONEY_STOCK());
 						if (moneyToWithdraw > 0.0) {
-							var moneyAsset = minecon_laborfoodutility_scenario1.controller.Global.getAssetByName("Money", assets);
-							var firmMoneyAsset = minecon_laborfoodutility_scenario1.controller.Global.getAssetByName("Money", this.getFirm().getAllAssets());
+							var moneyAsset = this.getAssetByName("Money");
+							var firmMoneyAsset = this.getFirm().getAssetByName("Money");
 							moneyAsset.deposit(firmMoneyAsset.withdraw(moneyToWithdraw));
 						}
-						this.setKonto(minecon_laborfoodutility_scenario1.controller.Global.getAssetByName("Money", assets).getQuantity());
-						this.getAllFoodBuyLists().clear();
+						this.setKonto(this.getAssetByName("Money").getQuantity());
+						this.getAllFoodBuyList().clear();
 						var quantum = this.getEAT_AMOUNT() * 1.0;
-						var purse = minecon_laborfoodutility_scenario1.controller.Global.getAssetByName("Money", assets).getQuantity();
-						for (var x = minecon_laborfoodutility_scenario1.controller.Global.getAssetByName("Food", assets).getQuantity(); x <= 1.5 * this.getTARGET_FOOD_STOCK(); x += quantum) {
+						var purse = this.getAssetByName("Money").getQuantity();
+						for (var x = this.getAssetByName("Food").getQuantity(); x <= 1.5 * this.getTARGET_FOOD_STOCK(); x += quantum) {
 							if (x == 0.0) x = 0.00000000001;
 							var random_value = js.util.Random.uniform(0.0, 1.0);
 							var mod = 0.1 * Math.pow(this.getTARGET_FOOD_STOCK() / x, 0.2) + 0.90 + random_value * this.getRANDOM_FACTOR();
@@ -962,8 +914,118 @@
 							o.setPrice(price);
 							o.setBuy(true);
 							o.setBidderIdRef(bidder);
-							this.getAllFoodBuyLists().add(o);
+							this.getAllFoodBuyList().add(o);
 							this.setKonto(this.getKonto() - price);
+						}
+						simConsole.message("oKonto3: " + this.getKonto());
+						return true;
+					]]></Body>
+				</Function>
+				<!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~-->
+				<Function name="sellFood" resultType="Boolean">
+					<!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~-->
+					<documentation>
+						<dc:description>Calculates the selloffers and adds them to the foodSellList</dc:description>
+					</documentation>
+					<Parameter name="bidderIdRef" type="long"/>
+					<Body language="Java"><![CDATA[
+						getAllFoodSellList().clear();
+						if (getAssetByName("Food").getQuantity() > 1.5 * getTARGET_FOOD_STOCK()){
+				        	final double quantum = getEAT_AMOUNT() * 1.0;
+				          	for (double x = getAssetByName("Food").getQuantity(); x > 1.5 * getTARGET_FOOD_STOCK(); x -= quantum) {
+								if (x == 0.0) x = 0.00000000001;
+					            double mod = 0.1 * Math.pow(getTARGET_FOOD_STOCK() / (x - getTARGET_FOOD_STOCK()), .2) + 0.90 + aors.util.Random.uniform(0.0, 1.0) * getRANDOM_FACTOR();
+					            double price = mod * getLastFoodPrice();
+					            if (price <= 0.0) break;
+								
+					            model.dataTypes.TradeOffer o = new model.dataTypes.TradeOffer();
+					            o.setProduct("Food");
+				            	o.setQuantity(quantum);
+				            	o.setPrice(price);
+				            	o.setBuy(false);
+				            	o.setBidderIdRef(bidderIdRef);
+				            	getAllFoodSellList().add(o);
+				          }
+						return true;
+						}
+						return false;
+					]]></Body>
+					<Body language="JavaScript"><![CDATA[
+						this.getAllFoodSellList().clear();
+						if (this.getAssetByName("Food").getQuantity() > 1.5 * this.getTARGET_FOOD_STOCK()) {
+							var quantum = this.getEAT_AMOUNT() * 1.0;
+							for (var x = this.getAssetByName("Food").getQuantity(); x > 1.5 * this.getTARGET_FOOD_STOCK(); x -= quantum) {
+								if (x == 0.0) x = 0.00000000001;
+								var random_value = js.util.Random.uniform(0.0, 1.0);
+								var mod = 0.1 * Math.pow(this.getTARGET_FOOD_STOCK() / (x - this.getTARGET_FOOD_STOCK()), 0.2) + 0.90 + random_value * this.getRANDOM_FACTOR();
+								var price = mod * this.getLastFoodPrice();
+								if (price <= 0.0) break;
+								
+								var o = new minecon_laborfoodutility_scenario1.model.dataTypes.TradeOffer();
+								o.setProduct("Food");
+								o.setQuantity(quantum);
+								o.setPrice(price);
+								o.setBuy(false);
+								
+								o.setBidderIdRef(bidderIdRef);
+								this.getAllFoodSellList().add(o);
+							}
+							return true;
+						}
+						return false;
+					]]></Body>
+				</Function>
+				<!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~-->
+				<Function name="buyUtility" resultType="Boolean">
+					<!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~-->
+					<documentation>
+						<dc:description>Calculates the buyoffers and adds them to the utilityBuyList</dc:description>
+					</documentation>
+					<Parameter name="bidderIdRef" type="long"/>
+					<Body language="Java"><![CDATA[
+						getAllUtilityBuyList().clear();
+						double purse = getKonto();
+						if (purse > getTARGET_MONEY_STOCK() && getAssetByName("Food").getQuantity() > getTARGET_FOOD_STOCK()) {
+					      	final double frac = 0.95;
+					      	double factor = ((Math.max(Math.min(aors.util.Random.normal(0.0, 1.0), 2.0), -2.0) / 2) * (1 - frac) + 1);
+					      	double uPrice = getLastUtilityPrice() * factor;
+					      	double quantity = (getKonto() - getTARGET_MONEY_STOCK()) / uPrice;
+					      	if (quantity > 0 && uPrice > 0.0){
+					      		for (double d = quantity; d > 0; d--){
+						        	model.dataTypes.TradeOffer o = new model.dataTypes.TradeOffer();
+					            	o.setProduct("Utility");
+				            		o.setQuantity(1);
+				            		o.setPrice(uPrice);
+				            		o.setBuy(true);
+				            		o.setBidderIdRef(bidderIdRef);
+				            		getAllUtilityBuyList().add(o);
+			            		}
+			            	}
+			            }
+			            return true;
+					]]></Body>
+					<Body language="JavaScript"><![CDATA[
+						this.getAllUtilityBuyList().clear();
+						var purse = this.getKonto();
+						simConsole.message("oKonto4: " + purse);
+						if (purse > this.getTARGET_MONEY_STOCK() && this.getAssetByName("Food").getQuantity() > this.getTARGET_FOOD_STOCK()) {
+							simConsole.message("oBuy");
+							var frac = 0.95;
+							var random_value = js.util.Random.normal(0.0, 1.0); 
+							var factor = ((Math.max(Math.min(random_value, 2.0), -2.0) / 2) * (1 - frac) + 1);
+							var uPrice = this.getLastUtilityPrice() * factor;
+							var quantity = (this.getKonto() - this.getTARGET_MONEY_STOCK()) / uPrice;
+							if (quantity > 0 && uPrice > 0.0) {
+								for (var d = quantity; d > 0; d--) {
+									var o = new minecon_laborfoodutility_scenario1.model.dataTypes.TradeOffer();
+									o.setProduct("Utility");
+									o.setQuantity(1);
+									o.setPrice(uPrice);
+									o.setBuy(true);
+									o.setBidderIdRef(bidderIdRef);
+									this.getAllUtilityBuyList().add(o);
+								}
+							}
 						}
 						return true;
 					]]></Body>
@@ -980,8 +1042,42 @@
 						<SCHEDULE-EVT>
 							<OutMessageEventExpr messageType="OfferToBuyFood" receiverIdRefs="2">
 								<Slot property="buyOffers">
-									<ValueExpr language="Java">this.p.getAllFoodBuyList()</ValueExpr>
-									<ValueExpr language="JavaScript">this.p.getAllFoodBuyLists()</ValueExpr>
+									<ValueExpr language="Java JavaScript">this.p.getAllFoodBuyList()</ValueExpr>
+								</Slot>
+							</OutMessageEventExpr>
+						</SCHEDULE-EVT>
+					</THEN>
+				</ReactionRule>
+				<!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->
+				<ReactionRule name="SellFood_Rule" agentVariable="p">
+					<!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->
+					<documentation>
+						<description> The person decides how much food he wants to sell</description>
+					</documentation>
+					<WHEN eventType="InMessageEvent" messageType="Act_msg"/>
+					<IF language="Java JavaScript">this.p.sellFood(this.p.getId())</IF>
+					<THEN>
+						<SCHEDULE-EVT>
+							<OutMessageEventExpr messageType="OfferToSellFood" receiverIdRefs="2">
+								<Slot property="sellOffers">
+									<ValueExpr language="Java JavaScript">this.p.getAllFoodSellList()</ValueExpr>
+								</Slot>
+							</OutMessageEventExpr>
+						</SCHEDULE-EVT>
+					</THEN>
+				</ReactionRule>
+				<!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->
+				<ReactionRule name="BuyUtility_Rule" agentVariable="p">
+					<documentation>
+						<description> The person decides how much utility he wants to buy</description>
+					</documentation>
+					<WHEN eventType="InMessageEvent" messageType="Act_msg"/>
+					<IF language="Java JavaScript">this.p.buyUtility(this.p.getId())</IF>
+					<THEN>
+						<SCHEDULE-EVT>
+							<OutMessageEventExpr messageType="OfferToBuyUtility" receiverIdRefs="4">
+								<Slot property="buyOffers">
+									<ValueExpr language="Java JavaScript">this.p.getAllUtilityBuyList()</ValueExpr>
 								</Slot>
 							</OutMessageEventExpr>
 						</SCHEDULE-EVT>
@@ -1010,7 +1106,7 @@
 					<Parameter name="bidderIdRef" type="long"/>
 					<Body language="Java"><![CDATA[
 						getAllSellList().clear();
-						double productQuantity = controller.Global.getAssetByName("Food", getAllAssets()).getQuantity();
+						double productQuantity = getAssetByName("Food").getQuantity();
 						if (productQuantity == 0) {
 							return false;
 						} else {
@@ -1030,14 +1126,12 @@
 				            	}
 				            	food = food - quantum;
             				}
-            			return true;
+            				return true;
         				}
 					]]></Body>
 					<Body language="JavaScript"><![CDATA[
-						this.getAllSellLists().clear();
-						var assets = this.getAllAssets();
-						var productQuantity = minecon_laborfoodutility_scenario1.controller.Global.getAssetByName("Food", assets).getQuantity();
-
+						this.getAllSellList().clear();
+						var productQuantity = this.getAssetByName("Food").getQuantity();
 						if (productQuantity == 0) {
 							return false;
 						} else {
@@ -1054,13 +1148,12 @@
 									o.setPrice(price);
 									o.setBuy(false);
 									o.setBidderIdRef(bidderIdRef);
-									this.getAllSellLists().add(o);
+									this.getAllSellList().add(o);
 								}
 								food = food - quantum;
 							}
-						return true;
+							return true;
 						}
-						return false;
 					]]></Body>
 				</Function>
 				<!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~-->
@@ -1072,10 +1165,10 @@
 					<Parameter name="bidderIdRef" type="long"/>
 					<Body language="Java"><![CDATA[
 						getAllBuyList().clear();
-						double ownerfoodAmount = controller.Global.getAssetByName("Food", getOwner().getAllAssets()).getQuantity();
-				        if (ownerfoodAmount < 0.75 * getTARGET_OWNER_FOOD_STOCK() && controller.Global.getAssetByName("Food", getAllAssets()).getQuantity() < getTARGET_FOOD_STOCK()){
+						double ownerfoodAmount = getOwner().getAssetByName("Food").getQuantity();
+				        if (ownerfoodAmount < 0.75 * getTARGET_OWNER_FOOD_STOCK() && getAssetByName("Food").getQuantity() < getTARGET_FOOD_STOCK()){
 				          final double quantum = getLABOR_ALLOWANCE() * 1.0;
-				          double purse = controller.Global.getAssetByName("Money", getAllAssets()).getQuantity();
+				          double purse = getAssetByName("Money").getQuantity();
 				          for (double x = ownerfoodAmount; x <= 1.5 * getTARGET_OWNER_FOOD_STOCK(); x += quantum) {
 				            if (x == 0.0) x = 0.00000000001;
 				            double mod = 0.1 * Math.pow(getTARGET_OWNER_FOOD_STOCK() / x, 0.2) + 0.90 + aors.util.Random.uniform(0.0, 1.0) * getRANDOM_FACTOR();
@@ -1096,11 +1189,11 @@
 				        }
 						double lastProduct = 0.0;
 						double minPrice = (getLABOR_ALLOWANCE() * getLastLaborPrice()) / 2.0;
-						double purse = controller.Global.getAssetByName("Money", getAllAssets()).getQuantity();
+						double purse = getAssetByName("Money").getQuantity();
 			            for (double d = getLABOR_ALLOWANCE(); purse > 0.0; d += getLABOR_ALLOWANCE()) {
 			            	
 			                double marginalProduct = convertToFood(d) - lastProduct;
-			                if (lastProduct + controller.Global.getAssetByName("Food", getAllAssets()).getQuantity() >= getTARGET_FOOD_STOCK()) break;
+			                if (lastProduct + getAssetByName("Food").getQuantity() >= getTARGET_FOOD_STOCK()) break;
 			
 			                double price = marginalProduct * getLastFoodPrice();
 			                // stop when you'd be buying at < 1/2 the price of labor
@@ -1119,12 +1212,11 @@
 						return true;						
 					]]></Body>
 					<Body language="JavaScript"><![CDATA[
-						this.getAllBuyLists().clear();
-						var assets = this.getAllAssets();
-						var ownerfoodAmount = minecon_laborfoodutility_scenario1.controller.Global.getAssetByName("Food", this.getOwner().getAllAssets()).getQuantity();
-						if (ownerfoodAmount < 0.75 * this.getTARGET_OWNER_FOOD_STOCK() && minecon_laborfoodutility_scenario1.controller.Global.getAssetByName("Food", assets).getQuantity() < this.getTARGET_FOOD_STOCK()){
+						this.getAllBuyList().clear();
+						var ownerfoodAmount = this.getOwner().getAssetByName("Food").getQuantity();
+						if (ownerfoodAmount < 0.75 * this.getTARGET_OWNER_FOOD_STOCK() && this.getAssetByName("Food").getQuantity() < this.getTARGET_FOOD_STOCK()){
 						  var quantum = this.getLABOR_ALLOWANCE() * 1.0;
-						  var purse = minecon_laborfoodutility_scenario1.controller.Global.getAssetByName("Money", assets).getQuantity();
+						  var purse = this.getAssetByName("Money").getQuantity();
 						  for (var x = ownerfoodAmount; x <= 1.5 * this.getTARGET_OWNER_FOOD_STOCK(); x += quantum) {
 							if (x == 0.0) x = 0.00000000001;
 							var random_value = js.util.Random.uniform(0.0, 1.0); 
@@ -1141,18 +1233,18 @@
 							o.setPrice(price);
 							o.setBuy(true);
 							o.setBidderIdRef(bidderIdRef);
-							this.getAllBuyLists().add(o);        	
+							this.getAllBuyList().add(o);        	
 						  }
 						}
 						
 						
 						var lastProduct = 0.0;
 						var minPrice = (this.getLABOR_ALLOWANCE() * this.getLastLaborPrice()) / 2.0;
-						var purse = minecon_laborfoodutility_scenario1.controller.Global.getAssetByName("Money", assets).getQuantity();
+						var purse = this.getAssetByName("Money").getQuantity();
 						for (var d = this.getLABOR_ALLOWANCE(); purse > 0.0; d += this.getLABOR_ALLOWANCE()) {
 						
 							var marginalProduct = this.convertToFood(d) - lastProduct;
-							if (lastProduct + minecon_laborfoodutility_scenario1.controller.Global.getAssetByName("Food", assets).getQuantity() >= this.getTARGET_FOOD_STOCK()) break;
+							if (lastProduct + this.getAssetByName("Food").getQuantity() >= this.getTARGET_FOOD_STOCK()) break;
 
 							var price = marginalProduct * this.getLastFoodPrice();
 							// stop when you'd be buying at < 1/2 the price of labor
@@ -1164,7 +1256,7 @@
 							o.setPrice(price);
 							o.setBuy(true);
 							o.setBidderIdRef(bidderIdRef);
-							this.getAllBuyLists().add(o);
+							this.getAllBuyList().add(o);
 							purse = purse - price;
 							lastProduct = lastProduct + marginalProduct;
 						}
@@ -1188,18 +1280,17 @@
 					</documentation>
 					<Parameter name="ID" type="long"/>
 					<Body language="Java"><![CDATA[
-						double food = convertToFood(controller.Global.getAssetByName("Labor", getAllAssets()).getQuantity());
-						double labor = controller.Global.getAssetByName("Labor", getAllAssets()).getQuantity();
-						controller.Global.getAssetByName("Labor", getAllAssets()).withdraw(labor);
-						controller.Global.getAssetByName("Food", getAllAssets()).deposit(food);
+						double labor = getAssetByName("Labor").getQuantity();
+						double food = convertToFood(labor);
+						getAssetByName("Labor").withdraw(labor);
+						getAssetByName("Food").deposit(food);
 						return food;									
 					]]></Body>
 					<Body language="JavaScript"><![CDATA[
-						var assets = this.getAllAssets();
-						var food = this.convertToFood(minecon_laborfoodutility_scenario1.controller.Global.getAssetByName("Labor", assets).getQuantity());
-						var labor = minecon_laborfoodutility_scenario1.controller.Global.getAssetByName("Labor", assets).getQuantity();
-						minecon_laborfoodutility_scenario1.controller.Global.getAssetByName("Labor", assets).withdraw(labor);
-						minecon_laborfoodutility_scenario1.controller.Global.getAssetByName("Food", assets).deposit(food);
+						var labor = this.getAssetByName("Labor").getQuantity();
+						var food = this.convertToFood(labor);
+						this.getAssetByName("Labor").withdraw(labor);
+						this.getAssetByName("Food").deposit(food);
 						return food;										
 					]]></Body>
 				</Function>
@@ -1210,8 +1301,7 @@
 						<dc:description>Converts all labor to food</dc:description>
 					</documentation>
 					<WHEN eventType="InMessageEvent" messageType="Act_msg"/>
-					<IF language="Java">Global.getAssetByName("Labor", f.getAllAssets()).getQuantity() > 0</IF>
-					<IF language="JavaScript">minecon_laborfoodutility_scenario1.controller.Global.getAssetByName("Labor", this.f.getAllAssets()).getQuantity() > 0</IF>
+					<IF language="Java JavaScript">this.f.getAssetByName("Labor").getQuantity() > 0</IF>
 					<THEN>
 						<UPDATE-AGT>
 							<Slot property="amountProduced">
@@ -1233,8 +1323,7 @@
 							<OutMessageEventExpr messageType="OfferToSellFood" receiverIdRefs="2">
 								<Slot property="sellOffers">
 									<!--<ObjectValueExpr objectVariable="sellList"/>-->
-									<ValueExpr language="Java">this.f.getAllSellList()</ValueExpr>
-									<ValueExpr language="JavaScript">this.f.getAllSellLists()</ValueExpr>
+									<ValueExpr language="Java JavaScript">this.f.getAllSellList()</ValueExpr>
 								</Slot>
 							</OutMessageEventExpr>
 						</SCHEDULE-EVT>
@@ -1252,8 +1341,7 @@
 						<SCHEDULE-EVT>
 							<OutMessageEventExpr messageType="OfferToBuyLabor" receiverIdRefs="3">
 								<Slot property="buyOffers">
-									<ValueExpr language="Java">this.f.getAllBuyList()</ValueExpr>
-									<ValueExpr language="JavaScript">this.f.getAllBuyLists()</ValueExpr>
+									<ValueExpr language="Java JavaScript">this.f.getAllBuyList()</ValueExpr>
 								</Slot>
 							</OutMessageEventExpr>
 						</SCHEDULE-EVT>
@@ -1273,7 +1361,7 @@
 					<Body language="Java"><![CDATA[
 						getAllSellList().clear();
 						final double frac = 0.9;
-			            double util = controller.Global.getAssetByName("Utility", getAllAssets()).getQuantity();
+			            double util = getAssetByName("Utility").getQuantity();
 			            double quantum = util / 10; 
 			            while (util > 0) {
 			            	for (double d = quantum; d > 0; d--) {
@@ -1293,10 +1381,9 @@
             			return true;		
 					]]></Body>
 					<Body language="JavaScript"><![CDATA[
-						var assets = this.getAllAssets();
-						this.getAllSellLists().clear();
+						this.getAllSellList().clear();
 						var frac = 0.9;
-						var util = minecon_laborfoodutility_scenario1.controller.Global.getAssetByName("Utility", assets).getQuantity();
+						var util = this.getAssetByName("Utility").getQuantity();
 						var quantum = util / 10.0; 
 						while (util > 0) {
 							for (var d = quantum; d > 0; d--) {
@@ -1310,7 +1397,7 @@
 								o.setPrice(price);
 								o.setBuy(false);
 								o.setBidderIdRef(bidderIdRef);
-								this.getAllSellLists().add(o);
+								this.getAllSellList().add(o);
 							}
 							util = util - quantum;
 						}
@@ -1327,10 +1414,10 @@
 					<Body language="Java"><![CDATA[
 						getAllBuyList().clear();
 						double lastProduct = 0.0, minPrice = (getLABOR_ALLOWANCE() * getLastLaborPrice()) / 2.0;
-						double purse = controller.Global.getAssetByName("Money", getAllAssets()).getQuantity();
+						double purse = getAssetByName("Money").getQuantity();
 			            for (double d = getLABOR_ALLOWANCE(); purse > 0.0; d += getLABOR_ALLOWANCE()) {
 			                double marginalProduct = convertToUtility(d) - lastProduct;
-			                if (lastProduct + controller.Global.getAssetByName("Utility", getAllAssets()).getQuantity() >= getTARGET_UTILITY_STOCK()) 
+			                if (lastProduct + getAssetByName("Utility").getQuantity() >= getTARGET_UTILITY_STOCK()) 
 								break;
 			
 			                double price = marginalProduct * getLastUtilityPrice();
@@ -1350,14 +1437,13 @@
 			        	return true;						
 					]]></Body>
 					<Body language="JavaScript"><![CDATA[
-						this.getAllBuyLists().clear();
-						var assets = this.getAllAssets();
+						this.getAllBuyList().clear();
 						var lastProduct = 0.0;
 						var minPrice = (this.getLABOR_ALLOWANCE() * this.getLastLaborPrice()) / 2.0;
-						var purse = minecon_laborfoodutility_scenario1.controller.Global.getAssetByName("Money", assets).getQuantity();
+						var purse = this.getAssetByName("Money").getQuantity();
 						for (var d = this.getLABOR_ALLOWANCE(); purse > 0.0; d += this.getLABOR_ALLOWANCE()) {
 							var marginalProduct = this.convertToUtility(d) - lastProduct;
-							if (lastProduct + minecon_laborfoodutility_scenario1.controller.Global.getAssetByName("Utility", assets).getQuantity() >= this.getTARGET_UTILITY_STOCK()) 
+							if (lastProduct + this.getAssetByName("Utility").getQuantity() >= this.getTARGET_UTILITY_STOCK()) 
 								break;
 
 							var price = marginalProduct * this.getLastUtilityPrice();
@@ -1370,7 +1456,7 @@
 							o.setPrice(price);
 							o.setBuy(true);
 							o.setBidderIdRef(bidderIdRef);
-							this.getAllBuyLists().add(o);
+							this.getAllBuyList().add(o);
 							purse = purse - price; 
 							lastProduct += marginalProduct;
 						}
@@ -1403,18 +1489,17 @@
 						<dc:description>converts all labor to utility</dc:description>
 					</documentation>
 					<Body language="Java"><![CDATA[	
-						long utility = convertToUtility(controller.Global.getAssetByName("Labor", getAllAssets()).getQuantity());
-						double labor = controller.Global.getAssetByName("Labor", getAllAssets()).getQuantity();
-						controller.Global.getAssetByName("Labor", getAllAssets()).withdraw(labor);
-						controller.Global.getAssetByName("Utility", getAllAssets()).deposit(utility);
+						long utility = convertToUtility(getAssetByName("Labor").getQuantity());
+						double labor = getAssetByName("Labor").getQuantity();
+						getAssetByName("Labor").withdraw(labor);
+						getAssetByName("Utility").deposit(utility);
 						return utility;
 					]]></Body>
-					<Body language="JavaScript"><![CDATA[		
-						var assets = this.getAllAssets(); 
-						var utility = this.convertToUtility(minecon_laborfoodutility_scenario1.controller.Global.getAssetByName("Labor", assets).getQuantity());
-						var labor = minecon_laborfoodutility_scenario1.controller.Global.getAssetByName("Labor", assets).getQuantity();
-						minecon_laborfoodutility_scenario1.controller.Global.getAssetByName("Labor", assets).withdraw(labor);
-						minecon_laborfoodutility_scenario1.controller.Global.getAssetByName("Utility", assets).deposit(utility);
+					<Body language="JavaScript"><![CDATA[ 
+						var utility = this.convertToUtility(this.getAssetByName("Labor").getQuantity());
+						var labor = this.getAssetByName("Labor").getQuantity();
+						this.getAssetByName("Labor").withdraw(labor);
+						this.getAssetByName("Utility").deposit(utility);
 						return utility;
 					]]></Body>
 				</Function>
@@ -1425,8 +1510,8 @@
 						<dc:description>Converts all labor to utility</dc:description>
 					</documentation>
 					<WHEN eventType="InMessageEvent" messageType="Act_msg"/>
-					<IF language="Java">Global.getAssetByName("Labor", f.getAllAssets()).getQuantity() > 0</IF>
-					<IF language="JavaScript">minecon_laborfoodutility_scenario1.controller.Global.getAssetByName("Labor", this.f.getAllAssets()).getQuantity() > 0</IF>
+					<IF language="Java">this.f.getAssetByName("Labor").getQuantity() > 0</IF>
+					<IF language="JavaScript">this.f.getAssetByName("Labor").getQuantity() > 0</IF>
 					<THEN>
 						<UPDATE-AGT>
 							<Slot property="amountProduced">
@@ -1447,8 +1532,7 @@
 						<SCHEDULE-EVT>
 							<OutMessageEventExpr messageType="OfferToSellUtility" receiverIdRefs="4">
 								<Slot property="sellOffers">
-									<ValueExpr language="Java">this.f.getAllSellList()</ValueExpr>
-									<ValueExpr language="JavaScript">this.f.getAllSellLists()</ValueExpr>
+									<ValueExpr language="Java JavaScript">this.f.getAllSellList()</ValueExpr>
 								</Slot>
 							</OutMessageEventExpr>
 						</SCHEDULE-EVT>
@@ -1466,8 +1550,7 @@
 						<SCHEDULE-EVT>
 							<OutMessageEventExpr messageType="OfferToBuyLabor" receiverIdRefs="3">
 								<Slot property="buyOffers">
-									<ValueExpr language="Java">this.f.getAllBuyList()</ValueExpr>
-									<ValueExpr language="JavaScript">this.f.getAllBuyLists()</ValueExpr>
+									<ValueExpr language="Java JavaScript">this.f.getAllBuyList()</ValueExpr>
 								</Slot>
 							</OutMessageEventExpr>
 						</SCHEDULE-EVT>
@@ -2043,25 +2126,13 @@
 			<THEN>
 				<UPDATE-ENV>
 					<UpdateObject objectVariable="f">
-					<Slot property="owner" value="o" />
+						<Slot property="owner"><ObjectValueExpr objectVariable="o"/></Slot>
 					</UpdateObject>
 					<UpdateObject objectVariable="o">
-						<Slot property="firm" value="f"></Slot>
+						<Slot property="firm"><ObjectValueExpr objectVariable="f"/></Slot>
 					</UpdateObject>
 				</UPDATE-ENV>
 			</THEN>
-		</EnvironmentRule>
-		<!-- ============================= -->
-		<EnvironmentRule name="InitializeLaborer">
-			<!-- ============================= -->
-			<documentation>
-				<dc:description>Finds an owner for all firms</dc:description>
-			</documentation>
-			<WHEN eventType="Init"/>
-			<FOR objectVariable="l" objectType="Laborer" />
-			<DO>
-				
-			</DO>
 		</EnvironmentRule>
 		<!-- ============================= -->
 		<EnvironmentRule name="AtStartOfDayEat_ER">
@@ -2071,11 +2142,10 @@
 			</documentation>
 			<WHEN eventType="StartOfDay" eventVariable="evt" />
 			<FOR objectVariable="p" objectType="Person" />
-			<IF language="Java"><![CDATA[ controller.Global.getAssetByName("Food", this.p.getAllAssets()).withdraw(this.p.getEAT_AMOUNT()) < this.p.getEAT_AMOUNT() ]]></IF>
-			<IF language="JavaScript"><![CDATA[ minecon_laborfoodutility_scenario1.controller.Global.getAssetByName("Food", this.p.getAllAssets()).withdraw(this.p.getEAT_AMOUNT()) < this.p.getEAT_AMOUNT() ]]></IF>
+			<IF language="Java JavaScript"><![CDATA[ this.p.getAssetByName("Food").withdraw(this.p.getEAT_AMOUNT()) < this.p.getEAT_AMOUNT() ]]></IF>
 			<THEN>
 				<UPDATE-ENV>
-					<DestroyObject objectVariable="p"/>
+					<DestroyObject><ObjectIdRef language="Java JavaScript">this.p.getId()</ObjectIdRef></DestroyObject>
 				</UPDATE-ENV>
 			</THEN>
 		</EnvironmentRule>
@@ -2087,8 +2157,7 @@
 			</documentation>
 			<WHEN eventType="StartOfDay" eventVariable="evt" />
 			<FOR objectVariable="f" objectType="Farm" />
-			<IF language="Java"><![CDATA[ controller.Global.getAssetByName("Food", f.getAllAssets()).getQuantity() == 0.0d && Global.getAssetByName("Labor", f.getAllAssets()).getQuantity() == 0.0d && Global.getAssetByName("Money", f.getAllAssets()).getQuantity() == 0.0d ]]></IF>
-			<IF language="JavaScript"><![CDATA[ minecon_laborfoodutility_scenario1.controller.Global.getAssetByName("Food", this.f.getAllAssets()).getQuantity() == 0.0 && minecon_laborfoodutility_scenario1.controller.Global.getAssetByName("Labor", this.f.getAllAssets()).getQuantity() == 0.0 && minecon_laborfoodutility_scenario1.controller.Global.getAssetByName("Money", this.f.getAllAssets()).getQuantity() == 0.0 ]]></IF>
+			<IF language="Java JavaScript"><![CDATA[ this.f.getAssetByName("Food").getQuantity() == 0.0 && this.f.getAssetByName("Labor").getQuantity() == 0.0 && this.f.getAssetByName("Money").getQuantity() == 0.0 ]]></IF>
 			<THEN>
 				<UPDATE-ENV>
 					<UpdateObject objectVariable="f">
@@ -2224,20 +2293,20 @@
 			<Slot property="assets">
 				<ValueExpr language="Java">
 					<![CDATA[ new ArrayList<aors.util.economics.Quantity>(){
-				        {
-				            Global.addContinuous(33.0d, "Food", "Stk", this);
-				            Global.addContinuous(60.0d, "Money", "Stk", this);
-				            Global.addContinuous(0.0d, "Labor", "Stk", this);
-				            Global.addDiscrete(0, "Utility", this);
-				        }
-				    } ]]>
-				</ValueExpr>
+						{
+							add(new aors.util.economics.ContinuousQuantity(33.0, new aors.util.economics.ContinuousQuantityType("Food", "Stk")));
+							add(new aors.util.economics.ContinuousQuantity(60.0, new aors.util.economics.ContinuousQuantityType("Money", "Stk")));
+							add(new aors.util.economics.ContinuousQuantity(0.0, new aors.util.economics.ContinuousQuantityType("Labor", "Stk")));
+							add(new aors.util.economics.DiscreteQuantity( "Utility", 0));
+						}
+				} ]]></ValueExpr>
 				<ValueExpr language="JavaScript">
+					//ToDo
 					<![CDATA[ new js.util.ArrayList(minecon_laborfoodutility_scenario1.controller.Global.getContinuous(33.0, "Food", "Stk"), 
 						minecon_laborfoodutility_scenario1.controller.Global.getContinuous(60.0, "Money", "Stk"), 
-						minecon_laborfoodutility_scenario1.controller.Global.getContinuous(0.0, "Labor", "Stk"), 
-						minecon_laborfoodutility_scenario1.controller.Global.getDiscrete(0, "Utility")) ]]>
-				</ValueExpr>
+						minecon_laborfoodutility_scenario1.controller.Global.getContinuous(0.0, "Labor", "Stk"),
+						new aors.util.economics.DiscreteQuantity("Utility", 0))
+				]]></ValueExpr>
 			</Slot>
 			<Slot property="foodBuyList">
 				<ValueExpr language="Java"><![CDATA[ new ArrayList<TradeOffer>() ]]></ValueExpr>
@@ -2268,10 +2337,10 @@
 				<ValueExpr language="Java">
 					<![CDATA[ new ArrayList<aors.util.economics.Quantity>(){
 				        {
-				            Global.addContinuous(33.0d, "Food", "Stk", this);
-				            Global.addContinuous(90.0d, "Money", "Stk", this);
-				            Global.addContinuous(0.0d, "Labor", "Stk", this);
-				            Global.addDiscrete(0, "Utility", this);
+				            add(new aors.util.economics.ContinuousQuantity(33.0, new aors.util.economics.ContinuousQuantityType("Food", "Stk")));
+							add(new aors.util.economics.ContinuousQuantity(90.0, new aors.util.economics.ContinuousQuantityType("Money", "Stk")));
+							add(new aors.util.economics.ContinuousQuantity(0.0, new aors.util.economics.ContinuousQuantityType("Labor", "Stk")));
+							add(new aors.util.economics.DiscreteQuantity( "Utility", 0));
 				        }
 				    } ]]>
 				</ValueExpr>
@@ -2279,7 +2348,7 @@
 					<![CDATA[ new js.util.ArrayList(minecon_laborfoodutility_scenario1.controller.Global.getContinuous(33.0, "Food", "Stk"), 
 						minecon_laborfoodutility_scenario1.controller.Global.getContinuous(90.0, "Money", "Stk"), 
 						minecon_laborfoodutility_scenario1.controller.Global.getContinuous(0.0, "Labor", "Stk"), 
-						minecon_laborfoodutility_scenario1.controller.Global.getDiscrete(0, "Utility")) ]]>
+						new aors.util.economics.DiscreteQuantity("Utility", 0)) ]]>
 				</ValueExpr>
 			</Slot>
 			<Slot property="foodBuyList">
@@ -2311,10 +2380,10 @@
 				<ValueExpr language="Java">
 					<![CDATA[ new ArrayList<aors.util.economics.Quantity>(){
 				        {
-				            Global.addContinuous(20.0d, "Food", "Stk", this);
-				            Global.addContinuous(100.0d, "Money", "Stk", this);
-				            Global.addContinuous(0.0d, "Labor", "Stk", this);
-				            Global.addDiscrete(0, "Utility", this);
+				            add(new aors.util.economics.ContinuousQuantity(20.0, new aors.util.economics.ContinuousQuantityType("Food", "Stk")));
+							add(new aors.util.economics.ContinuousQuantity(100.0, new aors.util.economics.ContinuousQuantityType("Money", "Stk")));
+							add(new aors.util.economics.ContinuousQuantity(0.0, new aors.util.economics.ContinuousQuantityType("Labor", "Stk")));
+							add(new aors.util.economics.DiscreteQuantity( "Utility", 0));
 				        }
 				    } ]]>
 				</ValueExpr>
@@ -2322,7 +2391,7 @@
 					<![CDATA[ new js.util.ArrayList(minecon_laborfoodutility_scenario1.controller.Global.getContinuous(20.0, "Food", "Stk"),
 						minecon_laborfoodutility_scenario1.controller.Global.getContinuous(100.0, "Money", "Stk"), 
 						minecon_laborfoodutility_scenario1.controller.Global.getContinuous(0.0, "Labor", "Stk"), 
-						minecon_laborfoodutility_scenario1.controller.Global.getDiscrete(0, "Utility")) ]]>
+						new aors.util.economics.DiscreteQuantity("Utility", 0)) ]]>
 				</ValueExpr>
 			</Slot>
 			<Slot property="buyList">
@@ -2345,10 +2414,10 @@
 				<ValueExpr language="Java">
 					<![CDATA[ new ArrayList<aors.util.economics.Quantity>(){
 					  {	
-						Global.addContinuous(0.0d, "Food", "Stk", this);
-						Global.addContinuous(100.0d, "Money", "Stk", this);
-						Global.addContinuous(0.0d, "Labor", "Stk", this);
-						Global.addDiscrete(5, "Utility", this);
+						add(new aors.util.economics.ContinuousQuantity(0.0, new aors.util.economics.ContinuousQuantityType("Food", "Stk")));
+							add(new aors.util.economics.ContinuousQuantity(100.0, new aors.util.economics.ContinuousQuantityType("Money", "Stk")));
+							add(new aors.util.economics.ContinuousQuantity(0.0, new aors.util.economics.ContinuousQuantityType("Labor", "Stk")));
+							add(new aors.util.economics.DiscreteQuantity( "Utility", 5));;
 					  }
 				    } ]]>
 				</ValueExpr>
@@ -2356,7 +2425,7 @@
 					<![CDATA[ new js.util.ArrayList(minecon_laborfoodutility_scenario1.controller.Global.getContinuous(0.0, "Food", "Stk"), 
 						minecon_laborfoodutility_scenario1.controller.Global.getContinuous(100.0, "Money", "Stk"), 
 						minecon_laborfoodutility_scenario1.controller.Global.getContinuous(0.0, "Labor", "Stk"), 
-						minecon_laborfoodutility_scenario1.controller.Global.getDiscrete(5, "Utility")) ]]>
+						new aors.util.economics.DiscreteQuantity("Utility", 0)) ]]>
 				</ValueExpr>
 			</Slot>
 			<Slot property="buyList">
