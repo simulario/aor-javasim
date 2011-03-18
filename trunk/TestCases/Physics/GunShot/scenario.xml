@@ -7,7 +7,7 @@
  xmlns:aors="http://aor-simulation.org"
  version="0.8.4"
  scenarioName="GunShot">
-  <SimulationParameters simulationSteps="3000" timeUnit="ms" stepTimeDelay="5"/>
+  <SimulationParameters simulationSteps="3000" timeUnit="ms"/>
 
   <SimulationModel modelName="GunShot" modelTitle="Gun Shot with Gravitation Effect">
     <documentation>
@@ -16,7 +16,7 @@
     </documentation>
 
     <SpaceModel geometry="Euclidean" spatialDistanceUnit="m">
-      <TwoDimensional_LateralView xMax="15000" yMax="5000"/>
+      <TwoDimensional_LateralView xMax="2100" yMax="700"/>
     </SpaceModel>
 
     <Statistics>
@@ -24,7 +24,7 @@
     </Statistics>
     
     <Globals>
-      <GlobalVariable name="simluationSlowDownRatio" dataType="Float" minValue="1" maxValue="5"/>
+      <GlobalVariable name="simluationSlowDownRatio" dataType="Float" minValue="1" maxValue="10"/>
       <GlobalVariable name="gravitation" dataType="Float"/>
       <GlobalVariable name="gunRectRadius" dataType="Float"/>
       <GlobalVariable name="gunRectCenterX" dataType="Float"/>
@@ -47,8 +47,8 @@
         <Attribute type="Boolean" name="vMaxSliderCreated" initialValue="false"/>
       </PhysicalObjectType>
       <PhysicalObjectType name="Gun">
-        <Attribute type="Float" name="rotZ" minValue="0" maxValue="180"/>
-        <Attribute type="Float" name="shotVelocity" minValue="100" maxValue="500"/>
+        <Attribute type="Float" name="rotZ" minValue="0" maxValue="90" initialValue="45"/>
+        <Attribute type="Float" name="shotVelocity" minValue="50" maxValue="150" initialValue="75"/>
         <Function name="getShotAngleInRadians" resultType="double">
           <Body language="Java JavaScript">
             <![CDATA[
@@ -84,9 +84,11 @@
                   <ValueExpr language="JavaScript"><![CDATA[gunshot.controller.Global.getGunRectCenterY() + gunshot.controller.Global.getGunRectRadius() * Math.sin(this.gun.getShotAngleInRadians())]]></ValueExpr>
                   <ValueExpr language="Java"><![CDATA[Global.getGunRectCenterY() + Global.getGunRectRadius() * Math.sin(this.gun.getShotAngleInRadians())]]></ValueExpr>
                 </Slot>
-                <Slot property="vx" value="100"/>
-                <Slot property="width" value="300"/>
-                <Slot property="height" value="300"/>
+                <Slot property="vx" value="100">
+                  <ValueExpr language="Java JavaScript"><![CDATA[this.gun.getShotVelocity()]]></ValueExpr>
+                </Slot>
+                <Slot property="width" value="40"/>
+                <Slot property="height" value="40"/>
               </PhysicalObject>
             </Create>
           </UPDATE-ENV>
@@ -214,7 +216,7 @@
       <EnvironmentRule name="DrawBulletPathRule">
         <WHEN eventType="Step" eventVariable="stepEvent"/>
         <FOR objectVariable="bullet" objectType="Bullet" objectIdRef="2"/>
-        <IF language="Java JavaScript"><![CDATA[this.stepEvent.getOccurrenceTime() % 5 == 0]]></IF>
+        <IF language="Java JavaScript"><![CDATA[this.stepEvent.getOccurrenceTime() % gunshot.controller.Global.getSimluationSlowDownRatio() == 0]]></IF>
         <THEN>
           <UPDATE-ENV>
             <Create>
@@ -225,7 +227,7 @@
                 <Slot property="y">
                   <ValueExpr language="Java JavaScript"><![CDATA[this.bullet.getY()]]></ValueExpr>
                 </Slot>
-                <Slot property="width" value="30"/>
+                <Slot property="width" value="5"/>
               </PhysicalObject>
             </Create>
           </UPDATE-ENV>
@@ -237,28 +239,27 @@
   
 
   <InitialState>
-    <GlobalVariable name="simluationSlowDownRatio" value="3"/>
-    <GlobalVariable name="gunRectRadius" value="750"/>
-    <GlobalVariable name="gunRectCenterX" value="750"/>
-    <GlobalVariable name="gunRectCenterY" value="570"/>
+    <GlobalVariable name="simluationSlowDownRatio" value="5"/>
+    <GlobalVariable name="gunRectRadius" value="105"/>
+    <GlobalVariable name="gunRectCenterX" value="105"/>
+    <GlobalVariable name="gunRectCenterY" value="80"/>
     <GlobalVariable name="gravitation" value="9.81"/>
   
     
-    <PhysicalObject objectVariable="gun" type="Gun" name="Gun" id="1" x="750" y="570" width="1500" height="1140">
-      <Slot property="shotVelocity" value="240"/>
+    <PhysicalObject objectVariable="gun" type="Gun" name="Gun" id="1" x="105" y="80" width="210" height="160">
       <Slot property="rotZ" value="45"/>
     </PhysicalObject>
 
-    <PhysicalObject type="HorizontalBar" name="HorizontalBar" id="100" x="7500" y="4500" z="1" width="15000" height="150"/>
-    <PhysicalObject type="HorizontalSlider" name="HorizontalSlider" id="101" y="4500" z="2" width="75" height="300">
+    <PhysicalObject type="HorizontalBar" name="HorizontalBar" id="100" x="1050" y="600" z="1" width="2100" height="21"/>
+    <PhysicalObject type="HorizontalSlider" name="HorizontalSlider" id="101" y="600" z="2" width="11" height="42">
       <Slot property="x">
         <ValueExpr language="JavaScript"><![CDATA[gunshot.controller.Global.getGunRectCenterX() + gunshot.controller.Global.getGunRectRadius() * Math.cos(gun.getShotAngleInRadians())]]></ValueExpr>
         <ValueExpr language="Java"><![CDATA[Global.getGunRectCenterX() + Global.getGunRectRadius() * Math.cos(gun.getShotAngleInRadians())]]></ValueExpr>
       </Slot>
     </PhysicalObject>
 
-    <PhysicalObject type="VerticalBar" name="VerticalBar" id="200" x="14500" z="1" y="2500" width="150" height="5000"/>
-    <PhysicalObject type="VerticalSlider" name="VerticalSlider" id="201" x="14500" z="2" width="300" height="75">
+    <PhysicalObject type="VerticalBar" name="VerticalBar" id="200" x="2000" z="1" y="350" width="21" height="700"/>
+    <PhysicalObject type="VerticalSlider" name="VerticalSlider" id="201" x="2000" z="2" width="42" height="11">
       <Slot property="y">
         <ValueExpr language="JavaScript"><![CDATA[gunshot.controller.Global.getGunRectCenterY() + gunshot.controller.Global.getGunRectRadius() * Math.sin(gun.getShotAngleInRadians())]]></ValueExpr>
         <ValueExpr language="Java"><![CDATA[Global.getGunRectCenterY() + Global.getGunRectRadius() * Math.sin(gun.getShotAngleInRadians())]]></ValueExpr>    
