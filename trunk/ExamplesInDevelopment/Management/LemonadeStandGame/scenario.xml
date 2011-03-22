@@ -18,6 +18,14 @@
 			<dc:creator>Gerd Wagner</dc:creator>
 			<dc:modified></dc:modified>
 			<dc:source>See http://en.wikipedia.org/wiki/Lemonade_Stand</dc:source>
+			<aors:shortDescription xmlns="http://www.w3.org/1999/xhtml">
+				Simulates a lemonade stand that makes lemonade in pitchers from lemons and sugar each morning,
+				and then sells it in paper cups. 
+			</aors:shortDescription>
+			<aors:shortDescription xml:lang="de" xmlns="http://www.w3.org/1999/xhtml">
+				Simuliert eine einen Limonadenstand, der jeden Morgen Limonade in Karaffen aus Zitronen und Zucker
+				herstellt und si dann in Papierbechern verkauft. 
+			</aors:shortDescription>
 			<aors:description xmlns="http://www.w3.org/1999/xhtml">
 				<p>A lemonade seller makes lemonade in pitchers and sells it in paper cups 
 				at a stand in a street market. Each day consists of the following process steps and phases:</p>
@@ -41,10 +49,15 @@
 			<TwoDimensionalGrid xMax="30" yMax="1"/>
 		</SpaceModel>
 -->		
-		<Statistics>			
-			<Variable name="Price" dataType="Float">				
+		<Statistics>
+			<Variable name="cash" dataType="Float">				
 				<Source>
-					<ObjectProperty property="productSalesPrice" objectType="LemonadeStand"/>
+					<ObjectProperty property="amountOfCash" objectType="LemonadeStand" objectIdRef="1"/>
+				</Source>
+			</Variable>
+			<Variable name="productQuantity" dataType="Integer">				
+				<Source>
+					<ObjectProperty property="productQuantityInStock" objectType="LemonadeStand" objectIdRef="1"/>
 				</Source>
 			</Variable>
 		</Statistics>
@@ -297,13 +310,13 @@
 								]]></ValueExpr>
 							</Slot>
 							<MultiValuedSlot property="purchaseQuantities">
-								<Assign indexValue="1">
+								<Assign indexValue="0"><!-- crates of lemons -->
 									<!-- TODO: use a function depending on the planned production quantity and the input items in stock -->
 									<ItemExpr language="Java">1</ItemExpr>
 								</Assign>
-								<Assign indexValue="2" itemValue="3"/>
-								<Assign indexValue="3" itemValue="3"/>
-								<Assign indexValue="4" itemValue="3"/>
+								<Assign indexValue="1" itemValue="3"/><!-- crates of sugar  -->
+								<Assign indexValue="2" itemValue="3"/><!-- ice bags-->
+								<Assign indexValue="3" itemValue="3"/><!-- crates of cups -->
 							</MultiValuedSlot>
 							<Slot property="productSalesPrice">
 								<!-- TODO: improve formula -->
@@ -326,8 +339,8 @@
 						<h:ol>
 							<h:li>the purchased input items are added to the purchase items in stock,</h:li>
 							<h:li>the amount of cash is decremented accordingly,</h:li>
-							<h:li>the planned production quantity is produced, and the used input items' quantities in stock 
-								are decremented accordingly.</h:li>
+							<h:li>the planned production quantity is produced, and the product quantity in stock is incremented, 
+								while the used input items' quantities in stock	are decremented, accordingly.</h:li>
 						</h:ol>
 						<h:p>Finally, the lemonade stand is opened for sales.</h:p> 
 					</description></documentation>
@@ -336,15 +349,14 @@
 						<UPDATE-AGT>
 							<Call procedure="addPurchaseQuantitiesToInventory" contextObjectVariable="lst"/>
 							<Slot property="amountOfCash">
-								<ValueExpr language="Java"><![CDATA[
+								<ValueExpr language="Java JavaScript">
 									lst.subtractPurchaseAmountFromAmountOfCash()
-								]]></ValueExpr>
+								</ValueExpr>
 							</Slot>
-							<Slot property="productSalesPrice">
-								<!-- TODO: develop an appropriate formula -->
-								<ValueExpr language="Java"><![CDATA[
-									1.80
-								]]></ValueExpr>
+							<Slot property="productQuantityInStock">
+								<ValueExpr language="Java JavaScript">
+									lst.getProductQuantityInStock() + lst.getPlannedProductionQuantity()
+								</ValueExpr>
 							</Slot>
 						</UPDATE-AGT>
 						<SCHEDULE-EVT>
@@ -383,7 +395,7 @@
 				<!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->
 					<documentation><description>
 						<h:p>At the end of the day, close the lemonade stand and depreciate the expired items in stock.
-						In this first version, only the ice cubes are depreciated.</h:p>
+							In this first version, only the remaining ice cubes and lemonade are depreciated.</h:p>
 					</description></documentation>
 					<WHEN eventType="EndOfDay" />
 					<DO>
@@ -391,6 +403,7 @@
 							<MultiValuedSlot property="purchaseItemQuantitiesInStock">
 								<Assign indexValue="3" itemValue="0"/>
 							</MultiValuedSlot>
+							<Slot property="productQuantityInStock" value="0"/>
 						</UPDATE-AGT>
 						<SCHEDULE-EVT>
 							<ActionEventExpr actionEventType="CloseLemonadeStand"/>
@@ -443,11 +456,11 @@
 					</SCHEDULE-EVT>
 				</DO>
 			</EnvironmentRule>
-			<!-- ====================================== -->
+			<!-- ======================================  Not Needed?
 			<EnvironmentRule name="CloseLemonadeStand_ER">
-			<!-- ====================================== -->
 				<WHEN eventType="CloseLemonadeStand"/>
 			</EnvironmentRule>
+			 ====================================== -->
 			
 			<!-- ====================================== 
 			<EnvironmentRule name="MakePayment_RR">
@@ -465,7 +478,7 @@
 					</UPDATE-ENV>
 				</DO>
 			</EnvironmentRule>
--->
+			====================================== -->
 		</EnvironmentRules>	
 	</SimulationModel>
 	
@@ -556,7 +569,28 @@
 			<PeriodicTimeEvent type="EndOfDay" occurrenceTime="100"/>
 		</Agent>
 	</InitialState>
+	
 	<UserInterface>
+		<StatisticsUI>
+			<StatisticsVariableUI variable="cash">
+				<Label>
+					<Text>Cash</Text>
+				</Label>
+				<Hint>
+					<Text>How much money does the stand have? </Text>
+				</Hint>
+			</StatisticsVariableUI>
+			<StatisticsVariableUI variable="productQuantity">
+				<Label>
+					<Text>Lemonade</Text>
+				</Label>
+				<Hint>
+					<Text>How much lemonade does the stand have? </Text>
+				</Hint>
+				<Format decimalPlaces="0"><PackagingUnits>cups</PackagingUnits></Format>
+			</StatisticsVariableUI>			
+		</StatisticsUI>
+		
 		<AnimationUI>
 			<DisplayDescription>
 				<aors:HtmlText xmlns="http://www.w3.org/1999/xhtml"><p>This is just an experimental<br/>
@@ -566,10 +600,12 @@
 			<Views>
 				<ObjectView objectType="LemonadeStand" objectIdRef="1">
 					<Shape2D x="50" y="30">
-						<Rectangle width="20" fill="green" positioning="LeftBottom">
-							<ShapePropertyVisualizationMap shapeProperty="height" property="amountOfCash" mapType="polynomial" a0="10" a1="0.1"/>
+						<Rectangle fill="green" positioning="LeftBottom">
+							<ShapePropertyVisualizationMap shapeProperty="height" property="amountOfCash" mapType="polynomial" a0="20" a1="0.1"/>
+							<ShapePropertyVisualizationMap shapeProperty="width" property="productQuantityInStock" mapType="polynomial" a0="20" a1="0.1"/>
 						</Rectangle>
 					</Shape2D>
+					<DisplayInfo content="Cash"></DisplayInfo>
 				</ObjectView>
 			</Views>
 		</AnimationUI>
