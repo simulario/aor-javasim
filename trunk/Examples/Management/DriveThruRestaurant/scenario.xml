@@ -121,7 +121,7 @@ var r2 = js.util.Random.uniformInt(1,6);
 				<Attribute name="maxMenuBoardLineSize" type="Integer" />
 				<Attribute name="menuBoardBusy" type="Boolean" />
                 <Attribute name="utilization" type="Float" />
-				<ReferenceProperty name="waitingCustomers" type="Customer" upperMultiplicity="unbounded">
+				<ReferenceProperty name="menuBoardQueue" type="Customer" upperMultiplicity="unbounded">
 					<description>This property represents a first-in-first-out queue.</description>
 				</ReferenceProperty>
 				<!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->
@@ -318,7 +318,7 @@ SimStatistics.numberOfCustomers.getValue() + 1
 				<FOR-ObjectVariable variable="q1" objectType="Queue" objectIdRef="6"/>
 				<FOR-ObjectVariable variable="q2" objectType="Queue" objectIdRef="7"/>
 				<FOR-ObjectVariable variable="cust" objectType="Customer">
-					<ObjectRef language="Java">mb.getMenuBoardQueue.getItem()</ObjectRef>
+					<ObjectRef language="Java JavaScript">this.mb.getMenuBoardQueue.getItem()</ObjectRef>
 				</FOR-ObjectVariable>
 				<IF language="Java"><![CDATA[
 pw.getPickupWindowQueue().size() < pw.getMaxPickupWindowLineSize()
@@ -372,10 +372,11 @@ mb.getMenuBoardQueue().size() > 0
 					<description> When a menu board service ends, but the PickupWindowQueue is full, the customer cannot move forward. We just update the customer attribute.</description>
 				</documentation>
 				<WHEN eventType="EndMenuBoardService" />
+				<FOR-ObjectVariable variable="mb" objectType="MenuBoard" objectIdRef="1" />
 				<FOR-ObjectVariable variable="pw" objectType="PickupWindow" objectIdRef="2" />
 				<FOR-ObjectVariable variable="q2" objectType="Queue" objectIdRef="7"/>
 				<FOR-ObjectVariable variable="cust" objectType="Customer">
-					<ObjectRef language="Java">mb.getMenuBoardQueue().getItem()</ObjectRef>
+					<ObjectRef language="Java JavaScript">this.mb.getMenuBoardQueue().getItem()</ObjectRef>
 				</FOR-ObjectVariable>
 				<IF language="Java"><![CDATA[
 pw.getPickupWindowQueue().size() >= pw.getMaxPickupWindowLineSize() && cust.getOrder() != null
