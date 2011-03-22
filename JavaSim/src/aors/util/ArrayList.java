@@ -60,4 +60,17 @@ public class ArrayList<E> extends java.util.ArrayList<E> implements
     return this.remove(this.size() - 1);
   }
 
+  @Override
+  public void addLast(E element) {
+    this.add(element);
+  }
+
+  public boolean removeObject(E element) {
+    return this.remove(element);
+  }
+
+  public void assign(int index, E element) {
+    this.add(index, element);
+  }
+
 }
