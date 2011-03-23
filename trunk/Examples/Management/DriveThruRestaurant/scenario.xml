@@ -254,7 +254,7 @@ SimStatistics.numberOfCustomers.getValue() + 1
 				<FOR-ObjectVariable variable="mb" objectType="MenuBoard" objectIdRef="1" />
 				<FOR-ObjectVariable variable="k" objectType="Kitchen" />
 				<FOR-ObjectVariable variable="cust" objectType="Customer">
-					<ObjectRef language="Java JavaScript">this.mb.getMenuBoardQueue().getItem()</ObjectRef>
+					<ObjectRef language="Java JavaScript">this.mb.getMenuBoardQueue().get(0)</ObjectRef>
 				</FOR-ObjectVariable>
 				<FOR-DataVariable  variable="serviceTimeMB" dataType="Integer">
 					<ValueExpr language="Java">Global.twoDice(10)</ValueExpr>
@@ -267,7 +267,7 @@ SimStatistics.numberOfCustomers.getValue() + 1
 						<Create>
 							<Object type="Order" objectVariable="ord">
 								<Slot property="pizzaType">
-									<ValueExpr language="Java">mb.randomPizzaType()</ValueExpr>
+									<ValueExpr language="Java JavaScript">this.mb.randomPizzaType()</ValueExpr>
 								</Slot>
 								<Slot property="arrived" value="false"/>
 							</Object>
@@ -318,10 +318,10 @@ SimStatistics.numberOfCustomers.getValue() + 1
 				<FOR-ObjectVariable variable="q1" objectType="Queue" objectIdRef="6"/>
 				<FOR-ObjectVariable variable="q2" objectType="Queue" objectIdRef="7"/>
 				<FOR-ObjectVariable variable="cust" objectType="Customer">
-					<ObjectRef language="Java JavaScript">this.mb.getMenuBoardQueue.getItem()</ObjectRef>
+					<ObjectRef language="Java JavaScript">this.mb.getMenuBoardQueue().get(0)</ObjectRef>
 				</FOR-ObjectVariable>
-				<IF language="Java"><![CDATA[
-pw.getPickupWindowQueue().size() < pw.getMaxPickupWindowLineSize()
+				<IF language="Java JavaScript"><![CDATA[
+this.pw.getPickupWindowQueue().size() < this.pw.getMaxPickupWindowLineSize()
                ]]></IF>
 				<THEN>
 					<UPDATE-ENV>
@@ -337,30 +337,30 @@ pw.getPickupWindowQueue().size() < pw.getMaxPickupWindowLineSize()
 					    </UpdateObject>
 						<UpdateObject objectVariable="mb">
 							<Slot property="menuBoardBusy">
-								<ValueExpr language="Java">mb.getMenuBoardQueue().size() == 0 ? false : true</ValueExpr>
+								<ValueExpr language="Java JavaScript">( this.mb.getMenuBoardQueue().size() == 0) ? false : true</ValueExpr>
 							</Slot>
 						</UpdateObject>
 						<UpdateObject objectVariable="q1">
 							<Slot property="lengthOfQueue">
-								<ValueExpr language="Java">mb.getMenuBoardQueue().size()</ValueExpr>
+								<ValueExpr language="Java JavaScript">this.mb.getMenuBoardQueue().size()</ValueExpr>
 							</Slot>
 						</UpdateObject>
 						<UpdateObject objectVariable="q2">
 							<Slot property="lengthOfQueue">
-								<ValueExpr language="Java">pw.getPickupWindowQueue().size()</ValueExpr>
+								<ValueExpr language="Java JavaScript">this.pw.getPickupWindowQueue().size()</ValueExpr>
 							</Slot>
 						</UpdateObject>
 					</UPDATE-ENV>
 					<SCHEDULE-EVT>
 						<CausedEventExpr eventType="StartMenuBoardService">
-							<Condition language="Java"><![CDATA[
-mb.getMenuBoardQueue().size() > 0
-	            ]]></Condition>
+							<Condition language="Java JavaScript"><![CDATA[
+this.mb.getMenuBoardQueue().size() > 0
+	                   ]]></Condition>
 						</CausedEventExpr>
 						<CausedEventExpr eventType="StartPickupWindowService">
 							<Condition language="Java"><![CDATA[
-! pw.isPickupWindowBusy() 
-	          ]]></Condition>
+! this.pw.isPickupWindowBusy() 
+	                     ]]></Condition>
 						</CausedEventExpr>
 					</SCHEDULE-EVT>
 				</THEN>
@@ -376,10 +376,10 @@ mb.getMenuBoardQueue().size() > 0
 				<FOR-ObjectVariable variable="pw" objectType="PickupWindow" objectIdRef="2" />
 				<FOR-ObjectVariable variable="q2" objectType="Queue" objectIdRef="7"/>
 				<FOR-ObjectVariable variable="cust" objectType="Customer">
-					<ObjectRef language="Java JavaScript">this.mb.getMenuBoardQueue().getItem()</ObjectRef>
+					<ObjectRef language="Java JavaScript">this.mb.getMenuBoardQueue().get(0)</ObjectRef>
 				</FOR-ObjectVariable>
-				<IF language="Java"><![CDATA[
-pw.getPickupWindowQueue().size() >= pw.getMaxPickupWindowLineSize() && cust.getOrder() != null
+				<IF language="Java JavaScript"><![CDATA[
+this.pw.getPickupWindowQueue().size() >= this.pw.getMaxPickupWindowLineSize() && this.cust.getOrder() != null
                ]]></IF>
 			<THEN>
 				<UPDATE-ENV>
@@ -388,7 +388,7 @@ pw.getPickupWindowQueue().size() >= pw.getMaxPickupWindowLineSize() && cust.getO
 					</UpdateObject>
 					<UpdateObject objectVariable="q2">
 						<Slot property="lengthOfQueue">
-							<ValueExpr language="Java">pw.getPickupWindowQueue().size()</ValueExpr>
+							<ValueExpr language="Java JavaScript">this.pw.getPickupWindowQueue().size()</ValueExpr>
 						</Slot>
 					</UpdateObject>
 				</UPDATE-ENV>
@@ -404,13 +404,14 @@ pw.getPickupWindowQueue().size() >= pw.getMaxPickupWindowLineSize() && cust.getO
 				<FOR-ObjectVariable variable="pw" objectType="PickupWindow" objectIdRef="2" />
 				<FOR-DataVariable variable="serviceTimePW" dataType="Integer">
 					<ValueExpr language="Java">Global.twoDice(10)</ValueExpr>
+					<ValueExpr language="JavaScript">drivethrurestaurant.controller.Global.twoDice(10)</ValueExpr>
 				</FOR-DataVariable>
 			<DO>
 				<UPDATE-ENV>
 					<UpdateObject objectVariable="pw">
 						<Slot property="pickupWindowBusy" value="true" />
 						<Slot property="utilization">
-							<ValueExpr language="Java"><![CDATA[
+							<ValueExpr language="Java JavaScript"><![CDATA[
 serviceTimePW
 							]]></ValueExpr>
 						</Slot>
@@ -418,8 +419,8 @@ serviceTimePW
 				</UPDATE-ENV>
 				<SCHEDULE-EVT>
 					<CausedEventExpr eventType="EndPickupWindowService">
-						<Condition language="Java"><![CDATA[
-pw.getPickupWindowQueue().size() > 0 && pw.getPickupWindowQueue().getItem()!= null && pw.getPickupWindowQueue().getItem().getOrder()!= null && pw.getPickupWindowQueue().getItem().getOrder().isArrived()
+						<Condition language="Java JavaScript"><![CDATA[
+this.pw.getPickupWindowQueue().size() > 0 && this.pw.getPickupWindowQueue().get(0)!= null && this.pw.getPickupWindowQueue().get(0).getOrder()!= null && this.pw.getPickupWindowQueue().get(0).getOrder().isArrived()
             ]]></Condition>
 						<Delay>
 							<ValueExpr language="Java">serviceTimePW</ValueExpr>
@@ -438,10 +439,11 @@ pw.getPickupWindowQueue().size() > 0 && pw.getPickupWindowQueue().getItem()!= nu
 				<FOR-ObjectVariable variable="mb" objectType="MenuBoard" objectIdRef="1" />
 				<FOR-ObjectVariable variable="pw" objectType="PickupWindow" objectIdRef="2" />
 				<FOR-ObjectVariable variable="ord" objectType="Order">
-					<ObjectRef language="Java">evt.getOrder()</ObjectRef>
+					<ObjectRef language="Java JavaScript">this.evt.getOrder()</ObjectRef>
 				</FOR-ObjectVariable>
 				<FOR-DataVariable variable="serviceTimePW" dataType="Integer">
 					<ValueExpr language="Java">Global.twoDice(10)</ValueExpr>
+					<ValueExpr language="JavaScript">drivethrurestaurant.controller.Global.twoDice(10)</ValueExpr>
 				</FOR-DataVariable>
 				<DO>
 					<UPDATE-ENV>
@@ -451,8 +453,8 @@ pw.getPickupWindowQueue().size() > 0 && pw.getPickupWindowQueue().getItem()!= nu
 					</UPDATE-ENV>
 					<SCHEDULE-EVT>
 						<CausedEventExpr eventType="EndPickupWindowService">
-							<Condition language="Java"><![CDATA[ 
-pw.getPickupWindowQueue().size() > 0 && pw.getPickupWindowQueue().getItem().getOrder().getId() == ord.getId()
+							<Condition language="Java JavaScript"><![CDATA[ 
+this.pw.getPickupWindowQueue().size() > 0 && this.pw.getPickupWindowQueue().get(0).getOrder().getId() == this.ord.getId()
                            ]]></Condition>
 							<Delay>
 								<ValueExpr language="Java">serviceTimePW</ValueExpr>
@@ -471,21 +473,21 @@ pw.getPickupWindowQueue().size() > 0 && pw.getPickupWindowQueue().getItem().getO
 				<FOR-ObjectVariable variable="pw" objectType="PickupWindow" objectIdRef="2" />
 				<FOR-ObjectVariable variable="q2" objectType="Queue" objectIdRef="7"/>
 				<FOR-ObjectVariable variable="cust" objectType="Customer">
-					<ObjectRef language="Java">pw.getPickupWindowQueue().getItem()</ObjectRef>
+					<ObjectRef language="Java JavaScript">this.pw.getPickupWindowQueue().get(0)</ObjectRef>
 				</FOR-ObjectVariable>
 				<IF language="Java"><![CDATA[
-pw.getPickupWindowQueue().size() < pw.getMaxPickupWindowLineSize() 
+this.pw.getPickupWindowQueue().size() < this.pw.getMaxPickupWindowLineSize() 
                ]]></IF>
 			<THEN>
 				<UPDATE-ENV>
 					<UpdateObject objectVariable="pw">
 						<Slot property="pickupWindowBusy">
-							<ValueExpr language="Java">pw.getPickupWindowQueue().size() == 1 ? false : true</ValueExpr>
+							<ValueExpr language="Java JavaScript">( this.pw.getPickupWindowQueue().size() == 1) ? false : true</ValueExpr>
 						</Slot>
 					</UpdateObject>
 					<UpdateObject objectVariable="q2">
 						<Slot property="lengthOfQueue">
-							<ValueExpr language="Java">pw.getPickupWindowQueue().size()</ValueExpr>
+							<ValueExpr language="Java JavaScript">this.pw.getPickupWindowQueue().size()</ValueExpr>
 						</Slot>
 					</UpdateObject>
 					<UpdateStatisticsVariable variable="nrOfDepartures">
@@ -494,11 +496,11 @@ pw.getPickupWindowQueue().size() < pw.getMaxPickupWindowLineSize()
 					<UpdateStatisticsVariable variable="cumulativeResponseTime">
 						<ValueExpr language="Java"><![CDATA[
 SimStatistics.cumulativeResponseTime.getValue() + evt.getOccurrenceTime() - cust.getArrivalTime()							
-							]]></ValueExpr>
+						]]></ValueExpr>
 					</UpdateStatisticsVariable>
 					<UpdateStatisticsVariable variable="revenue">
 						<ValueExpr language="Java"><![CDATA[
-SimStatistics.revenue.getValue() + pw.pizzaPrice((int) pw.getPickupWindowQueue().getItem().getOrder().getPizzaType())
+SimStatistics.revenue.getValue() + pw.pizzaPrice(( int) pw.getPickupWindowQueue().get(0).getOrder().getPizzaType())
               ]]></ValueExpr>
 					</UpdateStatisticsVariable>
 					<UpdateObject objectVariable="pw">
@@ -509,7 +511,7 @@ SimStatistics.revenue.getValue() + pw.pizzaPrice((int) pw.getPickupWindowQueue()
 				</UPDATE-ENV>
 				<SCHEDULE-EVT>
 					<CausedEventExpr eventType="StartPickupWindowService">
-						<Condition language="Java">pw.getPickupWindowQueue().size() > 0</Condition>
+						<Condition language="Java JavaScript">this.pw.getPickupWindowQueue().size() > 0</Condition>
 					</CausedEventExpr>
 				</SCHEDULE-EVT>
 			</THEN>
@@ -523,15 +525,18 @@ SimStatistics.revenue.getValue() + pw.pizzaPrice((int) pw.getPickupWindowQueue()
 				<WHEN eventType="EndPickupWindowService" eventVariable="evt" />
 				<FOR-ObjectVariable variable="mb" objectType="MenuBoard" objectIdRef="1" />
 				<FOR-ObjectVariable variable="pw" objectType="PickupWindow" objectIdRef="2" />
+				<FOR-ObjectVariable variable="cust" objectType="Customer">
+					<ObjectRef language="Java JavaScript">this.pw.getPickupWindowQueue().get(0)</ObjectRef>
+				</FOR-ObjectVariable>
 				<FOR-ObjectVariable variable="q2" objectType="Queue" objectIdRef="7"/>
-				<IF language="Java"><![CDATA[
-pw.getPickupWindowQueue().size() == pw.getMaxPickupWindowLineSize() 
+				<IF language="Java JavaScript"><![CDATA[
+this.pw.getPickupWindowQueue().size() == this.pw.getMaxPickupWindowLineSize() 
                 ]]></IF>
 				<THEN>
 					<UPDATE-ENV>
 						<UpdateObject objectVariable="pw">
 							<MultiValuedSlot property="pickupWindowQueue">
-								<RemoveFirst/>
+								<RemoveFirst itemVariable="cust"/>
 							</MultiValuedSlot>
 						</UpdateObject>
 						<UpdateStatisticsVariable variable="nrOfDepartures">
@@ -539,25 +544,25 @@ pw.getPickupWindowQueue().size() == pw.getMaxPickupWindowLineSize()
 						</UpdateStatisticsVariable>
 						<UpdateStatisticsVariable variable="cumulativeResponseTime">
 							<ValueExpr language="Java"><![CDATA[
-SimStatistics.cumulativeResponseTime.getValue() + evt.getOccurrenceTime() - pw.getPickupWindowQueue().getItem().getArrivalTime()
+SimStatistics.cumulativeResponseTime.getValue() + evt.getOccurrenceTime() - pw.getPickupWindowQueue().get(0).getArrivalTime()
                            ]]></ValueExpr>
 						</UpdateStatisticsVariable>				
 						<UpdateStatisticsVariable variable="revenue">
 							<ValueExpr language="Java"><![CDATA[
-SimStatistics.revenue.getValue() + pw.pizzaPrice((int) pw.getPickupWindowQueue().getItem().getOrder().getPizzaType())
+SimStatistics.revenue.getValue() + pw.pizzaPrice(( int) pw.getPickupWindowQueue().get(0).getOrder().getPizzaType())
                            ]]></ValueExpr>
 						</UpdateStatisticsVariable>
 						<UpdateObject objectVariable="q2">
 							<Slot property="lengthOfQueue">
-								<ValueExpr language="Java">pw.getPickupWindowQueue().size()</ValueExpr>
+								<ValueExpr language="Java JavaScript">this.pw.getPickupWindowQueue().size()</ValueExpr>
 							</Slot>
 						</UpdateObject>
 					</UPDATE-ENV>
 					<SCHEDULE-EVT>
 						<CausedEventExpr eventType="EndMenuBoardService">
-							<Condition language="Java"><![CDATA[
-( mb.getMenuBoardQueue().size() > 0) && ( mb.getMenuBoardQueue().getItem() != null) && (mb.getMenuBoardQueue().getItem().getOrder() != null) && (mb.getMenuBoardQueue().getItem().isWaitingForPWFree())
-             ]]></Condition>
+							<Condition language="Java JavaScript"><![CDATA[
+( this.mb.getMenuBoardQueue().size() > 0) && ( this.mb.getMenuBoardQueue().get(0) != null) && ( this.mb.getMenuBoardQueue().get(0).getOrder() != null) && ( this.mb.getMenuBoardQueue().get(0).isWaitingForPWFree())
+                            ]]></Condition>
 						</CausedEventExpr>
 						<CausedEventExpr eventType="StartPickupWindowService"/>
 					</SCHEDULE-EVT>
