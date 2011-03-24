@@ -19,10 +19,7 @@ import cern.jet.random.engine.MersenneTwister;
 import cern.jet.random.engine.RandomEngine;
 
 /**
- * A class for enabling some random number functions.
- * <p>
- * All methods are available for all simulation entities and can be used in
- * AORSML.
+ * Provides some important probability distributions.
  * 
  * @author Daniel Draeger
  */
@@ -45,7 +42,7 @@ public class Random {
   /**
    * Using this method is equal to use <CODE>uniform(0, 1)</CODE>.
    * 
-   * @return the next value of an uniformally distributed random variable
+   * @return the next value of a uniformally distributed random variable
    *         between 0 and 1
    */
   public static int uniformInt() {
@@ -59,8 +56,7 @@ public class Random {
   }
 
   /**
-   * @param b
-   *          max-Value
+   * @param b  max-Value
    * @return the next value of an uniformally distributed random variable
    *         between 0 and b
    */
@@ -75,11 +71,9 @@ public class Random {
   }
 
   /**
-   * @param a
-   *          min-Value
-   * @param b
-   *          max-Value
-   * @return the next value of an uniformally distributed random variable
+   * @param a  min-Value
+   * @param b  max-Value
+   * @return the next value of a uniformally distributed random variable
    *         between a and b
    */
   public static int uniformInt(int a, int b) {
@@ -93,11 +87,9 @@ public class Random {
   }
 
   /**
-   * @param mean
-   *          (µ)
-   * @param stDev
-   *          (σ) standard deviation
-   * @return the next value of a normal distributed (gaussian) random variable
+   * @param mean (µ)
+   * @param stDev (σ)  standard deviation
+   * @return the next value of a normally distributed random variable
    */
   public static double normal(double mean, double stDev) {
     Normal norX = new Normal(mean, stDev, mersenne);
