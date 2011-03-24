@@ -91,14 +91,14 @@
 			<![CDATA[
 				var neighboursCount = 0, myKindNeighboursCount = 0; 
 				var kind = -1;
-				var xMax = parseInt(schellingsegregationmodel.controller.Simulator.spaceModel.getXMax());
-				var yMax = parseInt(schellingsegregationmodel.controller.Simulator.spaceModel.getYMax());
+				var xMax = parseInt(sim.controller.Simulator.spaceModel.getXMax());
+				var yMax = parseInt(sim.controller.Simulator.spaceModel.getYMax());
 				// we look for neighbours in the specified radius making sure we don't check the current location
 				for (var x = posX - radius; x <= posX + radius; x++)
 					for (var y = posY - radius; y <= posY + radius; y++)
 						if (x >= 1 && x <= xMax && y >= 1 && y <= yMax 
 							&& !(x == this.getPosX() && y == this.getPosY()) && !(x == posX && y == posY)) {
-						kind = schellingsegregationmodel.controller.Simulator.spaceModel.getGridCell(x,y).getKindOfResident();
+						kind = sim.controller.Simulator.spaceModel.getGridCell(x,y).getKindOfResident();
 						if (kind != -1) neighboursCount++;
 						if (kind == this.getKindOfResident()) myKindNeighboursCount++;
 				}
@@ -119,7 +119,7 @@
 			</Body>
 			<Body language="JavaScript">
 			<![CDATA[
-				return ( this.neighborhoodSimilarityLevel(this.getPosX(), this.getPosY(), radius) >= schellingsegregationmodel.controller.Global.intoleranceLevel( this.getKindOfResident() ));
+				return ( this.neighborhoodSimilarityLevel(this.getPosX(), this.getPosY(), radius) >= sim.controller.Global.intoleranceLevel( this.getKindOfResident() ));
 			]]>
 			</Body>
 		</GridCellFunction>			
@@ -137,7 +137,7 @@
 			</Body>
 			<Body language="JavaScript">
 			<![CDATA[
-				return this.neighborhoodSimilarityLevel(parseInt(newX), parseInt(newY), parseInt(radius)) >= schellingsegregationmodel.controller.Global.intoleranceLevel( this.getKindOfResident());
+				return this.neighborhoodSimilarityLevel(parseInt(newX), parseInt(newY), parseInt(radius)) >= sim.controller.Global.intoleranceLevel( this.getKindOfResident());
 			]]>
 			</Body>
 		</GridCellFunction>	
@@ -193,8 +193,8 @@
 			<Body language="JavaScript">
 			<![CDATA[
 			var Xmin = 1, Ymin = 1;
-			var Xmax = schellingsegregationmodel.controller.Simulator.spaceModel.getXMax();  // the space border 
-			var Ymax = schellingsegregationmodel.controller.Simulator.spaceModel.getYMax(); 
+			var Xmax = sim.controller.Simulator.spaceModel.getXMax();  // the space border 
+			var Ymax = sim.controller.Simulator.spaceModel.getYMax(); 
 			var x0 = this.getPosX();  // the agent's current position (its grid cell coordinates)
 			var y0 = this.getPosY();
 			var X=0,Y=0;
@@ -206,28 +206,28 @@
 			  Y = y0 - d;
 			  if ( Y >= Ymin) {  // inspect the line below the current position
 			    for ( X = Math.max( x0-d, Xmin); X < Math.min( x0+d, Xmax); X++) {
-			      if ( schellingsegregationmodel.controller.Simulator.spaceModel.getGridCell(X,Y).getKindOfResident()==-1 && this.wouldBeHappyOnNewLocation(X,Y,1)) 
+			      if ( sim.controller.Simulator.spaceModel.getGridCell(X,Y).getKindOfResident()==-1 && this.wouldBeHappyOnNewLocation(X,Y,1)) 
 			    	  return new aors.util.reftypes.Position(parseInt(X),parseInt(Y));
 			    }
 			  }
 			  X = x0 + d;
 			  if ( X <= Xmax) {  // inspect the line to the right of the current position
 			    for ( Y = Math.max( y0-d, Ymin); Y < Math.min( y0+d, Ymax); Y++) {
-			      if ( schellingsegregationmodel.controller.Simulator.spaceModel.getGridCell(X,Y).getKindOfResident()==-1 && this.wouldBeHappyOnNewLocation(X,Y,1)) 
+			      if ( sim.controller.Simulator.spaceModel.getGridCell(X,Y).getKindOfResident()==-1 && this.wouldBeHappyOnNewLocation(X,Y,1)) 
 			    	  return new aors.util.reftypes.Position(parseInt(X),parseInt(Y));
 			    }
 			  }
 			  Y = y0 + d;
 			  if ( Y <= Ymax) {  // inspect the line above the current position
 			    for ( X = Math.min( x0+d, Xmax); X > Math.max( x0-d, Xmin); X--) {
-			      if ( schellingsegregationmodel.controller.Simulator.spaceModel.getGridCell(X,Y).getKindOfResident()==-1 && this.wouldBeHappyOnNewLocation(X,Y,1)) 
+			      if ( sim.controller.Simulator.spaceModel.getGridCell(X,Y).getKindOfResident()==-1 && this.wouldBeHappyOnNewLocation(X,Y,1)) 
 			    	  return new aors.util.reftypes.Position(parseInt(X),parseInt(Y));
 			    }
 			  }
 			  X = x0 - d;
 			  if ( X >= Xmin) {  // inspect the line to the left of the current position
 			    for ( Y = Math.min( y0+d, Ymax); Y > Math.max( y0-d, Ymin); Y--) {
-			      if ( schellingsegregationmodel.controller.Simulator.spaceModel.getGridCell(X,Y).getKindOfResident()==-1 && this.wouldBeHappyOnNewLocation(X,Y,1)) 
+			      if ( sim.controller.Simulator.spaceModel.getGridCell(X,Y).getKindOfResident()==-1 && this.wouldBeHappyOnNewLocation(X,Y,1)) 
 			    	  return new aors.util.reftypes.Position(parseInt(X),parseInt(Y));
 			    }
 			  }
@@ -267,9 +267,9 @@
 			var i = 0.2;
 			var k = parseInt(kind);
 			switch (k) {
-				case 0: i = schellingsegregationmodel.controller.Global.intoleranceLevel0; break;
-				case 1: i = schellingsegregationmodel.controller.Global.intoleranceLevel1; break;
-				case 2: i = schellingsegregationmodel.controller.Global.intoleranceLevel2; break;
+				case 0: i = sim.controller.Global.intoleranceLevel0; break;
+				case 1: i = sim.controller.Global.intoleranceLevel1; break;
+				case 2: i = sim.controller.Global.intoleranceLevel2; break;
 			}
 			return i;
 		]]>
@@ -316,11 +316,11 @@
 				  <![CDATA[ 
 					var newPos = gc.getSuitableLocation();
 					if (newPos != null) {
-				      schellingsegregationmodel.controller.Simulator.spaceModel.getGridCell(newPos.getX(), newPos.getY()).setKindOfResident( gc.getKindOfResident());
-					  schellingsegregationmodel.controller.Simulator.spaceModel.getGridCell(gc.getPosX(), gc.getPosY()).setKindOfResident(-1);
+				      sim.controller.Simulator.spaceModel.getGridCell(newPos.getX(), newPos.getY()).setKindOfResident( gc.getKindOfResident());
+					  sim.controller.Simulator.spaceModel.getGridCell(gc.getPosX(), gc.getPosY()).setKindOfResident(-1);
 					}
 					else {
-					  schellingsegregationmodel.controller.Simulator.spaceModel.getGridCell(gc.getPosX(), gc.getPosY()).setKindOfResident(-1);
+					  sim.controller.Simulator.spaceModel.getGridCell(gc.getPosX(), gc.getPosY()).setKindOfResident(-1);
 					}
 				  ]]>
 				  </Code>	
