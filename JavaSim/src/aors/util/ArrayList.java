@@ -33,7 +33,7 @@ public class ArrayList<E> extends java.util.ArrayList<E> implements
    */
   @Override
   public void addFirst(E element) {
-    this.add(1, element);
+    this.add(0, element);
   }
 
   /**
