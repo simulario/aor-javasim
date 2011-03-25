@@ -8,6 +8,8 @@ import java.util.List;
 
 import javax.xml.ws.WebServiceRef;
 
+import aors.controller.Project;
+
 import com.simulario.Output;
 import com.simulario.Simweb;
 import com.simulario.TranslationResult;
@@ -135,6 +137,17 @@ public class CodeGenClient {
   private void createFolders(File sourceRootPath) {
     File directory;
     String separator = File.separator;
+
+    // create the ./sim directors
+    if (!Project.MAIN_PACKAGE_NAME.equals("")) {
+      directory = new File(sourceRootPath + separator
+          + Project.MAIN_PACKAGE_NAME);
+      if (!directory.isDirectory()) {
+        directory.mkdir();
+      }
+      sourceRootPath = new File(sourceRootPath.getAbsolutePath() + separator
+          + Project.MAIN_PACKAGE_NAME);
+    }
 
     // create the ./controller directory
     directory = new File(sourceRootPath + separator + "controller");

@@ -84,6 +84,8 @@ public class Project implements ProjectInterface {
   // the source folder (generated Java classes are stored inside)
   public final static String SRC_FOLDER_NAME = "src";
 
+  public final static String MAIN_PACKAGE_NAME = "sim";
+
   // the binary folder (compiled classes are stored inside)
   public final static String BIN_FOLDER_NAME = "bin";
 
@@ -120,11 +122,14 @@ public class Project implements ProjectInterface {
   private DataBus dataBus;
 
   // the main class that has to be executed for this simulation
-  private final String simPackageAndClassName = "controller.Simulator";
+  private final String simPackageAndClassName = (!MAIN_PACKAGE_NAME.equals("")) ? MAIN_PACKAGE_NAME
+      + ".controller.Simulator"
+      : "controller.Simulator";
 
   // the path and file name of the java source containing the main class
-  private final String simPathAndFileName = "controller" + File.separator
-      + "Simulator.java";
+  private final String simPathAndFileName = (!MAIN_PACKAGE_NAME.equals("")) ? MAIN_PACKAGE_NAME
+      + File.separator + "controller" + File.separator + "Simulator.java"
+      : "controller" + File.separator + "Simulator.java";
 
   // the destination folder where the simulation is build on request
   private String destinationFolder;
@@ -303,7 +308,7 @@ public class Project implements ProjectInterface {
       this.simulationDescriptionMD5 = MD5Generator.getMD5(this
           .getSimulationDescription());
     }
-    //this.save();
+    // this.save();
   }
 
   /**
@@ -416,6 +421,7 @@ public class Project implements ProjectInterface {
     for (Diagnostic<? extends JavaFileObject> diagnostic : diagnostics
         .getDiagnostics()) {
       if (diagnostic.getKind().equals(Diagnostic.Kind.ERROR)) {
+        // System.err.println(diagnostic.getMessage(null));
         return false;
       }
     }
@@ -513,10 +519,10 @@ public class Project implements ProjectInterface {
           this.simDescXmlFileName = this.projectName + ".xml";
         }
 
-        this.generated = new Boolean(properties
-            .getProperty(this.propertyGenerated));
-        this.compiled = new Boolean(properties
-            .getProperty(this.propertyCompiled));
+        this.generated = new Boolean(
+            properties.getProperty(this.propertyGenerated));
+        this.compiled = new Boolean(
+            properties.getProperty(this.propertyCompiled));
 
         this.simulationDescriptionMD5 = properties
             .getProperty(this.propertySimulationDescriptionFileMD5);
@@ -591,8 +597,8 @@ public class Project implements ProjectInterface {
     // load the XML simulation description
     try {
       InputStreamReader streamReader = new InputStreamReader(
-          new FileInputStream(this.simulationDescriptionFile),"UTF8");
-      
+          new FileInputStream(this.simulationDescriptionFile), "UTF8");
+
       BufferedReader fileReader = new BufferedReader(streamReader);
 
       String line = "";
@@ -775,8 +781,7 @@ public class Project implements ProjectInterface {
 
         // the full qualified name to the simulation
         // because of the dependencies it's NOT necessary to specify
-        // every Java
-        // source code
+        // every Java source code
         String javaSourcePathPlusFileName = this.directory + File.separator
             + this.projectName + File.separator + SRC_FOLDER_NAME
             + File.separator + this.simPathAndFileName;
@@ -867,14 +872,16 @@ public class Project implements ProjectInterface {
           .loadClass(simPackageAndClassName);
 
     } catch (MalformedURLException e) {
-      //System.err.println("ERROR: " + e.getClass().getCanonicalName());
+      // System.err.println("ERROR: " + e.getClass().getCanonicalName());
       e.printStackTrace();
-      throw new SimulatorException(e.getClass().getSimpleName()+ ": " + e.getMessage());
+      throw new SimulatorException(e.getClass().getSimpleName() + ": "
+          + e.getMessage());
     } catch (ClassNotFoundException e) {
-//      System.err.println("ERROR: " + e.getClass().getCanonicalName());
-//      System.out.println("Message: " + e.getMessage());
-//      e.printStackTrace();
-      throw new SimulatorException(e.getClass().getSimpleName()+ ": " + e.getMessage());
+      // System.err.println("ERROR: " + e.getClass().getCanonicalName());
+      // System.out.println("Message: " + e.getMessage());
+      // e.printStackTrace();
+      throw new SimulatorException(e.getClass().getSimpleName() + ": "
+          + e.getMessage());
     }
 
     // try to instantiate the simulation
@@ -887,15 +894,19 @@ public class Project implements ProjectInterface {
       }
 
     } catch (IllegalAccessException e) {
-      //System.err.println("ERROR: " + e.getClass().getSimpleName() + ": " + e.getMessage());
-      //e.printStackTrace();
-      throw new SimulatorException(e.getClass().getSimpleName() + ": " + e.getMessage());
+      // System.err.println("ERROR: " + e.getClass().getSimpleName() + ": " +
+      // e.getMessage());
+      // e.printStackTrace();
+      throw new SimulatorException(e.getClass().getSimpleName() + ": "
+          + e.getMessage());
     } catch (InstantiationException e) {
-      //System.err.println("ERROR: " + e.getClass().getCanonicalName());
-      //e.printStackTrace();
-      throw new SimulatorException(e.getClass().getSimpleName() + ": " + e.getMessage());
+      // System.err.println("ERROR: " + e.getClass().getCanonicalName());
+      // e.printStackTrace();
+      throw new SimulatorException(e.getClass().getSimpleName() + ": "
+          + e.getMessage());
     } catch (NoClassDefFoundError error) {
-      throw new SimulatorException(error.getClass().getSimpleName() + ": " + error.getMessage());
+      throw new SimulatorException(error.getClass().getSimpleName() + ": "
+          + error.getMessage());
     }
 
   }
@@ -1008,11 +1019,11 @@ public class Project implements ProjectInterface {
   public void setSimulationDescriptionFile(File simulationDescriptionFile) {
     this.simulationDescriptionFile = simulationDescriptionFile;
   }
-  
+
   public void runSimulation(boolean multithreading) {
     this.simulation.runSimulation(multithreading);
   }
-  
+
   public boolean existSimulation() {
     return this.simulation != null;
   }
