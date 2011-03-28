@@ -47,6 +47,12 @@
         <Attribute type="Boolean" name="vMaxSliderCreated" initialValue="false"/>
       </PhysicalObjectType>
       <PhysicalObjectType name="Gun">
+        <InheritedAttributeSettings attribute="id" initialValue="1"/>
+        <InheritedAttributeSettings attribute="name" initialValue="Gun"/>
+        <InheritedAttributeSettings attribute="x" initialValue="105"/>
+        <InheritedAttributeSettings attribute="y" initialValue="80"/>
+        <InheritedAttributeSettings attribute="width" initialValue="210"/>
+        <InheritedAttributeSettings attribute="height" initialValue="160"/>
         <InheritedAttributeSettings attribute="rotZ" minValue="0" maxValue="90" initialValue="45"/>
         <Attribute type="Float" name="shotVelocity" minValue="50" maxValue="150" initialValue="75"/>
         <Function name="getShotAngleInRadians" resultType="double">
@@ -70,7 +76,7 @@
     <EnvironmentRules>
       <EnvironmentRule name="ShotBulletRule">
         <WHEN eventType="Shot" eventVariable="shotEvent"/>
-        <FOR objectVariable="gun" objectType="Gun"/>
+        <FOR-ObjectVariable variable="gun" objectType="Gun"/>
         <DO>
           <UPDATE-ENV>
             <Create>
@@ -97,13 +103,13 @@
       
       <EnvironmentRule name="MoveBulletRule">
         <WHEN eventType="Step" eventVariable="stepEvent"/>
-        <FOR objectVariable="bullet" objectType="Bullet" objectIdRef="2"/>
-        <FOR objectVariable="hSlider" objectType="HorizontalSlider" objectIdRef="101"/>
-        <FOR objectVariable="vSlider" objectType="VerticalSlider" objectIdRef="201"/>
-        <FOR objectVariable="gun" objectType="Gun"/>
-        <FOR dataVariable="currentTime" dataType="Float">
+        <FOR-ObjectVariable variable="bullet" objectType="Bullet" objectIdRef="2"/>
+        <FOR-ObjectVariable variable="hSlider" objectType="HorizontalSlider" objectIdRef="101"/>
+        <FOR-ObjectVariable variable="vSlider" objectType="VerticalSlider" objectIdRef="201"/>
+        <FOR-ObjectVariable variable="gun" objectType="Gun"/>
+        <FOR-DataVariable variable="currentTime" dataType="Float">
           <ValueExpr language="Java JavaScript"><![CDATA[this.stepEvent.getOccurrenceTime()/__Global.getSimluationSlowDownRatio()]]></ValueExpr>
-        </FOR>
+        </FOR-DataVariable>
         <IF language="Java JavaScript"><![CDATA[this.bullet.getY() - this.bullet.getHeight() / 2.0 > 0]]></IF>
         <THEN>
           <UPDATE-ENV>
@@ -161,7 +167,7 @@
       
       <EnvironmentRule name="MaxHeightReachedRule">
         <WHEN eventType="Step" eventVariable="stepEvent"/>
-        <FOR objectVariable="bullet" objectIdRef="2" objectType="Bullet"/>
+        <FOR-ObjectVariable variable="bullet" objectIdRef="2" objectType="Bullet"/>
         <IF language="JavaScript"><![CDATA[sim.controller.SimStatistics.maxHeight.getValue() < this.bullet.getY()]]></IF>
         <IF language="Java"><![CDATA[SimStatistics.maxHeight.getValue() < this.bullet.getY()]]></IF>
         <THEN>
@@ -182,7 +188,7 @@
       
       <EnvironmentRule name="CreateMaxHeightSliderRule">
         <WHEN eventType="Step" eventVariable="stepEvent"/>
-        <FOR objectVariable="bullet" objectIdRef="2" objectType="Bullet"/>
+        <FOR-ObjectVariable variable="bullet" objectIdRef="2" objectType="Bullet"/>
         <IF language="Java JavaScript"><![CDATA[this.bullet.isMaxHeightReached()  && !this.bullet.isVMaxSliderCreated()]]></IF>
         <THEN>
           <UPDATE-ENV>
@@ -214,7 +220,7 @@
       
       <EnvironmentRule name="DrawBulletPathRule">
         <WHEN eventType="Step" eventVariable="stepEvent"/>
-        <FOR objectVariable="bullet" objectType="Bullet" objectIdRef="2"/>
+        <FOR-ObjectVariable variable="bullet" objectType="Bullet" objectIdRef="2"/>
         <IF language="Java JavaScript"><![CDATA[this.stepEvent.getOccurrenceTime() % sim.controller.Global.getSimluationSlowDownRatio() == 0]]></IF>
         <THEN>
           <UPDATE-ENV>
