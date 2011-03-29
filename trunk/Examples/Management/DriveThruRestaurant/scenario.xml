@@ -190,14 +190,14 @@ var price = new ArrayList{8.90, 9.80, 8.50, 7.20, 7.80, 5.20};
 			<EnvironmentRule name="CustomerArrival_Rule">
 				<!-- ======================================================== -->
 				<documentation>
-					<description> When a car arrives at the Fast Food Restaurant, and the menu board queue is full, the customer leaves and he is considered a dissatisfied customer. Else, if the menu board queue is not full then the car gets in the waiting line as a new customer. Furthermore, if the menu board service is not busy, a StartMenuBoardService is created. </description>
+					<description>When a car arrives at the Fast Food Restaurant, and the menu board queue is full, the customer leaves and he is considered a dissatisfied customer. Else, if the menu board queue is not full then the car gets in the waiting line as a new customer. Furthermore, if the menu board service is not busy, a StartMenuBoardService is created. </description>
 				</documentation>
 				<WHEN eventType="CustomerArrival" eventVariable="evt" />
 				<FOR-ObjectVariable variable="mb" objectType="MenuBoard" objectIdRef="1" />
 				<FOR-ObjectVariable variable="q1" objectType="Queue" objectIdRef="6" />
 				<IF language="Java JavaScript"><![CDATA[
 this.mb.getMenuBoardQueue().size() >= this.mb.getMaxMenuBoardLineSize()
-            ]]></IF>
+                ]]></IF>
 			<THEN>
 				<UPDATE-ENV>
 					<UpdateStatisticsVariable variable="numberOfLostCustomers">
@@ -252,10 +252,9 @@ SimStatistics.numberOfCustomers.getValue() + 1
 				</documentation>
 				<WHEN eventType="StartMenuBoardService"/>
 				<FOR-ObjectVariable variable="mb" objectType="MenuBoard" objectIdRef="1" />
-				<FOR-ObjectVariable variable="ord" objectType="Order" />
 				<FOR-ObjectVariable variable="k" objectType="Kitchen" />
 				<FOR-ObjectVariable variable="cust" objectType="Customer">
-					<ObjectRef language="Java JavaScript">this.mb.getMenuBoardQueue().get(this.mb.getMenuBoardQueue().size()-1)</ObjectRef>
+					<ObjectRef language="Java JavaScript">this.mb.getMenuBoardQueue().get( this.mb.getMenuBoardQueue().size()-1)</ObjectRef>
 				</FOR-ObjectVariable>
 				<FOR-DataVariable  variable="serviceTimeMB" dataType="Integer">
 					<ValueExpr language="Java">Global.twoDice(10)</ValueExpr>
@@ -613,11 +612,11 @@ SimStatistics.revenue.getValue() + pw.pizzaPrice(( int) pw.getPickupWindowQueue(
 		<ExogenousEvent type="CustomerArrival" occurrenceTime="1" />	
 	</InitialState>
 
-	<UserInterface defaultLanguage="en">
+	<UserInterface supportedLanguages="en de">
 		<!-- ========================================================= -->
 		<InitialStateUI>
 		<!-- ========================================================= -->
-			<ObjectUI objectType="PickupWindow" nmrOfInstances="1">
+			<ObjectUI objectType="PickupWindow" maxNmrOfInstances="1">
 				<PropertyUI property="maxPickupWindowLineSize">
 					<Label>
 						<Text>Maximum size of the pickup window line</Text>
@@ -627,7 +626,7 @@ SimStatistics.revenue.getValue() + pw.pizzaPrice(( int) pw.getPickupWindowQueue(
 					</Hint>
 				</PropertyUI>
 			</ObjectUI>
-			<ObjectUI objectType="MenuBoard" nmrOfInstances="1">
+			<ObjectUI objectType="MenuBoard" maxNmrOfInstances="1">
 				<PropertyUI property="maxMenuBoardLineSize" widget="Slider">
 					<Label>
 						<Text>Maximum size of the menu board line</Text>
