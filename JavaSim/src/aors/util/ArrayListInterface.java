@@ -16,6 +16,6 @@ public interface ArrayListInterface<E> extends List<E> {
   public E removeFirst();
   public E removeLast();
   public boolean removeObject(E element);
-  public void assign(int index, E element);
+  public void insert(int index, E element);
 
 }
