@@ -69,7 +69,7 @@ public class ArrayList<E> extends java.util.ArrayList<E> implements
     return this.remove(element);
   }
 
-  public void assign(int index, E element) {
+  public void insert(int index, E element) {
     this.add(index, element);
   }
 
