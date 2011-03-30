@@ -227,5 +227,8 @@ public class Objekt extends Entity {
   public InheritedProperty getInheritedProperty() {
     return inheritedProperty;
   }
+  
+  // is implemented as a hook and should be overloaded if necessary
+  protected void initInheritedAttr() {};
 
 }
