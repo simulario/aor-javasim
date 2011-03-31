@@ -2085,19 +2085,22 @@
 					<IF language="Java JavaScript">getAssetByName("Labor").getQuantity() > 0</IF>
 					<THEN>
 						<UPDATE-AGT>
-							<Slot property="hallo"><ValueExpr language="Java">sim.controller.Global.hallo("NFirm: OutputRule" )</ValueExpr></Slot>
+							<Slot property="hallo"><ValueExpr language="Java">sim.controller.Global.hallo("NFirm: OutputRule " + getTriggeredTime())</ValueExpr></Slot>
 							<Slot property="MC">
 								<ValueExpr language="Java JavaScript">
 									getWage() / getBeta() * Math.pow( getA(), -1/getBeta() )
 									* Math.pow(getOutput(), 1 / getBeta() - 1 )
 								</ValueExpr>
 							</Slot>
+							<Slot property="hallo"><ValueExpr language="Java">sim.controller.Global.hallo("NFirm: marginalProfit " )</ValueExpr></Slot>
+							<Slot property="hallo"><ValueExpr language="Java">sim.controller.Global.hallo("NFirm: LastUtilityPrice= " + getLastUtilityPrice() )</ValueExpr></Slot>
+							<Slot property="hallo"><ValueExpr language="Java">sim.controller.Global.hallo("NFirm: MC= " + getMC() )</ValueExpr></Slot>
 							<Slot property="marginalProfit">
 								<ValueExpr language="Java JavaScript">
 									getLastFoodPrice() - getMC()
 								</ValueExpr>
 							</Slot>
-							<Slot property="hallo"><ValueExpr language="Java">sim.controller.Global.hallo("NFirm: Output= " + getOutput() )</ValueExpr></Slot>
+							<Slot property="hallo"><ValueExpr language="Java">sim.controller.Global.hallo("NFirm: OutPut " )</ValueExpr></Slot>
 							<Slot property="hallo"><ValueExpr language="Java">sim.controller.Global.hallo("NFirm: Phi= " + getPhi() )</ValueExpr></Slot>
 							<Slot property="hallo"><ValueExpr language="Java">sim.controller.Global.hallo("NFirm: MarginalProfit= " + getMarginalProfit() )</ValueExpr></Slot>
 							<Slot property="hallo"><ValueExpr language="Java">sim.controller.Global.hallo("NFirm: LastFoodPrice= " + getLastFoodPrice() )</ValueExpr></Slot>
@@ -2168,23 +2171,25 @@
 					<IF language="Java JavaScript">getAssetByName("Labor").getQuantity() > 0</IF>
 					<THEN>
 						<UPDATE-AGT>
-							<Slot property="hallo"><ValueExpr language="Java">sim.controller.Global.hallo("EFirm: OutputRule" )</ValueExpr></Slot>
+							<Slot property="hallo"><ValueExpr language="Java">sim.controller.Global.hallo("EFirm: OutputRule " + this.getTriggeredTime())</ValueExpr></Slot>
 							<Slot property="MC">
 								<ValueExpr language="Java JavaScript">
 									getWage() / getBeta() * Math.pow( getA(), -1/getBeta() )
 									* Math.pow(getOutput(), 1 / getBeta() - 1 )
 								</ValueExpr>
 							</Slot>
+							<Slot property="hallo"><ValueExpr language="Java">sim.controller.Global.hallo("EFirm: marginalProfit " )</ValueExpr></Slot>
+							<Slot property="hallo"><ValueExpr language="Java">sim.controller.Global.hallo("EFirm: LastUtilityPrice= " + getLastUtilityPrice() )</ValueExpr></Slot>
+							<Slot property="hallo"><ValueExpr language="Java">sim.controller.Global.hallo("EFirm: MC " + getMC() )</ValueExpr></Slot>
 							<Slot property="marginalProfit">
 								<ValueExpr language="Java JavaScript">
-									getLastFoodPrice() - getMC()
+									getLastUtilityPrice() - getMC()
 								</ValueExpr>
 							</Slot>
-							<Slot property="hallo"><ValueExpr language="Java">sim.controller.Global.hallo("EFirm: Output= " + getOutput() )</ValueExpr></Slot>
-							
-							<Slot property="hallo"><ValueExpr language="Java">sim.controller.Global.hallo("NFirm: Phi= " + getPhi() )</ValueExpr></Slot>
-							<Slot property="hallo"><ValueExpr language="Java">sim.controller.Global.hallo("NFirm: MarginalProfit= " + getMarginalProfit() )</ValueExpr></Slot>
-							<Slot property="hallo"><ValueExpr language="Java">sim.controller.Global.hallo("NFirm: LastUtilityPrice= " + getLastUtilityPrice() )</ValueExpr></Slot>
+							<Slot property="hallo"><ValueExpr language="Java">sim.controller.Global.hallo("EFirm: OutPut " )</ValueExpr></Slot>
+							<Slot property="hallo"><ValueExpr language="Java">sim.controller.Global.hallo("EFirm: Phi= " + getPhi() )</ValueExpr></Slot>
+							<Slot property="hallo"><ValueExpr language="Java">sim.controller.Global.hallo("EFirm: MarginalProfit= " + getMarginalProfit() )</ValueExpr></Slot>
+							<Slot property="hallo"><ValueExpr language="Java">sim.controller.Global.hallo("EFirm: LastUtilityPrice= " + getLastUtilityPrice() )</ValueExpr></Slot>
 							<Slot property="output">
 								<ValueExpr language="Java JavaScript">
 									getOutput() * ( 1 + getPhi() * getMarginalProfit()/ getLastUtilityPrice() )
@@ -2522,6 +2527,70 @@
 		</EntityTypes>
 		
 	<EnvironmentRules>
+		<!-- BS6 Init -->
+		<EnvironmentRule name="Create_InitialBuyOffers">
+			<WHEN eventType="Init"/>
+			<FOR objectType="BS6LaborMarket" objectVariable="m" />
+			<FOR objectType="BS6Laborer" objectVariable="l" />
+			<DO>
+				<UPDATE-ENV>
+					<UpdateObject objectVariable="m">
+						<MultiValuedSlot property="buyOffers">
+							<AddLast>
+								<ItemExpr language="Java">
+									new sim.model.dataTypes.TradeOffer()
+								</ItemExpr>
+							</AddLast>
+						</MultiValuedSlot>
+					</UpdateObject>
+				</UPDATE-ENV>
+			</DO>
+		</EnvironmentRule>
+		<EnvironmentRule name="Create_InitialSellOffers">
+			<WHEN eventType="Init"/>
+			<FOR objectType="BS6LaborMarket" objectVariable="m" />
+			<FOR objectType="BS6Firm"  objectVariable="f" />
+			<DO>
+				<UPDATE-ENV>
+					<UpdateObject objectVariable="m">
+						<MultiValuedSlot property="buyOffers">
+							<AddLast>
+								<ItemExpr language="Java">
+									new sim.model.dataTypes.TradeOffer()
+								</ItemExpr>
+							</AddLast>
+						</MultiValuedSlot>
+					</UpdateObject>
+				</UPDATE-ENV>
+			</DO>
+		</EnvironmentRule>
+		<EnvironmentRule name="Initial_Clear_LaborMarket">
+			<WHEN eventType="Init"/>
+			<FOR objectType="BS6LaborMarket" objectVariable="m" />
+			<DO>
+				<UPDATE-ENV>
+					<Call procedure="clear" contextObjectVariable="m"></Call>
+				</UPDATE-ENV>
+			</DO>
+		</EnvironmentRule>
+		<EnvironmentRule name="Initial_Send_MatchingOffers">
+			<WHEN eventType="Init"/>
+			<FOR objectType="BS6LaborMarket"  objectVariable="m"/>
+			<FOR-ListItemVariable variable="o" listItemType="TradeOffer">
+				<ListExpr language="Java JavaScript">this.m.getTransactions()</ListExpr>
+			</FOR-ListItemVariable>
+			<DO>
+				<SCHEDULE-EVT>
+					<InMessageEventExpr messageType="MatchingOffer">
+						<SenderIdRef language="Java">m.getId()</SenderIdRef>
+						<ReceiverIdRef language="Java JavaScript">this.o.getBidderIdRef()</ReceiverIdRef>
+						<Slot property="offer">
+							<ObjectValueExpr objectVariable="o"/>
+						</Slot>
+					</InMessageEventExpr>
+				</SCHEDULE-EVT>
+			</DO>
+		</EnvironmentRule>
 		<!-- ============================= -->
 		<!--<EnvironmentRule name="InitializeOwnership">
 			<documentation>
@@ -2926,7 +2995,7 @@
 				<ValueExpr language="Java"><![CDATA[ new ArrayList<TradeOffer>() ]]></ValueExpr>
 			</Slot>
 		</Agent>
-		<!--<ExogenousEvent type="Init" occurrenceTime="1" />-->
+		<ExogenousEvent type="Init" occurrenceTime="1" />
 		<!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->
 		<ExogenousEvent occurrenceTime="1" type="StartOfDay" />
 		<!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->
