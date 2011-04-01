@@ -228,6 +228,7 @@
 			</MessageType>
 			<!-- =================================== -->
 			<MessageType name="BS6OfferToSell">
+				<Attribute type="String" name="product"/>
 				<Attribute type="Integer" name="bidderIdRef"/>
 				<Attribute type="Float" name="quantity"/>
 			</MessageType>
@@ -1993,8 +1994,9 @@
 								<Slot property="demand"><ValueExpr language="Java JavaScript">this.agt.getEConsumption()</ValueExpr></Slot>
 							</OutMessageEventExpr>
 							<OutMessageEventExpr messageType="BS6OfferToSell" receiverIdRefs="12">
+								<Slot property="product" value="Labor" />
 								<Slot property="bidderIdRef"><ValueExpr language="Java JavaScript">this.agt.getId()</ValueExpr></Slot>
-								<Slot property="quantity" value="1"></Slot>
+								<Slot property="quantity" value="1" />
 							</OutMessageEventExpr>
 						</SCHEDULE-EVT>
 					</DO>
@@ -2130,7 +2132,7 @@
 					<DO>
 						<SCHEDULE-EVT>
 							<OutMessageEventExpr messageType="BS6OfferToBuy" receiverIdRefs="12">
-								<Slot property="product" value="Labor"></Slot>
+								<Slot property="product" value="Labor" />
 								<Slot property="demand"><PropertyValueExpr entityVariable="agt" property="wageBudget"/></Slot>
 								<Slot property="bidderIdRef"><ValueExpr language="Java JavaScript">agt.getId()</ValueExpr></Slot>
 							</OutMessageEventExpr>
@@ -2211,7 +2213,7 @@
 					<DO>
 						<SCHEDULE-EVT>
 							<OutMessageEventExpr messageType="BS6OfferToBuy" receiverIdRefs="12">
-								<Slot property="product" value="Labor"></Slot>
+								<Slot property="product" value="Labor" />
 								<Slot property="demand"><PropertyValueExpr entityVariable="agt" property="wageBudget"/></Slot>
 								<Slot property="bidderIdRef"><ValueExpr language="Java JavaScript">agt.getId()</ValueExpr></Slot>
 							</OutMessageEventExpr>
@@ -2530,17 +2532,20 @@
 		<!-- BS6 Init -->
 		<EnvironmentRule name="Create_InitialBuyOffers">
 			<WHEN eventType="Init"/>
-			<FOR objectType="BS6LaborMarket" objectVariable="m" />
-			<FOR objectType="BS6Laborer" objectVariable="l" />
+			<FOR-ObjectVariable variable="m" objectType="BS6LaborMarket" />
+			<FOR-ObjectVariable variable="l" objectType="BS6Laborer" />
 			<DO>
 				<UPDATE-ENV>
+					<Create>
+						<Object type="TradeOffer" objectVariable="o">
+							<Slot property="product" value="Labor" />
+							<Slot property="bidderIdRef"><ValueExpr language="Java JavaScript">this.l.getId()</ValueExpr></Slot>
+							<Slot property="quantity" value="1" />
+						</Object>
+					</Create>
 					<UpdateObject objectVariable="m">
 						<MultiValuedSlot property="buyOffers">
-							<AddLast>
-								<ItemExpr language="Java">
-									new sim.model.dataTypes.TradeOffer()
-								</ItemExpr>
-							</AddLast>
+							<AddLast itemVariable="o" />
 						</MultiValuedSlot>
 					</UpdateObject>
 				</UPDATE-ENV>
@@ -2548,17 +2553,20 @@
 		</EnvironmentRule>
 		<EnvironmentRule name="Create_InitialSellOffers">
 			<WHEN eventType="Init"/>
-			<FOR objectType="BS6LaborMarket" objectVariable="m" />
-			<FOR objectType="BS6Firm"  objectVariable="f" />
+			<FOR-ObjectVariable variable="m" objectType="BS6LaborMarket" />
+			<FOR-ObjectVariable variable="f" objectType="BS6Firm" />
 			<DO>
 				<UPDATE-ENV>
+					<Create>
+						<Object type="TradeOffer" objectVariable="o">
+							<Slot property="product" value="Labor" />
+							<Slot property="bidderIdRef"><ValueExpr language="Java JavaScript">this.f.getId()</ValueExpr></Slot>
+							<Slot property="quantity" value="1" />
+						</Object>
+					</Create>
 					<UpdateObject objectVariable="m">
 						<MultiValuedSlot property="buyOffers">
-							<AddLast>
-								<ItemExpr language="Java">
-									new sim.model.dataTypes.TradeOffer()
-								</ItemExpr>
-							</AddLast>
+							<AddLast itemVariable="o" />
 						</MultiValuedSlot>
 					</UpdateObject>
 				</UPDATE-ENV>
@@ -2566,7 +2574,7 @@
 		</EnvironmentRule>
 		<EnvironmentRule name="Initial_Clear_LaborMarket">
 			<WHEN eventType="Init"/>
-			<FOR objectType="BS6LaborMarket" objectVariable="m" />
+			<FOR-ObjectVariable variable="m" objectType="BS6LaborMarket" />
 			<DO>
 				<UPDATE-ENV>
 					<Call procedure="clear" contextObjectVariable="m"></Call>
@@ -2575,7 +2583,7 @@
 		</EnvironmentRule>
 		<EnvironmentRule name="Initial_Send_MatchingOffers">
 			<WHEN eventType="Init"/>
-			<FOR objectType="BS6LaborMarket"  objectVariable="m"/>
+			<FOR-ObjectVariable variable="m" objectType="BS6LaborMarket"></FOR-ObjectVariable>
 			<FOR-ListItemVariable variable="o" listItemType="TradeOffer">
 				<ListExpr language="Java JavaScript">this.m.getTransactions()</ListExpr>
 			</FOR-ListItemVariable>
@@ -2597,8 +2605,8 @@
 				<dc:description>Finds an owner for all firms</dc:description>
 			</documentation>
 			<WHEN eventType="Init"/>
-			<FOR objectVariable="f" objectType="Firm" />
-			<FOR objectVariable="o" objectType="Owner" />
+			<FOR-ObjectVariable variable="f" objectType="Firm" />
+			<FOR-ObjectVariable variable="o" objectType="Owner" />
 			<IF language="Java JavaScript"><![CDATA[ (this.o.getFirm() == null) && (this.f.getOwner() == null) ]]></IF>
 			<THEN>
 				<UPDATE-ENV>
@@ -2618,8 +2626,8 @@
 				<dc:description>Every person tries to eat, if he can't then he dies</dc:description>
 			</documentation>
 			<WHEN eventType="StartOfDay" eventVariable="evt" />
-			<!--<FOR objectVariable="p" objectType="Person" />-->
-			<FOR objectVariable="p" objectType="BS6Laborer" />
+			<!--<FOR-ObjectVariable variable="p" objectType="Person" />-->
+			<FOR-ObjectVariable variable="p" objectType="BS6Laborer" />
 			<!--<IF language="Java JavaScript"><![CDATA[ this.p.getAssetByName("Food").withdraw(this.p.getEAT_AMOUNT()) < this.p.getEAT_AMOUNT() ]]></IF>-->
 			<IF language="Java JavaScript"><![CDATA[ this.p.getAssetByName("Food").withdraw(1) < 1 ]]></IF>
 			<THEN>
@@ -2634,7 +2642,7 @@
 				<dc:description>If a farm  has no more money, food and labor it is shut down</dc:description>
 			</documentation>
 			<WHEN eventType="StartOfDay" eventVariable="evt" />
-			<FOR objectVariable="f" objectType="Farm" />
+			<FOR-ObjectVariable variable="f" objectType="Farm" />
 			<IF language="Java"><![CDATA[ this.f.getAssetByName("Food").getQuantity() == 0.0 && this.f.getAssetByName("Labor").getQuantity() == 0.0 && this.f.getAssetByName("Money").getQuantity() == 0.0 ]]></IF>
 			<IF language="JavaScript"><![CDATA[ this.f.getAssetByName("Food").getQuantity() === 0.0 && this.f.getAssetByName("Labor").getQuantity() === 0.0 && this.f.getAssetByName("Money").getQuantity() === 0.0 ]]></IF>
 			<THEN>
@@ -2655,9 +2663,9 @@
 				</dc:description>
 			</documentation>
 			<WHEN eventType="StartOfDay"/>
-			<!--<FOR objectVariable="m" objectType="Market" />-->
-			<FOR objectVariable="m" objectType="BS6ConsumerMarket" />
-			<FOR objectVariable="p" objectType="EconomicAgent" />
+			<!--<FOR-ObjectVariable variable="m" objectType="Market" />-->
+			<FOR-ObjectVariable variable="m" objectType="BS6ConsumerMarket" />
+			<FOR-ObjectVariable variable="p" objectType="EconomicAgent" />
 			<DO>
 				<SCHEDULE-EVT>
 					<InMessageEventExpr messageType="StartOfDay_Notification">
@@ -2687,7 +2695,7 @@
 				<dc:description>Act_msg is sent to every person</dc:description>
 			</documentation>
 			<WHEN eventType="StartWork"/>
-			<FOR objectVariable="p" objectType="EconomicAgent" />
+			<FOR-ObjectVariable variable="p" objectType="EconomicAgent"></FOR-ObjectVariable>
 			<DO>
 				<SCHEDULE-EVT>
 					<InMessageEventExpr messageType="Act_msg" senderIdRef="0">
@@ -2703,8 +2711,8 @@
 				<dc:description>ClearMarket is send to every market</dc:description>
 			</documentation>
 			<WHEN eventType="CloseMarket"/>
-			<!--<FOR objectVariable="m" objectType="Market" />-->
-			<FOR objectVariable="m" objectType="BS6Market" />
+			<!--<FOR-ObjectVariable variable="m" objectType="Market" />-->
+			<FOR-ObjectVariable variable="m" objectType="BS6Market" />
 			<DO>
 				<SCHEDULE-EVT>
 					<InMessageEventExpr messageType="ClearMarket" senderIdRef="0">
