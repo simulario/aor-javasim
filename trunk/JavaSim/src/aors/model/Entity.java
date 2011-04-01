@@ -179,4 +179,7 @@ public class Entity implements Cloneable {
 		properties.put("type", this.aorEntityType);
 		return properties;
 	}
+	
+  // is implemented as a hook and should be overloaded if necessary
+	public void initInheritedAttr() {};
 }
