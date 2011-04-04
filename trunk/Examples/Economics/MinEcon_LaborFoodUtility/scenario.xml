@@ -1103,8 +1103,8 @@
 					<Body language="Java"><![CDATA[
 						double labor = getAssetByName("Labor").getQuantity();
 						double food = convertToFood(labor);
-						getAssetByName("Labor").withdraw(labor);
-						getAssetByName("Food").deposit(food);
+						this.getAssetByName("Labor").withdraw(labor);
+						this.getAssetByName("Food").deposit(food);
 						return food;									
 					]]></Body>
 					<Body language="JavaScript"><![CDATA[
@@ -1984,18 +1984,18 @@
 						<SCHEDULE-EVT>
 							<OutMessageEventExpr messageType="BS6OfferToBuy" receiverIdRefs="10">
 								<Slot property="product" value="Food" />
-								<Slot property="bidderIdRef"><ValueExpr language="Java JavaScript">this.agt.getId()</ValueExpr></Slot>
-								<Slot property="demand"><ValueExpr language="Java JavaScript">this.agt.getNConsumption()</ValueExpr></Slot>
-								<Slot property="min"><ValueExpr language="Java JavaScript">this.agt.getMinN()</ValueExpr></Slot>
+								<Slot property="bidderIdRef"><PropertyValueExpr entityVariable="agt" property="id"/></Slot>
+								<Slot property="demand"><PropertyValueExpr entityVariable="agt" property="nConsumption"/></Slot>
+								<Slot property="min"><PropertyValueExpr entityVariable="agt" property="minN"/></Slot>
 							</OutMessageEventExpr>
 							<OutMessageEventExpr messageType="BS6OfferToBuy" receiverIdRefs="11">
 								<Slot property="product" value="Utility" />
-								<Slot property="bidderIdRef"><ValueExpr language="Java JavaScript">this.agt.getId()</ValueExpr></Slot>
-								<Slot property="demand"><ValueExpr language="Java JavaScript">this.agt.getEConsumption()</ValueExpr></Slot>
+								<Slot property="bidderIdRef"><PropertyValueExpr entityVariable="agt" property="Id"/></Slot>
+								<Slot property="demand"><PropertyValueExpr entityVariable="agt" property="eConsumption"/></Slot>
 							</OutMessageEventExpr>
 							<OutMessageEventExpr messageType="BS6OfferToSell" receiverIdRefs="12">
 								<Slot property="product" value="Labor" />
-								<Slot property="bidderIdRef"><ValueExpr language="Java JavaScript">this.agt.getId()</ValueExpr></Slot>
+								<Slot property="bidderIdRef"><PropertyValueExpr entityVariable="agt" property="id"/></Slot>
 								<Slot property="quantity" value="1" />
 							</OutMessageEventExpr>
 						</SCHEDULE-EVT>
@@ -2029,7 +2029,7 @@
 				<Attribute type="Float" name="MC"/>
 				<Function name="convertToProduct" resultType="Float">
 					<Parameter name="K" type="double"/>
-					<Body language="Java">
+					<Body language="Java JavaScript">
 						return getA() * Math.pow(getAssetByName("Labor").getQuantity(), getBeta()) * Math.pow(K, 1- getBeta());
 					</Body>
 				</Function>
@@ -2075,8 +2075,8 @@
 				<Function name="updateProduct" resultType="void">
 					<Body language="Java">
 						System.out.println("UpdateFood: " + getAssetByName("Food").getQuantity());
-						if(getOutput() > 0){
-							getAssetByName("Food").deposit(getOutput());
+						if(this.getOutput() > 0){
+							this.getAssetByName("Food").deposit(getOutput());
 						}
 						System.out.println("Neu: " + getAssetByName("Food").getQuantity());
 					</Body>
@@ -2090,8 +2090,8 @@
 							<Slot property="hallo"><ValueExpr language="Java">sim.controller.Global.hallo("NFirm: OutputRule " + getTriggeredTime())</ValueExpr></Slot>
 							<Slot property="MC">
 								<ValueExpr language="Java JavaScript">
-									getWage() / getBeta() * Math.pow( getA(), -1/getBeta() )
-									* Math.pow(getOutput(), 1 / getBeta() - 1 )
+									this.agt.getWage() / this.agt.getBeta() * Math.pow( this.agt.getA(), -1/this.agt.getBeta() )
+									* Math.pow(this.agt.getOutput(), 1 / this.agt.getBeta() - 1 )
 								</ValueExpr>
 							</Slot>
 							<Slot property="hallo"><ValueExpr language="Java">sim.controller.Global.hallo("NFirm: marginalProfit " )</ValueExpr></Slot>
@@ -2108,18 +2108,18 @@
 							<Slot property="hallo"><ValueExpr language="Java">sim.controller.Global.hallo("NFirm: LastFoodPrice= " + getLastFoodPrice() )</ValueExpr></Slot>
 							<Slot property="output">
 								<ValueExpr language="Java JavaScript">
-									getOutput() * ( 1 + getPhi() * getMarginalProfit()/ getLastFoodPrice() )
+									getOutput() * ( 1 + this.agt.getPhi() * this.agt.getMarginalProfit()/ this.agt.getLastFoodPrice() )
 								</ValueExpr>
 							</Slot>
 							<Slot property="hallo"><ValueExpr language="Java">sim.controller.Global.hallo("NFirm: Output= " + getOutput() )</ValueExpr></Slot>
 							<Slot property="output">
 								<ValueExpr language="Java JavaScript">
-									Math.min( getCapacity(), getOutput() )
+									Math.min( this.agt.getCapacity(), this.agt.getOutput() )
 								</ValueExpr>
 							</Slot>
 							<Slot property="output">
 								<ValueExpr language="Java">
-									(this.getTriggeredTime() == 1) ? 50 : getOutput()	
+									(this.getTriggeredTime() == 1) ? 50 : this.agt.getOutput()	
 								</ValueExpr>
 							</Slot>
 							<Call procedure="updateProduct" contextObjectVariable="agt"></Call>
@@ -2134,7 +2134,7 @@
 							<OutMessageEventExpr messageType="BS6OfferToBuy" receiverIdRefs="12">
 								<Slot property="product" value="Labor" />
 								<Slot property="demand"><PropertyValueExpr entityVariable="agt" property="wageBudget"/></Slot>
-								<Slot property="bidderIdRef"><ValueExpr language="Java JavaScript">agt.getId()</ValueExpr></Slot>
+								<Slot property="bidderIdRef"><PropertyValueExpr entityVariable="agt" property="id"/></Slot>
 							</OutMessageEventExpr>
 						</SCHEDULE-EVT>
 					</DO>
@@ -2148,9 +2148,7 @@
 								<Slot property="quantity">
 									<ValueExpr language="Java JavaScript">getAssetByName("Food").getQuantity()</ValueExpr>
 								</Slot>
-								<Slot property="bidderIdRef">
-									<ValueExpr language="Java JavaScript">agt.getId()</ValueExpr>
-								</Slot>
+								<Slot property="bidderIdRef"><PropertyValueExpr entityVariable="agt" property="id"/></Slot>
 							</OutMessageEventExpr>
 						</SCHEDULE-EVT>
 					</THEN>
@@ -2215,7 +2213,7 @@
 							<OutMessageEventExpr messageType="BS6OfferToBuy" receiverIdRefs="12">
 								<Slot property="product" value="Labor" />
 								<Slot property="demand"><PropertyValueExpr entityVariable="agt" property="wageBudget"/></Slot>
-								<Slot property="bidderIdRef"><ValueExpr language="Java JavaScript">agt.getId()</ValueExpr></Slot>
+								<Slot property="bidderIdRef"><PropertyValueExpr entityVariable="agt" property="id"/></Slot>
 							</OutMessageEventExpr>
 						</SCHEDULE-EVT>
 					</DO>
@@ -2229,9 +2227,7 @@
 								<Slot property="quantity">
 									<ValueExpr language="Java JavaScript">getAssetByName("Utility").getQuantity()</ValueExpr>
 								</Slot>
-								<Slot property="bidderIdRef">
-									<ValueExpr language="Java JavaScript">agt.getId()</ValueExpr>
-								</Slot>
+								<Slot property="bidderIdRef"><PropertyValueExpr entityVariable="agt" property="id"/></Slot>
 							</OutMessageEventExpr>
 						</SCHEDULE-EVT>
 					</THEN>
@@ -2536,16 +2532,9 @@
 			<FOR-ObjectVariable variable="l" objectType="BS6Laborer" />
 			<DO>
 				<UPDATE-ENV>
-					<Create>
-						<Object type="TradeOffer" objectVariable="o">
-							<Slot property="product" value="Labor" />
-							<Slot property="bidderIdRef"><ValueExpr language="Java JavaScript">this.l.getId()</ValueExpr></Slot>
-							<Slot property="quantity" value="1" />
-						</Object>
-					</Create>
 					<UpdateObject objectVariable="m">
 						<MultiValuedSlot property="buyOffers">
-							<AddLast itemVariable="o" />
+							<AddLast><ItemExpr language="Java">new TradeOffer()</ItemExpr></AddLast>
 						</MultiValuedSlot>
 					</UpdateObject>
 				</UPDATE-ENV>
@@ -2557,16 +2546,9 @@
 			<FOR-ObjectVariable variable="f" objectType="BS6Firm" />
 			<DO>
 				<UPDATE-ENV>
-					<Create>
-						<Object type="TradeOffer" objectVariable="o">
-							<Slot property="product" value="Labor" />
-							<Slot property="bidderIdRef"><ValueExpr language="Java JavaScript">this.f.getId()</ValueExpr></Slot>
-							<Slot property="quantity" value="1" />
-						</Object>
-					</Create>
 					<UpdateObject objectVariable="m">
-						<MultiValuedSlot property="buyOffers">
-							<AddLast itemVariable="o" />
+						<MultiValuedSlot property="sellOffers">
+								<AddLast><ItemExpr language="Java">new TradeOffer()</ItemExpr></AddLast>
 						</MultiValuedSlot>
 					</UpdateObject>
 				</UPDATE-ENV>
@@ -2590,7 +2572,7 @@
 			<DO>
 				<SCHEDULE-EVT>
 					<InMessageEventExpr messageType="MatchingOffer">
-						<SenderIdRef language="Java">m.getId()</SenderIdRef>
+						<SenderIdRef language="Java JavaScript">this.m.getId()</SenderIdRef>
 						<ReceiverIdRef language="Java JavaScript">this.o.getBidderIdRef()</ReceiverIdRef>
 						<Slot property="offer">
 							<ObjectValueExpr objectVariable="o"/>
