@@ -148,6 +148,16 @@
 					<ObjectProperty property="mktSupply" objectType="BS6ConsumerMarket" objectIdRef="11"/>
 				</Source>
 			</Variable>
+			<Variable name="BuyOffersLabor" dataType="Float">	
+				<Source>
+					<ObjectProperty property="mktDemand" objectType="BS6LaborMarket" objectIdRef="12"/>
+				</Source>
+			</Variable>
+			<Variable name="SellOffersLabor" dataType="Float">	
+				<Source>
+					<ObjectProperty property="mktSupply" objectType="BS6LaborMarket" objectIdRef="12"/>
+				</Source>
+			</Variable>
 		</Statistics>
 		
 		<DataTypes>
@@ -160,14 +170,13 @@
 				<Attribute name="buy" type="Boolean"/>
 				<Attribute name="bidderIdRef" type="Integer" />
 				<Attribute type="Float" name="min"/><!-- BS6 -->
-				<!--<ReferenceProperty name="bidder" type="EconomicAgent"/>-->
 			</ComplexDataType>
 		</DataTypes>
 		<Globals>
 			<GlobalFunction name="hallo" resultType="String">
 				<Parameter name="text" type="String"/>
 				<Body language="Java">
-					System.out.println("Hallo: " + text);
+					System.out.println(text);
 					return text;
 				</Body>
 			</GlobalFunction>
@@ -220,17 +229,8 @@
 				<ComplexDataProperty name="offer" type="TradeOffer"/>
 			</MessageType>
 			<!-- =================================== -->
-			<MessageType name="BS6OfferToBuy">
-				<Attribute type="String" name="product"/>
-				<Attribute type="Integer" name="bidderIdRef"/>
-				<Attribute type="Float" name="demand"/>
-				<Attribute type="Float" name="min"/>
-			</MessageType>
-			<!-- =================================== -->
-			<MessageType name="BS6OfferToSell">
-				<Attribute type="String" name="product"/>
-				<Attribute type="Integer" name="bidderIdRef"/>
-				<Attribute type="Float" name="quantity"/>
+			<MessageType name="BS6Offer">
+				<ComplexDataProperty name="offer" type="TradeOffer"/>
 			</MessageType>
 			<!-- =================================== -->
 			<ExogenousEventType name="Init" />
@@ -372,7 +372,6 @@
 					<IF language="JavaScript"><![CDATA[ this.msg.getOffer().isBuy() && this.asset.getType() === "Money" ]]></IF>
 					<THEN>
 						<UPDATE-AGT>
-							<!--<Slot property="hallo"><ValueExpr language="Java">sim.controller.Global.hallo("WithdrawMoneyRule")</ValueExpr></Slot>-->
 							<Call procedure="withdraw" contextObjectVariable="asset">
 								<Argument parameter="q">
 									<ValueExpr language="Java JavaScript">this.msg.getOffer().getQuantity() * this.msg.getOffer().getPrice()</ValueExpr>
@@ -1947,16 +1946,27 @@
 				<Attribute type="Float" name="targetConsumption"/>
 				<Attribute type="Float" name="demandForE"/>
 				<Attribute type="Float" name="demandForN"/>
+				<Attribute type="Boolean" name="cheat" initialValue="true"/>
+				
+				<ReactionRule name="Wage_Rule">
+					<WHEN eventType="InMessageEvent" messageType="MatchingOffer" messageVariable="msg" />
+					<IF language="Java JavaScript"><![CDATA[ !this.msg.getOffer().isBuy() && this.msg.getOffer().getProduct().equals("Labor") ]]></IF>
+					<THEN>
+						<UPDATE-AGT>
+							<Slot property="wage"><ValueExpr language="Java JavaScript">this.msg.getOffer().getQuantity() * this.msg.getOffer().getPrice()</ValueExpr></Slot>
+						</UPDATE-AGT>
+					</THEN>
+				</ReactionRule>
+				
 				<ReactionRule name="act" agentVariable="agt">
 					<WHEN eventType="InMessageEvent" messageType="Act_msg"/>
 					<DO>
 						<UPDATE-AGT>
-							<!--<Slot property="hallo"><ValueExpr language="Java">sim.controller.Global.hallo("Laborer: " + getAssetByName("Food").getQuantity())</ValueExpr></Slot>-->
-							<Slot property="income"><ValueExpr language="Java JavaScript">this.agt.getAssetByName("Money").getQuantity()</ValueExpr></Slot>
+							<Slot property="income"><PropertyValueExpr entityVariable="agt" property="wage" /></Slot>
+							<!-- Zinsen -->
 							<Slot property="targetSavings">
 								<ValueExpr language="Java JavaScript">this.agt.getIncome() * this.agt.getBaseSavingToIncomeRatio()</ValueExpr>
 							</Slot>
-							<!-- Zinsen -->
 							<Slot property="targetConsumption">
 								<ValueExpr language="Java JavaScript">this.agt.getAssetByName("Money").getQuantity() - this.agt.getTargetSavings()</ValueExpr>
 							</Slot>
@@ -1967,6 +1977,12 @@
 									this.agt.getConsumption() * (1 + this.agt.getUpsilon()))
 								</ValueExpr>
 							</Slot>
+							<Slot property="consumption">
+								<ValueExpr language="Java">
+									isCheat() ? getIncome() : getConsumption()
+								</ValueExpr>
+							</Slot>
+							<Slot property="cheat" value="false" />
 							<Slot property="nConsumption">
 								<ValueExpr language="Java JavaScript">
 									this.agt.getConsumption() * Math.max(0, 1 - this.agt.getAssetByName("Food").getQuantity() / this.agt.getTargetNStock())
@@ -1982,24 +1998,59 @@
 							</Slot>
 						</UPDATE-AGT>
 						<SCHEDULE-EVT>
-							<OutMessageEventExpr messageType="BS6OfferToBuy" receiverIdRefs="10">
-								<Slot property="product" value="Food" />
-								<Slot property="demand"><PropertyValueExpr entityVariable="agt" property="nConsumption"/></Slot>
-								<Slot property="min"><PropertyValueExpr entityVariable="agt" property="minN"/></Slot>
-								<Slot property="bidderIdRef"><PropertyValueExpr entityVariable="agt" property="id"/></Slot>
+							<OutMessageEventExpr messageType="BS6Offer" receiverIdRefs="10">
+								<Slot property="offer">
+									<ValueExpr language="Java">new TradeOffer(){
+										{
+											setProduct("Food");
+											setQuantity(getNConsumption());
+											setBuy(true);
+											setBidderIdRef(getId());
+											setMin(getMinN());
+										}
+									}</ValueExpr>
+								</Slot>
 							</OutMessageEventExpr>
-							<OutMessageEventExpr messageType="BS6OfferToBuy" receiverIdRefs="11">
-								<Slot property="product" value="Utility" />
-								<Slot property="demand"><PropertyValueExpr entityVariable="agt" property="eConsumption"/></Slot>
-								<Slot property="bidderIdRef"><PropertyValueExpr entityVariable="agt" property="Id"/></Slot>
+							<OutMessageEventExpr messageType="BS6Offer" receiverIdRefs="11">
+								<Slot property="offer">
+									<ValueExpr language="Java">new TradeOffer(){
+										{
+											setProduct("Utility");
+											setQuantity(getEConsumption());
+											setBuy(true);
+											setBidderIdRef(getId());
+										}
+										}</ValueExpr>
+								</Slot>
 							</OutMessageEventExpr>
-							<OutMessageEventExpr messageType="BS6OfferToSell" receiverIdRefs="12">
-								<Slot property="product" value="Labor" />
-								<Slot property="quantity" value="1" />
-								<Slot property="bidderIdRef"><PropertyValueExpr entityVariable="agt" property="id"/></Slot>
+							<OutMessageEventExpr messageType="BS6Offer" receiverIdRefs="12">
+								<Slot property="offer">
+									<ValueExpr language="Java">new TradeOffer(){
+										{
+											setProduct("Labor");
+											setQuantity(1);
+											setBuy(false);
+											setBidderIdRef(getId());
+										}
+										}</ValueExpr>
+								</Slot>
 							</OutMessageEventExpr>
 						</SCHEDULE-EVT>
 					</DO>
+					<!--<IF language="Java">agt.getId() == 5000</IF>
+					<THEN>
+						<UPDATE-AGT>
+							<Slot property="hallo"><ValueExpr language="Java">sim.controller.Global.hallo("Laborer: " + getAssetByName("Food").getQuantity())</ValueExpr></Slot>
+							<Slot property="hallo"><ValueExpr language="Java">sim.controller.Global.hallo("Laborer: Income " + getIncome() )</ValueExpr></Slot>
+							<Slot property="hallo"><ValueExpr language="Java">sim.controller.Global.hallo("Laborer: TargetSavings " + getTargetSavings() )</ValueExpr></Slot>
+							<Slot property="hallo"><ValueExpr language="Java">sim.controller.Global.hallo("Laborer: TargetConsumption " + getTargetConsumption() )</ValueExpr></Slot>
+							<Slot property="hallo"><ValueExpr language="Java">sim.controller.Global.hallo("Laborer: Upsilon " + getUpsilon() )</ValueExpr></Slot>
+							<Slot property="hallo"><ValueExpr language="Java">sim.controller.Global.hallo("Laborer: Consumption " + getConsumption() )</ValueExpr></Slot>
+							<Slot property="hallo"><ValueExpr language="Java">sim.controller.Global.hallo("Laborer: eConsumption " + getEConsumption() )</ValueExpr></Slot>
+							<Slot property="hallo"><ValueExpr language="Java">sim.controller.Global.hallo("Laborer: nConsumption " + getNConsumption() )</ValueExpr></Slot>
+							<Slot property="hallo"><ValueExpr language="Java">sim.controller.Global.hallo("Laborer: minN " + getMinN() )</ValueExpr></Slot>
+						</UPDATE-AGT>
+					</THEN>-->
 				</ReactionRule>
 			</AgentType>
 			<!-- ============================================ -->
@@ -2027,6 +2078,7 @@
 				<Attribute type="Float" name="capitalQty"/>
 				<Attribute type="Float" name="capitylVal"/>
 				<Attribute type="Float" name="MC"/>
+				<Attribute type="Boolean" name="cheat" initialValue="true"/>
 				<Function name="convertToProduct" resultType="Float">
 					<Parameter name="K" type="double"/>
 					<Body language="Java JavaScript">
@@ -2034,21 +2086,12 @@
 					</Body>
 				</Function>
 				
-				<ReactionRule name="act">
+				<ReactionRule name="act" agentVariable="agt">
 					<WHEN eventType="InMessageEvent" messageType="Act_msg"/>
 					<DO>
 						<UPDATE-AGT>
-							<!--<Slot property="hallo"><ValueExpr language="Java">sim.controller.Global.hallo("Firm: " + getAssetByName("Labor").getQuantity() )</ValueExpr></Slot>-->
-							<Slot property="revenue">
-								<ValueExpr language="Java JavaScript">
-									getAssetByName("Money").getQuantity()
-								</ValueExpr>
-							</Slot>
-							<Slot property="totalCost">
-								<ValueExpr language="Java JavaScript">
-									getWageBudget() + getCapitalCost()
-								</ValueExpr>
-							</Slot>
+							<Slot property="totalCost"><PropertyValueExpr entityVariable="agt" property="wageBudget"/></Slot>
+							<!-- Capital -->
 							<Slot property="profit">
 								<ValueExpr language="Java JavaScript">
 									getRevenue() - getTotalCost()
@@ -2058,6 +2101,7 @@
 								<ValueExpr language="Java JavaScript">
 									convertToProduct(30)
 								</ValueExpr>
+								<!-- Capital als Konstante -->
 							</Slot>
 							<Slot property="wage">
 								<ValueExpr language="Java JavaScript">
@@ -2071,47 +2115,49 @@
 			</AgentType>
 			<!-- ============================================ -->
 			<AgentType name="BS6NFirm" superType="BS6ConsumerGoodFirm">
-				
 				<Function name="updateProduct" resultType="void">
 					<Body language="Java">
-						//System.out.println("UpdateFood: " + getAssetByName("Food").getQuantity());
 						if(this.getOutput() > 0){
 							this.getAssetByName("Food").deposit(getOutput());
 						}
-						//System.out.println("Neu: " + getAssetByName("Food").getQuantity());
+						getAssetByName("Labor").withdraw(getAssetByName("Labor").getQuantity());
 					</Body>
 				</Function>
+				
+				<ReactionRule name="Revenue_Rule">
+					<WHEN eventType="InMessageEvent" messageType="MatchingOffer" messageVariable="msg" />
+					<IF language="Java JavaScript"><![CDATA[ !this.msg.getOffer().isBuy() && this.msg.getOffer().getProduct().equals("Food") ]]></IF>
+					<THEN>
+						<UPDATE-AGT>
+							<Slot property="revenue"><ValueExpr language="Java JavaScript">this.msg.getOffer().getQuantity() * this.msg.getOffer().getPrice()</ValueExpr></Slot>
+						</UPDATE-AGT>
+					</THEN>
+				</ReactionRule>
 				
 				<ReactionRule name="Output_Rule" agentVariable="agt">
 					<WHEN eventType="InMessageEvent" messageType="Act_msg"/>
 					<IF language="Java JavaScript">getAssetByName("Labor").getQuantity() > 0</IF>
 					<THEN>
 						<UPDATE-AGT>
-							<!--<Slot property="hallo"><ValueExpr language="Java">sim.controller.Global.hallo("NFirm: OutputRule " + getTriggeredTime())</ValueExpr></Slot>-->
 							<Slot property="MC">
 								<ValueExpr language="Java JavaScript">
-									this.agt.getWage() / this.agt.getBeta() * Math.pow( this.agt.getA(), -1/this.agt.getBeta() )
+									this.agt.getWage() / this.agt.getBeta() 
+									* Math.pow( this.agt.getA(), -1/this.agt.getBeta() )
 									* Math.pow(this.agt.getOutput(), 1 / this.agt.getBeta() - 1 )
+									* Math.pow(30, 1 - 1 / getBeta())
 								</ValueExpr>
+								<!-- Capital als Konstante -->
 							</Slot>
-							<!--<Slot property="hallo"><ValueExpr language="Java">sim.controller.Global.hallo("NFirm: marginalProfit " )</ValueExpr></Slot>
-							<Slot property="hallo"><ValueExpr language="Java">sim.controller.Global.hallo("NFirm: LastFoodPrice= " + getLastFoodPrice() )</ValueExpr></Slot>
-							<Slot property="hallo"><ValueExpr language="Java">sim.controller.Global.hallo("NFirm: MC= " + getMC() )</ValueExpr></Slot>-->
 							<Slot property="marginalProfit">
 								<ValueExpr language="Java JavaScript">
 									getLastFoodPrice() - getMC()
 								</ValueExpr>
 							</Slot>
-							<!--<Slot property="hallo"><ValueExpr language="Java">sim.controller.Global.hallo("NFirm: OutPut " )</ValueExpr></Slot>
-							<Slot property="hallo"><ValueExpr language="Java">sim.controller.Global.hallo("NFirm: Phi= " + getPhi() )</ValueExpr></Slot>
-							<Slot property="hallo"><ValueExpr language="Java">sim.controller.Global.hallo("NFirm: MarginalProfit= " + getMarginalProfit() )</ValueExpr></Slot>
-							<Slot property="hallo"><ValueExpr language="Java">sim.controller.Global.hallo("NFirm: LastFoodPrice= " + getLastFoodPrice() )</ValueExpr></Slot>-->
 							<Slot property="output">
 								<ValueExpr language="Java JavaScript">
-									getOutput() * ( 1 + this.agt.getPhi() * this.agt.getMarginalProfit()/ this.agt.getLastFoodPrice() )
+									getOutput() * ( 1 + this.agt.getPhi() * this.agt.getMarginalProfit() / this.agt.getLastFoodPrice() )
 								</ValueExpr>
 							</Slot>
-							<!--<Slot property="hallo"><ValueExpr language="Java">sim.controller.Global.hallo("NFirm: Output= " + getOutput() )</ValueExpr></Slot>-->
 							<Slot property="output">
 								<ValueExpr language="Java JavaScript">
 									Math.min( this.agt.getCapacity(), this.agt.getOutput() )
@@ -2119,10 +2165,10 @@
 							</Slot>
 							<Slot property="output">
 								<ValueExpr language="Java">
-									(this.getTriggeredTime() == 4) ? 50 : this.agt.getOutput()	
+									(this.agt.isCheat()) ? 50 : this.agt.getOutput()	
 								</ValueExpr>
 							</Slot>
-							<!--<Slot property="hallo"><ValueExpr language="Java">sim.controller.Global.hallo("NFirm: Output= " + getOutput() )</ValueExpr></Slot>-->
+							<Slot property="cheat" value="false" />
 							<Call procedure="updateProduct" contextObjectVariable="agt"></Call>
 						</UPDATE-AGT>
 					</THEN>
@@ -2132,24 +2178,34 @@
 					<WHEN eventType="InMessageEvent" messageType="Act_msg"/>
 					<DO>
 						<SCHEDULE-EVT>
-							<OutMessageEventExpr messageType="BS6OfferToBuy" receiverIdRefs="12">
-								<Slot property="product" value="Labor" />
-								<Slot property="demand"><PropertyValueExpr entityVariable="agt" property="wageBudget"/></Slot>
-								<Slot property="bidderIdRef"><PropertyValueExpr entityVariable="agt" property="id"/></Slot>
+							<OutMessageEventExpr messageType="BS6Offer" receiverIdRefs="12">
+								<Slot property="offer">
+									<ValueExpr language="Java">new TradeOffer(){
+										{
+											setProduct("Labor");
+											setQuantity(getWageBudget());
+											setBuy(true);
+											setBidderIdRef(getId());
+										}
+									}</ValueExpr>
+								</Slot>
 							</OutMessageEventExpr>
 						</SCHEDULE-EVT>
 					</DO>
 					<IF language="Java JavaScript">getAssetByName("Food").getQuantity() > 0</IF>
 					<THEN>
-						<UPDATE-AGT>
-							<!--<Slot property="hallo"><ValueExpr language="Java">sim.controller.Global.hallo("NFirm MakeSellOffer")</ValueExpr></Slot>-->
-						</UPDATE-AGT>
 						<SCHEDULE-EVT>
-							<OutMessageEventExpr messageType="BS6OfferToSell" receiverIdRefs="10">
-								<Slot property="quantity">
-									<ValueExpr language="Java JavaScript">getAssetByName("Food").getQuantity()</ValueExpr>
+							<OutMessageEventExpr messageType="BS6Offer" receiverIdRefs="10">
+								<Slot property="offer">
+									<ValueExpr language="Java">new TradeOffer(){
+										{
+											setProduct("Food");
+											setQuantity(getAssetByName("Food").getQuantity());
+											setBuy(false);
+											setBidderIdRef(getId());
+										}
+										}</ValueExpr>
 								</Slot>
-								<Slot property="bidderIdRef"><PropertyValueExpr entityVariable="agt" property="id"/></Slot>
 							</OutMessageEventExpr>
 						</SCHEDULE-EVT>
 					</THEN>
@@ -2159,44 +2215,47 @@
 			<AgentType name="BS6EFirm" superType="BS6ConsumerGoodFirm">
 				<Function name="updateProduct" resultType="void">
 					<Body language="Java">
-						//System.out.println("UpdateUtility: " + getAssetByName("Utility").getQuantity());
 						if(getOutput() > 0){
 						getAssetByName("Utility").deposit(getOutput());
-						//System.out.println("Neu: " + getAssetByName("Utility").getQuantity());
+						getAssetByName("Labor").withdraw(getAssetByName("Labor").getQuantity());
 						}
 					</Body>
 				</Function>
+				
+				<ReactionRule name="Revenue_Rule">
+					<WHEN eventType="InMessageEvent" messageType="MatchingOffer" messageVariable="msg" />
+					<IF language="Java JavaScript"><![CDATA[ !this.msg.getOffer().isBuy() && this.msg.getOffer().getProduct().equals("Utility") ]]></IF>
+					<THEN>
+						<UPDATE-AGT>
+							<Slot property="revenue"><ValueExpr language="Java JavaScript">this.msg.getOffer().getQuantity() * this.msg.getOffer().getPrice()</ValueExpr></Slot>
+						</UPDATE-AGT>
+					</THEN>
+				</ReactionRule>
 				
 				<ReactionRule name="Output_Rule" agentVariable="agt">
 					<WHEN eventType="InMessageEvent" messageType="Act_msg"/>
 					<IF language="Java JavaScript">getAssetByName("Labor").getQuantity() > 0</IF>
 					<THEN>
 						<UPDATE-AGT>
-							<!--<Slot property="hallo"><ValueExpr language="Java">sim.controller.Global.hallo("EFirm: OutputRule " + this.getTriggeredTime())</ValueExpr></Slot>-->
 							<Slot property="MC">
 								<ValueExpr language="Java JavaScript">
-									getWage() / getBeta() * Math.pow( getA(), -1/getBeta() )
-									* Math.pow(getOutput(), 1 / getBeta() - 1 )
+									getWage() / getBeta() 
+									* Math.pow( getA(), -1/getBeta() ) 
+									* Math.pow( getOutput(), 1 / getBeta() - 1 )
+									* Math.pow(30, 1 - 1 / getBeta())
 								</ValueExpr>
+								<!-- Capital als Konstante -->
 							</Slot>
-							<!--<Slot property="hallo"><ValueExpr language="Java">sim.controller.Global.hallo("EFirm: marginalProfit " )</ValueExpr></Slot>
-							<Slot property="hallo"><ValueExpr language="Java">sim.controller.Global.hallo("EFirm: LastUtilityPrice= " + getLastUtilityPrice() )</ValueExpr></Slot>
-							<Slot property="hallo"><ValueExpr language="Java">sim.controller.Global.hallo("EFirm: MC " + getMC() )</ValueExpr></Slot>-->
 							<Slot property="marginalProfit">
 								<ValueExpr language="Java JavaScript">
 									getLastUtilityPrice() - getMC()
 								</ValueExpr>
 							</Slot>
-							<!--<Slot property="hallo"><ValueExpr language="Java">sim.controller.Global.hallo("EFirm: OutPut " )</ValueExpr></Slot>
-							<Slot property="hallo"><ValueExpr language="Java">sim.controller.Global.hallo("EFirm: Phi= " + getPhi() )</ValueExpr></Slot>
-							<Slot property="hallo"><ValueExpr language="Java">sim.controller.Global.hallo("EFirm: MarginalProfit= " + getMarginalProfit() )</ValueExpr></Slot>
-							<Slot property="hallo"><ValueExpr language="Java">sim.controller.Global.hallo("EFirm: LastUtilityPrice= " + getLastUtilityPrice() )</ValueExpr></Slot>-->
 							<Slot property="output">
 								<ValueExpr language="Java JavaScript">
 									getOutput() * ( 1 + getPhi() * getMarginalProfit()/ getLastUtilityPrice() )
 								</ValueExpr>
 							</Slot>
-							<!--<Slot property="hallo"><ValueExpr language="Java">sim.controller.Global.hallo("EFirm: Output= " + getOutput() )</ValueExpr></Slot>-->
 							<Slot property="output">
 								<ValueExpr language="Java JavaScript">
 									Math.min( getCapacity(), getOutput() )
@@ -2205,10 +2264,10 @@
 							
 							<Slot property="output">
 								<ValueExpr language="Java">
-									(this.getTriggeredTime() == 4) ? 40 : this.agt.getOutput()	
+									(this.agt.isCheat()) ? 40 : this.agt.getOutput()	
 								</ValueExpr>
 							</Slot>
-							<!--<Slot property="hallo"><ValueExpr language="Java">sim.controller.Global.hallo("EFirm: Output= " + getOutput() )</ValueExpr></Slot>-->
+							<Slot property="cheat" value="false" />
 							<Call procedure="updateProduct" contextObjectVariable="agt"></Call>
 						</UPDATE-AGT>
 					</THEN>
@@ -2218,24 +2277,34 @@
 					<WHEN eventType="InMessageEvent" messageType="Act_msg"/>
 					<DO>
 						<SCHEDULE-EVT>
-							<OutMessageEventExpr messageType="BS6OfferToBuy" receiverIdRefs="12">
-								<Slot property="product" value="Labor" />
-								<Slot property="demand"><PropertyValueExpr entityVariable="agt" property="wageBudget"/></Slot>
-								<Slot property="bidderIdRef"><PropertyValueExpr entityVariable="agt" property="id"/></Slot>
+							<OutMessageEventExpr messageType="BS6Offer" receiverIdRefs="12">
+								<Slot property="offer">
+									<ValueExpr language="Java">new TradeOffer(){
+										{
+										setProduct("Labor");
+										setQuantity(getWageBudget());
+										setBuy(true);
+										setBidderIdRef(getId());
+										}
+										}</ValueExpr>
+								</Slot>
 							</OutMessageEventExpr>
 						</SCHEDULE-EVT>
 					</DO>
 					<IF language="Java JavaScript">getAssetByName("Utility").getQuantity() > 0</IF>
 					<THEN>
-						<UPDATE-AGT>
-							<!--<Slot property="hallo"><ValueExpr language="Java">sim.controller.Global.hallo("NFirm MakeSellOffer")</ValueExpr></Slot>-->
-						</UPDATE-AGT>
 						<SCHEDULE-EVT>
-							<OutMessageEventExpr messageType="BS6OfferToSell" receiverIdRefs="10">
-								<Slot property="quantity">
-									<ValueExpr language="Java JavaScript">getAssetByName("Utility").getQuantity()</ValueExpr>
+							<OutMessageEventExpr messageType="BS6Offer" receiverIdRefs="11">
+								<Slot property="offer">
+									<ValueExpr language="Java">new TradeOffer(){
+										{
+										setProduct("Utility");
+										setQuantity(getAssetByName("Utility").getQuantity());
+										setBuy(false);
+										setBidderIdRef(getId());
+										}
+										}</ValueExpr>
 								</Slot>
-								<Slot property="bidderIdRef"><PropertyValueExpr entityVariable="agt" property="id"/></Slot>
 							</OutMessageEventExpr>
 						</SCHEDULE-EVT>
 					</THEN>
@@ -2256,19 +2325,19 @@
 				<Attribute type="Float" name="mktSupply"/>
 				<Attribute type="Float" name="mktDemand"/>
 				<Attribute type="String" name="hallo"/>
+				<Attribute type="Boolean" name="cheat" initialValue="true"/>
 				<ComplexDataProperty name="buyOffers" type="TradeOffer" upperMultiplicity="unbounded"/>
 				<ComplexDataProperty name="sellOffers" type="TradeOffer" upperMultiplicity="unbounded"/>
 				<!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->
 				<Function name="clear" resultType="void">
-					<Parameter name="init" type="Boolean"/>
 					<Body language="Java"><![CDATA[
 						double low;
 						double high;
 						double supply = 0;
 						double demand = 0;
 						double price = 0;
-						System.out.println("Init: " + init);
-						if (init) {
+						if(isCheat()){
+							setCheat(false);
 							low = getInitLow();
 							high = getInitHigh();
 						} else {
@@ -2296,56 +2365,52 @@
 								high = price;
 							}
 						}
-						System.out.println("price: " + price);
+						for(TradeOffer offer : getBuyOffers()){
+							offer.setPrice(price);
+						}
+						for(TradeOffer offer : getSellOffers()){
+							offer.setPrice(price);
+						}
 						setMktPrice(price);
-						//System.out.println(getMktPrice());
 						setMktGoodVol(Math.min(supply, demand));
 						setMktMoneyVol(price + getMktGoodVol());
 						setMktSupply(supply);
 						setMktDemand(demand);
-						getBuyOffers().clear();
-						getSellOffers().clear();
 					]]></Body>
 				</Function>
 				<!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->
-				<ReactionRule name="Accept_BuyOffer" agentVariable="m">
-					<!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->
-					<documentation>
-						<dc:description>BuyOffers are stored</dc:description>
-					</documentation>
-					<WHEN eventType="InMessageEvent" messageType="BS6OfferToBuy" messageVariable="msg"/>
-					<DO>
-						<UPDATE-AGT>
-							<!--<Slot property="hallo"><ValueExpr language="Java">sim.controller.Global.hallo("cMarket rbo")</ValueExpr></Slot>-->
-							<MultiValuedSlot property="buyOffers">
-								<AddFirst>
-									<ItemExpr language="Java JavaScript">new TradeOffer(){{
-										setQuantity(msg.getDemand());
-										setBidderIdRef(msg.getBidderIdRef());
-										setMin(msg.getMin());
-									}}</ItemExpr>
-								</AddFirst>
-							</MultiValuedSlot>
-						</UPDATE-AGT>
-					</DO>
-				</ReactionRule>
+				<Function name="del_Lists" resultType="void">
+					<Body language="Java">
+						getBuyOffers().clear();
+						getSellOffers().clear();
+					</Body>
+				</Function>
 				<!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->
-				<ReactionRule name="Accept_SellOffer" agentVariable="m">
+				<ReactionRule name="Accept_Offer" agentVariable="m">
 					<!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->
 					<documentation>
-						<dc:description>BuyOffers are stored</dc:description>
+						<dc:description>Offers are stored</dc:description>
 					</documentation>
-					<WHEN eventType="InMessageEvent" messageType="BS6OfferToSell" messageVariable="msg"/>
-					<DO>
+					<WHEN eventType="InMessageEvent" messageType="BS6Offer" messageVariable="msg"/>
+					<IF language="Java JavaScript">this.msg.getOffer().isBuy()</IF>
+					<THEN>
 						<UPDATE-AGT>
-							<!--<Slot property="hallo"><ValueExpr language="Java">sim.controller.Global.hallo("cMarket rso")</ValueExpr></Slot>-->
-							<MultiValuedSlot property="sellOffers">
-								<AddFirst>
-									<ItemExpr language="Java JavaScript">new TradeOffer()</ItemExpr>
-								</AddFirst>
+							<MultiValuedSlot property="buyOffers">
+								<AddLast>
+									<ItemExpr language="Java JavaScript">this.msg.getOffer()</ItemExpr>
+								</AddLast>
 							</MultiValuedSlot>
 						</UPDATE-AGT>
-					</DO>
+					</THEN>
+					<ELSE>
+						<UPDATE-AGT>
+							<MultiValuedSlot property="sellOffers">
+								<AddLast>
+									<ItemExpr language="Java JavaScript">this.msg.getOffer()</ItemExpr>
+								</AddLast>
+							</MultiValuedSlot>
+						</UPDATE-AGT>
+					</ELSE>
 				</ReactionRule>
 				<!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->
 				<ReactionRule name="Clear" agentVariable="m">
@@ -2357,7 +2422,6 @@
 					<DO>
 						<UPDATE-AGT>
 							<Call procedure="clear" contextObjectVariable="m">
-								<Argument parameter="init" value="false" />
 							</Call>
 						</UPDATE-AGT>
 						<SCHEDULE-EVT>
@@ -2410,20 +2474,38 @@
 									<ObjectValueExpr objectVariable="o"/>
 								</Slot>
 							</OutMessageEventExpr>
+							<ReminderEventExpr>
+								<ReminderMsg language="Java JavaScript">"del_lists"</ReminderMsg>
+							</ReminderEventExpr>
 						</SCHEDULE-EVT>
 					</THEN>
 				</ReactionRule>
+				<!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->
+				<ReactionRule name="Del_Lists" agentVariable="m">
+					<WHEN eventType="ReminderEvent" eventVariable="evt" />
+					<IF language="Java"><![CDATA[ this.evt.getReminderMsg().equals("del_lists") ]]></IF>
+					<THEN>
+						<UPDATE-AGT>
+							<Call procedure="del_Lists" contextObjectVariable="m"></Call>
+						</UPDATE-AGT>
+					</THEN>
+				</ReactionRule>
 			</AgentType>
+			<!-- ============================================ -->
 			<AgentType name="BS6LaborMarket" superType="BS6Market">
 				<Attribute type="Float" name="totalBudget"/>
 				<ComplexDataProperty name="buyOffers" type="TradeOffer" upperMultiplicity="unbounded"/>
 				<ComplexDataProperty name="sellOffers" type="TradeOffer" upperMultiplicity="unbounded"/>
 				<ComplexDataProperty name="transactions" type="TradeOffer" upperMultiplicity="unbounded"/>
+				<Attribute type="Float" name="mktSupply"/>
+				<Attribute type="Float" name="mktDemand"/>
 				<Attribute type="String" name="hallo"/>
 				<!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->
 				<Function name="clear" resultType="void">
 					<Body language="Java"><![CDATA[
 						getTransactions().clear();
+						setMktDemand(0);
+						setMktSupply(0);
 						java.util.Collections.shuffle( getBuyOffers(), new java.util.Random() );
 						java.util.Collections.shuffle( getSellOffers(), new java.util.Random() );
 						int low = 0;
@@ -2431,7 +2513,6 @@
 						for (TradeOffer employer : getBuyOffers()) {
 							sum += employer.getQuantity();
 							int high = (int) (Math.min(1, sum / getTotalBudget()) * getSellOffers().size());
-				
 							double wage = employer.getQuantity() / (high - low);
 							for (int i = low; i < high; i++) {
 								sim.model.dataTypes.TradeOffer o = new sim.model.dataTypes.TradeOffer();
@@ -2440,7 +2521,8 @@
 				            	o.setPrice(wage);
 				            	o.setBuy(true);
 				            	o.setBidderIdRef(employer.getBidderIdRef());
-				            	getTransactions().add(o); 
+				            	getTransactions().add(o);
+				            	setMktDemand(getMktDemand() + 1);
 				            	o = new sim.model.dataTypes.TradeOffer();
 				            	o.setProduct("Labor");
 				            	o.setQuantity(1);
@@ -2448,6 +2530,7 @@
 				            	o.setBuy(false);
 				            	o.setBidderIdRef(getSellOffers().get(i).getBidderIdRef());
 				            	getTransactions().add(o); 
+				            	setMktSupply(getMktSupply() + 1);
 							}
 							low = high;
 						}
@@ -2457,51 +2540,34 @@
 					]]></Body>
 				</Function>
 				<!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->
-				<ReactionRule name="Accept_BuyOffer" agentVariable="m">
+				<ReactionRule name="Accept_Offer" agentVariable="m">
 					<!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->
 					<documentation>
-						<dc:description>BuyOffers are stored</dc:description>
+						<dc:description>Offers are stored</dc:description>
 					</documentation>
-					<WHEN eventType="InMessageEvent" messageType="BS6OfferToBuy" messageVariable="msg"/>
-					<DO>
+					<WHEN eventType="InMessageEvent" messageType="BS6Offer" messageVariable="msg"/>
+					<IF language="Java JavaScript">this.msg.getOffer().isBuy()</IF>
+					<THEN>
 						<UPDATE-AGT>
-							<!--<Slot property="hallo"><ValueExpr language="Java">sim.controller.Global.hallo("lMarket rbo")</ValueExpr></Slot>-->
 							<MultiValuedSlot property="buyOffers">
-								<AddFirst>
-									<ItemExpr language="Java JavaScript">new TradeOffer(){{
-										setQuantity(msg.getDemand());
-										setBidderIdRef(msg.getBidderIdRef());
-										}}</ItemExpr>
-								</AddFirst>
+								<AddLast>
+									<ItemExpr language="Java JavaScript">this.msg.getOffer()</ItemExpr>
+								</AddLast>
 							</MultiValuedSlot>
 							<Slot property="totalBudget">
-								<ValueExpr language="Java JavaScript">getTotalBudget() + msg.getDemand()</ValueExpr>
+								<ValueExpr language="Java JavaScript">getTotalBudget() + this.msg.getOffer().getQuantity()</ValueExpr>
 							</Slot>
 						</UPDATE-AGT>
-					</DO>
-				</ReactionRule>
-				<!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->
-				<ReactionRule name="Accept_SellOffer" agentVariable="m">
-					<!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->
-					<documentation>
-						<dc:description>BuyOffers are stored</dc:description>
-					</documentation>
-					<WHEN eventType="InMessageEvent" messageType="BS6OfferToSell" messageVariable="msg"/>
-					<DO>
+					</THEN>
+					<ELSE>
 						<UPDATE-AGT>
-							<!--<Slot property="hallo"><ValueExpr language="Java">sim.controller.Global.hallo("lMarket rso")</ValueExpr></Slot>-->
 							<MultiValuedSlot property="sellOffers">
-								<AddFirst>
-									<ItemExpr language="Java JavaScript">new TradeOffer(){
-										{
-											setQuantity(1);
-											setBidderIdRef(msg.getBidderIdRef());
-										}
-									}</ItemExpr>
-								</AddFirst>
+								<AddLast>
+									<ItemExpr language="Java JavaScript">this.msg.getOffer()</ItemExpr>
+								</AddLast>
 							</MultiValuedSlot>
 						</UPDATE-AGT>
-					</DO>
+					</ELSE>
 				</ReactionRule>
 				<!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->
 				<ReactionRule name="Clear" agentVariable="m">
@@ -2565,6 +2631,9 @@
 								}
 							}</ItemExpr></AddLast>
 						</MultiValuedSlot>
+						<Slot property="totalBudget">
+							<ValueExpr language="Java">m.getTotalBudget() + f.getWageBudget()</ValueExpr>
+						</Slot>
 					</UpdateObject>
 				</UPDATE-ENV>
 			</DO>
@@ -2593,13 +2662,11 @@
 			<FOR-ObjectVariable variable="m" objectType="BS6LaborMarket" />
 			<DO>
 				<UPDATE-ENV>
-					<Call procedure="clear" contextObjectVariable="m">
-						<Argument parameter="init" value="true" />
-					</Call>
+					<Call procedure="clear" contextObjectVariable="m" />
 				</UPDATE-ENV>
 			</DO>
 		</EnvironmentRule>
-		<!--<EnvironmentRule name="Initial_Send_MatchingOffers">
+		<EnvironmentRule name="Initial_Send_MatchingOffers">
 			<WHEN eventType="Init"/>
 			<FOR-ObjectVariable variable="m" objectType="BS6LaborMarket"></FOR-ObjectVariable>
 			<FOR-ListItemVariable variable="o" listItemType="TradeOffer">
@@ -2616,11 +2683,11 @@
 					</InMessageEventExpr>
 				</SCHEDULE-EVT>
 			</DO>
-		</EnvironmentRule>-->
-		<!-- ============================= -->
-		<!--<EnvironmentRule name="InitializeOwnership">
+		</EnvironmentRule>
+		<!-- BS4 Init -->
+		<EnvironmentRule name="InitializeOwnership">
 			<documentation>
-				<dc:description>Finds an owner for all firms</dc:description>
+				<dc:description>Finds an owner for all firms(BS4 only)</dc:description>
 			</documentation>
 			<WHEN eventType="Init"/>
 			<FOR-ObjectVariable variable="f" objectType="Firm" />
@@ -2636,7 +2703,7 @@
 					</UpdateObject>
 				</UPDATE-ENV>
 			</THEN>
-		</EnvironmentRule>-->
+		</EnvironmentRule>
 		<!-- ============================= -->
 		<EnvironmentRule name="AtStartOfDayEat_ER">
 			<!-- ============================= -->
@@ -2655,9 +2722,9 @@
 			</THEN>
 		</EnvironmentRule>
 		<!-- ============================= -->
-		<!--<EnvironmentRule name="CheckBankrupt_ER">
+		<EnvironmentRule name="CheckBankrupt_ER">
 			<documentation>
-				<dc:description>If a farm  has no more money, food and labor it is shut down</dc:description>
+				<dc:description>If a farm  has no more money, food and labor it is shut down(BS4 only)</dc:description>
 			</documentation>
 			<WHEN eventType="StartOfDay" eventVariable="evt" />
 			<FOR-ObjectVariable variable="f" objectType="Farm" />
@@ -2671,7 +2738,7 @@
 					<DestroyObject objectVariable="f"/>
 				</UPDATE-ENV>
 			</THEN>
-		</EnvironmentRule>-->
+		</EnvironmentRule>
 		<!-- ====================================== -->
 		<EnvironmentRule name="StartOfDay_Rule_ER">
 			<!-- ====================================== -->
@@ -2691,7 +2758,6 @@
 						<ReceiverIdRef language="Java JavaScript">this.p.getId()</ReceiverIdRef>
 						<!--<Slot property="price">
 							<PropertyValueExpr entityVariable="m" property="lastMarketPrice"/>
-							<PropertyValueExpr entityVariable="m" property="mktPrice"/>
 						</Slot>
 						<Slot property="marketType">
 							<PropertyValueExpr entityVariable="m" property="commodity"/>
@@ -2745,6 +2811,7 @@
 	<!-- ======================= -->
 	<InitialState>
 	<!-- ======================= -->
+	<!-- BS4 Agents -->
 	<!--	<Agent name="FoodMarket" id="2" type="ContinuousCommodityMarket">
 		<Slot property="lastMarketPrice" value="0.2" />
 			<Slot property="commodity" value="Food"></Slot>
@@ -2927,6 +2994,7 @@
 			</Slot>
 		</Agents>-->
 		<!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->
+		<!-- BS6 Agents -->
 		<Agents type="BS6Laborer" rangeStartID="5000" rangeEndID="5449">
 			<Slot property="assets">
 				<ValueExpr language="Java">
@@ -3001,8 +3069,9 @@
 			<Slot property="sellOffers">
 				<ValueExpr language="Java"><![CDATA[ new ArrayList<sim.model.dataTypes.TradeOffer>() ]]></ValueExpr>
 			</Slot>
-			<Slot property="initLow" value="0.1"></Slot>
-			<Slot property="initHigh" value="5.0"></Slot>
+			<Slot property="good" value="Food" />
+			<Slot property="initLow" value="0.1" />
+			<Slot property="initHigh" value="5.0" />
 		</Agent>
 		<Agent name="BS6UtilityMarket" type="BS6ConsumerMarket" id="11">
 			<Slot property="buyOffers">
@@ -3011,8 +3080,9 @@
 			<Slot property="sellOffers">
 				<ValueExpr language="Java"><![CDATA[ new ArrayList<sim.model.dataTypes.TradeOffer>() ]]></ValueExpr>
 			</Slot>
-			<Slot property="initLow" value="0.1"></Slot>
-			<Slot property="initHigh" value="5.0"></Slot>
+			<Slot property="good" value="Utility" />
+			<Slot property="initLow" value="0.1" />
+			<Slot property="initHigh" value="5.0" />
 		</Agent>
 		<Agent type="BS6LaborMarket" id="12">
 			<Slot property="buyOffers">
@@ -3118,7 +3188,22 @@
 					<Text xml:lang="en">number of selloffers for labor</Text>
 				</Hint>
 			</StatisticsVariableUI>
-			
+			<StatisticsVariableUI variable="BuyOffersLabor" comparisonGroup="pricevslabor">
+				<Label>
+					<Text xml:lang="en">Labor BuyOffers</Text>
+				</Label>
+				<Hint>
+					<Text xml:lang="en">number of selloffers for labor</Text>
+				</Hint>
+			</StatisticsVariableUI>
+			<StatisticsVariableUI variable="SellOffersLabor" comparisonGroup="pricevslabor">
+				<Label>
+					<Text xml:lang="en">Labor SellOffers</Text>
+				</Label>
+				<Hint>
+					<Text xml:lang="en">number of selloffers for labor</Text>
+				</Hint>
+			</StatisticsVariableUI>
 		</StatisticsUI>
 		<AnimationUI>
 			<DisplayDescription>
