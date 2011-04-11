@@ -11,16 +11,19 @@
 	<!-- xs:element -->
 
 	<xsl:template match="xs:element" mode="attributes">
+		<xsl:param name="documentNodes"/>
 		<xsl:variable name="requiredAttributes">
 			<xsl:choose>
 				<xsl:when test="@type">
-					<xsl:apply-templates select="/xs:schema/xs:complexType[@name = current()/@type or @name = substring-after(current()/@type,':')]" mode="attributes">
+					<xsl:apply-templates select="$documentNodes/xs:complexType[@name = current()/@type or @name = substring-after(current()/@type,':')]" mode="attributes">
 						<xsl:with-param name="use" select="'required'"/>
+						<xsl:with-param name="documentNodes" select="$documentNodes"/>
 					</xsl:apply-templates>
 				</xsl:when>
 				<xsl:otherwise>
 					<xsl:apply-templates select="xs:complexType" mode="attributes">
 						<xsl:with-param name="use" select="'required'"/>
+						<xsl:with-param name="documentNodes" select="$documentNodes"/>
 					</xsl:apply-templates>
 				</xsl:otherwise>
 			</xsl:choose>
@@ -28,10 +31,14 @@
 		<xsl:variable name="optionalAttributes">
 			<xsl:choose>
 				<xsl:when test="@type">
-					<xsl:apply-templates select="/xs:schema/xs:complexType[@name = current()/@type or @name = substring-after(current()/@type,':')]" mode="attributes"/>
+					<xsl:apply-templates select="$documentNodes/xs:complexType[@name = current()/@type or @name = substring-after(current()/@type,':')]" mode="attributes">
+						<xsl:with-param name="documentNodes" select="$documentNodes"/>
+					 </xsl:apply-templates>
 				</xsl:when>
 				<xsl:otherwise>
-					<xsl:apply-templates select="xs:complexType" mode="attributes"/>
+					<xsl:apply-templates select="xs:complexType" mode="attributes">
+						<xsl:with-param name="documentNodes" select="$documentNodes"/>
+					</xsl:apply-templates>
 				</xsl:otherwise>
 			</xsl:choose>
 		</xsl:variable>
@@ -83,9 +90,11 @@
 	<xsl:template match="xs:complexType" mode="attributes">
 		<xsl:param name="use" select="'optional'"/>
 		<xsl:param name="restrictedAttributes"/>
+		<xsl:param name="documentNodes"/>
 		<xsl:apply-templates select="xs:complexContent | xs:simpleContent | xs:attributeGroup | xs:attribute" mode="attributes">
 			<xsl:with-param name="use" select="$use"/>
 			<xsl:with-param name="restrictedAttributes" select="$restrictedAttributes"/>
+			<xsl:with-param name="documentNodes" select="$documentNodes"/>
 		</xsl:apply-templates>
 	</xsl:template>
 
@@ -94,18 +103,22 @@
 	<xsl:template match="xs:complexContent" mode="attributes">
 		<xsl:param name="use"/>
 		<xsl:param name="restrictedAttributes"/>
+		<xsl:param name="documentNodes"/>
 		<xsl:apply-templates select="xs:extension | xs:restriction" mode="attributes">
 			<xsl:with-param name="use" select="$use"/>
 			<xsl:with-param name="restrictedAttributes" select="$restrictedAttributes"/>
+			<xsl:with-param name="documentNodes" select="$documentNodes"/>
 		</xsl:apply-templates>
 	</xsl:template>
 
 	<xsl:template match="xs:complexContent/xs:extension" mode="attributes">
 		<xsl:param name="use"/>
 		<xsl:param name="restrictedAttributes"/>
-		<xsl:apply-templates select="/xs:schema/xs:complexType[@name = current()/@base or @name = substring-after(current()/@base,':')] | xs:attributeGroup | xs:attribute" mode="attributes">
+		<xsl:param name="documentNodes"/>
+		<xsl:apply-templates select="$documentNodes/xs:complexType[@name = current()/@base or @name = substring-after(current()/@base,':')] | xs:attributeGroup | xs:attribute" mode="attributes">
 			<xsl:with-param name="use" select="$use"/>
 			<xsl:with-param name="restrictedAttributes" select="$restrictedAttributes"/>
+			<xsl:with-param name="documentNodes" select="$documentNodes"/>
 		</xsl:apply-templates>
 	</xsl:template>
 
@@ -116,6 +129,7 @@
 				<xsl:with-param name="duplicate-free" select="true()"/>
 			</xsl:call-template>
 		</xsl:param>
+		<xsl:param name="documentNodes"/>
 		<xsl:variable name="newRestrictedAttributes">
 			<xsl:choose>
 				<xsl:when test="string-length(normalize-space($restrictedAttributes)) = 0">
@@ -131,17 +145,21 @@
 		<xsl:apply-templates select="xs:attributeGroup | xs:attribute" mode="attributes">
 			<xsl:with-param name="use" select="$use"/>
 			<xsl:with-param name="restrictedAttributes" select="$newRestrictedAttributes"/>
+			<xsl:with-param name="documentNodes" select="$documentNodes"/>
 		</xsl:apply-templates>
-		<xsl:apply-templates select="/xs:schema/xs:complexType[@name = current()/@base or @name = substring-after(current()/@base,':')]" mode="attributes">
+		<xsl:apply-templates select="$documentNodes/xs:complexType[@name = current()/@base or @name = substring-after(current()/@base,':')]" mode="attributes">
 			<xsl:with-param name="use" select="$use"/>
 			<xsl:with-param name="restrictedAttributes">
 				<xsl:call-template name="x1f:List.appendEntries">
 					<xsl:with-param name="list" select="$newRestrictedAttributes"/>
 					<xsl:with-param name="entries">
-						<xsl:apply-templates select="xs:attribute|xs:attributeGroup" mode="restrictedAttributes"/>
+						<xsl:apply-templates select="xs:attribute|xs:attributeGroup" mode="restrictedAttributes">
+							<xsl:with-param name="documentNodes" select="$documentNodes"/>
+						</xsl:apply-templates>
 					</xsl:with-param>
 				</xsl:call-template>
 			</xsl:with-param>
+			<xsl:with-param name="documentNodes" select="$documentNodes"/>
 		</xsl:apply-templates>
 	</xsl:template>
 
@@ -150,18 +168,22 @@
 	<xsl:template match="xs:simpleContent" mode="attributes">
 		<xsl:param name="use"/>
 		<xsl:param name="restrictedAttributes"/>
+		<xsl:param name="documentNodes"/>
 		<xsl:apply-templates select="xs:extension | xs:restriction" mode="attributes">
 			<xsl:with-param name="use" select="$use"/>
 			<xsl:with-param name="restrictedAttributes" select="$restrictedAttributes"/>
+			<xsl:with-param name="documentNodes" select="$documentNodes"/>
 		</xsl:apply-templates>
 	</xsl:template>
 
 	<xsl:template match="xs:simpleContent/xs:extension" mode="attributes">
 		<xsl:param name="use"/>
 		<xsl:param name="restrictedAttributes"/>
-		<xsl:apply-templates select="/xs:schema/xs:simpleType[@name = current()/@base or @name = substring-after(current()/@base,':')] | /xs:schema/xs:complexType[@name = current()/@base or @name = substring-after(current()/@base,':')] | xs:attributeGroup | xs:attribute" mode="attributes">
+		<xsl:param name="documentNodes"/>
+		<xsl:apply-templates select="$documentNodes/xs:simpleType[@name = current()/@base or @name = substring-after(current()/@base,':')] | $documentNodes/xs:complexType[@name = current()/@base or @name = substring-after(current()/@base,':')] | xs:attributeGroup | xs:attribute" mode="attributes">
 			<xsl:with-param name="use" select="$use"/>
 			<xsl:with-param name="restrictedAttributes" select="$restrictedAttributes"/>
+			<xsl:with-param name="documentNodes" select="$documentNodes"/>
 		</xsl:apply-templates>
 	</xsl:template>
 
@@ -172,6 +194,7 @@
 				<xsl:with-param name="duplicate-free" select="true()"/>
 			</xsl:call-template>
 		</xsl:param>
+		<xsl:param name="documentNodes"/>
 		<xsl:variable name="newRestrictedAttributes">
 			<xsl:choose>
 				<xsl:when test="string-length(normalize-space($restrictedAttributes)) = 0">
@@ -187,17 +210,21 @@
 		<xsl:apply-templates select="xs:attributeGroup | xs:attribute" mode="attributes">
 			<xsl:with-param name="use" select="$use"/>
 			<xsl:with-param name="restrictedAttributes" select="$newRestrictedAttributes"/>
+			<xsl:with-param name="documentNodes" select="$documentNodes"/>
 		</xsl:apply-templates>
-		<xsl:apply-templates select="/xs:schema/xs:simpleType[@name = current()/@base or @name = substring-after(current()/@base,':')]" mode="attributes">
+		<xsl:apply-templates select="$documentNodes/xs:simpleType[@name = current()/@base or @name = substring-after(current()/@base,':')]" mode="attributes">
 			<xsl:with-param name="use" select="$use"/>
 			<xsl:with-param name="restrictedAttributes">
 				<xsl:call-template name="x1f:List.appendEntries">
 					<xsl:with-param name="list" select="$newRestrictedAttributes"/>
 					<xsl:with-param name="entries">
-						<xsl:apply-templates select="xs:attribute|xs:attributeGroup" mode="restrictedAttributes"/>
+						<xsl:apply-templates select="xs:attribute|xs:attributeGroup" mode="restrictedAttributes">
+							<xsl:with-param name="documentNodes" select="$documentNodes"/>
+						</xsl:apply-templates>
 					</xsl:with-param>
 				</xsl:call-template>
 			</xsl:with-param>
+			<xsl:with-param name="documentNodes" select="$documentNodes"/>
 		</xsl:apply-templates>
 	</xsl:template>
 
@@ -208,24 +235,27 @@
 	<xsl:template match="xs:attribute[@ref and not(@use = 'prohibited')]" mode="attributes">
 		<xsl:param name="use"/>
 		<xsl:param name="restrictedAttributes"/>
-		<xsl:apply-templates select="/xs:schema/xs:attribute[(@name = current()/@ref or @name = substring-after(current()/@ref,':')) and @use = 'required']" mode="attributes">
-		  <xsl:with-param name="use" select="$use"/>
-			<xsl:with-param name="restrictedAttributes" select="$restrictedAttributes"/>
-		</xsl:apply-templates>
+		<xsl:param name="documentNodes"/>
+		<xsl:if test="@use = $use or (not(@use) and $use = 'optional')">
+			<xsl:apply-templates select="$documentNodes/xs:attribute[(@name = current()/@ref or @name = substring-after(current()/@ref,':')) and @use = 'required']" mode="attributes">
+				<xsl:with-param name="restrictedAttributes" select="$restrictedAttributes"/>
+				<xsl:with-param name="documentNodes" select="$documentNodes"/>
+			</xsl:apply-templates>
+		</xsl:if>
 	</xsl:template>
 
 	<xsl:template match="xs:attribute[@name and not(@use = 'prohibited')]" mode="attributes">
 		<xsl:param name="use"/>
-		<xsl:param name="restrictedAttributes"/>	  
-	  <xsl:variable name="restricted">
+		<xsl:param name="restrictedAttributes"/>
+		<xsl:param name="documentNodes"/>
+		<xsl:variable name="restricted">
 			<xsl:call-template name="x1f:List.containsValue">
 				<xsl:with-param name="list" select="$restrictedAttributes"/>
 				<xsl:with-param name="value" select="@name"/>
 			</xsl:call-template>
-	  </xsl:variable>
-	  
-	  <xsl:if test="$restricted = 'false'">	    
-	    <xsl:if test="@use = $use or (not(@use) and $use = 'optional')">
+		</xsl:variable>
+		<xsl:if test="$restricted = 'false'">
+			<xsl:if test="@use = $use or (not(@use) and $use = 'optional')">
 				<tr>
 					<th scope="row">
 						<xsl:value-of select="@name"/>
@@ -233,8 +263,10 @@
 					<td>
 						<xsl:variable name="type">
 							<xsl:choose>
-								<xsl:when test="@type and /xs:schema/xs:simpleType[@name = current()/@type or @name = substring-after(current()/@type,':')]">
-									<xsl:apply-templates select="/xs:schema/xs:simpleType[@name = current()/@type or @name = substring-after(current()/@type,':')]" mode="attributes"/>
+								<xsl:when test="@type and $documentNodes/xs:simpleType[@name = current()/@type or @name = substring-after(current()/@type,':')]">
+									<xsl:apply-templates select="$documentNodes/xs:simpleType[@name = current()/@type or @name = substring-after(current()/@type,':')]" mode="attributes">
+										<xsl:with-param name="documentNodes" select="$documentNodes"/>
+									</xsl:apply-templates>
 								</xsl:when>
 								<xsl:when test="@type">
 									<dt>type: </dt>
@@ -243,11 +275,15 @@
 									</dd>
 								</xsl:when>
 								<xsl:otherwise>
-									<xsl:apply-templates select="xs:simpleType" mode="attributes"/>
+									<xsl:apply-templates select="xs:simpleType" mode="attributes">
+										<xsl:with-param name="documentNodes" select="$documentNodes"/>
+									</xsl:apply-templates>
 								</xsl:otherwise>
 							</xsl:choose>
 						</xsl:variable>
-						<xsl:apply-templates select="." mode="annotations"/>
+						<xsl:apply-templates select="." mode="annotations">
+							<xsl:with-param name="documentNodes" select="$documentNodes"/>
+						</xsl:apply-templates>
 						<xsl:if test="$type != ''">
 							<dl>
 								<xsl:copy-of select="$type"/>
@@ -264,26 +300,30 @@
 	<xsl:template match="xs:attributeGroup[@ref]" mode="attributes">
 		<xsl:param name="use"/>
 		<xsl:param name="restrictedAttributes"/>
-		<xsl:apply-templates select="/xs:schema/xs:attributeGroup[@name = current()/@ref or @name = substring-after(current()/@ref,':')]" mode="attributes">
-		  <xsl:with-param name="use" select="$use"/>
+		<xsl:param name="documentNodes"/>
+		<xsl:apply-templates select="$documentNodes/xs:attributeGroup[@name = current()/@ref or @name = substring-after(current()/@ref,':')]" mode="attributes">
 			<xsl:with-param name="restrictedAttributes" select="$restrictedAttributes"/>
+			<xsl:with-param name="documentNodes" select="$documentNodes"/>
 		</xsl:apply-templates>
 	</xsl:template>
 
 	<xsl:template match="xs:attributeGroup[@name]" mode="attributes">
 		<xsl:param name="use"/>
 		<xsl:param name="restrictedAttributes"/>
+		<xsl:param name="documentNodes"/>
 		<xsl:apply-templates select="xs:attributeGroup | xs:attribute" mode="attributes">
-		  <xsl:with-param name="use" select="$use"/>
-		  <xsl:with-param name="restrictedAttributes" select="$restrictedAttributes"/>
+			<xsl:with-param name="restrictedAttributes" select="$restrictedAttributes"/>
+			<xsl:with-param name="documentNodes" select="$documentNodes"/>
 		</xsl:apply-templates>
 	</xsl:template>
 
 	<!-- xs:simpleType -->
 
 	<xsl:template match="xs:simpleType" mode="attributes">
+		<xsl:param name="documentNodes"/>
 		<xsl:apply-templates select="." mode="simpleTypes">
 			<xsl:with-param name="first" select="true()"/>
+			<xsl:with-param name="documentNodes" select="$documentNodes"/>
 		</xsl:apply-templates>
 	</xsl:template>
 
@@ -294,10 +334,14 @@
 	<!-- xs:attribute -->
 
 	<xsl:template match="xs:attribute[@ref]" mode="restrictedAttributes">
-		<xsl:apply-templates select="/xs:schema/xs:attribute[@name = current()/@ref or @name = substring-after(current()/@ref,':')]" mode="restrictedAttributes"/>
+		<xsl:param name="documentNodes"/>
+		<xsl:apply-templates select="$documentNodes/xs:attribute[@name = current()/@ref or @name = substring-after(current()/@ref,':')]" mode="restrictedAttributes">
+			<xsl:with-param name="documentNodes" select="$documentNodes"/>
+		</xsl:apply-templates>
 	</xsl:template>
 
 	<xsl:template match="xs:attribute[@name]" mode="restrictedAttributes">
+		<xsl:param name="documentNodes"/>
 		<xsl:call-template name="x1f:List.Entry.createEntry">
 			<xsl:with-param name="value" select="@name"/>
 		</xsl:call-template>
@@ -306,11 +350,17 @@
 	<!-- xs:attributeGroup -->
 
 	<xsl:template match="xs:attributeGroup[@ref]" mode="restrictedAttributes">
-		<xsl:apply-templates select="/xs:schema/xs:attributeGroup[@name = current()/@ref or @name = substring-after(current()/@ref,':')]" mode="restrictedAttributes"/>
+		<xsl:param name="documentNodes"/>
+		<xsl:apply-templates select="$documentNodes/xs:attributeGroup[@name = current()/@ref or @name = substring-after(current()/@ref,':')]" mode="restrictedAttributes">
+			<xsl:with-param name="documentNodes" select="$documentNodes"/>
+		</xsl:apply-templates>
 	</xsl:template>
 
 	<xsl:template match="xs:attributeGroup[@name]" mode="restrictedAttributes">
-		<xsl:apply-templates select="xs:attribute|xs:attributeGroup" mode="restrictedAttributes"/>
+		<xsl:param name="documentNodes"/>
+		<xsl:apply-templates select="xs:attribute|xs:attributeGroup" mode="restrictedAttributes">
+			<xsl:with-param name="documentNodes" select="$documentNodes"/>
+		</xsl:apply-templates>
 	</xsl:template>
 
 </xsl:stylesheet>

@@ -673,4 +673,69 @@
 			<xsl:value-of select="substring(substring-after(substring($body,$index),':'),1,$length)"/>
 		</xsl:if>
 	</xsl:template>
+	
+	
+	<!--
+		This template return the list's content as an string.
+		@param  list - The list whose current value shall be returned.
+		@return The string.
+	-->
+	<xsl:template name="x1f:List.toString">
+		<xsl:param name="list"/>
+		<xsl:call-template name="toString">
+			<xsl:with-param name="list" select="$list"/>
+		</xsl:call-template>
+	</xsl:template>
+	
+	<xsl:template name="toString">
+		<xsl:param name="list"/>
+		<xsl:param name="resetIndex" select="true()"/>
+		<xsl:variable name="list2">
+			<xsl:choose>
+				<xsl:when test="$resetIndex">
+					<xsl:call-template name="x1f:List.resetIndex">
+						<xsl:with-param name="list" select="$list"/>
+					</xsl:call-template>
+				</xsl:when>
+				<xsl:otherwise>
+					<xsl:copy-of select="$list"/>
+				</xsl:otherwise>
+			</xsl:choose>
+		</xsl:variable>
+		<xsl:variable name="index">
+			<xsl:call-template name="x1f:List.getIndex">
+				<xsl:with-param name="list" select="$list2"/>
+			</xsl:call-template>
+		</xsl:variable>
+		<xsl:variable name="hasMore">
+			<xsl:call-template name="x1f:List.hasNext">
+				<xsl:with-param name="list" select="$list2"/>
+			</xsl:call-template>
+		</xsl:variable>
+		<xsl:if test="$index = 0">
+			<xsl:text>[</xsl:text>
+		</xsl:if>
+		<xsl:choose>
+			<xsl:when test="$hasMore = 'true'">
+				<xsl:variable name="listWithNewIndex">
+					<xsl:call-template name="x1f:List.nextIndex">
+						<xsl:with-param name="list" select="$list2"/>
+					</xsl:call-template>
+				</xsl:variable>
+				<xsl:if test="$index > 0">
+					<xsl:text>, </xsl:text>
+				</xsl:if>
+				<xsl:call-template name="x1f:List.getValue">
+					<xsl:with-param name="list" select="$listWithNewIndex"/>
+				</xsl:call-template>
+				<xsl:call-template name="toString">
+					<xsl:with-param name="list" select="$listWithNewIndex"/>
+					<xsl:with-param name="resetIndex" select="false()"/>
+				</xsl:call-template>
+			</xsl:when>
+			<xsl:otherwise>
+				<xsl:text>]</xsl:text>
+			</xsl:otherwise>
+		</xsl:choose>
+	</xsl:template>
 </xsl:stylesheet>
