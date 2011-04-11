@@ -6,14 +6,14 @@
 			- handle informations (block)
 		- group | attributeGroup
 			- annotations
-		- simpleType/union
 		- xs:any
 		- support for more dc-elements
 -->
 
 <xsl:stylesheet xmlns="http://www.w3.org/1999/xhtml" xmlns:xsl="http://www.w3.org/1999/XSL/Transform" xmlns:xs="http://www.w3.org/2001/XMLSchema" xmlns:x1f="http://www.informatik.tu-cottbus.de/~tgrundm1/projects/xslt-framework/xslt-1.0/" xmlns:dc="http://purl.org/dc/elements/1.1/" version="1.0" exclude-result-prefixes="xs xsl x1f dc">
 
-	<xsl:import href="elements.xsl"/>
+	<xsl:import href="elements.xsl"/>	
+	<xsl:import href="XSLT-1.0-Framework/mergeDocuments.xsl"/>
 
 	<xsl:output method="xml" doctype-public="-//W3C//DTD XHTML 1.1//EN" doctype-system="http://www.w3.org/TR/xhtml11/DTD/xhtml11.dtd" encoding="UTF-8" indent="yes"/>
 
@@ -25,6 +25,8 @@
 
 	<xsl:template name="getChapters">
 		<xsl:param name="node" select="."/>
+		<xsl:param name="otherDocuments"/>
+		
 		<xsl:call-template name="x1f:List.appendEntries">
 			<xsl:with-param name="list">
 				<xsl:call-template name="x1f:List.createEmptyList">
@@ -82,7 +84,7 @@
 							top:      0;
 							left:     0;
 							height:   100%;
-							width:  25%;
+							width:  28%;
 							overflow: auto;
 							border-right: 1px solid black;
 							
@@ -111,7 +113,7 @@
 						
 						div.document > * {
 							display: block;
-							margin: 0 0 0 25%;
+							margin: 0 0 0 28%;
 							padding: 0 10px;
 						}
 	
@@ -217,29 +219,125 @@
 			</body>
 		</html>
 	</xsl:template>
-
-	<xsl:template match="xs:schema">
-		<xsl:variable name="chapterList">
-			<xsl:call-template name="getChapters"/>
-		</xsl:variable>
-		<xsl:call-template name="x1f:createDocument">
-			<xsl:with-param name="heading">
-				<xsl:call-template name="getTitle"/>
+	
+	<xsl:template match="/" mode="x1f:mergeDocuments.addURIs">
+		<xsl:param name="listOfURIs"/>
+		<xsl:param name="depth"/>
+		<xsl:call-template name="x1f:mergeDocuments.addURIsByDepthFirstSearch">
+			<xsl:with-param name="listOfURIs" select="$listOfURIs"/>
+			<xsl:with-param name="listOfNewURIs">
+				<xsl:call-template name="x1f:List.appendEntries">
+					<xsl:with-param name="list">
+						<xsl:call-template name="x1f:List.createEmptyList">
+							<xsl:with-param name="duplicate-free" select="true()"/>
+						</xsl:call-template>
+					</xsl:with-param>
+					<xsl:with-param name="entries">
+						<xsl:apply-templates select="xs:schema/xs:include" mode="x1f:mergeDocuments.addURIs">
+							<xsl:with-param name="listOfURIs" select="$listOfURIs"/>
+							<xsl:with-param name="depth" select="$depth"/>
+						</xsl:apply-templates>
+					</xsl:with-param>
+				</xsl:call-template>
 			</xsl:with-param>
-			<xsl:with-param name="preface">
-				<xsl:apply-templates select="." mode="annotations"/>
-			</xsl:with-param>
-			<xsl:with-param name="navigation">
-				<xsl:apply-templates select="." mode="navigation">
-					<xsl:with-param name="chapterList" select="$chapterList"/>
-				</xsl:apply-templates>
-			</xsl:with-param>
-			<xsl:with-param name="body">
-				<xsl:apply-templates select="." mode="elements">
-					<xsl:with-param name="chapterList" select="$chapterList"/>
-				</xsl:apply-templates>
+			<xsl:with-param name="depth" select="$depth + 1"/>
+		</xsl:call-template>
+	</xsl:template>
+	
+	<xsl:template match="xs:schema/xs:include" mode="x1f:mergeDocuments.addURIs">
+		<xsl:param name="listOfURIs"/>
+		<xsl:param name="depth"/>
+		<xsl:call-template name="x1f:List.Entry.createEntry">
+			<xsl:with-param name="value" select="@schemaLocation"/>
+		</xsl:call-template>
+	</xsl:template>
+	
+	<xsl:template match="/" mode="x1f:mergeDocuments.processDocument">
+		<xsl:param name="URI"/>
+		<xsl:param name="parameters"/>
+		<xsl:call-template name="x1f:List.Entry.createEntry">
+			<xsl:with-param name="value" select="$URI"/>
+		</xsl:call-template>
+	</xsl:template>
+	
+	<xsl:template match="/xs:schema">
+		<xsl:call-template name="createContent">
+			<xsl:with-param name="documentList">
+				<xsl:call-template name="x1f:List.appendEntries">
+					<xsl:with-param name="list">
+						<xsl:call-template name="x1f:List.createEmptyList">
+							<xsl:with-param name="duplicate-free" select="true()"/>
+						</xsl:call-template>
+					</xsl:with-param>
+					<xsl:with-param name="entries">
+						<xsl:call-template name="x1f:mergeDocuments.mergeByNode">
+							<xsl:with-param name="documentNode" select="/"/>
+							<xsl:with-param name="relativeURIs" select="true()"/>
+						</xsl:call-template>
+					</xsl:with-param>
+				</xsl:call-template>
 			</xsl:with-param>
 		</xsl:call-template>
+	</xsl:template>
+	
+	<xsl:template name="createContent">
+		<xsl:param name="nodes" select="." />
+		<xsl:param name="documentList"/>
+		
+		<xsl:variable name="moreDocuments">
+			<xsl:call-template name="x1f:List.hasNext">
+				<xsl:with-param name="list" select="$documentList"/>
+			</xsl:call-template>
+		</xsl:variable>
+		<xsl:choose>
+			<xsl:when test="$moreDocuments = 'true'">
+				<xsl:variable name="documentListWithNextIndex">
+					<xsl:call-template name="x1f:List.nextIndex">
+						<xsl:with-param name="list" select="$documentList"/>
+					</xsl:call-template>
+				</xsl:variable>
+				<xsl:variable name="newDocument">
+					<xsl:call-template name="x1f:List.getValue">
+						<xsl:with-param name="list" select="$documentListWithNextIndex"/>
+					</xsl:call-template>
+				</xsl:variable>
+				<xsl:call-template name="createContent">
+					<xsl:with-param name="nodes" select="$nodes | document(string($newDocument),.)//xs:schema"/>
+					<xsl:with-param name="documentList" select="$documentListWithNextIndex"/>
+				</xsl:call-template>
+			</xsl:when>
+			
+			<xsl:otherwise>
+				<xsl:variable name="chapterList">
+					<xsl:call-template name="getChapters">
+						<xsl:with-param name="node" select="$nodes"/>
+					</xsl:call-template>
+				</xsl:variable>
+				<xsl:call-template name="x1f:createDocument">
+					<xsl:with-param name="heading">
+						<xsl:call-template name="getTitle"/>
+					</xsl:with-param>
+					<xsl:with-param name="preface">
+						<xsl:apply-templates select="." mode="annotations">
+							<xsl:with-param name="documentNodes" select="$nodes"/>
+						</xsl:apply-templates>
+					</xsl:with-param>
+					<xsl:with-param name="navigation">
+						<xsl:apply-templates select="." mode="navigation">
+							<xsl:with-param name="chapterList" select="$chapterList"/>
+							<xsl:with-param name="documentNodes" select="$nodes"/>
+						</xsl:apply-templates>
+					</xsl:with-param>
+					<xsl:with-param name="body">
+						<xsl:apply-templates select="." mode="elements">
+							<xsl:with-param name="chapterList" select="$chapterList"/>
+							<xsl:with-param name="documentNodes" select="$nodes"/>
+						</xsl:apply-templates>
+					</xsl:with-param>
+				</xsl:call-template>
+
+			</xsl:otherwise>
+		</xsl:choose>
 	</xsl:template>
 
 	<!--##################-->
@@ -248,6 +346,7 @@
 
 	<xsl:template match="xs:schema" mode="navigation">
 		<xsl:param name="chapterList"/>
+		<xsl:param name="documentNodes"/>
 
 		<xsl:variable name="hasNext">
 			<xsl:call-template name="x1f:List.hasNext">
@@ -278,7 +377,7 @@
 					</a>
 					<xsl:call-template name="x1f:createNavigation">
 						<xsl:with-param name="content">
-							<xsl:apply-templates select="xs:element[not(@abstract = 'true') and (starts-with(@name,$value_upperCase) or starts-with(@name,$value_lowerCase))]" mode="navigation">
+							<xsl:apply-templates select="$documentNodes/xs:element[not(@abstract = 'true') and (starts-with(@name,$value_upperCase) or starts-with(@name,$value_lowerCase))]" mode="navigation">
 								<xsl:sort select="@name"/>
 							</xsl:apply-templates>
 						</xsl:with-param>
@@ -287,6 +386,7 @@
 			</xsl:call-template>
 			<xsl:apply-templates select="." mode="navigation">
 				<xsl:with-param name="chapterList" select="$chapterListWithNextIndex"/>
+				<xsl:with-param name="documentNodes" select="$documentNodes"/>
 			</xsl:apply-templates>
 		</xsl:if>
 	</xsl:template>
