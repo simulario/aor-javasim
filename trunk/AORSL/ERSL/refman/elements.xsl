@@ -285,13 +285,7 @@
 				<xsl:with-param name="duplicate-free" select="true()"/>
 			</xsl:call-template>
 		</xsl:param>
-<debug style="color:orange">
-	<xsl:apply-templates select="xs:sequence | xs:choice | xs:all" mode="candidates">
-		<xsl:with-param name="mode" select="$mode"/>
-		<xsl:with-param name="documentNodes" select="$documentNodes"/>
-	</xsl:apply-templates>
-	<xsl:value-of select="@name"/>
-</debug>
+		
 		<xsl:choose>
 			<xsl:when test="$mode = 'groups'">
 				<xsl:value-of select="concat(@name,' ')"/>
