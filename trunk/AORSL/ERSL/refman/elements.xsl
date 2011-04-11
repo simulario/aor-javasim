@@ -280,9 +280,39 @@
 	<xsl:template match="xs:group[@name]" mode="candidates">
 		<xsl:param name="mode"/>
 		<xsl:param name="documentNodes"/>
+		<xsl:param name="alreadyKnownGroups">
+			<xsl:call-template name="x1f:List.createEmptyList">
+				<xsl:with-param name="duplicate-free" select="true()"/>
+			</xsl:call-template>
+		</xsl:param>
+<debug style="color:orange">
+	<xsl:apply-templates select="xs:sequence | xs:choice | xs:all" mode="candidates">
+		<xsl:with-param name="mode" select="$mode"/>
+		<xsl:with-param name="documentNodes" select="$documentNodes"/>
+	</xsl:apply-templates>
+	<xsl:value-of select="@name"/>
+</debug>
 		<xsl:choose>
 			<xsl:when test="$mode = 'groups'">
 				<xsl:value-of select="concat(@name,' ')"/>
+				<xsl:variable name="groupIsAlreadyKnown">
+					<xsl:call-template name="x1f:List.containsValue">
+						<xsl:with-param name="list" select="alreadyKnownGroups"/>
+						<xsl:with-param name="value" select="@name"/>
+					</xsl:call-template>
+				</xsl:variable>
+				<xsl:if test="$groupIsAlreadyKnown = 'false'">
+					<xsl:apply-templates select="xs:sequence | xs:choice | xs:all" mode="candidates">
+						<xsl:with-param name="mode" select="$mode"/>
+						<xsl:with-param name="documentNodes" select="$documentNodes"/>
+						<xsl:with-param name="alreadyKnownGroups">
+							<xsl:call-template name="x1f:List.appendValue">
+								<xsl:with-param name="list" select="$alreadyKnownGroups"/>
+								<xsl:with-param name="value" select="@name"/>
+							</xsl:call-template>
+						</xsl:with-param>
+					</xsl:apply-templates>
+				</xsl:if>
 			</xsl:when>
 			<xsl:otherwise>
 				<xsl:apply-templates select="xs:sequence | xs:choice | xs:all" mode="candidates">
@@ -328,9 +358,11 @@
 	<xsl:template match="xs:sequence | xs:choice | xs:all" mode="candidates">
 		<xsl:param name="mode"/>
 		<xsl:param name="documentNodes"/>
+		<xsl:param name="alreadyKnownGroups"/>
 		<xsl:apply-templates select="xs:sequence | xs:choice | xs:all | xs:group | xs:element[@name]" mode="candidates">
 			<xsl:with-param name="mode" select="$mode"/>
 			<xsl:with-param name="documentNodes" select="$documentNodes"/>
+			<xsl:with-param name="alreadyKnownGroups" select="alreadyKnownGroups"/>
 		</xsl:apply-templates>
 	</xsl:template>
 	
