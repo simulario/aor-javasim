@@ -3,11 +3,9 @@
 <xs:schema attributeFormDefault="unqualified" elementFormDefault="qualified"
 	targetNamespace="http://aor-simulation.org" xmlns:aors="http://aor-simulation.org"
 	xmlns:dc="http://purl.org/dc/elements/1.1/" xmlns:ers="http://aor-simulation.org"
-	xmlns:h="http://www.w3.org/1999/xhtml" xmlns:xi="http://www.w3.org/2001/XInclude"
-	xmlns:xs="http://www.w3.org/2001/XMLSchema">
-	<xs:import namespace="http://www.w3.org/XML/1998/namespace" schemaLocation="ERSL/xml.xsd"/>
-	<xs:import namespace="http://www.w3.org/2001/XInclude" schemaLocation="ERSL/xinclude.xsd"/>
-	<xs:import namespace="http://purl.org/dc/elements/1.1/" schemaLocation="ERSL/dc.xsd"/>
+	xmlns:h="http://www.w3.org/1999/xhtml" xmlns:saxon="http://saxon.sf.net/"
+	xmlns:xi="http://www.w3.org/2001/XInclude" xmlns:xs="http://www.w3.org/2001/XMLSchema">
+	<!--xs:import namespace="http://www.w3.org/1999/XSL/Transform" schemaLocation="http://www.w3.org/2007/schema-for-xslt20.xsd"/-->
 	<xs:annotation>
 		<xs:documentation>
 			<dc:title>AORSL 0.8.4</dc:title>
@@ -17,15 +15,17 @@
 		<xs:documentation xml:lang="en">
 			<h:img alt="AORS-UpperLevelCategories" href="AORS-UpperLevelCategories.gif"
 				style="float:right"/>
-			<h:p>Created on 20100506, Copyright 2010 Gerd Wagner, some rights reserved (<h:a
+			<h:p>Created on 20110407, Copyright 2007-2011 Gerd Wagner, some rights reserved         (<h:a
 					href="http://creativecommons.org/licenses/by-sa/3.0/" rel="nofollow">Creative Commons 3.0
-					BY-SA</h:a>). With contributions by Mircea Diaconescu, Daniel Draeger, Thomas Grundmann
-				and Jens Werner. See also the <h:a href="http://AOR-Simulation.org">project
-				website</h:a>.</h:p>
+					BY-SA</h:a>).         With contributions by Mircea Diaconescu, Daniel Draeger, Thomas
+				Grundmann and Jens Werner.         See also the <h:a href="http://AOR-Simulation.org"
+					>project website</h:a>.</h:p>
 			<h:p>The main element of an AORSL file is <h:strong>
 					<h:code><h:a href="#SimulationScenario">SimulationScenario</h:a></h:code>
-				</h:strong>, which essentially consists of a <h:code>SimulationModel</h:code>, an
-					<h:code>InitialState</h:code>, and a <h:code>UserInterface</h:code> element.</h:p>
+				</h:strong>, which essentially consists of a <h:code><h:a href="#SimulationModel"
+						>SimulationModel</h:a></h:code>,         an <h:code><h:a href="#InitialState"
+						>InitialState</h:a></h:code>,         and a <h:code><h:a href="#UserInterface"
+						>UserInterface</h:a></h:code> element.</h:p>
 		</xs:documentation>
 	</xs:annotation>
 	<!-- Open issues
@@ -33,104 +33,25 @@
 	-->
 	<!-- =================================================================== -->
 	<!-- =================================================================== -->
-	<xs:attributeGroup name="SimulationScenario.attributes">
-		<!-- =================================================================== -->
-		<xs:attribute fixed="0.8.4" form="unqualified" name="version" type="xs:string" use="required">
-			<xs:annotation>
-				<xs:documentation>Indicates the AORSL version against which the
-						<h:code>SimulationScenario</h:code> document must be validated.</xs:documentation>
-			</xs:annotation>
-		</xs:attribute>
-		<xs:attribute form="unqualified" name="scenarioName" type="xs:NCName" use="required"/>
-		<xs:attribute form="unqualified" name="scenarioTitle" type="xs:normalizedString" use="optional"/>
-		<!--xs:attribute name="prettyPrintCssLocation" type="xs:anyURI" use="optional"
-          default="http://aor-javasim.googlecode.com/svn/trunk/PrettyPrint/css/prettyprint.css"/-->
-		<!-- deprecated: will be replaced by prettyPrintCssLocation -->
-		<xs:attribute form="unqualified" name="simulationManagerDirectory" type="xs:string"
-			use="optional">
-			<xs:annotation>
-				<xs:documentation>Indicates the file system directory in which the AOR-JavaSim program is
-					located (deprecated: will be replaced by prettyPrintCssLocation).</xs:documentation>
-			</xs:annotation>
-		</xs:attribute>
-	</xs:attributeGroup>
-	<!-- ======================================================================== -->
-	<xs:element name="SimulationParameters" type="ers:SimulationParameters.type">
-		<!-- ======================================================================== -->
-		<xs:annotation>
-			<xs:documentation>The attributes of the SimulationParameters element can be accessed within
-				Java expressions in the form of, e.g.,
-					<h:code>SimulationParameters.SIMULATION_STEPS</h:code>.</xs:documentation>
-		</xs:annotation>
-	</xs:element>
-	<xs:complexType name="SimulationParameters.type">
-		<xs:sequence>
-			<xs:element form="qualified" maxOccurs="unbounded" minOccurs="0" name="Parameter">
-				<xs:complexType>
-					<xs:attribute form="unqualified" name="name" type="ers:CanonicalName" use="required"/>
-					<xs:attribute form="unqualified" name="value" type="xs:string" use="required"/>
-				</xs:complexType>
-			</xs:element>
-		</xs:sequence>
-		<xs:attribute form="unqualified" name="simulationSteps" type="xs:positiveInteger" use="required">
-			<xs:annotation>
-				<xs:documentation>Defines the duration of a simulation run as the number of simulation steps
-					to be performed.</xs:documentation>
-			</xs:annotation>
-		</xs:attribute>
-		<xs:attribute default="1" form="unqualified" name="stepDuration" type="xs:positiveInteger"
-			use="optional">
-			<xs:annotation>
-				<xs:documentation>This attribute is purely descriptive, and only meaningful for non-realtime
-					simulation. In combination with the <h:code>timeUnit</h:code> attribute, it allows to
-					specify the real (calendar time) duration that a simulation step is intended to
-					represent.</xs:documentation>
-			</xs:annotation>
-		</xs:attribute>
-		<xs:attribute default="s" form="unqualified" name="timeUnit" type="ers:TimeUnit" use="optional">
-			<xs:annotation>
-				<xs:documentation>This attribute is purely descriptive, and only meaningful for non-realtime
-					simulation. In combination with the <h:code>stepDuration</h:code> attribute, it allows to
-					specify the real (calendar time) duration that a simulation step is intended to
-					represent.</xs:documentation>
-			</xs:annotation>
-		</xs:attribute>
-		<xs:attribute form="unqualified" name="stepTimeDelay" type="xs:nonNegativeInteger"
-			use="optional">
-			<xs:annotation>
-				<xs:documentation>Defines how many miliseconds a simulation step takes (the simulator
-					execution will pause accordingly). The purpose of this attribute is to allow slowing down
-					a simulation run for making it better observable. </xs:documentation>
-			</xs:annotation>
-		</xs:attribute>
-		<xs:attribute form="unqualified" name="randomSeed" type="xs:integer" use="optional">
-			<xs:annotation>
-				<xs:documentation>Defines the start value for the random number generator. Allows to
-					reproduce a run of a stochastic simulation model by using the same value as before.
-				</xs:documentation>
-			</xs:annotation>
-		</xs:attribute>
-		<xs:attribute default="true" form="unqualified" name="randomOrderAgentSimulation"
-			type="xs:boolean" use="optional">
-			<xs:annotation>
-				<xs:documentation>When this parameter is set to true, which is the default setting, the
-					agent simulators will be executed in a random order. Otherwise, they will be executed in
-					the order given by their definition sequence in the initial state definition.
-				</xs:documentation>
-			</xs:annotation>
-		</xs:attribute>
-	</xs:complexType>
+	<!-- =================================================================== -->
+	<xs:import namespace="http://www.w3.org/XML/1998/namespace" schemaLocation="ERSL/xml.xsd"/>
+	<!-- =================================================================== -->
+	<xs:import namespace="http://www.w3.org/2001/XInclude" schemaLocation="ERSL/xinclude.xsd"/>
+	<!-- =================================================================== -->
+	<xs:import namespace="http://purl.org/dc/elements/1.1/" schemaLocation="ERSL/dc.xsd"/>
 	<!-- =================================================================== -->
 	<xs:element name="documentation">
 		<!-- =================================================================== -->
 		<xs:complexType>
 			<xs:choice maxOccurs="unbounded" minOccurs="0">
+				<xs:element maxOccurs="unbounded" minOccurs="0" ref="dc:title"/>
 				<xs:element maxOccurs="unbounded" minOccurs="0" ref="dc:subject"/>
 				<xs:element maxOccurs="unbounded" minOccurs="0" ref="dc:creator"/>
 				<xs:element maxOccurs="unbounded" minOccurs="0" ref="dc:contributor"/>
 				<xs:element maxOccurs="unbounded" minOccurs="0" ref="dc:description"/>
-				<xs:element form="qualified" maxOccurs="unbounded" minOccurs="0" name="description"
+				<xs:element form="qualified" maxOccurs="unbounded" minOccurs="0" name="shortDescription"
 					type="ers:AnyXHTML.type"/>
+				<xs:element maxOccurs="unbounded" minOccurs="0" ref="ers:description"/>
 				<xs:element maxOccurs="unbounded" minOccurs="0" ref="dc:source">
 					<xs:annotation>
 						<xs:documentation>A related resource from which the described resource is
@@ -138,7 +59,6 @@
 					</xs:annotation>
 				</xs:element>
 				<xs:element minOccurs="0" ref="dc:created"/>
-				<xs:element minOccurs="0" ref="dc:available"/>
 				<xs:element maxOccurs="unbounded" minOccurs="0" ref="dc:modified"/>
 				<xs:element minOccurs="0" ref="dc:license"/>
 				<xs:element form="qualified" minOccurs="0" name="informationModelDiagram" type="xs:anyURI"/>
@@ -147,6 +67,7 @@
 			<xs:attribute default="en" ref="xml:lang" use="optional"/>
 		</xs:complexType>
 	</xs:element>
+	<xs:element name="description" type="ers:AnyXHTML.type"/>
 	<!-- =================================================================== -->
 	<xs:group name="include">
 		<!-- =================================================================== -->
@@ -180,29 +101,54 @@
 	<!-- =================================================================== -->
 	<xs:element abstract="true" name="Property" type="ers:Property.type"/>
 	<xs:complexType name="Property.type">
+		<xs:sequence>
+			<xs:element minOccurs="0" ref="ers:description"/>
+		</xs:sequence>
 		<xs:attribute form="unqualified" name="name" type="ers:CanonicalName" use="required"/>
 		<xs:attribute form="unqualified" name="type" type="ers:PathName" use="required"/>
 		<xs:attribute default="1" form="unqualified" name="upperMultiplicity"
-			type="ers:UpperMultiplicity" use="optional"/>
+			type="ers:UpperMultiplicity" use="optional">
+			<xs:annotation>
+				<xs:documentation>If set to "unbounded", the property/attribute will be multi-valued,
+					i.e. its value will be a list/array, for which the following access methods can be used:
+					addFirst(), addLast(),    removeFirst(), removeLast(), get(i) and set(i,value). A
+					multi-valued reference property allows to implement a     non-functional association. It
+					can also be used for representing a first-in-first-out queue.</xs:documentation>
+			</xs:annotation>
+		</xs:attribute>
 		<xs:attribute default="1" form="unqualified" name="lowerMultiplicity"
 			type="xs:nonNegativeInteger" use="optional"/>
 		<xs:attribute default="false" form="unqualified" name="isStatic" type="xs:boolean"
-			use="optional"/>
+			use="optional">
+			<xs:annotation>
+				<xs:documentation>A 'static' property is a type-level attribute that can be accessed via the
+					type's class name.      E.g. if p is defined as a static property of some type T, then you
+					can use the expressions T.getP() and T.setP(...)     for accessing it. </xs:documentation>
+			</xs:annotation>
+		</xs:attribute>
 		<!-- 
 		<xs:attribute name="isEmergent" type="xs:boolean" use="optional" default="false"/>
+		<xs:assert test="@lowerMultiplicity le @upperMultiplicity" saxon:message="Property/@lowerMultiplicity must be less than Property/@upperMultiplicity!"/>
 		-->
 	</xs:complexType>
 	<!-- =================================================================== -->
 	<!-- *** Attribute ** -->
 	<!-- =================================================================== -->
-	<xs:element name="Attribute" substitutionGroup="ers:Property" type="ers:Attribute.type"/>
+	<xs:element name="Attribute" substitutionGroup="ers:Property" type="ers:Attribute.type">
+		<xs:annotation>
+			<xs:documentation> The values of an attribute are plain data literals (integers, strings,
+				etc.),     i.e. its type is a primitive datatype.</xs:documentation>
+		</xs:annotation>
+	</xs:element>
 	<xs:complexType name="Attribute.type">
 		<xs:complexContent>
 			<xs:extension base="ers:Attribute0.type">
 				<xs:attribute form="unqualified" name="initialValue" type="xs:string" use="optional"/>
 				<xs:attribute form="unqualified" name="minValue" type="xs:double" use="optional"/>
 				<xs:attribute form="unqualified" name="maxValue" type="xs:double" use="optional"/>
-				<!--<xs:assert test="@minValue le @maxValue"/>-->
+				<!--
+				<xs:assert test="not(@minValue) or not(@maxValue) or (@minValue le @maxValue)" saxon:message="Attribute/@minValue must be less than Attribute/@maxValue!"/>
+-->
 			</xs:extension>
 		</xs:complexContent>
 	</xs:complexType>
@@ -229,7 +175,12 @@
 	<!-- *** ReferenceProperty ***  -->
 	<!-- =================================================================== -->
 	<xs:element name="ReferenceProperty" substitutionGroup="ers:Property"
-		type="ers:ReferenceProperty.type"/>
+		type="ers:ReferenceProperty.type">
+		<xs:annotation>
+			<xs:documentation>The values of a reference property are object references, i.e. its type is
+				an object type.</xs:documentation>
+		</xs:annotation>
+	</xs:element>
 	<xs:complexType name="ReferenceProperty.type">
 		<xs:complexContent>
 			<xs:extension base="ers:Property.type"/>
@@ -239,12 +190,49 @@
 	<!-- *** ComplexDataProperty *** -->
 	<!-- =================================================================== -->
 	<xs:element name="ComplexDataProperty" substitutionGroup="ers:Property"
-		type="ers:ReferenceProperty.type"/>
+		type="ers:ReferenceProperty.type">
+		<xs:annotation>
+			<xs:documentation>The values of a complex data property are complex data structures such as
+				lists,     i.e. its type is a complex data type.</xs:documentation>
+		</xs:annotation>
+	</xs:element>
+	<!-- =================================================================== -->
+	<!-- *** CollectionValuedProperty *** 
+	<xs:element name="CollectionValuedProperty" type="ers:CollectionValuedProperty.type" substitutionGroup="ers:Property">
+		<xs:annotation><xs:documentation>For referencing a Collection Type.</xs:documentation></xs:annotation>		
+	</xs:element>
+	<xs:complexType name="CollectionValuedProperty.type">
+		<xs:complexContent>
+			<xs:extension base="ers:CollectionValuedProperty0.type">
+				<xs:attribute name="itemType" type="ers:PathName" use="required"/>
+			</xs:extension>
+		</xs:complexContent>
+	</xs:complexType>
+	<xs:complexType name="CollectionValuedProperty0.type">
+		<xs:complexContent>
+			<xs:restriction base="ers:Property.type">
+				<xs:attribute name="type" use="required">
+					<xs:simpleType>
+						<xs:restriction base="ers:PathName">
+							<xs:enumeration value="List"/>
+							<xs:enumeration value="Set"/>
+						</xs:restriction>
+					</xs:simpleType>										
+				</xs:attribute>
+			</xs:restriction>
+		</xs:complexContent>
+	</xs:complexType>
+	-->
 	<!-- =================================================================== -->
 	<!-- *** EnumerationProperty *** -->
 	<!-- =================================================================== -->
 	<xs:element name="EnumerationProperty" substitutionGroup="ers:Property"
-		type="ers:EnumerationProperty.type"/>
+		type="ers:EnumerationProperty.type">
+		<xs:annotation>
+			<xs:documentation>The values of an enumeration property are enumeration literals (such as
+				Sex.MALE),     i.e. its type is an enumeration datatype.</xs:documentation>
+		</xs:annotation>
+	</xs:element>
 	<xs:complexType name="EnumerationProperty.type">
 		<xs:complexContent>
 			<xs:extension base="ers:Property.type">
@@ -258,6 +246,12 @@
 	<xs:complexType name="Parameter.type">
 		<xs:attribute form="unqualified" name="name" type="ers:CanonicalName" use="required"/>
 		<xs:attribute form="unqualified" name="type" type="ers:JavaTypeName" use="required"/>
+		<xs:attribute form="unqualified" name="itemType" type="ers:JavaTypeName" use="optional">
+			<xs:annotation>
+				<xs:documentation>The type of the items of a collection/list. Requires that type="List".
+				</xs:documentation>
+			</xs:annotation>
+		</xs:attribute>
 	</xs:complexType>
 	<!-- =================================================================== -->
 	<xs:complexType name="OpaqueExpression">
@@ -270,6 +264,7 @@
 							<xs:enumeration value="Java"/>
 							<xs:enumeration value="JavaScript"/>
 							<xs:enumeration value="PHP"/>
+							<xs:enumeration value="Java JavaScript"/>
 						</xs:restriction>
 					</xs:simpleType>
 				</xs:attribute>
@@ -279,60 +274,210 @@
 	<!-- =================================================================== -->
 	<xs:element name="Slot" type="ers:Slot.type"/>
 	<!-- =================================================================== -->
+	<xs:annotation>
+		<xs:documentation>Allows to set the value of a property. </xs:documentation>
+	</xs:annotation>
 	<xs:complexType name="Slot.type">
-		<xs:choice>
-			<xs:element minOccurs="0" ref="ers:RandomVariable"/>
-			<xs:element maxOccurs="unbounded" minOccurs="0" ref="ers:ValueExpr"/>
-		</xs:choice>
-		<xs:attribute form="unqualified" name="property" type="ers:PathName" use="required"/>
-		<xs:attribute form="unqualified" name="value" type="xs:string" use="optional"/>
-	</xs:complexType>
-	<xs:complexType name="SimpleSlot">
 		<xs:complexContent>
-			<xs:restriction base="ers:Slot.type">
-				<xs:attribute form="unqualified" name="property" type="ers:PathName" use="required"/>
-				<xs:attribute form="unqualified" name="value" type="xs:string" use="required"/>
-			</xs:restriction>
-		</xs:complexContent>
-	</xs:complexType>
-	<xs:complexType name="OpaqueExprSlot">
-		<xs:complexContent>
-			<xs:restriction base="ers:Slot.type">
+			<xs:extension base="ers:RandomVariable-OR-ValueExpr">
 				<xs:choice>
-					<xs:element minOccurs="0" ref="ers:RandomVariable"/>
-					<xs:element maxOccurs="unbounded" minOccurs="0" ref="ers:ValueExpr"/>
+					<xs:element minOccurs="0" ref="ers:ObjectValueExpr"/>
 				</xs:choice>
 				<xs:attribute form="unqualified" name="property" type="ers:PathName" use="required"/>
-			</xs:restriction>
+				<xs:attribute form="unqualified" name="value" type="xs:string" use="optional"/>
+			</xs:extension>
 		</xs:complexContent>
 	</xs:complexType>
 	<!-- =================================================================== -->
 	<xs:element name="MultiValuedSlot">
 		<!-- =================================================================== -->
+		<xs:annotation>
+			<xs:documentation>Allows to change the value of a multi-valued property.     This includes
+				adding/removing items to/from the list, and assigning a new value to a specific list item.
+			</xs:documentation>
+		</xs:annotation>
 		<xs:complexType>
-			<xs:choice maxOccurs="unbounded" minOccurs="0">
-				<xs:element form="qualified" name="Add">
-					<xs:complexType>
-						<xs:sequence>
-							<xs:element maxOccurs="unbounded" minOccurs="0" ref="ers:ValueExpr"/>
-						</xs:sequence>
-						<xs:attribute form="unqualified" name="itemVariable" type="ers:CanonicalName"
-							use="optional"/>
-					</xs:complexType>
-				</xs:element>
-				<xs:element form="qualified" name="Remove">
-					<xs:complexType>
-						<xs:sequence>
-							<xs:element maxOccurs="unbounded" minOccurs="0" ref="ers:ValueExpr"/>
-						</xs:sequence>
-						<xs:attribute form="unqualified" name="itemVariable" type="ers:CanonicalName"
-							use="optional"/>
-					</xs:complexType>
-				</xs:element>
-			</xs:choice>
+			<xs:group maxOccurs="unbounded" ref="ers:ChangeMultiValuedProperty.group"/>
 			<xs:attribute form="unqualified" name="property" type="ers:PathName" use="required"/>
 		</xs:complexType>
 	</xs:element>
+	<!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->
+	<xs:group name="ChangeMultiValuedProperty.group">
+		<!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->
+		<xs:choice>
+			<xs:element form="qualified" name="AddFirst" type="ers:AddItem.type">
+				<xs:annotation>
+					<xs:documentation>For adding a value as a new FIRST item to the list. </xs:documentation>
+				</xs:annotation>
+			</xs:element>
+			<xs:element form="qualified" name="AddLast" type="ers:AddItem.type">
+				<xs:annotation>
+					<xs:documentation>For adding a value as a new LAST item to the list. </xs:documentation>
+				</xs:annotation>
+			</xs:element>
+			<xs:element form="qualified" name="AddAll">
+				<xs:annotation>
+					<xs:documentation>For adding an entire list/array of vlues. </xs:documentation>
+				</xs:annotation>
+				<xs:complexType>
+					<xs:sequence>
+						<xs:element form="qualified" maxOccurs="unbounded" minOccurs="0" name="ListExpr"
+							type="ers:OpaqueExpression">
+							<xs:annotation>
+								<xs:documentation>An expression that evaluates to a type-conform list to be appended
+									to the list. </xs:documentation>
+							</xs:annotation>
+						</xs:element>
+					</xs:sequence>
+					<xs:attribute form="unqualified" name="listVariable" type="ers:CanonicalName"
+						use="optional">
+						<xs:annotation>
+							<xs:documentation>A variable that holds an object reference to the list/array to be
+								added. </xs:documentation>
+						</xs:annotation>
+					</xs:attribute>
+				</xs:complexType>
+			</xs:element>
+			<xs:element form="qualified" name="RemoveFirst">
+				<xs:annotation>
+					<xs:documentation>For removing the FIRST item from the list. </xs:documentation>
+				</xs:annotation>
+				<xs:complexType>
+					<xs:attribute form="unqualified" name="itemVariable" type="ers:CanonicalName"
+						use="optional">
+						<xs:annotation>
+							<xs:documentation>A variable holding an object reference to the item that was removed
+								from the list. </xs:documentation>
+						</xs:annotation>
+					</xs:attribute>
+				</xs:complexType>
+			</xs:element>
+			<xs:element form="qualified" name="RemoveLast">
+				<xs:annotation>
+					<xs:documentation>For removing the LAST item from the list. </xs:documentation>
+				</xs:annotation>
+				<xs:complexType>
+					<xs:attribute form="unqualified" name="itemVariable" type="ers:CanonicalName"
+						use="optional">
+						<xs:annotation>
+							<xs:documentation>A variable holding an object reference to the item that was removed
+								from the list. </xs:documentation>
+						</xs:annotation>
+					</xs:attribute>
+				</xs:complexType>
+			</xs:element>
+			<xs:element form="qualified" name="Remove">
+				<xs:annotation>
+					<xs:documentation>For removing a specific item from the list. </xs:documentation>
+				</xs:annotation>
+				<xs:complexType>
+					<xs:sequence>
+						<xs:element form="qualified" maxOccurs="unbounded" minOccurs="0" name="ItemExpr"
+							type="ers:OpaqueExpression">
+							<xs:annotation>
+								<xs:documentation>An expression that evaluates to a type-conform value to be removed
+									from the list. </xs:documentation>
+							</xs:annotation>
+						</xs:element>
+					</xs:sequence>
+					<xs:attribute form="unqualified" name="itemVariable" type="ers:CanonicalName"
+						use="optional">
+						<xs:annotation>
+							<xs:documentation>A variable that holds an object reference to the item to be removed.
+							</xs:documentation>
+						</xs:annotation>
+					</xs:attribute>
+				</xs:complexType>
+			</xs:element>
+			<xs:element form="qualified" name="Set">
+				<xs:annotation>
+					<xs:documentation>For assigning a new value to an item at a specific index in the
+						array/list. </xs:documentation>
+				</xs:annotation>
+				<xs:complexType>
+					<xs:sequence>
+						<xs:element form="qualified" maxOccurs="unbounded" minOccurs="0" name="ItemExpr"
+							type="ers:OpaqueExpression"/>
+					</xs:sequence>
+					<xs:attribute form="unqualified" name="indexValue" type="xs:int" use="required">
+						<xs:annotation>
+							<xs:documentation>The item index at which the new value is to be assigned.
+							</xs:documentation>
+						</xs:annotation>
+					</xs:attribute>
+					<xs:attribute form="unqualified" name="itemVariable" type="ers:CanonicalName"
+						use="optional">
+						<xs:annotation>
+							<xs:documentation>A variable holding an object reference that is to be assigned.
+							</xs:documentation>
+						</xs:annotation>
+					</xs:attribute>
+					<xs:attribute form="unqualified" name="itemValue" type="xs:string" use="optional">
+						<xs:annotation>
+							<xs:documentation>A literal value to be assigned (in the case where the list item type
+								is a primitive datatype). </xs:documentation>
+						</xs:annotation>
+					</xs:attribute>
+				</xs:complexType>
+			</xs:element>
+			<xs:element form="qualified" name="Insert">
+				<xs:annotation>
+					<xs:documentation>For inserting a new item at a specific index in the array/list.
+					</xs:documentation>
+				</xs:annotation>
+				<xs:complexType>
+					<xs:sequence>
+						<xs:element form="qualified" maxOccurs="unbounded" minOccurs="0" name="ItemExpr"
+							type="ers:OpaqueExpression"/>
+					</xs:sequence>
+					<xs:attribute form="unqualified" name="indexValue" type="xs:int" use="required">
+						<xs:annotation>
+							<xs:documentation>The item index at which the new value is to be assigned.
+							</xs:documentation>
+						</xs:annotation>
+					</xs:attribute>
+					<xs:attribute form="unqualified" name="itemVariable" type="ers:CanonicalName"
+						use="optional">
+						<xs:annotation>
+							<xs:documentation>A variable holding an object reference that is to be assigned.
+							</xs:documentation>
+						</xs:annotation>
+					</xs:attribute>
+					<xs:attribute form="unqualified" name="itemValue" type="xs:string" use="optional">
+						<xs:annotation>
+							<xs:documentation>A literal value to be assigned (in the case where the list item type
+								is a primitive datatype). </xs:documentation>
+						</xs:annotation>
+					</xs:attribute>
+				</xs:complexType>
+			</xs:element>
+		</xs:choice>
+	</xs:group>
+	<!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->
+	<xs:complexType name="AddItem.type">
+		<!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->
+		<xs:sequence>
+			<xs:element form="qualified" maxOccurs="unbounded" minOccurs="0" name="ItemExpr"
+				type="ers:OpaqueExpression">
+				<xs:annotation>
+					<xs:documentation>An expression that evaluates to a type-conform value to be added as a
+						new item. </xs:documentation>
+				</xs:annotation>
+			</xs:element>
+		</xs:sequence>
+		<xs:attribute form="unqualified" name="itemVariable" type="ers:CanonicalName" use="optional">
+			<xs:annotation>
+				<xs:documentation>A variable holding an object reference to be added as a new item.
+				</xs:documentation>
+			</xs:annotation>
+		</xs:attribute>
+		<xs:attribute form="unqualified" name="itemValue" type="xs:string" use="optional">
+			<xs:annotation>
+				<xs:documentation>A literal value to be added as a new item (in the case where the list item
+					type is a primitive datatype). </xs:documentation>
+			</xs:annotation>
+		</xs:attribute>
+	</xs:complexType>
 	<!-- =================================================================== -->
 	<xs:element name="Code" type="ers:OpaqueExpression"/>
 	<!-- =================================================================== -->
@@ -364,6 +509,7 @@
 			<xs:any maxOccurs="unbounded" minOccurs="0" namespace="http://www.w3.org/1999/xhtml"
 				processContents="skip"/>
 		</xs:sequence>
+		<xs:attributeGroup ref="ers:lang_default_en"/>
 	</xs:complexType>
 	<!-- ==================================================================== -->
 	<xs:element name="Condition" type="ers:Condition.type"/>
@@ -381,6 +527,41 @@
 			<xs:extension base="ers:OpaqueExpression"> </xs:extension>
 		</xs:simpleContent>
 	</xs:complexType>
+	<!-- =================================================================== -->
+	<xs:element name="PropertyValueExpr">
+		<!-- =================================================================== -->
+		<xs:annotation>
+			<xs:documentation>Allows to specify a property value expression of the form e.p, or e.getP(),
+				by providing     an entity variable e and a property p. </xs:documentation>
+		</xs:annotation>
+		<xs:complexType>
+			<xs:attribute form="unqualified" name="entityVariable" type="ers:CanonicalName" use="required"/>
+			<xs:attribute form="unqualified" name="property" type="ers:CanonicalName" use="required"/>
+		</xs:complexType>
+	</xs:element>
+	<!-- =================================================================== -->
+	<xs:element name="GlobalVariableValueExpr">
+		<!-- =================================================================== -->
+		<xs:annotation>
+			<xs:documentation>Allows to specify a global variable value expression of the form Global.p
+				by providing a variable name p. </xs:documentation>
+		</xs:annotation>
+		<xs:complexType>
+			<xs:attribute form="unqualified" name="variable" type="ers:CanonicalName" use="required"/>
+		</xs:complexType>
+	</xs:element>
+	<!-- =================================================================== -->
+	<xs:element name="ObjectValueExpr">
+		<!-- =================================================================== -->
+		<xs:annotation>
+			<xs:documentation>Allows to specify an object value expression of the form o by providing
+				an object variable o. </xs:documentation>
+		</xs:annotation>
+		<xs:complexType>
+			<xs:attribute form="unqualified" name="objectVariable" type="ers:CanonicalName" use="required"
+			/>
+		</xs:complexType>
+	</xs:element>
 	<!-- =================================================================== -->
 	<xs:element name="Selection">
 		<!-- =================================================================== -->
@@ -421,6 +602,8 @@
 		<xs:choice>
 			<xs:element minOccurs="0" ref="ers:RandomVariable"/>
 			<xs:element maxOccurs="unbounded" minOccurs="0" ref="ers:ValueExpr"/>
+			<xs:element minOccurs="0" ref="ers:PropertyValueExpr"/>
+			<xs:element minOccurs="0" ref="ers:GlobalVariableValueExpr"/>
 		</xs:choice>
 	</xs:complexType>
 	<!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->
@@ -429,6 +612,8 @@
 		<xs:choice>
 			<xs:element minOccurs="0" ref="ers:DiscreteRandomVariable"/>
 			<xs:element maxOccurs="unbounded" minOccurs="0" ref="ers:ValueExpr"/>
+			<xs:element minOccurs="0" ref="ers:PropertyValueExpr"/>
+			<xs:element minOccurs="0" ref="ers:GlobalVariableValueExpr"/>
 		</xs:choice>
 	</xs:complexType>
 	<!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->
@@ -953,6 +1138,9 @@
 			<xs:pattern value="([A-Z])([A-Z]|_|[0-9])*"/>
 		</xs:restriction>
 	</xs:simpleType>
+	<xs:simpleType name="ListOfLanguages">
+		<xs:list itemType="xs:language"/>
+	</xs:simpleType>
 	<!-- =================================================================== -->
 	<!-- *** Code Lists  *** -->
 	<!-- =================================================================== -->
@@ -1077,6 +1265,14 @@
 			</xs:enumeration>
 		</xs:restriction>
 	</xs:simpleType>
+	<xs:simpleType name="PackagingUnit">
+		<xs:restriction base="xs:string">
+			<xs:enumeration value="cans"/>
+			<xs:enumeration value="crates"/>
+			<xs:enumeration value="cups"/>
+			<xs:enumeration value="bags"/>
+		</xs:restriction>
+	</xs:simpleType>
 	<xs:simpleType name="MathUnit">
 		<xs:restriction base="xs:string">
 			<xs:enumeration value="°">
@@ -1186,18 +1382,108 @@
 		</xs:restriction>
 	</xs:simpleType>
 	<!-- =================================================================== -->
-	<xs:attributeGroup name="SimulationModel.attributes">
+	<xs:attributeGroup name="SimulationScenario.attributes">
+		<!-- =================================================================== -->
+		<xs:attribute fixed="0.8.4" form="unqualified" name="version" type="xs:string" use="required">
+			<xs:annotation>
+				<xs:documentation>Indicates the AORSL version against which the
+						<h:code>SimulationScenario</h:code> document must be validated.</xs:documentation>
+			</xs:annotation>
+		</xs:attribute>
+		<xs:attribute form="unqualified" name="scenarioName" type="xs:NCName" use="required"/>
+		<xs:attribute form="unqualified" name="scenarioTitle" type="xs:normalizedString" use="optional"/>
+		<!--xs:attribute name="prettyPrintCssLocation" type="xs:anyURI" use="optional"
+          default="http://aor-javasim.googlecode.com/svn/trunk/PrettyPrint/css/prettyprint.css"/-->
+		<!-- deprecated: will be replaced by prettyPrintCssLocation -->
+		<xs:attribute form="unqualified" name="simulationManagerDirectory" type="xs:string"
+			use="optional">
+			<xs:annotation>
+				<xs:documentation>Indicates the file system directory in which the AOR-JavaSim program is
+					located (deprecated: will be replaced by prettyPrintCssLocation).</xs:documentation>
+			</xs:annotation>
+		</xs:attribute>
+		<xs:attribute default="false" form="unqualified" name="createSimulationLog" type="xs:boolean"
+			use="optional">
+			<xs:annotation>
+				<xs:documentation>Allows to turn on the creation of a simulation log that is useful for
+					debugging and special data analysis. </xs:documentation>
+			</xs:annotation>
+		</xs:attribute>
+	</xs:attributeGroup>
+	<!-- ======================================================================== -->
+	<xs:element name="SimulationParameters" type="ers:SimulationParameters.type">
+		<!-- ======================================================================== -->
+		<xs:annotation>
+			<xs:documentation>The attributes of the SimulationParameters element can be accessed within
+				Java expressions in the form of, e.g.,
+					<h:code>SimulationParameters.SIMULATION_STEPS</h:code>.</xs:documentation>
+		</xs:annotation>
+	</xs:element>
+	<xs:complexType name="SimulationParameters.type">
+		<xs:sequence>
+			<xs:element form="qualified" maxOccurs="unbounded" minOccurs="0" name="Parameter">
+				<xs:complexType>
+					<xs:attribute form="unqualified" name="name" type="ers:CanonicalName" use="required"/>
+					<xs:attribute form="unqualified" name="value" type="xs:string" use="required"/>
+				</xs:complexType>
+			</xs:element>
+		</xs:sequence>
+		<xs:attribute form="unqualified" name="simulationSteps" type="xs:positiveInteger" use="required">
+			<xs:annotation>
+				<xs:documentation>Defines the duration of a simulation run as the number of simulation steps
+					to be performed.</xs:documentation>
+			</xs:annotation>
+		</xs:attribute>
+		<xs:attribute default="1" form="unqualified" name="stepDuration" type="xs:positiveInteger"
+			use="optional">
+			<xs:annotation>
+				<xs:documentation>This attribute is purely descriptive, and only meaningful for non-realtime
+					simulation. In combination with the <h:code>timeUnit</h:code> attribute, it allows to
+					specify the real (calendar time) duration that a simulation step is intended to
+					represent.</xs:documentation>
+			</xs:annotation>
+		</xs:attribute>
+		<xs:attribute default="s" form="unqualified" name="timeUnit" type="ers:TimeUnit" use="optional">
+			<xs:annotation>
+				<xs:documentation>This attribute is purely descriptive, and only meaningful for non-realtime
+					simulation. In combination with the <h:code>stepDuration</h:code> attribute, it allows to
+					specify the real (calendar time) duration that a simulation step is intended to
+					represent.</xs:documentation>
+			</xs:annotation>
+		</xs:attribute>
+		<xs:attribute form="unqualified" name="stepTimeDelay" type="xs:nonNegativeInteger"
+			use="optional">
+			<xs:annotation>
+				<xs:documentation>Defines how many miliseconds a simulation step takes (the simulator
+					execution will pause accordingly). The purpose of this attribute is to allow slowing down
+					a simulation run for making it better observable. </xs:documentation>
+			</xs:annotation>
+		</xs:attribute>
+		<xs:attribute form="unqualified" name="randomSeed" type="xs:integer" use="optional">
+			<xs:annotation>
+				<xs:documentation>Defines the start value for the random number generator. Allows to
+					reproduce a run of a stochastic simulation model by using the same value as before.
+				</xs:documentation>
+			</xs:annotation>
+		</xs:attribute>
+		<xs:attribute default="true" form="unqualified" name="randomOrderAgentSimulation"
+			type="xs:boolean" use="optional">
+			<xs:annotation>
+				<xs:documentation>When this parameter is set to true, which is the default setting, the
+					agent simulators will be executed in a random order. Otherwise, they will be executed in
+					the order given by their definition sequence in the initial state definition.
+				</xs:documentation>
+			</xs:annotation>
+		</xs:attribute>
+	</xs:complexType>
+	<!-- =================================================================== -->
+	<!-- =================================================================== -->
+	<xs:attributeGroup name="SimulationModel.basic-attributes">
 		<!-- =================================================================== -->
 		<xs:attribute form="unqualified" name="modelName" type="ers:CanonicalName" use="required"/>
 		<xs:attribute form="unqualified" name="modelTitle" type="xs:normalizedString" use="optional"/>
 		<xs:attribute form="unqualified" name="importPackages" type="ers:ListOfCanonicalName"
 			use="optional"/>
-		<xs:attribute form="unqualified" name="baseURI" type="xs:anyURI" use="optional">
-			<xs:annotation>
-				<xs:documentation>The base URI is used in the URIs of agent vocabulary elements.
-				</xs:documentation>
-			</xs:annotation>
-		</xs:attribute>
 		<xs:attributeGroup ref="ers:include"/>
 	</xs:attributeGroup>
 	<!-- =================================================================== -->
@@ -1374,12 +1660,6 @@
 	<!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->
 	<xs:element name="ThreeDimensional">
 		<!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->
-		<xs:annotation>
-			<xs:documentation>This discrete space consists of cells for which properties and functions may
-				be defined. The built-in cell properties <h:code>posX</h:code>, <h:code>posY</h:code> and
-					<h:code>posZ</h:code> can be accessed with an expression of the form
-					<h:code>Simulator.spaceModel.getGridCell(x,y).getPosX()</h:code>. </xs:documentation>
-		</xs:annotation>
 		<xs:complexType>
 			<xs:attribute form="unqualified" name="xMax" type="xs:nonNegativeInteger" use="required"/>
 			<xs:attribute form="unqualified" name="yMax" type="xs:nonNegativeInteger" use="required"/>
@@ -1392,6 +1672,12 @@
 	<!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->
 	<xs:element name="ThreeDimensionalGrid">
 		<!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->
+		<xs:annotation>
+			<xs:documentation>This discrete space consists of cells for which properties and functions may
+				be defined. The built-in cell properties <h:code>posX</h:code>, <h:code>posY</h:code> and
+					<h:code>posZ</h:code> can be accessed with an expression of the form
+					<h:code>Simulator.spaceModel.getGridCell(x,y,z).getPosX()</h:code>. </xs:documentation>
+		</xs:annotation>
 		<xs:complexType>
 			<xs:group minOccurs="0" ref="ers:GridSpace.elements"/>
 			<xs:attribute form="unqualified" name="xMax" type="xs:nonNegativeInteger" use="required"/>
@@ -1445,18 +1731,18 @@
 					at each simulation step according to their velocity and acceleration. </xs:documentation>
 			</xs:annotation>
 		</xs:attribute>
-		<xs:attribute default="false" form="unqualified" name="autoCollisionHandling" type="xs:boolean"
-			use="optional">
-			<xs:annotation>
-				<xs:documentation>Use impulse to update the velocities of objects participating in a
-					collision. </xs:documentation>
-			</xs:annotation>
-		</xs:attribute>
 		<xs:attribute default="false" form="unqualified" name="autoCollisionDetection" type="xs:boolean"
 			use="optional">
 			<xs:annotation>
 				<xs:documentation>Create a CollisionEvent when two physical objects collide.
 				</xs:documentation>
+			</xs:annotation>
+		</xs:attribute>
+		<xs:attribute default="false" form="unqualified" name="autoCollisionHandling" type="xs:boolean"
+			use="optional">
+			<xs:annotation>
+				<xs:documentation>Use impulse to update the velocities of objects participating in a
+					collision. </xs:documentation>
 			</xs:annotation>
 		</xs:attribute>
 	</xs:attributeGroup>
@@ -1618,18 +1904,18 @@
 							use="optional"/>
 						<xs:attribute form="unqualified" name="refDataType" type="ers:PathName" use="optional">
 							<xs:annotation>
-								<xs:documentation>A class or array type.</xs:documentation>
+								<xs:documentation>The name of a class.</xs:documentation>
 							</xs:annotation>
 						</xs:attribute>
-						<xs:attribute form="unqualified" name="initialValue" type="xs:string" use="optional">
-							<xs:annotation>
-								<xs:documentation>NOT YET implemented!</xs:documentation>
-							</xs:annotation>
-						</xs:attribute>
+						<xs:attribute form="unqualified" name="initialValue" type="xs:string" use="optional"/>
 						<xs:attribute form="unqualified" name="minValue" type="xs:double" use="optional"/>
 						<xs:attribute form="unqualified" name="maxValue" type="xs:double" use="optional"/>
 						<xs:attribute default="1" form="unqualified" name="upperMultiplicity"
 							type="ers:UpperMultiplicity" use="optional"/>
+						<!--
+						<xs:assert test="not(@minValue) or not(@maxValue) or (@minValue le @maxValue)" 
+							saxon:message="Attribute/@minValue must be less than Attribute/@maxValue!"/>
+-->
 					</xs:complexType>
 				</xs:element>
 				<xs:element form="qualified" maxOccurs="unbounded" minOccurs="0" name="GlobalFunction"
@@ -1647,10 +1933,13 @@
 	<xs:complexType name="EntityType.type">
 		<xs:sequence>
 			<xs:element minOccurs="0" ref="ers:documentation"/>
-			<xs:element form="qualified" maxOccurs="unbounded" minOccurs="0" name="InitialAttributeValue">
+			<xs:element form="qualified" maxOccurs="unbounded" minOccurs="0"
+				name="InheritedAttributeSettings">
 				<xs:complexType>
 					<xs:attribute form="unqualified" name="attribute" type="ers:CanonicalName" use="required"/>
-					<xs:attribute form="unqualified" name="value" type="xs:string" use="required"/>
+					<xs:attribute form="unqualified" name="initialValue" type="xs:string" use="optional"/>
+					<xs:attribute form="unqualified" name="minValue" type="xs:string" use="optional"/>
+					<xs:attribute form="unqualified" name="maxValue" type="xs:string" use="optional"/>
 				</xs:complexType>
 			</xs:element>
 			<xs:element maxOccurs="unbounded" minOccurs="0" ref="ers:Property"/>
@@ -1701,6 +1990,38 @@
 	<xs:complexType name="PhysicalObjectType.type">
 		<xs:complexContent>
 			<xs:extension base="ers:ObjectType.type">
+				<xs:attribute default="NORMAL" form="unqualified" name="physicsType" use="optional">
+					<xs:annotation>
+						<xs:documentation>Defines collision behavior and perceivability. </xs:documentation>
+					</xs:annotation>
+					<xs:simpleType>
+						<xs:restriction base="xs:string">
+							<xs:enumeration value="NORMAL">
+								<xs:annotation>
+									<xs:documentation>Participates in collisions and is perceivable.
+									</xs:documentation>
+								</xs:annotation>
+							</xs:enumeration>
+							<xs:enumeration value="INFINITE_MASS">
+								<xs:annotation>
+									<xs:documentation>Not affected by collisions, but perceivable. </xs:documentation>
+								</xs:annotation>
+							</xs:enumeration>
+							<xs:enumeration value="IMMATERIAL">
+								<xs:annotation>
+									<xs:documentation>Does not participate in collisions, but is perceivable.
+									</xs:documentation>
+								</xs:annotation>
+							</xs:enumeration>
+							<xs:enumeration value="PHANTOM">
+								<xs:annotation>
+									<xs:documentation>Does not participate in collisions, and is neither perceivable.
+									</xs:documentation>
+								</xs:annotation>
+							</xs:enumeration>
+						</xs:restriction>
+					</xs:simpleType>
+				</xs:attribute>
 				<xs:attribute default="false" form="unqualified" name="idPerceivable" type="xs:boolean"
 					use="optional"/>
 			</xs:extension>
@@ -1762,37 +2083,6 @@
 	<xs:element name="Periodicity" type="ers:DiscreteRandomVariable-OR-ValueExpr"/>
 	<xs:element name="StopCondition" type="ers:OpaqueExpression"/>
 	<!-- =================================================================== -->
-	<xs:complexType name="CommuncationRule.type">
-		<xs:complexContent>
-			<xs:extension base="aors:CommuncationRule.type_Redefined0">
-				<xs:attributeGroup ref="aors:ActionRulesUsage.attributes"/>
-			</xs:extension>
-		</xs:complexContent>
-	</xs:complexType>
-	<xs:complexType name="CommuncationRule.type_Redefined0">
-		<xs:sequence>
-			<xs:element minOccurs="0" ref="ers:documentation"/>
-			<xs:choice>
-				<xs:element form="qualified" name="WHEN"
-					type="aors:TriggeringCommunicationRuleEventExpr.type"/>
-				<xs:element ref="ers:ON-EACH-SIMULATION-STEP"/>
-			</xs:choice>
-			<xs:choice maxOccurs="unbounded" minOccurs="0">
-				<xs:element form="qualified" maxOccurs="unbounded" minOccurs="0" name="FOR"
-					type="aors:DataVariable-OR-BeliefEntityVariable-Declaration.type"/>
-				<xs:element form="qualified" maxOccurs="unbounded" minOccurs="0" name="FOR-ListItemVariable"
-					type="aors:FOR-AgentRuleListItemVariable.type"/>
-			</xs:choice>
-			<xs:element form="qualified" minOccurs="0" name="DO" type="aors:CommRuleDO.type"/>
-			<xs:sequence minOccurs="0">
-				<xs:element maxOccurs="unbounded" ref="ers:IF"/>
-				<xs:element form="qualified" name="THEN" type="aors:CommRuleDO.type"/>
-				<xs:element form="qualified" minOccurs="0" name="ELSE" type="aors:CommRuleDO.type"/>
-			</xs:sequence>
-		</xs:sequence>
-		<xs:attribute form="unqualified" name="name" type="ers:CanonicalName" use="required"/>
-		<xs:attribute form="unqualified" name="agentVariable" type="ers:CanonicalName" use="optional"/>
-	</xs:complexType>
 	<xs:complexType name="ReactionRule.type">
 		<xs:complexContent>
 			<xs:extension base="aors:ReactionRule.type_Redefined0">
@@ -1866,13 +2156,11 @@
 					<xs:element form="qualified" maxOccurs="unbounded" minOccurs="0" name="Component"
 						type="ers:Object.type"/>
 				</xs:sequence>
-				<xs:attribute form="unqualified" name="addToCollection" type="ers:CanonicalName"
-					use="optional">
-					<xs:annotation>
-						<xs:documentation>Can be used to add the newly created object to a collection defined in
-							the simulation  model.</xs:documentation>
-					</xs:annotation>
+				<!--  DROPPED in 0.8.4
+				<xs:attribute name="addToCollection" type="ers:CanonicalName" use="optional">
+					<xs:annotation><xs:documentation>Can be used to add the newly created object to a collection defined in the simulation  model.</xs:documentation></xs:annotation>
 				</xs:attribute>
+-->
 				<xs:attribute form="unqualified" name="objectVariable" type="ers:CanonicalName"
 					use="optional">
 					<xs:annotation>
@@ -2383,13 +2671,12 @@
 		<xs:attribute form="unqualified" name="creationLoopVar" type="ers:CanonicalName" use="optional"
 		/>
 	</xs:complexType>
-	<!-- =================================================================== -->
-	<xs:element name="Collection" substitutionGroup="ers:Object" type="ers:Collection.type"/>
-	<!-- =================================================================== -->
+	<!-- DROPPED in 0.8.4 =================================================================== 
+	<xs:element name="Collection" type="ers:Collection.type" substitutionGroup="ers:Object"/>
 	<xs:complexType name="Collection.type">
 		<xs:complexContent>
 			<xs:extension base="ers:Collection.type0">
-				<xs:attribute form="unqualified" name="itemType" type="ers:CanonicalName" use="required"/>
+				<xs:attribute name="itemType" type="ers:CanonicalName" use="required"/>
 			</xs:extension>
 		</xs:complexContent>
 	</xs:complexType>
@@ -2397,11 +2684,11 @@
 		<xs:complexContent>
 			<xs:restriction base="ers:Object.type">
 				<xs:sequence>
-					<xs:element maxOccurs="unbounded" minOccurs="0" ref="ers:Slot"/>
+					<xs:element ref="ers:Slot" minOccurs="0" maxOccurs="unbounded"/>
 				</xs:sequence>
-				<xs:attribute form="unqualified" name="id" type="xs:long" use="optional"/>
-				<xs:attribute form="unqualified" name="name" type="xs:NCName" use="optional"/>
-				<xs:attribute form="unqualified" name="type" use="required">
+				<xs:attribute name="id" type="xs:long" use="optional"/>
+				<xs:attribute name="name" type="xs:NCName" use="optional"/>
+				<xs:attribute name="type" use="required">
 					<xs:simpleType>
 						<xs:restriction base="ers:CanonicalName">
 							<xs:enumeration value="FIFO_QUEUE"/>
@@ -2413,6 +2700,7 @@
 			</xs:restriction>
 		</xs:complexContent>
 	</xs:complexType>
+	-->
 	<!-- =================================================================== -->
 	<!-- *** Agent *** -->
 	<!-- =================================================================== -->
@@ -2731,6 +3019,9 @@
 		<!-- ==================================================================== -->
 		<xs:complexContent>
 			<xs:extension base="ers:TriggeringAtomicEventExpr.type">
+				<!-- TODO		
+	<xs:attribute name="actorVariable" type="ers:CanonicalName" use="optional"/>
+-->
 				<xs:attribute form="unqualified" name="activityType" type="ers:CanonicalName" use="optional"
 				/>
 			</xs:extension>
@@ -2742,7 +3033,6 @@
 		<xs:complexType/>
 	</xs:element>
 	<xs:element name="IF" type="ers:Condition.type"/>
-	<xs:element name="ELSE-IF" type="ers:Condition.type"/>
 	<!-- =================================================================== -->
 	<xs:element name="EnvironmentRules">
 		<!-- =================================================================== -->
@@ -2940,11 +3230,10 @@
 			<xs:choice maxOccurs="unbounded" minOccurs="0">
 				<xs:element ref="ers:UpdateGlobalVariable"/>
 				<xs:element ref="ers:IncrementGlobalVariable"/>
-				<xs:element ref="ers:RemoveObjectFromCollection"/>
+				<xs:element ref="ers:UpdateMultiValuedGlobalVariable"/>
 				<xs:element ref="ers:UpdateObject"/>
 				<xs:element ref="ers:UpdateGridCell"/>
 				<xs:element ref="ers:ForEachGridCell"/>
-				<xs:element ref="ers:AddObjectToCollection"/>
 				<xs:element ref="ers:UpdateStatisticsVariable"/>
 				<xs:element ref="ers:Create"/>
 				<xs:element ref="ers:DestroyObject"/>
@@ -2970,6 +3259,17 @@
 		<xs:complexType>
 			<xs:attribute form="unqualified" name="name" type="ers:CanonicalName" use="required"/>
 			<xs:attribute form="unqualified" name="value" type="xs:long" use="required"/>
+		</xs:complexType>
+	</xs:element>
+	<!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->
+	<xs:element name="UpdateMultiValuedGlobalVariable">
+		<!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->
+		<xs:annotation>
+			<xs:documentation>For changing the value of a list-valued global variable.</xs:documentation>
+		</xs:annotation>
+		<xs:complexType>
+			<xs:group maxOccurs="unbounded" ref="ers:ChangeMultiValuedProperty.group"/>
+			<xs:attribute form="unqualified" name="name" type="ers:CanonicalName" use="required"/>
 		</xs:complexType>
 	</xs:element>
 	<!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->
@@ -3059,40 +3359,33 @@
 			<xs:attribute form="unqualified" name="loopVariable" type="ers:CanonicalName" use="optional"/>
 		</xs:complexType>
 	</xs:element>
-	<!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->
+	<!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ DROPPED in 0.8.4
 	<xs:element name="AddObjectToCollection">
-		<!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->
+
 		<xs:complexType>
 			<xs:sequence>
-				<xs:element form="qualified" maxOccurs="unbounded" minOccurs="0" name="ItemObjectRef"
-					type="ers:OpaqueExpression"/>
+				<xs:element name="ItemObjectRef" type="ers:OpaqueExpression" minOccurs="0" maxOccurs="unbounded"/>
 			</xs:sequence>
-			<xs:attribute form="unqualified" name="collectionName" type="ers:CanonicalName" use="optional"/>
-			<xs:attribute form="unqualified" name="collectionID" type="xs:long" use="optional"/>
-			<xs:attribute form="unqualified" name="collectionObjectVariable" type="ers:CanonicalName"
-				use="optional"/>
-			<xs:attribute form="unqualified" name="itemObjectVariable" type="ers:CanonicalName"
-				use="optional"/>
+			<xs:attribute name="collectionName" type="ers:CanonicalName" use="optional"/>
+			<xs:attribute name="collectionID" type="xs:long" use="optional"/>
+			<xs:attribute name="collectionObjectVariable" type="ers:CanonicalName" use="optional"/>
+			<xs:attribute name="itemObjectVariable" type="ers:CanonicalName" use="optional"/>
 		</xs:complexType>
 	</xs:element>
-	<!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->
+
 	<xs:element name="RemoveObjectFromCollection">
-		<!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->
 		<xs:complexType>
 			<xs:sequence>
-				<xs:element form="qualified" maxOccurs="unbounded" minOccurs="0" name="ItemObjectRef"
-					type="ers:OpaqueExpression"/>
+				<xs:element name="ItemObjectRef" type="ers:OpaqueExpression" minOccurs="0" maxOccurs="unbounded"/>
 			</xs:sequence>
-			<xs:attribute form="unqualified" name="collectionName" type="ers:CanonicalName" use="optional"/>
-			<xs:attribute form="unqualified" name="collectionID" type="xs:long" use="optional"/>
-			<xs:attribute form="unqualified" name="collectionObjectVariable" type="ers:CanonicalName"
-				use="optional"/>
-			<xs:attribute form="unqualified" name="itemObjectVariable" type="ers:CanonicalName"
-				use="optional"/>
-			<xs:attribute form="unqualified" name="destroyObject" type="xs:boolean" use="optional"/>
+			<xs:attribute name="collectionName" type="ers:CanonicalName" use="optional"/>
+			<xs:attribute name="collectionID" type="xs:long" use="optional"/>
+			<xs:attribute name="collectionObjectVariable" type="ers:CanonicalName" use="optional"/>
+			<xs:attribute name="itemObjectVariable" type="ers:CanonicalName" use="optional"/>
+			<xs:attribute name="destroyObject" type="xs:boolean" use="optional"/>
 		</xs:complexType>
 	</xs:element>
-	<!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->
+	~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->
 	<xs:element name="Increment" type="ers:Increment.type"/>
 	<xs:element name="Decrement" type="ers:Increment.type"/>
 	<!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->
@@ -3125,9 +3418,18 @@
 					</xs:complexType>
 				</xs:element>
 			</xs:sequence>
-			<xs:attribute form="unqualified" name="procedure" type="ers:CanonicalName" use="required"/>
+			<xs:attribute form="unqualified" name="procedure" type="ers:CanonicalName" use="required">
+				<xs:annotation>
+					<xs:documentation>A function/procedure defined in an object type.</xs:documentation>
+				</xs:annotation>
+			</xs:attribute>
 			<xs:attribute form="unqualified" name="contextObjectVariable" type="ers:CanonicalName"
-				use="optional"/>
+				use="required">
+				<xs:annotation>
+					<xs:documentation>This variable must have been declared by a FOR element, or, in a
+						reaction rule,       it can be the agent variable.</xs:documentation>
+				</xs:annotation>
+			</xs:attribute>
 		</xs:complexType>
 	</xs:element>
 	<!-- ==================================== -->
@@ -3184,23 +3486,6 @@
 			</xs:annotation>
 		</xs:attribute>
 	</xs:complexType>
-	<!-- ==================================================================== -->
-	<xs:element name="CommunicationRule" type="aors:CommuncationRule.type"/>
-	<!-- ==================================================================== -->
-	<!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->
-	<xs:complexType name="TriggeringCommunicationRuleEventExpr.type">
-		<!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->
-		<xs:complexContent>
-			<xs:extension base="aors:TriggeringAtomicEventExpr.type">
-				<xs:attribute form="unqualified" name="reminderMsg" type="ers:CanonicalName" use="optional">
-					<xs:annotation>
-						<xs:documentation>Reminder message is only allowed for
-							eventType="ReminderEvent".</xs:documentation>
-					</xs:annotation>
-				</xs:attribute>
-			</xs:extension>
-		</xs:complexContent>
-	</xs:complexType>
 	<!-- 
 	<xs:group name="AgentRule.sharedElements">
 		<xs:sequence>
@@ -3213,15 +3498,6 @@
 		</xs:sequence>
 	</xs:group>
 -->
-	<!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->
-	<xs:complexType name="CommRuleDO.type">
-		<!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->
-		<xs:sequence>
-			<xs:element minOccurs="0" ref="aors:UPDATE-AGT"/>
-			<xs:element form="qualified" minOccurs="0" name="SCHEDULE-EVT"
-				type="aors:CommRuleResEvtExpr.type"/>
-		</xs:sequence>
-	</xs:complexType>
 	<!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->
 	<xs:complexType name="DataVariable-OR-BeliefEntityVariable-Declaration.type">
 		<!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->
@@ -3264,16 +3540,6 @@
 				use="optional"/>
 		</xs:complexType>
 	</xs:element>
-	<!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->
-	<!-- *** SCHEDULE-EVT for Communication Rules *** -->
-	<!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->
-	<xs:complexType name="CommRuleResEvtExpr.type">
-		<xs:sequence>
-			<xs:element maxOccurs="unbounded" minOccurs="0" ref="aors:CreateDescription"/>
-			<xs:element maxOccurs="unbounded" minOccurs="0" ref="aors:OutMessageEventExpr"/>
-			<xs:element maxOccurs="unbounded" minOccurs="0" ref="aors:ReminderEventExpr"/>
-		</xs:sequence>
-	</xs:complexType>
 	<!-- ==================================================================== -->
 	<xs:element name="ReactionRule" type="aors:ReactionRule.type"/>
 	<!-- ==================================================================== -->
@@ -3281,11 +3547,24 @@
 	<xs:complexType name="TriggeringAgentRuleEventExpr.type">
 		<!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->
 		<xs:complexContent>
-			<xs:extension base="aors:TriggeringCommunicationRuleEventExpr.type">
-				<xs:attribute form="unqualified" name="physicalObjectType" type="ers:CanonicalName"
+			<xs:extension base="aors:TriggeringAtomicEventExpr.type">
+				<xs:attribute form="unqualified" name="reminderMsg" type="ers:CanonicalName" use="optional">
+					<xs:annotation>
+						<xs:documentation>The reminderMsg attribute must only be used in case
+							eventType="ReminderEvent".</xs:documentation>
+					</xs:annotation>
+				</xs:attribute>
+				<xs:attribute form="unqualified" name="physicalObjectType" type="aors:JavaTypeName"
 					use="optional">
 					<xs:annotation>
-						<xs:documentation>Physical object type is only allowed for
+						<xs:documentation>The physicalObjectType attribute must only be used in case
+							eventType="PhysicalObjectPerceptionEvent".</xs:documentation>
+					</xs:annotation>
+				</xs:attribute>
+				<xs:attribute form="unqualified" name="perceivedObjectVariable" type="ers:CanonicalName"
+					use="optional">
+					<xs:annotation>
+						<xs:documentation>The perceivedObjectVariable attribute must only be used in case
 							eventType="PhysicalObjectPerceptionEvent".</xs:documentation>
 					</xs:annotation>
 				</xs:attribute>
@@ -3497,6 +3776,7 @@
 		<xs:attribute form="unqualified" name="senderIdRef" type="xs:long" use="optional"/>
 		<!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->
 	</xs:complexType>
+	<xs:element name="ELSE-IF" type="ers:Condition.type"/>
 	<!-- ==================================================================== -->
 	<xs:element abstract="true" name="AbstractActionRule" type="aors:AbstractActionRule.type"/>
 	<!-- ==================================================================== -->
@@ -3644,7 +3924,6 @@
 			<xs:extension base="ers:ObjectType.type">
 				<xs:sequence>
 					<xs:group ref="aors:AgentType.elements"/>
-					<xs:element maxOccurs="unbounded" minOccurs="0" ref="aors:CommunicationRule"/>
 					<xs:element maxOccurs="unbounded" minOccurs="0" ref="aors:ReactionRule">
 						<xs:annotation>
 							<xs:documentation>For definiing a reactive behavior in response to an event of a
@@ -3986,7 +4265,6 @@
 				<xs:element ref="ers:IncrementGlobalVariable"/>
 				<xs:element ref="ers:UpdateObject"/>
 				<xs:element ref="ers:UpdateGridCell"/>
-				<xs:element ref="ers:AddObjectToCollection"/>
 				<xs:element ref="ers:UpdateStatisticsVariable"/>
 				<xs:element ref="ers:UpdateActor"/>
 			</xs:choice>
@@ -4025,77 +4303,6 @@
 		</xs:sequence>
 		<xs:attribute form="unqualified" name="actorType" type="xs:NCName" use="required"/>
 		<xs:attribute form="unqualified" name="actorVariable" type="ers:CanonicalName" use="optional"/>
-	</xs:complexType>
-	<xs:complexType name="AnimationUI.type">
-		<xs:complexContent>
-			<xs:extension base="aors:AnimationUI.type_Redefined0">
-				<xs:sequence>
-					<xs:element minOccurs="0" ref="aors:AgentControlUI"/>
-				</xs:sequence>
-			</xs:extension>
-		</xs:complexContent>
-	</xs:complexType>
-	<xs:complexType name="AnimationUI.type_Redefined0">
-		<xs:sequence>
-			<xs:element form="qualified" minOccurs="0" name="DisplayDescription">
-				<xs:complexType>
-					<xs:sequence>
-						<xs:element maxOccurs="unbounded" ref="ers:HtmlText"/>
-					</xs:sequence>
-				</xs:complexType>
-			</xs:element>
-			<!-- <xs:element ref="ers:Scales" minOccurs="0"/> -->
-			<xs:element form="qualified" name="Views">
-				<xs:complexType>
-					<xs:sequence>
-						<xs:element minOccurs="0" ref="ers:SpaceView"/>
-						<xs:element maxOccurs="unbounded" minOccurs="0" ref="ers:ObjectView"/>
-						<xs:element maxOccurs="unbounded" minOccurs="0" ref="ers:PhysicalObjectView"/>
-						<xs:element maxOccurs="unbounded" minOccurs="0" ref="ers:EventAppearance"/>
-					</xs:sequence>
-				</xs:complexType>
-			</xs:element>
-			<!--				<xs:element name="AgentControlUI" minOccurs="0">
-	      <xs:complexType>
-	      <xs:sequence>
-	      <xs:element ref="ers:PropertyUI" minOccurs="0" maxOccurs="unbounded"/>
-	      <xs:element ref="ers:SelfBeliefPropertyUI" minOccurs="0" maxOccurs="unbounded"/>
-	    -->
-			<!--
-	      <xs:element ref="ers:BeliefEntityUI" minOccurs="0" maxOccurs="unbounded"/>
-	    -->
-			<!--							<xs:element ref="ers:ReactionRuleUI"  minOccurs="0" maxOccurs="unbounded"/>
-	      <xs:element ref="ers:UserInterfaceEventListener" minOccurs="0" maxOccurs="unbounded"/>
-	      </xs:sequence>
-	      <xs:attribute name="agentType" type="ers:CanonicalName" use="required">
-	      <xs:annotation><xs:documentation>The type of agent for which this agent control UI is defined. </xs:documentation></xs:annotation>
-	      </xs:attribute>
-	      </xs:complexType>
-	      </xs:element>
-	    -->
-		</xs:sequence>
-		<xs:attribute form="unqualified" name="playableAgents" type="ers:ListOfCanonicalName"
-			use="optional">
-			<xs:annotation>
-				<xs:documentation>A list of agent names specifying those agents (defined in the initial
-					state) that are playable by a human user. </xs:documentation>
-			</xs:annotation>
-		</xs:attribute>
-		<xs:attribute form="unqualified" name="timeoutSec" type="xs:positiveInteger" use="optional">
-			<xs:annotation>
-				<xs:documentation>The timeout for the human-controlled agents' response time in number of
-					seconds. </xs:documentation>
-			</xs:annotation>
-		</xs:attribute>
-		<xs:attribute form="unqualified" name="introSoundFile" type="xs:anyURI" use="optional">
-			<xs:annotation>
-				<xs:documentation>The sound file can be mp3 or midi, as identified by its extension (.mp3 or
-					.mid). The file is searched first in the project folder under "media/sounds". If the file
-					is not found in this folder, then it is searched in the global media/sounds folder. If
-					still not found, then no sound is played. Note that the path is relative to the
-					media/sounds folder. </xs:documentation>
-			</xs:annotation>
-		</xs:attribute>
 	</xs:complexType>
 	<!-- =================================================================== -->
 	<xs:element name="SpaceView" type="ers:SpaceView.type">
@@ -4254,6 +4461,7 @@
 	<xs:complexType name="TwoDimensionalSpaceView2D.type">
 		<!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->
 		<xs:sequence>
+			<xs:element maxOccurs="unbounded" minOccurs="0" ref="ers:SpaceViewPropertyVisualizationMap"/>
 			<xs:element form="qualified" minOccurs="0" name="OverlayGrid">
 				<xs:complexType>
 					<xs:attribute form="unqualified" name="numberOfGridCellsX" use="required">
@@ -4323,16 +4531,7 @@
 			</xs:element>
 		</xs:sequence>
 		<xs:attributeGroup ref="ers:SpaceViewBackground.attributes"/>
-		<xs:attribute form="unqualified" name="borderColor" type="ers:Color.type" use="optional">
-			<xs:annotation>
-				<xs:documentation>Defines the color of the border line. </xs:documentation>
-			</xs:annotation>
-		</xs:attribute>
-		<xs:attribute form="unqualified" name="borderColorRGB" type="ers:RGB.type" use="optional">
-			<xs:annotation>
-				<xs:documentation>Defines the color of the border line. </xs:documentation>
-			</xs:annotation>
-		</xs:attribute>
+		<xs:attributeGroup ref="ers:SpaceViewBorder.attributes"/>
 	</xs:complexType>
 	<!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->
 	<xs:simpleType name="GridCellSize.type">
@@ -4345,14 +4544,67 @@
 	<!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->
 	<xs:complexType name="TwoDimensionalSpaceView3D.type">
 		<!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->
-		<xs:complexContent>
-			<xs:extension base="ers:TwoDimensionalSpaceView2D.type">
-				<xs:sequence>
-					<xs:element minOccurs="0" ref="ers:Skybox"/>
-				</xs:sequence>
-			</xs:extension>
-		</xs:complexContent>
+		<xs:sequence>
+			<xs:element minOccurs="0" ref="ers:Skybox"/>
+			<xs:choice minOccurs="0">
+				<xs:element ref="ers:GlobalCamera"/>
+				<xs:element ref="ers:AgentCamera"/>
+			</xs:choice>
+			<xs:element maxOccurs="unbounded" minOccurs="0" ref="ers:SpaceViewPropertyVisualizationMap"/>
+		</xs:sequence>
+		<xs:attributeGroup ref="ers:SpaceViewBackground.attributes"/>
+		<xs:attributeGroup ref="ers:SpaceViewBorder.attributes"/>
 	</xs:complexType>
+	<!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->
+	<xs:complexType name="ThreeDimensionalSpaceView.type">
+		<!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->
+		<xs:sequence>
+			<xs:element minOccurs="0" ref="ers:Skybox"/>
+			<xs:choice minOccurs="0">
+				<xs:element ref="ers:GlobalCamera"/>
+				<xs:element ref="ers:AgentCamera"/>
+			</xs:choice>
+			<xs:element maxOccurs="unbounded" minOccurs="0" ref="ers:SpaceViewPropertyVisualizationMap"/>
+		</xs:sequence>
+		<xs:attributeGroup ref="ers:SpaceViewBackground.attributes"/>
+		<xs:attributeGroup ref="ers:SpaceViewBorder.attributes"/>
+	</xs:complexType>
+	<!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->
+	<xs:element name="GlobalCamera">
+		<!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->
+		<xs:complexType>
+			<xs:attribute form="unqualified" name="position" type="ers:DoubleTriple.type" use="required"/>
+			<xs:attribute form="unqualified" name="viewVector" type="ers:DoubleTriple.type" use="required"/>
+			<xs:attribute form="unqualified" name="upVector" type="ers:DoubleTriple.type" use="required"/>
+		</xs:complexType>
+	</xs:element>
+	<!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->
+	<xs:element name="AgentCamera">
+		<!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->
+		<xs:complexType>
+			<xs:attribute form="unqualified" name="agentIdRef" type="xs:long" use="required"/>
+			<xs:attribute form="unqualified" name="viewType" use="required">
+				<xs:simpleType>
+					<xs:restriction base="xs:string">
+						<xs:enumeration value="FIRST_PERSON"/>
+						<xs:enumeration value="THIRD_PERSON"/>
+					</xs:restriction>
+				</xs:simpleType>
+			</xs:attribute>
+			<xs:attribute form="unqualified" name="defaultViewVector" type="ers:DoubleTriple.type"
+				use="required"/>
+			<xs:attribute form="unqualified" name="upVector" type="ers:DoubleTriple.type" use="required"/>
+			<xs:attribute form="unqualified" name="cameraOrientationMode" use="required">
+				<xs:simpleType>
+					<xs:restriction base="xs:string">
+						<xs:enumeration value="FIXED"/>
+						<xs:enumeration value="BODY_ROTATION"/>
+						<xs:enumeration value="MOVING_DIRECTION"/>
+					</xs:restriction>
+				</xs:simpleType>
+			</xs:attribute>
+		</xs:complexType>
+	</xs:element>
 	<!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->
 	<xs:complexType name="TwoDimensionalGridSpaceView2D.type">
 		<!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->
@@ -4419,9 +4671,9 @@
 			</xs:extension>
 		</xs:complexContent>
 	</xs:complexType>
-	<!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->
+	<!-- =================================================================== -->
 	<xs:element name="SpaceViewPropertyVisualizationMap">
-		<!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->
+		<!-- =================================================================== -->
 		<xs:annotation>
 			<xs:documentation>A function that maps a global variable or an object property to a space view
 				property for visualizing it. The <h:code>mapType</h:code> attribute allows to specify the
@@ -4439,7 +4691,8 @@
 		<xs:complexType>
 			<xs:attribute form="unqualified" name="spaceViewProperty" type="ers:SpaceViewProperty.type"
 				use="required"/>
-			<xs:attributeGroup ref="ers:Map.attrgrp"/>
+			<xs:attribute form="unqualified" name="globalVariable" type="ers:CanonicalName" use="required"/>
+			<xs:attributeGroup ref="ers:MapParameters.attrgrp"/>
 		</xs:complexType>
 	</xs:element>
 	<!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->
@@ -4487,6 +4740,20 @@
 		</xs:attribute>
 	</xs:attributeGroup>
 	<!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->
+	<xs:attributeGroup name="SpaceViewBorder.attributes">
+		<!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->
+		<xs:attribute form="unqualified" name="borderColor" type="ers:Color.type" use="optional">
+			<xs:annotation>
+				<xs:documentation>Defines the color of the border line. </xs:documentation>
+			</xs:annotation>
+		</xs:attribute>
+		<xs:attribute form="unqualified" name="borderColorRGB" type="ers:RGB.type" use="optional">
+			<xs:annotation>
+				<xs:documentation>Defines the color of the border line. </xs:documentation>
+			</xs:annotation>
+		</xs:attribute>
+	</xs:attributeGroup>
+	<!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->
 	<xs:attributeGroup name="GridStroke.attributes">
 		<!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->
 		<xs:attribute form="unqualified" name="stroke" type="ers:Color.type" use="optional">
@@ -4511,6 +4778,11 @@
 	<xs:attributeGroup name="Map.attrgrp">
 		<!-- =================================================================== -->
 		<xs:attribute form="unqualified" name="property" type="ers:CanonicalName" use="required"/>
+		<xs:attributeGroup ref="ers:MapParameters.attrgrp"/>
+	</xs:attributeGroup>
+	<!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->
+	<xs:attributeGroup name="MapParameters.attrgrp">
+		<!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->
 		<xs:attribute form="unqualified" name="mapType" use="required">
 			<xs:simpleType>
 				<xs:restriction base="xs:string">
@@ -4625,7 +4897,7 @@
 				<xs:element minOccurs="0" ref="ers:PhysicalShape3D"/>
 			</xs:choice>
 			<xs:group ref="ers:ViewAnnotation.elements"/>
-			<xs:element maxOccurs="unbounded" minOccurs="0" ref="ers:EmbeddedShape2D">
+			<xs:element maxOccurs="unbounded" minOccurs="0" ref="ers:AttachedShape2D">
 				<xs:annotation>
 					<xs:documentation>Allows defining nested 2D shapes.</xs:documentation>
 				</xs:annotation>
@@ -4680,7 +4952,7 @@
 				<xs:element minOccurs="0" ref="ers:Shape3D"/>
 			</xs:choice>
 			<xs:group ref="ers:ViewAnnotation.elements"/>
-			<xs:element maxOccurs="unbounded" minOccurs="0" ref="ers:EmbeddedShape2D">
+			<xs:element maxOccurs="unbounded" minOccurs="0" ref="ers:AttachedShape2D">
 				<xs:annotation>
 					<xs:documentation>Allows defining nested 2D shapes.</xs:documentation>
 				</xs:annotation>
@@ -4729,12 +5001,12 @@
 		-->
 	</xs:attributeGroup>
 	<!-- =================================================================== -->
-	<xs:element name="EmbeddedShape2D">
+	<xs:element name="AttachedShape2D">
 		<!-- =================================================================== -->
 		<xs:annotation>
-			<xs:documentation>Defines a (possibly dynamic) shape that is embedded in a view or in another
-				embedded shape. An embedded shape is either a shape or a dynamic shape (i.e. a shape
-				visualization map), and possibly has other embedded shapes. </xs:documentation>
+			<xs:documentation>Defines a (possibly dynamic) shape that is attached to a view or another
+				attached shape. An attached shape is either a shape or a dynamic shape (i.e. a shape
+				visualization map), and possibly has other attached shapes. </xs:documentation>
 		</xs:annotation>
 		<xs:complexType>
 			<xs:sequence>
@@ -4761,7 +5033,7 @@
 						</xs:complexType>
 					</xs:element>
 				</xs:choice>
-				<xs:element maxOccurs="unbounded" minOccurs="0" ref="ers:EmbeddedShape2D">
+				<xs:element maxOccurs="unbounded" minOccurs="0" ref="ers:AttachedShape2D">
 					<xs:annotation>
 						<xs:documentation>Allows defining nested shapes.</xs:documentation>
 					</xs:annotation>
@@ -4898,6 +5170,48 @@
 								</xs:complexType>
 							</xs:element>
 						</xs:sequence>
+						<xs:attributeGroup ref="ers:ShapeFillAttributes"/>
+						<xs:attributeGroup ref="ers:ShapeStrokeAttributes"/>
+					</xs:complexType>
+				</xs:element>
+				<xs:element form="qualified" name="Arc">
+					<xs:annotation>
+						<xs:documentation>        Defines a circle arc shape. Allows to draw pies like shapes.
+							Notice that the space         coordinates (x,y) refers to the center of the circle to
+							which this arc belongs to.        The arc is drawn counterclockwise.
+						</xs:documentation>
+					</xs:annotation>
+					<xs:complexType>
+						<xs:sequence>
+							<xs:element form="qualified" maxOccurs="unbounded" minOccurs="0"
+								name="ShapePropertyVisualizationMap">
+								<xs:complexType>
+									<xs:attribute form="unqualified" name="shapeProperty"
+										type="ers:ArcShapeProperty.type" use="required"/>
+									<xs:attributeGroup ref="ers:Map.attrgrp"/>
+								</xs:complexType>
+							</xs:element>
+						</xs:sequence>
+						<xs:attribute form="unqualified" name="angle" type="xs:double" use="optional">
+							<xs:annotation>
+								<xs:documentation>          The opening angle of the arc shape in degrees.
+									Default is 360 degrees, that means a full circle.         </xs:documentation>
+							</xs:annotation>
+						</xs:attribute>
+						<xs:attribute form="unqualified" name="startAngle" type="xs:double" use="optional">
+							<xs:annotation>
+								<xs:documentation>          The angle (degrees) where the arc starts. Default is 0
+									degrees.         </xs:documentation>
+							</xs:annotation>
+						</xs:attribute>
+						<xs:attribute form="unqualified" name="endAngle" type="xs:double" use="optional">
+							<xs:annotation>
+								<xs:documentation>          The angle (degrees) where the arc shape ends. Default is
+									360 degrees.           If set, then the value of @angle will be ignored while an
+									automatic           computation will apply based on @startAngle and @endAngle
+									values.         </xs:documentation>
+							</xs:annotation>
+						</xs:attribute>
 						<xs:attributeGroup ref="ers:ShapeFillAttributes"/>
 						<xs:attributeGroup ref="ers:ShapeStrokeAttributes"/>
 					</xs:complexType>
@@ -5080,6 +5394,56 @@
 							type="ers:PositiveInteger-OR-Pixel-OR-Percent.type" use="optional"/>
 						<xs:attribute form="unqualified" name="height"
 							type="ers:PositiveInteger-OR-Pixel-OR-Percent.type" use="optional"/>
+						<xs:attributeGroup ref="ers:ShapeFillAttributes"/>
+						<xs:attributeGroup ref="ers:ShapeStrokeAttributes"/>
+					</xs:complexType>
+				</xs:element>
+				<xs:element form="qualified" name="Arc">
+					<xs:annotation>
+						<xs:documentation>        Defines a circle arc shape. Allows to draw pies like shapes.
+							Notice that the space         coordinates (x,y) refers to the center of the circle to
+							which this arc belongs to.        The arc is drawn counterclockwise.
+						</xs:documentation>
+					</xs:annotation>
+					<xs:complexType>
+						<xs:sequence>
+							<xs:element form="qualified" maxOccurs="unbounded" minOccurs="0"
+								name="ShapePropertyVisualizationMap">
+								<xs:complexType>
+									<xs:attribute form="unqualified" name="shapeProperty"
+										type="ers:ArcShapeProperty.type" use="required"/>
+									<xs:attributeGroup ref="ers:Map.attrgrp"/>
+								</xs:complexType>
+							</xs:element>
+						</xs:sequence>
+						<xs:attribute form="unqualified" name="r"
+							type="ers:PositiveInteger-OR-Pixel-OR-Percent.type" use="optional">
+							<xs:annotation>
+								<xs:documentation>          The radius of the Arc shape. The position (x,y) refers
+									to the circle origin           to which this arc belongs to.
+								</xs:documentation>
+							</xs:annotation>
+						</xs:attribute>
+						<xs:attribute form="unqualified" name="angle" type="xs:double" use="optional">
+							<xs:annotation>
+								<xs:documentation>          The opening angle of the arc shape in degrees.
+									Default is 360 degrees, that means a full circle.         </xs:documentation>
+							</xs:annotation>
+						</xs:attribute>
+						<xs:attribute form="unqualified" name="startAngle" type="xs:double" use="optional">
+							<xs:annotation>
+								<xs:documentation>          The angle (degrees) where the arc starts. Default is 0
+									degrees.         </xs:documentation>
+							</xs:annotation>
+						</xs:attribute>
+						<xs:attribute form="unqualified" name="endAngle" type="xs:double" use="optional">
+							<xs:annotation>
+								<xs:documentation>          The angle (degrees) where the arc shape ends. Default is
+									360 degrees.           If set, then the value of @angle will be ignored while an
+									automatic           computation will apply based on @startAngle and @endAngle
+									values.         </xs:documentation>
+							</xs:annotation>
+						</xs:attribute>
 						<xs:attributeGroup ref="ers:ShapeFillAttributes"/>
 						<xs:attributeGroup ref="ers:ShapeStrokeAttributes"/>
 					</xs:complexType>
@@ -5294,6 +5658,32 @@
 			<xs:enumeration value="opacity"/>
 			<xs:enumeration value="fillOpacity"/>
 			<xs:enumeration value="rot"/>
+			<xs:enumeration value="texture"/>
+		</xs:restriction>
+	</xs:simpleType>
+	<!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->
+	<xs:simpleType name="ArcShapeProperty.type">
+		<!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->
+		<xs:restriction base="xs:string">
+			<xs:enumeration value="r"/>
+			<xs:enumeration value="angle"/>
+			<xs:enumeration value="startAngle"/>
+			<xs:enumeration value="endAngle"/>
+			<!-- shared shape properties -->
+			<xs:enumeration value="x"/>
+			<xs:enumeration value="y"/>
+			<xs:enumeration value="fill"/>
+			<xs:enumeration value="fillR"/>
+			<xs:enumeration value="fillG"/>
+			<xs:enumeration value="fillB"/>
+			<xs:enumeration value="stroke"/>
+			<xs:enumeration value="strokeR"/>
+			<xs:enumeration value="strokeG"/>
+			<xs:enumeration value="strokeB"/>
+			<xs:enumeration value="strokeWidth"/>
+			<xs:enumeration value="opacity"/>
+			<xs:enumeration value="fillOpacity"/>
+			<xs:enumeration value="rot"/>
 		</xs:restriction>
 	</xs:simpleType>
 	<!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->
@@ -5316,6 +5706,7 @@
 			<xs:enumeration value="opacity"/>
 			<xs:enumeration value="fillOpacity"/>
 			<xs:enumeration value="rot"/>
+			<xs:enumeration value="texture"/>
 		</xs:restriction>
 	</xs:simpleType>
 	<!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->
@@ -5339,6 +5730,7 @@
 			<xs:enumeration value="opacity"/>
 			<xs:enumeration value="fillOpacity"/>
 			<xs:enumeration value="rot"/>
+			<xs:enumeration value="texture"/>
 		</xs:restriction>
 	</xs:simpleType>
 	<!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->
@@ -5361,6 +5753,7 @@
 			<xs:enumeration value="opacity"/>
 			<xs:enumeration value="fillOpacity"/>
 			<xs:enumeration value="rot"/>
+			<xs:enumeration value="texture"/>
 		</xs:restriction>
 	</xs:simpleType>
 	<!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->
@@ -5385,6 +5778,7 @@
 			<xs:enumeration value="opacity"/>
 			<xs:enumeration value="fillOpacity"/>
 			<xs:enumeration value="rot"/>
+			<xs:enumeration value="texture"/>
 		</xs:restriction>
 	</xs:simpleType>
 	<!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->
@@ -6043,13 +6437,7 @@
 						<xs:sequence>
 							<xs:element ref="ers:Label"/>
 							<xs:element ref="ers:Hint"/>
-							<xs:element form="qualified" minOccurs="0" name="Format">
-								<xs:complexType>
-									<xs:group ref="ers:Units.elemGrp"/>
-									<xs:attribute form="unqualified" name="decimalPlaces" type="xs:nonNegativeInteger"
-										use="required"/>
-								</xs:complexType>
-							</xs:element>
+							<xs:element minOccurs="0" ref="ers:Format"/>
 						</xs:sequence>
 						<xs:attribute form="unqualified" name="variable" type="ers:CanonicalName" use="required"/>
 						<xs:attribute form="unqualified" name="comparisonGroup" type="ers:CanonicalName"
@@ -6063,8 +6451,8 @@
 						<xs:attribute form="unqualified" name="showChart" type="xs:boolean" use="optional">
 							<xs:annotation>
 								<xs:documentation>Allows to specify that the variable's time series should be shown
-									in a chart. It makes only sense for variables that have distinct values at
-									different simulations steps such that their temporal variation is of interest.
+									in a chart. Makes only sense for variables that have distinct values at different
+									simulations steps such that their temporal variation is of interest.
 								</xs:documentation>
 							</xs:annotation>
 						</xs:attribute>
@@ -6127,6 +6515,7 @@
 			<xs:element form="qualified" minOccurs="0" name="Volume" type="ers:VolumeUnit"/>
 			<xs:element form="qualified" minOccurs="0" name="Math" type="ers:MathUnit"/>
 			<xs:element form="qualified" minOccurs="0" name="Physics" type="ers:PhysicalUnit"/>
+			<xs:element form="qualified" minOccurs="0" name="PackagingUnits" type="ers:PackagingUnit"/>
 		</xs:choice>
 	</xs:group>
 	<!-- =================================================================== -->
@@ -6155,7 +6544,9 @@
 	<!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->
 	<xs:attributeGroup name="EntityUI.attributes">
 		<!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->
-		<xs:attribute form="unqualified" name="nmrOfInstances" use="optional">
+		<xs:attribute form="unqualified" name="minNmrOfInstances" type="xs:nonNegativeInteger"
+			use="optional"/>
+		<xs:attribute form="unqualified" name="maxNmrOfInstances" use="optional">
 			<xs:simpleType>
 				<xs:restriction base="xs:integer">
 					<xs:minInclusive value="1"/>
@@ -6195,18 +6586,25 @@
 	<!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->
 	<xs:complexType name="PropertyUI.type">
 		<!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->
-		<xs:sequence>
-			<xs:element ref="ers:Label"/>
-			<xs:element ref="ers:Hint"/>
-			<xs:element minOccurs="0" ref="ers:Unit"/>
-		</xs:sequence>
+		<xs:group ref="ers:Field.CommonElem"/>
 		<xs:attribute form="unqualified" name="property" type="ers:CanonicalName" use="required"/>
-		<xs:attributeGroup ref="ers:PropertyAndVariable.attrGrp"/>
+		<xs:attributeGroup ref="ers:PropertyAndVariableInputField.attrGrp"/>
 	</xs:complexType>
 	<!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->
-	<xs:attributeGroup name="PropertyAndVariable.attrGrp">
+	<xs:group name="Field.CommonElem">
 		<!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->
-		<xs:attribute form="unqualified" name="readonly" type="xs:boolean" use="optional"/>
+		<xs:sequence>
+			<xs:element ref="ers:Label"/>
+			<xs:element minOccurs="0" ref="ers:Hint"/>
+			<xs:element minOccurs="0" ref="ers:Format"/>
+		</xs:sequence>
+	</xs:group>
+	<!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->
+	<xs:attributeGroup name="PropertyAndVariableInputField.attrGrp">
+		<!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->
+		<xs:attribute form="unqualified" name="label" type="xs:string" use="optional"/>
+		<xs:attribute default="false" form="unqualified" name="readonly" type="xs:boolean"
+			use="optional"/>
 		<xs:attribute form="unqualified" name="inputFieldLength" use="optional">
 			<xs:annotation>
 				<xs:documentation>The length of the property input field in cm. </xs:documentation>
@@ -6236,6 +6634,15 @@
 			</xs:simpleType>
 		</xs:attribute>
 	</xs:attributeGroup>
+	<!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->
+	<xs:element name="Format">
+		<!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->
+		<xs:complexType>
+			<xs:group ref="ers:Units.elemGrp"/>
+			<xs:attribute form="unqualified" name="decimalPlaces" type="xs:nonNegativeInteger"
+				use="required"/>
+		</xs:complexType>
+	</xs:element>
 	<!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->
 	<xs:element name="Unit">
 		<!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->
@@ -6274,15 +6681,9 @@
 	<xs:element name="GlobalVariableUI">
 		<!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->
 		<xs:complexType>
-			<xs:sequence>
-				<xs:sequence>
-					<xs:element ref="ers:Label"/>
-					<xs:element ref="ers:Hint"/>
-					<xs:element minOccurs="0" ref="ers:Unit"/>
-				</xs:sequence>
-			</xs:sequence>
+			<xs:group ref="ers:Field.CommonElem"/>
 			<xs:attribute form="unqualified" name="variable" type="ers:CanonicalName" use="required"/>
-			<xs:attributeGroup ref="ers:PropertyAndVariable.attrGrp"/>
+			<xs:attributeGroup ref="ers:PropertyAndVariableInputField.attrGrp"/>
 		</xs:complexType>
 	</xs:element>
 	<!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->
@@ -6299,1479 +6700,40 @@
 	<!-- =================================================================== -->
 	<xs:element name="AnimationUI" type="ers:AnimationUI.type"/>
 	<!-- =================================================================== -->
-	<!-- =================================================================== -->
-	<xs:element name="ReactionRuleUI">
-		<!-- =================================================================== -->
-		<xs:complexType>
-			<xs:sequence>
-				<xs:element form="qualified" maxOccurs="unbounded" minOccurs="0" name="ActionEventUI">
-					<xs:complexType>
-						<xs:sequence>
-							<xs:element maxOccurs="unbounded" minOccurs="0" ref="ers:PropertyUI"/>
-						</xs:sequence>
-						<xs:attribute form="unqualified" name="actionEventType" type="ers:CanonicalName"
-							use="required"/>
-					</xs:complexType>
-				</xs:element>
-				<xs:element form="qualified" maxOccurs="unbounded" minOccurs="0" name="OutMessageEventUI">
-					<xs:complexType>
-						<xs:sequence>
-							<xs:element maxOccurs="unbounded" minOccurs="0" ref="ers:PropertyUI"/>
-						</xs:sequence>
-						<xs:attribute form="unqualified" name="messageType" type="ers:CanonicalName"
-							use="required"/>
-					</xs:complexType>
-				</xs:element>
-			</xs:sequence>
-			<xs:attribute form="unqualified" name="rule" type="ers:CanonicalName" use="required">
-				<xs:annotation>
-					<xs:documentation>The name of the affected rule. </xs:documentation>
-				</xs:annotation>
-			</xs:attribute>
-			<xs:attribute form="unqualified" name="activationMode" use="optional">
-				<xs:annotation>
-					<xs:documentation>Defines the way in which a reaction rule is activated or used when the
-						agent is controlled by a human user. In case of "suspend", the rule is not used/executed
-						at all. In case of "entryform", the rule is used in combination with an entry form that
-						allows the user to enter a value for a paramter of the rule's action. In case of
-						"activate", the rule is applied by the simulator, but has to be activated by the user
-						for being fired (by a mouse-click or another kind of activation). </xs:documentation>
-				</xs:annotation>
-				<xs:simpleType>
-					<xs:restriction base="xs:string">
-						<xs:enumeration value="suspend"/>
-						<xs:enumeration value="entryform"/>
-						<xs:enumeration value="activate"/>
-					</xs:restriction>
-				</xs:simpleType>
-			</xs:attribute>
-		</xs:complexType>
-	</xs:element>
-	<!-- =================================================================== -->
-	<xs:element name="UserInterfaceEventListener">
-		<!-- =================================================================== -->
-		<xs:complexType>
-			<xs:sequence>
-				<xs:element form="qualified" name="WHEN">
-					<xs:complexType>
-						<xs:complexContent>
-							<xs:restriction base="ers:UserInterfaceEventListenerTriggeringEvent.type">
-								<xs:choice maxOccurs="1">
-									<xs:element ref="ers:KeyboardEvent"/>
-									<xs:element ref="ers:MouseEvent"/>
-								</xs:choice>
-							</xs:restriction>
-						</xs:complexContent>
-					</xs:complexType>
-				</xs:element>
-				<xs:element form="qualified" name="DO"
-					type="ers:UserInterfaceEventListenerResultingEvent.type"/>
-			</xs:sequence>
-		</xs:complexType>
-	</xs:element>
-	<xs:complexType name="UserInterfaceEventListenerTriggeringEvent.type">
-		<xs:annotation>
-			<xs:documentation>         User interface events are defined in the DOM3-Spezifikation
-				[http://www.w3.org/TR/DOM-Level-3-Events]       </xs:documentation>
-		</xs:annotation>
-		<xs:choice maxOccurs="unbounded">
-			<xs:element ref="ers:KeyboardEvent"/>
-			<xs:element ref="ers:MouseEvent"/>
-		</xs:choice>
-	</xs:complexType>
-	<xs:element name="KeyboardEvent">
-		<xs:complexType>
-			<xs:attribute form="unqualified" name="keyIdentifier" type="ers:KeyIdentifiers.type"
-				use="required"/>
-			<xs:attribute form="unqualified" name="shiftKey" type="xs:boolean" use="optional"/>
-			<xs:attribute form="unqualified" name="ctrlKey" type="xs:boolean" use="optional"/>
-			<!--									
-        <xs:attribute name="altKey" type="xs:boolean" use="optional">
-        <xs:annotation><xs:documentation>On Macintosh systems this key modifier corresponds to the Option key modifier. </xs:documentation></xs:annotation>
-        </xs:attribute>
-      -->
-		</xs:complexType>
-	</xs:element>
-	<xs:simpleType name="KeyIdentifiers.type">
-		<xs:annotation>
-			<xs:documentation>See
-				http://www.w3.org/TR/2009/WD-DOM-Level-3-Events-20090908/#keyset-keyidentifiers
-			</xs:documentation>
-		</xs:annotation>
-		<xs:restriction base="xs:string">
-			<xs:enumeration value="Down"/>
-			<xs:enumeration value="Left"/>
-			<xs:enumeration value="Right"/>
-			<xs:enumeration value="Up"/>
-			<xs:enumeration value="Enter">
-				<xs:annotation>
-					<xs:documentation>This key identifier shall be also used for the Return (Macintosh numpad)
-						key. </xs:documentation>
-				</xs:annotation>
-			</xs:enumeration>
-			<xs:enumeration value="F1"/>
-			<xs:enumeration value="F2"/>
-			<xs:enumeration value="F3"/>
-			<xs:enumeration value="F4"/>
-			<xs:enumeration value="F5"/>
-			<xs:enumeration value="F6"/>
-			<xs:enumeration value="F7"/>
-			<xs:enumeration value="F8"/>
-			<xs:enumeration value="F9"/>
-			<xs:enumeration value="F10"/>
-			<xs:enumeration value="F11"/>
-			<xs:enumeration value="F12"/>
-			<xs:enumeration value="Insert"/>
-			<xs:enumeration value="Del">
-				<xs:annotation>
-					<xs:documentation>This key identifier shall be also used for the key labeled 'delete'
-						MacOS keyboards when modified by the 'Fn' key.</xs:documentation>
-				</xs:annotation>
-			</xs:enumeration>
-			<xs:enumeration value="Backspace">
-				<xs:annotation>
-					<xs:documentation>This key identifier shall be also used for the key labeled 'delete'
-						MacOS keyboards when not modified by the 'Fn' key.</xs:documentation>
-				</xs:annotation>
-			</xs:enumeration>
-			<xs:enumeration value="PageDown"/>
-			<xs:enumeration value="PageUp"/>
-			<xs:enumeration value="Tab"/>
-			<xs:enumeration value="Esc"/>
-			<xs:enumeration value="Spacebar"/>
-			<xs:enumeration value="#"/>
-			<xs:enumeration value="+"/>
-			<xs:enumeration value="-"/>
-			<xs:enumeration value="1"/>
-			<xs:enumeration value="2"/>
-			<xs:enumeration value="3"/>
-			<xs:enumeration value="4"/>
-			<xs:enumeration value="5"/>
-			<xs:enumeration value="6"/>
-			<xs:enumeration value="7"/>
-			<xs:enumeration value="8"/>
-			<xs:enumeration value="9"/>
-			<xs:enumeration value="0"/>
-			<xs:enumeration value="A"/>
-			<xs:enumeration value="B"/>
-			<xs:enumeration value="C"/>
-			<xs:enumeration value="D"/>
-			<xs:enumeration value="E"/>
-			<xs:enumeration value="F"/>
-			<xs:enumeration value="G"/>
-			<xs:enumeration value="H"/>
-			<xs:enumeration value="I"/>
-			<xs:enumeration value="J"/>
-			<xs:enumeration value="K"/>
-			<xs:enumeration value="L"/>
-			<xs:enumeration value="M"/>
-			<xs:enumeration value="N"/>
-			<xs:enumeration value="O"/>
-			<xs:enumeration value="P"/>
-			<xs:enumeration value="Q"/>
-			<xs:enumeration value="R"/>
-			<xs:enumeration value="S"/>
-			<xs:enumeration value="T"/>
-			<xs:enumeration value="U"/>
-			<xs:enumeration value="V"/>
-			<xs:enumeration value="W"/>
-			<xs:enumeration value="X"/>
-			<xs:enumeration value="Y"/>
-			<xs:enumeration value="Z"/>
-		</xs:restriction>
-	</xs:simpleType>
-	<xs:element name="MouseEvent" type="ers:MouseEvent.type"/>
-	<xs:complexType name="MouseEvent.type">
-		<xs:attribute form="unqualified" name="targetType" type="ers:CanonicalName" use="optional"/>
-		<xs:attribute form="unqualified" name="targetIdRef" type="xs:long" use="optional"/>
-		<xs:attribute form="unqualified" name="targetName" type="xs:string" use="optional"/>
-		<xs:attribute form="unqualified" name="mouseEventType" type="ers:MouseEventType.type"
-			use="required"/>
-		<xs:attribute form="unqualified" name="eventVariable" type="ers:CanonicalName" use="optional"/>
-	</xs:complexType>
-	<xs:simpleType name="MouseEventType.type">
-		<xs:annotation>
-			<xs:documentation>See
-				http://www.w3.org/TR/2009/WD-DOM-Level-3-Events-20090908/#events-mouseevents
-			</xs:documentation>
-		</xs:annotation>
-		<xs:restriction base="xs:string">
-			<xs:enumeration value="click"/>
-			<xs:enumeration value="dblclick"/>
-			<xs:enumeration value="mousedown"/>
-			<xs:enumeration value="mouseup"/>
-		</xs:restriction>
-	</xs:simpleType>
-	<xs:complexType name="UserInterfaceEventListenerResultingEvent.type">
+	<xs:complexType name="AnimationUI.type">
 		<xs:sequence>
-			<xs:element maxOccurs="unbounded" minOccurs="0" ref="ers:Slot"/>
-		</xs:sequence>
-		<xs:attribute form="unqualified" name="actionType" type="ers:CanonicalName" use="required"/>
-	</xs:complexType>
-	<xs:element name="AgentControlUI">
-		<xs:complexType>
-			<xs:sequence>
-				<xs:element maxOccurs="unbounded" ref="aors:ControllableAgentType"/>
-			</xs:sequence>
-		</xs:complexType>
-	</xs:element>
-	<xs:element name="ControllableAgentType">
-		<xs:complexType>
-			<xs:sequence>
-				<xs:element form="qualified" name="GUI" type="aors:AgentControlUI.GUI.type"/>
-				<xs:element form="qualified" maxOccurs="unbounded" minOccurs="0"
-					name="UserInterfaceEventListener"
-					type="aors:AgentControlUI.UserInterfaceEventListener.type">
-					<!--xs:unique name="structure.unique.names">
-            <xs:selector xpath=".//aors:textfield | .//aors:checkbox | .//aors:select | .//aors:button | .//aors:textarea | .//aors:slider"/>
-            <xs:field xpath="@name"/>
-          </xs:unique-->
-				</xs:element>
-			</xs:sequence>
-			<xs:attribute name="type" type="aors:CanonicalName" use="required"/>
-			<xs:attribute name="controllableAgents" type="aors:ListOfLong" use="optional"/>
-			<xs:attribute name="suspendRules" type="aors:ListOfCanonicalName" use="optional"/>
-		</xs:complexType>
-	</xs:element>
-	<!--###########-->
-	<!--### GUI ###-->
-	<!--###########-->
-	<xs:complexType name="AgentControlUI.GUI.type">
-		<xs:sequence>
-			<xs:element form="qualified" minOccurs="0" name="Style">
+			<xs:element form="qualified" minOccurs="0" name="DisplayDescription">
 				<xs:complexType>
-					<xs:simpleContent>
-						<xs:extension base="xs:string">
-							<xs:attribute fixed="text/css" name="type" type="xs:string" use="optional"/>
-						</xs:extension>
-					</xs:simpleContent>
-				</xs:complexType>
-			</xs:element>
-			<xs:element form="qualified" name="Structure"
-				type="aors:AgentControlUI.GUI.FlowPerceptionlistContent.type"/>
-		</xs:sequence>
-		<xs:attribute name="defaultLanguage" type="xs:language" use="required"/>
-	</xs:complexType>
-	<!--#################-->
-	<!--### Structure ###-->
-	<!--#################-->
-	<!-- empty and common attributes -->
-	<xs:complexType name="AgentControlUI.GUI.EmptyContent.type">
-		<xs:attributeGroup ref="aors:AgentControlUI.GUI.CommonAttributes"/>
-	</xs:complexType>
-	<xs:complexType mixed="true" name="AgentControlUI.GUI.TextContent.monolingual.type"/>
-	<xs:complexType name="AgentControlUI.GUI.TextContent.multilingual.type">
-		<xs:complexContent>
-			<xs:extension base="aors:AgentControlUI.GUI.TextContent.monolingual.type">
-				<xs:attributeGroup ref="aors:lang_mandatory"/>
-			</xs:extension>
-		</xs:complexContent>
-	</xs:complexType>
-	<xs:attributeGroup name="AgentControlUI.GUI.CommonAttributes">
-		<xs:attribute name="id" type="aors:CanonicalName" use="optional"/>
-		<xs:attribute name="class" type="aors:ListOfCanonicalName" use="optional"/>
-		<xs:attribute name="style" type="xs:string" use="optional"/>
-	</xs:attributeGroup>
-	<!-- flow -->
-	<xs:complexType name="AgentControlUI.GUI.FlowContent.monolingual.type">
-		<xs:complexContent mixed="true">
-			<xs:extension base="aors:AgentControlUI.GUI.EmptyContent.type">
-				<xs:sequence>
-					<xs:group maxOccurs="unbounded" minOccurs="0"
-						ref="aors:AgentControlUI.GUI.FlowElements.monolingual"/>
-				</xs:sequence>
-			</xs:extension>
-		</xs:complexContent>
-	</xs:complexType>
-	<xs:complexType name="AgentControlUI.GUI.FlowContent.type">
-		<xs:complexContent>
-			<xs:extension base="aors:AgentControlUI.GUI.EmptyContent.type">
-				<xs:choice maxOccurs="unbounded" minOccurs="0">
-					<xs:group ref="aors:AgentControlUI.GUI.FlowElements.multilingual"/>
-					<xs:group ref="aors:AgentControlUI.GUI.FlowElements"/>
-				</xs:choice>
-			</xs:extension>
-		</xs:complexContent>
-	</xs:complexType>
-	<xs:group name="AgentControlUI.GUI.FlowElements.monolingual">
-		<xs:choice>
-			<xs:group ref="aors:AgentControlUI.GUI.HeadingElements.monolingual"/>
-			<xs:group ref="aors:AgentControlUI.GUI.ListElements.monolingual"/>
-			<xs:group ref="aors:AgentControlUI.GUI.BlockElements.monolingual"/>
-			<xs:group ref="aors:AgentControlUI.GUI.InlineElements.monolingual"/>
-		</xs:choice>
-	</xs:group>
-	<xs:group name="AgentControlUI.GUI.FlowElements.multilingual">
-		<xs:sequence>
-			<xs:element form="qualified" maxOccurs="unbounded" name="multilingualContent">
-				<xs:complexType mixed="true">
 					<xs:sequence>
-						<xs:group maxOccurs="unbounded" minOccurs="0"
-							ref="aors:AgentControlUI.GUI.FlowElements.monolingual"/>
+						<xs:element maxOccurs="unbounded" ref="ers:HtmlText"/>
 					</xs:sequence>
-					<xs:attributeGroup ref="aors:lang_mandatory"/>
 				</xs:complexType>
 			</xs:element>
-		</xs:sequence>
-	</xs:group>
-	<xs:group name="AgentControlUI.GUI.FlowElements">
-		<xs:choice>
-			<xs:group ref="aors:AgentControlUI.GUI.HeadingElements"/>
-			<xs:group ref="aors:AgentControlUI.GUI.ListElements"/>
-			<xs:group ref="aors:AgentControlUI.GUI.BlockElements"/>
-			<xs:group ref="aors:AgentControlUI.GUI.InlineElements"/>
-		</xs:choice>
-	</xs:group>
-	<!-- heading -->
-	<xs:group name="AgentControlUI.GUI.HeadingElements.monolingual">
-		<xs:choice>
-			<xs:element form="qualified" name="h1"
-				type="aors:AgentControlUI.GUI.InlineContent.monolingual.type"/>
-			<xs:element form="qualified" name="h2"
-				type="aors:AgentControlUI.GUI.InlineContent.monolingual.type"/>
-			<xs:element form="qualified" name="h3"
-				type="aors:AgentControlUI.GUI.InlineContent.monolingual.type"/>
-			<xs:element form="qualified" name="h4"
-				type="aors:AgentControlUI.GUI.InlineContent.monolingual.type"/>
-			<xs:element form="qualified" name="h5"
-				type="aors:AgentControlUI.GUI.InlineContent.monolingual.type"/>
-			<xs:element form="qualified" name="h6"
-				type="aors:AgentControlUI.GUI.InlineContent.monolingual.type"/>
-		</xs:choice>
-	</xs:group>
-	<xs:group name="AgentControlUI.GUI.HeadingElements">
-		<xs:choice>
-			<xs:element form="qualified" name="h1" type="aors:AgentControlUI.GUI.InlineContent.type"/>
-			<xs:element form="qualified" name="h2" type="aors:AgentControlUI.GUI.InlineContent.type"/>
-			<xs:element form="qualified" name="h3" type="aors:AgentControlUI.GUI.InlineContent.type"/>
-			<xs:element form="qualified" name="h4" type="aors:AgentControlUI.GUI.InlineContent.type"/>
-			<xs:element form="qualified" name="h5" type="aors:AgentControlUI.GUI.InlineContent.type"/>
-			<xs:element form="qualified" name="h6" type="aors:AgentControlUI.GUI.InlineContent.type"/>
-		</xs:choice>
-	</xs:group>
-	<!-- list -->
-	<xs:complexType name="AgentControlUI.GUI.ListContent.monolingual.type">
-		<xs:complexContent>
-			<xs:extension base="aors:AgentControlUI.GUI.EmptyContent.type">
-				<xs:sequence>
-					<xs:element form="qualified" maxOccurs="unbounded" name="li"
-						type="aors:AgentControlUI.GUI.FlowContent.monolingual.type"/>
-				</xs:sequence>
-			</xs:extension>
-		</xs:complexContent>
-	</xs:complexType>
-	<xs:complexType name="AgentControlUI.GUI.ListContent.type">
-		<xs:complexContent>
-			<xs:extension base="aors:AgentControlUI.GUI.EmptyContent.type">
-				<xs:sequence>
-					<xs:element form="qualified" maxOccurs="unbounded" name="li"
-						type="aors:AgentControlUI.GUI.FlowContent.type"/>
-				</xs:sequence>
-			</xs:extension>
-		</xs:complexContent>
-	</xs:complexType>
-	<xs:group name="AgentControlUI.GUI.ListElements.monolingual">
-		<xs:choice>
-			<xs:element form="qualified" name="dl">
+			<xs:element form="qualified" name="Views">
 				<xs:complexType>
-					<xs:complexContent>
-						<xs:extension base="aors:AgentControlUI.GUI.EmptyContent.type">
-							<xs:choice maxOccurs="unbounded">
-								<xs:element form="qualified" name="dt"
-									type="aors:AgentControlUI.GUI.InlineContent.monolingual.type"/>
-								<xs:element form="qualified" name="dd"
-									type="aors:AgentControlUI.GUI.FlowContent.monolingual.type"/>
-							</xs:choice>
-						</xs:extension>
-					</xs:complexContent>
-				</xs:complexType>
-			</xs:element>
-			<xs:element form="qualified" name="ol"
-				type="aors:AgentControlUI.GUI.ListContent.monolingual.type"/>
-			<xs:element form="qualified" name="ul"
-				type="aors:AgentControlUI.GUI.ListContent.monolingual.type"/>
-		</xs:choice>
-	</xs:group>
-	<xs:group name="AgentControlUI.GUI.ListElements">
-		<xs:choice>
-			<xs:element form="qualified" name="dl">
-				<xs:complexType>
-					<xs:complexContent>
-						<xs:extension base="aors:AgentControlUI.GUI.EmptyContent.type">
-							<xs:choice maxOccurs="unbounded">
-								<xs:element form="qualified" name="dt"
-									type="aors:AgentControlUI.GUI.InlineContent.type"/>
-								<xs:element form="qualified" name="dd"
-									type="aors:AgentControlUI.GUI.FlowContent.type"/>
-							</xs:choice>
-						</xs:extension>
-					</xs:complexContent>
-				</xs:complexType>
-			</xs:element>
-			<xs:element form="qualified" name="ol" type="aors:AgentControlUI.GUI.ListContent.type"/>
-			<xs:element form="qualified" name="ul" type="aors:AgentControlUI.GUI.ListContent.type"/>
-		</xs:choice>
-	</xs:group>
-	<!-- inline -->
-	<xs:complexType name="AgentControlUI.GUI.InlineContent.monolingual.type">
-		<xs:complexContent mixed="true">
-			<xs:extension base="aors:AgentControlUI.GUI.EmptyContent.type">
-				<xs:sequence>
-					<xs:group maxOccurs="unbounded" minOccurs="0"
-						ref="aors:AgentControlUI.GUI.InlineElements.monolingual"/>
-				</xs:sequence>
-			</xs:extension>
-		</xs:complexContent>
-	</xs:complexType>
-	<xs:complexType name="AgentControlUI.GUI.InlineContent.type">
-		<xs:complexContent>
-			<xs:extension base="aors:AgentControlUI.GUI.EmptyContent.type">
-				<xs:choice maxOccurs="unbounded" minOccurs="0">
-					<xs:group ref="aors:AgentControlUI.GUI.InlineElements.multilingual"/>
-					<xs:group ref="aors:AgentControlUI.GUI.InlineElements"/>
-				</xs:choice>
-			</xs:extension>
-		</xs:complexContent>
-	</xs:complexType>
-	<xs:group name="AgentControlUI.GUI.InlineElements.monolingual">
-		<xs:choice>
-			<xs:group ref="aors:AgentControlUI.GUI.InlineElements-label.monolingual"/>
-			<xs:group ref="aors:AgentControlUI.GUI.LabelElements.monolingual"/>
-		</xs:choice>
-	</xs:group>
-	<xs:group name="AgentControlUI.GUI.InlineElements.multilingual">
-		<xs:sequence>
-			<xs:element form="qualified" maxOccurs="unbounded" name="multilingualContent">
-				<xs:complexType mixed="true">
 					<xs:sequence>
-						<xs:group maxOccurs="unbounded" minOccurs="0"
-							ref="aors:AgentControlUI.GUI.InlineElements.monolingual"/>
+						<xs:element minOccurs="0" ref="ers:SpaceView"/>
+						<xs:element maxOccurs="unbounded" minOccurs="0" ref="ers:ObjectView"/>
+						<xs:element maxOccurs="unbounded" minOccurs="0" ref="ers:PhysicalObjectView"/>
+						<xs:element maxOccurs="unbounded" minOccurs="0" ref="ers:EventAppearance"/>
 					</xs:sequence>
-					<xs:attributeGroup ref="aors:lang_mandatory"/>
 				</xs:complexType>
 			</xs:element>
 		</xs:sequence>
-	</xs:group>
-	<xs:group name="AgentControlUI.GUI.InlineElements">
-		<xs:choice>
-			<xs:group ref="aors:AgentControlUI.GUI.InlineElements-label"/>
-			<xs:group ref="aors:AgentControlUI.GUI.LabelElements"/>
-		</xs:choice>
-	</xs:group>
-	<!-- inline elements - label -->
-	<xs:complexType name="AgentControlUI.GUI.InlineContent-label.monolingual.type">
-		<xs:complexContent mixed="true">
-			<xs:extension base="aors:AgentControlUI.GUI.EmptyContent.type">
-				<xs:sequence>
-					<xs:group maxOccurs="unbounded" minOccurs="0"
-						ref="aors:AgentControlUI.GUI.InlineElements-label.monolingual"/>
-				</xs:sequence>
-			</xs:extension>
-		</xs:complexContent>
-	</xs:complexType>
-	<xs:complexType name="AgentControlUI.GUI.InlineContent-label.type">
-		<xs:complexContent>
-			<xs:extension base="aors:AgentControlUI.GUI.EmptyContent.type">
-				<xs:choice maxOccurs="unbounded" minOccurs="0">
-					<xs:group ref="aors:AgentControlUI.GUI.InlineElements-label.multilingual"/>
-					<xs:group ref="aors:AgentControlUI.GUI.InlineElements-label"/>
-				</xs:choice>
-			</xs:extension>
-		</xs:complexContent>
-	</xs:complexType>
-	<xs:group name="AgentControlUI.GUI.InlineElements-label.monolingual">
-		<xs:choice>
-			<xs:group ref="aors:AgentControlUI.GUI.InlineTextElements.monolingual"/>
-			<xs:group ref="aors:AgentControlUI.GUI.ImageElements.monolingual"/>
-			<xs:group ref="aors:AgentControlUI.GUI.InlineFormElements.monolingual"/>
-		</xs:choice>
-	</xs:group>
-	<xs:group name="AgentControlUI.GUI.InlineElements-label.multilingual">
-		<xs:sequence>
-			<xs:element form="qualified" maxOccurs="unbounded" name="multilingualContent">
-				<xs:complexType mixed="true">
-					<xs:sequence>
-						<xs:group maxOccurs="unbounded" minOccurs="0"
-							ref="aors:AgentControlUI.GUI.InlineElements-label.monolingual"/>
-					</xs:sequence>
-					<xs:attributeGroup ref="aors:lang_mandatory"/>
-				</xs:complexType>
-			</xs:element>
-		</xs:sequence>
-	</xs:group>
-	<xs:group name="AgentControlUI.GUI.InlineElements-label">
-		<xs:choice>
-			<xs:group ref="aors:AgentControlUI.GUI.InlineTextElements"/>
-			<xs:group ref="aors:AgentControlUI.GUI.ImageElements"/>
-			<xs:group ref="aors:AgentControlUI.GUI.InlineFormElements"/>
-		</xs:choice>
-	</xs:group>
-	<!-- inline text -->
-	<xs:group name="AgentControlUI.GUI.InlineTextElements.monolingual">
-		<xs:choice>
-			<xs:element form="qualified" name="br" type="aors:AgentControlUI.GUI.EmptyContent.type"/>
-			<xs:element form="qualified" name="code"
-				type="aors:AgentControlUI.GUI.InlineContent.monolingual.type"/>
-			<xs:element form="qualified" name="em"
-				type="aors:AgentControlUI.GUI.InlineContent.monolingual.type"/>
-			<xs:element form="qualified" name="q"
-				type="aors:AgentControlUI.GUI.InlineContent.monolingual.type"/>
-			<xs:element form="qualified" name="span"
-				type="aors:AgentControlUI.GUI.InlineContent.monolingual.type"/>
-			<xs:element form="qualified" name="strong"
-				type="aors:AgentControlUI.GUI.InlineContent.monolingual.type"/>
-		</xs:choice>
-	</xs:group>
-	<xs:group name="AgentControlUI.GUI.InlineTextElements">
-		<xs:choice>
-			<xs:element form="qualified" name="br" type="aors:AgentControlUI.GUI.EmptyContent.type"/>
-			<xs:element form="qualified" name="code" type="aors:AgentControlUI.GUI.InlineContent.type"/>
-			<xs:element form="qualified" name="em" type="aors:AgentControlUI.GUI.InlineContent.type"/>
-			<xs:element form="qualified" name="q" type="aors:AgentControlUI.GUI.InlineContent.type"/>
-			<xs:element form="qualified" name="span" type="aors:AgentControlUI.GUI.InlineContent.type"/>
-			<xs:element form="qualified" name="strong" type="aors:AgentControlUI.GUI.InlineContent.type"/>
-		</xs:choice>
-	</xs:group>
-	<!-- image -->
-	<xs:group name="AgentControlUI.GUI.ImageElements.monolingual">
-		<xs:sequence>
-			<xs:element form="qualified" name="img">
-				<xs:complexType>
-					<xs:complexContent>
-						<xs:extension base="aors:AgentControlUI.GUI.EmptyContent.type">
-							<xs:attribute name="alt" type="xs:string" use="required"/>
-							<xs:attribute name="src" type="xs:anyURI" use="required"/>
-						</xs:extension>
-					</xs:complexContent>
-				</xs:complexType>
-			</xs:element>
-		</xs:sequence>
-	</xs:group>
-	<xs:group name="AgentControlUI.GUI.ImageElements">
-		<xs:sequence>
-			<xs:element form="qualified" name="img">
-				<xs:complexType>
-					<xs:complexContent>
-						<xs:extension base="aors:AgentControlUI.GUI.EmptyContent.type">
-							<xs:sequence>
-								<xs:element form="qualified" maxOccurs="unbounded" name="alt"
-									type="aors:AgentControlUI.GUI.TextContent.multilingual.type"/>
-							</xs:sequence>
-							<xs:attribute name="src" type="xs:anyURI" use="required"/>
-						</xs:extension>
-					</xs:complexContent>
-				</xs:complexType>
-			</xs:element>
-		</xs:sequence>
-	</xs:group>
-	<!-- block -->
-	<xs:complexType name="AgentControlUI.GUI.BlockContent.monolingual.type">
-		<xs:complexContent mixed="true">
-			<xs:extension base="aors:AgentControlUI.GUI.EmptyContent.type">
-				<xs:sequence>
-					<xs:group maxOccurs="unbounded" minOccurs="0"
-						ref="aors:AgentControlUI.GUI.BlockElements.monolingual"/>
-				</xs:sequence>
-			</xs:extension>
-		</xs:complexContent>
-	</xs:complexType>
-	<xs:complexType name="AgentControlUI.GUI.BlockContent.type">
-		<xs:complexContent>
-			<xs:extension base="aors:AgentControlUI.GUI.EmptyContent.type">
-				<xs:choice maxOccurs="unbounded" minOccurs="0">
-					<xs:group ref="aors:AgentControlUI.GUI.BlockElements.multilingual"/>
-					<xs:group ref="aors:AgentControlUI.GUI.BlockElements"/>
-				</xs:choice>
-			</xs:extension>
-		</xs:complexContent>
-	</xs:complexType>
-	<xs:group name="AgentControlUI.GUI.BlockElements.monolingual">
-		<xs:choice>
-			<xs:group ref="aors:AgentControlUI.GUI.BlockTextElements.monolingual"/>
-			<xs:group ref="aors:AgentControlUI.GUI.TableElements.monolingual"/>
-			<!--xs:group ref="aors:AgentControlUI.GUI.FormElements.monolingual"/-->
-		</xs:choice>
-	</xs:group>
-	<xs:group name="AgentControlUI.GUI.BlockElements.multilingual">
-		<xs:sequence>
-			<xs:element form="qualified" maxOccurs="unbounded" name="multilingualContent">
-				<xs:complexType mixed="true">
-					<xs:sequence>
-						<xs:group maxOccurs="unbounded" minOccurs="0"
-							ref="aors:AgentControlUI.GUI.BlockElements.monolingual"/>
-					</xs:sequence>
-					<xs:attributeGroup ref="aors:lang_mandatory"/>
-				</xs:complexType>
-			</xs:element>
-		</xs:sequence>
-	</xs:group>
-	<xs:group name="AgentControlUI.GUI.BlockElements">
-		<xs:choice>
-			<xs:group ref="aors:AgentControlUI.GUI.BlockTextElements"/>
-			<xs:group ref="aors:AgentControlUI.GUI.TableElements"/>
-			<!--xs:group ref="aors:AgentControlUI.GUI.FormElements"/-->
-		</xs:choice>
-	</xs:group>
-	<!-- block text -->
-	<xs:group name="AgentControlUI.GUI.BlockTextElements.monolingual">
-		<xs:choice>
-			<xs:element form="qualified" name="div"
-				type="aors:AgentControlUI.GUI.FlowContent.monolingual.type"/>
-			<xs:element form="qualified" name="p"
-				type="aors:AgentControlUI.GUI.InlineContent.monolingual.type"/>
-			<xs:element form="qualified" name="pre"
-				type="aors:AgentControlUI.GUI.InlineContent.monolingual.type"/>
-		</xs:choice>
-	</xs:group>
-	<xs:group name="AgentControlUI.GUI.BlockTextElements">
-		<xs:choice>
-			<xs:element form="qualified" name="div" type="aors:AgentControlUI.GUI.FlowContent.type"/>
-			<xs:element form="qualified" name="p" type="aors:AgentControlUI.GUI.InlineContent.type"/>
-			<xs:element form="qualified" name="pre" type="aors:AgentControlUI.GUI.InlineContent.type"/>
-		</xs:choice>
-	</xs:group>
-	<!-- table (monolingual) -->
-	<xs:group name="AgentControlUI.GUI.TableElements.monolingual">
-		<xs:sequence>
-			<xs:element form="qualified" name="table">
-				<xs:complexType>
-					<xs:complexContent>
-						<xs:extension base="aors:AgentControlUI.GUI.EmptyContent.type">
-							<xs:sequence>
-								<xs:element form="qualified" minOccurs="0" name="caption"
-									type="aors:AgentControlUI.GUI.InlineContent.monolingual.type"/>
-								<xs:choice>
-									<xs:group maxOccurs="unbounded" minOccurs="0"
-										ref="aors:AgentControlUI.GUI.Table.ColElements"/>
-									<xs:element form="qualified" maxOccurs="unbounded" minOccurs="0" name="colgroup">
-										<xs:complexType>
-											<xs:complexContent>
-												<xs:extension base="aors:AgentControlUI.GUI.EmptyContent.type">
-													<xs:sequence>
-														<xs:group maxOccurs="unbounded" minOccurs="0"
-															ref="aors:AgentControlUI.GUI.Table.ColElements"/>
-													</xs:sequence>
-													<xs:attributeGroup ref="aors:AgentControlUI.GUI.Table.ColAttributes"/>
-												</xs:extension>
-											</xs:complexContent>
-										</xs:complexType>
-									</xs:element>
-								</xs:choice>
-								<xs:choice>
-									<xs:sequence>
-										<xs:element form="qualified" minOccurs="0" name="thead"
-											type="aors:AgentControlUI.GUI.Table.RowWrapper.monolingual.type"/>
-										<xs:element form="qualified" minOccurs="0" name="tfoot"
-											type="aors:AgentControlUI.GUI.Table.RowWrapper.monolingual.type"/>
-										<xs:element form="qualified" maxOccurs="unbounded" name="tbody"
-											type="aors:AgentControlUI.GUI.Table.RowWrapper.monolingual.type"/>
-									</xs:sequence>
-									<xs:group maxOccurs="unbounded"
-										ref="aors:AgentControlUI.GUI.Table.RowElements.monolingual"/>
-								</xs:choice>
-							</xs:sequence>
-							<xs:attribute name="summery" type="xs:string" use="optional"/>
-						</xs:extension>
-					</xs:complexContent>
-				</xs:complexType>
-			</xs:element>
-		</xs:sequence>
-	</xs:group>
-	<xs:group name="AgentControlUI.GUI.Table.ColElements">
-		<xs:sequence>
-			<xs:element form="qualified" name="col">
-				<xs:complexType>
-					<xs:complexContent>
-						<xs:extension base="aors:AgentControlUI.GUI.EmptyContent.type">
-							<xs:attributeGroup ref="aors:AgentControlUI.GUI.Table.ColAttributes"/>
-						</xs:extension>
-					</xs:complexContent>
-				</xs:complexType>
-			</xs:element>
-		</xs:sequence>
-	</xs:group>
-	<xs:attributeGroup name="AgentControlUI.GUI.Table.ColAttributes">
-		<xs:attribute name="span" type="xs:nonNegativeInteger" use="optional"/>
-		<xs:attribute name="width" use="optional">
-			<xs:simpleType>
-				<xs:restriction base="xs:string">
-					<xs:pattern value="[1-9][0-9]*(%|\*)?"/>
-				</xs:restriction>
-			</xs:simpleType>
+		<xs:attribute form="unqualified" name="introSoundFile" type="xs:anyURI" use="optional">
+			<xs:annotation>
+				<xs:documentation>The sound file can be mp3 or midi, as identified by its extension (.mp3 or
+					.mid). The file is searched first in the project folder under "media/sounds". If the file
+					is not found in this folder, then it is searched in the global media/sounds folder. If
+					still not found, then no sound is played. Note that the path is relative to the
+					media/sounds folder. </xs:documentation>
+			</xs:annotation>
 		</xs:attribute>
-	</xs:attributeGroup>
-	<xs:complexType name="AgentControlUI.GUI.Table.RowWrapper.monolingual.type">
-		<xs:complexContent>
-			<xs:extension base="aors:AgentControlUI.GUI.EmptyContent.type">
-				<xs:sequence>
-					<xs:group maxOccurs="unbounded"
-						ref="aors:AgentControlUI.GUI.Table.RowElements.monolingual"/>
-				</xs:sequence>
-			</xs:extension>
-		</xs:complexContent>
 	</xs:complexType>
-	<xs:group name="AgentControlUI.GUI.Table.RowElements.monolingual">
-		<xs:sequence>
-			<xs:element form="qualified" name="tr">
-				<xs:complexType>
-					<xs:complexContent>
-						<xs:extension base="aors:AgentControlUI.GUI.EmptyContent.type">
-							<xs:choice maxOccurs="unbounded">
-								<xs:element form="qualified" name="td"
-									type="aors:AgentControlUI.GUI.Table.CellContent.monolingual.type"/>
-								<xs:element form="qualified" name="th"
-									type="aors:AgentControlUI.GUI.Table.CellContent.monolingual.type"/>
-							</xs:choice>
-						</xs:extension>
-					</xs:complexContent>
-				</xs:complexType>
-			</xs:element>
-		</xs:sequence>
-	</xs:group>
-	<xs:complexType name="AgentControlUI.GUI.Table.CellContent.monolingual.type">
-		<xs:complexContent>
-			<xs:extension base="aors:AgentControlUI.GUI.FlowContent.monolingual.type">
-				<xs:attribute name="rowspan" type="xs:nonNegativeInteger" use="optional"/>
-				<xs:attribute name="colspan" type="xs:nonNegativeInteger" use="optional"/>
-			</xs:extension>
-		</xs:complexContent>
-	</xs:complexType>
-	<!-- table -->
-	<xs:group name="AgentControlUI.GUI.TableElements">
-		<xs:sequence>
-			<xs:element form="qualified" name="table">
-				<xs:complexType>
-					<xs:complexContent>
-						<xs:extension base="aors:AgentControlUI.GUI.EmptyContent.type">
-							<xs:sequence>
-								<xs:element form="qualified" minOccurs="0" name="caption"
-									type="aors:AgentControlUI.GUI.InlineContent.type"/>
-								<xs:element form="qualified" maxOccurs="unbounded" minOccurs="0" name="summery"
-									type="aors:AgentControlUI.GUI.TextContent.multilingual.type"/>
-								<xs:choice>
-									<xs:group maxOccurs="unbounded" minOccurs="0"
-										ref="aors:AgentControlUI.GUI.Table.ColElements"/>
-									<xs:element form="qualified" maxOccurs="unbounded" minOccurs="0" name="colgroup">
-										<xs:complexType>
-											<xs:complexContent>
-												<xs:extension base="aors:AgentControlUI.GUI.EmptyContent.type">
-													<xs:sequence>
-														<xs:group maxOccurs="unbounded" minOccurs="0"
-															ref="aors:AgentControlUI.GUI.Table.ColElements"/>
-													</xs:sequence>
-													<xs:attributeGroup ref="aors:AgentControlUI.GUI.Table.ColAttributes"/>
-												</xs:extension>
-											</xs:complexContent>
-										</xs:complexType>
-									</xs:element>
-								</xs:choice>
-								<xs:choice>
-									<xs:sequence>
-										<xs:element form="qualified" minOccurs="0" name="thead"
-											type="aors:AgentControlUI.GUI.Table.RowWrapper.type"/>
-										<xs:element form="qualified" minOccurs="0" name="tfoot"
-											type="aors:AgentControlUI.GUI.Table.RowWrapper.type"/>
-										<xs:element form="qualified" maxOccurs="unbounded" name="tbody"
-											type="aors:AgentControlUI.GUI.Table.RowWrapper.type"/>
-									</xs:sequence>
-									<xs:group maxOccurs="unbounded" ref="aors:AgentControlUI.GUI.Table.RowElements"/>
-								</xs:choice>
-							</xs:sequence>
-						</xs:extension>
-					</xs:complexContent>
-				</xs:complexType>
-			</xs:element>
-		</xs:sequence>
-	</xs:group>
-	<xs:complexType name="AgentControlUI.GUI.Table.RowWrapper.type">
-		<xs:complexContent>
-			<xs:extension base="aors:AgentControlUI.GUI.EmptyContent.type">
-				<xs:sequence>
-					<xs:group maxOccurs="unbounded" ref="aors:AgentControlUI.GUI.Table.RowElements"/>
-				</xs:sequence>
-			</xs:extension>
-		</xs:complexContent>
-	</xs:complexType>
-	<xs:group name="AgentControlUI.GUI.Table.RowElements">
-		<xs:sequence>
-			<xs:element form="qualified" name="tr">
-				<xs:complexType>
-					<xs:complexContent>
-						<xs:extension base="aors:AgentControlUI.GUI.EmptyContent.type">
-							<xs:choice maxOccurs="unbounded">
-								<xs:element form="qualified" name="td"
-									type="aors:AgentControlUI.GUI.Table.CellContent.type"/>
-								<xs:element form="qualified" name="th"
-									type="aors:AgentControlUI.GUI.Table.CellContent.type"/>
-							</xs:choice>
-						</xs:extension>
-					</xs:complexContent>
-				</xs:complexType>
-			</xs:element>
-		</xs:sequence>
-	</xs:group>
-	<xs:complexType name="AgentControlUI.GUI.Table.CellContent.type">
-		<xs:complexContent>
-			<xs:extension base="aors:AgentControlUI.GUI.FlowContent.type">
-				<xs:attribute name="rowspan" type="xs:nonNegativeInteger" use="optional"/>
-				<xs:attribute name="colspan" type="xs:nonNegativeInteger" use="optional"/>
-			</xs:extension>
-		</xs:complexContent>
-	</xs:complexType>
-	<!--############-->
-	<!--### form ###-->
-	<!--############-->
-	<!-- inline form -->
-	<xs:complexType name="AgentControlUI.GUI.InlineFormContent.type">
-		<xs:complexContent>
-			<xs:extension base="aors:AgentControlUI.GUI.EmptyContent.type">
-				<xs:attribute name="property" type="aors:CanonicalName" use="optional"/>
-				<xs:attribute name="group" type="aors:CanonicalName" use="optional"/>
-				<xs:attribute name="name" type="aors:CanonicalName" use="optional"/>
-				<xs:attribute default="false" name="readonly" type="xs:boolean" use="optional"/>
-			</xs:extension>
-		</xs:complexContent>
-	</xs:complexType>
-	<xs:group name="AgentControlUI.GUI.InlineFormElements-select.monolingual">
-		<xs:choice>
-			<xs:element form="qualified" name="textfield">
-				<xs:complexType>
-					<xs:complexContent>
-						<xs:extension base="aors:AgentControlUI.GUI.InlineFormContent.type">
-							<xs:attributeGroup ref="aors:AgentControlUI.GUI.InlineFormAttributes.initialValue"/>
-							<xs:attributeGroup ref="aors:AgentControlUI.GUI.InlineFormAttributes.size"/>
-							<xs:attributeGroup ref="aors:AgentControlUI.GUI.InlineFormAttributes.type"/>
-						</xs:extension>
-					</xs:complexContent>
-				</xs:complexType>
-			</xs:element>
-			<xs:element form="qualified" name="checkbox">
-				<xs:complexType>
-					<xs:complexContent>
-						<xs:extension base="aors:AgentControlUI.GUI.InlineFormContent.type">
-							<xs:attributeGroup ref="aors:AgentControlUI.GUI.InlineFormAttributes.checked"/>
-							<xs:attributeGroup ref="aors:AgentControlUI.GUI.InlineFormAttributes.value"/>
-							<xs:attributeGroup ref="aors:AgentControlUI.GUI.InlineFormAttributes.type"/>
-						</xs:extension>
-					</xs:complexContent>
-				</xs:complexType>
-			</xs:element>
-			<xs:element form="qualified" name="radiobutton">
-				<xs:complexType>
-					<xs:complexContent>
-						<xs:extension base="aors:AgentControlUI.GUI.InlineFormContent.type">
-							<xs:attributeGroup ref="aors:AgentControlUI.GUI.InlineFormAttributes.checked"/>
-							<xs:attributeGroup ref="aors:AgentControlUI.GUI.InlineFormAttributes.value"/>
-							<xs:attributeGroup ref="aors:AgentControlUI.GUI.InlineFormAttributes.type"/>
-						</xs:extension>
-					</xs:complexContent>
-				</xs:complexType>
-			</xs:element>
-			<xs:element form="qualified" name="slider">
-				<xs:complexType>
-					<xs:complexContent>
-						<xs:extension base="aors:AgentControlUI.GUI.InlineFormContent.type">
-							<xs:attribute name="minValue" type="xs:integer" use="required"/>
-							<xs:attribute name="maxValue" type="xs:integer" use="required"/>
-							<xs:attribute name="initialValue" type="xs:integer" use="optional"/>
-							<xs:attribute fixed="Integer" name="type" type="aors:PrimitiveDataType" use="required"
-							/>
-						</xs:extension>
-					</xs:complexContent>
-				</xs:complexType>
-			</xs:element>
-		</xs:choice>
-	</xs:group>
-	<xs:complexType name="AgentControlUI.GUI.ButtonElement.type0">
-		<xs:complexContent>
-			<xs:restriction base="aors:AgentControlUI.GUI.InlineFormContent.type">
-				<xs:attribute name="name" type="aors:CanonicalName" use="required"/>
-				<xs:attribute name="property" type="aors:CanonicalName" use="prohibited"/>
-				<xs:attribute name="group" type="aors:CanonicalName" use="prohibited"/>
-				<xs:attribute name="readonly" type="xs:boolean" use="prohibited"/>
-			</xs:restriction>
-		</xs:complexContent>
-	</xs:complexType>
-	<xs:group name="AgentControlUI.GUI.InlineFormElements.monolingual">
-		<xs:choice>
-			<xs:group ref="aors:AgentControlUI.GUI.InlineFormElements-select.monolingual"/>
-			<xs:element form="qualified" name="select">
-				<xs:complexType>
-					<xs:complexContent>
-						<xs:extension base="aors:AgentControlUI.GUI.InlineFormContent.type">
-							<xs:sequence>
-								<xs:element form="qualified" maxOccurs="unbounded" name="option">
-									<xs:complexType>
-										<xs:complexContent>
-											<xs:extension base="aors:AgentControlUI.GUI.EmptyContent.type">
-												<xs:attributeGroup ref="aors:AgentControlUI.GUI.InlineFormAttributes.label"/>
-												<xs:attributeGroup ref="aors:AgentControlUI.GUI.InlineFormAttributes.value"
-												/>
-											</xs:extension>
-										</xs:complexContent>
-									</xs:complexType>
-								</xs:element>
-							</xs:sequence>
-							<xs:attributeGroup ref="aors:AgentControlUI.GUI.InlineFormAttributes.size"/>
-						</xs:extension>
-					</xs:complexContent>
-				</xs:complexType>
-			</xs:element>
-			<xs:element form="qualified" name="button">
-				<xs:complexType>
-					<xs:complexContent>
-						<xs:extension base="aors:AgentControlUI.GUI.ButtonElement.type0">
-							<xs:attribute name="title" type="xs:string" use="required"/>
-						</xs:extension>
-					</xs:complexContent>
-				</xs:complexType>
-			</xs:element>
-		</xs:choice>
-	</xs:group>
-	<xs:group name="AgentControlUI.GUI.InlineFormElements">
-		<xs:choice>
-			<xs:group ref="aors:AgentControlUI.GUI.InlineFormElements-select.monolingual"/>
-			<xs:element form="qualified" name="select">
-				<xs:complexType>
-					<xs:complexContent>
-						<xs:extension base="aors:AgentControlUI.GUI.InlineFormContent.type">
-							<xs:sequence>
-								<xs:element form="qualified" maxOccurs="unbounded" name="option">
-									<xs:complexType>
-										<xs:complexContent>
-											<xs:extension base="aors:AgentControlUI.GUI.EmptyContent.type">
-												<xs:sequence>
-													<xs:element form="qualified" maxOccurs="unbounded" minOccurs="0"
-														name="label"
-														type="aors:AgentControlUI.GUI.TextContent.multilingual.type"/>
-												</xs:sequence>
-												<xs:attributeGroup ref="aors:AgentControlUI.GUI.InlineFormAttributes.value"
-												/>
-											</xs:extension>
-										</xs:complexContent>
-									</xs:complexType>
-								</xs:element>
-							</xs:sequence>
-							<xs:attributeGroup ref="aors:AgentControlUI.GUI.InlineFormAttributes.size"/>
-						</xs:extension>
-					</xs:complexContent>
-				</xs:complexType>
-			</xs:element>
-			<xs:element form="qualified" name="button">
-				<xs:complexType>
-					<xs:complexContent>
-						<xs:extension base="aors:AgentControlUI.GUI.ButtonElement.type0">
-							<xs:sequence>
-								<xs:element form="qualified" maxOccurs="unbounded" name="title"
-									type="aors:AgentControlUI.GUI.TextContent.multilingual.type"/>
-							</xs:sequence>
-						</xs:extension>
-					</xs:complexContent>
-				</xs:complexType>
-			</xs:element>
-		</xs:choice>
-	</xs:group>
-	<xs:attributeGroup name="AgentControlUI.GUI.InlineFormAttributes.initialValue">
-		<xs:attribute name="initialValue" type="xs:string" use="optional"/>
-	</xs:attributeGroup>
-	<xs:attributeGroup name="AgentControlUI.GUI.InlineFormAttributes.size">
-		<xs:attribute name="size" type="xs:nonNegativeInteger" use="optional"/>
-	</xs:attributeGroup>
-	<xs:attributeGroup name="AgentControlUI.GUI.InlineFormAttributes.value">
-		<xs:attribute name="value" type="xs:string" use="required"/>
-	</xs:attributeGroup>
-	<xs:attributeGroup name="AgentControlUI.GUI.InlineFormAttributes.checked">
-		<xs:attribute default="false" name="checked" type="xs:boolean" use="optional"/>
-	</xs:attributeGroup>
-	<xs:attributeGroup name="AgentControlUI.GUI.InlineFormAttributes.type">
-		<xs:attribute name="type" type="aors:PrimitiveDataType" use="required"/>
-	</xs:attributeGroup>
-	<xs:attributeGroup name="AgentControlUI.GUI.InlineFormAttributes.label">
-		<xs:attribute name="label" type="xs:string" use="optional"/>
-	</xs:attributeGroup>
+	<!-- to be dropped when AgentControlUserInterface -->
 	<!--
-  <xs:attributeGroup name="AgentControlUI.GUI.InlineFormAttributes.cols">
-    <xs:attribute name="cols" type="xs:nonNegativeInteger" use="required"/>
-  </xs:attributeGroup>
-  <xs:attributeGroup name="AgentControlUI.GUI.InlineFormAttributes.rows">
-    <xs:attribute name="rows" type="xs:nonNegativeInteger" use="required"/>
-  </xs:attributeGroup>
+  <xs:include schemaLocation="AgentControlUserInterface.xsd"/>
 -->
-	<!-- label -->
-	<xs:group name="AgentControlUI.GUI.LabelElements.monolingual">
-		<xs:choice>
-			<xs:element form="qualified" name="label">
-				<xs:complexType>
-					<xs:complexContent>
-						<xs:extension base="aors:AgentControlUI.GUI.InlineContent-label.monolingual.type">
-							<xs:attribute name="for" type="aors:CanonicalName" use="optional"/>
-						</xs:extension>
-					</xs:complexContent>
-				</xs:complexType>
-			</xs:element>
-		</xs:choice>
-	</xs:group>
-	<xs:group name="AgentControlUI.GUI.LabelElements">
-		<xs:choice>
-			<xs:element form="qualified" name="label">
-				<xs:complexType>
-					<xs:complexContent>
-						<xs:extension base="aors:AgentControlUI.GUI.InlineContent-label.type">
-							<xs:attribute name="for" type="aors:CanonicalName" use="optional"/>
-						</xs:extension>
-					</xs:complexContent>
-				</xs:complexType>
-			</xs:element>
-		</xs:choice>
-	</xs:group>
-	<!--######################-->
-	<!--### perceptionlist ###-->
-	<!--######################-->
-	<xs:group name="AgentControlUI.GUI.PerceptionlistElements.monolingual">
-		<xs:choice>
-			<xs:element form="qualified" name="perceptionlist">
-				<xs:complexType>
-					<xs:complexContent>
-						<xs:extension base="aors:AgentControlUI.GUI.EmptyContent.type">
-							<xs:sequence>
-								<xs:element form="qualified" maxOccurs="unbounded" minOccurs="1" name="perception">
-									<xs:complexType>
-										<xs:complexContent>
-											<xs:extension base="aors:AgentControlUI.GUI.FlowContent.monolingual.type">
-												<xs:attribute name="entityType" type="aors:CanonicalName" use="required"/>
-											</xs:extension>
-										</xs:complexContent>
-									</xs:complexType>
-								</xs:element>
-							</xs:sequence>
-						</xs:extension>
-					</xs:complexContent>
-				</xs:complexType>
-			</xs:element>
-		</xs:choice>
-	</xs:group>
-	<xs:group name="AgentControlUI.GUI.PerceptionlistElements">
-		<xs:choice>
-			<xs:element form="qualified" name="perceptionlist">
-				<xs:complexType>
-					<xs:complexContent>
-						<xs:extension base="aors:AgentControlUI.GUI.EmptyContent.type">
-							<xs:sequence>
-								<xs:element form="qualified" maxOccurs="unbounded" minOccurs="1" name="perception">
-									<xs:complexType>
-										<xs:complexContent>
-											<xs:extension base="aors:AgentControlUI.GUI.FlowContent.type">
-												<xs:attribute name="entityType" type="aors:CanonicalName" use="required"/>
-											</xs:extension>
-										</xs:complexContent>
-									</xs:complexType>
-								</xs:element>
-							</xs:sequence>
-						</xs:extension>
-					</xs:complexContent>
-				</xs:complexType>
-			</xs:element>
-		</xs:choice>
-	</xs:group>
-	<!-- flow + perceptionlist -->
-	<xs:complexType name="AgentControlUI.GUI.FlowPerceptionlistContent.monolingual.type">
-		<xs:complexContent mixed="true">
-			<xs:extension base="aors:AgentControlUI.GUI.EmptyContent.type">
-				<xs:sequence>
-					<xs:group maxOccurs="unbounded" minOccurs="0"
-						ref="aors:AgentControlUI.GUI.FlowPerceptionlistElements.monolingual"/>
-				</xs:sequence>
-			</xs:extension>
-		</xs:complexContent>
-	</xs:complexType>
-	<xs:complexType name="AgentControlUI.GUI.FlowPerceptionlistContent.type">
-		<xs:complexContent>
-			<xs:extension base="aors:AgentControlUI.GUI.EmptyContent.type">
-				<xs:choice maxOccurs="unbounded" minOccurs="0">
-					<xs:group ref="aors:AgentControlUI.GUI.FlowPerceptionlistElements.multilingual"/>
-					<xs:group ref="aors:AgentControlUI.GUI.FlowPerceptionlistElements"/>
-				</xs:choice>
-			</xs:extension>
-		</xs:complexContent>
-	</xs:complexType>
-	<xs:group name="AgentControlUI.GUI.FlowPerceptionlistElements.monolingual">
-		<xs:choice>
-			<xs:group ref="aors:AgentControlUI.GUI.HeadingElements.monolingual"/>
-			<xs:group ref="aors:AgentControlUI.GUI.ListPerceptionlistElements.monolingual"/>
-			<xs:group ref="aors:AgentControlUI.GUI.BlockPerceptionlistElements.monolingual"/>
-			<xs:group ref="aors:AgentControlUI.GUI.InlineElements.monolingual"/>
-			<xs:group ref="aors:AgentControlUI.GUI.PerceptionlistElements.monolingual"/>
-		</xs:choice>
-	</xs:group>
-	<xs:group name="AgentControlUI.GUI.FlowPerceptionlistElements.multilingual">
-		<xs:sequence>
-			<xs:element form="qualified" maxOccurs="unbounded" name="multilingualContent">
-				<xs:complexType mixed="true">
-					<xs:sequence>
-						<xs:group maxOccurs="unbounded" minOccurs="0"
-							ref="aors:AgentControlUI.GUI.FlowPerceptionlistElements.monolingual"/>
-					</xs:sequence>
-					<xs:attributeGroup ref="aors:lang_mandatory"/>
-				</xs:complexType>
-			</xs:element>
-		</xs:sequence>
-	</xs:group>
-	<xs:group name="AgentControlUI.GUI.FlowPerceptionlistElements">
-		<xs:choice>
-			<xs:group ref="aors:AgentControlUI.GUI.HeadingElements"/>
-			<xs:group ref="aors:AgentControlUI.GUI.ListPerceptionlistElements"/>
-			<xs:group ref="aors:AgentControlUI.GUI.BlockPerceptionlistElements"/>
-			<xs:group ref="aors:AgentControlUI.GUI.InlineElements"/>
-			<xs:group ref="aors:AgentControlUI.GUI.PerceptionlistElements"/>
-		</xs:choice>
-	</xs:group>
-	<!-- list + perceptionlist -->
-	<xs:complexType name="AgentControlUI.GUI.ListPerceptionlistContent.monolingual.type">
-		<xs:complexContent>
-			<xs:extension base="aors:AgentControlUI.GUI.EmptyContent.type">
-				<xs:sequence>
-					<xs:element form="qualified" maxOccurs="unbounded" name="li"
-						type="aors:AgentControlUI.GUI.FlowPerceptionlistContent.monolingual.type"/>
-				</xs:sequence>
-			</xs:extension>
-		</xs:complexContent>
-	</xs:complexType>
-	<xs:complexType name="AgentControlUI.GUI.ListPerceptionlistContent.type">
-		<xs:complexContent>
-			<xs:extension base="aors:AgentControlUI.GUI.EmptyContent.type">
-				<xs:sequence>
-					<xs:element form="qualified" maxOccurs="unbounded" name="li"
-						type="aors:AgentControlUI.GUI.FlowPerceptionlistContent.type"/>
-				</xs:sequence>
-			</xs:extension>
-		</xs:complexContent>
-	</xs:complexType>
-	<xs:group name="AgentControlUI.GUI.ListPerceptionlistElements.monolingual">
-		<xs:choice>
-			<xs:element form="qualified" name="dl">
-				<xs:complexType>
-					<xs:complexContent>
-						<xs:extension base="aors:AgentControlUI.GUI.EmptyContent.type">
-							<xs:choice maxOccurs="unbounded">
-								<xs:element form="qualified" name="dt"
-									type="aors:AgentControlUI.GUI.InlineContent.monolingual.type"/>
-								<xs:element form="qualified" name="dd"
-									type="aors:AgentControlUI.GUI.FlowPerceptionlistContent.monolingual.type"/>
-							</xs:choice>
-						</xs:extension>
-					</xs:complexContent>
-				</xs:complexType>
-			</xs:element>
-			<xs:element form="qualified" name="ol"
-				type="aors:AgentControlUI.GUI.ListPerceptionlistContent.monolingual.type"/>
-			<xs:element form="qualified" name="ul"
-				type="aors:AgentControlUI.GUI.ListPerceptionlistContent.monolingual.type"/>
-		</xs:choice>
-	</xs:group>
-	<xs:group name="AgentControlUI.GUI.ListPerceptionlistElements">
-		<xs:choice>
-			<xs:element form="qualified" name="dl">
-				<xs:complexType>
-					<xs:complexContent>
-						<xs:extension base="aors:AgentControlUI.GUI.EmptyContent.type">
-							<xs:choice maxOccurs="unbounded">
-								<xs:element form="qualified" name="dt"
-									type="aors:AgentControlUI.GUI.InlineContent.type"/>
-								<xs:element form="qualified" name="dd"
-									type="aors:AgentControlUI.GUI.FlowPerceptionlistContent.type"/>
-							</xs:choice>
-						</xs:extension>
-					</xs:complexContent>
-				</xs:complexType>
-			</xs:element>
-			<xs:element form="qualified" name="ol"
-				type="aors:AgentControlUI.GUI.ListPerceptionlistContent.type"/>
-			<xs:element form="qualified" name="ul"
-				type="aors:AgentControlUI.GUI.ListPerceptionlistContent.type"/>
-		</xs:choice>
-	</xs:group>
-	<!-- block + perceptionlist -->
-	<xs:complexType name="AgentControlUI.GUI.BlockPerceptionlistContent.monolingual.type">
-		<xs:complexContent mixed="true">
-			<xs:extension base="aors:AgentControlUI.GUI.EmptyContent.type">
-				<xs:sequence>
-					<xs:group maxOccurs="unbounded" minOccurs="0"
-						ref="aors:AgentControlUI.GUI.BlockPerceptionlistElements.monolingual"/>
-				</xs:sequence>
-			</xs:extension>
-		</xs:complexContent>
-	</xs:complexType>
-	<xs:complexType name="AgentControlUI.GUI.BlockPerceptionlistContent.type">
-		<xs:complexContent>
-			<xs:extension base="aors:AgentControlUI.GUI.EmptyContent.type">
-				<xs:choice maxOccurs="unbounded" minOccurs="0">
-					<xs:group ref="aors:AgentControlUI.GUI.BlockPerceptionlistElements.multilingual"/>
-					<xs:group ref="aors:AgentControlUI.GUI.BlockPerceptionlistElements"/>
-				</xs:choice>
-			</xs:extension>
-		</xs:complexContent>
-	</xs:complexType>
-	<xs:group name="AgentControlUI.GUI.BlockPerceptionlistElements.monolingual">
-		<xs:choice>
-			<xs:group ref="aors:AgentControlUI.GUI.BlockTextPerceptionlistElements.monolingual"/>
-			<xs:group ref="aors:AgentControlUI.GUI.TablePerceptionlistElements.monolingual"/>
-			<!--xs:group ref="aors:AgentControlUI.GUI.FormElements.monolingual"/-->
-		</xs:choice>
-	</xs:group>
-	<xs:group name="AgentControlUI.GUI.BlockPerceptionlistElements.multilingual">
-		<xs:sequence>
-			<xs:element form="qualified" maxOccurs="unbounded" name="multilingualContent">
-				<xs:complexType mixed="true">
-					<xs:sequence>
-						<xs:group maxOccurs="unbounded" minOccurs="0"
-							ref="aors:AgentControlUI.GUI.BlockPerceptionlistElements.monolingual"/>
-					</xs:sequence>
-					<xs:attributeGroup ref="aors:lang_mandatory"/>
-				</xs:complexType>
-			</xs:element>
-		</xs:sequence>
-	</xs:group>
-	<xs:group name="AgentControlUI.GUI.BlockPerceptionlistElements">
-		<xs:choice>
-			<xs:group ref="aors:AgentControlUI.GUI.BlockTextPerceptionlistElements"/>
-			<xs:group ref="aors:AgentControlUI.GUI.TablePerceptionlistElements"/>
-			<!--xs:group ref="aors:AgentControlUI.GUI.FormElements"/-->
-		</xs:choice>
-	</xs:group>
-	<!-- block text + perceptionlist-->
-	<xs:group name="AgentControlUI.GUI.BlockTextPerceptionlistElements.monolingual">
-		<xs:choice>
-			<xs:element form="qualified" name="div"
-				type="aors:AgentControlUI.GUI.FlowPerceptionlistContent.monolingual.type"/>
-			<xs:element form="qualified" name="p"
-				type="aors:AgentControlUI.GUI.InlineContent.monolingual.type"/>
-			<xs:element form="qualified" name="pre"
-				type="aors:AgentControlUI.GUI.InlineContent.monolingual.type"/>
-		</xs:choice>
-	</xs:group>
-	<xs:group name="AgentControlUI.GUI.BlockTextPerceptionlistElements">
-		<xs:choice>
-			<xs:element form="qualified" name="div"
-				type="aors:AgentControlUI.GUI.FlowPerceptionlistContent.type"/>
-			<xs:element form="qualified" name="p" type="aors:AgentControlUI.GUI.InlineContent.type"/>
-			<xs:element form="qualified" name="pre" type="aors:AgentControlUI.GUI.InlineContent.type"/>
-		</xs:choice>
-	</xs:group>
-	<!-- table  + perceptionlist (monolingual) -->
-	<xs:group name="AgentControlUI.GUI.TablePerceptionlistElements.monolingual">
-		<xs:sequence>
-			<xs:element form="qualified" name="table">
-				<xs:complexType>
-					<xs:complexContent>
-						<xs:extension base="aors:AgentControlUI.GUI.EmptyContent.type">
-							<xs:sequence>
-								<xs:element form="qualified" minOccurs="0" name="caption"
-									type="aors:AgentControlUI.GUI.InlineContent.monolingual.type"/>
-								<xs:choice>
-									<xs:group maxOccurs="unbounded" minOccurs="0"
-										ref="aors:AgentControlUI.GUI.Table.ColElements"/>
-									<xs:element form="qualified" maxOccurs="unbounded" minOccurs="0" name="colgroup">
-										<xs:complexType>
-											<xs:complexContent>
-												<xs:extension base="aors:AgentControlUI.GUI.EmptyContent.type">
-													<xs:sequence>
-														<xs:group maxOccurs="unbounded" minOccurs="0"
-															ref="aors:AgentControlUI.GUI.Table.ColElements"/>
-													</xs:sequence>
-													<xs:attributeGroup ref="aors:AgentControlUI.GUI.Table.ColAttributes"/>
-												</xs:extension>
-											</xs:complexContent>
-										</xs:complexType>
-									</xs:element>
-								</xs:choice>
-								<xs:choice>
-									<xs:sequence>
-										<xs:element form="qualified" minOccurs="0" name="thead"
-											type="aors:AgentControlUI.GUI.TablePerceptionlist.RowWrapper.monolingual.type"/>
-										<xs:element form="qualified" minOccurs="0" name="tfoot"
-											type="aors:AgentControlUI.GUI.TablePerceptionlist.RowWrapper.monolingual.type"/>
-										<xs:element form="qualified" maxOccurs="unbounded" name="tbody"
-											type="aors:AgentControlUI.GUI.TablePerceptionlist.RowWrapper.monolingual.type"
-										/>
-									</xs:sequence>
-									<xs:group maxOccurs="unbounded"
-										ref="aors:AgentControlUI.GUI.TablePerceptionlist.RowElements.monolingual"/>
-								</xs:choice>
-							</xs:sequence>
-							<xs:attribute name="summery" type="xs:string" use="optional"/>
-						</xs:extension>
-					</xs:complexContent>
-				</xs:complexType>
-			</xs:element>
-		</xs:sequence>
-	</xs:group>
-	<xs:complexType name="AgentControlUI.GUI.TablePerceptionlist.RowWrapper.monolingual.type">
-		<xs:complexContent>
-			<xs:extension base="aors:AgentControlUI.GUI.EmptyContent.type">
-				<xs:sequence>
-					<xs:group maxOccurs="unbounded"
-						ref="aors:AgentControlUI.GUI.TablePerceptionlist.RowElements.monolingual"/>
-				</xs:sequence>
-			</xs:extension>
-		</xs:complexContent>
-	</xs:complexType>
-	<xs:group name="AgentControlUI.GUI.TablePerceptionlist.RowElements.monolingual">
-		<xs:sequence>
-			<xs:element form="qualified" name="tr">
-				<xs:complexType>
-					<xs:complexContent>
-						<xs:extension base="aors:AgentControlUI.GUI.EmptyContent.type">
-							<xs:choice maxOccurs="unbounded">
-								<xs:element form="qualified" name="td"
-									type="aors:AgentControlUI.GUI.TablePerceptionlist.CellContent.monolingual.type"/>
-								<xs:element form="qualified" name="th"
-									type="aors:AgentControlUI.GUI.TablePerceptionlist.CellContent.monolingual.type"/>
-							</xs:choice>
-						</xs:extension>
-					</xs:complexContent>
-				</xs:complexType>
-			</xs:element>
-		</xs:sequence>
-	</xs:group>
-	<xs:complexType name="AgentControlUI.GUI.TablePerceptionlist.CellContent.monolingual.type">
-		<xs:complexContent>
-			<xs:extension base="aors:AgentControlUI.GUI.FlowPerceptionlistContent.monolingual.type">
-				<xs:attribute name="rowspan" type="xs:nonNegativeInteger" use="optional"/>
-				<xs:attribute name="colspan" type="xs:nonNegativeInteger" use="optional"/>
-			</xs:extension>
-		</xs:complexContent>
-	</xs:complexType>
-	<!-- table + perceptionlist -->
-	<xs:group name="AgentControlUI.GUI.TablePerceptionlistElements">
-		<xs:sequence>
-			<xs:element form="qualified" name="table">
-				<xs:complexType>
-					<xs:complexContent>
-						<xs:extension base="aors:AgentControlUI.GUI.EmptyContent.type">
-							<xs:sequence>
-								<xs:element form="qualified" minOccurs="0" name="caption"
-									type="aors:AgentControlUI.GUI.InlineContent.type"/>
-								<xs:element form="qualified" maxOccurs="unbounded" minOccurs="0" name="summery"
-									type="aors:AgentControlUI.GUI.TextContent.multilingual.type"/>
-								<xs:choice>
-									<xs:group maxOccurs="unbounded" minOccurs="0"
-										ref="aors:AgentControlUI.GUI.Table.ColElements"/>
-									<xs:element form="qualified" maxOccurs="unbounded" minOccurs="0" name="colgroup">
-										<xs:complexType>
-											<xs:complexContent>
-												<xs:extension base="aors:AgentControlUI.GUI.EmptyContent.type">
-													<xs:sequence>
-														<xs:group maxOccurs="unbounded" minOccurs="0"
-															ref="aors:AgentControlUI.GUI.Table.ColElements"/>
-													</xs:sequence>
-													<xs:attributeGroup ref="aors:AgentControlUI.GUI.Table.ColAttributes"/>
-												</xs:extension>
-											</xs:complexContent>
-										</xs:complexType>
-									</xs:element>
-								</xs:choice>
-								<xs:choice>
-									<xs:sequence>
-										<xs:element form="qualified" minOccurs="0" name="thead"
-											type="aors:AgentControlUI.GUI.TablePerceptionlist.RowWrapper.type"/>
-										<xs:element form="qualified" minOccurs="0" name="tfoot"
-											type="aors:AgentControlUI.GUI.TablePerceptionlist.RowWrapper.type"/>
-										<xs:element form="qualified" maxOccurs="unbounded" name="tbody"
-											type="aors:AgentControlUI.GUI.TablePerceptionlist.RowWrapper.type"/>
-									</xs:sequence>
-									<xs:group maxOccurs="unbounded"
-										ref="aors:AgentControlUI.GUI.TablePerceptionlist.RowElements"/>
-								</xs:choice>
-							</xs:sequence>
-						</xs:extension>
-					</xs:complexContent>
-				</xs:complexType>
-			</xs:element>
-		</xs:sequence>
-	</xs:group>
-	<xs:complexType name="AgentControlUI.GUI.TablePerceptionlist.RowWrapper.type">
-		<xs:complexContent>
-			<xs:extension base="aors:AgentControlUI.GUI.EmptyContent.type">
-				<xs:sequence>
-					<xs:group maxOccurs="unbounded"
-						ref="aors:AgentControlUI.GUI.TablePerceptionlist.RowElements"/>
-				</xs:sequence>
-			</xs:extension>
-		</xs:complexContent>
-	</xs:complexType>
-	<xs:group name="AgentControlUI.GUI.TablePerceptionlist.RowElements">
-		<xs:sequence>
-			<xs:element form="qualified" name="tr">
-				<xs:complexType>
-					<xs:complexContent>
-						<xs:extension base="aors:AgentControlUI.GUI.EmptyContent.type">
-							<xs:choice maxOccurs="unbounded">
-								<xs:element form="qualified" name="td"
-									type="aors:AgentControlUI.GUI.TablePerceptionlist.CellContent.type"/>
-								<xs:element form="qualified" name="th"
-									type="aors:AgentControlUI.GUI.TablePerceptionlist.CellContent.type"/>
-							</xs:choice>
-						</xs:extension>
-					</xs:complexContent>
-				</xs:complexType>
-			</xs:element>
-		</xs:sequence>
-	</xs:group>
-	<xs:complexType name="AgentControlUI.GUI.TablePerceptionlist.CellContent.type">
-		<xs:complexContent>
-			<xs:extension base="aors:AgentControlUI.GUI.FlowPerceptionlistContent.type">
-				<xs:attribute name="rowspan" type="xs:nonNegativeInteger" use="optional"/>
-				<xs:attribute name="colspan" type="xs:nonNegativeInteger" use="optional"/>
-			</xs:extension>
-		</xs:complexContent>
-	</xs:complexType>
-	<!--#####################################-->
-	<!--### User-Interface-Event-Listener ###-->
-	<!--#####################################-->
-	<xs:complexType name="AgentControlUI.UserInterfaceEventListener.type">
-		<xs:sequence>
-			<xs:element form="qualified" name="WHEN">
-				<xs:complexType>
-					<xs:choice maxOccurs="unbounded">
-						<xs:element ref="aors:KeyboardEvent"/>
-						<xs:element form="qualified" name="MouseEvent">
-							<xs:complexType>
-								<xs:complexContent>
-									<xs:restriction base="aors:MouseEvent.type">
-										<xs:attribute name="targetType" type="aors:CanonicalName" use="prohibited"/>
-										<xs:attribute name="targetIdRef" type="xs:long" use="prohibited"/>
-										<xs:attribute name="targetName" type="xs:string" use="required"/>
-										<xs:attribute name="mouseEventType" type="aors:MouseEventType.type"
-											use="required"/>
-										<xs:attribute name="eventVariable" type="aors:CanonicalName" use="prohibited"/>
-									</xs:restriction>
-								</xs:complexContent>
-							</xs:complexType>
-						</xs:element>
-					</xs:choice>
-				</xs:complexType>
-			</xs:element>
-			<xs:element form="qualified" name="DO">
-				<xs:complexType>
-					<xs:sequence>
-						<xs:element maxOccurs="1" minOccurs="0" ref="aors:UPDATE-AGT"/>
-						<xs:element form="qualified" maxOccurs="1" minOccurs="0" name="SCHEDULE-EVT">
-							<xs:complexType>
-								<xs:choice maxOccurs="unbounded">
-									<xs:element ref="aors:ActionEventExpr"/>
-									<xs:element ref="aors:OutMessageEventExpr"/>
-								</xs:choice>
-							</xs:complexType>
-						</xs:element>
-					</xs:sequence>
-				</xs:complexType>
-			</xs:element>
-		</xs:sequence>
-		<xs:attribute name="name" type="aors:CanonicalName" use="required"/>
-		<xs:attribute name="agentVariable" type="aors:CanonicalName" use="optional"/>
-		<xs:attribute name="guiVariable" type="aors:CanonicalName" use="optional"/>
-		<xs:attributeGroup ref="aors:ActionRuleEvaluation.attributes"/>
-	</xs:complexType>
 	<!-- =================================================================== -->
 	<!-- *** Root element *** -->
 	<!-- *** SimulationScenario *** -->
@@ -7801,7 +6763,7 @@
 	<!-- =================================================================== -->
 	<!-- *** SimulationModel *** -->
 	<!-- =================================================================== -->
-	<xs:element name="SimulationModel">
+	<xs:element id="SimulationModel" name="SimulationModel">
 		<xs:complexType>
 			<xs:sequence>
 				<xs:element minOccurs="0" ref="ers:documentation"/>
@@ -7812,13 +6774,17 @@
 				<xs:element minOccurs="0" ref="ers:Globals"/>
 				<xs:element minOccurs="0" ref="ers:EntityTypes"/>
 				<xs:element minOccurs="0" ref="ers:EnvironmentRules"/>
-				<xs:element minOccurs="0" ref="ers:Collections"/>
 			</xs:sequence>
-			<xs:attributeGroup ref="ers:SimulationModel.attributes"/>
+			<xs:attributeGroup ref="ers:SimulationModel.basic-attributes"/>
+			<xs:attribute name="baseURI" type="xs:anyURI" use="optional">
+				<xs:annotation>
+					<xs:documentation>The base URI is used in the URIs of agent vocabulary elements.
+					</xs:documentation>
+				</xs:annotation>
+			</xs:attribute>
 		</xs:complexType>
 		<xs:unique name="uniqueNames">
-			<xs:selector
-				xpath="ers:EntityTypes/* | ers:Collections | ers:EnvironmentRules | ers:DataTypes"/>
+			<xs:selector xpath="ers:EntityTypes/* | ers:EnvironmentRules | ers:DataTypes"/>
 			<xs:field xpath="@name"/>
 		</xs:unique>
 		<!-- =================================================================== -->
@@ -7953,19 +6919,9 @@
 		</xs:complexType>
 	</xs:element>
 	<!-- =================================================================== -->
-	<!-- *** The Collections container *** -->
-	<!-- =================================================================== -->
-	<xs:element name="Collections">
-		<xs:complexType>
-			<xs:sequence>
-				<xs:element maxOccurs="unbounded" ref="ers:Collection"/>
-			</xs:sequence>
-		</xs:complexType>
-	</xs:element>
-	<!-- =================================================================== -->
 	<!-- *** InitialState *** -->
 	<!-- =================================================================== -->
-	<xs:element name="InitialState">
+	<xs:element id="InitialState" name="InitialState">
 		<xs:complexType>
 			<xs:sequence>
 				<xs:choice maxOccurs="unbounded" minOccurs="0">
@@ -7984,13 +6940,14 @@
 	<!-- =================================================================== -->
 	<!-- *** UserInterface *** -->
 	<!-- =================================================================== -->
-	<xs:element name="UserInterface">
+	<xs:element id="UserInterface" name="UserInterface">
 		<xs:complexType>
 			<xs:sequence>
 				<xs:element minOccurs="0" ref="ers:InitialStateUI"/>
 				<xs:element minOccurs="0" ref="ers:StatisticsUI"/>
 				<xs:element minOccurs="0" ref="ers:AnimationUI"/>
 			</xs:sequence>
+			<xs:attribute name="supportedLanguages" type="ers:ListOfLanguages" use="required"/>
 		</xs:complexType>
 	</xs:element>
 </xs:schema>

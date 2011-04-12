@@ -12,12 +12,14 @@
   <xs:annotation id="preface">
     <xs:documentation xml:lang="en">
       <h:img style="float:right" href="AORS-UpperLevelCategories.gif" alt="AORS-UpperLevelCategories"/>
-      <h:p>Created on 20100506, Copyright 2010 Gerd Wagner, some rights reserved (<h:a href="http://creativecommons.org/licenses/by-sa/3.0/" rel="nofollow"
-          >Creative Commons 3.0 BY-SA</h:a>). With contributions by Mircea Diaconescu, Daniel Draeger, Thomas Grundmann and Jens Werner. See also the <h:a
-          href="http://AOR-Simulation.org">project website</h:a>.</h:p>
-      <h:p>The main element of an AORSL file is <h:strong>
-          <h:code><h:a href="#SimulationScenario">SimulationScenario</h:a></h:code>
-        </h:strong>, which essentially consists of a <h:code>SimulationModel</h:code>, an <h:code>InitialState</h:code>, and a <h:code>UserInterface</h:code> element.</h:p>
+      <h:p>Created on 20110407, Copyright 2007-2011 Gerd Wagner, some rights reserved 
+      	(<h:a href="http://creativecommons.org/licenses/by-sa/3.0/" rel="nofollow">Creative Commons 3.0 BY-SA</h:a>). 
+      	With contributions by Mircea Diaconescu, Daniel Draeger, Thomas Grundmann	and Jens Werner. 
+      	See also the <h:a href="http://AOR-Simulation.org">project website</h:a>.</h:p>
+      <h:p>The main element of an AORSL file is <h:strong> <h:code><h:a href="#SimulationScenario">SimulationScenario</h:a></h:code>
+      </h:strong>, which essentially consists of a <h:code><h:a href="#SimulationModel">SimulationModel</h:a></h:code>, 
+      	an <h:code><h:a href="#InitialState">InitialState</h:a></h:code>, 
+      	and a <h:code><h:a href="#UserInterface">UserInterface</h:a></h:code> element.</h:p>
     </xs:documentation>
   </xs:annotation>
   <!-- Open issues
@@ -27,7 +29,10 @@
   <xs:redefine schemaLocation="ERSL/SimulationScenario.xsd"/>
   <xs:include schemaLocation="ERSL/SimulationModel.xsd"/>
   <xs:include schemaLocation="ActivityTypes.xsd"/>
+	<xs:include schemaLocation="ERSL/UserInterface.xsd"/>  <!-- to be dropped when AgentControlUserInterface -->
+<!--
   <xs:include schemaLocation="AgentControlUserInterface.xsd"/>
+-->	
   <!-- =================================================================== -->
   <!-- *** Root element *** -->
   <!-- *** SimulationScenario *** -->
@@ -55,7 +60,7 @@
   <!-- =================================================================== -->
   <!-- *** SimulationModel *** -->
   <!-- =================================================================== -->
-  <xs:element name="SimulationModel">
+	<xs:element name="SimulationModel" id="SimulationModel">
     <xs:complexType>
       <xs:sequence>
         <xs:element ref="ers:documentation" minOccurs="0"/>
@@ -67,7 +72,10 @@
         <xs:element ref="ers:EntityTypes" minOccurs="0"/>
         <xs:element ref="ers:EnvironmentRules" minOccurs="0"/>
       </xs:sequence>
-      <xs:attributeGroup ref="ers:SimulationModel.attributes"/>
+      <xs:attributeGroup ref="ers:SimulationModel.basic-attributes"/>
+    	<xs:attribute name="baseURI" type="xs:anyURI" use="optional">
+    		<xs:annotation><xs:documentation>The base URI is used in the URIs of agent vocabulary elements. </xs:documentation></xs:annotation>
+    	</xs:attribute>
     </xs:complexType>
     <xs:unique name="uniqueNames">
       <xs:selector xpath="ers:EntityTypes/* | ers:EnvironmentRules | ers:DataTypes"/>
@@ -204,7 +212,7 @@
   <!-- =================================================================== -->
   <!-- *** InitialState *** -->
   <!-- =================================================================== -->
-  <xs:element name="InitialState">
+	<xs:element name="InitialState" id="InitialState">
     <xs:complexType>
       <xs:sequence>
         <xs:choice minOccurs="0" maxOccurs="unbounded">
@@ -222,7 +230,7 @@
   <!-- =================================================================== -->
   <!-- *** UserInterface *** -->
   <!-- =================================================================== -->
-  <xs:element name="UserInterface">
+	<xs:element name="UserInterface" id="UserInterface">
     <xs:complexType>
       <xs:sequence>
         <xs:element ref="ers:InitialStateUI" minOccurs="0"/>
