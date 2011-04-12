@@ -3,9 +3,9 @@
 <!-- 
 	TODO:
 		- elements
-			- handle informations (block)
+		- handle informations (block)
 		- group | attributeGroup
-			- annotations
+		- annotations
 		- xs:any
 		- support for more dc-elements
 -->
@@ -76,141 +76,131 @@
 				<meta http-equiv="Content-Type" content="application/xml; charset=UTF-8"/>
 				<style type="text/css">
 					<xsl:text disable-output-escaping="yes">
-						/* navigation */
+/* navigation */
+
+div.document > ol.navigation {
+	display: block;
+	position: fixed;
+	top:      0;
+	left:     0;
+	height:   100%;
+	width:  25%;
+	overflow: auto;
+	border-right: 1px solid black;
+	list-style: none;
+	margin: 0;
+	padding:0;
+	}
+
+div.document > ol.navigation > li {
+	margin: 0;
+	padding:0 10px 20px;
+	}
+div.document > ol.navigation ol.navigation {
+	list-style: inherit;
+	margin: 0;
+	padding: 0;
+	}
+div.document > ol.navigation ol.navigation > li {
+	margin: 0;
+	padding: 0 0 0 20px;
+}
+				
+/* document */
+					
+div.document {
+	font-family: Verdana, sans-serif;
+    font-size: 80%;
+	}
+code {
+    font-size: 125%;
+	}
+div.document > * {
+	display: block;
+	margin: 0 0 0 25%;
+	padding: 0 10px;
+	}
+div.document > .heading {
+	margin-top: 0;
+	margin-bottom: 10px;
+	font-size: 180%;
+	font-weight: bold;
+	}
+						
+/* chapter */
+
+div.chapter > .heading {
+	display: none;
+	}
+	
+/* section */
+				
+div.section .heading {
+	margin-top: 20px;
+	margin-bottom: 10px;
+	font-size: 120%;
+	font-weight: bold;
+	}
+div.section div.section .heading {
+	display: none;
+}
+div.subelements, div.attributes, div.content, div.documentation, div.substiution {
+	margin: 15px 0;
+	}
+						
+/* content */
 											
-						div.document > ol.navigation {
-							display: block;
-							position: fixed;
-							top:      0;
-							left:     0;
-							height:   100%;
-							width:  28%;
-							overflow: auto;
-							border-right: 1px solid black;
-							
-							list-style: none;
-							margin: 0;
-							padding:0;
-						}
-						
-						div.document > ol.navigation > li {
-							margin: 0;
-							padding:0 10px 20px;
-						}
-						
-						div.document > ol.navigation ol.navigation {
-							list-style: inherit;
-							margin: 0;
-							padding: 0;
-						}
-						
-						div.document > ol.navigation ol.navigation > li {
-							margin: 0;
-							padding: 0 0 0 20px;
-						}
-						
-						/* document */
-						
-						div.document > * {
-							display: block;
-							margin: 0 0 0 28%;
-							padding: 0 10px;
-						}
-	
-						div.document > .heading {
-							margin-top: 0;
-							margin-bottom: 10px;
-							font-size: 200%;
-							font-weight: bold;
-						}
-						
-						/* chapter */
-	
-						div.chapter > .heading {
-							display: none;
-						}
-	
-						/* section */
-						
-						div.section .heading {
-							margin-top: 20px;
-							margin-bottom: 10px;
-							font-size: 160%;
-							font-weight: bold;
-						}
-						
-						div.section div.section .heading {
-							display: none;
-						}
-								
-						div.subelements, div.attributes, div.content, div.documentation, div.substiution {
-							margin: 15px 0;
-						}
-						
-						/* content */
-											
-						table {
-							width: 100%;
-							border-collapse: collapse;
-							margin: 0 0 15px;
-						}
-						
-						table.optional {
-							background-color: #dddddd;
-						}
-						
-						caption {
-							display: none;
-						}
-						
-						th, td {
-							padding: 5px;
-							text-align: left;
-							vertical-align: top;
-							border: 1px solid black;
-						}
-						
-						ul {
-							margin: 0;
-							padding: 0 0 0 15px;
-						}
-						
-						ul ul {
-							margin: 0;
-							padding: 0 0 0 35px;
-						}
-						
-						ul li {
-							margin: 0 0 5px;
-							padding: 0;
-						}
-						
-						dl {
-							position: relative;
-							margin: -5px 0 5px;
-							padding: 0;
-						}
-						
-						ul + dl {
-							margin-top: 0;
-						}
-						
-						dt {
-							float: left;
-							margin: 0px 10px 0 0;
-							padding: 0;
-							font-style: italic;
-						}
-						
-						dt + dt, dd + dt {
-							margin-top: 5px;
-							clear: both;
-						}
-						
-						dd {
-							margin: 5px 0 0;
-							padding: 0;
-						}
+table {
+	width: 100%;
+	border-collapse: collapse;
+	margin: 0 0 15px;
+	}
+table.optional {
+	background-color: #dddddd;
+	}
+caption {
+	display: none;
+	}
+th, td {
+	padding: 5px;
+	text-align: left;
+	vertical-align: top;
+	border: 1px solid black;
+	}
+ul {
+	margin: 0;
+	padding: 0 0 0 15px;
+	}
+ul ul {
+	margin: 0;
+	padding: 0 0 0 35px;
+	}
+ul li {
+	margin: 0 0 5px;
+	padding: 0;
+	}
+dl {
+	position: relative;
+	margin: -5px 0 5px;
+	padding: 0;
+	}
+ul + dl {
+	margin-top: 0;
+	}
+dt {
+	float: left;
+	margin: 0px 10px 0 0;
+	padding: 0;
+	font-style: italic;
+	}
+dt + dt, dd + dt {
+	margin-top: 5px;
+	clear: both;
+	}
+dd {
+	margin: 5px 0 0;
+	padding: 0;
+	}
 						</xsl:text>
 				</style>
 			</head>
