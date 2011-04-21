@@ -27,6 +27,8 @@ import aors.module.visopengl3d.space.component.SpaceComponent;
 import aors.module.visopengl3d.space.model.GridSpaceModel;
 import aors.module.visopengl3d.space.model.SpaceModel;
 import aors.module.visopengl3d.space.view.GridSpaceView;
+import aors.module.visopengl3d.space.view.Skybox;
+import aors.module.visopengl3d.space.view.SpaceView;
 import aors.module.visopengl3d.space.view.TwoDimSpaceView;
 import aors.module.visopengl3d.utility.Offset;
 import aors.module.visopengl3d.utility.TextureLoader;
@@ -108,6 +110,13 @@ public class Engine implements GLEventListener {
         }
       }
       spaceModel.display(gl, glu);
+      
+      Skybox skybox = spaceModel.getSpaceView().getSkybox();
+      if(skybox != null) {
+    	double[] cameraPosition = {camera.getX(), camera.getY(), camera.getZ()};
+      	skybox.setPosition(cameraPosition);
+      	skybox.display(gl, glu);
+      }
 
       if (objMap != null) {
         if (!objMap.isEmpty()) {
@@ -327,6 +336,13 @@ public class Engine implements GLEventListener {
     // Create display list
     spaceModel.compileDisplayList(gl, glu);
     spaceModel.setInitialized(true);
+    
+    
+    Skybox skybox = spaceModel.getSpaceView().getSkybox();
+    if(skybox != null) {
+    	skybox.loadTextures();
+    	skybox.generateDisplayList(gl, glu);
+    }
   }
 
   /**
@@ -979,6 +995,10 @@ public class Engine implements GLEventListener {
 
     else if (spaceModel.getSpaceType().equals(SpaceType.TwoD)) {
       return 0;
+    }
+    
+    else if (spaceModel.getSpaceType().equals(SpaceType.TwoDLateralView)) {
+        return 0;
     }
 
     else if (spaceModel.getSpaceType().equals(SpaceType.TwoDGrid)) {

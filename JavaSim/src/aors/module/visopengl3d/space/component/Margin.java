@@ -3,6 +3,8 @@ package aors.module.visopengl3d.space.component;
 import javax.media.opengl.GL2;
 import javax.media.opengl.glu.GLU;
 
+import aors.module.visopengl3d.space.model.SpaceModel;
+import aors.module.visopengl3d.space.model.TwoDimLateralViewSpaceModel;
 import aors.module.visopengl3d.space.model.TwoDimSpaceModel;
 import aors.module.visopengl3d.utility.Color;
 import aors.module.visopengl3d.utility.Offset;
@@ -20,7 +22,7 @@ import com.sun.opengl.util.texture.TextureCoords;
 public class Margin implements SpaceComponent {
 
   // Space model
-  private TwoDimSpaceModel spaceModel;
+  private SpaceModel spaceModel;
 
   // Offsets
   private Offset offset;
@@ -48,7 +50,7 @@ public class Margin implements SpaceComponent {
 
   @Override
   public void display(GL2 gl, GLU glu) {
-    if (backgroundImg != null) {
+    /*if (backgroundImg != null) {
       // Get texture coordinates
       TextureCoords tc = backgroundImg.getImageTexCoords();
 
@@ -80,7 +82,7 @@ public class Margin implements SpaceComponent {
     // Draw the border
     gl.glColor4dv(borderColor.getColor(), 0);
     gl.glPolygonMode(GL2.GL_FRONT_AND_BACK, GL2.GL_LINE);
-    gl.glRectd(offset.x1, offset.y1, offset.x2, offset.y2);
+    gl.glRectd(offset.x1, offset.y1, offset.x2, offset.y2);*/
   }
 
   @Override
@@ -105,15 +107,20 @@ public class Margin implements SpaceComponent {
     pos[0] = offset.x1 + ((offset.getWidth() * x) / spaceModel.getxMax());
     pos[1] = offset.y1 + ((offset.getHeight() * y) / spaceModel.getyMax());
     pos[2] = 0;
+    
+    if(spaceModel instanceof TwoDimSpaceModel) {
+    	pos[2] = -pos[1];
+    	pos[1] = 0;
+    }
 
     return pos;
   }
 
-  public TwoDimSpaceModel getSpaceModel() {
+  public SpaceModel getSpaceModel() {
     return spaceModel;
   }
 
-  public void setSpaceModel(TwoDimSpaceModel spaceModel) {
+  public void setSpaceModel(SpaceModel spaceModel) {
     this.spaceModel = spaceModel;
   }
 
