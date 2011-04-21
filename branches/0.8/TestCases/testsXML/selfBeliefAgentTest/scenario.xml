@@ -1,0 +1,99 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<?xml-stylesheet type="text/xsl" href="prettyprint.xsl"?>
+<SimulationScenario version="0.8.3" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xsi:schemaLocation="http://aor-simulation.org ../../../../ext/aorsl/AORSL-0-8-3.xsd"
+	xmlns="http://aor-simulation.org" xmlns:aors="http://aor-simulation.org"
+	xmlns:dc="http://purl.org/dc/elements/1.1/" scenarioName="selfBeliefAgentTest"
+	scenarioTitle="Test for self belief agents">
+
+	<SimulationParameters simulationSteps="80" stepDuration="1" timeUnit="Y"/>
+
+	<SimulationModel modelName="selfBeliefAgentTest"
+		modelTitle="Test for self belief agents">
+
+		<documentation>
+			<dc:creator>Martin Müller</dc:creator>
+			<dc:created>2010-01-28</dc:created>
+			<dc:description>Two Agents use messages to communicate about their self belief attributes</dc:description>
+		</documentation>
+
+		<EntityTypes>
+			
+			<MessageType name="AboutMe">
+				<Attribute type="Integer" name="age"/>
+				<Attribute type="String" name="name"/>
+			</MessageType>
+			
+			<AgentType name="TestDummy" />
+			
+			<AgentType name="TestAgentSender" beliefRepresentationStyle="designTimeVocabulary">
+				<SelfBeliefAttribute type="Integer" name="myAge" initialValue="10"/>
+				<SelfBeliefAttribute type="String" name="myName" initialValue="Hans"/>
+				
+				<ReactionRule name="SendInfo" agentVariable="agt">
+					<ON-EACH-SIMULATION-STEP/>
+					<DO>
+						<SCHEDULE-EVT>
+							<OutMessageEventExpr messageType="AboutMe" receiverIdRefs="2">
+								<Delay><ValueExpr language="Java">1</ValueExpr></Delay>
+								<Slot property="age">
+									<ValueExpr language="Java">agt.getMyAge()</ValueExpr>
+								</Slot>
+								<Slot property="name">
+									<ValueExpr language="Java">agt.getMyName()</ValueExpr>
+								</Slot>
+							</OutMessageEventExpr>
+						</SCHEDULE-EVT>
+					</DO>
+				</ReactionRule>
+			</AgentType>
+			
+			<AgentType name="TestAgentReceiver">
+				<SelfBeliefAttribute type="Integer" name="senderAge"/>
+				<SelfBeliefAttribute type="String" name="senderName"/>
+				
+				<ReactionRule name="receivedInfo">
+					<WHEN eventType="InMessageEvent" messageType="AboutMe" messageVariable="msg"/>
+					<DO>
+						<UPDATE-AGT>
+							<SelfBeliefSlot property="senderAge">
+								<ValueExpr language="Java">msg.getAge()</ValueExpr>
+							</SelfBeliefSlot>
+							<SelfBeliefSlot property="senderName">
+								<ValueExpr language="Java">msg.getName()</ValueExpr>
+							</SelfBeliefSlot>
+						</UPDATE-AGT>
+					</DO>
+				</ReactionRule>
+			</AgentType>
+			
+			
+		</EntityTypes>
+		
+		<EnvironmentRules>
+			<EnvironmentRule name="createDestory">
+				<ON-EACH-SIMULATION-STEP/>
+				<DO>
+					<UPDATE-ENV>
+						<Create>
+							<Agent type="TestDummy" id="3" />
+						</Create>
+						<DestroyObject>
+							<ObjectIdRef language="Java">3</ObjectIdRef>
+						</DestroyObject>
+					</UPDATE-ENV>
+				</DO>
+			</EnvironmentRule>
+		</EnvironmentRules>
+		
+	</SimulationModel>
+
+
+	<InitialState>
+		
+		<Agent type="TestAgentSender" id="1" />
+		<Agent type="TestAgentReceiver" id="2" />
+		
+	</InitialState>
+
+</SimulationScenario>

@@ -1,0 +1,92 @@
+<?xml version="1.0"?>
+<?xml-stylesheet type="text/xsl" href="prettyprint.xsl"?>
+
+<SimulationScenario version="0.8.4" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" 
+	xsi:schemaLocation="http://aor-simulation.org ../../AORSL/AORSL_0-8-4.xsd" 
+	xmlns="http://aor-simulation.org" xmlns:aors="http://aor-simulation.org" 
+	xmlns:dc="http://purl.org/dc/elements/1.1/" xmlns:h="http://www.w3.org/1999/xhtml"
+	scenarioName="Call_TestCaseExample"
+	scenarioTitle="Test case example for Call"
+	simulationManagerDirectory="../../..">
+
+	<SimulationParameters simulationSteps="20" timeUnit="h"  stepTimeDelay="0"/>
+	<SimulationModel modelName="Call_TestCaseExample">
+		<documentation>
+			<dc:creator>Gerd Wagner</dc:creator>
+			<dc:created>12-Oct-2010</dc:created>
+		</documentation>
+		
+		<EntityTypes>				
+			<ObjectType name="Beer">
+				<Attribute type="String" name="brand"/>
+				<Function name="BeerProcedure" resultType="void">
+					<Body language="Java">System.out.println("test UPDATE-ENV/Call");</Body>
+				</Function>				
+			</ObjectType>
+		<!-- ======================= -->
+       <AgentType name="Market">
+      <!-- ======================= -->
+       	<Function name="MarketProcedure" resultType="void">
+       		<Parameter name="par1" type="Integer"/>
+       		<Parameter name="par2" type="String"/>
+       		<Body language="Java">
+       			System.out.println("test Market_procedure_Call: par1 = " + par1 + " par2 = " + par2);
+       		</Body>
+       	</Function>       	
+       	<ReactionRule name="test">
+         	<ON-EACH-SIMULATION-STEP/>
+         	<DO>
+         		<UPDATE-AGT>
+         			<Call procedure="MarketProcedure">
+         				<Argument parameter="par1">
+         					<ValueExpr language="Java"> 1+1 </ValueExpr>
+         				</Argument>
+         				<Argument parameter="par2" value="STRING value"/>
+         			</Call>
+         		</UPDATE-AGT>
+         	</DO>
+         </ReactionRule>
+       </AgentType>
+
+		</EntityTypes>
+
+		<EnvironmentRules>
+				<!-- ==================================== -->
+				<EnvironmentRule name="StartOfDay_Rule">
+					<!-- ================================== -->
+					<ON-EACH-SIMULATION-STEP/>
+					<FOR objectVariable="m" objectType="Market" />
+					<FOR objectVariable="b" objectType="Beer" />
+					<DO>
+						<UPDATE-ENV>
+							<Call procedure="MarketProcedure" contextObjectVariable="m">
+								<Argument parameter="par1">
+									<ValueExpr language="Java"> 1+1 </ValueExpr>
+								</Argument>
+								<Argument parameter="par2" value="STRING value"/>
+							</Call>
+							<Call procedure="BeerProcedure" contextObjectVariable="b"/>
+							<UpdateObject objectVariable="m">
+								<Call procedure="MarketProcedure">
+									<Argument parameter="par1">
+										<ValueExpr language="Java"> 1+1 </ValueExpr>
+									</Argument>
+									<Argument parameter="par2" value="STRING value"/>
+								</Call>
+							</UpdateObject>
+						</UPDATE-ENV>
+					</DO>
+				</EnvironmentRule>		
+			</EnvironmentRules>
+	</SimulationModel>
+	<!-- ======================= -->
+	<InitialState>
+	<!-- ======================= -->
+		<!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->			
+		<Agent type="Market" id="1">
+		<!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->
+		</Agent>
+		
+	</InitialState>
+	
+</SimulationScenario>

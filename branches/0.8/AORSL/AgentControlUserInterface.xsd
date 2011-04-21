@@ -1,0 +1,374 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<?xml-stylesheet type="text/xsl" href="ersl/refman/refman.xsl"?>
+
+<xs:schema xmlns:xs="http://www.w3.org/2001/XMLSchema" xmlns:aors="http://aor-simulation.org" xmlns:xml="http://www.w3.org/XML/1998/namespace"
+  targetNamespace="http://aor-simulation.org" elementFormDefault="qualified">
+
+	<!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->
+	<xs:redefine schemaLocation="ERSL/UserInterface.xsd">
+	<!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->
+		<xs:complexType name="AnimationUI.type">
+      <xs:complexContent>
+        <xs:extension base="aors:AnimationUI.type">
+          <xs:sequence>
+            <xs:element ref="aors:AgentControlUI" minOccurs="0"/>
+          </xs:sequence>          
+        </xs:extension>
+      </xs:complexContent>
+    </xs:complexType>
+  </xs:redefine>
+  <xs:include schemaLocation="ActionRules.xsd"/>
+  
+	<!-- =================================================================== -->
+	<xs:element name="AgentControlUI">
+	<!-- =================================================================== -->
+		<xs:complexType>
+      <xs:sequence>
+      	<xs:element ref="aors:AgentControlByAgentType" maxOccurs="unbounded"/>
+      </xs:sequence>
+    	<xs:attribute name="waitForUserInput" type="xs:boolean" use="optional" default="false">
+    		<xs:annotation><xs:documentation>Interrupt the simulation while waiting for the user input. In the case of a single-user simulation this will not be combined with a timeout, while in the case of a multi-user simulation it will be combined with a timeout. </xs:documentation></xs:annotation>
+    	</xs:attribute>
+    	<xs:attribute name="timeoutSec" type="xs:positiveInteger" use="optional">
+    		<xs:annotation><xs:documentation>The timeout for the human-controlled agents' response time in number of seconds. </xs:documentation></xs:annotation>
+    	</xs:attribute>
+    	<xs:attribute name="roundEventType" type="aors:CanonicalName" use="optional">
+    		<xs:annotation><xs:documentation>If waitForUserInput is true, then this attribute specifies the type of exogenous event that defines the start of a new round when the simulator would ask the user-controlled agent simulators for their user inputs. </xs:documentation></xs:annotation>
+    	</xs:attribute>
+    </xs:complexType>
+  </xs:element>
+	<!-- =================================================================== -->
+	<xs:element name="AgentControlByAgentType">
+	<!-- =================================================================== -->
+		<xs:complexType>
+      <xs:sequence>
+        <xs:element name="AgentControlGUI" type="aors:AgentControlGUI.type"/>        
+      	<xs:element name="AgentControlEventListener" type="aors:AgentControlEventListener.type" minOccurs="0" maxOccurs="unbounded"/>
+      </xs:sequence>
+      <xs:attribute name="type" type="aors:CanonicalName" use="required"/>
+    	<xs:attribute name="playableAgents" type="aors:ListOfCanonicalName" use="optional">
+    		<xs:annotation><xs:documentation>A list of agent names specifying those agents (defined in the initial state) that are playable by a human user. </xs:documentation></xs:annotation>
+    	</xs:attribute>
+      <xs:attribute name="suspendRules" type="aors:ListOfCanonicalName" use="optional"/>
+    </xs:complexType>
+  </xs:element>
+	<!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->
+	<xs:complexType name="AgentControlGUI.type">
+	<!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->
+		<xs:annotation><xs:documentation>
+			The GUI element has 5 kinds of subelements: a perception event list, 
+			reaction elements allowing to enter parameter values for actions performed in response to certain events,
+			action elements allowing to enter parameter values for actions that can be performed at any time,
+			ouput fields that allow to display information about the agent itself, about other objects or about statistics,
+			input fields that allow to change beliefs of the agent.        		
+		</xs:documentation></xs:annotation>
+		<xs:sequence>
+			<xs:element name="PerceptionEventList" type="aors:PerceptionEventList.type"/>
+			<xs:element name="ReactionUI" type="aors:ReactionUI.type" minOccurs="0" maxOccurs="unbounded"/>
+			<xs:element name="OutputField" type="aors:OutputField.type" minOccurs="0" maxOccurs="unbounded"/>
+		</xs:sequence>
+		<xs:attribute name="cssFile" type="xs:anyURI" use="optional"/>
+	</xs:complexType>
+	<!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->	
+	<xs:complexType name="PerceptionEventList.type">
+	<!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->
+		<xs:choice maxOccurs="unbounded">
+			<xs:element name="PerceptionEventView" minOccurs="0" maxOccurs="unbounded">
+				<xs:annotation><xs:documentation>For showing generic perception events. </xs:documentation></xs:annotation>
+				<xs:complexType>
+					<xs:sequence>
+						<xs:element ref="aors:Label"/>
+						<xs:element name="EventProperty" type="aors:PropertyView.type" minOccurs="0" maxOccurs="unbounded"/>    							
+					</xs:sequence>
+					<xs:attribute name="perceptionEventType" type="aors:CanonicalName" use="required"/>
+					<xs:attributeGroup ref="aors:EventView.CommonAttributes"/>
+				</xs:complexType>
+			</xs:element>
+			<xs:element name="PhysicalObjectPerceptionEventView" minOccurs="0" maxOccurs="unbounded">
+				<xs:annotation><xs:documentation>For showing physical object perception events. </xs:documentation></xs:annotation>
+				<xs:complexType>
+					<xs:sequence>
+						<xs:element ref="aors:Label"/>
+						<xs:element name="ObjectProperty" type="aors:PropertyView.type" minOccurs="0" maxOccurs="unbounded"/>    							
+					</xs:sequence>
+					<xs:attribute name="objectType" type="aors:CanonicalName" use="required"/>
+					<xs:attribute name="showObjectId" type="xs:boolean" use="optional" default="false"/>
+					<xs:attribute name="showObjectName" type="xs:boolean" use="optional" default="false"/>
+					<xs:attribute name="showDistance" type="xs:boolean" use="optional" default="false"/>
+					<xs:attribute name="showPerceptionAngle" type="xs:boolean" use="optional" default="false"/>
+					<xs:attributeGroup ref="aors:EventView.CommonAttributes"/>
+				</xs:complexType>
+			</xs:element>
+			<xs:element name="InMessageEventView" minOccurs="0" maxOccurs="unbounded">
+				<xs:annotation><xs:documentation>For showing in-message events. </xs:documentation></xs:annotation>
+				<xs:complexType>
+					<xs:sequence>
+						<xs:element ref="aors:Label"/>
+						<xs:element name="MessageProperty" type="aors:PropertyView.type" minOccurs="0" maxOccurs="unbounded"/>    							
+					</xs:sequence>
+					<xs:attribute name="messageType" type="aors:CanonicalName" use="required"/>
+					<xs:attribute name="showSender" type="xs:boolean" use="optional" default="true"/>
+					<xs:attributeGroup ref="aors:EventView.CommonAttributes"/>
+				</xs:complexType>
+			</xs:element>
+			<xs:element name="PeriodicTimeEventView" minOccurs="0" maxOccurs="unbounded">
+				<xs:annotation><xs:documentation>For showing periodic time events. </xs:documentation></xs:annotation>
+				<xs:complexType>
+					<xs:sequence>
+						<xs:element ref="aors:Label"/>						
+					</xs:sequence>
+					<xs:attribute name="periodicTimeEventType" type="aors:CanonicalName" use="required"/>
+					<xs:attributeGroup ref="aors:EventView.CommonAttributes"/>
+				</xs:complexType>
+			</xs:element>
+		</xs:choice>
+		<xs:attribute name="showReminderEvents" type="xs:boolean" use="optional" default="false"/>
+	</xs:complexType>  
+	<!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->
+	<xs:complexType name="PropertyView.type">
+	<!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->
+		<xs:sequence>
+			<xs:element ref="aors:Label"/>
+			<xs:element ref="aors:Format" minOccurs="0"/>
+		</xs:sequence>
+		<xs:attribute name="name" type="aors:CanonicalName" use="required"/>
+		<xs:attribute name="label" type="xs:string" use="required"/>
+		<xs:attribute name="fieldLength" use="optional">
+			<xs:annotation><xs:documentation>The length of the property field in cm. </xs:documentation></xs:annotation>
+			<xs:simpleType>
+				<xs:restriction base="xs:float">
+					<xs:minExclusive value="0.0"/>
+				</xs:restriction>
+			</xs:simpleType>
+		</xs:attribute>
+	</xs:complexType>
+	<!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->
+	<xs:attributeGroup name="EventView.CommonAttributes">
+	<!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->
+		<xs:attribute name="label" type="xs:string" use="required"/>
+		<xs:attribute name="icon" type="xs:anyURI" use="optional">
+			<xs:annotation><xs:documentation xml:lang="en">An icon file from the media folder. </xs:documentation></xs:annotation>
+		</xs:attribute>
+	</xs:attributeGroup>
+	<!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->
+	<xs:complexType name="OutputField.type">
+	<!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->
+		<xs:sequence>
+			<xs:group ref="aors:Field.CommonElem"/>
+			<xs:element name="Source" minOccurs="0">
+				<xs:complexType>
+					<xs:choice>
+						<xs:element name="GlobalVariable">
+							<xs:complexType>
+								<xs:attribute name="name" type="aors:CanonicalName" use="required"/>
+							</xs:complexType>
+						</xs:element>	
+						<xs:element name="StatisticsVariable">
+							<xs:complexType>
+								<xs:attribute name="name" type="aors:CanonicalName" use="required"/>
+							</xs:complexType>
+						</xs:element>	
+						<xs:element name="ObjectProperty">
+							<xs:annotation><xs:documentation xml:lang="en">A property of another object/agent. </xs:documentation></xs:annotation>
+							<xs:complexType>
+								<xs:attribute name="property" type="aors:CanonicalName" use="required"/>
+								<xs:attribute name="objectType" type="aors:CanonicalName" use="required"/>
+								<xs:attribute name="objectIdRef" type="xs:long" use="required"/>
+							</xs:complexType>
+						</xs:element>
+					</xs:choice>
+				</xs:complexType>
+			</xs:element>
+		</xs:sequence>
+		<xs:attribute name="label" type="xs:string" use="required"/>
+		<xs:attribute name="property" type="aors:CanonicalName" use="optional">
+			<xs:annotation><xs:documentation xml:lang="en">A property of the agent. </xs:documentation></xs:annotation>			
+		</xs:attribute>
+	</xs:complexType>
+	<!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->
+	<xs:complexType name="ReactionUI.type">
+	<!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->
+		<xs:sequence>
+			<xs:element name="ActionEventUI" minOccurs="0" maxOccurs="unbounded">
+				<xs:complexType>
+					<xs:sequence>
+						<xs:element ref="aors:Label"/>
+						<xs:element ref="aors:PropertyUI" minOccurs="0" maxOccurs="unbounded"/>
+					</xs:sequence>
+					<xs:attribute name="actionEventType" type="aors:CanonicalName" use="required"/>
+					<xs:attributeGroup ref="aors:EventView.CommonAttributes"/>
+				</xs:complexType>
+			</xs:element>
+			<xs:element name="OutMessageEventUI" minOccurs="0" maxOccurs="unbounded">
+				<xs:complexType>
+					<xs:sequence>
+						<xs:element ref="aors:Label"/>
+						<xs:element ref="aors:PropertyUI" minOccurs="0" maxOccurs="unbounded"/>
+					</xs:sequence>
+					<xs:attribute name="messageType" type="aors:CanonicalName" use="required"/>
+					<xs:attributeGroup ref="aors:EventView.CommonAttributes"/>
+				</xs:complexType>
+			</xs:element>
+		</xs:sequence>
+		<xs:attribute name="eventType" type="aors:CanonicalName" use="required">
+			<xs:annotation><xs:documentation>The type of events, in response to which the player reacts. </xs:documentation></xs:annotation>
+		</xs:attribute>
+	</xs:complexType>
+	<!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->
+	<xs:complexType name="AgentControlEventListener.type">
+	<!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->
+		<xs:sequence>
+      <xs:element name="WHEN">
+      	<xs:annotation><xs:documentation>User interface events are defined in the DOM3-Spezifikation [http://www.w3.org/TR/DOM-Level-3-Events]. </xs:documentation></xs:annotation>
+      	<xs:complexType>
+          <xs:choice maxOccurs="unbounded">
+            <xs:element ref="aors:KeyboardEvent"/>
+            <xs:element name="MouseEvent">              
+              <xs:complexType>
+                <xs:complexContent>
+                  <xs:restriction base="aors:MouseEvent.type">
+                    <xs:attribute name="targetType" type="aors:CanonicalName" use="prohibited"/>
+                    <xs:attribute name="targetIdRef" type="xs:long" use="prohibited"/>
+                    <xs:attribute name="targetName" type="xs:string" use="required"/>
+                    <xs:attribute name="mouseEventType" type="aors:MouseEventType.type" use="required"/>
+                    <xs:attribute name="eventVariable" type="aors:CanonicalName" use="prohibited"/>                          
+                  </xs:restriction>
+                </xs:complexContent>
+              </xs:complexType>              
+            </xs:element>
+          </xs:choice>
+        </xs:complexType>
+      </xs:element>
+      <xs:element name="DO">
+        <xs:complexType>
+          <xs:sequence>
+            <xs:element ref="aors:UPDATE-AGT" minOccurs="0" maxOccurs="1"/>
+            <xs:element name="SCHEDULE-EVT" minOccurs="0" maxOccurs="1">
+              <xs:complexType>
+                <xs:choice maxOccurs="unbounded">
+                  <xs:element ref="aors:ActionEventExpr"/>
+                  <xs:element ref="aors:OutMessageEventExpr"/>
+                </xs:choice>
+              </xs:complexType>
+            </xs:element>            
+          </xs:sequence>
+        </xs:complexType>
+      </xs:element>            
+    </xs:sequence>
+    <xs:attribute name="name" type="aors:CanonicalName" use="required"/>
+    <xs:attribute name="agentVariable" type="aors:CanonicalName" use="optional"/>
+    <xs:attribute name="guiVariable" type="aors:CanonicalName" use="optional"/>
+    <xs:attributeGroup ref="aors:ActionRuleEvaluation.attributes"/>
+  </xs:complexType>
+	<!-- =================================================================== -->	
+	<xs:element name="KeyboardEvent">
+	<!-- =================================================================== -->
+		<xs:complexType>
+			<xs:attribute name="keyIdentifier" type="aors:KeyIdentifiers.type" use="required"/>
+			<xs:attribute name="shiftKey" type="xs:boolean" use="optional"/>
+			<xs:attribute name="ctrlKey" type="xs:boolean" use="optional"/>
+			<!--									
+				<xs:attribute name="altKey" type="xs:boolean" use="optional">
+				<xs:annotation><xs:documentation>On Macintosh systems this key modifier corresponds to the Option key modifier. </xs:documentation></xs:annotation>
+				</xs:attribute>
+			-->									
+		</xs:complexType>
+	</xs:element>
+	<!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->
+	<xs:simpleType name="KeyIdentifiers.type">
+	<!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->
+		<xs:annotation><xs:documentation>See http://www.w3.org/TR/2009/WD-DOM-Level-3-Events-20090908/#keyset-keyidentifiers </xs:documentation></xs:annotation>
+		<xs:restriction base="xs:string">
+			<xs:enumeration value="Down"/>
+			<xs:enumeration value="Left"/>
+			<xs:enumeration value="Right"/>
+			<xs:enumeration value="Up"/>
+			<xs:enumeration value="Enter">
+				<xs:annotation><xs:documentation>This key identifier shall be also used for the Return (Macintosh numpad) key. </xs:documentation></xs:annotation>
+			</xs:enumeration>
+			<xs:enumeration value="F1"/>
+			<xs:enumeration value="F2"/>
+			<xs:enumeration value="F3"/>
+			<xs:enumeration value="F4"/>
+			<xs:enumeration value="F5"/>
+			<xs:enumeration value="F6"/>
+			<xs:enumeration value="F7"/>
+			<xs:enumeration value="F8"/>
+			<xs:enumeration value="F9"/>
+			<xs:enumeration value="F10"/>
+			<xs:enumeration value="F11"/>
+			<xs:enumeration value="F12"/>
+			<xs:enumeration value="Insert"/>
+			<xs:enumeration value="Del">
+				<xs:annotation><xs:documentation>This key identifier shall be also used for the key labeled 'delete' MacOS keyboards when modified by the 'Fn' key.</xs:documentation></xs:annotation>
+			</xs:enumeration>
+			<xs:enumeration value="Backspace">
+				<xs:annotation><xs:documentation>This key identifier shall be also used for the key labeled 'delete' MacOS keyboards when not modified by the 'Fn' key.</xs:documentation></xs:annotation>
+			</xs:enumeration>
+			<xs:enumeration value="PageDown"/>
+			<xs:enumeration value="PageUp"/>
+			<xs:enumeration value="Tab"/>
+			<xs:enumeration value="Esc"/>
+			<xs:enumeration value="Spacebar"/>
+			<xs:enumeration value="#"/>
+			<xs:enumeration value="+"/>
+			<xs:enumeration value="-"/>
+			<xs:enumeration value="1"/>
+			<xs:enumeration value="2"/>
+			<xs:enumeration value="3"/>
+			<xs:enumeration value="4"/>
+			<xs:enumeration value="5"/>
+			<xs:enumeration value="6"/>
+			<xs:enumeration value="7"/>
+			<xs:enumeration value="8"/>
+			<xs:enumeration value="9"/>
+			<xs:enumeration value="0"/>
+			<xs:enumeration value="A"/>
+			<xs:enumeration value="B"/>
+			<xs:enumeration value="C"/>
+			<xs:enumeration value="D"/>
+			<xs:enumeration value="E"/>
+			<xs:enumeration value="F"/>
+			<xs:enumeration value="G"/>
+			<xs:enumeration value="H"/>
+			<xs:enumeration value="I"/>
+			<xs:enumeration value="J"/>
+			<xs:enumeration value="K"/>
+			<xs:enumeration value="L"/>
+			<xs:enumeration value="M"/>
+			<xs:enumeration value="N"/>
+			<xs:enumeration value="O"/>
+			<xs:enumeration value="P"/>
+			<xs:enumeration value="Q"/>
+			<xs:enumeration value="R"/>
+			<xs:enumeration value="S"/>
+			<xs:enumeration value="T"/>
+			<xs:enumeration value="U"/>
+			<xs:enumeration value="V"/>
+			<xs:enumeration value="W"/>
+			<xs:enumeration value="X"/>
+			<xs:enumeration value="Y"/>
+			<xs:enumeration value="Z"/>
+		</xs:restriction>
+	</xs:simpleType>
+	
+	<xs:element name="MouseEvent" type="aors:MouseEvent.type"/>
+	<xs:complexType name="MouseEvent.type">
+		<xs:attribute name="targetType" type="aors:CanonicalName" use="optional"/>
+		<xs:attribute name="targetIdRef" type="xs:long" use="optional"/>
+		<xs:attribute name="targetName" type="xs:string" use="optional"/>
+		<xs:attribute name="mouseEventType" type="aors:MouseEventType.type" use="required"/>
+		<xs:attribute name="eventVariable" type="aors:CanonicalName" use="optional"/>
+	</xs:complexType>
+	
+	<xs:simpleType name="MouseEventType.type">
+		<xs:annotation><xs:documentation>See http://www.w3.org/TR/2009/WD-DOM-Level-3-Events-20090908/#events-mouseevents </xs:documentation></xs:annotation>
+		<xs:restriction base="xs:string">
+			<xs:enumeration value="click"/>
+			<xs:enumeration value="dblclick"/>
+			<xs:enumeration value="mousedown"/>
+			<xs:enumeration value="mouseup"/>
+		</xs:restriction>
+	</xs:simpleType>
+	
+</xs:schema>

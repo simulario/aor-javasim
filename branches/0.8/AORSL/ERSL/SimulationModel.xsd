@@ -1,0 +1,347 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<xs:schema
+	xmlns:ers="http://aor-simulation.org"
+	xmlns:xs="http://www.w3.org/2001/XMLSchema"
+	xmlns:h="http://www.w3.org/1999/xhtml"
+	xmlns:saxon="http://saxon.sf.net/"
+	targetNamespace="http://aor-simulation.org"
+	elementFormDefault="qualified"
+	attributeFormDefault="unqualified">
+	<!-- =================================================================== -->
+	<xs:include schemaLocation="UMLetc.xsd"/>
+	<!-- =================================================================== -->
+	<xs:attributeGroup name="SimulationModel.basic-attributes">
+	<!-- =================================================================== -->
+		<xs:attribute name="modelName" type="ers:CanonicalName" use="required"/>
+		<xs:attribute name="modelTitle" type="xs:normalizedString" use="optional"/>
+		<xs:attribute name="importPackages" type="ers:ListOfCanonicalName" use="optional"/>
+		<xs:attributeGroup ref="ers:include"/>
+	</xs:attributeGroup>
+	<!-- =================================================================== -->
+	<xs:element name="SimulationParameterDeclaration">
+	<!-- =================================================================== -->
+		<xs:complexType>
+			<xs:sequence>
+				<xs:element ref="ers:documentation" minOccurs="0"/>
+			</xs:sequence>
+			<xs:attribute name="name" type="ers:CanonicalName" use="required"/>
+			<xs:attribute name="type" type="ers:PrimitiveDataType" use="required"/>
+		</xs:complexType>
+	</xs:element>
+	<!-- =================================================================== -->
+	<xs:element name="SpaceModel" type="ers:SpaceModel.type">
+		<xs:annotation><xs:documentation>The built-in space model properties such as <h:code>xMax</h:code> can be accessed with an expression of the form <h:code>Simulator.spaceModel.getXMax()</h:code>. </xs:documentation></xs:annotation>
+	</xs:element>
+	<!-- =================================================================== -->
+	<xs:complexType name="SpaceModel.type">
+		<xs:annotation><xs:documentation>The values of space model attributes can be accessed in Java expressions in the form of, e.g., <h:code>Simulator.spaceModel.getXMax()</h:code>. </xs:documentation></xs:annotation>
+		<xs:sequence>		 
+			<xs:choice minOccurs="0">
+				<xs:element ref="ers:OneDimensional"/>
+				<xs:element ref="ers:TwoDimensional"/>
+				<xs:element ref="ers:TwoDimensional_LateralView"/>
+				<xs:element ref="ers:TwoDimensionalGrid"/>
+				<xs:element ref="ers:ThreeDimensional"/>
+				<xs:element ref="ers:ThreeDimensionalGrid"/>
+			</xs:choice>
+		</xs:sequence>
+		<xs:attributeGroup ref="ers:SpaceModel.attributes"/>
+	</xs:complexType>
+	<!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->
+	<xs:attributeGroup name="SpaceModel.attributes">
+	<!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->
+		<xs:attribute name="geometry" use="optional" default="Euclidean">
+			<xs:simpleType>
+				<xs:restriction base="xs:string">
+					<xs:enumeration value="Euclidean">
+						<xs:annotation><xs:documentation>Moving objects halt at the space border.</xs:documentation></xs:annotation>
+					</xs:enumeration>
+					<xs:enumeration value="Toroidal">
+						<xs:annotation><xs:documentation>Moving objects leave the space at its border and reenter it at the opposite side. </xs:documentation></xs:annotation>
+					</xs:enumeration>
+				</xs:restriction>
+			</xs:simpleType>
+		</xs:attribute>
+		<xs:attribute name="spatialDistanceUnit" type="ers:LengthUnit" use="optional" default="m"/>
+	</xs:attributeGroup>
+	<!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->
+	<xs:element name="OneDimensional">
+	<!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->
+		<xs:complexType>
+			<xs:attribute name="xMax" type="xs:nonNegativeInteger" use="required">
+				<xs:annotation><xs:documentation>The size of the one-dimensional space. </xs:documentation></xs:annotation>
+			</xs:attribute>
+			<xs:attribute name="multiplicity" use="optional" default="1">
+				<xs:annotation><xs:documentation>The number of parallel one-dimensional space tracks. The default is 1. </xs:documentation></xs:annotation>
+				<xs:simpleType>
+					<xs:restriction base="xs:integer">
+						<xs:minInclusive value="1"/>
+						<xs:maxInclusive value="4"/>
+					</xs:restriction>
+				</xs:simpleType>
+			</xs:attribute>
+			<xs:attribute name="startCountingWithZero" type="xs:boolean" use="optional" default="false">
+				<xs:annotation><xs:documentation>In a multi-track space, count the first track as track number 0. </xs:documentation></xs:annotation>
+			</xs:attribute>
+			<xs:attributeGroup ref="ers:ContinuousSpacePhysics.attributes"/>
+		</xs:complexType>
+	</xs:element>
+	<!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->
+	<xs:element name="TwoDimensional">
+	<!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->
+		<xs:annotation><xs:documentation>This space model represents the x/z plane of the 3-dimensional coordinate system, that is the birds eye view.</xs:documentation></xs:annotation>
+		<xs:complexType>
+			<xs:sequence>
+				<xs:element ref="ers:OverlayGrid" minOccurs="0"/>
+			</xs:sequence>
+			<xs:attribute name="xMax" type="xs:nonNegativeInteger" use="required"/>
+			<xs:attribute name="yMax" type="xs:nonNegativeInteger" use="required"/>
+			<xs:attributeGroup ref="ers:ContinuousSpacePhysics.attributes"/>
+		</xs:complexType>
+	</xs:element>
+	<!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->
+	<xs:element name="OverlayGrid">
+	<!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->
+		<xs:complexType>
+			<xs:attribute name="gridCellWidth" type="xs:double" use="required">
+				<xs:annotation><xs:documentation xml:lang="en">The width of a grid cell in spatial distance units. </xs:documentation></xs:annotation>
+			</xs:attribute>
+			<xs:attribute name="gridCellHeight" type="xs:double" use="required">
+				<xs:annotation><xs:documentation xml:lang="en">The height of a grid cell in spatial distance units. </xs:documentation></xs:annotation>
+			</xs:attribute>
+		</xs:complexType>
+	</xs:element>
+	<!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->
+	<xs:element name="TwoDimensional_LateralView">
+	<!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->
+		<xs:annotation><xs:documentation>This space model represents the x/y plane of the 3-dimensional coordinate system, that is the lateral view. It allows to specify a value for gravitation, which is 9.81 by default.</xs:documentation></xs:annotation>
+		<xs:complexType>
+			<xs:sequence>
+				<xs:element ref="ers:OverlayGrid" minOccurs="0"/>
+			</xs:sequence>
+			<xs:attribute name="xMax" type="xs:nonNegativeInteger" use="required"/>
+			<xs:attribute name="yMax" type="xs:nonNegativeInteger" use="required"/>
+			<xs:attribute name="gravitation" type="xs:double" use="optional" default="9.81"/>
+			<xs:attributeGroup ref="ers:ContinuousSpacePhysics.attributes"/>
+		</xs:complexType>
+	</xs:element>
+	<!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->
+	<xs:element name="TwoDimensionalGrid">
+	<!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->
+		<xs:annotation><xs:documentation>This discrete space, also called <h:em>grid space</h:em>, consists of cells for which properties and functions may be defined. A cell object reference for the cell on position (x,y) can be obtained with the expression <h:code>c = Simulator.spaceModel.getGridCell(x,y)</h:code>. The ccordinates of a given cell <h:code>c</h:code> can be retrieved with the built-in cell properties <h:code>posX</h:code> and <h:code>posY</h:code> using an expression of the form <h:code>c.getPosX()</h:code>. </xs:documentation></xs:annotation>
+		<xs:complexType>
+			<xs:group ref="ers:GridSpace.elements" minOccurs="0"/>
+			<xs:attribute name="xMax" type="xs:nonNegativeInteger" use="required"/>
+			<xs:attribute name="yMax" type="xs:nonNegativeInteger" use="required"/>
+			<xs:attributeGroup ref="ers:GridSpace.attributes"/>
+			<xs:attribute name="autoKinematics" type="xs:boolean" use="optional" default="false">
+				<xs:annotation><xs:documentation>Automatically update the spatial position and velocity of physical objects at each simulation step according to their velocity and acceleration. </xs:documentation></xs:annotation>
+			</xs:attribute>
+		</xs:complexType>
+	</xs:element>
+	<!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->
+	<xs:element name="ThreeDimensional">
+	<!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->
+		<xs:complexType>
+			<xs:attribute name="xMax" type="xs:nonNegativeInteger" use="required"/>
+			<xs:attribute name="yMax" type="xs:nonNegativeInteger" use="required"/>
+			<xs:attribute name="zMax" type="xs:nonNegativeInteger" use="required"/>
+			<xs:attribute name="gravitation" type="xs:double" use="optional" default="9.81"/>
+			<xs:attributeGroup ref="ers:ContinuousSpacePhysics.attributes"/>
+		</xs:complexType>
+	</xs:element>
+	<!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->
+	<xs:element name="ThreeDimensionalGrid">
+		<!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->
+		<xs:annotation><xs:documentation>This discrete space consists of cells for which properties and functions may be defined. The built-in cell properties <h:code>posX</h:code>, <h:code>posY</h:code> and <h:code>posZ</h:code> can be accessed with an expression of the form <h:code>Simulator.spaceModel.getGridCell(x,y,z).getPosX()</h:code>. </xs:documentation></xs:annotation>
+		<xs:complexType>
+			<xs:group ref="ers:GridSpace.elements" minOccurs="0"/>
+			<xs:attribute name="xMax" type="xs:nonNegativeInteger" use="required"/>
+			<xs:attribute name="yMax" type="xs:nonNegativeInteger" use="required"/>
+			<xs:attribute name="zMax" type="xs:nonNegativeInteger" use="required"/>
+			<xs:attributeGroup ref="ers:GridSpace.attributes"/>
+			<xs:attribute name="gravitation" type="xs:double" use="optional" default="9.81"/>
+			<xs:attribute name="autoKinematics" type="xs:boolean" use="optional" default="false">
+				<xs:annotation><xs:documentation>Automatically update the spatial position and velocity of physical objects at each simulation step according to their velocity and acceleration. </xs:documentation></xs:annotation>
+			</xs:attribute>
+		</xs:complexType>
+	</xs:element>
+	<!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->
+	<xs:group name="GridSpace.elements">
+	<!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->
+		<xs:sequence>
+			<xs:element name="GridCellProperty" type="ers:Attribute.type" minOccurs="0" maxOccurs="unbounded">
+				<xs:annotation><xs:documentation>A discrete space, also called <h:em>grid space</h:em>, consists of cells that can have properties. These properties can be accessed with expressions of the form <h:code>Simulator.spaceModel.getGridCell(x,y).getProperty()</h:code>. </xs:documentation></xs:annotation>
+			</xs:element>
+			<xs:element name="GridCellFunction" type="ers:Function.type" minOccurs="0" maxOccurs="unbounded">
+				<xs:annotation><xs:documentation>A discrete space, also called <h:em>grid space</h:em>, consists of cells for which functions can be defined (as methods of grid cell objects). These functions can be called with expressions of the form <h:code>Simulator.spaceModel.getGridCell(x,y).function(...)</h:code>. </xs:documentation></xs:annotation>
+			</xs:element>
+		</xs:sequence>
+	</xs:group>
+	<!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->
+	<xs:attributeGroup name="ContinuousSpacePhysics.attributes">
+	<!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->
+		<xs:attribute name="autoKinematics" type="xs:boolean" use="optional" default="false">
+			<xs:annotation><xs:documentation>Automatically update the spatial position and velocity of physical objects at each simulation step according to their velocity and acceleration. </xs:documentation></xs:annotation>
+		</xs:attribute>
+		<xs:attribute name="autoCollisionDetection" type="xs:boolean" use="optional" default="false">
+			<xs:annotation><xs:documentation>Create a CollisionEvent when two physical objects collide. </xs:documentation></xs:annotation>
+		</xs:attribute>
+		<xs:attribute name="autoCollisionHandling" type="xs:boolean" use="optional" default="false">
+			<xs:annotation><xs:documentation>Use impulse to update the velocities of objects participating in a collision. </xs:documentation></xs:annotation>
+		</xs:attribute>
+	</xs:attributeGroup>
+	<!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->
+	<xs:attributeGroup name="GridSpace.attributes">
+	<!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->
+		<xs:attribute name="gridCellMaxOccupancy" use="optional" default="unbounded">
+			<xs:annotation>
+				<xs:documentation>The maximum of physical objects that will be placed on a grid cell at initialization time. Notice: this constraint is (currently) not checked at runtime.</xs:documentation>
+			</xs:annotation>
+			<xs:simpleType>
+				<xs:restriction base="xs:string">
+					<xs:pattern value="unbounded|[1-9]\d*"/>
+				</xs:restriction>
+			</xs:simpleType>
+		</xs:attribute>
+		<xs:attribute name="startCountingWithZero" type="xs:boolean" use="optional" default="false">
+			<xs:annotation><xs:documentation>Count the first cell as cell number 0. </xs:documentation></xs:annotation>
+		</xs:attribute>
+	</xs:attributeGroup>
+	<!-- =================================================================== -->
+	<xs:element name="Statistics" type="ers:Statistics.type"/>
+	<!-- =================================================================== -->
+	<xs:complexType name="Statistics.type">
+		<xs:sequence>
+			<xs:element name="Variable" minOccurs="0" maxOccurs="unbounded">
+				<xs:annotation>
+					<xs:documentation>A statistics variable is bound to a source, which is a value expression, a variable or an object property. It is updated in one of 3 possible ways: 1) by an UpdateVariable element in an environment rule, 2) at the end of the simulation run, 3) at the end of each simulation step by aggregating the value of ist source.</xs:documentation>
+				</xs:annotation>
+				<xs:complexType>
+					<xs:sequence>
+						<xs:element name="Source" minOccurs="0">
+							<xs:complexType>
+								<xs:choice>
+									<xs:element name="GlobalVariable">
+										<xs:complexType>
+											<xs:attribute name="name" type="ers:CanonicalName" use="required"/>
+										</xs:complexType>
+									</xs:element>	
+									<xs:element name="StatisticsVariable">
+										<xs:complexType>
+											<xs:attribute name="name" type="ers:CanonicalName" use="required"/>
+										</xs:complexType>
+									</xs:element>	
+									<xs:element name="ObjectProperty">
+										<xs:complexType>
+											<xs:attribute name="property" type="ers:CanonicalName" use="required"/>
+											<xs:attribute name="objectType" type="ers:CanonicalName" use="required"/>
+											<xs:attribute name="objectIdRef" type="xs:long" use="optional"/>
+										</xs:complexType>
+									</xs:element>	
+									<xs:element name="ObjectTypeExtensionSize">
+										<xs:complexType>
+											<xs:attribute name="objectType" type="ers:CanonicalName" use="required"/>
+										</xs:complexType>
+									</xs:element>	
+									<xs:element name="ResourceUtilization">
+										<xs:complexType>
+											<xs:attribute name="activityType" type="ers:CanonicalName" use="required"/>
+											<xs:attribute name="resourceObjectType" type="ers:CanonicalName" use="required"/>
+											<xs:attribute name="resourceObjectIdRef" type="xs:long" use="optional"/>
+										</xs:complexType>
+									</xs:element>	
+									<xs:element ref="ers:ValueExpr" minOccurs="0" maxOccurs="unbounded"/>
+								</xs:choice>
+								<xs:attribute name="aggregationFunction" use="optional">
+									<xs:simpleType>
+										<xs:restriction base="xs:string">
+											<xs:enumeration value="max"/>
+											<xs:enumeration value="min"/>
+											<xs:enumeration value="avg"/>
+											<xs:enumeration value="sum"/>
+										</xs:restriction>
+									</xs:simpleType>
+								</xs:attribute>
+								<xs:attribute name="computeOnlyAtEnd" type="xs:boolean" use="optional"/>
+							</xs:complexType>
+						</xs:element>
+					</xs:sequence>
+					<xs:attribute name="name" type="ers:CanonicalName" use="required"/>
+					<xs:attribute name="dataType" use="required">
+						<xs:simpleType>
+							<xs:restriction base="xs:string">
+								<xs:enumeration value="Integer"/>
+								<xs:enumeration value="Float"/>
+							</xs:restriction>
+						</xs:simpleType>
+					</xs:attribute>
+					<xs:attribute name="initialValue" type="xs:string" use="optional"/>
+				</xs:complexType>
+			</xs:element>
+		</xs:sequence>
+	</xs:complexType>
+	<!-- =================================================================== -->
+	<xs:element name="DataTypes">
+	<!-- =================================================================== -->
+		<xs:complexType>
+			<xs:sequence>
+				<xs:element ref="ers:Enumeration" minOccurs="0" maxOccurs="unbounded"/>
+				<xs:element ref="ers:ComplexDataType" minOccurs="0" maxOccurs="unbounded"/>
+			</xs:sequence>
+		</xs:complexType>
+	</xs:element>
+	<xs:element name="ComplexDataType">
+		<xs:complexType>
+			<xs:choice>
+				<xs:sequence>
+					<xs:element ref="ers:Property" minOccurs="0" maxOccurs="unbounded"/>
+					<xs:element name="DefaultConstructor" minOccurs="0" maxOccurs="1">
+						<xs:complexType>
+							<xs:sequence>
+								<xs:element name="Def" type="ers:OpaqueExpression" minOccurs="0" maxOccurs="unbounded"/>
+							</xs:sequence>
+						</xs:complexType>
+					</xs:element>
+					<xs:element ref="ers:Function" minOccurs="0" maxOccurs="unbounded"/>
+				</xs:sequence>
+				<xs:sequence>
+					<xs:element name="ClassDef" type="ers:OpaqueExpression" minOccurs="0" maxOccurs="unbounded"/>
+				</xs:sequence>
+			</xs:choice>
+			<xs:attribute name="name" type="ers:CanonicalName" use="required"/>
+			<xs:attribute name="superType" type="ers:CanonicalName" use="optional"/>
+		</xs:complexType>
+	</xs:element>
+	<!-- =================================================================== -->
+	<xs:element name="Globals">
+	<!-- =================================================================== -->
+		<xs:complexType>
+			<xs:sequence>
+				<xs:element name="GlobalVariable" minOccurs="0" maxOccurs="unbounded">
+					<xs:complexType>
+						<xs:sequence>
+							<xs:element ref="ers:documentation" minOccurs="0"/>
+						</xs:sequence>
+						<xs:attribute name="name" type="ers:CanonicalName" use="required"/>
+						<xs:attribute name="dataType" type="ers:PrimitiveDataType" use="optional"/>
+						<xs:attribute name="refDataType" type="ers:PathName" use="optional">
+							<xs:annotation>
+								<xs:documentation>The name of a class.</xs:documentation>
+							</xs:annotation>							
+						</xs:attribute>
+						<xs:attribute name="initialValue" type="xs:string" use="optional"/>
+						<xs:attribute name="minValue" type="xs:double" use="optional"/>
+						<xs:attribute name="maxValue" type="xs:double" use="optional"/>
+						<xs:attribute name="upperMultiplicity" type="ers:UpperMultiplicity" use="optional" default="1"/>
+<!--
+						<xs:assert test="not(@minValue) or not(@maxValue) or (@minValue le @maxValue)" 
+							saxon:message="Attribute/@minValue must be less than Attribute/@maxValue!"/>
+-->
+					</xs:complexType>
+				</xs:element>
+				<xs:element name="GlobalFunction" type="ers:Function.type" minOccurs="0" maxOccurs="unbounded"/>
+			</xs:sequence>
+		</xs:complexType>
+	</xs:element>
+</xs:schema>

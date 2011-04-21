@@ -1,0 +1,267 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<?xml-stylesheet type="text/xsl" href="prettyprint.xsl"?>
+<SimulationScenario xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+ xsi:schemaLocation="http://aor-simulation.org ../../../AORSL/AORSL_0-8-4.xsd"
+ xmlns:dc="http://purl.org/dc/elements/1.1/"
+ xmlns="http://aor-simulation.org"
+ xmlns:aors="http://aor-simulation.org"
+ version="0.8.4"
+ scenarioName="GameOfLife">
+    
+	<SimulationParameters simulationSteps="1000" timeUnit="ms" stepTimeDelay="33"/>
+    
+	<SimulationModel modelName="GameOfLife">
+		<documentation>
+			<dc:title>Conway's Game of Life</dc:title>
+			<dc:title xml:lang="de">Conways Spiel des Lebens</dc:title>
+			<dc:creator>Sebastian Mucha</dc:creator>
+			<dc:created>20100511</dc:created>
+			<dc:modified>20100716</dc:modified>
+			<dc:contributor>Gerd Wagner</dc:contributor>
+			<dc:license>Creative Commons Attribution-NonCommercial-ShareAlike 3.0, 
+				see http://creativecommons.org/licenses/by-nc-sa/3.0/</dc:license>
+			<shortDescription>A cellular automata (grid space) model where each cell may be dead or alive
+				(shown with different colors). In each simulation step, cells either die or get
+				reanimated depending on their neighborhood. </shortDescription>
+			<shortDescription xml:lang="de">Ein Zelluläre-Automaten-Modell, bei dem jede Gitterzelle 
+				tod oder lebendig sein kann (was mit verschiedenen Farben angezeigt wird). In jedem 
+				Simulationsschritt wird für jede Zelle durch Überprüfung ihrer Nachbrschaft geprüft,
+				ob sie stirbt oder wieder wieder zum Leben erwacht.</shortDescription>
+			<description xmlns:h="http://www.w3.org/1999/xhtml">
+				A model of the classical <h:em>Game of Life</h:em> introduced by John Horton Conway. The space consists of a grid of cells,
+				which can be dead or alive.	The new status of a cell is computed based on the status of its neighbors 
+				with the following four rules:
+				<h:ol>
+					<h:li>A dead cell with exactly three living neighbors will become alive.</h:li>
+					<h:li>A living cell with fewer than two living neighbors will die (from loneliness).</h:li>
+					<h:li>A living cell with two or three living neighbors will stay alive.</h:li>
+					<h:li>A living cell with more than three living neighbors will die (from over-crowdedness).</h:li>
+				</h:ol></description>
+		</documentation>
+		
+		<SpaceModel geometry="Euclidean">
+			<TwoDimensionalGrid xMax="40" yMax="40">
+				<GridCellProperty name="status" type="Integer" minValue="0" maxValue="1"/>				
+				<GridCellProperty name="activeNeighbors" type="Integer"/>				
+				<!-- The cell status for the next step -->
+				<GridCellProperty type="Integer" name="nextStatus"/>
+				
+				<GridCellFunction name="cellStatus" resultType="Integer">
+					<documentation><description>Determines the status of a cell at the given position.	</description></documentation>
+					<Parameter name="x" type="int"/>
+					<Parameter name="y" type="int"/>                    
+					<Body language="Java">
+						<![CDATA[
+							return Simulator.spaceModel.getGridCell(x,y).getStatus();
+						]]>
+					</Body>
+					<Body language="JavaScript">
+						<![CDATA[
+							return sim.controller.Simulator.spaceModel.getGridCell(x,y).getStatus();
+          				]]>
+					</Body>
+				</GridCellFunction>
+				
+				<GridCellFunction name="computeActiveNeighbors" resultType="Integer">
+					<documentation><description>Determines the number of active neighbors in a cells direct neighborhood.</description></documentation>
+					<Body language="Java">
+						<![CDATA[                    
+                            int activeNeighborsCount = 0;
+                            int posX = (int) this.getPosX();
+                            int posY = (int) this.getPosY();
+                            int xMax = (int) Simulator.spaceModel.getXMax();
+                            int yMax = (int) Simulator.spaceModel.getYMax();
+                            for (int x = posX-1; x <= posX+1; x++)
+                            	for (int y = posY-1; y <= posY+1; y++)
+                            		if (x >= 1 && x <= xMax && y >= 1 && y <= yMax 
+                            				&& !(x == posX && y == posY)) {
+                            			activeNeighborsCount += this.cellStatus(x,y);
+                            		}
+                            return activeNeighborsCount; 
+          				]]>
+					</Body>
+					<Body language="JavaScript">
+						<![CDATA[                    
+                            var activeNeighborsCount = 0;
+                            var posX = this.getPosX();
+                            var posY = this.getPosY();
+                            var xMax = sim.controller.Simulator.spaceModel.getXMax();
+                            var yMax = sim.controller.Simulator.spaceModel.getYMax();
+                            for (var x = posX-1; x <= posX+1; x++)
+                            	for (var y = posY-1; y <= posY+1; y++)
+                            		if (x >= 1 && x <= xMax && y >= 1 && y <= yMax 
+                            				&& !(x == posX && y == posY)) {
+                            			activeNeighborsCount += this.cellStatus(x,y);
+                            		}
+                            return activeNeighborsCount; 
+          				]]>
+					</Body>
+				</GridCellFunction>
+				<GridCellFunction name="newCellStatus" resultType="Integer">
+					<documentation><description xmlns:h="http://www.w3.org/1999/xhtml">Computes the new status of a cell based on the status of its neighbors with the following four rules:
+					<h:ol>
+						<h:li>A dead cell with exactly three living neighbors will become alive.</h:li>
+						<h:li>A living cell with fewer than two living neighbors will die (from loneliness).</h:li>
+						<h:li>A living cell with two or three living neighbors will stay alive.</h:li>
+						<h:li>A living cell with more than three living neighbors will die (from over-crowdedness).</h:li>
+					</h:ol>
+					</description></documentation>
+					<Body language="Java">
+						<![CDATA[                    
+                            if (this.getStatus() == 0 && this.getActiveNeighbors() == 3)
+                                return 1;
+                            else if (this.getStatus() == 1 && this.getActiveNeighbors() < 2)
+                                return 0;
+                            else if (this.getStatus() == 1 && (this.getActiveNeighbors() == 2 || this.getActiveNeighbors() == 3))
+                                return 1;
+                            else if (this.getStatus() == 1 && this.getActiveNeighbors() > 3)
+                                return 0;
+                            else
+                                return 0;
+          				]]>
+					</Body>
+					<Body language="JavaScript">
+						<![CDATA[                    
+                            if (this.getStatus() == 0 && this.getActiveNeighbors() == 3)
+                                return 1;
+                            else if (this.getStatus() == 1 && this.getActiveNeighbors() < 2)
+                                return 0;
+                            else if (this.getStatus() == 1 && (this.getActiveNeighbors() == 2 || this.getActiveNeighbors() == 3))
+                                return 1;
+                            else if (this.getStatus() == 1 && this.getActiveNeighbors() > 3)
+                                return 0;
+                            else
+                                return 0;
+         				 ]]>
+					</Body>
+				</GridCellFunction>				
+			</TwoDimensionalGrid>
+		</SpaceModel>
+
+		<EnvironmentRules>
+			<EnvironmentRule name="ComputeNextGeneration_EnvRule">
+				<ON-EACH-SIMULATION-STEP/>
+				<DO>
+					<UPDATE-ENV>
+						<ForEachGridCell gridCellVariable="gc">
+							<Slot property="activeNeighbors">
+								<ValueExpr language="Java"><![CDATA[gc.computeActiveNeighbors()]]></ValueExpr>
+								<ValueExpr language="JavaScript"><![CDATA[ gc.computeActiveNeighbors() ]]></ValueExpr>
+							</Slot>
+							<Slot property="nextStatus">
+								<ValueExpr language="Java"><![CDATA[gc.newCellStatus()]]></ValueExpr>
+								<ValueExpr language="JavaScript"><![CDATA[gc.newCellStatus()]]></ValueExpr>
+							</Slot>
+						</ForEachGridCell>
+						<ForEachGridCell gridCellVariable="gc">
+							<Slot property="status">
+								<ValueExpr language="Java"><![CDATA[gc.getNextStatus()]]></ValueExpr>
+								<ValueExpr language="JavaScript"><![CDATA[gc.getNextStatus()]]></ValueExpr>
+							</Slot>
+						</ForEachGridCell>
+					</UPDATE-ENV>
+				</DO>
+			</EnvironmentRule>
+		</EnvironmentRules>		
+	</SimulationModel>
+	
+	<InitialState>        
+		<GridCells>
+			<!-- Glidergun -->
+			<GridCellSet startX="1" endX="40" startY="1" endY="40">
+				<Slot property="status" value="0"/>
+			</GridCellSet>
+			
+			<GridCellSet startX="2" endX="3" startY="34" endY="35">
+				<Slot property="status" value="1"/>
+			</GridCellSet>
+			
+			<GridCellSet startX="12" endX="12" startY="33" endY="35">
+				<Slot property="status" value="1"/>
+			</GridCellSet>
+			
+			<GridCell x="13" y="36">
+				<Slot property="status" value="1"/>
+			</GridCell>
+			
+			<GridCell x="13" y="32">
+				<Slot property="status" value="1"/>
+			</GridCell>
+			
+			<GridCellSet startX="14" endX="15" startY="37" endY="37">
+				<Slot property="status" value="1"/>
+			</GridCellSet>
+			
+			<GridCellSet startX="14" endX="15" startY="31" endY="31">
+				<Slot property="status" value="1"/>
+			</GridCellSet>
+			
+			<GridCell x="16" y="34">
+				<Slot property="status" value="1"/>
+			</GridCell>
+			
+			<GridCell x="17" y="36">
+				<Slot property="status" value="1"/>
+			</GridCell>
+			
+			<GridCell x="17" y="32">
+				<Slot property="status" value="1"/>
+			</GridCell>
+			
+			<GridCellSet startX="18" endX="18" startY="33" endY="35">
+				<Slot property="status" value="1"/>
+			</GridCellSet>
+			
+			<GridCell x="19" y="34">
+				<Slot property="status" value="1"/>
+			</GridCell>
+			
+			<GridCellSet startX="22" endX="23" startY="35" endY="37">
+				<Slot property="status" value="1"/>
+			</GridCellSet>
+			
+			<GridCell x="24" y="34">
+				<Slot property="status" value="1"/>
+			</GridCell>
+			
+			<GridCell x="24" y="38">
+				<Slot property="status" value="1"/>
+			</GridCell>
+			
+			<GridCellSet startX="26" endX="26" startY="38" endY="39">
+				<Slot property="status" value="1"/>
+			</GridCellSet>
+			
+			<GridCellSet startX="26" endX="26" startY="33" endY="34">
+				<Slot property="status" value="1"/>
+			</GridCellSet>
+			
+			<GridCellSet startX="36" endX="37" startY="36" endY="37">
+				<Slot property="status" value="1"/>
+			</GridCellSet>
+			
+			<!-- Randomly initialized board -->
+			<!--
+				<GridCellSet startX="1" endX="50" startY="1" endY="50">
+				<Slot property="status">
+				<RandomVariable>
+				<UniformInt lowerBound="0" upperBound="1"/>
+				</RandomVariable>
+				</Slot>
+				</GridCellSet>
+			-->
+		</GridCells>   
+	</InitialState>
+	
+	<UserInterface supportedLanguages="en">
+		<AnimationUI>
+			<Views>
+				<SpaceView canvasColor="darkgrey">
+					<TwoDimensionalGridSpaceView2D stroke="black" strokeWidth="1px">
+						<GridCellPropertyVisualizationMap cellViewProperty="fill" property="status" mapType="equalityCaseWise" a0="0" v0="white" a1="1" v1="red"/>
+					</TwoDimensionalGridSpaceView2D>
+				</SpaceView>
+			</Views>
+		</AnimationUI>       
+	</UserInterface>
+</SimulationScenario>

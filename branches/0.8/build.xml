@@ -1,0 +1,425 @@
+<!--
+*************************************************************************************************************
+* Agent-Object-Relationship (AOR) Simulation
+* Ontologically well-founded and closer-to-reality simulation of complex discrete event scenarios
+*
+* AOR-JSim v.2
+*
+* Copyright (C) 2008 AOR Team: Daniel Draeger, Adrian Giurca, Emilian Pascalau, Andreas Post, Marco Pehla,
+* Gerd Wagner, Jens Werner
+*
+* This program is free software; you can redistribute it and/or
+* modify it under the terms of the GNU General Public License
+* as published by the Free Software Foundation; either version 2
+* of the License, or (at your option) any later version.
+*
+* This program is distributed in the hope that it will be useful,
+* but WITHOUT ANY WARRANTY; without even the implied warranty of
+* MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+* GNU General Public License for more details.
+*
+* You should have received a copy of the GNU General Public License
+* along with this program; if not, write to the Free Software
+* Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
+*
+* File: build.xml
+*************************************************************************************************************
+-->
+<!--
+* @author Marco Pehla, Jens Werner
+* @since September 10, 2008
+* @version: 1.1
+* @rev: $Rev$
+* @lastChanged: $Date$ by $Author$
+-->
+<project name="AOR Simulator v2" default="build" basedir=".">
+  <description> This ANT file builds an executeable JAR archive from the actual AOR Simulator source codes. </description>
+  <tstamp>
+    <format property="date" pattern="dd-MMMM-yyyy" locale="en"/>
+  </tstamp>
+
+  <property name="JavaSim.dir" value="JavaSim"/>
+  <property name="AORSL.dir" value="AORSL"/>
+  <property name="PrettyPrint.dir" value="PrettyPrint/css"/>
+
+  <property name="jar.filename.gui" value="AOR-Simulator.jar"/>
+  <property name="jar.filename.console" value="AOR-Simulator_console.jar"/>
+  <!--property name="ear.filename.jsf" value="AOR-WebSimulator.ear"/-->
+  <!--property name="jar.filename.xslt2processor_ejb3" value="050XSLT2Processor.jar"/-->
+  <!--property name="jar.filename.xslt2processor_interface" value="XSLT2ProcessorRemoteInterface.jar"/-->
+  <property name="dist.dir" value="Distribution"/>
+  <property name="dist.javagen.dir" value="${dist.dir}/ext/javagen"/>
+  <property name="dist.schema.dir" value="${dist.dir}/ext/AORSL"/>
+  <property name="dist.PrettyPrint.dir" value="${dist.dir}/PrettyPrint/css"/>
+  <property name="dist.documents.dir" value="${dist.dir}/ext/documents"/>
+  <property name="dist.media.dir" value="${dist.dir}/media"/>
+  <property name="dist.modules.dir" value="${dist.dir}/modules"/>
+  <property name="dist.lib.dir" value="${dist.dir}/lib"/>
+  <property name="dist.thirdparty-licenses.dir" value="${dist.dir}/thirdparty-licenses"/>
+
+  <property name="webstart.dir" value="webstart"/>
+  <property name="src.dir" value="${JavaSim.dir}/src"/>
+  <property name="class.dir" value="ant_bin"/>
+  <property name="lib.dir" value="${JavaSim.dir}/lib"/>
+  <property name="ext.dir" value="${JavaSim.dir}/ext"/>
+  <property name="modules.dir" value="${JavaSim.dir}/modules"/>
+  <property name="media.dir" value="${JavaSim.dir}/media"/>
+
+  <property name="core.dir" value="${src.dir}/aors"/>
+  <!--property name="mpj.home" value="/home/tecgen/mpj"/-->
+  <!--property name="ejb3.dir" value="${class.dir}/ejb"/-->
+  <!--property name="ejb-jar.xml" value="${ext.dir}/ejb3/AOR-Simulator/ejb-jar.xml"/-->
+  <property name="schema.dir" value="${AORSL.dir}"/>
+  <property name="javagen.dir" value="${ext.dir}/javagen"/>
+  <property name="documents.dir" value="${ext.dir}/documents"/>
+  <property name="thirdparty-licenses.dir" value="${JavaSim.dir}/thirdparty-licenses"/>
+  <property name="manifest.gui" value="${ext.dir}/manifest/gui/MANIFEST.MF"/>
+  <property name="manifest.gui.with_compiler" value="${ext.dir}/manifest/gui_with_compiler/MANIFEST.MF"/>
+  <property name="manifest.console" value="${ext.dir}/manifest/console/MANIFEST.MF"/>
+  <property name="manifest.gui.sparql" value="${ext.dir}/manifest/sparql/MANIFEST.MF"/>
+
+  <!-- exclude this directory for compilation since these are modules and are not need to be compiled here -->
+  <property name="modules.src.dir" value="module"/>
+
+  <!-- for webstart -->
+  <property name="gui.webstart.contents.path" value="${ext.dir}/manifest/gui_webstart"/>
+  <property name="manifest.gui.webstart" value="${gui.webstart.contents.path}/MANIFEST.MF"/>
+  <property name="keystore.webstart" value="${gui.webstart.contents.path}/simularioKeyStore"/>
+
+  <property name="projects.dir" value="Examples"/>
+  <property name="dist-version" value="${date}"/>
+  <property name="dist-zip.name" value="AOR-JavaSim-${dist-version}"/>
+  <property name="dist-zip.file" value="${dist-zip.name}.zip"/>
+
+  <property file="build.properties"/>
+
+  <path id="classpath">
+    <fileset dir="${lib.dir}">
+      <include name="*.jar"/>
+    </fileset>
+  </path>
+
+  <target name="clean" description="cleans the project">
+    <!-- remove all except the content of the project folder -->
+    <delete includeemptydirs="true" failonerror="false">
+      <fileset dir="${dist.dir}" excludes="${projects.dir}/**, properties.xml"/>
+    </delete>
+    <delete file="./${dist-zip.file}"/>
+  </target>
+
+  <target name="compile">
+    <mkdir dir="${class.dir}"/>
+    <echo message="Directory ${modules.src.dir} is excluded from compilation!"/>
+    <javac srcdir="${core.dir}" destdir="${class.dir}" classpathref="classpath" debug="true">
+      <exclude name="${modules.src.dir}/visopengl/**"/>
+	  <exclude name="${modules.src.dir}/visopengl3d/**"/>
+      <exclude name="${modules.src.dir}/statistics/**"/>
+      <exclude name="${modules.src.dir}/sound/**"/>
+      <exclude name="${modules.src.dir}/physics2d/**"/>
+      <exclude name="${modules.src.dir}/initialState/**"/>
+      <exclude name="${modules.src.dir}/agentControl/**"/>
+      <exclude name="controller/webstart/**"/>
+      <exclude name="gui/swing/webstart/**"/>
+      <compilerarg value="-Xlint"/>
+    </javac>
+
+  </target>
+
+  <target name="exec_env"
+    description="Build the environment that are necessary for the execution of the application, which means to copy all libraries and external files like XSLTs to the dist folder.">
+    
+    <mkdir dir="${dist.dir}"/>
+
+    <!-- copy the XSLT's for the Java code generation -->
+    <copy todir="${dist.javagen.dir}" overwrite="true">
+      <fileset dir="${javagen.dir}" excludes=".svn, *.xpr, *.bak, *.xsd"/>
+    </copy>
+
+    <!-- copy the XML Schema for the validation of the simulation description-->
+    <copy todir="${dist.schema.dir}" overwrite="true">
+      <fileset dir="${schema.dir}" excludes=".svn, *.vsd, *.xpr"/>
+    </copy>
+
+    <!-- copy the CSS files for prettyprinting -->
+    <copy todir="${dist.PrettyPrint.dir}" overwrite="true">
+      <fileset dir="${PrettyPrint.dir}"/>
+    </copy>
+
+    <!-- copy the document e.g. HTML files for the GUI -->
+    <copy todir="${dist.documents.dir}" overwrite="true">
+      <fileset dir="${documents.dir}" excludes=".svn readme.htm"/>
+    </copy>
+
+    <!-- copy the ext media data -->
+    <mkdir dir="${dist.media.dir}"/>
+    <copy todir="${dist.media.dir}" overwrite="true">
+      <fileset dir="${media.dir}" excludes=".svn"/>
+    </copy>
+
+    <!-- copy the modules -->
+    <mkdir dir="${dist.modules.dir}"/>
+    <copy todir="${dist.modules.dir}" overwrite="true">
+      <fileset dir="${modules.dir}" includes="*.xml soundModule.jar statisticsModule.jar visOpenGLModule_win32.jar agentControlModule.jar physicsModule.jar"/>
+    </copy>
+
+    <!-- copy the readme.htm in the dist-folder -->
+    <copy todir="${dist.dir}" overwrite="true" file="${documents.dir}/readme.htm"/>
+
+    <!-- copy the libraries -->
+    <copy todir="${dist.lib.dir}" overwrite="true">
+      <fileset dir="${lib.dir}"
+        includes="AORS-Log-API.jar bounce.jar icons.jar json_simple-1.1.jar saxon9he.jar BrowserLauncher2-1_3.jar json_simple-1.1.jar concurrent.jar colt.jar ws_client.jar"
+      />
+    </copy>
+
+    <!-- <copy todir="${dist.dir}/${lib.dir}/native" overwrite="true">
+        <fileset dir="${lib.dir}/native" includes="*.dll *.so" />
+        </copy> -->
+
+
+    <!-- copy the thirdparty-licenses -->
+    <copy todir="${dist.thirdparty-licenses.dir}" overwrite="true">
+      <fileset dir="${thirdparty-licenses.dir}" includes="*.txt"/>
+    </copy>
+    <copy todir="${dist.dir}" overwrite="true" file="${ext.dir}/manifest/AOR-Simulator.exe"/>
+    <copy todir="${dist.dir}" overwrite="true" file="${ext.dir}/manifest/AOR-Simulator.sh"/>
+
+  </target>
+
+
+  <target name="exec_env_lib_sparql"
+    description="Build the environment that are necessary for the execution of the application, which means to copy all libraries and external files like XSLTs to the dist folder.">
+
+    <!-- copy the libraries needed for SPARQL -->
+    <copy todir="${dist.lib.dir}" overwrite="true">
+      <fileset dir="${lib.dir}" includes="commons-logging-1.1.jar icu4j_3_4.jar iri.jar xercesImpl.jar jena.jar arq.jar arq-extra.jar"/>
+    </copy>
+
+  </target>
+
+  <target name="build" depends="clean, exec_env, compile" description="Build the AOR Simulator application with GUI.">
+    <jar destfile="${dist.dir}/${jar.filename.gui}" basedir="${class.dir}" includes="aors/**" manifest="${manifest.gui}"/>
+    <!-- delete the created bin directory -->
+    <delete includeemptydirs="true" failonerror="false">
+      <fileset dir="${class.dir}"/>
+    </delete>
+  </target>
+
+  <target name="build-zip" depends="clean, exec_env, compile"
+    description="Build the AOR Simulator application with GUI and creates a Zip.">
+
+    <jar destfile="${dist.dir}/${jar.filename.gui}" basedir="${class.dir}" includes="aors/**" manifest="${manifest.gui}"/>
+    <!-- delete the created bin directory -->
+    <delete includeemptydirs="true" failonerror="false">
+      <fileset dir="${class.dir}"/>
+    </delete>
+
+    <!-- save the existing projects in a temp-dir
+    <move todir="${dist.dir}/${projects.dir}-temp" failonerror="false">
+      <fileset dir="${dist.dir}/${projects.dir}"/>
+      </move> -->
+
+    <!-- copy the examples -->
+    <copy todir="${dist.dir}/${projects.dir}" overwrite="true">
+      <fileset dir="${projects.dir}" includes="*/*/scenario.xml */*/*.png */*/prettyprint.xsl"/>
+    </copy>
+
+    <zip destfile="./${dist-zip.file}" update="true">
+      <zipfileset dir="${dist.dir}" prefix="${dist-zip.name}" excludes="${projects.dir}-temp/**, properties.xml"/>
+    </zip>
+
+    <!--delete includeemptydirs="true" failonerror="false">
+      <fileset dir="${dist.dir}/${projects.dir}"/>
+    </delete-->
+
+    <!-- move the saved existing projects back to the projects-folder 
+    <move todir="${dist.dir}/${projects.dir}" failonerror="false">
+      <fileset dir="${dist.dir}/${projects.dir}-temp"/>
+      </move>-->
+  </target>
+
+  <target name="build-zip-with-compiler" depends="message_zip, clean, exec_env, compile"
+    description="Build the AOR Simulator application with GUI and creates a Zip.">
+
+
+    <jar destfile="${dist.dir}/${jar.filename.gui}" basedir="${class.dir}" includes="aors/**" manifest="${manifest.gui.with_compiler}"/>
+    <!-- delete the created bin directory -->
+    <delete includeemptydirs="true" failonerror="false">
+      <fileset dir="${class.dir}"/>
+    </delete>
+
+    <!-- save the existing projects in a temp-dir 
+    <move todir="${dist.dir}/${projects.dir}-temp" failonerror="false">
+      <fileset dir="${dist.dir}/${projects.dir}"/>
+      </move>-->
+
+
+    <!-- copy the examples -->
+    <copy todir="${dist.dir}/${projects.dir}" overwrite="true">
+      <fileset dir="${projects.dir}" includes="*/*/scenario.xml */*/*.png */*/prettyprint.xsl"/>
+    </copy>
+
+    <!-- copy the libraries -->
+    <copy todir="${dist.lib.dir}" overwrite="true">
+      <fileset dir="${ext.dir}/manifest/gui_with_compiler" includes="tools.jar"/>
+    </copy>
+
+    <copy todir="${dist.dir}" overwrite="true" file="${ext.dir}/manifest/gui_with_compiler/AOR-Simulator.exe"/>
+
+    <zip destfile="./${dist-zip.file}" update="true">
+      <zipfileset dir="${dist.dir}" prefix="${dist-zip.name}" excludes="${projects.dir}-temp/**, properties.xml"/>
+    </zip>
+
+    <!--delete includeemptydirs="true" failonerror="false">
+      <fileset dir="${dist.dir}/${projects.dir}"/>
+    </delete-->
+
+    <!-- move the saved existing projects back to the projects-folder
+    <move todir="${dist.dir}/${projects.dir}" failonerror="false">
+      <fileset dir="${dist.dir}/${projects.dir}-temp"/>
+      </move> -->
+
+  </target>
+
+  <target name="message_zip" description="Some communication for zip-creation">
+    <input message="Please safe your project-data! Continue Building?" validargs="y,n" addproperty="do.build"/>
+    <condition property="do.abort">
+      <equals arg1="n" arg2="${do.build}"/>
+    </condition>
+    <fail message="Build aborted by user.">
+      <condition>
+        <isset property="do.abort"/>
+      </condition>
+    </fail>
+  </target>
+
+  <target name="sparql" depends="clean, exec_env, exec_env_lib_sparql, compile"
+    description="Build the AOR Simulator application with GUI and SPARQL-support.">
+    <jar destfile="${dist.dir}/${jar.filename.gui}" basedir="${class.dir}" includes="aors/**" manifest="${manifest.gui.sparql}"/>
+  </target>
+
+  <target name="build_console_version" depends="clean, exec_env, compile" description="Build the AOR Simulator application as console application.">
+    <!--excludes all GUI related classes, which means the packages:
+        aors.gui.*
+        aors.vis.*
+        -->
+    <jar destfile="${dist.dir}/${jar.filename.console}" basedir="${class.dir}" manifest="${manifest.console}" includes="aors/**"
+      excludes="aors/gui/**;aors/vis/**"/>
+  </target>
+
+  <target name="MPJE_boot_nodes" description="Boot all MPJ Express nodes in the cluster.">
+
+    <!-- boot all cluster nodes defined in the machines file-->
+    <exec dir="${mpj.home}/user/" executable="${mpj.home}/bin/mpjboot">
+      <arg value="machines"/>
+    </exec>
+
+  </target>
+
+  <target name="MPJE_halt_nodes" description="Halt all MPJ Express nodes in the cluster.">
+
+    <!-- halt all cluster nodes defined in the machines file-->
+    <exec dir="${mpj.home}/user/" executable="${mpj.home}/bin/mpjhalt">
+      <arg value="machines"/>
+    </exec>
+
+  </target>
+
+  <target name="MPJE_run_testsuite">
+    <!-- execute the bash which again executes the shell script
+        that runs the MPJ Express test suite -->
+    <exec dir="${mpj.home}/user/" executable="/bin/sh">
+      <arg value="-c"/>
+      <arg value="${mpj.home}/bin/mpjrun.sh -np 2 -jar ${mpj.home}/lib/test.jar"/>
+    </exec>
+  </target>
+
+  <!-- Webstart -->
+  <target name="build_web_start" depends="clean_webstart, exec_env_webstart, compile_webstart"
+    description="Build the AOR Simulator application with GUI as a Web Start Version.">
+    <jar destfile="${webstart.dir}/${jar.filename.gui}" basedir="${class.dir}" manifest="${manifest.gui.webstart}">
+      <fileset dir="." includes="aors/**"/>
+      <fileset dir="." includes="ext/documents/about.htm"/>
+      <fileset dir="." includes="${thirdparty-licenses.dir}/*.txt"/>
+    </jar>
+
+    <!-- sign the jars  -->
+    <signjar jar="${webstart.dir}/${jar.filename.gui}" alias="simulario" keystore="${keystore.webstart}" storepass="simulario09"/>
+    <signjar alias="simulario" keystore="${keystore.webstart}" storepass="simulario09" lazy="true">
+      <path>
+        <fileset dir="${webstart.dir}/${lib.dir}" includes="**/*.jar"/>
+        <fileset dir="${webstart.dir}/scenarios" includes="**/*.jar"/>
+        <fileset dir="${webstart.dir}/modules" includes="**/*.jar"/>
+      </path>
+    </signjar>
+
+    <!-- delete the created bin directory -->
+    <delete includeemptydirs="true" failonerror="false">
+      <fileset dir="${class.dir}"/>
+    </delete>
+  </target>
+
+  <target name="exec_env_webstart"
+    description="Build the environment that are necessary for the execution of the application, which means to copy all libraries and external files like XSLTs to the dist folder.">
+    <mkdir dir="${webstart.dir}"/>
+
+    <!-- copy the ext media data -->
+    <mkdir dir="${webstart.dir}/${media.dir}"/>
+    <copy todir="${webstart.dir}/${media.dir}" overwrite="true">
+      <fileset dir="${media.dir}" excludes=".svn"/>
+    </copy>
+
+    <!-- copy the modules -->
+    <mkdir dir="${webstart.dir}/${modules.dir}"/>
+    <copy todir="${webstart.dir}/${modules.dir}" overwrite="true">
+      <fileset dir="${modules.dir}" includes="*.jar *.xml"/>
+      <!-- <fileset dir="${gui.webstart.contents.path}" includes="*.jar"/> -->
+    </copy>
+
+    <!-- copy the libraries -->
+    <copy todir="${webstart.dir}/${lib.dir}" overwrite="true">
+      <fileset dir="${lib.dir}"
+        includes="AORS-Log-API.jar bounce.jar icons.jar json_simple-1.1.jar BrowserLauncher2-1_3.jar json_simple-1.1.jar colt.jar ws_client.jar"/>
+    </copy>
+
+    <!-- copy the thirdparty-licenses -->
+    <copy todir="${webstart.dir}/${thirdparty-licenses.dir}" overwrite="true">
+      <fileset dir="${thirdparty-licenses.dir}" includes="*.txt"/>
+    </copy>
+
+    <!-- copy the default-jnlp and an example html page -->
+    <copy todir="${webstart.dir}" overwrite="true">
+      <fileset dir="${gui.webstart.contents.path}" includes="aor-simulator.jnlp Page.html"/>
+    </copy>
+
+  </target>
+
+  <target name="clean_webstart" description="cleans the project">
+    <!-- remove all except the content of the project folder -->
+    <delete includeemptydirs="true" failonerror="false">
+      <fileset dir="${webstart.dir}" excludes="scenarios/**"/>
+    </delete>
+  </target>
+
+
+  <target name="compile_webstart">
+    <mkdir dir="${class.dir}"/>
+    <echo message="Directory ${modules.src.dir} is excluded from compilation!"/>
+    <javac srcdir="${core.dir}" destdir="${class.dir}" classpathref="classpath" debug="true">
+      <exclude name="${modules.src.dir}/visopengl/**"/>
+      <exclude name="${modules.src.dir}/statistics/**"/>
+      <exclude name="${modules.src.dir}/sound/**"/>
+      <exclude name="${modules.src.dir}/physics2d/**"/>
+      <exclude name="${modules.src.dir}/initialState/**"/>
+      <exclude name="controller/Project.java"/>
+      <exclude name="controller/SimulationManager.java"/>
+      <exclude name="gui/swing/AORJavaGui.java"/>
+      <exclude name="gui/swing/ProjectFileView.java"/>
+      <exclude name="gui/swing/DialogPreferences.java"/>
+      <exclude name="test/**"/>
+      <compilerarg value="-Xlint"/>
+    </javac>
+
+  </target>
+
+</project>

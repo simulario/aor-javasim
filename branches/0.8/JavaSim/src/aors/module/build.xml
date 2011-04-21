@@ -1,0 +1,74 @@
+<?xml version="1.0" standalone="yes"?>
+<!--
+*************************************************************************************************************
+* Agent-Object-Relationship (AOR) Simulation
+* Ontologically well-founded and closer-to-reality simulation of complex discrete event scenarios
+*
+* AOR-JSim v.2
+*
+* Copyright (C) 2008 AOR Team: Daniel Draeger, Adrian Giurca, Emilian Pascalau, Andreas Post, Marco Pehla,
+* Gerd Wagner, Jens Werner, Mircea Diaconescu
+*
+* This program is free software; you can redistribute it and/or
+* modify it under the terms of the GNU General Public License
+* as published by the Free Software Foundation; either version 2
+* of the License, or (at your option) any later version.
+*
+* This program is distributed in the hope that it will be useful,
+* but WITHOUT ANY WARRANTY; without even the implied warranty of
+* MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+* GNU General Public License for more details.
+*
+* You should have received a copy of the GNU General Public License
+* along with this program; if not, write to the Free Software
+* Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
+*************************************************************************************************************
+-->
+<!--
+* @author Mircea Diaconescu
+* @since October 31, 2009
+* @version: 1.0
+-->
+<project name="Generic compilation used as base for modules" default="infoError" basedir=".">
+	<description>
+        This ANT file builds an executeable JAR archive from the AORS. Is used only temporarily for 
+		being able to compile modules.
+    </description>
+
+	<!-- please don't change these properties since this will afact the build of all modules -->
+	<property name="aors.dist.dir" value="./dist" />
+	<property name="aors.class.dir" value="${aors.dist.dir}" />
+	<property name="aors.lib.dir" value="../../../../lib" />
+	<property name="aors.include.dir" value="../../../" />
+
+	<path id="aors.classpath">
+		<fileset dir="${aors.lib.dir}">
+			<include name="*.jar" />
+		</fileset>
+	</path>
+
+	<target name="infoError">
+		<echo message="NOTHING TO DO! This file is a build helper and can't be called in this way! It is supposed to be called only from outside!" />
+	</target>
+
+	<target name="compileAORS">
+		<mkdir dir="${aors.dist.dir}" />
+		<echo message="Compile AORS sources, please wait..." />
+		<javac destdir="${aors.class.dir}" classpathref="aors.classpath" debug="true">
+			<src path="${aors.include.dir}/aors" />
+			<include name="**" />
+
+			<!-- Here we have to add exclude part for each new module. -->
+			<exclude name="module/agentControl/**" />
+			<exclude name="module/visopengl/**" />
+			<exclude name="module/visopengl3d/**" />
+			<exclude name="module/sound/**" />
+			<exclude name="module/statistics/**" />
+			<exclude name="module/physics2d/**" />
+			<exclude name="module/initialState/**" />
+			<compilerarg value="-Xlint" />
+		</javac>
+		<echo message="AORS sources were successfully completed." />
+	</target>
+
+</project>

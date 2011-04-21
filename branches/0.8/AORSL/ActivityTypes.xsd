@@ -1,0 +1,125 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<xs:schema xmlns:ers="http://aor-simulation.org" xmlns:aors="http://aor-simulation.org" xmlns:xs="http://www.w3.org/2001/XMLSchema"
+  targetNamespace="http://aor-simulation.org" elementFormDefault="qualified" attributeFormDefault="unqualified">
+  <!-- =================================================================== -->
+  <xs:include schemaLocation="AgentTypes.xsd"/>
+  <!-- =================================================================== -->
+  <!-- *** Activity Types *** -->
+  <!-- =================================================================== -->
+  <xs:element name="ActivityType" type="ers:ActivityType.type" substitutionGroup="ers:EventType"/>
+  <xs:complexType name="ActivityType.type">
+    <xs:complexContent>
+      <xs:extension base="ers:EventType.type">
+        <xs:sequence>
+          <xs:choice minOccurs="0" maxOccurs="unbounded">
+            <xs:element name="FOR" minOccurs="0" maxOccurs="unbounded">
+              <xs:complexType>
+                <xs:complexContent>
+                  <xs:restriction base="ers:VariableDeclaration.type">
+                    <xs:annotation>
+                      <xs:documentation>We use here a restricted version of VariableDeclaration.type, because we don't use sets</xs:documentation>
+                    </xs:annotation>
+                    <xs:choice minOccurs="0">
+                      <xs:element ref="ers:ValueExpr" minOccurs="0" maxOccurs="unbounded"/>
+                      <xs:element name="ObjectRef" type="ers:OpaqueExpression" minOccurs="0" maxOccurs="unbounded"/>
+                      <xs:element name="ObjectIdRef" type="ers:OpaqueExpression" minOccurs="0" maxOccurs="unbounded"/>
+                    </xs:choice>
+                    <xs:attribute name="dataVariable" type="ers:CanonicalName" use="optional"/>
+                    <xs:attribute name="dataType" type="ers:PrimitiveDataType" use="optional"/>
+                    <xs:attribute name="refDataType" type="ers:CanonicalName" use="optional"/>
+                    <xs:attribute name="objectVariable" type="ers:CanonicalName" use="optional"/>
+                    <xs:attribute name="objectType" type="ers:CanonicalName" use="optional"/>
+                    <xs:attribute name="objectIdRef" type="xs:long" use="optional"/>
+                    <xs:attribute name="objectName" type="xs:NCName" use="optional"/>
+                  </xs:restriction>
+                </xs:complexContent>
+              </xs:complexType>
+            </xs:element>
+          </xs:choice>
+        	<xs:element name="Duration" type="ers:DiscreteRandomVariable-OR-ValueExpr" minOccurs="0" maxOccurs="1"/>
+          <xs:element name="ActorIdRef" type="ers:OpaqueExpression" minOccurs="0" maxOccurs="unbounded"/>
+          <xs:element name="ActorRef" type="ers:OpaqueExpression" minOccurs="0" maxOccurs="unbounded"/>
+          <xs:element name="ResourceIdRef" type="ers:ResourceReferenceType" minOccurs="0" maxOccurs="unbounded"/>
+          <xs:element name="ResourceRef" type="ers:ResourceReferenceType" minOccurs="0" maxOccurs="unbounded"/>
+          <xs:element name="ActivityStartEffect" type="ers:ActivityEffect.type" minOccurs="0"/>
+          <xs:element name="ActivityEndEffect" type="ers:ActivityEffect.type" minOccurs="0"/>
+          <xs:element ref="aors:SuccessorActivityType" minOccurs="0" maxOccurs="unbounded"/>
+        </xs:sequence>
+        <xs:attribute name="duration" type="xs:long" use="optional"/>
+        <xs:attribute name="startEventType" type="ers:CanonicalName" use="optional"/>
+      	<xs:attribute name="startEventVariable" type="ers:CanonicalName" use="optional"/>
+      	<xs:attribute name="startEventCorrelationProperty" type="ers:CanonicalName" use="optional"/>
+        <xs:attribute name="endEventType" type="ers:ListOfCanonicalName" use="optional"/>
+      	<xs:attribute name="endEventVariable" type="ers:CanonicalName" use="optional"/>
+      	<xs:attribute name="endEventCorrelationProperty" type="ers:CanonicalName" use="optional"/>
+        <xs:attribute name="actorIdRef" type="xs:long" use="optional"/>
+      	<xs:attribute name="actorVariable" type="ers:CanonicalName" use="optional"/>
+        <xs:attribute name="actorType" type="ers:CanonicalName" use="optional"/>
+      </xs:extension>
+    </xs:complexContent>
+  </xs:complexType>
+  <xs:complexType name="ActorReferenceType">
+    <xs:simpleContent>
+      <xs:extension base="ers:OpaqueExpression">
+        <xs:attribute name="actorVariable" type="ers:CanonicalName" use="optional"/>
+        <xs:attribute name="type" type="ers:CanonicalName" use="optional"/>
+      </xs:extension>
+    </xs:simpleContent>
+  </xs:complexType>
+  <xs:complexType name="ResourceReferenceType">
+    <xs:simpleContent>
+      <xs:extension base="ers:OpaqueExpression">
+        <xs:attribute name="resourceVariable" type="ers:CanonicalName" use="optional"/>
+        <xs:attribute name="type" type="ers:CanonicalName" use="optional"/>
+      </xs:extension>
+    </xs:simpleContent>
+  </xs:complexType>
+  <!-- ==================================== -->
+  <!-- *** ActivityEffect.type *** -->
+  <!-- ==================================== -->
+  <xs:complexType name="ActivityEffect.type">
+    <xs:sequence>
+      <xs:choice minOccurs="0" maxOccurs="unbounded">
+        <xs:element ref="ers:UpdateGlobalVariable"/>
+        <xs:element ref="ers:IncrementGlobalVariable"/>
+        <xs:element ref="ers:UpdateObject"/>
+        <xs:element ref="ers:UpdateGridCell"/>
+        <xs:element ref="ers:UpdateStatisticsVariable"/>
+        <xs:element ref="ers:UpdateActor"/>
+      </xs:choice>
+      <xs:element ref="ers:UpdateObjects" minOccurs="0" maxOccurs="unbounded"/>
+    </xs:sequence>
+  </xs:complexType>
+
+  <!-- ==================================== -->
+  <!-- *** SuccessorActivity *** -->
+  <!-- ==================================== -->
+  <xs:element name="SuccessorActivityType" type="ers:SuccessorActivityType.type"/>
+  <xs:complexType name="SuccessorActivityType.type">
+    <xs:sequence>
+      <xs:element name="Delay" type="ers:OpaqueExpression" minOccurs="0" maxOccurs="unbounded"/>
+      <xs:element name="CorrelationValue" type="ers:OpaqueExpression" minOccurs="0" maxOccurs="unbounded"/>
+      <xs:element ref="ers:Slot" minOccurs="0" maxOccurs="unbounded"/>
+    </xs:sequence>
+    <xs:attribute name="activityName" type="ers:CanonicalName" use="required"/>
+    <xs:attribute name="delay" type="xs:positiveInteger" use="optional"/>
+  </xs:complexType>
+
+  <!-- ==================================== -->
+  <!-- *** UpdateActorObject *** -->
+  <!-- ==================================== -->
+  <xs:element name="UpdateActor" type="ers:UpdateActor.type">
+    <xs:annotation>
+      <xs:documentation>A possibilitie to change the actorObject (as a simplification to UpdateObject)</xs:documentation>
+    </xs:annotation>
+  </xs:element>
+  <xs:complexType name="UpdateActor.type">
+    <xs:sequence>
+      <xs:element ref="ers:Increment" minOccurs="0" maxOccurs="unbounded"/>
+      <xs:element ref="ers:Decrement" minOccurs="0" maxOccurs="unbounded"/>
+      <xs:element ref="ers:Slot" minOccurs="0" maxOccurs="unbounded"/>
+    </xs:sequence>
+    <xs:attribute name="actorType" type="xs:NCName" use="required"/>
+    <xs:attribute name="actorVariable" type="ers:CanonicalName" use="optional"/>
+  </xs:complexType>
+</xs:schema>

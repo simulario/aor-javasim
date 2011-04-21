@@ -1,0 +1,649 @@
+<?xml version="1.0"?>
+<?xml-stylesheet type="text/xsl" href="prettyprint.xsl"?>
+<SimulationScenario xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xsi:schemaLocation="http://aor-simulation.org ../../../../ext/aorsl/AORSL-0-8-3.xsd"
+	xmlns:dc="http://purl.org/dc/elements/1.1/" xmlns="http://aor-simulation.org"
+	xmlns:aors="http://aor-simulation.org" version="0.8.3" scenarioName="KnightsAndKnaves"
+	scenarioTitle="Rescue the princess by finding the Castle and defeat the Demon."
+	simulationManagerDirectory="../../..">
+
+	<SimulationParameters simulationSteps="500" stepTimeDelay="100" timeUnit="ms"/>
+
+	<SimulationModel modelName="KnightsAndKnaves"
+		modelTitle="Find the castle by asking people who might be knights or knaves."
+		baseURI="http://aors.example.net/knightsandknaves#">
+		<documentation>
+			<dc:created>17 October 2008</dc:created>
+			<dc:description> A visitor to the Island of Knights and Knaves is to find the castle
+				by asking Knights found in her way about the castle direction. The visitor can see
+				the castle only when she enters the same cell where the castle is located. With
+				each move action, she can move only to a neigboring cell (either E, S, W or N).
+				The rules of the simulation as defined as follows: 1. When the current cell where
+				the Visitor enters is empty, the Visitor has to move randomly one cell. 2. When in
+				the current cell where the Visitor enters contains a Knight, then the Visitor asks
+				the Knight about the direction to move. 3. When in the current cell where the
+				Visitor enters contains the Castle, then the visitor has win and the simulation
+				stops. </dc:description>
+		</documentation>
+
+		<SpaceModel geometry="Euclidean" spatialDistanceUnit="m">
+			<TwoDimensionalGrid xMax="25" yMax="25" gridCellMaxOccupancy="1" startCountingWithZero="true"/>
+		</SpaceModel>
+
+		<EntityTypes>
+			<MessageType name="Ask">
+				<Attribute type="String" name="queryLanguage"/>
+				<Attribute type="String" name="queryString"/>
+			</MessageType>
+			<MessageType name="Reply">
+				<Attribute type="Integer" name="messageReference"/>
+				<Attribute type="String" name="answer"/>
+			</MessageType>
+
+			<ActionEventType name="Move_E"/>
+			<ActionEventType name="Move_S"/>
+			<ActionEventType name="Move_W"/>
+			<ActionEventType name="Move_N"/>
+			
+			<ActionEventType name="RequestStopSimulation"/>
+
+			<!-- =================================================== -->
+			<PhysicalObjectType name="Castle">
+				<!-- =================================================== -->
+				<Attribute type="Integer" name="demonPower"/>
+				<Attribute type="Integer" name="princessPrice"/>
+			</PhysicalObjectType>
+			
+			<!-- =================================================== -->
+			<PhysicalObjectType name="Treasure">
+				<!-- =================================================== -->
+				<Attribute type="String" name="watchManName"/>
+				<Attribute type="Integer" name="watchManPower"/>
+				<Attribute type="Integer" name="goldAmount"/>
+			</PhysicalObjectType>
+			
+			<!-- =================================================== -->
+			<PhysicalAgentType name="Visitor" autoPerception="true" memorySize="5">
+				<!-- =================================================== -->
+				<SelfBeliefAttribute type="Integer" name="powerLevel"/>
+				<SelfBeliefAttribute type="Integer" name="goldAmount"/>
+				<SelfBeliefAttribute type="Boolean" name="foundKnight"/>
+				<SelfBeliefAttribute type="Integer" name="foundKnightId"/>
+				<SelfBeliefAttribute type="Boolean" name="knowDirection"/>
+				<SelfBeliefAttribute type="Integer" name="waitStepsNumber"/>
+				<SelfBeliefAttribute type="Integer" name="stepsNumber"/>
+
+				<!-- The visitor can move only one time per simulation step -->
+				<SubjectiveFunction name="getRandomMoveDirection" resultType="String">
+					<Body language="Java"> String resultDirection = ""; // compute a randomly
+						direction for moving the visitor. int dir = Random.uniformInt(1,5);
+						switch(dir) { case 1: resultDirection="E"; break; case 2: resultDirection="W";
+						break; case 3: resultDirection="S"; break; case 4: resultDirection="N"; break;
+						} return resultDirection; </Body>
+				</SubjectiveFunction>
+
+				<!-- On each step event -->
+				<PeriodicTimeEventType name="SimulationStep">
+					<Periodicity>
+						<ValueExpr language="Java">1</ValueExpr>
+					</Periodicity>
+				</PeriodicTimeEventType>
+
+				<!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->
+				<ReactionRule name="KnightPerceptionRule" agentVariable="visitor">
+					<!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->
+					<documentation>
+						<dc:description>When a visitor sees a knight, she asks him about the direction
+							(E, W, S or N) to go for reach the castle.</dc:description>
+					</documentation>
+					<WHEN eventType="PhysicalObjectPerceptionEvent" physicalObjectType="Knight"
+						eventVariable="e"/>
+					<IF language="Java"> !visitor.isFoundKnight() &amp;&amp;
+						visitor.getFoundKnightId()!=e.getPerceivedPhysicalObject().getId()&amp;&amp;
+						!visitor.isKnowDirection() &amp;&amp; visitor.getStepsNumber()== 0 </IF>
+					<THEN>
+						<UPDATE-AGT>
+							<SelfBeliefSlot property="foundKnight">
+								<ValueExpr language="Java">true</ValueExpr>
+							</SelfBeliefSlot>
+							<SelfBeliefSlot property="foundKnightId">
+								<ValueExpr language="Java"
+									>e.getPerceivedPhysicalObject().getId()</ValueExpr>
+							</SelfBeliefSlot>
+							<SelfBeliefSlot property="knowDirection">
+								<ValueExpr language="Java">true</ValueExpr>
+							</SelfBeliefSlot>
+						</UPDATE-AGT>
+						<SCHEDULE-EVT>
+							<OutMessageEventExpr messageType="Ask">
+								<ReceiverIdRef language="Java"
+									>e.getPerceivedPhysicalObjectIdRef()</ReceiverIdRef>
+								<Slot property="queryLanguage" value="SPARQL"/>
+								<Slot property="queryString"
+									value="SELECT ?x ?y WHERE {?c rdf:type :Castle; :name 'Magic Castle'; :x ?x; :y ?y.}"
+								/>
+							</OutMessageEventExpr>
+						</SCHEDULE-EVT>
+					</THEN>
+				</ReactionRule>
+
+				<!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->
+				<ReactionRule name="TreasurePerceptionRule" agentVariable="visitor">
+					<!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->
+					<documentation>
+						<dc:description>When a visitor sees a treasure, he fight with the guard and
+							get the amount of gold if wins.</dc:description>
+					</documentation>
+					<WHEN eventType="PhysicalObjectPerceptionEvent" physicalObjectType="Treasure"
+						eventVariable="e"/>
+					<DO>
+						<UPDATE-AGT>
+							<SelfBeliefSlot property="powerLevel">
+								<ValueExpr language="Java"
+									>visitor.getPowerLevel()-((Treasure)e.getPerceivedPhysicalObject()).getWatchManPower()</ValueExpr>
+							</SelfBeliefSlot>
+							<SelfBeliefSlot xsi:type="aors:OpaqueExprSlot" property="goldAmount">
+								<ValueExpr language="Java"
+									>visitor.getGoldAmount()+((Treasure)e.getPerceivedPhysicalObject()).getGoldAmount()</ValueExpr>
+							</SelfBeliefSlot>
+						</UPDATE-AGT>
+					</DO>
+				</ReactionRule>
+
+				<!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->
+				<ReactionRule name="CastlePerceptionRule">
+					<!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->
+					<documentation>
+						<dc:description>When a visitor sees the castle, she requests the environment
+							simulator to stop the simulation.</dc:description>
+					</documentation>
+					<WHEN eventType="PhysicalObjectPerceptionEvent" physicalObjectType="Castle"/>
+					<DO>
+						<SCHEDULE-EVT>
+							<ActionEventExpr actionEventType="RequestStopSimulation"/>
+						</SCHEDULE-EVT>
+					</DO>
+				</ReactionRule>
+
+				<!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->
+				<ReactionRule name="NoPerception" agentVariable="visitor">
+					<!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->
+					<documentation>
+						<dc:description>If found no Knight or Castle in the cell, then the visitor
+							moves one step randomly: E, W, S or N</dc:description>
+					</documentation>
+
+					<WHEN eventType="SimulationStep" eventVariable="e"/>
+					<IF language="Java"> !visitor.isFoundKnight() &amp;&amp;
+					!visitor.isKnowDirection() &amp;&amp; visitor.getStepsNumber()== 0 </IF>
+					<THEN>
+						<SCHEDULE-EVT>
+							<OutMessageEventExpr messageType="Reply">
+								<ReceiverIdRef language="Java">visitor.getId()</ReceiverIdRef>
+								<Slot property="messageReference">
+									<ValueExpr language="Java">99999999</ValueExpr>
+								</Slot>
+								<Slot property="answer">
+									<ValueExpr language="Java">visitor.getRandomMoveDirection()</ValueExpr>
+								</Slot>
+							</OutMessageEventExpr>
+						</SCHEDULE-EVT>
+					</THEN>
+				</ReactionRule>
+
+				<!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->
+				<ReactionRule name="IncSteps" agentVariable="visitor">
+					<!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->
+					<documentation>
+						<dc:description>Increase steps number</dc:description>
+					</documentation>
+					<WHEN eventType="SimulationStep" eventVariable="e"/>
+					<DO>
+						<UPDATE-AGT>
+							<SelfBeliefSlot property="stepsNumber">
+								<ValueExpr language="Java"
+									>(visitor.getStepsNumber()+1)%visitor.getWaitStepsNumber()</ValueExpr>
+							</SelfBeliefSlot>
+						</UPDATE-AGT>
+					</DO>
+				</ReactionRule>
+
+				<!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->
+				<ReactionRule name="Direction_E" agentVariable="visitor">
+					<!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->
+					<documentation>
+						<dc:description>The visitor has to move one step to East</dc:description>
+					</documentation>
+					<WHEN eventType="InMessageEvent" messageType="Reply" eventVariable="e"/>
+					<IF language="Java">((Reply)e.getMessage()).getAnswer().equals("E")</IF>
+					<THEN>
+						<UPDATE-AGT>
+							<SelfBeliefSlot property="foundKnight">
+								<ValueExpr language="Java">false</ValueExpr>
+							</SelfBeliefSlot>
+							<SelfBeliefSlot property="knowDirection">
+								<ValueExpr language="Java">false</ValueExpr>
+							</SelfBeliefSlot>
+							<SelfBeliefSlot property="stepsNumber">
+								<ValueExpr language="Java"
+									>(visitor.getStepsNumber()+1)%visitor.getWaitStepsNumber()</ValueExpr>
+							</SelfBeliefSlot>
+						</UPDATE-AGT>
+						<SCHEDULE-EVT>
+							<ActionEventExpr actionEventType="Move_E"/>
+						</SCHEDULE-EVT>
+					</THEN>
+				</ReactionRule>
+
+				<!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->
+				<ReactionRule name="Direction_W" agentVariable="visitor">
+					<!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->
+					<documentation>
+						<dc:description>The visitor has to move one step to West</dc:description>
+					</documentation>
+					<WHEN eventType="InMessageEvent" messageType="Reply" eventVariable="e"/>
+					<IF language="Java">((Reply)e.getMessage()).getAnswer().equals("W")</IF>
+					<THEN>
+						<UPDATE-AGT>
+							<SelfBeliefSlot property="foundKnight">
+								<ValueExpr language="Java">false</ValueExpr>
+							</SelfBeliefSlot>
+							<SelfBeliefSlot property="knowDirection">
+								<ValueExpr language="Java">false</ValueExpr>
+							</SelfBeliefSlot>
+							<SelfBeliefSlot property="stepsNumber">
+								<ValueExpr language="Java"
+									>(visitor.getStepsNumber()+1)%visitor.getWaitStepsNumber()</ValueExpr>
+							</SelfBeliefSlot>
+						</UPDATE-AGT>
+						<SCHEDULE-EVT>
+							<ActionEventExpr actionEventType="Move_W"/>
+						</SCHEDULE-EVT>
+					</THEN>
+				</ReactionRule>
+
+				<!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->
+				<ReactionRule name="Direction_S" agentVariable="visitor">
+					<!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->
+					<documentation>
+						<dc:description>The visitor has to move one step to South</dc:description>
+					</documentation>
+					<WHEN eventType="InMessageEvent" messageType="Reply" eventVariable="e"/>
+					<IF language="Java">((Reply)e.getMessage()).getAnswer().equals("S")</IF>
+					<THEN>
+						<UPDATE-AGT>
+							<SelfBeliefSlot property="foundKnight">
+								<ValueExpr language="Java">false</ValueExpr>
+							</SelfBeliefSlot>
+							<SelfBeliefSlot property="knowDirection">
+								<ValueExpr language="Java">false</ValueExpr>
+							</SelfBeliefSlot>
+							<SelfBeliefSlot property="stepsNumber">
+								<ValueExpr language="Java"
+									>(visitor.getStepsNumber()+1)%visitor.getWaitStepsNumber()</ValueExpr>
+							</SelfBeliefSlot>
+						</UPDATE-AGT>
+						<SCHEDULE-EVT>
+							<ActionEventExpr actionEventType="Move_S"/>
+						</SCHEDULE-EVT>
+					</THEN>
+				</ReactionRule>
+
+				<!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->
+				<ReactionRule name="Direction_N" agentVariable="visitor">
+					<!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->
+					<documentation>
+						<dc:description>The visitor has to move one step to North</dc:description>
+					</documentation>
+					<WHEN eventType="InMessageEvent" messageType="Reply" eventVariable="e"/>
+					<IF language="Java">((Reply)e.getMessage()).getAnswer().equals("N")</IF>
+					<THEN>
+						<UPDATE-AGT>
+							<SelfBeliefSlot property="foundKnight">
+								<ValueExpr language="Java">false</ValueExpr>
+							</SelfBeliefSlot>
+							<SelfBeliefSlot property="knowDirection">
+								<ValueExpr language="Java">false</ValueExpr>
+							</SelfBeliefSlot>
+							<SelfBeliefSlot property="stepsNumber">
+								<ValueExpr language="Java"
+									>(visitor.getStepsNumber()+1)%visitor.getWaitStepsNumber()</ValueExpr>
+							</SelfBeliefSlot>
+						</UPDATE-AGT>
+						<SCHEDULE-EVT>
+							<ActionEventExpr actionEventType="Move_N"/>
+						</SCHEDULE-EVT>
+					</THEN>
+				</ReactionRule>
+			</PhysicalAgentType>
+			
+			<!-- =================================================== -->
+			<PhysicalAgentType name="Knight" idPerceivable="true">
+				<!-- =================================================== -->
+				<!-- Castle belief entity type -->
+				<BeliefEntityType name="Castle">
+					<BeliefAttribute name="x" type="Integer"/>
+					<BeliefAttribute name="y" type="Integer"/>
+				</BeliefEntityType>
+
+				<SubjectiveFunction name="computeAnswer" resultType="String">
+					<Parameter name="requestQuery" type="String"/>
+					<Body language="Java"> // execute the SPARQL query in top of beliefs
+						java.util.List&lt;java.util.HashMap&lt;String, String&gt;&gt;
+						result = this.executeQuery(requestQuery); // the final direction for moving
+						the visitor String resultDirection = ""; // calculate the direction to move
+						according with the castle position and current position int xCastle =
+						Integer.parseInt(result.get(0).get("x")); int yCastle =
+						Integer.parseInt(result.get(0).get("y")); int xVisitor =
+						(int)((PhysicalAgentObject)this.getAgentObject()).getX(); int yVisitor =
+						(int)((PhysicalAgentObject)this.getAgentObject()).getY(); int xD =
+						xVisitor-xCastle; int yD = yVisitor-yCastle; // compute moving direction
+						if(xD&lt;0&amp;&amp; yD&lt;0) { resultDirection =
+						(Math.abs(xD)&gt;Math.abs(yD) ? "N" : "E"); } if(xD&lt;0
+						&amp;&amp; yD&gt;0) { resultDirection =
+						(Math.abs(xD)&gt;Math.abs(yD) ? "S" : "E"); } if(xD&gt;0
+						&amp;&amp; yD&lt;0) { resultDirection =
+						(Math.abs(xD)&gt;Math.abs(yD) ? "N" : "W"); } if(xD&gt;0
+						&amp;&amp; yD&gt;0) { resultDirection =
+						(Math.abs(xD)&gt;Math.abs(yD) ? "S" : "W"); } if(xD == 0) {
+						resultDirection = (yD&gt;0 ? "S" : "N"); } if(yD == 0) { resultDirection =
+						(xD&gt;0 ? "W" : "E"); } if(xD==0 &amp;&amp; yD==0) {
+						resultDirection = "X"; } return resultDirection; </Body>
+				</SubjectiveFunction>
+
+				<!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->
+				<ReactionRule name="AskRule" agentVariable="knight">
+					<!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->
+					<documentation>
+						<dc:description> When the visitor ask the knight about the direction towards
+							the castle, the knight compute the direction by knowing the castle's
+							coordinates and return the direction. </dc:description>
+					</documentation>
+					<WHEN eventType="InMessageEvent" messageType="Ask" eventVariable="e"/>
+					<DO>
+						<SCHEDULE-EVT>
+							<OutMessageEventExpr messageType="Reply">
+								<ReceiverIdRef language="Java">e.getSenderIdRef()</ReceiverIdRef>
+								<Slot property="messageReference">
+									<ValueExpr language="Java">(int)e.getMessage().getId()</ValueExpr>
+								</Slot>
+								<Slot property="answer">
+									<ValueExpr language="Java"
+										>knight.computeAnswer(((Ask)e.getMessage()).getQueryString())</ValueExpr>
+								</Slot>
+							</OutMessageEventExpr>
+						</SCHEDULE-EVT>
+					</DO>
+				</ReactionRule>
+			</PhysicalAgentType>
+		</EntityTypes>
+
+		<EnvironmentRules>
+			<!-- =================================================== -->
+			<EnvironmentRule name="MoveRule_E">
+				<!-- =================================================== -->
+				<documentation>
+					<dc:description>The Visitor is moving one step to East</dc:description>
+				</documentation>
+				<WHEN eventType="Move_E" eventVariable="e"/>
+				<FOR objectType="Visitor" objectVariable="v">
+					<ObjectRef language="Java">e.getActor()</ObjectRef>
+				</FOR>
+			  <DO>
+			  	<UPDATE-ENV>
+			  		<UpdateObject objectVariable="v">
+			  			<Slot property="x">
+			  				<ValueExpr language="Java">Simulator.spaceModel.newX(v,1)</ValueExpr>
+			  			</Slot>
+			  		</UpdateObject>
+			  	</UPDATE-ENV>
+			  </DO>
+			</EnvironmentRule>
+
+			<!-- =================================================== -->
+			<EnvironmentRule name="MoveRule_W">
+				<!-- =================================================== -->
+				<documentation>
+					<dc:description>The Visitor is moving one step to West</dc:description>
+				</documentation>
+				<WHEN eventType="Move_W" eventVariable="e"/>
+				<FOR objectType="Visitor" objectVariable="v">
+					<ObjectRef language="Java">e.getActor()</ObjectRef>
+				</FOR>
+			  <DO>
+			  	<UPDATE-ENV>
+			  		<UpdateObject objectVariable="v">
+			  			<Slot property="x">
+			  				<ValueExpr language="Java">Simulator.spaceModel.newX(v,-1)</ValueExpr>
+			  			</Slot>
+			  		</UpdateObject>
+			  	</UPDATE-ENV>
+			  </DO>
+			</EnvironmentRule>
+
+			<!-- =================================================== -->
+			<EnvironmentRule name="MoveRule_S">
+				<!-- =================================================== -->
+				<documentation>
+					<dc:description>The Visitor is moving one step to South</dc:description>
+				</documentation>
+				<WHEN eventType="Move_S" eventVariable="e"/>
+				<FOR objectType="Visitor" objectVariable="v">
+					<ObjectRef language="Java">e.getActor()</ObjectRef>
+				</FOR>
+			 <DO>
+			 	<UPDATE-ENV>
+			 		<UpdateObject objectVariable="v">
+			 			<Slot property="y">
+			 				<ValueExpr language="Java">Simulator.spaceModel.newY(v,-1)</ValueExpr>
+			 			</Slot>
+			 		</UpdateObject>
+			 	</UPDATE-ENV>
+			 </DO>
+			</EnvironmentRule>
+
+			<!-- =================================================== -->
+			<EnvironmentRule name="MoveRule_N">
+				<!-- =================================================== -->
+				<documentation>
+					<dc:description>The Visitor is moving one step to North</dc:description>
+				</documentation>
+				<WHEN eventType="Move_N" eventVariable="e"/>
+				<FOR objectType="Visitor" objectVariable="v">
+					<ObjectRef language="Java">e.getActor()</ObjectRef>
+				</FOR>
+			<DO>
+				<UPDATE-ENV>
+					<UpdateObject objectVariable="v">
+						<Slot property="y">
+							<ValueExpr language="Java">Simulator.spaceModel.newY(v,1)</ValueExpr>
+						</Slot>
+					</UpdateObject>
+				</UPDATE-ENV>
+			</DO>
+			</EnvironmentRule>
+
+			<!-- =================================================== -->
+			<EnvironmentRule name="StopSimulationRule">
+				<!-- =================================================== -->
+				<documentation>
+					<dc:description>The Visitor was found the Castle, then the simulation is
+						stoped</dc:description>
+				</documentation>
+				<WHEN eventType="RequestStopSimulation" eventVariable="e"/>
+				<FOR objectType="Visitor" objectVariable="a">
+					<ObjectRef language="Java">e.getActor()</ObjectRef>
+				</FOR>
+			<DO>
+				<SCHEDULE-EVT>
+					<CausedEventExpr eventType="StopSimulation"/>
+				</SCHEDULE-EVT>
+			</DO>
+			</EnvironmentRule>
+
+		</EnvironmentRules>
+	</SimulationModel>
+
+	<!-- ========================================= -->
+	<InitialState>
+		<!-- ========================================= -->
+		<!-- Initialize the Castle object -->
+		<PhysicalObject type="Castle" id="1" name="MagicCastle">
+			<Slot property="x">
+				<ValueExpr language="Java">12</ValueExpr>
+			</Slot>
+			<Slot property="y">
+				<ValueExpr language="Java">12</ValueExpr>
+			</Slot>
+			<Slot property="demonPower">
+				<ValueExpr language="Java">75</ValueExpr>
+			</Slot>
+			<Slot property="princessPrice">
+				<ValueExpr language="Java">500</ValueExpr>
+			</Slot>
+		</PhysicalObject>
+
+		<!-- Instantiate Treasures -->
+		<PhysicalObject type="Treasure" id="501">
+			<Slot property="name" value="Gold Treasure"/>
+			<Slot property="watchManName" value="Buggy Man 1"/>
+			<Slot property="watchManPower">
+				<ValueExpr language="Java">Random.uniformInt(1,11)</ValueExpr>
+			</Slot>
+			<Slot property="goldAmount">
+				<ValueExpr language="Java">Random.uniformInt(1,500)</ValueExpr>
+			</Slot>
+			<Slot property="x">
+				<ValueExpr language="Java">9</ValueExpr>
+			</Slot>
+			<Slot property="y">
+				<ValueExpr language="Java">6</ValueExpr>
+			</Slot>
+		</PhysicalObject>
+
+		<PhysicalObject type="Treasure" id="502">
+			<Slot property="name" value="Gold Treasure"/>
+			<Slot property="watchManName" value="Buggy Man 2"/>
+			<Slot property="watchManPower">
+				<ValueExpr language="Java">Random.uniformInt(1,11)</ValueExpr>
+			</Slot>
+			<Slot property="goldAmount">
+				<ValueExpr language="Java">Random.uniformInt(1,500)</ValueExpr>
+			</Slot>
+			<Slot property="x">
+				<ValueExpr language="Java">18</ValueExpr>
+			</Slot>
+			<Slot property="y">
+				<ValueExpr language="Java">18</ValueExpr>
+			</Slot>
+		</PhysicalObject>
+
+		<PhysicalObject type="Treasure" id="503">
+			<Slot property="name" value="Gold Treasure"/>
+			<Slot property="watchManName" value="Buggy Man 3"/>
+			<Slot property="watchManPower">
+				<ValueExpr language="Java">Random.uniformInt(1,11)</ValueExpr>
+			</Slot>
+			<Slot property="goldAmount">
+				<ValueExpr language="Java">Random.uniformInt(1,500)</ValueExpr>
+			</Slot>
+			<Slot property="x">
+				<ValueExpr language="Java">3</ValueExpr>
+			</Slot>
+			<Slot property="y">
+				<ValueExpr language="Java">12</ValueExpr>
+			</Slot>
+		</PhysicalObject>
+
+		<PhysicalObject type="Treasure" id="504">
+			<Slot property="name" value="Gold Treasure"/>
+			<Slot property="watchManName" value="Buggy Man 3"/>
+			<Slot property="watchManPower">
+				<ValueExpr language="Java">Random.uniformInt(1,11)</ValueExpr>
+			</Slot>
+			<Slot property="goldAmount">
+				<ValueExpr language="Java">Random.uniformInt(1,500)</ValueExpr>
+			</Slot>
+			<Slot property="x">
+				<ValueExpr language="Java">9</ValueExpr>
+			</Slot>
+			<Slot property="y">
+				<ValueExpr language="Java">19</ValueExpr>
+			</Slot>
+		</PhysicalObject>
+
+		<PhysicalObject type="Treasure" id="505">
+			<Slot property="name" value="Gold Treasure"/>
+			<Slot property="watchManName" value="Buggy Man 3"/>
+			<Slot property="watchManPower">
+				<ValueExpr language="Java">Random.uniformInt(1,11)</ValueExpr>
+			</Slot>
+			<Slot property="goldAmount">
+				<ValueExpr language="Java">Random.uniformInt(1,500)</ValueExpr>
+			</Slot>
+			<Slot property="x">
+				<ValueExpr language="Java">21</ValueExpr>
+			</Slot>
+			<Slot property="y">
+				<ValueExpr language="Java">8</ValueExpr>
+			</Slot>
+		</PhysicalObject>
+
+		<!-- Initialize the Visitor agent -->
+		<PhysicalAgent type="Visitor" id="2">
+			<Slot property="x">
+				<ValueExpr language="Java">Random.uniformInt(1,24)</ValueExpr>
+			</Slot>
+			<Slot property="y">
+				<ValueExpr language="Java">Random.uniformInt(1,24)</ValueExpr>
+			</Slot>
+			<SelfBeliefSlot property="powerLevel" value="100"/>
+			<SelfBeliefSlot property="goldAmount" value="0"/>
+			<SelfBeliefSlot property="foundKnight" value="false"/>
+			<SelfBeliefSlot property="waitStepsNumber" value="10"/>
+			<PeriodicTimeEvent occurrenceTime="1" type="SimulationStep"/>
+		</PhysicalAgent>
+
+		<!-- Initialize the Knights agents -->
+		<PhysicalAgents type="Knight" rangeStartID="101" rangeEndID="250"
+			perceptionRadius="1111">
+			<Slot property="x">
+				<ValueExpr language="Java">Random.uniformInt(1,25)</ValueExpr>
+			</Slot>
+			<Slot property="y">
+				<ValueExpr language="Java">Random.uniformInt(1,25)</ValueExpr>
+			</Slot>
+			<BeliefEntity type="Castle" idRef="1">
+				<BeliefSlot property="name" value="Magic Castle"/>
+				<BeliefSlot property="x" value="12"/>
+				<BeliefSlot property="y" value="12"/>
+			</BeliefEntity>
+		</PhysicalAgents>
+	</InitialState>
+
+	<!-- ========================================= -->
+	<Views>
+		<!-- ========================================= -->
+		<View physicalObjectType="Castle" shape2D="rectangle">
+			<ShapeSlot shapeProperty="fill" value="blue"/>
+			<ShapeSlot shapeProperty="width" value="22"/>
+			<ShapeSlot shapeProperty="height" value="22"/>
+		</View>
+
+		<View physicalObjectType="Treasure" shape2D="rectangle">
+			<ShapeSlot shapeProperty="fill" value="yellow"/>
+			<ShapeSlot shapeProperty="width" value="17"/>
+			<ShapeSlot shapeProperty="height" value="17"/>
+		</View>
+
+		<View physicalObjectType="Knight" shape2D="circle">
+			<ShapeSlot shapeProperty="fill" value="green"/>
+			<ShapeSlot shapeProperty="r" value="3"/>
+		</View>
+
+		<View physicalObjectType="Visitor" shape2D="circle">
+			<ShapeSlot shapeProperty="fill" value="red"/>
+			<ShapeSlot shapeProperty="r" value="8"/>
+		</View>
+	</Views>
+</SimulationScenario>

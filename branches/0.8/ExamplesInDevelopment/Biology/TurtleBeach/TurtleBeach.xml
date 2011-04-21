@@ -1,0 +1,350 @@
+<?xml version="1.0"?>
+<?xml-stylesheet type="text/xsl" href="prettyprint.xsl"?>
+
+<SimulationScenario xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+ xsi:schemaLocation="http://aor-simulation.org ../../../ext/aorsl/AORSL-0-8-3.xsd"
+ xmlns="http://aor-simulation.org"
+ xmlns:dc="http://purl.org/dc/elements/1.1/"
+ xmlns:aors="http://aor-simulation.org"
+ version="0.8.4"
+ scenarioName="TurtleBeach"
+ scenarioTitle="Turtles come to a beach for ng eggs in a nest and then return to the river"
+ simulationManagerDirectory="../../..">
+  <SimulationParameters simulationSteps="4000" stepDuration="6" timeUnit="s" stepTimeDelay="150"/>
+
+  <SimulationModel modelName="TurtleBeach" modelTitle="Turtles come to a beach for laying eggs in a nest and then return to the river">
+
+    <documentation>
+      <dc:creator>Gerd Wagner</dc:creator>
+      <dc:created>20090529</dc:created>
+      <dc:description>Turtles come to a 500 m long beach at river X for breeding eggs in nests before they return to the river. After some time baby
+        turtles get out of the nests and wander towards the water.</dc:description>
+    </documentation>
+
+    <SpaceModel spatialDistanceUnit="m" geometry="Euclidean">
+      <TwoDimensionalGrid xMax="50" yMax="14">
+        <GridCellProperty type="Float" name="temperature"/>
+      </TwoDimensionalGrid>
+    </SpaceModel>
+
+    <DataTypes>
+      <Enumeration name="Direction4">
+        <EnumerationLiteral>N</EnumerationLiteral>
+        <EnumerationLiteral>E</EnumerationLiteral>
+        <EnumerationLiteral>S</EnumerationLiteral>
+        <EnumerationLiteral>W</EnumerationLiteral>
+      </Enumeration>
+    </DataTypes>
+    <EntityTypes>
+      <!-- =================================================== -->
+      <ActionEventType name="Move">
+        <!-- =================================================== -->
+        <EnumerationProperty name="direction" type="Direction4"/>
+
+        <Function name="getOffsetX" resultType="Integer">
+          <Body language="Java"><![CDATA[
+              long offsetX=0;
+              switch (this.direction) {
+              case N: offsetX = 0; break;
+              case E: offsetX = 1; break;
+              case S: offsetX = 0; break;
+              case W: offsetX = -1;
+              } 
+              return offsetX;
+          ]]></Body>
+        </Function>
+
+        <Function name="getOffsetY" resultType="Integer">
+          <Body language="Java"><![CDATA[
+              long offsetY=0;
+              switch (this.direction) {
+              case N: offsetY = 1; break;
+              case E: offsetY = 0; break;
+              case S: offsetY = -1; break;
+              case W: offsetY = 0;
+              } 
+              return offsetY;
+          ]]></Body>
+        </Function>
+      </ActionEventType>
+      <!-- =================================================== -->
+      <ActionEventType name="Breed"/>
+      <!-- =================================================== -->
+      <ExogenousEventType name="TurtleComesToBeach">
+        <!-- =================================================== -->
+        <Periodicity>
+          <DiscreteRandomVariable>
+            <UniformInt lowerBound="10" upperBound="30"/>
+          </DiscreteRandomVariable>
+        </Periodicity>
+        <StopCondition language="Java"><![CDATA[
+        this.getOccurrenceTime() > SimParameter.SIMULATION_STEPS / 2
+        ]]></StopCondition>
+      </ExogenousEventType>
+      <!-- =================================================== -->
+      <PerceptionEventType name="ArrivalOnNewCell">
+        <!-- =================================================== -->
+        <Attribute type="Float" name="temperature"/>
+      </PerceptionEventType>
+      <!-- =================================================== -->
+      <PhysicalObjectType name="NestWithTurtleEggs">
+        <InitialAttributeValue attribute="width" value="0.5"/>
+        <InitialAttributeValue attribute="height" value="0.5"/>
+      </PhysicalObjectType>
+      <!-- =================================================== -->
+      <PhysicalAgentType name="Turtle">
+        <!-- =================================================== -->
+        <InitialAttributeValue attribute="width" value="0.5"/>
+        <InitialAttributeValue attribute="height" value="0.5"/>
+        <Attribute name="hasAlreadyNested" type="Boolean" initialValue="false"/>
+        <Attribute name="minNestingTemperature" type="Float"/>
+        <!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->
+        <ReactionRule name="ArrivalOnNewCellWhenNotYetNestedAndCellTemperatureTooLowRule" agentVariable="t">
+          <!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->
+          <documentation>
+            <dc:description>When a turtle arrives on a new cell on its way to a nesting place, it goes on northwards to the next cell, if the cell's
+              temperature is too low.</dc:description>
+          </documentation>
+          <WHEN eventType="ArrivalOnNewCell" eventVariable="e"/>
+          <IF language="Java"><![CDATA[
+          ! t.isHasAlreadyNested() 
+          && e.getTemperature() < t.getMinNestingTemperature()
+          ]]></IF>
+          <THEN>
+            <SCHEDULE-EVT>
+              <ActionEventExpr actionEventType="Move">
+                <Slot xsi:type="aors:SimpleSlot" property="direction" value="Direction4.N"/>
+              </ActionEventExpr>
+            </SCHEDULE-EVT>
+          </THEN>
+        </ReactionRule>
+        <!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->
+        <ReactionRule name="ArrivalOnNewCellWhenNotYetNestedAndCellTemperatureOkayRule" agentVariable="t">
+          <!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->
+          <documentation>
+            <dc:description>When a turtle arrives on a new cell on its way to a nesting place, it breeds, if the cell's temperature is okay. A
+              reminder event is created for the turtle to return to the river after some time.</dc:description>
+          </documentation>
+          <WHEN eventType="ArrivalOnNewCell" eventVariable="e"/>
+          <IF language="Java">! t.isHasAlreadyNested() &amp;&amp; e.getTemperature() >= t.getMinNestingTemperature()</IF>
+          <THEN>
+            <SCHEDULE-EVT>
+              <ActionEventExpr actionEventType="Breed"/>
+              <ReminderEventExpr reminderMsg="ReturnToRiver">
+                <Delay>
+                  <DiscreteRandomVariable>
+                    <UniformInt lowerBound="10" upperBound="20"/>
+                  </DiscreteRandomVariable>
+                </Delay>
+              </ReminderEventExpr>
+            </SCHEDULE-EVT>
+          </THEN>
+        </ReactionRule>
+        <!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->
+        <ReactionRule name="ReturnToRiverRule" agentVariable="t">
+          <!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->
+          <documentation>
+            <dc:description>When a ReturnToRiver reminder event occurs (after nesting), the turle starts going southwards in the direction of the
+              river.</dc:description>
+          </documentation>
+          <WHEN eventType="ReminderEvent" eventVariable="re"/>
+          <IF language="Java">re.getReminderMsg().equals("ReturnToRiver")</IF>
+          <THEN>
+            <SCHEDULE-EVT>
+              <ActionEventExpr actionEventType="Move">
+                <Slot xsi:type="aors:SimpleSlot" property="direction" value="Direction4.S"/>
+              </ActionEventExpr>
+            </SCHEDULE-EVT>
+          </THEN>
+        </ReactionRule>
+        <!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->
+        <ReactionRule name="ArrivalOnNewCellWhenAlreadyNestedRule" agentVariable="t">
+          <!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->
+          <documentation>
+            <dc:description>When a turtle arrives on a new cell on its way back to the river (after nesting), it goes on southwards to the next
+              cell.</dc:description>
+          </documentation>
+          <WHEN eventType="ArrivalOnNewCell"/>
+          <IF language="Java">t.isHasAlreadyNested()</IF>
+          <THEN>
+            <SCHEDULE-EVT>
+              <ActionEventExpr actionEventType="Move">
+                <Slot xsi:type="aors:SimpleSlot" property="direction" value="Direction4.S"/>
+              </ActionEventExpr>
+            </SCHEDULE-EVT>
+          </THEN>
+        </ReactionRule>
+      </PhysicalAgentType>
+    </EntityTypes>
+
+    <EnvironmentRules>
+      <!-- =================================================== -->
+      <EnvironmentRule name="TurtleComesToBeachRule">
+        <!-- =================================================== -->
+        <documentation>
+          <dc:description>When TurtleComesToBeach event ocurs, a new tutle is created and it starts going northwards.</dc:description>
+        </documentation>
+        <WHEN eventType="TurtleComesToBeach" eventVariable="e"/>
+        <DO>
+          <UPDATE-ENV>
+            <Create>
+              <PhysicalAgent type="Turtle" objectVariable="t">
+                <Slot property="x">
+                  <RandomVariable>
+                    <UniformInt lowerBound="1">
+                      <UpperBoundExpr language="Java">(int)Simulator.spaceModel.getXMax()</UpperBoundExpr>
+                    </UniformInt>
+                  </RandomVariable>
+                </Slot>
+                <Slot property="y" value="1"/>
+                <Slot property="minNestingTemperature">
+                  <RandomVariable>
+                    <UniformInt lowerBound="22" upperBound="23"/>
+                  </RandomVariable>
+                </Slot>
+              </PhysicalAgent>
+            </Create>
+          </UPDATE-ENV>
+          <SCHEDULE-EVT>
+            <PerceptionEventExpr eventType="ArrivalOnNewCell">
+              <PerceiverIdRef language="Java">t.getId()</PerceiverIdRef>
+              <Slot property="temperature">
+                <ValueExpr language="Java"> Simulator.spaceModel.getGridCell( (int) t.getX(), (int) t.getY()).getTemperature() </ValueExpr>
+              </Slot>
+            </PerceptionEventExpr>
+          </SCHEDULE-EVT>
+        </DO>
+      </EnvironmentRule>
+      <!-- =================================================== -->
+      <EnvironmentRule name="MoveOneCellRule">
+        <!-- =================================================== -->
+        <documentation>
+          <dc:description>When a physical agent moves, its position is updated accordingly. In addition, a perception event that it has arrived at a
+            new cell is created, unless it has moved outside of the space (x=0 or y=0).</dc:description>
+        </documentation>
+        <WHEN eventType="Move" eventVariable="e"/>
+        <FOR objectVariable="t" objectType="Turtle">
+          <ObjectRef language="Java">e.getActor()</ObjectRef>
+        </FOR>
+        <IF language="Java"><![CDATA[
+        ! (e.getDirection() == Direction4.S && t.getY() <= 1.25)
+        ]]></IF>
+        <THEN>
+          <UPDATE-ENV>
+            <UpdateObject objectVariable="t">
+              <Slot property="x">
+                <ValueExpr language="Java">Simulator.spaceModel.newX( t, e.getOffsetX())</ValueExpr>
+              </Slot>
+              <Slot property="y">
+                <ValueExpr language="Java">Simulator.spaceModel.newY( t, e.getOffsetY())</ValueExpr>
+              </Slot>
+            </UpdateObject>
+          </UPDATE-ENV>
+          <SCHEDULE-EVT>
+            <PerceptionEventExpr eventType="ArrivalOnNewCell">
+              <PerceiverIdRef language="Java">e.getActorIdRef()</PerceiverIdRef>
+              <Slot property="temperature">
+                <ValueExpr language="Java"> Simulator.spaceModel.getGridCell( (int) t.getX(), (int) t.getY()).getTemperature() </ValueExpr>
+              </Slot>
+            </PerceptionEventExpr>
+          </SCHEDULE-EVT>
+        </THEN>
+      </EnvironmentRule>
+      <!-- =================================================== -->
+      <EnvironmentRule name="MoveBackToTheRiverRule">
+        <!-- =================================================== -->
+        <documentation>
+          <dc:description>When a physical agent moves, its position is updated accordingly. In addition, a perception event that it has arrived at a
+            new cell is created, unless it has moved outside of the space (x=0 or y=0).</dc:description>
+        </documentation>
+        <WHEN eventType="Move" eventVariable="e"/>
+        <FOR objectVariable="t" objectType="Turtle">
+          <ObjectRef language="Java">e.getActor()</ObjectRef>
+        </FOR>
+        <IF language="Java"><![CDATA[
+        e.getDirection() == Direction4.S && t.getY() <= 1.25
+        ]]></IF>
+        <THEN>
+          <UPDATE-ENV>
+            <DestroyObject objectType="Turtle" objectVariable="t"/>
+          </UPDATE-ENV>
+        </THEN>
+      </EnvironmentRule>
+      <!-- =================================================== -->
+      <EnvironmentRule name="BreedRule">
+        <!-- =================================================== -->
+        <documentation>
+          <dc:description>When a tutle breeds, a nest with turtle eggs is created.</dc:description>
+        </documentation>
+        <WHEN eventType="Breed" eventVariable="e"/>
+        <FOR objectVariable="t" objectType="Turtle">
+          <ObjectRef language="Java">e.getActor()</ObjectRef>
+        </FOR>
+        <DO>
+          <UPDATE-ENV>
+            <UpdateObject objectVariable="t">
+              <Slot property="hasAlreadyNested" value="true"/>
+            </UpdateObject>
+            <Create>
+              <PhysicalObject type="NestWithTurtleEggs">
+                <Slot property="x">
+                  <ValueExpr language="Java">((aors.model.envsim.Physical) t).getX()</ValueExpr>
+                </Slot>
+                <Slot property="y">
+                  <ValueExpr language="Java">((aors.model.envsim.Physical) t).getY()</ValueExpr>
+                </Slot>
+              </PhysicalObject>
+            </Create>
+          </UPDATE-ENV>
+        </DO>
+      </EnvironmentRule>
+    </EnvironmentRules>
+  </SimulationModel>
+
+  <!-- =================================================== -->
+  <InitialState>
+    <!-- =================================================== -->
+    <GridCells>
+      <GridCellSet startX="1" endX="50" startY="1" endY="5">
+        <Slot property="temperature" value="20"/>
+      </GridCellSet>
+      <GridCellSet startX="1" endX="50" startY="6" endY="8">
+        <Slot property="temperature" value="21"/>
+      </GridCellSet>
+      <GridCellSet startX="1" endX="50" startY="9" endY="11">
+        <Slot property="temperature" value="22"/>
+      </GridCellSet>
+      <GridCellSet startX="1" endX="50" startY="12" endY="14">
+        <Slot property="temperature" value="23"/>
+      </GridCellSet>
+    </GridCells>
+    <ExogenousEvent type="TurtleComesToBeach" occurrenceTime="1"/>
+  </InitialState>
+
+  <!-- =================================================== -->
+
+  <UserInterface>
+    <AnimationUI>
+      <Views>
+        <SpaceView canvasColor="lightgrey">
+          <TwoDimensionalGridSpaceView2D>
+            <GridCellPropertyVisualizationMap cellViewProperty="fill" property="temperature" mapType="caseWise" v0="blue" a0="21" v1="green" a1="22"
+              v2="yellow" a2="23" v3="red"/>
+          </TwoDimensionalGridSpaceView2D>
+        </SpaceView>
+        <PhysicalObjectView physicalObjectType="Turtle">
+          <PhysicalShape2D>
+            <Circle fill="brown"/>
+          </PhysicalShape2D>
+        </PhysicalObjectView>
+
+        <PhysicalObjectView physicalObjectType="NestWithTurtleEggs">
+          <PhysicalShape2D>
+            <Circle fill="black"/>
+          </PhysicalShape2D>
+        </PhysicalObjectView>
+      </Views>
+    </AnimationUI>
+
+  </UserInterface>
+</SimulationScenario>

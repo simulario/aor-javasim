@@ -1,0 +1,143 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<xs:schema
+	xmlns:ers="http://aor-simulation.org"
+	xmlns:xs="http://www.w3.org/2001/XMLSchema"
+	targetNamespace="http://aor-simulation.org"
+	elementFormDefault="qualified"
+	attributeFormDefault="unqualified">
+	<!-- =================================================================== -->
+	<xs:include schemaLocation="UMLetc.xsd"/>
+	<!-- =================================================================== -->
+	<!-- *** EntityType *** -->
+	<!-- =================================================================== -->
+	<xs:element name="EntityType" type="ers:EntityType.type" abstract="true"/>
+	<xs:complexType name="EntityType.type">
+		<xs:sequence>
+			<xs:element ref="ers:documentation" minOccurs="0"/>
+			<xs:element name="InheritedAttributeSettings" minOccurs="0" maxOccurs="unbounded">
+				<xs:complexType>
+					<xs:attribute name="attribute" type="ers:CanonicalName" use="required"/>
+					<xs:attribute name="initialValue" type="xs:string" use="optional"/>
+					<xs:attribute name="minValue" type="xs:string" use="optional"/>
+					<xs:attribute name="maxValue" type="xs:string" use="optional"/>
+				</xs:complexType>
+			</xs:element>
+			<xs:element ref="ers:Property" minOccurs="0" maxOccurs="unbounded"/>
+			<xs:element ref="ers:Function" minOccurs="0" maxOccurs="unbounded"/>
+		</xs:sequence>
+		<xs:attribute name="name" type="ers:CanonicalName" use="required"/>
+		<xs:attribute name="superType" type="ers:CanonicalName" use="optional"/>
+	</xs:complexType>
+
+	<!-- =================================================================== -->
+	<!-- *** ObjectType *** -->
+	<!-- =================================================================== -->
+	<xs:element name="ObjectType" type="ers:ObjectType.type" substitutionGroup="ers:EntityType">
+		<xs:key name="ObjectType-PropertyKey">
+			<xs:selector xpath="ers:Attribute | ers:ReferenceProperty"/>
+			<xs:field xpath="@name"/>
+		</xs:key>
+	</xs:element>
+	<xs:complexType name="ObjectType.type">
+		<xs:complexContent>
+			<xs:extension base="ers:EntityType.type">
+				<xs:sequence>
+					<xs:element name="ComponentType" type="ers:ComponentType.type" minOccurs="0" maxOccurs="unbounded"/>
+				</xs:sequence>
+			</xs:extension>
+		</xs:complexContent>
+	</xs:complexType>
+	<xs:complexType name="ComponentType.type">
+		<xs:complexContent>
+			<xs:extension base="ers:ObjectType.type">
+				<xs:attribute name="minOccurs" type="xs:nonNegativeInteger" use="optional" default="0"/>
+				<xs:attribute name="maxOccurs" type="ers:UpperMultiplicity" use="optional" default="unbounded"/>
+			</xs:extension>
+		</xs:complexContent>
+	</xs:complexType>
+	<!-- =================================================================== -->
+	<!-- *** PhysicalObjectType *** -->
+	<!-- =================================================================== -->
+	<xs:element name="PhysicalObjectType" type="ers:PhysicalObjectType.type" substitutionGroup="ers:ObjectType">
+		<xs:key name="PhysicalObjectType-PropertyKey">
+			<xs:selector xpath="ers:Attribute | ers:ReferenceProperty"/>
+			<xs:field xpath="@name"/>
+		</xs:key>
+	</xs:element>
+	<xs:complexType name="PhysicalObjectType.type">
+		<xs:complexContent>
+			<xs:extension base="ers:ObjectType.type">
+				<xs:attribute name="physicsType" use="optional" default="NORMAL">
+					<xs:annotation><xs:documentation>Defines collision behavior and perceivability. </xs:documentation></xs:annotation>
+					<xs:simpleType>
+						<xs:restriction base="xs:string">
+							<xs:enumeration value="NORMAL">
+								<xs:annotation><xs:documentation>Participates in collisions and is perceivable. </xs:documentation></xs:annotation>
+							</xs:enumeration>
+							<xs:enumeration value="INFINITE_MASS">
+								<xs:annotation><xs:documentation>Not affected by collisions, but perceivable. </xs:documentation></xs:annotation>
+							</xs:enumeration>
+							<xs:enumeration value="IMMATERIAL">
+								<xs:annotation><xs:documentation>Does not participate in collisions, but is perceivable. </xs:documentation></xs:annotation>
+							</xs:enumeration>
+							<xs:enumeration value="PHANTOM">
+								<xs:annotation><xs:documentation>Does not participate in collisions, and is neither perceivable. </xs:documentation></xs:annotation>
+							</xs:enumeration>
+						</xs:restriction>
+					</xs:simpleType>
+				</xs:attribute>
+				<xs:attribute name="idPerceivable" type="xs:boolean" use="optional" default="false"/>
+			</xs:extension>
+		</xs:complexContent>
+	</xs:complexType>
+	<!-- =================================================================== -->
+	<!-- *** EventType *** -->
+	<!-- =================================================================== -->
+	<xs:element name="EventType" type="ers:EventType.type" abstract="true" substitutionGroup="ers:EntityType"/>
+	<xs:complexType name="EventType.type">
+		<xs:complexContent>
+			<xs:extension base="ers:EntityType.type"/>
+		</xs:complexContent>
+	</xs:complexType>
+	<!-- =================================================================== -->
+	<!-- *** Environment Event Types *** -->
+	<!-- =================================================================== -->
+	<xs:element name="EnvironmentEventType" type="ers:EnvironmentEventType.type" abstract="true" substitutionGroup="ers:EventType"/>
+	<xs:complexType name="EnvironmentEventType.type">
+		<xs:complexContent>
+			<xs:extension base="ers:EventType.type"/>
+		</xs:complexContent>
+	</xs:complexType>
+	<!-- *** CausedEventType *** -->
+	<xs:element name="CausedEventType" type="ers:CausedEventType.type" substitutionGroup="ers:EnvironmentEventType">
+		<xs:key name="CausedEventType-PropertyKey">
+			<xs:selector xpath="ers:Attribute | ers:ReferenceProperty"/>
+			<xs:field xpath="@name"/>
+		</xs:key>
+	</xs:element>
+	<xs:complexType name="CausedEventType.type">
+		<xs:complexContent>
+			<xs:extension base="ers:EnvironmentEventType.type"/>
+		</xs:complexContent>
+	</xs:complexType>
+	<!-- *** ExogeneousEventType *** -->
+	<xs:element name="ExogenousEventType" type="ers:ExogenousEventType.type" substitutionGroup="ers:EnvironmentEventType">
+		<xs:key name="ExogenousEventType-PropertyKey">
+			<xs:selector xpath="ers:Attribute | ers:ReferenceProperty"/>
+			<xs:field xpath="@name"/>
+		</xs:key>
+	</xs:element>
+	<xs:complexType name="ExogenousEventType.type">
+		<xs:complexContent>
+			<xs:extension base="ers:EnvironmentEventType.type">
+				<xs:sequence>
+					<xs:element ref="ers:Periodicity" minOccurs="0"/>
+					<xs:element ref="ers:StopCondition" minOccurs="0" maxOccurs="unbounded"/>
+				</xs:sequence>
+				<xs:attribute name="periodicity" type="xs:positiveInteger" use="optional"/>
+			</xs:extension>
+		</xs:complexContent>
+	</xs:complexType>
+	<xs:element name="Periodicity" type="ers:DiscreteRandomVariable-OR-ValueExpr"/>
+	<xs:element name="StopCondition" type="ers:OpaqueExpression"/>
+</xs:schema>

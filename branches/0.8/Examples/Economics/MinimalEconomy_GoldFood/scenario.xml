@@ -1,0 +1,1264 @@
+<?xml version="1.0"?>
+<?xml-stylesheet type="text/xsl" href="prettyprint.xsl"?>
+
+<SimulationScenario version="0.8.4" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xsi:schemaLocation="http://aor-simulation.org ../../../AORSL/AORSL_0-8-4.xsd"
+	xmlns="http://aor-simulation.org" xmlns:aors="http://aor-simulation.org"
+	xmlns:dc="http://purl.org/dc/elements/1.1/" 
+	scenarioName="Gold_Food_Economy"
+	scenarioTitle="Gold Food Economy"
+	simulationManagerDirectory="../../..">
+
+	<SimulationParameters simulationSteps="4320" timeUnit="h"  stepTimeDelay="0"/>
+	<SimulationModel modelName="Gold_Food_Economy">
+		<documentation>
+			<dc:modified>20100306</dc:modified>
+			<dc:source>"A computational market model based on individual action", by Ken Steiglitz, Michael L. Honig and Leonard M. Cohen, 1996. URL: http://www.cs.princeton.edu/~ken/scott.pdf</dc:source>
+			<aors:description xmlns="http://www.w3.org/1999/xhtml">The "Gold Food Economy" is an example of an agent-based simulation of a relatively basic economy that does not directly model a real economy, but attempts to explain the macroeconomy through simulation of a minimal economy. It is one of the simplest models wherein zero-intelligence agents produce, consume and trade in an economy with only two goods: gold and food. The model simulates the actions of independent "worker" agents, each with his own inventory and skills (at producing food and gold), interacting through an auction market agent that establishes a commonly accepted transaction price. Workers must consume a unit of food every period, and each worker tries to maintain a minimum inventory of food to guarantee consumption. For the system to survive the production of food must be greater than the total food consumption per period, but this leads to a surplus of food in the economy. The market allows agents to sell their surplus food for gold that can be used to purchase food in the same market later on. Agents more skilled in the production of gold might decide to mine gold and trade it for food at every period.</aors:description>
+		</documentation>
+		<Statistics>
+			<!-- ========================================= -->
+			<Variable name="marketPrice" dataType="Float">
+				<!-- ========================================= -->
+				<Source>
+					<ObjectProperty property="price" objectType="SealedBidMaximumVolumeAuction_Market"/>
+				</Source>
+			</Variable>
+			<!-- ========================================= -->
+			<Variable name="tradedFood" dataType="Float">
+				<!-- ========================================= -->
+				<Source>
+					<ObjectProperty property="tradedFood" objectType="SealedBidMaximumVolumeAuction_Market"/>
+				</Source>
+			</Variable>
+			<!-- ========================================= -->
+			<Variable name="supply" dataType="Float">
+				<!-- ========================================= -->
+				<Source>
+					<ObjectProperty property="supplyQuantity" objectType="SealedBidMaximumVolumeAuction_Market"/>
+				</Source>
+			</Variable>
+			<!-- ========================================= -->
+			<Variable name="demand" dataType="Float">
+				<!-- ========================================= -->
+				<Source>
+					<ObjectProperty property="demandQuantity" objectType="SealedBidMaximumVolumeAuction_Market"/>
+				</Source>
+			</Variable>
+			<!-- ========================================= -->
+			<Variable name="totalNumberOfSellers" dataType="Float">
+				<!-- ========================================= -->
+				<Source>
+					<ObjectProperty property="totalNumberOfSellers" objectType="SealedBidMaximumVolumeAuction_Market"/>
+				</Source>
+			</Variable>
+			<!-- ========================================= -->
+			<Variable name="totalNumberOfBuyers" dataType="Float">
+				<!-- ========================================= -->
+				<Source>
+					<ObjectProperty property="totalNumberOfBuyers" objectType="SealedBidMaximumVolumeAuction_Market"/>
+				</Source>
+			</Variable>
+			<!-- ========================================= -->
+			<Variable name="numberOfEligibleSellers" dataType="Float">
+				<!-- ========================================= -->
+				<Source>
+					<ObjectProperty property="numberOfEligibleSellers" objectType="SealedBidMaximumVolumeAuction_Market"/>
+				</Source>
+			</Variable>
+			<!-- ========================================= -->
+			<Variable name="numberOfEligibleBuyers" dataType="Float">
+				<!-- ========================================= -->
+				<Source>
+					<ObjectProperty property="numberOfEligibleBuyers" objectType="SealedBidMaximumVolumeAuction_Market"/>
+				</Source>
+			</Variable>
+		</Statistics>	
+		
+		<DataTypes>
+			<!--============================================-->
+			<ComplexDataType name="IndividualTransactionType">
+				<!--==========================================-->
+				<Attribute name="quantity" type="Float" />
+				<Attribute name="price" type="Float" />	
+				<Function name="updateIndividualTransaction" resultType="void">
+					<Parameter name="newQuantity" type="Float" />
+					<Parameter name="newPrice" type="Float" />
+					<Body language="Java"><![CDATA[
+this.setQuantity( newQuantity);
+this.setPrice( newPrice);
+						]]></Body>
+				</Function>		
+			</ComplexDataType>	
+			<!--====================================-->
+			<ComplexDataType name="OfferToSellRecord">
+			<!--====================================-->		
+				<Attribute name="price" type="Float"/>
+				<Attribute name="quantity" type="Float"/>
+				<Attribute name="sellerId" type="Integer"/>
+				<Function name="updateOfferToSell" resultType="void">
+					<Parameter name="price" type="Float"/>
+					<Parameter name="quantity" type="Float"/>
+					<Parameter name="sellerId" type="int"/>
+					<Body language="Java"><![CDATA[
+ this.setPrice( price);
+ this.setQuantity( quantity);
+ this.setSellerId( sellerId);
+        ]]></Body>
+				</Function>
+			</ComplexDataType>		
+			<!--====================================-->
+			<ComplexDataType name="BidToBuyRecord">
+				<!--====================================-->
+				<Attribute name="price" type="Float"/>
+				<Attribute name="quantity" type="Float"/>
+				<Attribute name="buyerId" type="Integer"/>
+				<Function name="updateBidToBuy" resultType="void">
+					<Parameter name="price" type="Float"/>
+					<Parameter name="quantity" type="Float"/>
+					<Parameter name="buyerId" type="int"/>
+					<Body language="Java"><![CDATA[
+ this.setPrice( price);
+ this.setQuantity( quantity);
+ this.setBuyerId( buyerId);
+        ]]></Body>
+				</Function>
+			</ComplexDataType>	
+			<!--====================================-->
+			<ComplexDataType name="OfferToSellList">
+				<!--==================================-->
+				<ClassDef language="Java"><![CDATA[
+private java.util.ArrayList<OfferToSellRecord> offers = new java.util.ArrayList<OfferToSellRecord>();
+private java.util.Comparator<OfferToSellRecord> comparator;
+
+public OfferToSellList() {
+this.comparator = new java.util.Comparator<OfferToSellRecord>() {
+ public int compare (OfferToSellRecord a, OfferToSellRecord b) {
+	  double p1 = a.getPrice();
+	  double p2 = b.getPrice(); 
+		if(p1 < p2) return -1;
+		if(p1 > p2) return 1;
+		            return 0;	             		
+	}		
+ };
+}
+public int addOfferToSell( double price, double quantity, int sellerId){
+ 	int index = 0;
+	OfferToSellRecord offer = new OfferToSellRecord();
+  offer.updateOfferToSell( price, quantity, sellerId);
+  if (offers.isEmpty()) {
+  	offers.add(offer);
+  }
+  else {
+			 index = java.util.Collections.binarySearch(offers, offer, this.comparator);		 
+  		// if the price value does not exist in the ordered array list, then the binarySearch function returns the position of the recommended insertion point: index = - insertionPoint -1
+			if(index < 0){
+				offers.add(-index-1, offer);
+			}
+			// if the price value exists in the ordered array list. We add the new complex data imediately after the position returned by the binarySearch function.
+			else {
+				offers.add(index+1, offer);
+		 }
+	}	
+	return offers.size();
+}
+public int checkSellersEligibility(double price, double demand) {
+	int i,j;
+	double sum;
+	double totalQuantityOfFoodOfferedToSell = 0.0;
+	for(i=0; i < offers.size(); i++) {
+	 if( price < (( OfferToSellRecord)offers.get(i)).getPrice()){
+	 	offers.remove(i);
+	 }
+	else {
+	  totalQuantityOfFoodOfferedToSell += (( OfferToSellRecord)offers.get(i)).getQuantity();
+	}	
+}	
+	if (totalQuantityOfFoodOfferedToSell >= demand && offers.size() > 0) {
+	  sum = 0.0;
+	  i=0;
+		while( sum < demand) {
+			sum += (( OfferToSellRecord)offers.get(i)).getQuantity();
+			i++;
+	   }
+	  	(( OfferToSellRecord)offers.get(i-1)).setQuantity((( OfferToSellRecord)offers.get(i-1)).getQuantity() - ( sum - demand) );	
+	  	j=i;
+	  	while(j<offers.size()) {	
+	       offers.remove(j); 
+	  }
+	}
+	return this.offers.size();
+}
+public double tradedFood (){
+	double sum = 0.0;
+	int i=0;
+	while(i < offers.size()) {
+ 		sum += ((OfferToSellRecord)offers.get(i)).getQuantity();
+ 		offers.remove(i);
+	}
+  offers.clear();
+	return sum/2.0;
+}
+public void clearList() {
+	offers.clear();
+}
+public OfferToSellRecord getListElement(int i){
+	return ( OfferToSellRecord)offers.get(i);
+}	
+public int getListSize(){
+	return offers.size();
+}		
+public java.util.List<OfferToSellRecord> getList() {
+  return offers;
+}		
+				]]></ClassDef>	
+			</ComplexDataType>	
+			<!--====================================-->
+			<ComplexDataType name="BidToBuyList">
+				<!--====================================-->
+				<ClassDef language="Java"><![CDATA[
+private java.util.ArrayList<BidToBuyRecord> bids = new java.util.ArrayList<BidToBuyRecord>();
+private java.util.Comparator<BidToBuyRecord> comparator;
+
+public BidToBuyList() {
+this.comparator = new java.util.Comparator<BidToBuyRecord>() {
+ public int compare (BidToBuyRecord a, BidToBuyRecord b) {
+	  double p1 = a.getPrice();
+	  double p2 = b.getPrice(); 
+		if(p1 < p2) return -1;
+		if(p1 > p2) return 1;
+		            return 0;	             		
+	}		
+ };
+}
+public int addBidToBuy( double price, double quantity, int buyerId) {
+  int index = 0;
+  BidToBuyRecord bid = new BidToBuyRecord();
+  bid.updateBidToBuy( price, quantity, buyerId);
+  if (bids.isEmpty()) {
+  	bids.add(bid);
+  }
+  else {
+  		index = java.util.Collections.binarySearch(bids, bid, this.comparator);		
+   		// if the price value does not exist in the ordered array list, then the function returns the exact position of the recommended insertion point: index = - insertionPoint -1
+			if(index < 0) {
+				bids.add(-index-1, bid);
+			}
+			// if the price value exists in the ordered array list. We add the new complex data imediately after the position returned by the function.
+			else {
+				bids.add(index+1, bid);
+			}
+ 	}	
+ 	return bids.size();
+}
+public int checkBuyersEligibility(double price, double supply){
+	int i,j;
+	double sum;
+	double totalQuantityOfFoodOfferedToBuy = 0.0;
+	for(i=0; i < bids.size(); i++) {
+	 if( price > (( BidToBuyRecord)bids.get(i)).getPrice()){
+	 	bids.remove(i);
+	 }
+	else {
+	  totalQuantityOfFoodOfferedToBuy += (( BidToBuyRecord)bids.get(i)).getQuantity();
+	}	
+}	
+	if (totalQuantityOfFoodOfferedToBuy >= supply  && bids.size() > 0) {
+	 sum = 0.0;
+	 i=0;
+		while( sum < supply) {
+			sum += (( BidToBuyRecord)bids.get(i)).getQuantity();
+			i++;
+	   }
+	  	(( BidToBuyRecord)bids.get(i-1)).setQuantity((( BidToBuyRecord)bids.get(i-1)).getQuantity() - ( sum - supply) );	
+	  	j=i;
+	  	while(j < bids.size()) {	
+	       bids.remove(j); 
+	     }
+	}
+	return this.bids.size();
+}
+public double tradedFood (){
+	double sum = 0.0;
+	int i=0;
+	while(i < bids.size()) {
+ 		sum += (( BidToBuyRecord)bids.get(i)).getQuantity();
+ 		bids.remove(i);
+ 	}
+  bids.clear();
+	return sum/2.0;
+}
+public void clearList() {
+	bids.clear();
+}
+public BidToBuyRecord getListElement(int i) {
+	return (BidToBuyRecord)bids.get(i);
+}
+public int getListSize() {
+	return bids.size();
+}
+public java.util.List<BidToBuyRecord> getList() {
+  return bids;
+}
+				]]></ClassDef>	
+			</ComplexDataType>
+		</DataTypes>
+		
+		<EntityTypes>	
+			<!-- ================================== -->
+			<MessageType name="ProduceGold" />	
+			<!-- ================================== -->
+			<MessageType name="ProduceFood" />
+			<!-- ================================== -->
+			<MessageType name="OfferToSell">
+				<!-- ================================== -->
+				<Attribute name="price" type="Float" />
+				<Attribute name="quantity" type="Float" />
+				<Attribute name="sellerId" type="Integer" />
+			</MessageType>
+			<!-- ================================== -->
+			<MessageType name="BidToBuy">
+				<!-- ================================== -->
+				<Attribute name="price" type="Float" />
+				<Attribute name="quantity" type="Float" />
+				<Attribute name="buyerId" type="Integer" />
+			</MessageType>
+			<!-- ================================== -->
+			<MessageType name="AnnouncePrice">
+				<!-- ================================== -->
+				<Attribute name="price" type="Float" />
+			</MessageType>
+			<!-- ================================== -->
+			<MessageType name="AcceptOfferToSell">
+				<!-- ================================== -->
+				<Attribute name="quantity" type="Float" />
+				<Attribute name="totalPrice" type="Float" />
+			</MessageType>
+			<!-- ================================== -->
+			<MessageType name="AcceptBidToBuy">
+				<!-- ================================== -->
+				<Attribute name="quantity" type="Float" />
+				<Attribute name="totalPrice" type="Float" />
+			</MessageType>
+			<!-- ================================================== -->
+			<ExogenousEventType name="StartOfDay" periodicity="24" />
+			<!-- ================================================== -->
+			<ExogenousEventType name="EachDayAt8AM" periodicity="24" />
+			<!-- ================================================== -->
+			<ExogenousEventType name="EachDayAt11AM" periodicity="24" />
+			<!-- ================================================== -->
+			<ExogenousEventType name="EndOfDay" periodicity="24" />		
+			<!-- ================================================== -->
+	   <!-- ======================= -->
+       <AgentType name="Market">
+       	<!-- ======================= -->
+       	<Attribute name="price" type="Float" />
+        <Attribute name="tradedFood" type="Float"/>    	
+       	<Attribute name="supplyQuantity" type="Float" />
+       	<Attribute name="demandQuantity" type="Float" />
+       	<Attribute name="totalNumberOfSellers" type="Integer" />
+       	<Attribute name="totalNumberOfBuyers" type="Integer" />  
+       	<Attribute name="numberOfEligibleSellers" type="Integer" />
+       	<Attribute name="numberOfEligibleBuyers" type="Integer" />
+       </AgentType>
+
+			<!-- =================================================================== -->
+			<AgentType name="SealedBidMaximumVolumeAuction_Market" superType="Market">
+			<!-- ==================================================================== -->			
+				<ComplexDataProperty name="offerToSell" type="OfferToSellRecord" upperMultiplicity="unbounded" />
+				<ComplexDataProperty name="offers" type="OfferToSellList" />
+				<ComplexDataProperty name="bidToBuy" type="BidToBuyRecord" upperMultiplicity="unbounded" />
+				<ComplexDataProperty name="bids" type="BidToBuyList" />
+				<ComplexDataProperty name="individualTransaction" type="IndividualTransactionType" />
+				<!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->
+				<Function name="individualTransaction" resultType="IndividualTransactionType">
+				<!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->
+					<documentation>
+						<description>
+							The function determines the food quantity that can be bought or sold in an individual transaction (between a seller and a buyer) and the associated price.							
+							OBS: The price of the individual transaction is determined as the midpoint between the offer and bid prices. The food quantity is the minimum between the offer and bid food quantities. 
+						</description>
+					</documentation>
+					<Parameter name="sellerPrice" type="Float"/>
+					<Parameter name="sellerQuantity" type="Float"/>
+					<Parameter name="buyerPrice" type="Float"/>
+					<Parameter name="buyerQuantity" type="Float"/>
+					<Body language="Java"><![CDATA[
+  double middlePrice = ( sellerPrice + buyerPrice) / 2.0f;
+  IndividualTransactionType t = new IndividualTransactionType();
+  if( sellerQuantity >= buyerQuantity){
+    t.updateIndividualTransaction (( float) buyerQuantity,( float) middlePrice * buyerQuantity);
+  }
+   else {
+    t.updateIndividualTransaction(( float) sellerQuantity,( float) middlePrice * sellerQuantity); 
+  }
+    return t;
+       	]]></Body>
+				</Function>
+				<!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~-->
+				<Function name="determinePriceP1" resultType="Float">
+				<!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~-->
+					<documentation>
+						<description>
+							The price P1 is defined as the average of the individual transaction prices, weighted by the volume traded at that price. It represents the "real" price of food, if the traded food volume is high.</description>
+					</documentation>
+					<Parameter name="offers" type="OfferToSellList" />
+					<Parameter name="bids" type="BidToBuyList" />
+					<Body language="Java"><![CDATA[
+double price = 0.0;
+double quantity = 0.0;
+int i,j;
+for(i=0, j=bids.getListSize()-1; i < offers.getListSize() && j >= 0; i++, j--) {
+	price += (( IndividualTransactionType)individualTransaction( (( OfferToSellRecord)offers.getListElement(i)).getPrice(), (( OfferToSellRecord)offers.getListElement(i)).getQuantity(), (( BidToBuyRecord)bids.getListElement(j)).getPrice(), (( BidToBuyRecord)bids.getListElement(j)).getQuantity())).getPrice();
+	quantity += (( IndividualTransactionType)individualTransaction( (( OfferToSellRecord)offers.getListElement(i)).getPrice(), (( OfferToSellRecord)offers.getListElement(i)).getQuantity(), (( BidToBuyRecord)bids.getListElement(j)).getPrice(), (( BidToBuyRecord)bids.getListElement(j)).getQuantity())).getQuantity();
+}  
+	return(price/quantity);
+						]]></Body>
+				</Function>
+				<!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~-->
+				<Function name="determinePriceP2" resultType="Float">
+				<!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~-->
+					<documentation>
+						<description> The price P2 defines a price that does not depend on transactions that actually take place. P2 price is used to estimate the value of food on days with few transactions.</description>
+					</documentation>
+					<Parameter name="offers" type="OfferToSellList" />
+					<Parameter name="bids" type="BidToBuyList" />
+					<Body language="Java"><![CDATA[
+double price = 0.0;
+double quantity = 0.0;
+int i,j;
+for( i=0; i < offers.getListSize(); i++) {
+	price += (( OfferToSellRecord)offers.getListElement(i)).getPrice() * (( OfferToSellRecord)offers.getListElement(i)).getQuantity();
+	quantity += (( OfferToSellRecord)offers.getListElement(i)).getQuantity();
+}  
+for( j=0; j < bids.getListSize(); j++) {
+	price += (( BidToBuyRecord)bids.getListElement(j)).getPrice() * (( BidToBuyRecord)bids.getListElement(j)).getQuantity();
+	quantity += (( BidToBuyRecord)bids.getListElement(j)).getQuantity();
+}  
+	return( price/quantity);
+				 ]]></Body>
+				</Function>		
+				<!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~-->
+				<Function name="determinePrice" resultType="Float">
+				<!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~-->
+					<Parameter name="offers" type="OfferToSellList" />
+					<Parameter name="bids" type="BidToBuyList" />
+					<Parameter name="nrOfSellers" type="Integer" />
+					<Parameter name="nrOfBuyers" type="Integer" />
+					<Body language="Java"><![CDATA[
+double price = 0.0;
+int i;
+if ( nrOfSellers == 0 && nrOfBuyers != 0) {
+	price = (( BidToBuyRecord)bids.getListElement(bids.getListSize() - 1)).getPrice();
+	// discard all buyers
+	bids.clearList();
+}					
+if ( nrOfSellers != 0 && nrOfBuyers == 0) {
+	price = (( OfferToSellRecord)offers.getListElement(0)).getPrice();
+	// discard all sellers	
+	offers.clearList();
+}				
+	return price;
+				]]></Body>
+				</Function>								
+				<PeriodicTimeEventType name="ComputeMarketPrice" periodicity="24" />			
+				<!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~-->
+				<ReactionRule name="ReceiveOfferToSell_Rule" agentVariable="m">
+				<!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~-->
+						<documentation>
+							<description> </description>
+						</documentation>
+						<WHEN eventType="InMessageEvent" messageType="OfferToSell" messageVariable="mes" />
+						<DO>
+							<UPDATE-AGT>
+								<Slot property="totalNumberOfSellers">
+									<ValueExpr language="Java"><![CDATA[
+m.getOffers().addOfferToSell(mes.getPrice(), mes.getQuantity(), (int)mes.getSellerId())				
+										]]></ValueExpr>
+								</Slot> 
+								<Slot property="supplyQuantity">
+									<ValueExpr language="Java"><![CDATA[
+m.getSupplyQuantity() + mes.getQuantity()				
+										]]></ValueExpr>
+								</Slot>
+							</UPDATE-AGT>
+						</DO>
+				</ReactionRule>
+				<!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~-->
+				<ReactionRule name="ReceiveBidToBuy_Rule" agentVariable="m">
+				<!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~-->
+					<documentation>
+						<description> </description>
+					</documentation>
+					<WHEN eventType="InMessageEvent" messageType="BidToBuy" messageVariable="mes" />
+					<DO>
+						<UPDATE-AGT>
+							<Slot property="totalNumberOfBuyers">
+								<ValueExpr language="Java"><![CDATA[
+m.getBids().addBidToBuy(mes.getPrice(),mes.getQuantity(), (int)mes.getBuyerId())									
+									]]></ValueExpr>
+							</Slot>
+							<Slot property="demandQuantity">
+								<ValueExpr language="Java"><![CDATA[
+m.getDemandQuantity() + mes.getQuantity()									
+									]]></ValueExpr>
+							</Slot>
+						</UPDATE-AGT>
+					</DO>
+				</ReactionRule>			
+				<!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->
+				<ReactionRule name="ComputeMarketPrice_Rule_1" agentVariable="m">
+				<!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->
+					<documentation>
+						<description> The rule calculates the market price according to the formula specified in the article "A computational market model based on individual action"(Steiglitz, Honig, Cohen) pp.15-16. : P1 * alfa + (1-alfa) * P2 </description></documentation>
+					<WHEN eventType="ComputeMarketPrice"/>
+					<IF language="Java"><![CDATA[ 
+( m.getTotalNumberOfSellers() > 0 &&  m.getTotalNumberOfBuyers() > 0) && ( m.getDemandQuantity() != m.getSupplyQuantity()) && ( m.getDemandQuantity() > 0 && m.getSupplyQuantity() > 0)
+           ]]></IF>
+					<THEN>
+						<UPDATE-AGT>
+							<Slot property="price">
+								<ValueExpr language="Java"><![CDATA[
+m.determinePriceP1( m.getOffers(), m.getBids()) * 0.008 + ( 1 - 0.008) * m.determinePriceP2( m.getOffers(), m.getBids())
+									]]></ValueExpr> 
+							</Slot>
+							<Slot property="numberOfEligibleSellers">
+								<ValueExpr language="Java"><![CDATA[
+m.getOffers().checkSellersEligibility( m.getPrice(), m.getDemandQuantity())									
+									]]></ValueExpr>
+							</Slot>
+							<Slot property="numberOfEligibleBuyers">
+								<ValueExpr language="Java"><![CDATA[
+m.getBids().checkBuyersEligibility( m.getPrice(), m.getSupplyQuantity())									
+									]]></ValueExpr>
+							</Slot>
+						</UPDATE-AGT>
+						<SCHEDULE-EVT>
+							<OutMessageEventExpr messageType="AnnouncePrice">
+								<ReceiverIdRef language="Java">0</ReceiverIdRef>
+								<Slot property="price">
+									<ValueExpr language="Java">m.getPrice()</ValueExpr>
+								</Slot>
+							</OutMessageEventExpr>
+							<ReminderEventExpr>
+								<ReminderMsg language="Java">"Notify Workers"</ReminderMsg>
+							</ReminderEventExpr>
+						</SCHEDULE-EVT>
+					</THEN>
+				</ReactionRule>
+				<!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->
+				<ReactionRule name="ComputeMarketPrice_Rule_2" agentVariable="m">
+				<!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->
+					<documentation>
+						<description>When the demand quantity of food is equal with the supply quantity of food, then the new price will remain equal with the last day price. The condition applies also when both supply-/demand- quantities are zero (no sellers and no buyers). </description>
+					</documentation>
+					<WHEN eventType="ComputeMarketPrice" />
+					<IF language="Java"><![CDATA[ 
+( m.getDemandQuantity() == m.getSupplyQuantity()) && ( m.getTotalNumberOfSellers() > 0 && m.getTotalNumberOfBuyers() > 0)
+           ]]></IF>
+					<THEN>
+						<UPDATE-AGT>
+							<Slot property="numberOfEligibleSellers">
+								<ValueExpr language="Java"><![CDATA[
+m.getOffers().checkSellersEligibility( m.getPrice(), m.getDemandQuantity())
+									]]></ValueExpr>
+							</Slot>
+							<Slot property="numberOfEligibleBuyers">
+								<ValueExpr language="Java"><![CDATA[
+m.getBids().checkBuyersEligibility( m.getPrice(), m.getSupplyQuantity())									
+									]]></ValueExpr>
+							</Slot>
+						</UPDATE-AGT>
+						<SCHEDULE-EVT>
+							<OutMessageEventExpr messageType="AnnouncePrice">
+								<ReceiverIdRef language="Java">0</ReceiverIdRef>
+								<Slot property="price">
+									<ValueExpr language="Java">m.getPrice()</ValueExpr>
+								</Slot>
+							</OutMessageEventExpr>		
+							<ReminderEventExpr>
+								<ReminderMsg language="Java">"Notify Workers"</ReminderMsg>
+							</ReminderEventExpr>
+						</SCHEDULE-EVT>
+					</THEN>
+				</ReactionRule>
+				<!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->
+				<ReactionRule name="ComputeMarketPrice_Rule_3" agentVariable="m">
+				<!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->
+					<documentation>
+						<description>The special cases when there aren't any sellers the price became the value of the highest bid. Also, when there aren't any buyers, the price became the value of the lowest offer.</description>
+					</documentation>
+					<WHEN eventType="ComputeMarketPrice" />
+					<IF language="Java"><![CDATA[
+( m.getTotalNumberOfSellers() == 0 && m.getTotalNumberOfBuyers() != 0) || ( m.getTotalNumberOfSellers() != 0 && m.getTotalNumberOfBuyers() == 0)
+						]]></IF>
+					<THEN>
+						<UPDATE-AGT>
+							<SelfBeliefSlot property="price">
+								<ValueExpr language="Java"><![CDATA[
+m.determinePrice( m.getOffers(), m.getBids(), m.getTotalNumberOfSellers(), m.getTotalNumberOfBuyers())
+							]]></ValueExpr> 
+							</SelfBeliefSlot>
+						</UPDATE-AGT>
+						<SCHEDULE-EVT>
+							<OutMessageEventExpr messageType="AnnouncePrice">
+								<ReceiverIdRef language="Java">0</ReceiverIdRef>
+								<Slot property="price">
+									<ValueExpr language="Java">m.getPrice()</ValueExpr>
+								</Slot>
+							</OutMessageEventExpr>	
+							<ReminderEventExpr>				
+								<ReminderMsg language="Java">"Discard Buyers"</ReminderMsg>
+								<Condition language="Java"><![CDATA[
+m.getTotalNumberOfSellers() == 0 && m.getTotalNumberOfBuyers() != 0								
+								]]></Condition>
+							</ReminderEventExpr>
+							<ReminderEventExpr>
+								<ReminderMsg language="Java">"Discard Sellers"</ReminderMsg>
+								<Condition language="Java"><![CDATA[
+m.getTotalNumberOfSellers() != 0 && m.getTotalNumberOfBuyers() == 0									
+									]]></Condition>
+							</ReminderEventExpr>
+						</SCHEDULE-EVT>
+					</THEN>
+				</ReactionRule>
+				<!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->
+				<ReactionRule name="AcceptOfferToSell_Rule" agentVariable="m">
+				<!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->
+					<documentation>
+						<description> The total sum of sell request is greater or equal than the total sum of buy request. It means that only a part from the sellers can sell the entired quantity of food. One seller sells a part from the desired quantity, and the others do not sell anything. </description>
+					</documentation>
+					<WHEN eventType="ReminderEvent" eventVariable="evt" />
+					<FOR-ListItemVariable variable="o" listItemType="OfferToSellRecord">
+						<ListExpr language="Java">getOffers().getList()</ListExpr>
+					</FOR-ListItemVariable>
+					<IF language="Java"><![CDATA[ 
+evt.getReminderMsg().equals("Notify Workers") 
+					]]></IF>
+					<THEN>
+						<SCHEDULE-EVT>
+							<OutMessageEventExpr messageType="AcceptOfferToSell">		
+								<ReceiverIdRef language="Java">o.getSellerId()</ReceiverIdRef>
+								<Slot property="totalPrice">
+									<ValueExpr language="Java"><![CDATA[
+o.getQuantity() * m.getPrice()
+									]]></ValueExpr>
+								</Slot>
+								<Slot property="quantity">
+									<ValueExpr language="Java"><![CDATA[
+o.getQuantity()
+									]]></ValueExpr>
+								</Slot>
+							</OutMessageEventExpr>
+							<ReminderEventExpr>
+								<ReminderMsg language="Java">"Discard Sellers"</ReminderMsg>
+							</ReminderEventExpr>
+						</SCHEDULE-EVT>
+					</THEN>
+				</ReactionRule>
+				<!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->
+				<ReactionRule name="AcceptBidToBuy_Rule" agentVariable="m">
+				<!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~-->
+					<documentation>
+						<description> The total sum of sell request is less than the total sum of buy request. It means that only a part from the buyers can buy the entired quantity of food. One buyer buys a part from the desired quantity, and the others do not buy anything. </description>
+					</documentation>
+					<WHEN eventType="ReminderEvent" eventVariable="evt" />
+					<FOR-ListItemVariable variable="b" listItemType="BidToBuyRecord">
+						<ListExpr language="Java">getBids().getList()</ListExpr>
+					</FOR-ListItemVariable>
+					<IF language="Java"><![CDATA[
+evt.getReminderMsg().equals("Notify Workers") 
+					]]></IF>
+					<THEN>
+						<SCHEDULE-EVT>
+							<OutMessageEventExpr messageType="AcceptBidToBuy">
+								<ReceiverIdRef language="Java">b.getBuyerId()</ReceiverIdRef>
+								<Slot property="totalPrice">
+									<ValueExpr language="Java"><![CDATA[
+b.getQuantity() * m.getPrice()
+									]]></ValueExpr>
+								</Slot>
+								<Slot property="quantity">
+									<ValueExpr language="Java"><![CDATA[
+b.getQuantity()
+									]]></ValueExpr>
+								</Slot>
+							</OutMessageEventExpr>
+							<ReminderEventExpr>
+								<ReminderMsg language="Java">"Discard Buyers"</ReminderMsg>
+							</ReminderEventExpr>
+						</SCHEDULE-EVT>
+					</THEN>
+				</ReactionRule>
+				<!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->
+				<ReactionRule name="DiscardBuyers_Rule" agentVariable="m">
+				<!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->
+					<documentation>
+						<description></description>
+					</documentation>
+					<WHEN eventType="ReminderEvent" eventVariable="evt" />
+					<IF language="Java"><![CDATA[
+evt.getReminderMsg().equals("Discard Buyers")
+						]]></IF>
+					<THEN>
+						<UPDATE-AGT>
+							<Slot property="tradedFood">
+								<ValueExpr language="Java"><![CDATA[
+m.getTradedFood() + m.getBids().tradedFood()									
+									]]></ValueExpr>
+							</Slot>		
+						</UPDATE-AGT>
+					</THEN>
+				</ReactionRule>
+				<!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->
+				<ReactionRule name="DiscardSellers_Rule" agentVariable="m">
+				<!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->
+					<documentation>
+						<description></description>
+					</documentation>
+					<WHEN eventType="ReminderEvent" eventVariable="evt" />
+					<IF language="Java"><![CDATA[
+evt.getReminderMsg().equals("Discard Sellers")
+						]]></IF>
+					<THEN>
+						<UPDATE-AGT>
+							<Slot property="tradedFood">
+								<ValueExpr language="Java"><![CDATA[
+m.getTradedFood() + m.getOffers().tradedFood()									
+									]]></ValueExpr>
+							</Slot>		
+						</UPDATE-AGT>
+					</THEN>
+				</ReactionRule>
+			</AgentType>
+			<!-- ============================================ -->
+			<AgentType name="Worker">
+			<!-- ============================================ -->
+				<documentation>
+					<description>The attributes skillLevelFood and skillLevelGold represent the number of food, resp. gold, units that a worker can produce in a day. On each day, a worker will produce either gold or food, whatever yields a higher value in terms of yesterday's price of food.</description>
+				</documentation>
+				<Attribute name="skillLevelFood" type="Float" />
+				<Attribute name="skillLevelGold" type="Float" />
+				<Attribute name="foodInventory" type="Float" />
+				<Attribute name="goldInventory" type="Float" />
+				<Attribute name="reserveLevel" type="Float" />
+				<Attribute name="actualPrice" type="Float" />
+				<Attribute name="leisureWorker" type="Boolean" />
+				<Attribute name="leisureFactor" type="Float" />
+				<Attribute name="bid" type="Float" />			
+				<!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->
+				<Function name="UtilityFunction" resultType="Float">
+					<!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->
+					<documentation>
+						<description>In order to set bids or offers, the agents must act accordingly to some utility function, which captures the degree of their willingness to buy or sell. The utility function is the same for all agents. It determines the bids to increase (resp. decrease) when food inventory is low (resp. high). Also, the utility function increases with gold inventory when bidding to buy and decreases with gold inventory when offering to sell.</description>
+					</documentation>
+					<Parameter name="foodReserve" type="Float"/>
+					<Parameter name="goldInventory" type="Float"/>
+					<Parameter name="foodInventory" type="Float"/>
+					<Parameter name="price" type="Float"/>
+					<Body language="Java"><![CDATA[		
+	if(goldInventory > 0) {					
+ if( foodInventory == foodReserve) {
+   return 1.0;
+ }      
+   else {
+   double x = ( foodReserve - foodInventory) / foodReserve;
+   double y = 16 - 12 * Math.pow((2/3),( goldInventory / ( price * foodReserve)));
+   return Math.pow(y, x);         
+  }
+ }
+ 		return 0.0;
+        ]]></Body>
+				</Function>
+				
+				<!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->
+				<Function name="determineBidToBuy" resultType="Float">
+					<!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->
+					<documentation>
+						<description>When the food inventory gets under the reserve level, the agent tries to buy a quantity of food equal to his maximum reserve level. In the case when his gold inventory is low, the agent will buy as much food as he affords. </description>
+					</documentation>
+					<Parameter name="goldInventory" type="Float" />
+					<Parameter name="bid" type="Float" />
+					<Parameter name="foodInventory" type="Float" />
+					<Parameter name="reserveFood" type="Float" />
+					<Body language="Java"><![CDATA[
+if( goldInventory > 0 && bid > 0){
+	double unitiesOfFood = goldInventory / bid;
+  if (unitiesOfFood > reserveFood - foodInventory) {
+  	return (reserveFood-foodInventory);
+  }
+  else {   
+  	return unitiesOfFood;
+  }
+ }
+	return 0;
+       ]]></Body>
+				</Function>			
+				<!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->
+				<ReactionRule name="ProduceFood_Rule" agentVariable="w">
+					<!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->
+					<documentation>
+						<description> The foodInventory is incremented with the value of the skillLevelFood. </description>
+					</documentation>
+					<WHEN eventType="InMessageEvent" messageType="ProduceFood"/>
+					<IF language="Java"><![CDATA[
+(( w.getGoldInventory() + ( w.getFoodInventory() * w.getActualPrice()) < w.getLeisureFactor()) && w.isLeisureWorker()) || !w.isLeisureWorker()
+					]]></IF>
+					<THEN>
+						<UPDATE-AGT>
+							<Slot property="foodInventory">
+								<ValueExpr language="Java"><![CDATA[ 
+w.getFoodInventory() + w.getSkillLevelFood()
+								]]></ValueExpr>
+							</Slot>
+						</UPDATE-AGT>
+					</THEN>
+				</ReactionRule>			
+				<!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->
+				<ReactionRule name="ProduceGold_Rule" agentVariable="w">
+					<!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->
+					<documentation>
+						<description> The goldInventory is incremented with the value of the skillLevelGold. </description>
+					</documentation>
+					<WHEN eventType="InMessageEvent" messageType="ProduceGold"/>
+					<IF language="Java"><![CDATA[
+(( w.getGoldInventory() + ( w.getFoodInventory() * w.getActualPrice() ) < w.getLeisureFactor() ) && w.isLeisureWorker() ) || !w.isLeisureWorker()
+					]]></IF>
+					<THEN>
+						<UPDATE-AGT>
+							<Slot property="goldInventory">
+								<ValueExpr language="Java"><![CDATA[ 
+w.getGoldInventory() + w.getSkillLevelGold()
+								]]></ValueExpr>
+							</Slot>
+						</UPDATE-AGT>
+					</THEN>
+				</ReactionRule>			
+				<!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->
+				<ReactionRule name="AcceptBidToBuy_Rule" agentVariable="w">
+					<!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->
+					<documentation>
+						<description> The rule is triggered by the action event AcceptBidToBuy sent by the market with the total quantity of food and the gold, that the worker bought. If this occurs, then will be able to update the foodInventory and the goldInventory of a specific worker. </description>
+					</documentation>
+					<WHEN eventType="InMessageEvent" messageType="AcceptBidToBuy" messageVariable="mes" />
+					<IF language="Java"><![CDATA[
+mes.getQuantity() > 0
+          ]]></IF>
+					<THEN>
+						<UPDATE-AGT>
+							<Slot property="goldInventory">
+								<ValueExpr language="Java"><![CDATA[
+w.getGoldInventory() - mes.getTotalPrice()
+								]]></ValueExpr>
+							</Slot>
+							<Slot property="foodInventory">
+								<ValueExpr language="Java"><![CDATA[
+w.getFoodInventory() + mes.getQuantity()
+								]]></ValueExpr>
+							</Slot>
+						</UPDATE-AGT>
+					</THEN>
+				</ReactionRule>	
+				<!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->
+				<ReactionRule name="AcceptOfferToSell_Rule" agentVariable="w">
+					<!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->
+					<documentation>
+						<description> The rule is triggered by the event AcceptOfferToSell sent by the market 
+							with the total quantity of food and the gold, that the worker sold. If this occurs, 
+							then will be able to update the foodInventory and the goldInventory of a specific worker. </description>
+					</documentation>
+					<WHEN eventType="InMessageEvent" messageType="AcceptOfferToSell" messageVariable="mes" />
+					<IF language="Java"><![CDATA[
+mes.getQuantity() > 0
+          ]]></IF>
+					<THEN>
+						<UPDATE-AGT>
+							<Slot property="goldInventory">
+								<ValueExpr language="Java"><![CDATA[
+w.getGoldInventory() + mes.getTotalPrice()
+								]]></ValueExpr>
+							</Slot>
+							<Slot property="foodInventory">
+								<ValueExpr language="Java"><![CDATA[
+w.getFoodInventory() - mes.getQuantity()
+								]]></ValueExpr>
+							</Slot>
+						</UPDATE-AGT>
+					</THEN>
+				</ReactionRule>
+			</AgentType>
+		</EntityTypes>
+			<EnvironmentRules>
+				<!-- ==================================== -->
+				<EnvironmentRule name="StartOfDay_Rule">
+					<!-- ================================== -->
+					<documentation>
+						<description> Workers decide to buy or to sell food. Their behaviour is 
+							wealth maximise and therefore they make this decision in function of the last market price .</description>
+					</documentation>
+					<WHEN eventType="StartOfDay" />
+					<FOR objectVariable="w" objectType="Worker" />		
+					<DO>
+						<UPDATE-ENV>
+							<UpdateObject objectVariable="w">
+								<Slot property="bid">
+									<ValueExpr language="Java"><![CDATA[
+ w.getActualPrice() * w.UtilityFunction(( float)w.getReserveLevel(), ( float)w.getGoldInventory(), ( float)w.getFoodInventory(), ( float)w.getActualPrice())
+               ]]></ValueExpr>
+								</Slot>
+							</UpdateObject>
+						</UPDATE-ENV>			
+						<SCHEDULE-EVT>
+							<InMessageEventExpr messageType="ProduceFood" senderIdRef="0">
+								<Condition language="Java"><![CDATA[
+( w.getActualPrice() * w.getSkillLevelFood()) >= w.getSkillLevelGold()
+									]]></Condition>
+								<ReceiverIdRef language="Java">w.getId()</ReceiverIdRef>
+							</InMessageEventExpr>
+							<InMessageEventExpr messageType="ProduceGold" senderIdRef="0">
+								<Condition language="Java"><![CDATA[
+( w.getActualPrice() * w.getSkillLevelFood()) < w.getSkillLevelGold() 
+								]]></Condition>
+								<ReceiverIdRef language="Java">w.getId()</ReceiverIdRef>
+							</InMessageEventExpr>	
+						</SCHEDULE-EVT>
+					</DO>
+				</EnvironmentRule>		
+				<!-- =================================== -->
+				<EnvironmentRule name="EachDayAt8AM_Rule">
+					<!-- ================================= -->
+					<documentation>
+						<description> Every day at 8 AM each worker eats 1 unity of food.</description>
+					</documentation>
+					<WHEN eventType="EachDayAt8AM"/>
+					<FOR objectVariable="w" objectType="Worker" />
+					<DO>
+						<UPDATE-ENV>
+							<UpdateObject objectVariable="w">
+								<Slot property="foodInventory">
+									<ValueExpr language="Java"><![CDATA[
+w.getFoodInventory() - 1
+								]]></ValueExpr>
+								</Slot>
+							</UpdateObject>
+						</UPDATE-ENV>
+					</DO>
+				</EnvironmentRule>		
+				<!-- ================================== -->
+				<EnvironmentRule name="EachDayAt11AM_Rule">
+					<!-- ================================ --> 
+					<documentation>
+						<description> The OfferToSell-/BidToBuy- messages are prepared to be sent to the market-agent. Each message contains the following information: the bid price of each worker, the quantity that they want to trade and the id of the worker. </description>
+					</documentation>
+					<WHEN eventType="EachDayAt11AM" />
+					<FOR objectVariable="w" objectType="Worker" />
+					<FOR dataVariable="bid" dataType="Float">
+						<ValueExpr language="Java"><![CDATA[
+w.determineBidToBuy(( float)w.getGoldInventory(),( float)w.getBid(), ( float)w.getFoodInventory(), ( float)w.getReserveLevel())							
+							]]></ValueExpr>
+					</FOR>
+					<IF language="Java"><![CDATA[
+w.getFoodInventory() > w.getReserveLevel()
+					]]></IF>
+					<THEN>
+						<SCHEDULE-EVT>
+							<InMessageEventExpr messageType="OfferToSell" receiverIdRefs="2">
+								<Condition language="Java"><![CDATA[
+w.getBid() > 0 && (( ( w.getGoldInventory() + ( w.getFoodInventory() * w.getActualPrice()) < w.getLeisureFactor()) && w.isLeisureWorker()) || !w.isLeisureWorker())
+								]]></Condition>
+								<SenderIdRef language="Java">w.getId()</SenderIdRef>
+								<Slot property="price">
+									<ValueExpr language="Java">w.getBid()</ValueExpr>
+								</Slot>
+								<Slot property="quantity">
+									<ValueExpr language="Java"><![CDATA[
+w.getFoodInventory() - w.getReserveLevel()
+									]]></ValueExpr>
+								</Slot>
+								<Slot property="sellerId">
+									<ValueExpr language="Java">w.getId()</ValueExpr>
+								</Slot>
+							</InMessageEventExpr>
+						</SCHEDULE-EVT>
+					</THEN>
+					<ELSE>
+						<SCHEDULE-EVT>
+							<InMessageEventExpr messageType="BidToBuy" receiverIdRefs="2">
+								<Condition language="Java"><![CDATA[
+bid > 0 && (( ( w.getGoldInventory() + (w.getFoodInventory() * w.getActualPrice()) < w.getLeisureFactor()) && w.isLeisureWorker()) || !w.isLeisureWorker())
+								]]></Condition>
+								<SenderIdRef language="Java">w.getId()</SenderIdRef>
+								<Slot property="price">
+									<ValueExpr language="Java">w.getBid()</ValueExpr>
+								</Slot>
+								<Slot property="quantity">
+									<ValueExpr language="Java"><![CDATA[
+bid
+							]]></ValueExpr>
+								</Slot>
+								<Slot property="buyerId">
+									<ValueExpr language="Java">w.getId()</ValueExpr>
+								</Slot>
+							</InMessageEventExpr>
+						</SCHEDULE-EVT>
+					</ELSE>
+				</EnvironmentRule>		
+				<!-- =========================================== -->
+				<EnvironmentRule name="AnnouncePriceENV_Rule">
+					<!-- ========================================= -->
+					<documentation>
+						<description> The market establishes the price and announce all the workers. The workers update their actualPrice attribute with the value of the new price.</description>
+					</documentation>
+					<WHEN eventType="OutMessageEvent" messageType="AnnouncePrice" messageVariable="mes" />
+					<FOR objectVariable="w" objectType="Worker" />
+					<DO>
+						<UPDATE-ENV>
+							<UpdateObject objectVariable="w">
+								<Slot property="actualPrice">
+									<ValueExpr language="Java">mes.getPrice()</ValueExpr>
+								</Slot>
+							</UpdateObject>
+						</UPDATE-ENV>
+					</DO>
+				</EnvironmentRule>	
+				<!-- =================================== -->
+				<EnvironmentRule name="EndOfDay_Rule">
+	             <!-- =================================== -->
+						<documentation>
+							<description>Reset the Attribute counters for the market agent.</description>
+						</documentation>
+						<WHEN eventType="EndOfDay"/>
+					  <FOR objectVariable="m2" objectType="SealedBidMaximumVolumeAuction_Market" />
+						<DO>
+							<UPDATE-ENV>
+								<UpdateObject objectVariable="m2">
+									<Slot property="numberOfEligibleSellers" value="0" />
+									<Slot property="numberOfEligibleBuyers" value="0" />
+									<Slot property="totalNumberOfSellers" value="0" />
+									<Slot property="totalNumberOfBuyers" value="0" />
+									<Slot property="supplyQuantity" value="0.0" />
+									<Slot property="demandQuantity" value="0.0" />
+									<Slot property="tradedFood" value="0.0" />
+								</UpdateObject>
+							</UPDATE-ENV>
+						</DO>
+				</EnvironmentRule>
+			</EnvironmentRules>
+	</SimulationModel>
+	<!-- ======================= -->
+	<InitialState>
+	<!-- ======================= -->
+		<!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->			
+		<Agent type="SealedBidMaximumVolumeAuction_Market" id="2">
+		<!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->			
+			<Slot property="price" value="2.0" />
+			<PeriodicTimeEvent occurrenceTime="18" type="ComputeMarketPrice" />
+		</Agent>
+		<!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->			
+		<Agents type="Worker" rangeStartID="1001" rangeEndID="1500">
+		<!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->			
+			<Slot property="skillLevelGold">
+				<RandomVariable>
+					<Uniform lowerBound="3.0" upperBound="4.0" />
+				</RandomVariable>
+			</Slot>
+			<Slot property="skillLevelFood">
+				<RandomVariable>
+					<Uniform lowerBound="1.25" upperBound="1.75" />
+				</RandomVariable>
+			</Slot>
+			<Slot property="reserveLevel">
+				<RandomVariable>
+					<Uniform lowerBound="20.0" upperBound="40.0" />
+				</RandomVariable>
+			</Slot>
+			<Slot property="foodInventory">
+				<RandomVariable>
+					<Uniform lowerBound="20.0" upperBound="40.0" />
+				</RandomVariable>
+			</Slot>
+			<Slot property="goldInventory" value="60.0" />
+			<Slot property="actualPrice" value="2.0" />
+			<Slot property="leisureWorker" value="false" />
+		</Agents>
+		<!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->			
+		<Agents type="Worker" rangeStartID="1501" rangeEndID="2000">
+		<!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->			
+			<Slot property="skillLevelGold">
+				<RandomVariable>
+					<Uniform lowerBound="3.0" upperBound="4.0" />
+				</RandomVariable>
+			</Slot>
+			<Slot property="skillLevelFood">
+				<RandomVariable>
+					<Uniform lowerBound="1.25" upperBound="1.75" />
+				</RandomVariable>
+			</Slot>
+			<Slot property="reserveLevel">
+				<RandomVariable>
+					<Uniform lowerBound="20.0" upperBound="40.0" />
+				</RandomVariable>
+			</Slot>
+			<Slot property="foodInventory">
+				<RandomVariable>
+					<Uniform lowerBound="20.0" upperBound="40.0" />
+				</RandomVariable>
+			</Slot>
+			<Slot property="goldInventory" value="60.0" />	
+			<Slot property="actualPrice" value="2.0" />
+			<Slot property="leisureFactor" value="100" />
+			<Slot property="leisureWorker" value="true" />
+		</Agents>	
+		<ExogenousEvent occurrenceTime="1" type="StartOfDay" />
+		<ExogenousEvent occurrenceTime="8" type="EachDayAt8AM" />
+		<ExogenousEvent occurrenceTime="11" type="EachDayAt11AM" />
+		<ExogenousEvent occurrenceTime="24" type="EndOfDay" />
+	</InitialState>
+	
+	<!-- =================================================== -->
+	<UserInterface>
+		<!-- =================================================== -->
+		<StatisticsUI>
+			<StatisticsVariableUI variable="marketPrice" comparisonGroup="pricevsfood">
+				<Label>
+					<Text xml:lang="en">Market price</Text>
+					<Text xml:lang="de">Marktpreis</Text>
+					<Text xml:lang="es">Precio de Mercado</Text>
+					<Text xml:lang="fr">Le Prix du Marché</Text>
+					<Text xml:lang="ro">Pret mediu</Text>
+				</Label>
+				<Hint>
+					<Text xml:lang="en">What is the average market price?</Text>
+					<Text xml:lang="de">Was ist der durchschnittliche Marktpreis?</Text>
+					<Text xml:lang="es">Cuál es el precio medio de mercado?</Text>
+					<Text xml:lang="fr">Quel est le moyen prix du marché?</Text>
+					<Text xml:lang="ro">Care este pretul mediu statilit de bursa?</Text>
+				</Hint>
+				<Format decimalPlaces="2">
+					<Currency>EUR(&#8364;)</Currency>
+				</Format>
+			</StatisticsVariableUI>
+			<StatisticsVariableUI variable="tradedFood" comparisonGroup="pricevsfood">
+				<Label>
+					<Text xml:lang="en">Trade volume</Text>
+					<Text xml:lang="de">Handelsvolumen</Text>
+					<Text xml:lang="es">Comida comerciada</Text>
+					<Text xml:lang="fr">La quantité de nourriture en bourse</Text>
+					<Text xml:lang="ro">Cantitatea de alimente comercializata</Text>
+				</Label>
+				<Hint>
+					<Text xml:lang="en">What is the food trade volume?</Text>
+					<Text xml:lang="de">Wie groß ist das Nahrungsmittel-Handelsvolumen?</Text>
+					<Text xml:lang="es">Cuanta comida fue comerciada?</Text>
+					<Text xml:lang="fr">Quelle est la quantité de nourriture en bourse?</Text>
+					<Text xml:lang="ro">Care este cantitatea de alimente comercializata?</Text>
+				</Hint>
+				<Format decimalPlaces="2">
+					<Weight>kg</Weight>
+				</Format>
+			</StatisticsVariableUI>
+			<StatisticsVariableUI variable="supply" showChart="true">
+				<Label>
+					<Text xml:lang="en">Quantity offered to sell</Text>
+					<Text xml:lang="de">Zum Verkauf angebotene Menge</Text>
+					<Text xml:lang="es">Comida ofreció vender</Text>
+					<Text xml:lang="fr">La quantité de nourriture offerts à vendre</Text>
+					<Text xml:lang="ro">Cantitatea de alimente oferite spre vanzare</Text>
+				</Label>
+				<Hint>
+					<Text xml:lang="en">What is the quantity of food offered to sell?</Text>
+					<Text xml:lang="de">Wie groß ist die angebotene Nahrungsmittel-Menge?</Text>
+					<Text xml:lang="es">Cuanta comida se ofreció a vender?</Text>
+					<Text xml:lang="fr">Quelle est la quantité de nourriture offerts à vendre?</Text>
+					<Text xml:lang="ro">Care este cantitatea de alimente oferite spre vanzare?</Text>
+				</Hint>
+				<Format decimalPlaces="2">
+					<Weight>kg</Weight>
+				</Format>
+			</StatisticsVariableUI>
+			<StatisticsVariableUI variable="demand" showChart="true">
+				<Label>
+					<Text xml:lang="en">Quantity in demand</Text>
+					<Text xml:lang="de">Nachgefragte Menge</Text>
+					<Text xml:lang="es">Comida ofreció comprar</Text>
+					<Text xml:lang="fr">La quantité de nourriture offerts à acheter</Text>
+					<Text xml:lang="ro">Cantitatea de alimente oferite spre cumparare</Text>
+				</Label>
+				<Hint>
+					<Text xml:lang="en">What is the quantity of food in demand?</Text>
+					<Text xml:lang="de">Wie groß ist die nachgefragte Nahrungsmittel-Menge?</Text>
+					<Text xml:lang="es">Cuanta comida se ofreció a comprar ?</Text>
+					<Text xml:lang="fr">Quelle est la quantité de nourriture offerts à acheter ?</Text>
+					<Text xml:lang="ro">Care este cantitatea de alimente oferite spre cumparare?</Text>
+				</Hint>
+				<Format decimalPlaces="2">
+					<Weight>kg</Weight>
+				</Format>
+			</StatisticsVariableUI>
+			<StatisticsVariableUI variable="totalNumberOfSellers">
+				<Label>
+					<Text xml:lang="en">Number of sellers</Text>
+					<Text xml:lang="de">Anzahl Verkäufer</Text>
+					<Text xml:lang="es">Número total de vendedores</Text>
+					<Text xml:lang="fr">Nombre des vendeurs</Text>
+					<Text xml:lang="ro">Numar total vanzatori</Text>
+				</Label>
+				<Hint>
+					<Text xml:lang="en">What is the number of sellers?</Text>
+					<Text xml:lang="de">Was ist die Gesamtzahl der Verkäufer?</Text>
+					<Text xml:lang="es">Cuál es el número total de los vendedores?</Text>
+					<Text xml:lang="fr">Quel est le total nombre de vendeurs?</Text>
+					<Text xml:lang="ro">Cati vanzatori sunt?</Text>
+				</Hint>
+			</StatisticsVariableUI>
+			<StatisticsVariableUI variable="totalNumberOfBuyers">
+				<Label>
+					<Text xml:lang="en">Number of Buyers</Text>
+					<Text xml:lang="de">Anzahl Käufer</Text>
+					<Text xml:lang="es">Número total de compradores</Text>
+					<Text xml:lang="fr">Nombre des acheteurs</Text>
+					<Text xml:lang="ro">Numar cumparatori sunt in total?</Text>
+				</Label>
+				<Hint>
+					<Text xml:lang="en">What is the number of buyers?</Text>
+					<Text xml:lang="de">Was ist die Gesamtzahl der Käufer?</Text>
+					<Text xml:lang="es">Cuál es el número total de los compradores?</Text>
+					<Text xml:lang="fr">Quel est le nombre moyen d'acheteurs?</Text>
+					<Text xml:lang="ro">Cati cumparatori sunt in total?</Text>
+				</Hint>
+			</StatisticsVariableUI>
+			<StatisticsVariableUI variable="numberOfEligibleSellers">
+				<Label>
+					<Text xml:lang="en">Number of eligible sellers</Text>
+					<Text xml:lang="de">Anzahl der akzeptierte Verkäufer</Text>
+					<Text xml:lang="es">Número de Vendedores aceptados</Text>
+					<Text xml:lang="fr">Nombre des admissibles vendeurs</Text>
+					<Text xml:lang="ro">Numar vanzatori eligibili</Text>
+				</Label>
+				<Hint>
+					<Text xml:lang="en">What is the average number of eligible sellers ?</Text>
+					<Text xml:lang="de">Wieviel beträgt den Durchschnitt der ekzeptierten Verkäufer?</Text>
+					<Text xml:lang="es">Cual es el promedio de vendedores elegidos ?</Text>
+					<Text xml:lang="fr">Quel est le nombre moyen des vendeurs admissibles ?</Text>
+					<Text xml:lang="ro">Cati vanzatori sunt eligibili in raport cu pretul stabilit?</Text>
+				</Hint>
+			</StatisticsVariableUI>
+			<StatisticsVariableUI variable="numberOfEligibleBuyers">
+				<Label>
+					<Text xml:lang="en">Number of Eligible Buyers</Text>
+					<Text xml:lang="de">Nummer der akzeptierte Käufer</Text>
+					<Text xml:lang="es">Número de compradores aceptados</Text>
+					<Text xml:lang="fr">Nombre des admissible acheteurs</Text>
+					<Text xml:lang="ro">Numar cumparatori eligibili</Text>
+				</Label>
+				<Hint>
+					<Text xml:lang="en">What is the average number of eligible buyers ?</Text>
+					<Text xml:lang="de">Wieviel beträgt den Durchschnitt der ekzeptierten Käufer ?</Text>
+					<Text xml:lang="es">Cual es el promedio de compradores elegidos ?</Text>
+					<Text xml:lang="fr">Quel est le nombre moyen des acheteurs admissibles ?</Text>
+					<Text xml:lang="ro">Cati cumparatori sunt eligibili in raport cu pretul stabilit?</Text>
+				</Hint>
+			</StatisticsVariableUI>
+		</StatisticsUI>
+	</UserInterface>
+</SimulationScenario>

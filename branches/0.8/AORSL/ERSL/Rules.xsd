@@ -1,0 +1,447 @@
+<?xml version="1.0" encoding="iso-8859-1"?>
+<xs:schema
+	xmlns:ers="http://aor-simulation.org"
+	xmlns:xs="http://www.w3.org/2001/XMLSchema"
+	targetNamespace="http://aor-simulation.org"
+	elementFormDefault="qualified"
+	attributeFormDefault="unqualified">
+	<!-- =================================================================== -->
+	<xs:include schemaLocation="Entities.xsd"/>
+	<!-- ==================================================================== -->
+	<xs:complexType name="TriggeringAtomicEventExpr.type">
+		<xs:attribute name="eventType" type="ers:CanonicalName" use="required"/>
+		<xs:attribute name="eventVariable" type="ers:CanonicalName" use="optional"/>
+	</xs:complexType>
+	<!-- ==================================================================== -->
+	<xs:complexType name="TriggeringEnvironmentRuleEventExpr.type">
+	<!-- ==================================================================== -->
+		<xs:complexContent>
+			<xs:extension base="ers:TriggeringAtomicEventExpr.type">
+<!-- TODO		
+	<xs:attribute name="actorVariable" type="ers:CanonicalName" use="optional"/>
+-->				
+				<xs:attribute name="activityType" type="ers:CanonicalName" use="optional"/>
+			</xs:extension>
+		</xs:complexContent>
+	</xs:complexType>
+	<!-- ==================================================================== -->
+	<xs:element name="ON-EACH-SIMULATION-STEP">
+	<!-- ==================================================================== -->
+		<xs:complexType/>
+	</xs:element>
+	<xs:element name="IF" type="ers:Condition.type"/>
+	<!-- =================================================================== -->
+	<xs:element name="EnvironmentRules">
+	<!-- =================================================================== -->
+		<xs:complexType>
+			<xs:sequence>
+				<xs:element ref="ers:EnvironmentRule" maxOccurs="unbounded"/>
+			</xs:sequence>
+		</xs:complexType>
+		<xs:key name="RuleName">
+			<xs:selector xpath="ers:EnvironmentRule"/>
+			<xs:field xpath="@name"/>
+		</xs:key>
+	</xs:element>
+	<!-- ==================================================================== -->
+	<xs:element name="EnvironmentRule" type="ers:EnvironmentRule.type"/>
+	<!-- ==================================================================== -->
+	<xs:complexType name="EnvironmentRule.type">
+		<xs:sequence>
+			<xs:sequence>
+				<xs:element ref="ers:documentation" minOccurs="0"/>
+				<xs:choice>
+					<xs:element name="WHEN" type="ers:TriggeringEnvironmentRuleEventExpr.type"/>
+					<xs:element ref="ers:ON-EACH-SIMULATION-STEP"/>
+				</xs:choice>
+				<xs:element ref="ers:FOR" minOccurs="0" maxOccurs="unbounded"/>
+				<xs:group ref="ers:FOR.grp" minOccurs="0" maxOccurs="unbounded"/>
+				<xs:element name="DO" type="ers:EnvRuleDO.type" minOccurs="0"/>	
+				<xs:sequence minOccurs="0">
+					<xs:element ref="ers:IF" maxOccurs="unbounded"/>
+					<xs:element name="THEN" type="ers:EnvRuleDO.type"/>
+					<xs:element name="ELSE" type="ers:EnvRuleDO.type" minOccurs="0"/>
+				</xs:sequence>
+			</xs:sequence>
+		</xs:sequence>
+		<xs:attribute name="name" type="ers:CanonicalName" use="required"/>
+	</xs:complexType>
+	<!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->
+	<xs:complexType name="EnvRuleDO.type">
+	<!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->
+		<xs:sequence>
+			<xs:element ref="ers:UPDATE-ENV" minOccurs="0"/>
+			<xs:element name="SCHEDULE-EVT" type="ers:ResEnvEvtExpr.type" minOccurs="0"/>
+		</xs:sequence>
+	</xs:complexType>
+	<!-- ==================================================================== -->
+	<xs:element name="InitializationRule">
+	<!-- ==================================================================== -->
+		<xs:complexType>
+			<xs:sequence>
+				<xs:element ref="ers:documentation" minOccurs="0"/>
+				<xs:element ref="ers:FOR" minOccurs="0" maxOccurs="unbounded"/>
+				<xs:group ref="ers:FOR.grp" minOccurs="0" maxOccurs="unbounded"/>
+				<xs:element ref="ers:IF" minOccurs="0" maxOccurs="unbounded"/>
+				<xs:element ref="ers:UpdateObject" minOccurs="0" maxOccurs="unbounded"/>
+				<xs:element ref="ers:UpdateObjects" minOccurs="0" maxOccurs="unbounded"/>
+				<xs:element ref="ers:UpdateGridCell" minOccurs="0" maxOccurs="unbounded"/>
+				<xs:element ref="ers:ForEachGridCell" minOccurs="0" maxOccurs="unbounded"/>
+			</xs:sequence>
+			<xs:attribute name="name" type="ers:CanonicalName" use="required"/>
+		</xs:complexType>
+	</xs:element>
+	<!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->
+	<xs:element name="FOR" type="ers:VariableDeclaration.type"/>
+	<!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->
+	<xs:complexType name="VariableDeclaration.type">
+		<xs:annotation>
+			<xs:documentation>A FOR element declares either a data variable or an object variable using the corresponding subelements and attributes. A data variable must be bound to a value. An object variable can be bound to a single object or to an object type. In the latter case the FOR element defines a loop over all instances of the object type. It's an option to refine this loop by providing a selection condition. </xs:documentation>
+		</xs:annotation>
+		<xs:choice minOccurs="0">
+			<xs:element ref="ers:ValueExpr" minOccurs="0" maxOccurs="unbounded"/>
+			<xs:element name="ObjectRef" type="ers:OpaqueExpression" minOccurs="0" maxOccurs="unbounded"/>
+			<xs:element name="ObjectIdRef" type="ers:OpaqueExpression" minOccurs="0" maxOccurs="unbounded"/>
+			<xs:element name="SelectionCondition" type="ers:OpaqueExpression" minOccurs="0" maxOccurs="unbounded"/>
+		</xs:choice>
+		<xs:attribute name="dataVariable" type="ers:CanonicalName" use="optional"/>
+		<xs:attribute name="dataType" type="ers:PrimitiveDataType" use="optional"/>
+		<xs:attribute name="refDataType" type="ers:CanonicalName" use="optional">
+			<xs:annotation>
+				<xs:documentation>A reference datatype (i.e. a class or array type). </xs:documentation>
+			</xs:annotation>			
+		</xs:attribute>
+		<xs:attribute name="objectVariable" type="ers:CanonicalName" use="optional"/>
+		<xs:attribute name="objectType" type="ers:CanonicalName" use="optional"/>
+		<xs:attribute name="objectIdRef" type="xs:long" use="optional">
+		  <xs:annotation>
+		    <xs:documentation>If used without specifying an @objectType, then the object vaiable is declared to be of type Objekt, otherwise of @objectType.</xs:documentation>
+		  </xs:annotation>
+		</xs:attribute>
+		<xs:attribute name="objectName" type="xs:NCName" use="optional">
+		  <xs:annotation>
+		  	<xs:documentation>If used without specifying an @objectType, then the object vaiable is declared to be of type Objekt, otherwise of @objectType.</xs:documentation>
+		  </xs:annotation>
+		</xs:attribute>
+		<xs:attribute name="rangeStartID" type="xs:long" use="optional"/>
+		<xs:attribute name="rangeEndID" type="xs:long" use="optional"/>
+	</xs:complexType>
+	<!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->
+	<xs:group name="FOR.grp">
+	<!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->
+		<xs:choice>
+			<xs:element name="FOR-DataVariable" type="ers:FOR-DataVariable.type">
+				<xs:annotation><xs:documentation>Not yet implemented! Declares a data variable that must be bound to a value. </xs:documentation></xs:annotation>
+			</xs:element>
+			<xs:element name="FOR-ObjectVariable" type="ers:FOR-ObjectVariable.type">
+				<xs:annotation><xs:documentation>Not yet implemented! Declares an object variable, which may be bound to a single object or to an object type. In the latter case the element defines a loop over all instances of the object type. It's an option to refine this loop by providing a selection condition. </xs:documentation></xs:annotation>
+			</xs:element>
+			<xs:element name="FOR-ListItemVariable" type="ers:FOR-ListItemVariable.type">
+				<xs:annotation><xs:documentation>Not yet implemented!</xs:documentation></xs:annotation>
+			</xs:element>
+		</xs:choice>
+	</xs:group>
+	<!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->
+	<xs:complexType name="FOR-DataVariable.type">
+	<!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->
+		<xs:sequence>
+			<xs:element ref="ers:ValueExpr" maxOccurs="unbounded"/>
+		</xs:sequence>
+		<xs:attribute name="variable" type="ers:CanonicalName" use="required"/>
+		<xs:attribute name="dataType" type="ers:PrimitiveDataType" use="optional"/>
+		<xs:attribute name="refDataType" type="ers:CanonicalName" use="optional">
+			<xs:annotation>
+				<xs:documentation>A class or array type.</xs:documentation>
+			</xs:annotation>							
+		</xs:attribute>
+	</xs:complexType>
+	<!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->
+	<xs:complexType name="FOR-ObjectVariable.type">
+	<!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->
+		<xs:sequence>
+			<xs:element name="ObjectRef" type="ers:OpaqueExpression" minOccurs="0" maxOccurs="unbounded"/>
+			<xs:element name="ObjectIdRef" type="ers:OpaqueExpression" minOccurs="0" maxOccurs="unbounded"/>
+			<xs:element name="SelectionCondition" type="ers:OpaqueExpression" minOccurs="0" maxOccurs="unbounded"/>
+		</xs:sequence>
+		<xs:attribute name="variable" type="ers:CanonicalName" use="required"/>
+		<xs:attribute name="objectType" type="ers:CanonicalName" use="optional"/>
+		<xs:attribute name="objectIdRef" type="xs:long" use="optional">
+			<xs:annotation>
+				<xs:documentation>If used without specifying an @objectType, then the object vaiable is declared to be of type Objekt, otherwise of @objectType.</xs:documentation>
+			</xs:annotation>
+		</xs:attribute>
+		<xs:attribute name="objectName" type="xs:NCName" use="optional">
+			<xs:annotation><xs:documentation>If used without specifying an @objectType, then the object vaiable is declared to be of type Objekt, otherwise of @objectType.</xs:documentation></xs:annotation>
+		</xs:attribute>
+		<xs:attribute name="rangeStartID" type="xs:long" use="optional"/>
+		<xs:attribute name="rangeEndID" type="xs:long" use="optional"/>
+	</xs:complexType>
+	<!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->
+	<xs:complexType name="FOR-ListItemVariable.type">
+	<!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->
+		<xs:sequence>
+			<xs:element name="ListExpr" type="ers:OpaqueExpression" minOccurs="0" maxOccurs="unbounded"/>
+		</xs:sequence>
+		<xs:attribute name="variable" type="ers:CanonicalName" use="required"/>
+		<xs:attribute name="listItemType" type="ers:PathName" use="required"/>
+		<xs:attribute name="listValuedGlobalVariable" type="ers:CanonicalName" use="optional"/>
+	</xs:complexType>
+	<!-- ==================================================================== -->
+	<!-- *** SCHEDULE-EVT for Environment Rules *** -->
+	<!-- ==================================================================== -->
+	<xs:complexType name="ResEnvEvtExpr.type">
+		<xs:sequence>
+			<xs:element name="CausedEventExpr" minOccurs="0" maxOccurs="unbounded">
+				<xs:complexType>
+					<xs:sequence>
+						<xs:element ref="ers:Condition" minOccurs="0" maxOccurs="unbounded"/>
+						<xs:element ref="ers:Delay" minOccurs="0" maxOccurs="unbounded"/>
+						<xs:element ref="ers:Slot" minOccurs="0" maxOccurs="unbounded"/>
+					</xs:sequence>
+					<xs:attribute name="eventType" type="ers:CanonicalName" use="required"/>
+					<xs:attribute name="delay" type="xs:positiveInteger" use="optional"/>
+				</xs:complexType>
+			</xs:element>
+		</xs:sequence>
+	</xs:complexType>
+	<xs:element name="Delay" type="ers:DiscreteRandomVariable-OR-ValueExpr"/>
+	<!-- =========================================================== -->
+	<xs:element name="UPDATE-ENV" type="ers:UpdateObjectiveStateExpr.type"/>
+	<!-- =========================================================== -->
+	<xs:complexType name="UpdateObjectiveStateExpr.type">
+		<xs:sequence>
+			<xs:choice minOccurs="0" maxOccurs="unbounded">
+				<xs:element ref="ers:UpdateGlobalVariable"/>
+				<xs:element ref="ers:IncrementGlobalVariable"/>
+				<xs:element ref="ers:UpdateMultiValuedGlobalVariable"/>
+				<xs:element ref="ers:UpdateObject"/>
+				<xs:element ref="ers:UpdateGridCell"/>
+				<xs:element ref="ers:ForEachGridCell"/>
+				<xs:element ref="ers:UpdateStatisticsVariable"/>
+				<xs:element ref="ers:Create"/>
+				<xs:element ref="ers:DestroyObject"/>
+				<xs:element ref="ers:Call"/>
+			</xs:choice>
+			<xs:element ref="ers:UpdateObjects" minOccurs="0" maxOccurs="unbounded"/>
+			<xs:element ref="ers:DestroyObjects" minOccurs="0" maxOccurs="unbounded"/>
+		</xs:sequence>
+	</xs:complexType>
+	<!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->
+	<xs:element name="UpdateGlobalVariable" type="ers:UpdateGlobalVariable.type"/>
+	<!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->	
+	<xs:complexType name="UpdateGlobalVariable.type">
+		<xs:sequence>
+			<xs:element ref="ers:ValueExpr" minOccurs="0" maxOccurs="unbounded"/>
+		</xs:sequence>
+		<xs:attribute name="name" type="ers:CanonicalName" use="required"/>
+		<xs:attribute name="value" type="xs:string" use="optional"/>
+	</xs:complexType>
+	<!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->
+	<xs:element name="IncrementGlobalVariable">
+	<!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->
+		<xs:complexType>
+			<xs:attribute name="name" type="ers:CanonicalName" use="required"/>
+			<xs:attribute name="value" type="xs:long" use="required"/>
+		</xs:complexType>
+	</xs:element>
+	<!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->
+	<xs:element name="UpdateMultiValuedGlobalVariable">
+	<!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->
+		<xs:annotation><xs:documentation>For changing the value of a list-valued global variable.</xs:documentation></xs:annotation>
+		<xs:complexType>
+			<xs:group ref="ers:ChangeMultiValuedProperty.group" maxOccurs="unbounded"/>
+			<xs:attribute name="name" type="ers:CanonicalName" use="required"/>
+		</xs:complexType>
+	</xs:element>		
+	<!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->
+	<xs:element name="UpdateObject">
+	<!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->
+		<xs:complexType>
+			<xs:sequence>
+				<xs:element name="ObjectRef" minOccurs="0" maxOccurs="unbounded">
+					<xs:complexType>
+						<xs:simpleContent>
+							<xs:extension base="ers:OpaqueExpression">
+								<xs:attribute name="objectType" type="ers:CanonicalName" use="required"/>
+							</xs:extension>
+						</xs:simpleContent>
+					</xs:complexType>
+				</xs:element>
+				<xs:choice minOccurs="0" maxOccurs="unbounded">
+					<xs:element ref="ers:Increment"/>
+					<xs:element ref="ers:Decrement"/>
+					<xs:element ref="ers:Slot"/>
+					<xs:element ref="ers:MultiValuedSlot"/>
+					<xs:element ref="ers:Call"/>
+				</xs:choice>
+			</xs:sequence>
+			<xs:attribute name="objectVariable" type="ers:CanonicalName" use="optional"/>
+		</xs:complexType>
+	</xs:element>
+	<!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->
+	<xs:element name="UpdateGridCell">
+	<!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->
+		<xs:complexType>
+			<xs:sequence>
+				<xs:element name="XCoordinate" type="ers:OpaqueExpression" minOccurs="1" maxOccurs="unbounded"/>
+				<xs:element name="YCoordinate" type="ers:OpaqueExpression" minOccurs="1" maxOccurs="unbounded"/>
+				<xs:element ref="ers:Increment" minOccurs="0" maxOccurs="unbounded"/>
+				<xs:element ref="ers:Decrement" minOccurs="0" maxOccurs="unbounded"/>
+				<xs:element ref="ers:Slot" minOccurs="0" maxOccurs="unbounded"/>
+				<xs:element ref="ers:MultiValuedSlot" minOccurs="0" maxOccurs="unbounded"/>
+			</xs:sequence>
+			<xs:attribute name="gridCellVariable" type="ers:CanonicalName" use="optional"/>
+		</xs:complexType>
+	</xs:element>
+	<!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->
+	<xs:element name="ForEachGridCell">
+		<!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->
+		<xs:complexType>
+			<xs:sequence>
+				<xs:element ref="ers:Selection" minOccurs="0"/>
+				<xs:choice>
+					<xs:element ref="ers:Code" minOccurs="0" maxOccurs="unbounded"/>
+					<xs:element ref="ers:Increment" minOccurs="0" maxOccurs="unbounded"/>
+					<xs:element ref="ers:Decrement" minOccurs="0" maxOccurs="unbounded"/>
+					<xs:element ref="ers:Slot" minOccurs="0" maxOccurs="unbounded"/>
+				</xs:choice>
+			</xs:sequence>
+			<xs:attribute name="gridCellVariable" type="ers:CanonicalName" use="optional"/>
+			<xs:attribute name="startX" type="xs:nonNegativeInteger" use="optional"/>
+			<xs:attribute name="endX" type="xs:nonNegativeInteger" use="optional"/>
+			<xs:attribute name="startY" type="xs:nonNegativeInteger" use="optional"/>
+			<xs:attribute name="endY" type="xs:nonNegativeInteger" use="optional"/>
+			<xs:attribute name="selectionList" type="ers:PathName" use="optional"/>
+		</xs:complexType>
+	</xs:element>
+	<!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->
+	<xs:element name="UpdateObjects">
+	<!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->
+		<xs:complexType>
+			<xs:sequence>
+				<xs:element name="RangeStartID" type="ers:OpaqueExpression" minOccurs="0" maxOccurs="unbounded"/>
+				<xs:element name="RangeEndID" type="ers:OpaqueExpression" minOccurs="0" maxOccurs="unbounded"/>
+				<xs:element ref="ers:Increment" minOccurs="0" maxOccurs="unbounded"/>
+				<xs:element ref="ers:Decrement" minOccurs="0" maxOccurs="unbounded"/>
+				<xs:element ref="ers:Slot" minOccurs="0" maxOccurs="unbounded"/>
+			</xs:sequence>
+			<xs:attribute name="objectType" type="ers:CanonicalName" use="required"/>
+			<xs:attribute name="rangeStartID" type="xs:long" use="optional"/>
+			<xs:attribute name="rangeEndID" type="xs:long" use="optional"/>
+			<xs:attribute name="objectVariable" type="ers:CanonicalName" use="required"/>
+			<xs:attribute name="loopVariable" type="ers:CanonicalName" use="optional"/>
+		</xs:complexType>
+	</xs:element>
+	<!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ DROPPED in 0.8.4
+	<xs:element name="AddObjectToCollection">
+
+		<xs:complexType>
+			<xs:sequence>
+				<xs:element name="ItemObjectRef" type="ers:OpaqueExpression" minOccurs="0" maxOccurs="unbounded"/>
+			</xs:sequence>
+			<xs:attribute name="collectionName" type="ers:CanonicalName" use="optional"/>
+			<xs:attribute name="collectionID" type="xs:long" use="optional"/>
+			<xs:attribute name="collectionObjectVariable" type="ers:CanonicalName" use="optional"/>
+			<xs:attribute name="itemObjectVariable" type="ers:CanonicalName" use="optional"/>
+		</xs:complexType>
+	</xs:element>
+
+	<xs:element name="RemoveObjectFromCollection">
+		<xs:complexType>
+			<xs:sequence>
+				<xs:element name="ItemObjectRef" type="ers:OpaqueExpression" minOccurs="0" maxOccurs="unbounded"/>
+			</xs:sequence>
+			<xs:attribute name="collectionName" type="ers:CanonicalName" use="optional"/>
+			<xs:attribute name="collectionID" type="xs:long" use="optional"/>
+			<xs:attribute name="collectionObjectVariable" type="ers:CanonicalName" use="optional"/>
+			<xs:attribute name="itemObjectVariable" type="ers:CanonicalName" use="optional"/>
+			<xs:attribute name="destroyObject" type="xs:boolean" use="optional"/>
+		</xs:complexType>
+	</xs:element>
+	~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->
+
+	<xs:element name="Increment" type="ers:Increment.type"/>
+	<xs:element name="Decrement" type="ers:Increment.type"/>
+	<!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->
+	<xs:complexType name="Increment.type">
+		<xs:attribute name="property" type="ers:CanonicalName" use="required"/>
+		<xs:attribute name="value" type="xs:long" use="required"/>
+	</xs:complexType>
+	<!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->
+	<xs:element name="UpdateStatisticsVariable">
+	<!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->
+		<xs:complexType>
+			<xs:sequence>
+				<xs:element ref="ers:ValueExpr" maxOccurs="unbounded"/>
+			</xs:sequence>
+			<xs:attribute name="variable" type="ers:CanonicalName" use="required"/>
+		</xs:complexType>
+	</xs:element>
+	<!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->
+	<xs:element name="Call">
+	<!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->
+		<xs:complexType>
+			<xs:sequence>
+				<xs:element name="Argument" minOccurs="0" maxOccurs="unbounded">
+					<xs:complexType>
+						<xs:sequence>
+							<xs:element ref="ers:ValueExpr" minOccurs="0" maxOccurs="unbounded"/>
+						</xs:sequence>
+						<xs:attribute name="parameter" type="xs:string" use="required"/>
+						<xs:attribute name="value" type="xs:string" use="optional"/>
+					</xs:complexType>
+				</xs:element>
+			</xs:sequence>
+			<xs:attribute name="procedure" type="ers:CanonicalName" use="required">
+				<xs:annotation><xs:documentation>A function/procedure defined in an object type.</xs:documentation></xs:annotation>				
+			</xs:attribute>
+			<xs:attribute name="contextObjectVariable" type="ers:CanonicalName" use="required">
+				<xs:annotation><xs:documentation>This variable must have been declared by a FOR element, or, in a reaction rule, 
+					it can be the agent variable.</xs:documentation></xs:annotation>
+			</xs:attribute>
+		</xs:complexType>
+	</xs:element>
+	<!-- ==================================== -->
+	<!-- *** Create & Destroy *** -->
+	<!-- ==================================== -->
+	<xs:element name="Create">
+		<xs:complexType>
+			<xs:sequence>
+				<xs:element ref="ers:Object" minOccurs="0" maxOccurs="unbounded"/>
+				<xs:element ref="ers:Objects" minOccurs="0" maxOccurs="unbounded"/>
+			</xs:sequence>
+		</xs:complexType>
+	</xs:element>
+	<xs:element name="DestroyObject">
+		<xs:complexType>
+			<xs:sequence>
+				<xs:element name="ObjectRef" type="ers:OpaqueExpression" minOccurs="0" maxOccurs="unbounded"/>
+				<xs:element name="ObjectIdRef" type="ers:OpaqueExpression" minOccurs="0" maxOccurs="unbounded"/>
+			</xs:sequence>
+			<xs:attribute name="objectType" type="ers:CanonicalName" use="optional"/>
+			<xs:attribute name="objectIdRef" type="xs:long" use="optional"/>
+			<xs:attribute name="objectVariable" type="ers:CanonicalName" use="optional"/>
+			<xs:attribute name="removeFromCollection" type="ers:CanonicalName" use="optional"/>
+			<xs:attribute name="deferred" type="xs:boolean" use="optional" default="false">
+				<xs:annotation>
+					<xs:documentation>If this attribute is set to true, the object will only be destroyed at the end of the rule execution after the resulting events have been created.</xs:documentation>
+				</xs:annotation>
+			</xs:attribute>
+		</xs:complexType>
+	</xs:element>
+	<xs:element name="DestroyObjects" type="ers:DestroyObjects.type"/>
+	<xs:complexType name="DestroyObjects.type">
+		<xs:sequence>
+			<xs:element name="RangeStartID" type="ers:OpaqueExpression" minOccurs="0" maxOccurs="unbounded"/>
+			<xs:element name="RangeEndID" type="ers:OpaqueExpression" minOccurs="0" maxOccurs="unbounded"/>
+		</xs:sequence>
+		<xs:attribute name="objectType" type="ers:CanonicalName"/>
+		<xs:attribute name="rangeStartID" type="xs:long" use="optional"/>
+		<xs:attribute name="rangeEndID" type="xs:long" use="optional"/>
+		<xs:attribute name="deferred" type="xs:boolean" use="optional" default="false">
+			<xs:annotation>
+				<xs:documentation>If this attribute is set to true, the objects will only be destroyed at the end of the rule execution after the resulting events have been created.</xs:documentation>
+			</xs:annotation>
+		</xs:attribute>
+	</xs:complexType>
+</xs:schema>

@@ -1,0 +1,217 @@
+<?xml version="1.0"?>
+<?xml-stylesheet type="text/xsl" href="prettyprint.xsl"?>
+
+<SimulationScenario version="0.8.4" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xsi:schemaLocation="http://aor-simulation.org ../../../AORSL/AORSL_0-8-4.xsd"
+	xmlns="http://aor-simulation.org" xmlns:aors="http://aor-simulation.org"
+	xmlns:dc="http://purl.org/dc/elements/1.1/"
+	scenarioName="SingleServiceQueueWithStatistics"
+	scenarioTitle="A single service queue with service utilization and maximum queue length statistics"
+	simulationManagerDirectory="../../..">
+	
+	<SimulationParameters simulationSteps="6000" stepDuration="1" timeUnit="min"/>
+	<SimulationModel modelName="SingleServiceQueueWithStatistics" modelTitle="A single service queue with service utilization and maximum queue length statistics.">
+		<documentation>
+			<dc:creator>Gerd Wagner</dc:creator>
+			<dc:created>20081001</dc:created>
+			<dc:modified>20100106</dc:modified>
+			<dc:description>Customers arrive at random times at a service desk where they have to wait in a queue when the service desk is busy. The time between two customer arrivals is uniformly distributed between 1 and 8 minutes. The times for completing a service vary from 1 to 6 minutes, with probabilities 0.1, 0.2, 0.3, 0.25, 0.1, 0.05, respectively. Two statistics are to be collected: service utilization (total service time divided by total time) and maximum queuelength.</dc:description>
+			<processModelDiagram>BPMN-diagram.png</processModelDiagram>
+		</documentation>
+		<Statistics>
+			<Variable name="totalServiceTime" dataType="Integer"/>
+			<Variable name="serviceUtilization" dataType="Float">
+				<Source>
+					<ValueExpr language="Java"><![CDATA[
+(double) SimStatistics.totalServiceTime.getValue() / SimParameter.SIMULATION_STEPS * 100
+					]]></ValueExpr>
+				</Source>
+			</Variable>
+			<Variable name="maxQueueLength" dataType="Integer">
+				<Source aggregationFunction="max">
+					<ObjectProperty property="queueLength" objectType="ServiceDesk" objectIdRef="1"/>
+				</Source>
+			</Variable>
+		</Statistics>
+		<EntityTypes>
+			<!-- =================================================== -->
+			<ExogenousEventType name="Arrival">
+				<!-- =================================================== -->
+				<Periodicity>
+					<DiscreteRandomVariable>
+						<UniformInt lowerBound="1" upperBound="8" />
+					</DiscreteRandomVariable>
+				</Periodicity>
+			</ExogenousEventType>	
+			<!-- =================================================== -->
+			<CausedEventType name="StartService"/>
+			<!-- =================================================== -->
+			<CausedEventType name="EndService">
+				<!-- =================================================== -->
+				<Attribute name="serviceTime" type="Integer"/>
+			</CausedEventType>
+			<!-- ====================================== -->
+			<ObjectType name="ServiceDesk">
+				<!-- ==================================== -->
+				<Attribute name="serviceDeskBusy" type="Boolean"/>
+				<Attribute name="queueLength" type="Integer"/>
+				<Function name="randomServiceTime" resultType="Integer">
+					<Body language="Java"><![CDATA[
+int r = Random.uniformInt(0,99);
+	if (r<10) return 1; 			  // with probability 0.10
+	else if (r<30) return 2;		// with probability 0.20
+	else if (r<60) return 3;		// with probability 0.30
+	else if (r<85) return 4;		// with probability 0.25
+	else if (r<95) return 5;		// with probability 0.10
+			      else return 6;		// with probability 0.05
+					]]></Body>
+				</Function>
+			</ObjectType>
+		</EntityTypes>
+		<EnvironmentRules>
+			<!-- =================================================== -->
+			<EnvironmentRule name="Arrival_Rule">
+				<!-- =================================================== -->
+				<documentation>
+					<description>On CustomerArrival, if the service desk is busy, the customer has to wait in a line, so the queue length is increased by 1. Otherwise, the customer is going to be serviced and hence the service desk gets busy, and for ending the service, a CustomerDeparture event (with a delay being set to a random service time) is created .</description>
+				</documentation>
+				<WHEN eventType="Arrival"/>
+				<FOR objectVariable="serviceDesk" objectType="ServiceDesk"/>
+				<IF language="Java"><![CDATA[
+!serviceDesk.isServiceDeskBusy()
+					]]></IF>
+				<THEN>
+					<SCHEDULE-EVT>
+						<CausedEventExpr eventType="StartService"/>
+					</SCHEDULE-EVT>
+				</THEN>
+				<ELSE>
+					<UPDATE-ENV>
+						<UpdateObject objectVariable="serviceDesk">
+							<Increment property="queueLength" value="1"/>
+						</UpdateObject>
+					</UPDATE-ENV>
+				</ELSE>
+			</EnvironmentRule>
+			<!-- =================================================== -->
+			<EnvironmentRule name="StartService_Rule">
+				<!-- =================================================== -->
+				<WHEN eventType="StartService"/>
+				<FOR objectVariable="serviceDesk" objectType="ServiceDesk"/>
+				<FOR dataVariable="srvTm" dataType="Integer">
+					<ValueExpr language="Java">serviceDesk.randomServiceTime()</ValueExpr>
+				</FOR>
+				<DO>
+					<UPDATE-ENV>
+						<UpdateObject objectVariable="serviceDesk">
+							<Slot property="serviceDeskBusy" value="true"/>
+						</UpdateObject>
+					</UPDATE-ENV>
+					<SCHEDULE-EVT>
+						<CausedEventExpr eventType="EndService">
+							<Delay>
+								<ValueExpr language="Java">srvTm</ValueExpr>
+							</Delay>
+							<Slot property="serviceTime">
+								<ValueExpr language="Java">srvTm</ValueExpr>
+							</Slot>
+						</CausedEventExpr>
+					</SCHEDULE-EVT>
+				</DO>
+			</EnvironmentRule>	
+			<!-- =================================================== -->
+			<EnvironmentRule name="EndService_Rule">
+				<!-- =================================================== -->
+				<documentation>
+					<description>On CustomerDeparture, when the queue is empty, the service desk is no longer busy. Otherwise, the next customer will be serviced, so a new future CustomerDeparture event is created (with a delay given by the random service time), and the queue size is decreased by 1.</description>
+				</documentation>
+				<WHEN eventType="EndService" eventVariable="e"/>
+				<FOR objectVariable="serviceDesk" objectType="ServiceDesk"/>
+				<FOR dataVariable="srvTm" dataType="Integer">
+					<ValueExpr language="Java">serviceDesk.randomServiceTime()</ValueExpr>
+				</FOR>
+				<DO>
+					<UPDATE-ENV>
+						<UpdateStatisticsVariable variable="totalServiceTime">
+							<ValueExpr language="Java">
+								SimStatistics.totalServiceTime.getValue() + e.getServiceTime()
+							</ValueExpr>
+						</UpdateStatisticsVariable>
+					</UPDATE-ENV>
+				</DO>
+				<IF language="Java">serviceDesk.getQueueLength() == 0</IF>
+				<THEN>
+					<UPDATE-ENV>
+						<UpdateObject objectVariable="serviceDesk">
+							<Slot property="serviceDeskBusy" value="false"/>
+						</UpdateObject>
+					</UPDATE-ENV>
+				</THEN>
+				<ELSE>
+					<UPDATE-ENV>
+						<UpdateObject objectVariable="serviceDesk">
+							<Decrement property="queueLength" value="1"/>
+						</UpdateObject>
+					</UPDATE-ENV>
+					<SCHEDULE-EVT>
+						<CausedEventExpr eventType="EndService">
+							<Delay>
+								<ValueExpr language="Java">srvTm</ValueExpr>
+							</Delay>
+							<Slot property="serviceTime">
+								<ValueExpr language="Java">srvTm</ValueExpr>
+							</Slot>
+						</CausedEventExpr>
+					</SCHEDULE-EVT>
+				</ELSE>
+			</EnvironmentRule>
+		</EnvironmentRules>
+	</SimulationModel>	
+	<!-- =================================================== -->
+	<InitialState>
+		<!-- =================================================== -->
+		<Object type="ServiceDesk" id="1">
+			<Slot property="serviceDeskBusy" value="false" />
+			<Slot property="queueLength" value="0" />
+		</Object>
+		<ExogenousEvent type="Arrival" occurrenceTime="1" />
+	</InitialState>
+	<!-- =================================================== -->
+	<UserInterface>
+		<!-- =================================================== -->
+		<StatisticsUI>
+			<StatisticsVariableUI variable="serviceUtilization">
+				<Label>
+					<Text xml:lang="en">Service Utilization</Text>
+					<Text xml:lang="de">Service-Nutzung</Text>
+					<Text xml:lang="fr">Utilisation du Service</Text>
+					<Text xml:lang="es">El uso del Servicio</Text>
+					<Text xml:lang="ro">Utilizare Serviciu</Text>
+				</Label>
+				<Hint>
+					<Text xml:lang="en">What is the average lenght of time the service is	used?</Text>
+					<Text xml:lang="de">Was ist der Nutzungsgrad des Service?</Text>
+					<Text xml:lang="fr">Quelle est la durée moyenne de service utilisation?</Text>
+					<Text xml:lang="es">Cual es el tiempo promedio de uso del servicio?</Text>
+					<Text xml:lang="ro">Care este timpul mediu de utilizare a serviciului?</Text>
+				</Hint>
+			</StatisticsVariableUI>
+			<StatisticsVariableUI variable="maxQueueLength">
+				<Label>
+					<Text xml:lang="en">Maximum Queue Length</Text>
+					<Text xml:lang="de">Maximale Länge der Warteschlange</Text>
+					<Text xml:lang="fr">Dimension maximale de la queue</Text>
+					<Text xml:lang="es">Maximo longitud de cola</Text>
+					<Text xml:lang="ro">Dimensiunea maxima a listei de asteptare</Text>
+				</Label>
+				<Hint>
+					<Text xml:lang="en">What is the maximum length of the	service queue?</Text>
+					<Text xml:lang="de">Was ist die maximale Länge der Warteschlange?</Text>
+					<Text xml:lang="fr">Quelle est la dimension maximale de la queue?</Text>
+					<Text xml:lang="es">Cual es el maximo longitud de la cola?</Text>
+					<Text xml:lang="ro">Care este dimensiunea maxima a listei de asteptare?</Text>
+				</Hint>
+			</StatisticsVariableUI>
+		</StatisticsUI>
+	</UserInterface>
+</SimulationScenario>

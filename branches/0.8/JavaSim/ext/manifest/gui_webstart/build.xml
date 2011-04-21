@@ -1,0 +1,74 @@
+<!-- HowToUse:
+
+- copy this build-file in your created project-folder
+  - be sure that your project is already created
+  - be sure that the scenario xml file exist in the project-folder
+- call:
+           ant -Dxml.description.file.name=[your_description_file_name] 
+               -Djar.file.name=[your_jar_file_name.jar]
+         
+         or (if [your_description_file_name] equals 'scenario.xml' 
+         and you need only the default jar file name scenario.jar)
+            
+           ant
+         
+- go to the trunk-folder and call the main-build-file:
+    
+           ant build_web_start
+         
+  - this create a package trunk/webstart
+  
+- copy the created scenario.jar to the scenarios-folder in trunk/webstart and run:
+
+         ant build_web_start again (to sign the scenario.jar)
+         
+   or use another way to sign the created scenario.jar
+    
+- copy the content of the webstart-folder
+
+-->
+<!--
+* @author Jens Werner
+* @since Feb 25, 2010
+* @version: 1.0
+* @rev: $Rev$
+* @lastChanged: $Date$
+-->
+<project name="Simulation Scenario Builder" default="build" basedir=".">
+  <description> This ANT file builds a JAR archive from a simulation scenario. </description>
+
+  <!-- for webstart -->
+  <property name="scenario.bin.folder" value="bin"/>
+  <property name="xml.description.file.name" value="scenario.xml"/>
+  <property name="default.xml.description.file.name" value="scenario.xml"/>
+  <property name="temp.dir" value="tmpDir"/>
+  <property name="jar.file.name" value="scenario.jar"/>
+  
+  <target name="build" depends="clean, copyScenarioFile, createJar, deleteTempDir"/>
+  
+  <target name="clean">
+    <delete failonerror="false" file="${jar.file.name}"/>
+  </target>
+  
+  <target name="copyScenarioFile">
+    <echo message="Copy from ${xml.description.file.name} to ${temp.dir}/${default.xml.description.file.name}!"/>
+    <mkdir dir="${temp.dir}"/>
+    <copy file="${xml.description.file.name}" tofile="${temp.dir}/${default.xml.description.file.name}"/>
+  </target>
+
+  <target name="createJar">
+    <echo message="Create the jar file ${jar.file.name}!"/>
+    <jar destfile="${jar.file.name}" basedir="${scenario.bin.folder}">
+      <fileset dir="." includes="model/**"/>
+      <fileset dir="." includes="controller/**"/>
+      <fileset dir="./${temp.dir}" includes="${default.xml.description.file.name}"/>
+    </jar>
+  </target>
+  
+  <target name="deleteTempDir">
+    <delete includeemptydirs="yes">
+      <fileset dir="${temp.dir}"/>
+    </delete>
+  </target>
+
+</project>
