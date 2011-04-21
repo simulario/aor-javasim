@@ -13,6 +13,7 @@ import org.w3c.dom.Node;
 import org.w3c.dom.NodeList;
 
 import aors.GeneralSpaceModel.SpaceType;
+import aors.module.visopengl3d.engine.Camera2D;
 import aors.module.visopengl3d.lang.LanguageManager;
 import aors.module.visopengl3d.shape.Cube;
 import aors.module.visopengl3d.shape.Cuboid;
@@ -192,12 +193,11 @@ public class XMLReader {
             else if (spaceViewChildNodes.item(j).getNodeName().equals(
                 TwoDimSpaceView.TWO_DIMENSIONAL)) {
               if (spaceType.equals(SpaceType.TwoD)
-                  || spaceType.equals(SpaceType.TwoDLateralView)) {
+            		  || spaceType.equals(SpaceType.TwoDLateralView)) {
                 spaceView = getTwoDimSpaceView(spaceViewChildNodes.item(j));
                 spaceView.setSkybox(getSkybox(spaceViewChildNodes.item(j)));
               }
             }
-            
           }
         }
       }
@@ -486,6 +486,87 @@ public class XMLReader {
 	}
 	
 	return skybox;
+  }
+  
+  /*
+   * Sets the global camera as read from the XML simulation description.
+   * 
+   * @param node SpaceView3D node
+   * 
+   */
+  private void readGlobalCamera(Node node, Camera2D globalCamera) {
+	
+	// Retrieve child nodes of the "SpaceView3D" node
+	NodeList childNodes = node.getChildNodes();
+
+	// Search for GlobalCamera node and if necessary initialize the global camera
+	for (int i = 0; i < childNodes.getLength(); i++) {
+	  if (childNodes.item(i).getNodeName().equals(Camera2D.GLOBAL_CAMERA)) {
+	    
+	    // Retrieve the attributes of a "GlobalCamera" node
+	    NamedNodeMap globalCameraAttributes = childNodes.item(i).getAttributes();
+	        
+	    /*
+	     * Retrieve the name and value of each attribute and initialize the class
+	     * members accordingly.
+	     */
+	    for (int j = 0; j < globalCameraAttributes.getLength(); j++) {
+	      String name = globalCameraAttributes.item(j).getNodeName();
+	      String value = globalCameraAttributes.item(j).getNodeValue();
+	      value = value.trim();
+
+	      // Check which attributes where found and initialize the members
+	      if (name.equals(Camera2D.POSITION)) {
+	        double[] position = new double[3];
+	        
+	        String[] splittedString = value.split(" ");
+	        
+	        int count = 0;
+	        for (int k=0; k<splittedString.length; k++) {
+	        	if(!splittedString[k].equals("") && count <= 2) {
+	        		position[count] = Double.valueOf(splittedString[k]);
+	        		count++;
+	        	}
+	        }
+	        
+	        globalCamera.setPosition(position);
+	      }
+
+	      else if (name.equals(Camera2D.VIEW_VECTOR)) {
+	    	double[] viewVector = new double[3];
+		        
+		    String[] splittedString = value.split(" ");
+		        
+		    int count = 0;
+		    for (int k=0; k<splittedString.length; k++) {
+		        if(!splittedString[k].equals("") && count <= 2) {
+		        	viewVector[count] = Double.valueOf(splittedString[k]);
+		        	count++;
+		        }
+		    }
+		    
+		    globalCamera.setViewVector(viewVector);
+	      }
+	          
+	      else if (name.equals(Camera2D.UP_VECTOR)) {
+	    	double[] upVector = new double[3];
+		        
+		    String[] splittedString = value.split(" ");
+		        
+		    int count = 0;
+		    for (int k=0; k<splittedString.length; k++) {
+		        if(!splittedString[k].equals("") && count <= 2) {
+		        	upVector[count] = Double.valueOf(splittedString[k]);
+		        	count++;
+		        }
+		    }
+		    
+		    globalCamera.setUpVector(upVector);
+	      }	  
+	    }
+	  }
+	}
+
   }
 
   /**

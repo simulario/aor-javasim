@@ -65,10 +65,14 @@ public abstract class SpaceModel {
     }
 
     // Create a two dimensional, continuous space model
-    else if (generalSpaceModel.getSpaceType().equals(SpaceType.TwoD)
-        || generalSpaceModel.getSpaceType().equals(SpaceType.TwoDLateralView)) {
+    else if (generalSpaceModel.getSpaceType().equals(SpaceType.TwoD)) {
       spaceModel = new TwoDimSpaceModel();
     }
+    
+    // Create a two dimensional, continuous lateral space model
+    else if (generalSpaceModel.getSpaceType().equals(SpaceType.TwoDLateralView)) {
+          spaceModel = new TwoDimLateralViewSpaceModel();
+        }
 
     // Create a two dimensional, discrete space model
     else if (generalSpaceModel.getSpaceType().equals(SpaceType.TwoDGrid)) {

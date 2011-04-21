@@ -135,23 +135,13 @@ public abstract class Shape3D {
 	 *          OpenGL utility library object.
 	 */
 	public abstract void generateDisplayList(GL2 gl, GLU glu);
-	
+
 	/**
-	 * Sets the material of the shape with the help of the parameter color.
+	 * Normalizes a vector by dividing its components through its length
 	 * 
-	 * @param gl
-	 * 			OpenGL pipeline object.
-	 * @param color
-	 * 			ambient and diffuse color of the material.
+	 * @param v
+	 * 			vector, which should be normalized, as an array
 	 */
-	/*public void setMaterial(GL2 gl, float[] color) {
-  	    float[] specular = {0.5f, 0.5f, 0.5f, 1.0f};
-  	    float[] shininess = {10.0f};
-  	    gl.glMaterialfv(GL2.GL_FRONT, GL2.GL_AMBIENT_AND_DIFFUSE, color, 0);
-  	    gl.glMaterialfv(GL2.GL_FRONT, GL2.GL_SPECULAR, specular, 0);
-  	    gl.glMaterialfv(GL2.GL_FRONT, GL2.GL_SHININESS, shininess, 0);
-	}*/
-	
 	public void normalize(double[] v) {
 		double length = Math.sqrt(v[0]*v[0] + v[1]*v[1] + v[2]*v[2]);
 		v[0] /= length;

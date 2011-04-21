@@ -6,14 +6,24 @@ import javax.media.opengl.GL2;
  * This class is providing a simple two dimensional camera model. It offers the
  * possibility to scroll through a OpenGL rendered scene.
  * 
- * @author Sebastian Mucha
+ * @author Sebastian Mucha, Susanne Schölzel
  * @since March 1st, 2010
  * 
  */
 public class Camera2D {
+	
+  public static final String GLOBAL_CAMERA = "GlobalCamera";
+	
+  public static final String POSITION = "position";
+  public static final String VIEW_VECTOR = "viewVector";
+  public static final String UP_VECTOR = "upVector";
 
+  private double[] position = new double[3];
+  private double[] viewVector = new double[3];
+  private double[] upVector = new double[3];
+  
   // Camera coordinates
-  private double x, y;
+  private double x, y, z;
 
   // Scroll speed in pixels
   private final double SCROLL_SPEED = 30;
@@ -57,4 +67,37 @@ public class Camera2D {
   public double getSCROLL_SPEED() {
     return SCROLL_SPEED;
   }
+  
+  public double getZ() {
+	  return 400;
+  }
+  
+  public void setZ(double z) {
+	    this.z = z;
+  }
+  
+  public double[] getPosition() {
+	  return position;
+  }
+  
+  public void setPosition(double[] position) {
+	  this.position = position;
+  }
+  
+  public double[] getViewVector() {
+	  return viewVector;
+  }
+  
+  public void setViewVector(double[] viewVector) {
+	  this.viewVector = viewVector;
+  }
+  
+  public double[] getUpVector() {
+	  return upVector;
+  }
+  
+  public void setUpVector(double[] upVector) {
+	  this.upVector = upVector;
+  }
+  
 }
