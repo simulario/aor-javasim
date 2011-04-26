@@ -34,7 +34,6 @@
 	<xs:include schemaLocation="EntityTypes.xsd"/>
 	<xs:include schemaLocation="Rules.xsd"/>
   <xs:include schemaLocation="UserInterface.xsd"/>
-	<!-- =================================================================== -->
 	<!-- ************    Root element    *********************************** -->
 	<xs:element name="SimulationScenario" type="ers:SimulationScenario.type" id="SimulationScenario">
 	<!-- =================================================================== -->
@@ -83,22 +82,15 @@
 		</xs:key>
 		<!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->
 		<xs:key name="ObjectTypeKey">
+		<!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->
 			<xs:selector xpath="ers:EntityTypes/ers:ObjectType | ers:EntityTypes/ers:PhysicalObjectType"/>
 			<xs:field xpath="@name"/>
 		</xs:key>
-		<xs:keyref name="ObjectTypeReference" refer="ers:ObjectTypeKey">
-			<!--
-				<xs:selector xpath="ers:EnvironmentRules/ers:EnvironmentRule/ers:VariableDeclaration[@objectType != 'Collection'] | ers:EnvironmentRules/ers:EnvironmentRule/ers:UPDATE-ENV/ers:UpdateObjects"/>
-			-->
-			<xs:selector xpath="ers:EnvironmentRules/ers:EnvironmentRule/ers:DO/ers:UPDATE-ENV/ers:UpdateObjects | ers:EnvironmentRules/ers:EnvironmentRule/ers:THEN/ers:UPDATE-ENV/ers:UpdateObjects | ers:EnvironmentRules/ers:EnvironmentRule/ers:ELSE/ers:UPDATE-ENV/ers:UpdateObjects"/>
+		<xs:keyref name="ObjectTypeReference_from_EnvironmentRule" refer="ers:ObjectTypeKey">
+			<xs:selector xpath="ers:EnvironmentRules/ers:EnvironmentRule/ers:FOR-ObjectVariable | ers:EnvironmentRules/ers:EnvironmentRule/ers:DO/ers:UPDATE-ENV/ers:UpdateObjects | ers:EnvironmentRules/ers:EnvironmentRule/ers:THEN/ers:UPDATE-ENV/ers:UpdateObjects | ers:EnvironmentRules/ers:EnvironmentRule/ers:ELSE/ers:UPDATE-ENV/ers:UpdateObjects"/>
 			<xs:field xpath="@objectType"/>
 		</xs:keyref>
-		<!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->
-		<xs:key name="ReferenceTypeKey">
-			<xs:selector xpath="ers:EntityTypes/ers:ObjectType | ers:EntityTypes/ers:PhysicalObjectType"/>
-			<xs:field xpath="@name"/>
-		</xs:key>
-		<xs:keyref name="ReferenceProperty-TypeReference" refer="ers:ReferenceTypeKey">
+		<xs:keyref name="ObjectTypeReference_from_ReferenceProperty" refer="ers:ObjectTypeKey">
 			<xs:selector xpath="ers:EntityTypes/ers:*/ers:ReferenceProperty"/>
 			<xs:field xpath="@type"/>
 		</xs:keyref>

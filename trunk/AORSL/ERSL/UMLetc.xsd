@@ -70,8 +70,55 @@
   <xs:attributeGroup name="lang_mandatory">
   <!-- =================================================================== -->
     <xs:attribute ref="xml:lang" use="required"/>
-  </xs:attributeGroup>  
-  <!-- =================================================================== -->
+  </xs:attributeGroup>
+	<!-- =================================================================== -->
+	<xs:element name="ComplexDataType">
+	<!-- =================================================================== -->
+		<xs:complexType>
+			<xs:choice>
+				<xs:sequence>
+					<xs:element ref="ers:documentation" minOccurs="0"/>
+					<xs:element ref="ers:Property" minOccurs="0" maxOccurs="unbounded"/>
+					<xs:element name="DefaultConstructor" minOccurs="0" maxOccurs="1">
+						<xs:annotation><xs:documentation>Does not apply to JavaScript!</xs:documentation></xs:annotation>
+						<xs:complexType>
+							<xs:sequence>
+								<xs:element name="Def" type="ers:OpaqueExpression" minOccurs="0" maxOccurs="unbounded"/>
+							</xs:sequence>
+						</xs:complexType>
+					</xs:element>
+					<xs:element name="Constructor" minOccurs="0" maxOccurs="unbounded">
+						<xs:annotation><xs:documentation>For JavaScript, only the first Constructor element applies!</xs:documentation></xs:annotation>
+						<xs:complexType>
+							<xs:sequence>
+								<xs:element ref="ers:Parameter" minOccurs="0" maxOccurs="unbounded"/>
+								<xs:element name="Body" type="ers:OpaqueExpression" maxOccurs="unbounded"/>
+							</xs:sequence>
+						</xs:complexType>
+					</xs:element>
+					<xs:element name="Getter" type="ers:GetterSetter.type" minOccurs="0" maxOccurs="unbounded">
+						<xs:annotation><xs:documentation>For defining a non-standard reading/getting method.</xs:documentation></xs:annotation>
+					</xs:element>
+					<xs:element name="Setter" type="ers:GetterSetter.type" minOccurs="0" maxOccurs="unbounded">
+						<xs:annotation><xs:documentation>For defining a non-standard writing/setting method.</xs:documentation></xs:annotation>
+					</xs:element>
+					<xs:element ref="ers:Function" minOccurs="0" maxOccurs="unbounded"/>
+				</xs:sequence>
+				<xs:sequence>
+					<xs:element name="ClassDef" type="ers:OpaqueExpression" minOccurs="0" maxOccurs="unbounded"/>
+				</xs:sequence>
+			</xs:choice>
+			<xs:attribute name="name" type="ers:CanonicalName" use="required"/>
+			<xs:attribute name="superType" type="ers:CanonicalName" use="optional"/>
+		</xs:complexType>
+	</xs:element>
+	<xs:complexType name="GetterSetter.type">
+		<xs:sequence>
+			<xs:element name="Body" type="ers:OpaqueExpression" maxOccurs="unbounded"/>
+		</xs:sequence>
+		<xs:attribute name="property" type="ers:CanonicalName" use="required"/>
+	</xs:complexType>
+	<!-- =================================================================== -->
 	<!-- *** Property *** -->
 	<!-- =================================================================== -->
 	<xs:element name="Property" type="ers:Property.type" abstract="true"/>
