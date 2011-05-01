@@ -37,7 +37,7 @@ public class TwoDimSpaceModel extends SpaceModel {
     // Create a margin
     Margin margin = new Margin(drawingArea.x1, drawingArea.y1, drawingArea.x2,
         drawingArea.y2);
-    //margin.setSpaceModel(this);
+    margin.setSpaceModel(this);
     margin.setBackgroundImg(twoDimSpaceView.getBackgroundImg());
     margin.setBackgroundColor(twoDimSpaceView.getBackgroundColor());
     margin.setBorderColor(twoDimSpaceView.getBorderColor());

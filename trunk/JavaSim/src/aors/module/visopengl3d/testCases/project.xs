@@ -3,7 +3,7 @@
   SYSTEM "http://java.sun.com/dtd/properties.dtd">
 <properties>
    <comment>This is the project description file for the AOR simulator project named testCases.</comment>
-   <entry key="simDescMD5">ad61583a70f47fdd26d607f3f0e6c44a</entry>
+   <entry key="simDescMD5">e9cdda04c378d238125d9189cc2e8d99</entry>
    <entry key="simDescFileName">scenario.xml</entry>
    <entry key="sources compiled">true</entry>
    <entry key="name">testCases</entry>
