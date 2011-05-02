@@ -6,7 +6,6 @@ The build.xml in the folder creates a distribution with following structure:
 
      /ext/aorsl           - the AORSL-Schema files
      /ext/doc             - some additional information
-     /ext/javagen         - the XSLT for code creation
      /media/images        - images, pics, etc.
      /media/sounds        - mp3-sounds
      /lib                 - libraries for the core implementation
