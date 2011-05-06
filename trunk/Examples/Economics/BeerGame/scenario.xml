@@ -95,7 +95,7 @@
         <!-- outDelivery: the total amount of delivery at the end of the week -->
         <Attribute name="outDelivery" type="Integer" />
         <PeriodicTimeEventType name="EndOfWeek" periodicity="7" />
-        <OutMessageActionRule messageType="Order" messageVariable="order">
+      	<OutMessageActionRule name="SendOrder" messageType="Order" messageVariable="order">
           <IF language="Java JavaScript"><![CDATA[this.order.getQuantity() > 0]]></IF>
           <THEN />
         </OutMessageActionRule>
@@ -919,115 +919,91 @@
       <AgentControlUI waitForUserInput="true">
       	<AgentControlByAgentType type="IntermediarySupplyChainNode"
           suspendRules="EndOfWeek_OrderingBeer_R1_Rule EndOfWeek_OrderingBeer_R2_Rule 
-            EndOfWeek_OrderingBeer_R3_Rule EndOfWeek_OrderingBeer_R4_Rule">
-      		<AgentControlGUI cssFile="basic.css">
+            EndOfWeek_OrderingBeer_R3_Rule EndOfWeek_OrderingBeer_R4_Rule"
+          cssFile="basic.css">
+      		<!-- ~~~~~~~~~~~~ -->
+      		<PerceptionEventList>
       			<!-- ~~~~~~~~~~~~ -->
-      			<PerceptionEventList>
-      				<!-- ~~~~~~~~~~~~ -->
-      				<InMessageEventView messageType="Order" label="Incoming Order" showSender="false" icon="Order.png">
+      			<InMessageEventView messageType="Order" label="Incoming Order" showSender="false" icon="Order.png">
+      				<Label>
+      					<Text xml:lang="de">Eingehender Auftrag</Text>
+      				</Label>
+      				<MessageProperty name="quantity" label="Order quantity">
       					<Label>
-      						<Text xml:lang="de">Eingehender Auftrag</Text>
+      						<Text xml:lang="de">Bestellmenge</Text>
       					</Label>
-      					<MessageProperty name="quantity" label="Order quantity">
-      						<Label>
-      							<Text xml:lang="de">Bestellmenge</Text>
-      						</Label>
-      						<Format decimalPlaces="0"><PackagingUnits>crates</PackagingUnits></Format>
-      					</MessageProperty>				
-      				</InMessageEventView>
-      				<InMessageEventView messageType="BeerDelivery" label="Delivery" showSender="false" icon="BeerDelivery.png">
+      					<Format decimalPlaces="0"><PackagingUnits>crates</PackagingUnits></Format>
+      				</MessageProperty>				
+      			</InMessageEventView>
+      			<InMessageEventView messageType="BeerDelivery" label="Delivery" showSender="false" icon="BeerDelivery.png">
+      				<Label>
+      					<Text xml:lang="de">Eingehende Lieferung</Text>
+      				</Label>
+      				<MessageProperty name="quantity" label="Delivered quantity">
       					<Label>
-      						<Text xml:lang="de">Eingehende Lieferung</Text>
+      						<Text xml:lang="de">Liefermenge</Text>
       					</Label>
-      					<MessageProperty name="quantity" label="Delivered quantity">
-      						<Label>
-      							<Text xml:lang="de">Liefermenge</Text>
-      						</Label>
-      						<Format decimalPlaces="0"><PackagingUnits>crates</PackagingUnits></Format>
-      					</MessageProperty>				
-      				</InMessageEventView>          			
-      			</PerceptionEventList>
-      			<!-- ~~~~~~~~~~~~~~~~~~~~~~~~~ -->
-      			<ReactionUI eventType="EndOfWeek">
-      				<!-- ~~~~~~~~~~~~~~~~~~~~~~~~~ -->
-      				<OutMessageEventUI messageType="Order" label="Incoming order">
-      					<Label>
-      						<Text xml:lang="de">Eingehender Auftrag</Text>
-      					</Label>
-      					<PropertyUI property="quantity">
-      						<Label>
-      							<Text>Order quantity</Text>
-      							<Text xml:lang="de">Bestellmenge</Text>
-      						</Label>
-      						<Hint>
-      							<Text>How many crates of beer do you want to order?</Text>
-      							<Text xml:lang="de">Wieviele Kästen Bier sollen bestellt werden?</Text>
-      						</Hint>
-      						<Format decimalPlaces="0"><PackagingUnits>crates</PackagingUnits></Format>
-      					</PropertyUI>				
-      				</OutMessageEventUI>          			
-      			</ReactionUI>
+      					<Format decimalPlaces="0"><PackagingUnits>crates</PackagingUnits></Format>
+      				</MessageProperty>				
+      			</InMessageEventView>          			
+      		</PerceptionEventList>
+      		<!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->
+      		<OutputField label="Inventory" agentAttribute="inventory">
       			<!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->
-      			<OutputField label="Inventory" property="inventory">
-      				<!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->
-      				<Label>
-      					<Text xml:lang="de">Lagermenge</Text>
-      				</Label>
-      				<Hint>
-      					<Text>How many crates of beer are in stock?</Text>
-      					<Text xml:lang="de">Wieviele Kästen Bier sind auf Lager?</Text>
-      				</Hint>
-      				<Format decimalPlaces="0"><PackagingUnits>crates</PackagingUnits></Format>
-      			</OutputField>
+      			<Label>
+      				<Text xml:lang="de">Lagermenge</Text>
+      			</Label>
+      			<Hint>
+      				<Text>How many crates of beer are in stock?</Text>
+      				<Text xml:lang="de">Wieviele Kästen Bier sind auf Lager?</Text>
+      			</Hint>
+      			<Format decimalPlaces="0"><PackagingUnits>crates</PackagingUnits></Format>
+      		</OutputField>
+      		<!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->
+      		<OutputField label="Backorders" agentAttribute="backorderQuantity">
       			<!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->
-      			<OutputField label="Backorders" property="backorderQuantity">
-      				<!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->
-      				<Label>
-      					<Text xml:lang="de">Nachliefermenge</Text>
-      				</Label>
-      				<Hint>
-      					<Text>How many crates of beer are in backlog?</Text>
-      					<Text xml:lang="de">Wieviele Kästen Bier müssen nachgeliefert werden?</Text>
-      				</Hint>
-      				<Format decimalPlaces="0"><PackagingUnits>crates</PackagingUnits></Format>
-      			</OutputField>
+      			<Label>
+      				<Text xml:lang="de">Nachliefermenge</Text>
+      			</Label>
+      			<Hint>
+      				<Text>How many crates of beer are in backlog?</Text>
+      				<Text xml:lang="de">Wieviele Kästen Bier müssen nachgeliefert werden?</Text>
+      			</Hint>
+      			<Format decimalPlaces="0"><PackagingUnits>crates</PackagingUnits></Format>
+      		</OutputField>
+      		<!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->
+      		<OutputField label="Total costs" agentAttribute="costs">
       			<!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->
-      			<OutputField label="Total costs" property="costs">
-      				<!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->
-      				<Label>
-      					<Text xml:lang="de">Gesamtkosten</Text>
-      				</Label>
-      				<Hint>
-      					<Text>Which costs have been accumulated meanwhile?</Text>
-      					<Text xml:lang="de">Welche Kosten sind bisher aufgelaufen?</Text>
-      				</Hint>
-      				<Format decimalPlaces="2"><Currency>EUR(€)</Currency></Format>
-      			</OutputField>
-      		</AgentControlGUI>
-      		
-      		<AgentControlEventListener agentVariable="node" guiVariable="gui" name="OrderBeer">
+      			<Label>
+      				<Text xml:lang="de">Gesamtkosten</Text>
+      			</Label>
+      			<Hint>
+      				<Text>Which costs have been accumulated meanwhile?</Text>
+      				<Text xml:lang="de">Welche Kosten sind bisher aufgelaufen?</Text>
+      			</Hint>
+      			<Format decimalPlaces="2"><Currency>EUR(€)</Currency></Format>
+      		</OutputField>
+
+      		<UserActionEventListener agentVariable="node" guiVariable="gui" name="OrderBeer">
             <WHEN>
               <MouseEvent mouseEventType="click" targetName="orderBeer" />
             </WHEN>
             <DO>
               <UPDATE-AGT>
                 <Slot property="myLastOrder">
-                  <ValueExpr language="Java">gui.getOrderBeerValue()</ValueExpr>
-                  <ValueExpr language="JavaScript">this.gui.getOrderBeerValue()</ValueExpr>
+                	<ValueExpr language="JavaScript">this.gui.getOrderBeerValue()</ValueExpr>
                 </Slot>
               </UPDATE-AGT>
               <SCHEDULE-EVT>
                 <OutMessageEventExpr messageType="Order">
-                  <ReceiverIdRef language="Java">node.getId() - 1</ReceiverIdRef>
                   <ReceiverIdRef language="JavaScript">this.node.getId() - 1</ReceiverIdRef>
                   <Slot property="quantity">
-                    <ValueExpr language="Java">gui.getOrderBeerValue()</ValueExpr>
                     <ValueExpr language="JavaScript">this.gui.getOrderBeerValue()</ValueExpr>
                   </Slot>
                 </OutMessageEventExpr>
               </SCHEDULE-EVT>
             </DO>
-          </AgentControlEventListener>
+          </UserActionEventListener>
         </AgentControlByAgentType>
       </AgentControlUI>
     </AnimationUI>
