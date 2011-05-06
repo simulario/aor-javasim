@@ -40,35 +40,27 @@
 	<!-- =================================================================== -->
 	<xs:element name="AgentControlByAgentType">
 	<!-- =================================================================== -->
+		<xs:annotation><xs:documentation>
+			The UI has 4 kinds of subelements: a perception event list, 
+			ouput fields that allow to display information about the agent itself, about other objects or about statistics,
+			user action forms allowing to enter parameter values for actions that can be performed at any time 
+			or in response to certain events.
+		</xs:documentation></xs:annotation>
 		<xs:complexType>
       <xs:sequence>
-        <xs:element name="AgentControlGUI" type="aors:AgentControlGUI.type"/>        
-      	<xs:element name="AgentControlEventListener" type="aors:AgentControlEventListener.type" minOccurs="0" maxOccurs="unbounded"/>
+      	<xs:element name="PerceptionEventList" type="aors:PerceptionEventList.type"/>
+      	<xs:element name="OutputField" type="aors:OutputField.type" minOccurs="0" maxOccurs="unbounded"/>
+      	<xs:element name="UserActionForm" type="aors:UserActionForm.type" minOccurs="0" maxOccurs="unbounded"/>
+      	<xs:element name="UserActionEventListener" type="aors:UserActionEventListener.type" minOccurs="0" maxOccurs="unbounded"/>
       </xs:sequence>
       <xs:attribute name="type" type="aors:CanonicalName" use="required"/>
     	<xs:attribute name="playableAgents" type="aors:ListOfCanonicalName" use="optional">
     		<xs:annotation><xs:documentation>A list of agent names specifying those agents (defined in the initial state) that are playable by a human user. </xs:documentation></xs:annotation>
     	</xs:attribute>
       <xs:attribute name="suspendRules" type="aors:ListOfCanonicalName" use="optional"/>
-    </xs:complexType>
+			<xs:attribute name="cssFile" type="xs:anyURI" use="optional"/>
+		</xs:complexType>
   </xs:element>
-	<!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->
-	<xs:complexType name="AgentControlGUI.type">
-	<!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->
-		<xs:annotation><xs:documentation>
-			The GUI element has 5 kinds of subelements: a perception event list, 
-			reaction elements allowing to enter parameter values for actions performed in response to certain events,
-			action elements allowing to enter parameter values for actions that can be performed at any time,
-			ouput fields that allow to display information about the agent itself, about other objects or about statistics,
-			input fields that allow to change beliefs of the agent.        		
-		</xs:documentation></xs:annotation>
-		<xs:sequence>
-			<xs:element name="PerceptionEventList" type="aors:PerceptionEventList.type"/>
-			<xs:element name="ReactionUI" type="aors:ReactionUI.type" minOccurs="0" maxOccurs="unbounded"/>
-			<xs:element name="OutputField" type="aors:OutputField.type" minOccurs="0" maxOccurs="unbounded"/>
-		</xs:sequence>
-		<xs:attribute name="cssFile" type="xs:anyURI" use="optional"/>
-	</xs:complexType>
 	<!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->	
 	<xs:complexType name="PerceptionEventList.type">
 	<!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->
@@ -149,6 +141,9 @@
 		<xs:attribute name="icon" type="xs:anyURI" use="optional">
 			<xs:annotation><xs:documentation xml:lang="en">An icon file from the media folder. </xs:documentation></xs:annotation>
 		</xs:attribute>
+		<xs:attribute name="keepInListTime" type="xs:positiveInteger" use="optional" default="1">
+			<xs:annotation><xs:documentation xml:lang="en">The time (in simulation steps) how long the perception event is kept in the list. </xs:documentation></xs:annotation>
+		</xs:attribute>
 	</xs:attributeGroup>
 	<!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->
 	<xs:complexType name="OutputField.type">
@@ -168,12 +163,12 @@
 								<xs:attribute name="name" type="aors:CanonicalName" use="required"/>
 							</xs:complexType>
 						</xs:element>	
-						<xs:element name="ObjectProperty">
-							<xs:annotation><xs:documentation xml:lang="en">A property of another object/agent. </xs:documentation></xs:annotation>
+						<xs:element name="ObjectAttribute">
+							<xs:annotation><xs:documentation xml:lang="en">An attribute of another object/agent. </xs:documentation></xs:annotation>
 							<xs:complexType>
-								<xs:attribute name="property" type="aors:CanonicalName" use="required"/>
 								<xs:attribute name="objectType" type="aors:CanonicalName" use="required"/>
 								<xs:attribute name="objectIdRef" type="xs:long" use="required"/>
+								<xs:attribute name="attribute" type="aors:CanonicalName" use="required"/>
 							</xs:complexType>
 						</xs:element>
 					</xs:choice>
@@ -181,44 +176,31 @@
 			</xs:element>
 		</xs:sequence>
 		<xs:attribute name="label" type="xs:string" use="required"/>
-		<xs:attribute name="property" type="aors:CanonicalName" use="optional">
-			<xs:annotation><xs:documentation xml:lang="en">A property of the agent. </xs:documentation></xs:annotation>			
+		<xs:attribute name="agentAttribute" type="aors:CanonicalName" use="optional">
+			<xs:annotation><xs:documentation xml:lang="en">An attribute of the agent (subject). </xs:documentation></xs:annotation>			
 		</xs:attribute>
 	</xs:complexType>
 	<!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->
-	<xs:complexType name="ReactionUI.type">
+	<xs:complexType name="UserActionForm.type">
 	<!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->
 		<xs:sequence>
-			<xs:element name="ActionEventUI" minOccurs="0" maxOccurs="unbounded">
-				<xs:annotation><xs:documentation>For specifying a non-communicative action of the player. </xs:documentation></xs:annotation>
-				<xs:complexType>
-					<xs:sequence>
-						<xs:element ref="aors:Label"/>
-						<xs:element ref="aors:PropertyUI" minOccurs="0" maxOccurs="unbounded"/>
-					</xs:sequence>
-					<xs:attribute name="actionEventType" type="aors:CanonicalName" use="required"/>
-					<xs:attributeGroup ref="aors:EventView.CommonAttributes"/>
-				</xs:complexType>
-			</xs:element>
-			<xs:element name="OutMessageEventUI" minOccurs="0" maxOccurs="unbounded">
-				<xs:annotation><xs:documentation>For specifying a communicative action of the player. </xs:documentation></xs:annotation>
-				<xs:complexType>
-					<xs:sequence>
-						<xs:element ref="aors:Label"/>
-						<xs:element ref="aors:PropertyUI" minOccurs="0" maxOccurs="unbounded"/>
-					</xs:sequence>
-					<xs:attribute name="messageType" type="aors:CanonicalName" use="required"/>
-					<xs:attributeGroup ref="aors:EventView.CommonAttributes"/>
-				</xs:complexType>
-			</xs:element>
+			<xs:element ref="aors:Label"/>
+			<xs:element name="ActionRuleParameterUI" type="aors:ParameterUI.type" minOccurs="0" maxOccurs="unbounded"/>
 		</xs:sequence>
-		<xs:attribute name="eventType" type="aors:CanonicalName" use="required">
-			<xs:annotation><xs:documentation>The type of events, in response to which the player reacts. </xs:documentation></xs:annotation>
+		<xs:attribute name="actionRule" type="aors:CanonicalName" use="required"/>
+		<xs:attribute name="label" type="xs:string" use="required"/>
+		<xs:attribute name="icon" type="xs:anyURI" use="optional">
+			<xs:annotation><xs:documentation xml:lang="en">An icon file from the media folder. </xs:documentation></xs:annotation>
+		</xs:attribute>
+		<xs:attribute name="enabledIfEventOfType" type="aors:CanonicalName" use="optional">
+			<xs:annotation><xs:documentation>The type of events, which enable this user action. </xs:documentation></xs:annotation>
 		</xs:attribute>
 	</xs:complexType>
 	<!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->
-	<xs:complexType name="AgentControlEventListener.type">
+	<xs:complexType name="UserActionEventListener.type">
 	<!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->
+		<xs:annotation><xs:documentation>A user action event listener maps an agent control user interface event to an action rule of the agent 
+			such that when an event of the specified type occurs, the action rule will be invoked. </xs:documentation></xs:annotation>
 		<xs:sequence>
       <xs:element name="WHEN">
       	<xs:annotation><xs:documentation>User interface events are defined in the DOM3-Spezifikation [http://www.w3.org/TR/DOM-Level-3-Events]. </xs:documentation></xs:annotation>
@@ -241,6 +223,7 @@
           </xs:choice>
         </xs:complexType>
       </xs:element>
+<!--
       <xs:element name="DO">
         <xs:complexType>
           <xs:sequence>
@@ -256,12 +239,16 @@
           </xs:sequence>
         </xs:complexType>
       </xs:element>            
-    </xs:sequence>
-    <xs:attribute name="name" type="aors:CanonicalName" use="required"/>
+-->
+		</xs:sequence>
+		<xs:attribute name="actionRule" type="aors:CanonicalName" use="required"/> <!-- NEW -->
+<!--
+		<xs:attribute name="name" type="aors:CanonicalName" use="required"/>
     <xs:attribute name="agentVariable" type="aors:CanonicalName" use="optional"/>
     <xs:attribute name="guiVariable" type="aors:CanonicalName" use="optional"/>
     <xs:attributeGroup ref="aors:ActionRuleEvaluation.attributes"/>
-  </xs:complexType>
+-->
+	</xs:complexType>
 	<!-- =================================================================== -->	
 	<xs:element name="KeyboardEvent">
 	<!-- =================================================================== -->
