@@ -117,7 +117,7 @@ public class RenderEngine2D implements GLEventListener, MouseMotionListener,
 	//gl.glRotated(-90, 1, 0, 0);
 	//gl.glRotated(-45, 0, 1, 0);
 	//gl.glRotated(-90, 1, 0, 0);
-	cylinder.display(gl, glu);
+	pyramid.display(gl, glu);
 	gl.glPopName();
 	  
     /*gl.glTranslated(0, 0, 95);
