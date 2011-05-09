@@ -4,15 +4,11 @@
   targetNamespace="http://aor-simulation.org" elementFormDefault="qualified" attributeFormDefault="unqualified">
   <!-- =================================================================== -->
   <xs:include schemaLocation="ERSL/EntityTypes.xsd"/>
-  <xs:include schemaLocation="ActionRules.xsd"/>
+  <xs:include schemaLocation="AgentRules.xsd"/>
   <!-- =================================================================== -->
   <!-- *** AgentType *** -->
   <!-- =================================================================== -->
   <xs:element name="AgentType" type="aors:AgentType.type" substitutionGroup="ers:ObjectType">
-    <xs:unique name="UniqueOutMessageActionRule">
-      <xs:selector xpath="aors:OutMessageActionRule"/>
-      <xs:field xpath="@messageType"/>
-    </xs:unique>
     <xs:key name="AgentType-PropertyKey">
       <xs:selector xpath="aors:Attribute | aors:ReferenceProperty"/>
       <xs:field xpath="@name"/>
@@ -26,7 +22,10 @@
         	<xs:element ref="aors:ReactionRule" minOccurs="0" maxOccurs="unbounded">
         		<xs:annotation><xs:documentation>For definiing a reactive behavior in response to an event of a certain type. </xs:documentation></xs:annotation>
         	</xs:element>
-        	<xs:element ref="aors:OutMessageActionRule" minOccurs="0" maxOccurs="unbounded"/>          
+        	<xs:element ref="aors:ActionRule" minOccurs="0" maxOccurs="unbounded">
+        		<xs:annotation><xs:documentation>For definiing a potentially pro-active behavior, 
+        			which can also be triggered by a user action in the agent control user interface. </xs:documentation></xs:annotation>
+        	</xs:element>          
         </xs:sequence>
         <xs:attributeGroup ref="aors:AgentType.attributes"/>
       </xs:extension>
@@ -62,12 +61,8 @@
   <xs:element name="PhysicalAgentType" type="aors:PhysicalAgentType.type" substitutionGroup="ers:PhysicalObjectType">
     <xs:unique name="UniqueActionRule">
       <xs:selector xpath="aors:ActionRule"/>
-      <xs:field xpath="@actionEventType"/>
+      <xs:field xpath="@name"/>
     </xs:unique>
-    <xs:unique name="UniqueOutMessageActionRule2">
-      <xs:selector xpath="aors:OutMessageActionRule"/>
-      <xs:field xpath="@messageType"/>
-    </xs:unique>    
     <xs:key name="PhysicalAgentType-PropertyKey">
       <xs:selector xpath="aors:Attribute | aors:ReferenceProperty"/>
       <xs:field xpath="@name"/>
@@ -99,7 +94,7 @@
           <xs:element ref="aors:ReactionRule" minOccurs="0" maxOccurs="unbounded">
           	<xs:annotation><xs:documentation>For definiing a reactive behavior in response to an event of a certain type. </xs:documentation></xs:annotation>
           </xs:element>
-          <xs:element ref="aors:AbstractActionRule" minOccurs="0" maxOccurs="unbounded"/>
+          <xs:element ref="aors:ActionRule" minOccurs="0" maxOccurs="unbounded"/>
         </xs:sequence>
         <xs:attribute name="autoPerception" type="xs:boolean" use="optional" default="false"/>
         <xs:attributeGroup ref="aors:AgentType.attributes"/>

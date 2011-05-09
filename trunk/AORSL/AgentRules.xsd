@@ -101,6 +101,7 @@
 			</xs:complexContent>
 		</xs:complexType>
 	</xs:redefine>
+	<xs:element name="ELSE-IF" type="ers:Condition.type"/>
 	<!-- 
 	<xs:group name="AgentRule.sharedElements">
 		<xs:sequence>
@@ -387,4 +388,26 @@
 		<xs:attribute name="senderIdRef" type="xs:long" use="optional"/>
 		<!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->
 	</xs:complexType>
+	<!-- ==================================================================== --> 
+	<xs:element name="ActionRule">  
+	<!-- ==================================================================== -->
+		<xs:complexType>
+			<xs:sequence>
+				<xs:element ref="ers:documentation" minOccurs="0"/>
+				<xs:element name="RuleParameter" type="ers:Parameter.type" minOccurs="0" maxOccurs="unbounded"/> <!-- NEW -->    	
+				<xs:element name="DO" type="aors:AgtRuleDO.type" minOccurs="0"/>
+				<xs:sequence minOccurs="0">
+					<xs:element ref="ers:IF" maxOccurs="unbounded"/>
+					<xs:element name="THEN" type="aors:AgtRuleDO.type"/>
+					<xs:sequence minOccurs="0" maxOccurs="unbounded">
+						<xs:element ref="ers:ELSE-IF" maxOccurs="unbounded"/>
+						<xs:element name="THEN" type="aors:AgtRuleDO.type"/>
+					</xs:sequence>
+					<xs:element name="ELSE" type="aors:AgtRuleDO.type" minOccurs="0"/>
+				</xs:sequence>
+			</xs:sequence>
+			<xs:attribute name="name" type="ers:CanonicalName" use="required"/> <!-- NEW -->
+			<xs:attribute name="agentVariable" type="aors:CanonicalName" use="optional"/>
+		</xs:complexType>
+	</xs:element>  
 </xs:schema>

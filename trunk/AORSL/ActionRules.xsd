@@ -6,17 +6,13 @@
 	<xs:include schemaLocation="AgentRules.xsd"/>
 	<xs:element name="ELSE-IF" type="ers:Condition.type"/>
 
-	<!-- ==================================================================== -->
-  <xs:element name="AbstractActionRule" type="aors:AbstractActionRule.type" abstract="true"/>
-  <!-- ==================================================================== -->
-  <xs:complexType name="AbstractActionRule.type" abstract="true">
+<!--    
+	<xs:element name="AbstractActionRule" type="aors:AbstractActionRule.type" abstract="true"/>
+	  <xs:complexType name="AbstractActionRule.type" abstract="true">
     <xs:sequence>
       <xs:element ref="ers:documentation" minOccurs="0"/>
-    	<xs:element name="RuleParameter" type="ers:Parameter.type" minOccurs="0" maxOccurs="unbounded"/>    	
     </xs:sequence>
-  	<xs:attribute name="name" type="ers:CanonicalName" use="required"/> <!-- NEW -->
   	<xs:attribute name="agentVariable" type="aors:CanonicalName" use="optional"/>
-<!--    
 		<xs:attribute name="inheritanceMethod" default="none">
       <xs:simpleType>
         <xs:restriction base="xs:string">
@@ -34,31 +30,28 @@
         </xs:restriction>
       </xs:simpleType>
     </xs:attribute>
--->  
   </xs:complexType>
-  <!-- ==================================================================== --> 
-  <xs:element name="ActionRule" substitutionGroup="aors:AbstractActionRule">  
+-->  
+	<!-- ==================================================================== --> 
+  <xs:element name="ActionRule">  
   <!-- ==================================================================== -->
     <xs:complexType>
-      <xs:complexContent>
-        <xs:extension base="aors:AbstractActionRule.type">
-          <xs:sequence>
-          	<xs:element name="DO" type="aors:AgtRuleDO.type" minOccurs="0"/>
-            <xs:sequence minOccurs="0">
-              <xs:element ref="ers:IF" maxOccurs="unbounded"/>
-            	<xs:element name="THEN" type="aors:AgtRuleDO.type"/>
-              <xs:sequence minOccurs="0" maxOccurs="unbounded">
-                <xs:element ref="ers:ELSE-IF" maxOccurs="unbounded"/>
-              	<xs:element name="THEN" type="aors:AgtRuleDO.type"/>
-              </xs:sequence>
-            	<xs:element name="ELSE" type="aors:AgtRuleDO.type" minOccurs="0"/>
-            </xs:sequence>
-          </xs:sequence>
-          <xs:attribute name="actionEventType" type="ers:CanonicalName" use="required"/>
-          <xs:attribute name="eventVariable" type="ers:CanonicalName" use="optional"/>
-          <!--xs:assert test="@agentVariable != @eventVariable"/-->          
-        </xs:extension>
-      </xs:complexContent>
+    	<xs:sequence>
+    		<xs:element ref="ers:documentation" minOccurs="0"/>
+    		<xs:element name="RuleParameter" type="ers:Parameter.type" minOccurs="0" maxOccurs="unbounded"/> <!-- NEW -->    	
+    		<xs:element name="DO" type="aors:AgtRuleDO.type" minOccurs="0"/>
+    		<xs:sequence minOccurs="0">
+    			<xs:element ref="ers:IF" maxOccurs="unbounded"/>
+    			<xs:element name="THEN" type="aors:AgtRuleDO.type"/>
+    			<xs:sequence minOccurs="0" maxOccurs="unbounded">
+    				<xs:element ref="ers:ELSE-IF" maxOccurs="unbounded"/>
+    				<xs:element name="THEN" type="aors:AgtRuleDO.type"/>
+    			</xs:sequence>
+    			<xs:element name="ELSE" type="aors:AgtRuleDO.type" minOccurs="0"/>
+    		</xs:sequence>
+    	</xs:sequence>
+    	<xs:attribute name="name" type="ers:CanonicalName" use="required"/> <!-- NEW -->
+    	<xs:attribute name="agentVariable" type="aors:CanonicalName" use="optional"/>
     </xs:complexType>
   </xs:element>  
   <!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->
@@ -80,9 +73,8 @@
     </xs:complexType>
   </xs:element> 
 -->
-	<!-- ==================================================================== -->
-  <xs:element name="OutMessageActionRule" substitutionGroup="aors:AbstractActionRule">
-  <!-- ==================================================================== -->
+<!--
+	<xs:element name="OutMessageActionRule" substitutionGroup="aors:AbstractActionRule">
     <xs:complexType>
       <xs:complexContent>
         <xs:extension base="aors:AbstractActionRule.type">
@@ -100,13 +92,10 @@
           </xs:sequence>
           <xs:attribute name="messageType" type="ers:CanonicalName" use="required"/>
           <xs:attribute name="messageVariable" type="ers:CanonicalName" use="optional"/>        
-          <!--xs:assert test="@messageVariable != @agentVariable"/-->                    
         </xs:extension>
       </xs:complexContent>
     </xs:complexType>
   </xs:element>
-  <!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->
-<!--
   <xs:complexType name="OutMessageActionRuleDO.type">
     <xs:choice minOccurs="0" maxOccurs="unbounded">
       <xs:element ref="aors:UPDATE-AGT"/>

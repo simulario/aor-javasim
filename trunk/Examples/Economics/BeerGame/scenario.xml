@@ -15,7 +15,7 @@
     	<dc:contributor>Mircea Diaconescu</dc:contributor>
     	<dc:contributor>Gerd Wagner</dc:contributor>
     	<dc:modified>20110218</dc:modified>
-      <description> This model describes the classical MIT Beer Game
+      <description>This model describes the classical MIT Beer Game
         (http://web.mit.edu/jsterman/www/SDG/beergame.html). It is a management simulation with a
         beer supply chain consisting of four nodes: the Retailer, the Wholesaler, the Distributor
         and the Factory. Every intermediate node has one upstream node to order and receive beer
@@ -95,10 +95,6 @@
         <!-- outDelivery: the total amount of delivery at the end of the week -->
         <Attribute name="outDelivery" type="Integer" />
         <PeriodicTimeEventType name="EndOfWeek" periodicity="7" />
-      	<OutMessageActionRule name="SendOrder" messageType="Order" messageVariable="order">
-          <IF language="Java JavaScript"><![CDATA[this.order.getQuantity() > 0]]></IF>
-          <THEN />
-        </OutMessageActionRule>
       </AgentType>
       <!-- ==================================================================== -->
       <AgentType name="TopSupplyChainNode" superType="AbstractSupplyChainNode">
@@ -472,12 +468,33 @@
             </UPDATE-AGT>
           </DO>
         </ReactionRule>
+      	<!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->
+      	<ActionRule name="SendOrder" agentVariable="node">
+     		<!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->
+      		<RuleParameter name="quantity" type="Integer"/>
+      		<IF language="Java JavaScript"><![CDATA[this.order.getQuantity() > 0]]></IF>
+      		<THEN>
+      			<UPDATE-AGT>
+      				<Slot property="myLastOrder">
+      					<ValueExpr language="Java JavaScript">this.quantity</ValueExpr>
+      				</Slot>
+      			</UPDATE-AGT>
+      			<SCHEDULE-EVT>
+      				<OutMessageEventExpr messageType="Order">
+      					<ReceiverIdRef language="JavaScript">this.node.getId() - 1</ReceiverIdRef>
+      					<Slot property="quantity">
+      						<ValueExpr language="Java JavaScript">this.quantity</ValueExpr>
+      					</Slot>
+      				</OutMessageEventExpr>
+      			</SCHEDULE-EVT>
+      		</THEN>
+      	</ActionRule>
       </AgentType>
     </EntityTypes>
     <EnvironmentRules>
       <!-- =================================================== -->
       <EnvironmentRule name="CustomerDemand_Rule">
-        <!-- =================================================== -->
+      <!-- =================================================== -->
         <documentation>
           <dc:description> When an external customer demand event occurs, a corresponding order
             message event is created. </dc:description>
@@ -947,7 +964,7 @@
       				</MessageProperty>				
       			</InMessageEventView>          			
       		</PerceptionEventList>
-      		<!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->
+      		<!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->
       		<OutputField label="Inventory" agentAttribute="inventory">
       			<!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->
       			<Label>
@@ -973,7 +990,7 @@
       		</OutputField>
       		<!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->
       		<OutputField label="Total costs" agentAttribute="costs">
-      			<!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->
+      		<!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->
       			<Label>
       				<Text xml:lang="de">Gesamtkosten</Text>
       			</Label>
@@ -983,26 +1000,29 @@
       			</Hint>
       			<Format decimalPlaces="2"><Currency>EUR(€)</Currency></Format>
       		</OutputField>
-
-      		<UserActionEventListener agentVariable="node" guiVariable="gui" name="OrderBeer">
-            <WHEN>
-              <MouseEvent mouseEventType="click" targetName="orderBeer" />
+      		<!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->
+      		<UserActionForm actionRule="SendOrder" enabledIfEventOfType="EndOfWeek" label="Order">
+     			<!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->
+      			<Label>
+      				<Text xml:lang="de">Auftrag</Text>
+      			</Label>
+      			<ActionRuleParameterUI parameter="quantity" label="Order quantity">
+      				<Label>
+      					<Text xml:lang="de">Bestellmenge</Text>
+      				</Label>
+      				<Hint>
+      					<Text>How many crates of beer do you want to order?</Text>
+      					<Text xml:lang="de">Wieviele Kästen Bier sollen bestellt werden?</Text>
+      				</Hint>
+      				<Format decimalPlaces="0"><PackagingUnits>crates</PackagingUnits></Format>
+      			</ActionRuleParameterUI>
+      		</UserActionForm>
+      		<!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->
+      		<UserActionEventListener actionRule="aRule">
+     			<!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->
+      			<WHEN>
+              <MouseEvent mouseEventType="click" targetName="anObject" />
             </WHEN>
-            <DO>
-              <UPDATE-AGT>
-                <Slot property="myLastOrder">
-                	<ValueExpr language="JavaScript">this.gui.getOrderBeerValue()</ValueExpr>
-                </Slot>
-              </UPDATE-AGT>
-              <SCHEDULE-EVT>
-                <OutMessageEventExpr messageType="Order">
-                  <ReceiverIdRef language="JavaScript">this.node.getId() - 1</ReceiverIdRef>
-                  <Slot property="quantity">
-                    <ValueExpr language="JavaScript">this.gui.getOrderBeerValue()</ValueExpr>
-                  </Slot>
-                </OutMessageEventExpr>
-              </SCHEDULE-EVT>
-            </DO>
           </UserActionEventListener>
         </AgentControlByAgentType>
       </AgentControlUI>
