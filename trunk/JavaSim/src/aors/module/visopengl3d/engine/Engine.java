@@ -26,6 +26,7 @@ import aors.module.visopengl3d.shape.View;
 import aors.module.visopengl3d.space.component.SpaceComponent;
 import aors.module.visopengl3d.space.model.GridSpaceModel;
 import aors.module.visopengl3d.space.model.SpaceModel;
+import aors.module.visopengl3d.space.view.Face;
 import aors.module.visopengl3d.space.view.GridSpaceView;
 import aors.module.visopengl3d.space.view.Skybox;
 import aors.module.visopengl3d.space.view.SpaceView;
@@ -340,7 +341,15 @@ public class Engine implements GLEventListener {
     
     Skybox skybox = spaceModel.getSpaceView().getSkybox();
     if(skybox != null) {
-    	skybox.loadTextures();
+    	Class<?> faceClass = Face.class;
+		for (Face face : (Face[])faceClass.getEnumConstants())  {
+			String textureFilename = skybox.getTextureFilename(face);
+			
+			if(textureFilename != null) {
+				skybox.setTexture(face, loadTexture(textureFilename)); 
+			}
+		}
+    	
     	skybox.generateDisplayList(gl, glu);
     }
   }

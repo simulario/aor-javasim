@@ -8,6 +8,7 @@ import aors.module.visopengl3d.utility.Color;
 import com.sun.opengl.util.texture.Texture;
 import com.sun.opengl.util.texture.TextureCoords;
 
+import java.io.File;
 import java.util.EnumMap;
 
 import javax.media.opengl.GL2;
@@ -44,16 +45,6 @@ public class Skybox {
 	
 	// Position of the skybox
 	protected double[] position = new double[3];
-	
-	
-	public void loadTextures() {
-		Class<?> faceClass = Face.class;
-		for (Face face : (Face[])faceClass.getEnumConstants())  {
-			if(getTextureFilename(face) != null) {
-				TextureLoader.load(getTextureFilename(face));
-			}
-		}
-	}
 	
 	public void generateDisplayList(GL2 gl, GLU glu) {
 
