@@ -47,7 +47,9 @@ int value = Random.uniformInt(0,1);
     <EntityTypes>
       <ActionEventType name="Move"/>
       <ActionEventType name="Eat"/>
-      <ActionEventType name="Reproduce"/>
+      <ActionEventType name="Reproduce">
+        <ReferenceProperty name="bug" type="Bug"/>
+      </ActionEventType>
       <ActionEventType name="Eat_EachOther">
         <ReferenceProperty name="bug" type="Bug"/>
       </ActionEventType>
@@ -124,7 +126,12 @@ this.percBug.getAge()
               <ActionEventExpr actionEventType="Reproduce">
                 <Condition language="Java"><![CDATA[
 b.getAge() >= Global.getMaturityLevel() && age >= Global.getMaturityLevel()  						
-      					]]></Condition>
+                ]]></Condition>
+              <Slot property="bug">
+                <ValueExpr language="Java"><![CDATA[
+this.percBug    							
+      				]]></ValueExpr>
+              </Slot>  
               </ActionEventExpr>
               <ActionEventExpr actionEventType="Eat_EachOther">
                 <Condition language="Java"><![CDATA[
@@ -278,12 +285,16 @@ b2.getM() + b1.getM()/5
       <EnvironmentRule name="Reproduce_Rule">
         <!-- =================================================== -->
         <WHEN eventType="Reproduce" eventVariable="e"/>
-      	<FOR objectVariable="b" objectType="Bug">
+      	<FOR objectVariable="b1" objectType="Bug">
       		<ObjectRef language="Java">e.getActor()</ObjectRef>
       	</FOR>
-        <DO>
+        <FOR objectVariable="b2" objectType="Bug">
+          <ObjectRef language="Java">(Bug)e.getBug()</ObjectRef>
+        </FOR>
+        <IF language="Java">b1.getGender() == "f"</IF>
+        <THEN>
         	<UPDATE-ENV>
-        		<UpdateObject objectVariable="b">
+        		<UpdateObject objectVariable="b1">
         			<Slot property="isPregnant" value="true" />
         		</UpdateObject>
         	</UPDATE-ENV>
@@ -295,11 +306,30 @@ Global.getPregnancyInterval()
                 	]]></ValueExpr>
               </Delay>
             	<Slot property="motherBugId">
-            		<ValueExpr language="Java">b.getId()</ValueExpr>
+            		<ValueExpr language="Java">b1.getId()</ValueExpr>
             	</Slot>
             </CausedEventExpr>
           </SCHEDULE-EVT>
-        </DO>
+        </THEN>
+        <ELSE>
+          <UPDATE-ENV>
+            <UpdateObject objectVariable="b2">
+              <Slot property="isPregnant" value="true" />
+            </UpdateObject>
+          </UPDATE-ENV>
+          <SCHEDULE-EVT>
+            <CausedEventExpr eventType="BugIsBorn">
+              <Delay>
+                <ValueExpr language="Java"><![CDATA[
+Global.getPregnancyInterval()                	
+                	]]></ValueExpr>
+              </Delay>
+              <Slot property="motherBugId">
+                <ValueExpr language="Java">b2.getId()</ValueExpr>
+              </Slot>
+            </CausedEventExpr>
+          </SCHEDULE-EVT>
+        </ELSE>
       </EnvironmentRule>
       <!-- =================================================== -->
       <EnvironmentRule name="BugIsBorn_Rule">
