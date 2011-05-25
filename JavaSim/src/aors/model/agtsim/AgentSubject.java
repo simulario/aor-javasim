@@ -96,6 +96,13 @@ public abstract class AgentSubject extends Entity implements Rollbackable,
    * 
    */
   protected List<ReactionRule> reactionRules;
+  
+  /**
+   * Comments: rules are created only by the constructor. There is no setter for
+   * this property
+   * 
+   */
+  protected List<ActionRule> actionRules;
 
   /**
    * Actual Perception Rules TODO comment
