@@ -1,4 +1,4 @@
-package aors.module.visopengl.test.utility;
+package aors.module.visopengl.utility;
 
 import javax.media.opengl.GL2;
 

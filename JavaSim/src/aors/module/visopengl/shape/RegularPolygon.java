@@ -5,8 +5,8 @@ import java.util.ArrayList;
 import javax.media.opengl.GL2;
 import javax.media.opengl.glu.GLU;
 
-import aors.module.visopengl.test.utility.TessellatedPolygon;
 import aors.module.visopengl.utility.Color;
+import aors.module.visopengl.utility.TessellatedPolygon;
 
 /**
  * The RegularPolygon class is representing a simple geometric regular polygon

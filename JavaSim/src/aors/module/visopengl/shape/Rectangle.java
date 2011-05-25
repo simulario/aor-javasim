@@ -5,8 +5,8 @@ import java.util.ArrayList;
 import javax.media.opengl.GL2;
 import javax.media.opengl.glu.GLU;
 
-import aors.module.visopengl.test.utility.TessellatedPolygon;
 import aors.module.visopengl.utility.Color;
+import aors.module.visopengl.utility.TessellatedPolygon;
 
 /**
  * The Rectangle class is representing a simple geometric rectangle with a
