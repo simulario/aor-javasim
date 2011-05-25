@@ -1,4 +1,4 @@
-package aors.module.visopengl3d.test.utility;
+package aors.module.visopengl3d.utility;
 
 import javax.media.opengl.GL2;
 import javax.media.opengl.glu.GLU;

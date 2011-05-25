@@ -6,7 +6,7 @@ import javax.media.opengl.GL2;
 import javax.media.opengl.glu.GLU;
 import javax.media.opengl.glu.GLUtessellator;
 
-import aors.module.visopengl3d.test.utility.TesselationCallback;
+import aors.module.visopengl3d.utility.TesselationCallback;
 
 public class TessellatedPolygon {
   // Tessellation callbacks

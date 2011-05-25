@@ -1,4 +1,4 @@
-package aors.module.visopengl3d.test.utility;
+package aors.module.visopengl3d.utility;
 
 import java.util.ArrayList;
 
