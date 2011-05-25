@@ -990,6 +990,7 @@ public class UpdateManager {
         }
 
         view.getShape().applyPropertyMaps((Physical) obj);
+        view.getShape().applyPropertyMaps(phyAgt);
       }
     }
   }

@@ -128,9 +128,9 @@ public abstract class Shape2D implements Cloneable {
 	 * Displays the shape.
 	 * 
 	 * @param gl
-	 *          OpenGL pipeline object.
+	 *            OpenGL pipeline object.
 	 * @param glu
-	 *          OpenGL utility library object.
+	 *            OpenGL utility library object.
 	 */
 	public void display(GL2 gl, GLU glu) {
 		if (displayList != -1) {
@@ -142,22 +142,22 @@ public abstract class Shape2D implements Cloneable {
 	 * Generates the shape's display list.
 	 * 
 	 * @param gl
-	 *          OpenGL pipeline object.
+	 *            OpenGL pipeline object.
 	 * @param glu
-	 *          OpenGL utility library object.
+	 *            OpenGL utility library object.
 	 */
 	public abstract void generateDisplayList(GL2 gl, GLU glu);
 
 	/**
-	 * Calculates the vertices lying on the shapes contour. Either the contour of
-	 * the whole shape (outShape) or the contour of a smaller version of the shape
-	 * (inShape), that is used to apply a border around the shape. If inContour is
-	 * null only the outer contour will be calculated.
+	 * Calculates the vertices lying on the shapes contour. Either the contour
+	 * of the whole shape (outShape) or the contour of a smaller version of the
+	 * shape (inShape), that is used to apply a border around the shape. If
+	 * inContour is null only the outer contour will be calculated.
 	 * 
 	 * @param outContour
-	 *          List storing vertices of the shapes contour.
+	 *            List storing vertices of the shapes contour.
 	 * @param inContour
-	 *          List storing vertices of the shapes border.
+	 *            List storing vertices of the shapes border.
 	 */
 	protected abstract void calculateContour(ArrayList<double[]> outContour,
 			ArrayList<double[]> inContour);
@@ -166,9 +166,9 @@ public abstract class Shape2D implements Cloneable {
 	 * Applies a color to each vertex in a list of vertices.
 	 * 
 	 * @param contour
-	 *          List of vertices.
+	 *            List of vertices.
 	 * @param color
-	 *          Color that will be applied to each vertex.
+	 *            Color that will be applied to each vertex.
 	 */
 	protected void applyColor(ArrayList<double[]> contour, Color color) {
 		for (double[] vertex : contour) {
@@ -181,13 +181,13 @@ public abstract class Shape2D implements Cloneable {
 	}
 
 	/**
-	 * Performs a mapping from object coordinates into texture coordinates. If the
-	 * second parameter equals null texture coordinates will be set to 0.
+	 * Performs a mapping from object coordinates into texture coordinates. If
+	 * the second parameter equals null texture coordinates will be set to 0.
 	 * 
 	 * @param contour
-	 *          List storing vertices.
+	 *            List storing vertices.
 	 * @param tc
-	 *          tImage coordinates of the texture image.
+	 *            tImage coordinates of the texture image.
 	 */
 	protected void applyTexture(ArrayList<double[]> contour, TextureCoords tc) {
 		/*
@@ -256,22 +256,24 @@ public abstract class Shape2D implements Cloneable {
 
 				if (obj.getClass().equals(Object.class)) {
 					System.out
-							.println("Visualization Warning: Object with ID " + obj.getId()
-									+ " has no getter method for property: " + propName);
+							.println("Visualization Warning: Object with ID "
+									+ obj.getId()
+									+ " has no getter method for property: "
+									+ propName);
 					return;
 				}
 
 				// get the property value calling the getter via reflection
-				Method getter = this.locateMethodInClasses(obj.getClass(), propertyMap
-						.getPropertyName());
+				Method getter = this.locateMethodInClasses(obj.getClass(),
+						propertyMap.getPropertyName());
 				if (getter == null) {
 					continue;
 				}
 
 				// Apply the property map
 				try {
-					updateVisualProperty(propertyMap.getVisualPropertyName(), propertyMap
-							.performMapping(getter.invoke(obj)));
+					updateVisualProperty(propertyMap.getVisualPropertyName(),
+							propertyMap.performMapping(getter.invoke(obj)));
 				} catch (IllegalArgumentException e) {
 					e.printStackTrace();
 				} catch (IllegalAccessException e) {
@@ -288,20 +290,21 @@ public abstract class Shape2D implements Cloneable {
 	}
 
 	/**
-	 * Locates a getter method in the class of the object or in its super classes
-	 * for a given property
+	 * Locates a getter method in the class of the object or in its super
+	 * classes for a given property
 	 * 
 	 * @param clazz
-	 *          the class where start to look for the getter method
+	 *            the class where start to look for the getter method
 	 * @param propName
-	 *          the property name for which we look for the getter method
+	 *            the property name for which we look for the getter method
 	 * @return the getter method object is found, null otherwise
 	 */
 	private Method locateMethodInClasses(Class<?> clazz, String propName) {
 		try {
 			// Look for the method in the super class and return it
 			if (clazz.getSuperclass() != null) {
-				String methodName = "get" + Character.toUpperCase(propName.charAt(0))
+				String methodName = "get"
+						+ Character.toUpperCase(propName.charAt(0))
 						+ (propName.length() > 1 ? propName.substring(1) : "");
 				Method method = clazz.getDeclaredMethod(methodName);
 				return method;
@@ -313,7 +316,8 @@ public abstract class Shape2D implements Cloneable {
 		} catch (NoSuchMethodException e) {
 			// Look for methods of boolean types
 			try {
-				String methodName = "is" + Character.toUpperCase(propName.charAt(0))
+				String methodName = "is"
+						+ Character.toUpperCase(propName.charAt(0))
 						+ (propName.length() > 1 ? propName.substring(1) : "");
 				Method method = clazz.getDeclaredMethod(methodName);
 				return method;
@@ -336,9 +340,11 @@ public abstract class Shape2D implements Cloneable {
 			for (PropertyMap propertyMap : propertyMaps) {
 				if (objectType.getSlot() != null) {
 					for (SlotType slot : objectType.getSlot()) {
-						if (slot.getProperty().equals(propertyMap.getPropertyName())) {
+						if (slot.getProperty().equals(
+								propertyMap.getPropertyName())) {
 							// Apply the property map
-							updateVisualProperty(propertyMap.getVisualPropertyName(),
+							updateVisualProperty(
+									propertyMap.getVisualPropertyName(),
 									propertyMap.performMapping(slot.getValue()));
 						}
 					}
@@ -357,9 +363,11 @@ public abstract class Shape2D implements Cloneable {
 			for (PropertyMap propertyMap : propertyMaps) {
 				if (objType.getSlot() != null) {
 					for (SlotType slot : objType.getSlot()) {
-						if (slot.getProperty().equals(propertyMap.getPropertyName())) {
+						if (slot.getProperty().equals(
+								propertyMap.getPropertyName())) {
 							// Apply the property map
-							updateVisualProperty(propertyMap.getVisualPropertyName(),
+							updateVisualProperty(
+									propertyMap.getVisualPropertyName(),
 									propertyMap.performMapping(slot.getValue()));
 						}
 					}
@@ -378,10 +386,14 @@ public abstract class Shape2D implements Cloneable {
 			for (PropertyMap propertyMap : propertyMaps) {
 				if (agtType.getSlot() != null) {
 					for (SlotType slot : agtType.getSlot()) {
-						if (slot.getProperty().equals(propertyMap.getPropertyName())) {
+						if (slot.getProperty().equals(
+								propertyMap.getPropertyName())) {
 							// Apply the property map
-							updateVisualProperty(propertyMap.getVisualPropertyName(),
+							updateVisualProperty(
+									propertyMap.getVisualPropertyName(),
 									propertyMap.performMapping(slot.getValue()));
+							System.out.println(propertyMap.performMapping(slot
+									.getValue()));
 						}
 					}
 				}
@@ -393,96 +405,97 @@ public abstract class Shape2D implements Cloneable {
 		if (propertyMaps != null) {
 			for (PropertyMap propertyMap : propertyMaps) {
 				if (propertyMap.getPropertyName().equals("x"))
-					updateVisualProperty(propertyMap.getVisualPropertyName(), propertyMap
-							.performMapping(phy.getX()));
+					updateVisualProperty(propertyMap.getVisualPropertyName(),
+							propertyMap.performMapping(phy.getX()));
 
 				else if (propertyMap.getPropertyName().equals("y"))
-					updateVisualProperty(propertyMap.getVisualPropertyName(), propertyMap
-							.performMapping(phy.getY()));
+					updateVisualProperty(propertyMap.getVisualPropertyName(),
+							propertyMap.performMapping(phy.getY()));
 
 				else if (propertyMap.getPropertyName().equals("z"))
-					updateVisualProperty(propertyMap.getVisualPropertyName(), propertyMap
-							.performMapping(phy.getZ()));
+					updateVisualProperty(propertyMap.getVisualPropertyName(),
+							propertyMap.performMapping(phy.getZ()));
 
 				else if (propertyMap.getPropertyName().equals("rotationAngleX"))
-					updateVisualProperty(propertyMap.getVisualPropertyName(), propertyMap
-							.performMapping(phy.getRotX()));
+					updateVisualProperty(propertyMap.getVisualPropertyName(),
+							propertyMap.performMapping(phy.getRotX()));
 
 				else if (propertyMap.getPropertyName().equals("rotationAngleY"))
-					updateVisualProperty(propertyMap.getVisualPropertyName(), propertyMap
-							.performMapping(phy.getRotY()));
+					updateVisualProperty(propertyMap.getVisualPropertyName(),
+							propertyMap.performMapping(phy.getRotY()));
 
 				else if (propertyMap.getPropertyName().equals("rotationAngleZ"))
-					updateVisualProperty(propertyMap.getVisualPropertyName(), propertyMap
-							.performMapping(phy.getRotZ()));
+					updateVisualProperty(propertyMap.getVisualPropertyName(),
+							propertyMap.performMapping(phy.getRotZ()));
 
 				else if (propertyMap.getPropertyName().equals("vx"))
-					updateVisualProperty(propertyMap.getVisualPropertyName(), propertyMap
-							.performMapping(phy.getVx()));
+					updateVisualProperty(propertyMap.getVisualPropertyName(),
+							propertyMap.performMapping(phy.getVx()));
 
 				else if (propertyMap.getPropertyName().equals("vy"))
-					updateVisualProperty(propertyMap.getVisualPropertyName(), propertyMap
-							.performMapping(phy.getVy()));
+					updateVisualProperty(propertyMap.getVisualPropertyName(),
+							propertyMap.performMapping(phy.getVy()));
 
 				else if (propertyMap.getPropertyName().equals("vz"))
-					updateVisualProperty(propertyMap.getVisualPropertyName(), propertyMap
-							.performMapping(phy.getVz()));
+					updateVisualProperty(propertyMap.getVisualPropertyName(),
+							propertyMap.performMapping(phy.getVz()));
 
 				else if (propertyMap.getPropertyName().equals("ax"))
-					updateVisualProperty(propertyMap.getVisualPropertyName(), propertyMap
-							.performMapping(phy.getAx()));
+					updateVisualProperty(propertyMap.getVisualPropertyName(),
+							propertyMap.performMapping(phy.getAx()));
 
 				else if (propertyMap.getPropertyName().equals("ay"))
-					updateVisualProperty(propertyMap.getVisualPropertyName(), propertyMap
-							.performMapping(phy.getAy()));
+					updateVisualProperty(propertyMap.getVisualPropertyName(),
+							propertyMap.performMapping(phy.getAy()));
 
 				else if (propertyMap.getPropertyName().equals("az"))
-					updateVisualProperty(propertyMap.getVisualPropertyName(), propertyMap
-							.performMapping(phy.getAz()));
+					updateVisualProperty(propertyMap.getVisualPropertyName(),
+							propertyMap.performMapping(phy.getAz()));
 
 				else if (propertyMap.getPropertyName().equals("omegaX"))
-					updateVisualProperty(propertyMap.getVisualPropertyName(), propertyMap
-							.performMapping(phy.getOmegaX()));
+					updateVisualProperty(propertyMap.getVisualPropertyName(),
+							propertyMap.performMapping(phy.getOmegaX()));
 
 				else if (propertyMap.getPropertyName().equals("omegaY"))
-					updateVisualProperty(propertyMap.getVisualPropertyName(), propertyMap
-							.performMapping(phy.getOmegaY()));
+					updateVisualProperty(propertyMap.getVisualPropertyName(),
+							propertyMap.performMapping(phy.getOmegaY()));
 
 				else if (propertyMap.getPropertyName().equals("omegaZ"))
-					updateVisualProperty(propertyMap.getVisualPropertyName(), propertyMap
-							.performMapping(phy.getOmegaZ()));
+					updateVisualProperty(propertyMap.getVisualPropertyName(),
+							propertyMap.performMapping(phy.getOmegaZ()));
 
 				else if (propertyMap.getPropertyName().equals("alphaX"))
-					updateVisualProperty(propertyMap.getVisualPropertyName(), propertyMap
-							.performMapping(phy.getAlphaX()));
+					updateVisualProperty(propertyMap.getVisualPropertyName(),
+							propertyMap.performMapping(phy.getAlphaX()));
 
 				else if (propertyMap.getPropertyName().equals("alphaY"))
-					updateVisualProperty(propertyMap.getVisualPropertyName(), propertyMap
-							.performMapping(phy.getAlphaY()));
+					updateVisualProperty(propertyMap.getVisualPropertyName(),
+							propertyMap.performMapping(phy.getAlphaY()));
 
 				else if (propertyMap.getPropertyName().equals("alphaZ"))
-					updateVisualProperty(propertyMap.getVisualPropertyName(), propertyMap
-							.performMapping(phy.getAlphaZ()));
+					updateVisualProperty(propertyMap.getVisualPropertyName(),
+							propertyMap.performMapping(phy.getAlphaZ()));
 
 				else if (propertyMap.getPropertyName().equals("m"))
-					updateVisualProperty(propertyMap.getVisualPropertyName(), propertyMap
-							.performMapping(phy.getM()));
+					updateVisualProperty(propertyMap.getVisualPropertyName(),
+							propertyMap.performMapping(phy.getM()));
 
 				else if (propertyMap.getPropertyName().equals("width"))
-					updateVisualProperty(propertyMap.getVisualPropertyName(), propertyMap
-							.performMapping(phy.getWidth()));
+					updateVisualProperty(propertyMap.getVisualPropertyName(),
+							propertyMap.performMapping(phy.getWidth()));
 
 				else if (propertyMap.getPropertyName().equals("height"))
-					updateVisualProperty(propertyMap.getVisualPropertyName(), propertyMap
-							.performMapping(phy.getHeight()));
+					updateVisualProperty(propertyMap.getVisualPropertyName(),
+							propertyMap.performMapping(phy.getHeight()));
 
 				else if (propertyMap.getPropertyName().equals("depth"))
-					updateVisualProperty(propertyMap.getVisualPropertyName(), propertyMap
-							.performMapping(phy.getDepth()));
+					updateVisualProperty(propertyMap.getVisualPropertyName(),
+							propertyMap.performMapping(phy.getDepth()));
 
 				else if (propertyMap.getPropertyName().equals("materialType"))
-					updateVisualProperty(propertyMap.getVisualPropertyName(), propertyMap
-							.performMapping(phy.getMaterialType().name()));
+					updateVisualProperty(propertyMap.getVisualPropertyName(),
+							propertyMap.performMapping(phy.getMaterialType()
+									.name()));
 			}
 		}
 	}
@@ -509,7 +522,8 @@ public abstract class Shape2D implements Cloneable {
 				}
 			}
 
-			else if (shapeProperty.equals(STROKE) || shapeProperty.equals(STROKE_RGB)) {
+			else if (shapeProperty.equals(STROKE)
+					|| shapeProperty.equals(STROKE_RGB)) {
 				Color tmp = new Color(value);
 
 				// Only update if the color has really changed
@@ -549,7 +563,8 @@ public abstract class Shape2D implements Cloneable {
 
 			else if (shapeProperty.equals(X)) {
 				if (value.endsWith("%")) {
-					relativeX = Double.valueOf(value.substring(0, value.length() - 1));
+					relativeX = Double.valueOf(value.substring(0,
+							value.length() - 1));
 					xRelative = true;
 				} else if (value.endsWith("px")) {
 					x = Double.valueOf(value.substring(0, value.length() - 2));
@@ -561,7 +576,8 @@ public abstract class Shape2D implements Cloneable {
 
 			else if (shapeProperty.equals(Y)) {
 				if (value.endsWith("%")) {
-					relativeY = Double.valueOf(value.substring(0, value.length() - 1));
+					relativeY = Double.valueOf(value.substring(0,
+							value.length() - 1));
 					yRelative = true;
 				} else if (value.endsWith("px")) {
 					y = Double.valueOf(value.substring(0, value.length() - 2));
@@ -573,11 +589,12 @@ public abstract class Shape2D implements Cloneable {
 
 			else if (shapeProperty.equals(WIDTH)) {
 				if (value.endsWith("%")) {
-					relativeWidth = Double
-							.valueOf(value.substring(0, value.length() - 1));
+					relativeWidth = Double.valueOf(value.substring(0,
+							value.length() - 1));
 					widthRelative = true;
 				} else if (value.endsWith("px")) {
-					width = Double.valueOf(value.substring(0, value.length() - 2));
+					width = Double.valueOf(value.substring(0,
+							value.length() - 2));
 				} else {
 					width = Double.valueOf(value);
 				}
@@ -586,11 +603,12 @@ public abstract class Shape2D implements Cloneable {
 
 			else if (shapeProperty.equals(HEIGHT)) {
 				if (value.endsWith("%")) {
-					relativeHeight = Double.valueOf(value
-							.substring(0, value.length() - 1));
+					relativeHeight = Double.valueOf(value.substring(0,
+							value.length() - 1));
 					heightRelative = true;
 				} else if (value.endsWith("px")) {
-					height = Double.valueOf(value.substring(0, value.length() - 2));
+					height = Double.valueOf(value.substring(0,
+							value.length() - 2));
 				} else {
 					height = Double.valueOf(value);
 				}
@@ -599,11 +617,12 @@ public abstract class Shape2D implements Cloneable {
 
 			else if (shapeProperty.equals(R)) {
 				if (value.endsWith("%")) {
-					relativeWidth = Double
-							.valueOf(value.substring(0, value.length() - 1)) * 2;
+					relativeWidth = Double.valueOf(value.substring(0,
+							value.length() - 1)) * 2;
 					widthRelative = true;
 				} else if (value.endsWith("px")) {
-					width = Double.valueOf(value.substring(0, value.length() - 2)) * 2;
+					width = Double.valueOf(value.substring(0,
+							value.length() - 2)) * 2;
 				} else {
 					width = Double.valueOf(value) * 2;
 				}
@@ -612,11 +631,12 @@ public abstract class Shape2D implements Cloneable {
 
 			else if (shapeProperty.equals(RX)) {
 				if (value.endsWith("%")) {
-					relativeWidth = Double
-							.valueOf(value.substring(0, value.length() - 1)) * 2;
+					relativeWidth = Double.valueOf(value.substring(0,
+							value.length() - 1)) * 2;
 					widthRelative = true;
 				} else if (value.endsWith("px")) {
-					width = Double.valueOf(value.substring(0, value.length() - 2)) * 2;
+					width = Double.valueOf(value.substring(0,
+							value.length() - 2)) * 2;
 				} else {
 					width = Double.valueOf(value) * 2;
 				}
@@ -625,11 +645,12 @@ public abstract class Shape2D implements Cloneable {
 
 			else if (shapeProperty.equals(RY)) {
 				if (value.endsWith("%")) {
-					relativeHeight = Double.valueOf(value
-							.substring(0, value.length() - 1)) * 2;
+					relativeHeight = Double.valueOf(value.substring(0,
+							value.length() - 1)) * 2;
 					heightRelative = true;
 				} else if (value.endsWith("px")) {
-					height = Double.valueOf(value.substring(0, value.length() - 2)) * 2;
+					height = Double.valueOf(value.substring(0,
+							value.length() - 2)) * 2;
 				} else {
 					height = Double.valueOf(value) * 2;
 				}
