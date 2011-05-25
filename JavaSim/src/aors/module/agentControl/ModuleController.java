@@ -1,5 +1,9 @@
 package aors.module.agentControl;
 
+import java.io.File;
+import java.util.HashMap;
+import java.util.Map;
+
 import aors.controller.InitialState;
 import aors.controller.SimulationDescription;
 import aors.data.evt.ControllerEvent;
@@ -14,10 +18,6 @@ import aors.model.envevt.EnvironmentEvent;
 import aors.module.Module;
 import aors.module.agentControl.gui.GUIManager;
 import aors.util.jar.JarUtil;
-import java.io.File;
-import java.io.IOException;
-import java.util.HashMap;
-import java.util.Map;
 
 /**
  * This class is the module's main class. It receives all the messsages from

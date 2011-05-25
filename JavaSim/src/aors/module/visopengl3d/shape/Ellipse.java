@@ -5,8 +5,8 @@ import java.util.ArrayList;
 import javax.media.opengl.GL2;
 import javax.media.opengl.glu.GLU;
 
-import aors.module.visopengl3d.test.utility.TessellatedPolygon;
 import aors.module.visopengl3d.utility.Color;
+import aors.module.visopengl3d.utility.TessellatedPolygon;
 
 /**
  * The Ellipse class is representing a simple geometric ellipse with a border.
