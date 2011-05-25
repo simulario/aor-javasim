@@ -132,6 +132,9 @@ int r2 = Random.uniformInt(1,6);
 				<!-- =================================================== -->
 				<Attribute name="maxMenuBoardQL" type="Integer"/>
 				<Attribute name="menuBoardBusy" type="Boolean"/>
+				<ReferenceProperty name="menuBoardQueue" type="Customer" upperMultiplicity="unbounded">
+					<description>This property represents a first-in-first-out queue.</description>
+				</ReferenceProperty>
 				<!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->
 				<Function name="getMessagePart" resultType="String">
 					<!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->
@@ -294,6 +297,9 @@ Integer.parseInt(getMessagePart(evt.getReminderMsg(),3))
 				<!-- =========================== -->
 				<Attribute name="maxPickupQL" type="Integer"/>
 				<Attribute name="pickupWindowBusy" type="Boolean"/>
+				<ReferenceProperty name="pickupWindowQueue" type="Customer" upperMultiplicity="unbounded">
+					<description>This property represents a first-in-first-out queue. </description>
+				</ReferenceProperty>
 				<!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~-->
 				<Function name="pizzaPrice" resultType="Float">
 					<!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->
@@ -448,10 +454,9 @@ cust.getOrderNo()
 				</documentation>
 				<WHEN eventType="CustomerArrival" eventVariable="evt"/>
 				<FOR objectVariable="mb" objectType="MenuBoard" objectIdRef="1"/>
-				<FOR objectVariable="mbq" objectName="MenuBoardQueue" objectType="Collection" objectIdRef="3"/>
 				<FOR objectVariable="q1" objectType="Queue" objectIdRef="6"/>
 				<IF language="Java"><![CDATA[
-mbq.size() >= mb.getMaxMenuBoardQL()
+mb.getMenuBoardQueue().size() >= mb.getMaxMenuBoardQL()
         ]]></IF>
 				<THEN>
 					<UPDATE-ENV>
@@ -462,7 +467,7 @@ SimStatistics.numberOfLostCustomers.getValue() + 1
 						</UpdateStatisticsVariable>
 						<UpdateObject objectVariable="q1">
 							<Slot property="lengthOfQueue">
-								<ValueExpr language="Java">mbq.size()</ValueExpr>
+								<ValueExpr language="Java">mb.getMenuBoardQueue().size()</ValueExpr>
 							</Slot>
 						</UpdateObject>
 					</UPDATE-ENV>
@@ -470,16 +475,20 @@ SimStatistics.numberOfLostCustomers.getValue() + 1
 				<ELSE>
 					<UPDATE-ENV>
 						<Create>
-							<Agent type="Customer" objectVariable="customer"
-								addToCollection="MenuBoardQueue">
+							<Agent type="Customer" objectVariable="customer">
 								<Slot property="arrivalTime">
 									<ValueExpr language="Java">evt.getOccurrenceTime()</ValueExpr>
 								</Slot>
 							</Agent>
 						</Create>
+						<UpdateObject objectVariable="mb">
+							<MultiValuedSlot property="menuBoardQueue">
+								<AddLast itemVariable="customer" />
+							</MultiValuedSlot>
+						</UpdateObject>
 						<UpdateObject objectVariable="q1">
 							<Slot property="lengthOfQueue">
-								<ValueExpr language="Java">mbq.size()</ValueExpr>
+								<ValueExpr language="Java">mb.getMenuBoardQueue().size()</ValueExpr>
 							</Slot>
 						</UpdateObject>
 						<UpdateStatisticsVariable variable="numberOfCustomers">
@@ -506,10 +515,8 @@ SimStatistics.numberOfCustomers.getValue() + 1
 				</documentation>
 				<WHEN eventType="StartMenuBoardService"/>
 				<FOR objectVariable="mb" objectType="MenuBoard" objectIdRef="1"/>
-				<FOR objectVariable="mbq" objectType="Collection" objectName="MenuBoardQueue"
-					objectIdRef="3"/>
 				<FOR objectVariable="cust" objectType="Customer">
-					<ObjectRef language="Java">mbq.getItem()</ObjectRef>
+					<ObjectRef language="Java">mb.getMenuBoardQueue().get(0)</ObjectRef>
 				</FOR>
 				<DO>
 					<UPDATE-ENV>
@@ -526,23 +533,19 @@ SimStatistics.numberOfCustomers.getValue() + 1
 				</DO>
 			</EnvironmentRule>
 			<!-- ================================================================ -->
-			<EnvironmentRule name="EndMenuBoardServiceWhenPickupWindowQueueFull_Rule">
+			<EnvironmentRule name="EndMenuBoardService_Rule">
 				<!-- ================================================================ -->
 				<documentation>
 					<description> When a menu board service ends, but the PickupWindowQueue is full, the customer cannot move forward. We just update the customer attribute, so we know that he is waiting for a free place in the Pickup Window waiting line.</description>
 				</documentation>
 				<WHEN eventType="OutMessageEvent" messageType="ConfirmOrder" messageVariable="mes"/>
-				<FOR objectVariable="mbq" objectName="MenuBoardQueue" objectType="Collection"
-					objectIdRef="3"/>
 				<FOR objectVariable="pw" objectType="PickupWindow" objectIdRef="2"/>
-				<FOR objectVariable="pwq" objectName="PickupWindowQueue" objectType="Collection"
-					objectIdRef="4"/>
 				<FOR objectVariable="q2" objectType="Queue" objectIdRef="7"/>
 				<FOR objectVariable="cust" objectType="Customer">
-					<ObjectRef language="Java">mbq.getItem()</ObjectRef>
+					<ObjectRef language="Java">mb.getMenuBoardQueue().get(0)</ObjectRef>
 				</FOR>
 				<IF language="Java"><![CDATA[
-pwq.size() >= pw.getMaxPickupQL()       
+pw.getPickupWindowQueue().size() >= pw.getMaxPickupQL()       
          ]]></IF>
 				<THEN>
 					<UPDATE-ENV>
@@ -556,74 +559,56 @@ mes.getOrderNo()
 						</UpdateObject>
 						<UpdateObject objectVariable="q2">
 							<Slot property="lengthOfQueue">
-								<ValueExpr language="Java">pwq.size()</ValueExpr>
+								<ValueExpr language="Java">pw.getPickupWindowQueue().size()</ValueExpr>
 							</Slot>
 						</UpdateObject>
 					</UPDATE-ENV>
 				</THEN>
-			</EnvironmentRule>
-			<!-- ========================================================================== -->
-			<EnvironmentRule name="EndMenuBoardServiceWhenPickupWindowServiceQueueNotFull_Rule">
-				<!-- ========================================================================== -->
-				<documentation>
-					<description>When a menu board service ends and the pickup window service queue is not full, then the current customer moves forward. Furthermore, if there are no more customers in the menu board queue, then the menu board is no longer busy. Otherwise, a new StartMenuBoardService event is created for serving the next customer. </description>
-				</documentation>
-				<WHEN eventType="OutMessageEvent" messageType="ConfirmOrder" messageVariable="mes"
-					eventVariable="evt"/>
-				<FOR objectVariable="mb" objectType="MenuBoard" objectIdRef="1"/>
-				<FOR objectVariable="pw" objectType="PickupWindow" objectIdRef="2"/>
-				<FOR objectVariable="mbq" objectName="MenuBoardQueue" objectType="Collection"
-					objectIdRef="3"/>
-				<FOR objectVariable="pwq" objectName="PickupWindowQueue" objectType="Collection"
-					objectIdRef="4"/>
-				<FOR objectVariable="q1" objectType="Queue" objectIdRef="6"/>
-				<FOR objectVariable="q2" objectType="Queue" objectIdRef="7"/>
-				<FOR objectVariable="cust" objectType="Customer">
-					<ObjectRef language="Java">mbq.getItem()</ObjectRef>
-				</FOR>
-				<IF language="Java"><![CDATA[
-pwq.size() < pw.getMaxPickupQL()
-        ]]></IF>
-				<THEN>
-					<UPDATE-ENV>
-						<UpdateObject objectVariable="cust">
-							<Slot property="orderNo">
-								<ValueExpr language="Java">mes.getOrderNo()</ValueExpr>
-							</Slot>
-							<Slot property="waitingForOrderToArrive" value="true"/>
-						</UpdateObject>
-						<RemoveObjectFromCollection collectionName="MenuBoardQueue"/>
-						<AddObjectToCollection collectionName="PickupWindowQueue"
-							itemObjectVariable="cust"/>
-						<UpdateObject objectVariable="mb">
-							<Slot property="menuBoardBusy">
-								<ValueExpr language="Java">mbq.size() == 0 ? false :true</ValueExpr>
-							</Slot>
-						</UpdateObject>
-						<UpdateObject objectVariable="q1">
-							<Slot property="lengthOfQueue">
-								<ValueExpr language="Java">mbq.size()</ValueExpr>
-							</Slot>
-						</UpdateObject>
-						<UpdateObject objectVariable="q2">
-							<Slot property="lengthOfQueue">
-								<ValueExpr language="Java">pwq.size()</ValueExpr>
-							</Slot>
-						</UpdateObject>
-					</UPDATE-ENV>
-					<SCHEDULE-EVT>
-						<CausedEventExpr eventType="StartMenuBoardService">
-							<Condition language="Java"><![CDATA[
-mbq.size() > 0
+			    <ELSE>
+			    	<UPDATE-ENV>
+			    		<UpdateObject objectVariable="cust">
+			    			<Slot property="orderNo">
+			    				<ValueExpr language="Java">mes.getOrderNo()</ValueExpr>
+			    			</Slot>
+			    			<Slot property="waitingForOrderToArrive" value="true"/>
+			    		</UpdateObject>
+			    		<UpdateObject objectVariable="mb">
+			    			<MultiValuedSlot property="menuBoardQueue">
+			    				<RemoveFirst itemVariable="cust"/>
+			    			</MultiValuedSlot>
+			    			<Slot property="menuBoardBusy">
+			    				<ValueExpr language="Java">mb.getMenuBoardQueue().size() == 0 ? false :true</ValueExpr>
+			    			</Slot>
+			    		</UpdateObject>
+			    		<UpdateObject objectVariable="pw">
+			    			<MultiValuedSlot property="pickupWindowQueue">
+			    				<AddLast itemVariable="cust"/>
+			    			</MultiValuedSlot>
+			    		</UpdateObject>
+			    		<UpdateObject objectVariable="q1">
+			    			<Slot property="lengthOfQueue">
+			    				<ValueExpr language="Java">mb.getMenuBoardQueue().size()</ValueExpr>
+			    			</Slot>
+			    		</UpdateObject>
+			    		<UpdateObject objectVariable="q2">
+			    			<Slot property="lengthOfQueue">
+			    				<ValueExpr language="Java">pw.getPickupWindowQueue().size()</ValueExpr>
+			    			</Slot>
+			    		</UpdateObject>
+			    	</UPDATE-ENV>
+			    	<SCHEDULE-EVT>
+			    		<CausedEventExpr eventType="StartMenuBoardService">
+			    			<Condition language="Java"><![CDATA[
+mb.getMenuBoardQueue().size() > 0
 	           ]]></Condition>
-						</CausedEventExpr>
-						<CausedEventExpr eventType="StartPickupWindowService">
-							<Condition language="Java"><![CDATA[
+			    		</CausedEventExpr>
+			    		<CausedEventExpr eventType="StartPickupWindowService">
+			    			<Condition language="Java"><![CDATA[
 ! pw.isPickupWindowBusy() 
 	          ]]></Condition>
-						</CausedEventExpr>
-					</SCHEDULE-EVT>
-				</THEN>
+			    		</CausedEventExpr>
+			    	</SCHEDULE-EVT>
+			    </ELSE>
 			</EnvironmentRule>
 			<!-- ====================================================================== -->
 			<EnvironmentRule name="StartPickupWindowService_Rule">
@@ -633,10 +618,8 @@ mbq.size() > 0
 				</documentation>
 				<WHEN eventType="StartPickupWindowService"/>
 				<FOR objectVariable="pw" objectType="PickupWindow" objectIdRef="2"/>
-				<FOR objectVariable="pwq" objectName="PickupWindowQueue" objectType="Collection"
-					objectIdRef="4"/>
 				<FOR objectVariable="cust" objectType="Customer">
-					<ObjectRef language="Java">pwq.getItem()</ObjectRef>
+					<ObjectRef language="Java">pw.getPickupWindowQueue().get(0)</ObjectRef>
 				</FOR>
 				<DO>
 					<UPDATE-ENV>
@@ -647,7 +630,7 @@ mbq.size() > 0
 					<SCHEDULE-EVT>
 						<InMessageEventExpr messageType="AskOrderNo">
 							<Condition language="Java"><![CDATA[
-pwq.size()>0 && cust.isWaitingForOrderToArrive()
+pw.getPickupWindowQueue().size()>0 && cust.isWaitingForOrderToArrive()
               ]]></Condition>
 							<SenderIdRef language="Java">pw.getId()</SenderIdRef>
 							<ReceiverIdRef language="Java">cust.getId()</ReceiverIdRef>
@@ -664,42 +647,46 @@ pwq.size()>0 && cust.isWaitingForOrderToArrive()
 				<WHEN eventType="StartPickupWindowService"/>
 				<FOR objectVariable="mb" objectType="MenuBoard" objectIdRef="1"/>
 				<FOR objectVariable="pw" objectType="PickupWindow" objectIdRef="2"/>
-				<FOR objectVariable="pwq" objectName="PickupWindowQueue" objectType="Collection"
-					objectIdRef="4"/>
-				<FOR objectVariable="mbq" objectName="MenuBoardQueue" objectType="Collection"
-					objectIdRef="3"/>
 				<FOR objectVariable="q1" objectType="Queue" objectIdRef="6"/>
 				<FOR objectVariable="q2" objectType="Queue" objectIdRef="7"/>
 				<FOR objectVariable="cust" objectType="Customer">
-					<ObjectRef language="Java">mbq.getItem()</ObjectRef>
+					<ObjectRef language="Java">mb.getMenuBoardQueue().get(0)</ObjectRef>
 				</FOR>
 				<IF language="Java"><![CDATA[
 cust.isWaitingForPWFree()
-          ]]></IF>
+             ]]></IF>
 				<THEN>
 					<UPDATE-ENV>
-						<RemoveObjectFromCollection collectionName="MenuBoardQueue"/>
-						<AddObjectToCollection collectionName="PickupWindowQueue"
-							itemObjectVariable="cust"/>
+						
+						<UpdateObject objectVariable="mb">
+							<MultiValuedSlot property="menuBoardQueue">
+								<RemoveFirst itemVariable="cust"/>
+							</MultiValuedSlot>
+						</UpdateObject>
+						<UpdateObject objectVariable="pw">
+							<MultiValuedSlot property="pickupWindowQueue">
+								<AddLast itemVariable="cust"/>
+							</MultiValuedSlot>
+						</UpdateObject>
 						<UpdateObject objectVariable="cust">
 							<Slot property="waitingForOrderToArrive" value="true"/>
 						</UpdateObject>
 						<UpdateObject objectVariable="q1">
 							<Slot property="lengthOfQueue">
-								<ValueExpr language="Java">mbq.size()</ValueExpr>
+								<ValueExpr language="Java">mb.getMenuBoardQueue().size()</ValueExpr>
 							</Slot>
 						</UpdateObject>
 						<UpdateObject objectVariable="q2">
 							<Slot property="lengthOfQueue">
-								<ValueExpr language="Java">pwq.size()</ValueExpr>
+								<ValueExpr language="Java">pw.getPickupWindowQueue().size()</ValueExpr>
 							</Slot>
 						</UpdateObject>
 					</UPDATE-ENV>
 					<SCHEDULE-EVT>
 						<CausedEventExpr eventType="StartMenuBoardService">
 							<Condition language="Java"><![CDATA[
-mbq.size() > 0
-	         ]]></Condition>
+mb.getMenuBoardQueue().size() > 0
+	                      ]]></Condition>
 						</CausedEventExpr>
 					</SCHEDULE-EVT>
 				</THEN>
@@ -714,24 +701,17 @@ mbq.size() > 0
 				<FOR objectVariable="mb" objectType="MenuBoard" objectIdRef="1"/>
 				<FOR objectVariable="pw" objectType="PickupWindow" objectIdRef="2"/>
 				<FOR objectVariable="q2" objectType="Queue" objectIdRef="7"/>
-				<FOR objectVariable="pwq" objectType="Collection" objectName="PickupWindowQueue" objectIdRef="4"/>
 				<FOR objectVariable="cust" objectType="Customer">
-					<ObjectRef language="Java">pwq.getItem()</ObjectRef>
+					<ObjectRef language="Java">pw.getPickupWindowQueue().get(0)</ObjectRef>
 				</FOR>
 				<IF language="Java"><![CDATA[
-pwq.size() < pw.getMaxPickupQL() 
-         ]]></IF>
+pw.getPickupWindowQueue().size() < pw.getMaxPickupQL() 
+                ]]></IF>
 				<THEN>
 					<UPDATE-ENV>
-						<UpdateObject objectVariable="pw">
-							<Slot property="pickupWindowBusy">
-								<ValueExpr language="Java">pwq.size() == 1 ? false :
-									true</ValueExpr>
-							</Slot>
-						</UpdateObject>
 						<UpdateObject objectVariable="q2">
 							<Slot property="lengthOfQueue">
-								<ValueExpr language="Java">pwq.size()-1</ValueExpr>
+								<ValueExpr language="Java">pw.getPickupWindowQueue().size()-1</ValueExpr>
 							</Slot>
 						</UpdateObject>
 						<UpdateStatisticsVariable variable="nrOfDepartures">
@@ -744,13 +724,19 @@ SimStatistics.nrOfDepartures.getValue() + 1
 SimStatistics.cumulativeResponseTime.getValue() + evt.getOccurrenceTime() - cust.getArrivalTime()
              ]]></ValueExpr>
 						</UpdateStatisticsVariable>
-						<RemoveObjectFromCollection collectionName="PickupWindowQueue"
-							destroyObject="true"/>
+						<UpdateObject objectVariable="pw">
+							<Slot property="pickupWindowBusy">
+								<ValueExpr language="Java">pw.getPickupWindowQueue().size() == 1 ? false : true</ValueExpr>
+							</Slot>
+							<MultiValuedSlot property="pickupWindowQueue">
+								<RemoveFirst itemVariable="cust"/>
+							</MultiValuedSlot>
+						</UpdateObject>
 					</UPDATE-ENV>
 					<SCHEDULE-EVT>
 						<CausedEventExpr eventType="StartPickupWindowService">
 							<Condition language="Java"><![CDATA[
-pwq.size() > 0							
+pw.getPickupWindowQueue().size() > 0							
 							]]></Condition>
 						</CausedEventExpr>
 						<InMessageEventExpr messageType="HereIsYourPizza" senderIdRef="2">
@@ -758,41 +744,24 @@ pwq.size() > 0
 						</InMessageEventExpr>
 					</SCHEDULE-EVT>
 				</THEN>
-			</EnvironmentRule>
-			<!-- =================================================================== -->
-			<EnvironmentRule name="EndPickupWindowServiceWhenQueueFull_Rule">
-				<!-- ==================================================================== -->
-				<documentation>
-					<description> On EndPickupWindowService, when the queue is full, the current pickup window service customer object is removed from the queue (and destroyed), and the current menu board service customer is moved forward to the pickup window queue. Furthermore, a new StartMenuBoardService event and a new StartPickupWindowService event is created. </description>
-				</documentation>
-				<WHEN eventType="OutMessageEvent" messageType="HereIsYourPizza" eventVariable="evt"/>
-				<FOR objectVariable="mb" objectType="MenuBoard" objectIdRef="1"/>
-				<FOR objectVariable="pw" objectType="PickupWindow" objectIdRef="2"/>
-				<FOR objectVariable="mbq" objectName="MenuBoardQueue" objectType="Collection"
-					objectIdRef="3"/>
-				<FOR objectVariable="pwq" objectName="PickupWindowQueue" objectType="Collection"
-					objectIdRef="4"/>
-				<FOR objectVariable="q2" objectType="Queue" objectIdRef="7"/>
-				<FOR objectVariable="cust" objectType="Customer">
-					<ObjectRef language="Java">pwq.getItem()</ObjectRef>
-				</FOR>
-				<IF language="Java"><![CDATA[
-pwq.size() == pw.getMaxPickupQL() 
-         ]]></IF>
-				<THEN>
+				<ELSE>
 					<UPDATE-ENV>
 						<UpdateStatisticsVariable variable="nrOfDepartures">
 							<ValueExpr language="Java">SimStatistics.nrOfDepartures.getValue() + 1</ValueExpr>
 						</UpdateStatisticsVariable>
 						<UpdateStatisticsVariable variable="cumulativeResponseTime">
 							<ValueExpr language="Java"><![CDATA[
-SimStatistics.cumulativeResponseTime.getValue() + evt.getOccurrenceTime() - pwq.getItem().getArrivalTime()
+SimStatistics.cumulativeResponseTime.getValue() + evt.getOccurrenceTime() - cust.getArrivalTime()
             ]]></ValueExpr>
 						</UpdateStatisticsVariable>
-						<RemoveObjectFromCollection collectionName="PickupWindowQueue" destroyObject="true"/>
+						<UpdateObject objectVariable="pw">
+							<MultiValuedSlot property="pickupWindowQueue">
+								<RemoveFirst itemVariable="cust"/>
+							</MultiValuedSlot>
+						</UpdateObject>
 						<UpdateObject objectVariable="q2">
 							<Slot property="lengthOfQueue">
-								<ValueExpr language="Java">pwq.size()</ValueExpr>
+								<ValueExpr language="Java">pw.getPickupWindowQueue().size()</ValueExpr>
 							</Slot>
 						</UpdateObject>
 					</UPDATE-ENV>
@@ -800,15 +769,16 @@ SimStatistics.cumulativeResponseTime.getValue() + evt.getOccurrenceTime() - pwq.
 						<CausedEventExpr eventType="StartPickupWindowService"/>
 						<InMessageEventExpr messageType="ConfirmOrder">
 							<Condition language="Java"><![CDATA[
-(mbq.size() > 0) && (mbq.getItem() != null) && ((Customer)mbq.getItem()).isWaitingForPWFree()
-             ]]></Condition>
+(mb.getMenuBoardQueue().size() > 0) && (mb.getMenuBoardQueue().get(0) != null) &&
+((Customer)mb.getMenuBoardQueue().get(0)).isWaitingForPWFree()
+                             ]]></Condition>
 							<SenderIdRef language="Java">pw.getId()</SenderIdRef>
 							<ReceiverIdRef language="Java"><![CDATA[
-((Customer)mbq.getItem()).getId()
+((Customer)mb.getMenuBoardQueue().get(0)).getId()
 							]]></ReceiverIdRef>
 							<Slot property="orderNo">
 								<ValueExpr language="Java"><![CDATA[
-((Customer)mbq.getItem()).getOrderNo()
+((Customer)mb.getMenuBoardQueue().get(0)).getOrderNo()
 							]]></ValueExpr>
 							</Slot>
 						</InMessageEventExpr>
@@ -816,7 +786,7 @@ SimStatistics.cumulativeResponseTime.getValue() + evt.getOccurrenceTime() - pwq.
 							<ReceiverIdRef language="Java">evt.getReceiverIdRef()</ReceiverIdRef>
 						</InMessageEventExpr>
 					</SCHEDULE-EVT>
-				</THEN>
+				</ELSE>
 			</EnvironmentRule>
 			<!-- ============================================================================== -->
 			<EnvironmentRule name="OrderPrepared_Rule">
@@ -825,10 +795,7 @@ SimStatistics.cumulativeResponseTime.getValue() + evt.getOccurrenceTime() - pwq.
 					<description> When an order is prepared, the Kitchen Service send it to the PW Service. The PW Service asks the client which is at the desk what is his orderNo (only if the client is waiting for his order to arrive).</description>
 				</documentation>
 				<WHEN eventType="OutMessageEvent" messageType="OrderPrepared" messageVariable="mes"/>
-				<FOR objectVariable="pw" objectName="PickupWindow" objectType="PickupWindow"
-					objectIdRef="2"/>
-				<FOR objectVariable="pwq" objectType="Collection" objectName="PickupWindowQueue"
-					objectIdRef="4"/>
+				<FOR objectVariable="pw" objectName="PickupWindow" objectType="PickupWindow" objectIdRef="2"/>
 				<FOR dataVariable="custID" dataType="Integer">
 					<ValueExpr language="Java"><![CDATA[
 mes.getCustID()
@@ -850,8 +817,9 @@ SimStatistics.revenue.getValue() + (float)pw.pizzaPrice(pizzaType)
 					<SCHEDULE-EVT>
 						<InMessageEventExpr messageType="AskOrderNo" senderIdRef="2">
 							<Condition language="Java"><![CDATA[
-pwq.size() > 0  && (( Customer)pwq.getItem()).getId() == custID && (( Customer)pwq.getItem()).isWaitingForOrderToArrive()
-              ]]></Condition>
+pw.getPickupWindowQueue().size() > 0  && (( Customer)pw.getPickupWindowQueue().get(0)).getId() ==
+custID && (( Customer)pw.getPickupWindowQueue().get(0)).isWaitingForOrderToArrive()
+                           ]]></Condition>
 							<ReceiverIdRef language="Java">custID</ReceiverIdRef>
 						</InMessageEventExpr>
 						<InMessageEventExpr messageType="OrderPrepared" receiverIdRefs="2"
@@ -859,12 +827,12 @@ pwq.size() > 0  && (( Customer)pwq.getItem()).getId() == custID && (( Customer)p
 							<Slot property="orderNo">
 								<ValueExpr language="Java"><![CDATA[
 mes.getOrderNo()
-							]]></ValueExpr>
+							   ]]></ValueExpr>
 							</Slot>
 							<Slot property="pizzaType">
 								<ValueExpr language="Java"><![CDATA[
 mes.getPizzaType()
-							]]></ValueExpr>
+							   ]]></ValueExpr>
 							</Slot>
 							<Slot property="custID">
 								<ValueExpr language="Java"><![CDATA[
@@ -876,10 +844,6 @@ mes.getCustID()
 				</DO>
 			</EnvironmentRule>
 		</EnvironmentRules>
-		<Collections>
-			<Collection itemType="Customer" type="FIFO_QUEUE" name="MenuBoardQueue" id="3" />
-			<Collection itemType="Customer" type="FIFO_QUEUE" name="PickupWindowQueue" id="4" />
-		</Collections>
 	</SimulationModel>
 
 	<!-- =================================================== -->
@@ -889,6 +853,10 @@ mes.getCustID()
 		<!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->
 			<Slot property="menuBoardBusy" value="false"/>
 			<Slot property="maxMenuBoardQL" value="5"/>
+			<Slot property="menuBoardQueue">
+				<ValueExpr language="Java"><![CDATA[ new ArrayList<Customer>() ]]></ValueExpr>
+				<ValueExpr language="JavaScript">new js.util.ArrayList()</ValueExpr>
+			</Slot>
 		</Agent>
 		<!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->
 		<Agent type="Kitchen" name="K" id="5"/>
@@ -897,6 +865,10 @@ mes.getCustID()
 		<!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->
 			<Slot property="pickupWindowBusy" value="false"/>
 			<Slot property="maxPickupQL" value="5"/>
+			<Slot property="pickupWindowQueue">
+				<ValueExpr language="Java"><![CDATA[ new ArrayList<Customer>() ]]></ValueExpr>
+				<ValueExpr language="JavaScript">new js.util.ArrayList()</ValueExpr>
+			</Slot>
 		</Agent>
 		<!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->
 		<Object type="Queue" id="6" name="MBQueue">
@@ -913,7 +885,7 @@ mes.getCustID()
 		<!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->
 	</InitialState>
 	<!-- =================================================== -->
-	<UserInterface>
+	<UserInterface supportedLanguages="en">
 	<!-- ================================================== -->
 		<StatisticsUI>
 		<!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->
