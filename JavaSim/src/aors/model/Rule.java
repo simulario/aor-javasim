@@ -50,7 +50,7 @@ public abstract class Rule {
   /**
    * helpful to know when the rules is triggered
    */
-  private long triggeredTime;
+  protected long triggeredTime;
 
   /**
    * 
