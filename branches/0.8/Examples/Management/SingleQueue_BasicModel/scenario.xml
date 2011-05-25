@@ -34,7 +34,7 @@
 					</ValueExpr>
 				</Source>
 			</Variable>
-			<!--
+			
 			<Variable name="maxQueueLength" dataType="Integer">
 				<Source aggregationFunction="max">
 					<GlobalVariable name="queueLength"/>
@@ -45,28 +45,10 @@
 					<GlobalVariable name="queueLength"/>
 				</Source>
 			</Variable>
-			-->
-			<Variable name="maxQueueLength" dataType="Integer">
-				<Source>
-					<GlobalVariable name="maxQueueLength"/>
-				</Source>
-			</Variable>
-			<Variable name="avgQueueLength" dataType="Float">
-				<Source computeOnlyAtEnd="true">
-					<ValueExpr language="Java"><![CDATA[
-		     (float) Global.sumQueueLength / Global.numberOfChanges		
-						]]></ValueExpr>
-					<ValueExpr language="JavaScript"><![CDATA[
-		     singleservicequeuewithstatistics.controller.Global.sumQueueLength / singleservicequeuewithstatistics.controller.Global.numberOfChanges		
-						]]></ValueExpr>
-				</Source>
-			</Variable>		
+			
 		</Statistics>
 		<Globals>
 			<GlobalVariable name="queueLength" dataType="Integer"/>
-			<GlobalVariable name="maxQueueLength" dataType="Integer"/>
-			<GlobalVariable name="sumQueueLength" dataType="Integer"/>
-			<GlobalVariable name="numberOfChanges" dataType="Integer"/>
 			<GlobalVariable name="serviceDeskBusy" dataType="Boolean"/>
 			<GlobalFunction name="randomServiceTime" resultType="Integer">
 				<Body language="Java"><![CDATA[
@@ -124,23 +106,6 @@
 				<THEN>
 					<UPDATE-ENV>
 						<IncrementGlobalVariable name="queueLength" value="1"/>
-						<IncrementGlobalVariable name="numberOfChanges" value="1"/>
-						<UpdateGlobalVariable name="sumQueueLength">
-							<ValueExpr language="Java"><![CDATA[
-				Global.sumQueueLength += Global.queueLength				
-							]]></ValueExpr>
-							<ValueExpr language="JavaScript"><![CDATA[
-				singleservicequeuewithstatistics.controller.Global.sumQueueLength += singleservicequeuewithstatistics.controller.Global.queueLength
-							]]></ValueExpr>
-						</UpdateGlobalVariable>
-						<UpdateGlobalVariable name="maxQueueLength">
-							<ValueExpr language="Java"><![CDATA[
-				( Global.maxQueueLength >= Global.queueLength)? Global.maxQueueLength : Global.queueLength				
-							]]></ValueExpr>
-							<ValueExpr language="JavaScript"><![CDATA[
-			    ( singleservicequeuewithstatistics.controller.Global.maxQueueLength >= singleservicequeuewithstatistics.controller.Global.queueLength) ? singleservicequeuewithstatistics.controller.Global.maxQueueLength : singleservicequeuewithstatistics.controller.Global.queueLength		
-							]]></ValueExpr>
-						</UpdateGlobalVariable>
 					</UPDATE-ENV>
 				</THEN>
 				<ELSE>
@@ -192,23 +157,6 @@
 				<ELSE>
 					<UPDATE-ENV>
 						<IncrementGlobalVariable name="queueLength" value="-1"/>
-						<IncrementGlobalVariable name="numberOfChanges" value="1"/>
-						<UpdateGlobalVariable name="sumQueueLength">
-							<ValueExpr language="Java"><![CDATA[
-				Global.sumQueueLength += Global.queueLength				
-							]]></ValueExpr>
-							<ValueExpr language="JavaScript"><![CDATA[
-				singleservicequeuewithstatistics.controller.Global.sumQueueLength += singleservicequeuewithstatistics.controller.Global.queueLength
-							]]></ValueExpr>
-						</UpdateGlobalVariable>
-						<UpdateGlobalVariable name="maxQueueLength">
-							<ValueExpr language="Java"><![CDATA[
-				(Global.maxQueueLength >= Global.queueLength)? Global.maxQueueLength : Global.queueLength				
-							]]></ValueExpr>
-							<ValueExpr language="JavaScript"><![CDATA[
-			    ( singleservicequeuewithstatistics.controller.Global.maxQueueLength >= singleservicequeuewithstatistics.controller.Global.queueLength) ? singleservicequeuewithstatistics.controller.Global.maxQueueLength : singleservicequeuewithstatistics.controller.Global.queueLength		
-							]]></ValueExpr>
-						</UpdateGlobalVariable>
 					</UPDATE-ENV>
 					<SCHEDULE-EVT>
 						<CausedEventExpr eventType="CustomerDeparture">
@@ -235,7 +183,7 @@
 		<ExogenousEvent type="CustomerArrival" occurrenceTime="1"/>
 	</InitialState>
 	<!-- =================================================== -->
-	<UserInterface>
+	<UserInterface supportedLanguages="en">
 		<!-- =================================================== -->
 		<StatisticsUI>
 			<StatisticsVariableUI variable="serviceUtilization">
