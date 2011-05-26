@@ -541,6 +541,7 @@ SimStatistics.numberOfCustomers.getValue() + 1
 				<WHEN eventType="OutMessageEvent" messageType="ConfirmOrder" messageVariable="mes"/>
 				<FOR objectVariable="mb" objectType="MenuBoard" objectIdRef="1"/>
 				<FOR objectVariable="pw" objectType="PickupWindow" objectIdRef="2"/>
+				<FOR objectVariable="q1" objectType="Queue" objectIdRef="6"/>
 				<FOR objectVariable="q2" objectType="Queue" objectIdRef="7"/>
 				<FOR objectVariable="cust" objectType="Customer">
 					<ObjectRef language="Java">mb.getMenuBoardQueue().get(0)</ObjectRef>
@@ -601,12 +602,12 @@ mes.getOrderNo()
 			    		<CausedEventExpr eventType="StartMenuBoardService">
 			    			<Condition language="Java"><![CDATA[
 mb.getMenuBoardQueue().size() > 0
-	                       ]]></Condition>
+	           ]]></Condition>
 			    		</CausedEventExpr>
 			    		<CausedEventExpr eventType="StartPickupWindowService">
 			    			<Condition language="Java"><![CDATA[
 ! pw.isPickupWindowBusy() 
-	                        ]]></Condition>
+	          ]]></Condition>
 			    		</CausedEventExpr>
 			    	</SCHEDULE-EVT>
 			    </ELSE>
@@ -619,9 +620,9 @@ mb.getMenuBoardQueue().size() > 0
 				</documentation>
 				<WHEN eventType="StartPickupWindowService"/>
 				<FOR objectVariable="pw" objectType="PickupWindow" objectIdRef="2"/>
-				<FOR objectVariable="cust" objectType="Customer">
+				<FOR objectVariable="cust1" objectType="Customer">
 					<ObjectRef language="Java">pw.getPickupWindowQueue().get(0)</ObjectRef>
-				</FOR>
+				</FOR>	
 				<DO>
 					<UPDATE-ENV>
 						<UpdateObject objectVariable="pw">
@@ -631,10 +632,10 @@ mb.getMenuBoardQueue().size() > 0
 					<SCHEDULE-EVT>
 						<InMessageEventExpr messageType="AskOrderNo">
 							<Condition language="Java"><![CDATA[
-pw.getPickupWindowQueue().size()>0 && cust.isWaitingForOrderToArrive()
-              ]]></Condition>
+pw.getPickupWindowQueue().size()>0 && cust1.isWaitingForOrderToArrive()
+                           ]]></Condition>
 							<SenderIdRef language="Java">pw.getId()</SenderIdRef>
-							<ReceiverIdRef language="Java">cust.getId()</ReceiverIdRef>
+							<ReceiverIdRef language="Java">cust1.getId()</ReceiverIdRef>
 						</InMessageEventExpr>
 					</SCHEDULE-EVT>
 				</DO>
@@ -652,13 +653,13 @@ pw.getPickupWindowQueue().size()>0 && cust.isWaitingForOrderToArrive()
 				<FOR objectVariable="q2" objectType="Queue" objectIdRef="7"/>
 				<FOR objectVariable="cust" objectType="Customer">
 					<ObjectRef language="Java">mb.getMenuBoardQueue().get(0)</ObjectRef>
+					<SelectionCondition language="Java">mb.getMenuBoardQueue().get(0) != null</SelectionCondition>
 				</FOR>
 				<IF language="Java"><![CDATA[
-cust.isWaitingForPWFree()
-             ]]></IF>
+cust!= null && cust.isWaitingForPWFree()
+                 ]]></IF>
 				<THEN>
-					<UPDATE-ENV>
-						
+					<UPDATE-ENV>	
 						<UpdateObject objectVariable="mb">
 							<MultiValuedSlot property="menuBoardQueue">
 								<RemoveFirst itemVariable="cust"/>
@@ -693,7 +694,7 @@ mb.getMenuBoardQueue().size() > 0
 				</THEN>
 			</EnvironmentRule>
 			<!-- =================================================================== -->
-			<EnvironmentRule name="EndPickupWindowServiceWhenQueueNotFull_Rule">
+			<EnvironmentRule name="EndPickupWindowService_Rule">
 				<!-- ==================================================================== -->
 				<documentation>
 					<description> On EndPickupWindowService, when the queue is not full, the current customer object is removed from the queue and destroyed. Furthermore, if the queue is empty, the pickup window is no longer busy. Otherwise, a new StartPickupWindowService is created. </description>
@@ -723,7 +724,7 @@ SimStatistics.nrOfDepartures.getValue() + 1
 						<UpdateStatisticsVariable variable="cumulativeResponseTime">
 							<ValueExpr language="Java"><![CDATA[
 SimStatistics.cumulativeResponseTime.getValue() + evt.getOccurrenceTime() - cust.getArrivalTime()
-             ]]></ValueExpr>
+                            ]]></ValueExpr>
 						</UpdateStatisticsVariable>
 						<UpdateObject objectVariable="pw">
 							<Slot property="pickupWindowBusy">
@@ -753,7 +754,7 @@ pw.getPickupWindowQueue().size() > 0
 						<UpdateStatisticsVariable variable="cumulativeResponseTime">
 							<ValueExpr language="Java"><![CDATA[
 SimStatistics.cumulativeResponseTime.getValue() + evt.getOccurrenceTime() - cust.getArrivalTime()
-            ]]></ValueExpr>
+                            ]]></ValueExpr>
 						</UpdateStatisticsVariable>
 						<UpdateObject objectVariable="pw">
 							<MultiValuedSlot property="pickupWindowQueue">
@@ -796,7 +797,7 @@ SimStatistics.cumulativeResponseTime.getValue() + evt.getOccurrenceTime() - cust
 					<description> When an order is prepared, the Kitchen Service send it to the PW Service. The PW Service asks the client which is at the desk what is his orderNo (only if the client is waiting for his order to arrive).</description>
 				</documentation>
 				<WHEN eventType="OutMessageEvent" messageType="OrderPrepared" messageVariable="mes"/>
-				<FOR objectVariable="pw" objectName="PickupWindow" objectType="PickupWindow" objectIdRef="2"/>
+				<FOR objectVariable="pw" objectType="PickupWindow" objectIdRef="2"/>
 				<FOR dataVariable="custID" dataType="Integer">
 					<ValueExpr language="Java"><![CDATA[
 mes.getCustID()
@@ -855,7 +856,7 @@ mes.getCustID()
 			<Slot property="menuBoardBusy" value="false"/>
 			<Slot property="maxMenuBoardQL" value="5"/>
 			<Slot property="menuBoardQueue">
-				<ValueExpr language="Java"><![CDATA[ new ArrayList<Customer>() ]]></ValueExpr>
+				<ValueExpr language="Java"><![CDATA[ new ArrayList<Customer>()]]></ValueExpr>
 				<ValueExpr language="JavaScript">new js.util.ArrayList()</ValueExpr>
 			</Slot>
 		</Agent>
@@ -867,7 +868,7 @@ mes.getCustID()
 			<Slot property="pickupWindowBusy" value="false"/>
 			<Slot property="maxPickupQL" value="5"/>
 			<Slot property="pickupWindowQueue">
-				<ValueExpr language="Java"><![CDATA[ new ArrayList<Customer>() ]]></ValueExpr>
+				<ValueExpr language="Java"><![CDATA[ new ArrayList<Customer>()]]></ValueExpr>
 				<ValueExpr language="JavaScript">new js.util.ArrayList()</ValueExpr>
 			</Slot>
 		</Agent>
