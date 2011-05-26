@@ -126,10 +126,10 @@
 			<!--====================================-->
 				<Attribute name="product" type="String"/>
 				<Attribute name="price" type="Float"/>
-				<Attribute name="Quantity" type="Float"/>
+				<Attribute name="quantity" type="Float"/>
 				<Attribute name="buy" type="Boolean"/>
 				<Attribute name="bidderIdRef" type="Integer" />
-				<Attribute type="Float" name="min"/><!-- BS6 -->
+				<Attribute name="min" type="Float" /><!-- BS6 -->
 			</ComplexDataType>
 		</DataTypes>
 		<EntityTypes>
@@ -205,6 +205,25 @@
 						return assets.get(i);
 					]]></Body>	
 				</Function>
+				<!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~-->
+				<Function name="createOffer" resultType="BS6Offer">
+					<documentation>
+						<dc:description>Needed to create an BS6Offer in JavaScript</dc:description>
+					</documentation>
+					<Parameter name="product" type="String"/>
+					<Parameter name="quantity" type="Float"/>
+					<Parameter name="buy" type="Boolean"/>
+					<Parameter name="min" type="Float"/>
+					<Body language="JavaScript">
+						var offer = new sim.model.dataTypes.TradeOffer();
+						offer.setProduct(product);
+						offer.setQuantity(quantity);
+						offer.setBuy(buy);
+						offer.setBidderIdRef(this.getId());
+						offer.setMin(min);
+						return offer;
+					</Body>
+				</Function>			
 				<!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~-->
 				<ReactionRule name="StartOfDay_Food_Rule">
 					<!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~-->
@@ -1345,7 +1364,7 @@
 							</Slot>
 							<Slot property="consumption">
 								<ValueExpr language="Java JavaScript">
-									isCheat() ? getIncome() : getConsumption()
+									this.agt.isCheat() ? this.agt.getIncome() : this.agt.getConsumption()
 								</ValueExpr>
 							</Slot>
 							<Slot property="cheat" value="false" />
@@ -1374,24 +1393,16 @@
 								<Slot property="offer">
 									<ValueExpr language="Java">new TradeOffer(){
 										{
-										setProduct("Food");
-										setPrice(getLastFoodPrice());
-										setQuantity(getNConsumption());
-										setBuy(true);
-										setBidderIdRef(getId());
-										setMin(getMinN());
+											setProduct("Food");
+											setQuantity(getNConsumption());
+											setBuy(true);
+											setBidderIdRef(getId());
+											setMin(getMinN());
 										}
 										}</ValueExpr>
-									<ValueExpr language="JavaScript">new minecon_laborfoodutility_scenario1.model.dataTypes.TradeOffer(){
-										{
-										setProduct("Food");
-										setPrice(getLastFoodPrice());
-										setQuantity(getNConsumption());
-										setBuy(true);
-										setBidderIdRef(getId());
-										setMin(getMinN());
-										}
-										}</ValueExpr>
+									<ValueExpr language="JavaScript">
+										this.agt.createOffer( "Food", this.agt.getNConsumption(), true, this.agt.getMinN() )
+									</ValueExpr>
 								</Slot>
 							</OutMessageEventExpr>
 						</SCHEDULE-EVT>
@@ -1411,22 +1422,15 @@
 								<Slot property="offer">
 									<ValueExpr language="Java">new TradeOffer(){
 										{
-										setProduct("Utility");
-										setPrice(getLastUtilityPrice());
-										setQuantity(getEConsumption());
-										setBuy(true);
-										setBidderIdRef(getId());
+											setProduct("Utility");
+											setQuantity(getEConsumption());
+											setBuy(true);
+											setBidderIdRef(getId());
 										}
 										}</ValueExpr>
-									<ValueExpr language="JavaScript">new minecon_laborfoodutility_scenario1.model.dataTypes.TradeOffer(){
-										{
-										setProduct("Utility");
-										setPrice(getLastUtilityPrice());
-										setQuantity(getEConsumption());
-										setBuy(true);
-										setBidderIdRef(getId());
-										}
-										}</ValueExpr>
+									<ValueExpr language="JavaScript">
+										this.agt.createOffer( "Utility", this.agt.getEConsumption(), true )
+									</ValueExpr>
 								</Slot>
 							</OutMessageEventExpr>
 						</SCHEDULE-EVT>
@@ -1441,22 +1445,15 @@
 								<Slot property="offer">
 									<ValueExpr language="Java">new TradeOffer(){
 										{
-										setProduct("Labor");
-										setPrice(getLastLaborPrice());
-										setQuantity(1);
-										setBuy(false);
-										setBidderIdRef(getId());
+											setProduct("Labor");
+											setQuantity(1);
+											setBuy(false);
+											setBidderIdRef(getId());
 										}
 										}</ValueExpr>
-									<ValueExpr language="JavaScript">new minecon_laborfoodutility_scenario1.model.dataTypes.TradeOffer(){
-										{
-										setProduct("Labor");
-										setPrice(getLastLaborPrice());
-										setQuantity(1);
-										setBuy(false);
-										setBidderIdRef(getId());
-										}
-										}</ValueExpr>
+									<ValueExpr language="JavaScript">
+										this.agt.createOffer( "Labor", 1, false )
+									</ValueExpr>
 								</Slot>
 							</OutMessageEventExpr>
 						</SCHEDULE-EVT>
@@ -1495,22 +1492,15 @@
 								<Slot property="offer">
 									<ValueExpr language="Java">new TradeOffer(){
 										{
-										setProduct("Labor");
-										setPrice(getLastLaborPrice());
-										setQuantity(getWageBudget());
-										setBuy(true);
-										setBidderIdRef(getId());
+											setProduct("Labor");
+											setQuantity(getWageBudget());
+											setBuy(true);
+											setBidderIdRef(getId());
 										}
 										}</ValueExpr>
-									<ValueExpr language="JavaScript">new minecon_laborfoodutility_scenario1.model.dataTypes.TradeOffer(){
-										{
-										setProduct("Labor");
-										setPrice(getLastLaborPrice());
-										setQuantity(this.agt.getWageBudget());
-										setBuy(true);
-										setBidderIdRef(this.agt.getId());
-										}
-										}</ValueExpr>
+									<ValueExpr language="JavaScript">
+										this.agt.createOffer( "Labor", this.agt.getWageBudget(), true )
+									</ValueExpr>
 								</Slot>
 							</OutMessageEventExpr>
 						</SCHEDULE-EVT>
@@ -1616,21 +1606,14 @@
 									<ValueExpr language="Java">new TradeOffer(){
 										{
 											setProduct("Food");
-											setPrice(getLastFoodPrice());
 											setQuantity(getAssetByName("Food").getQuantity());
 											setBuy(false);
 											setBidderIdRef(getId());
 										}
 									}</ValueExpr>
-									<ValueExpr language="JavaScript">new new minecon_laborfoodutility_scenario1.model.dataTypes.TradeOffer(){
-										{
-											setProduct("Food");
-											setPrice(getLastFoodPrice());
-											setQuantity(this.agt.getAssetByName("Food").getQuantity());
-											setBuy(false);
-											setBidderIdRef(this.agt.getId());
-										}
-									}</ValueExpr>
+									<ValueExpr language="JavaScript">
+										this.agt.createOffer( "Food", this.agt.getAssetByName("Food").getQuantity(), false )
+									</ValueExpr>
 								</Slot>
 							</OutMessageEventExpr>
 						</SCHEDULE-EVT>
@@ -1736,21 +1719,14 @@
 									<ValueExpr language="Java">new TradeOffer(){
 										{
 											setProduct("Utility");
-											setPrice(getLastUtilityPrice());
 											setQuantity(getAssetByName("Utility").getQuantity());
 											setBuy(false);
 											setBidderIdRef(getId());
 										}
 									}</ValueExpr>
-									<ValueExpr language="JavaScript">new minecon_laborfoodutility_scenario1.model.dataTypes.TradeOffer(){
-										{
-											setProduct("Utility");
-											setPrice(getLastUtilityPrice());
-											setQuantity(this.agt.getAssetByName("Utility").getQuantity());
-											setBuy(false);
-											setBidderIdRef(this.agt.getId());
-										}
-									}</ValueExpr>
+									<ValueExpr language="JavaScript">
+										this.agt.createOffer( "Utility", this.agt.getAssetByName("Utility").getQuantity(), false )
+									</ValueExpr>
 								</Slot>
 							</OutMessageEventExpr>
 						</SCHEDULE-EVT>
@@ -2323,9 +2299,58 @@
 						setSupply(supply);
 						setDemand(demand);
 						]]></Body>
-					<Body language="JavaScript">
-						
-					</Body>
+					<Body language="JavaScript"><![CDATA[
+						this.getTransactions().clear();
+						this.setDemand(0);
+						this.setSupply(0);
+						var low;
+						var high;
+						var supply = 0;
+						var demand = 0;
+						var price = 0;
+						if(this.isCheat()){
+							this.setCheat(false);
+							low = this.getInitLow();
+							high = this.getInitHigh();
+						} else {
+							low = this.getLastMarketPrice() * (1 - this.getZeta());
+							high = this.getLastMarketPrice() * (1 + this.getZeta());
+						}
+						for(var offer in this.getSellOffers()){
+							supply +=  offer.getQuantity();
+						}
+						while(true){
+							price = (low + high) / 2;
+							for(var offer in this.getBuyOffers()){
+								if(offer.getProduct().equals("Food")){
+									demand += Math.max(offer.getQuantity() / price, offer.getMin());
+								}else{
+									demand += offer.getQuantity() / price;
+								}
+							}
+							if(Math.abs(demand - supply) < 0.1 || Math.abs(high - low) < 0.01) break;
+							
+							if(demand > supply){
+								low = price;
+							}
+							else{
+								high = price;
+							}
+						}
+						for(var offer in this.getBuyOffers()){
+							offer.setPrice(price);
+						}
+						for(var offer in this.getSellOffers()){
+							offer.setPrice(price);
+						}
+						this.getTransactions().addAll(this.getBuyOffers());
+						this.getTransactions().addAll(this.getSellOffers());
+						this.getBuyOffers().clear();
+						this.getSellOffers().clear();
+						this.setLastMarketPrice(price);
+						this.setSupply(supply);
+						this.setDemand(demand);
+					]]></Body>
 				</Function>
 			</AgentType>
 			<!-- ============================================ -->
@@ -2342,21 +2367,19 @@
 						int low = 0;
 						double sum = 0;
 						for (TradeOffer employer : getBuyOffers()) {
+							System.out.println("EMPLOYER");
 							sum += employer.getQuantity();
-							System.out.println("sum" + sum);
-							System.out.println("tb" + getTotalBudget());
-							System.out.println("sos" + getSellOffers().size());
-							int high = (int) (Math.min(1, sum / getTotalBudget()) * getSellOffers().size());
+							int high =(int) (Math.min(1, sum / getTotalBudget()) * getSellOffers().size());
 							double wage = employer.getQuantity() / (high - low);
-							System.out.println("low" + low + "high" + high);
+							System.out.println("high: " + high);
 							for (int i = low; i < high; i++) {
+								System.out.println("i: " + i);
 								sim.model.dataTypes.TradeOffer o = new sim.model.dataTypes.TradeOffer();
 					            o.setProduct("Labor");
 				            	o.setQuantity(1);
 				            	o.setPrice(wage);
 				            	o.setBuy(true);
 				            	o.setBidderIdRef(employer.getBidderIdRef());
-				            	System.out.println(employer.getBidderIdRef());
 				            	getTransactions().add(o);
 				            	setDemand(getDemand() + 1);
 				            	o = new sim.model.dataTypes.TradeOffer();
@@ -2375,9 +2398,49 @@
 						getBuyOffers().clear();
 						getSellOffers().clear();
 						]]></Body>
-					<Body language="JavaScript">
-						
-					</Body>
+					<Body language="JavaScript"><![CDATA[
+						this.getTransactions().clear();
+						this.setDemand(0);
+						this.setSupply(0);
+						this.getBuyOffers().sort(function() {return 0.5 - Math.random()});
+						this.getSellOffers().sort(function() {return 0.5 - Math.random()});
+						var low = 0;
+						var sum = 0;
+						simConsole.message(this.getBuyOffers().size());
+						simConsole.message(this.getSellOffers().size());
+						for ( var i = 0; i < this.getBuyOffers().size(); i++) {
+							simConsole.message("i: " + i);
+							var employer = this.getBuyOffers().get(i);
+							sum += employer.getQuantity();
+							var high = Math.min(1, sum / this.getTotalBudget()) * this.getSellOffers().size();
+							simConsole.message("high: " + high);
+							var wage = employer.getQuantity() / (high - low);
+							for (var j = low; j < high; j++) {
+								simConsole.message("j: " + j);
+								var o = new sim.model.dataTypes.TradeOffer();
+					            o.setProduct("Labor");
+				            	o.setQuantity(1);
+				            	o.setPrice(wage);
+				            	o.setBuy(true);
+				            	o.setBidderIdRef( employer.getBidderIdRef() );
+				            	this.getTransactions().add(o);
+				            	this.setDemand(this.getDemand() + 1);
+				            	o = new sim.model.dataTypes.TradeOffer();
+				            	o.setProduct("Labor");
+				            	o.setQuantity(1);
+				            	o.setPrice(wage);
+				            	o.setBuy(false);
+				            	o.setBidderIdRef( this.getSellOffers().get(j).getBidderIdRef() );
+				            	this.getTransactions().add(o); 
+				            	this.setSupply(this.getSupply() + 1);
+				            	this.setLastMarketPrice(wage);
+							}
+							low = high;
+						}
+						this.setTotalBudget(0);
+						this.getBuyOffers().clear();
+						this.getSellOffers().clear();
+					]]></Body>
 				</Function>
 				<!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->
 				<ReactionRule name="TotalBudget_Rule">
@@ -2410,13 +2473,18 @@
 						<MultiValuedSlot property="buyOffers">
 							<AddLast><ItemExpr language="Java">new TradeOffer(){
 								{
+									setProduct("Labor");
 									setQuantity(f.getWageBudget());
+									setBuy(true);
 									setBidderIdRef(f.getId());
 								}
-							}</ItemExpr></AddLast>
+								}</ItemExpr>
+								<ItemExpr language="JavaScript">
+									this.f.createOffer("Labor", this.f.getWageBudget(), true)
+								</ItemExpr></AddLast>
 						</MultiValuedSlot>
 						<Slot property="totalBudget">
-							<ValueExpr language="Java">m.getTotalBudget() + f.getWageBudget()</ValueExpr>
+							<ValueExpr language="Java JavaScript">this.m.getTotalBudget() + this.f.getWageBudget()</ValueExpr>
 						</Slot>
 					</UpdateObject>
 				</UPDATE-ENV>
@@ -2431,12 +2499,16 @@
 				<UPDATE-ENV>
 					<UpdateObject objectVariable="m">
 						<MultiValuedSlot property="sellOffers">
-								<AddLast><ItemExpr language="Java">new TradeOffer(){
-									{
-										setQuantity(1);
-										setBidderIdRef(p.getId());
-									}
-								}</ItemExpr></AddLast>
+							<AddLast><ItemExpr language="Java">new TradeOffer(){
+								{
+									setProduct("Labor");
+									setQuantity(1);
+									setBuy(false);
+									setBidderIdRef(p.getId());
+								}
+								}</ItemExpr><ItemExpr language="JavaScript">
+									this.p.createOffer("Labor", 1, false)
+								</ItemExpr></AddLast>
 						</MultiValuedSlot>
 					</UpdateObject>
 				</UPDATE-ENV>
@@ -2516,9 +2588,7 @@
 			<IF language="Java"><![CDATA[ ( ( this.f.getClass() == BS4Farm.class && this.f.getAssetByName("Food").getQuantity() == 0.0) 
 												|| (this.f.getClass() == BS4Factory.class && this.f.getAssetByName("Utility").getQuantity() == 0.0)
 											) && this.f.getAssetByName("Labor").getQuantity() == 0.0 && this.f.getAssetByName("Money").getQuantity() == 0.0 ]]></IF>
-			<IF language="JavaScript"><![CDATA[ ( ( this.f insteance of minecon_laborfoodutility_scenario1.model.envsim.BS4Farm && this.f.getAssetByName("Food").getQuantity() === 0.0) 
-													|| ( this.f insteance of minecon_laborfoodutility_scenario1.model.envsim.BS4Factory&& this.f.getAssetByName("Utility").getQuantity() === 0.0)
-												   ) && this.f.getAssetByName("Labor").getQuantity() === 0.0 && this.f.getAssetByName("Money").getQuantity() === 0.0 ]]></IF>
+			<IF language="JavaScript"><![CDATA[ false ]]></IF>
 			<THEN>
 				<UPDATE-ENV>
 					<DestroyObject objectVariable="f"/>
@@ -2845,7 +2915,7 @@
 					new js.util.ArrayList(new aors.util.economics.ContinuousQuantity(15.0, new aors.util.economics.ContinuousQuantityType("Food", "Stk")), 
 					new aors.util.economics.ContinuousQuantity(100.0, new aors.util.economics.ContinuousQuantityType("Money", "Stk")), 
 					new aors.util.economics.ContinuousQuantity(0.0, new aors.util.economics.ContinuousQuantityType("Labor", "Stk")),
-					new aors.util.economics.ContinuousQuantity(0.0, new aors.util.economics.ContinuousQuantityType("Utility", "Stk"))
+					new aors.util.economics.ContinuousQuantity(0.0, new aors.util.economics.ContinuousQuantityType("Utility", "Stk")))
 				]]></ValueExpr>
 			</Slot>
 			<Slot property="EAT_AMOUNT" value="1.0" />
