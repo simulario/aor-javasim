@@ -82,11 +82,13 @@
       </MessageType>
       <ExogenousEventType name="CustomerDemand" periodicity="7" />
       <ExogenousEventType name="EndOfSystemWeek" periodicity="7" />
+      
       <!-- ========================== -->
       <AgentType name="Customer">
       <!-- ========================== -->
         <Attribute name="order" type="Integer" />
       </AgentType>
+      
       <!-- ==================================== -->
       <AgentType name="AbstractSupplyChainNode">
        <!-- ==================================== -->
@@ -96,6 +98,7 @@
         <Attribute name="outDelivery" type="Integer" />
         <PeriodicTimeEventType name="EndOfWeek" periodicity="7" />
       </AgentType>
+      
       <!-- ==================================================================== -->
       <AgentType name="TopSupplyChainNode" superType="AbstractSupplyChainNode">
       <!-- ==================================================================== -->
@@ -245,7 +248,7 @@
           <IF language="Java JavaScript">
             <![CDATA[
 							this.node.getInventory() >= (this.node.getCurrentSalesOrderQuantity() + this.node.getBackorderQuantity()) 
-							&& ((this.node.getCurrentSalesOrderQuantity() + this.node.getBackorderQuantity()) >= 0)
+							&& ((this.node.getCurrentSalesOrderQuantity() + this.node.getBackorderQuantity()) > 0)
         		]]>
           </IF>
           <THEN>
@@ -300,13 +303,13 @@
                 <ValueExpr language="Java">
                   <![CDATA[
                     this.node.getBackorderQuantity() +  2 * this.node.getCurrentSalesOrderQuantity() 
-                    - this.node.getMyLastOrder() + aors.util.Random.uniformInt(0,5)  
+                    - this.node.getMyLastOrder() + aors.util.Random.uniformInt(1,5)  
                   ]]>
                 </ValueExpr>
                 <ValueExpr language="JavaScript">
                   <![CDATA[
                      this.node.getBackorderQuantity() +  2 * this.node.getCurrentSalesOrderQuantity() 
-                     - this.node.getMyLastOrder() + js.util.Random.uniformInt(0,5)
+                     - this.node.getMyLastOrder() + js.util.Random.uniformInt(1,5)
                   ]]>
                 </ValueExpr>
               </Slot>
@@ -349,7 +352,7 @@
             <UPDATE-AGT>
               <Slot property="myLastOrder">
                 <RandomVariable>
-                  <UniformInt lowerBound="0" upperBound="5" />
+                  <UniformInt lowerBound="1" upperBound="5" />
                 </RandomVariable>
               </Slot>
               <Slot property="sendOrder" value="true" />
@@ -383,13 +386,13 @@
                 <ValueExpr language="Java">
                   <![CDATA[
                     2 * this.node.getCurrentSalesOrderQuantity() - this.node.getInventory() 
-                    - this.node.getMyLastOrder() + aors.util.Random.uniformInt(0,5)
+                    - this.node.getMyLastOrder() + aors.util.Random.uniformInt(1,5)
                   ]]>
                 </ValueExpr>
                 <ValueExpr language="JavaScript">
                   <![CDATA[
                      2 * this.node.getCurrentSalesOrderQuantity() - this.node.getInventory() 
-                    - this.node.getMyLastOrder() + js.util.Random.uniformInt(0,5)
+                    - this.node.getMyLastOrder() + js.util.Random.uniformInt(1,5)
                   ]]>
                 </ValueExpr>
               </Slot>
