@@ -1699,53 +1699,58 @@
 		</xs:annotation>
 	</xs:element>
 	<xs:complexType name="EventAppearance.type">
-		<xs:choice>
-			<xs:element name="Sound">
-				<xs:complexType>
-					<xs:sequence>
-						<xs:element ref="ers:SoundFileSonificationMap" minOccurs="0" maxOccurs="1"/>
-						<xs:element ref="ers:SoundPropertySonificationMap" minOccurs="0" maxOccurs="2"/>
-					</xs:sequence>
-					<xs:attribute name="soundFile" type="xs:anyURI" use="optional">
-						<xs:annotation>
-							<xs:documentation>The source file can be MP3, OGG, WAV or MIDI (as identified by the resp. extension). The file is searched first in the project directory under "media/sounds". If the file is not found then it is searched in the media/sounds global directory. If still not found, then no sound is played. Note that the path is relativ to "media/sounds" (of the project or the global one). So a value @introSoundFile="/mySounds/background.mid" will be searched in "media/sounds/mySounds/background.mid" (global or the project one).	</xs:documentation>
-						</xs:annotation>
-					</xs:attribute>
-				</xs:complexType>
-			</xs:element>
-			<xs:element name="MidiSound" minOccurs="1" maxOccurs="16">
-				<xs:complexType>
-					<xs:sequence>
-						<xs:element ref="ers:MidiSonificationMap" minOccurs="0" maxOccurs="3"/>
-					</xs:sequence>
-					<xs:attribute name="instrumentName" type="ers:Instrument.type" use="optional"/>
-					<xs:attribute name="instrumentNo" use="optional">
-						<xs:simpleType>
-							<xs:restriction base="xs:integer">
-								<xs:minInclusive value="0"/>
-								<xs:maxInclusive value="127"/>
-							</xs:restriction>
-						</xs:simpleType>
-					</xs:attribute>
-					<xs:attribute name="noteSequence" type="ers:NoteSequence.type" use="optional">
-						<xs:annotation>
-							<xs:documentation>
-								A note sequence is a list of note/duration/volume triples where the note is an integer between 0 
-								(corresponding to a low C) and 127 (in half-tones) and the duration (in ms) and 
-								volume (in range 0 = mute to 127 = MAX_VOLUME) are positive integers. 
-								An example is "12/300/80 14/200/90"
-							</xs:documentation>
-						</xs:annotation>
-					</xs:attribute>
-				</xs:complexType>
-			</xs:element>
-		</xs:choice>
-		<xs:attribute name="eventType" type="ers:CanonicalName" use="required"/>
+		<xs:sequence>
+			<xs:choice>
+				<xs:element ref="ers:Condition" minOccurs="0"/>
+				<xs:element name="Sound">
+					<xs:complexType>
+						<xs:sequence>
+							<xs:element ref="ers:SoundFileSonificationMap" minOccurs="0"/>
+							<xs:element ref="ers:SoundPropertySonificationMap" minOccurs="0" maxOccurs="2"/>
+						</xs:sequence>
+						<xs:attribute name="soundFile" type="xs:anyURI" use="optional">
+							<xs:annotation>
+								<xs:documentation>The source file can be MP3, OGG, WAV or MIDI (as identified by the resp. extension). The file is searched first in the project directory under "media/sounds". If the file is not found then it is searched in the media/sounds global directory. If still not found, then no sound is played. Note that the path is relativ to "media/sounds" (of the project or the global one). So a value @introSoundFile="/mySounds/background.mid" will be searched in "media/sounds/mySounds/background.mid" (global or the project one).	</xs:documentation>
+							</xs:annotation>
+						</xs:attribute>
+					</xs:complexType>
+				</xs:element>
+				<xs:element name="MidiSound" minOccurs="1" maxOccurs="16">
+					<xs:complexType>
+						<xs:sequence>
+							<xs:element ref="ers:MidiSonificationMap" minOccurs="0" maxOccurs="3"/>
+						</xs:sequence>
+						<xs:attribute name="instrumentName" type="ers:Instrument.type" use="optional"/>
+						<xs:attribute name="instrumentNo" use="optional">
+							<xs:simpleType>
+								<xs:restriction base="xs:integer">
+									<xs:minInclusive value="0"/>
+									<xs:maxInclusive value="127"/>
+								</xs:restriction>
+							</xs:simpleType>
+						</xs:attribute>
+						<xs:attribute name="noteSequence" type="ers:NoteSequence.type" use="optional">
+							<xs:annotation>
+								<xs:documentation>
+									A note sequence is a list of note/duration/volume triples where the note is an integer between 0 
+									(corresponding to a low C) and 127 (in half-tones) and the duration (in ms) and 
+									volume (in range 0 = mute to 127 = MAX_VOLUME) are positive integers. 
+									An example is "12/300/80 14/200/90"
+								</xs:documentation>
+							</xs:annotation>
+						</xs:attribute>
+					</xs:complexType>
+				</xs:element>
+			</xs:choice>
+		</xs:sequence>		
+		<xs:attribute name="eventType" type="ers:CanonicalName" use="optional"/>
+		<xs:attribute name="eventVariable" type="ers:CanonicalName" use="optional"/>
 		<!-- TO BE MOVED to AORSL -->
 		<xs:attribute name="messageType" type="ers:CanonicalName" use="optional"/>
+		<xs:attribute name="messageVariable" type="ers:CanonicalName" use="optional"/>
 		<xs:attribute name="duration" type="xs:positiveInteger" use="optional">
 			<xs:annotation>
-				<xs:documentation>The duration of the sound. If the sound source is a file and if no duration if specified, then the entire file is played. If deal with a sound file and a duration is specified with a value lower than the sound file duration then only the "duration" time is played from that file. If the source is a note sequence and no duration is specified, then the duration is computed as the sum of all note durations. If the source is a note sequence and a duration is defined then the duration of each note from sequence is multipled with a factor that ensures that the total notes duration equals with the value of the @duration attribute. </xs:documentation>
+				<xs:documentation>The duration of the sound. If the sound source is a file and if no duration is specified, then the entire file is played. If a duration is specified with a value lower than the sound file duration then only the "duration" time is played from that file. If the source is a note sequence and no duration is specified, then the duration is computed as the sum of all note durations. If the source is a note sequence and a duration is defined then the duration of each note from sequence is multipled with a factor that ensures that the total notes duration equals with the value of the @duration attribute. </xs:documentation>
 			</xs:annotation>
 		</xs:attribute>
 	</xs:complexType>
