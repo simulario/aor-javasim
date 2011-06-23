@@ -243,8 +243,8 @@
 
 			
 			
-
-			
+			<ExogenousEventType name="SecondIterationPostVacancyInformation" periodicity="20"/>
+			<ExogenousEventType name="EndFirstIterationLaborSupply" periodicity="20"/>
 
 			<ExogenousEventType name="AbortLaborSupply" periodicity="20"/>
 
@@ -303,7 +303,7 @@
 				<!-- at step 2 -->
 				<ReactionRule name="AtStartOfMonthCheckStockLevel_Rule" agentVariable="m">
 					<documentation>
-						<description>reporting the current stock level.</description>
+						<description>Reporting the current stock level.</description>
 					</documentation>
 					<WHEN eventType="AtStartOfMonthCheckStockLevel"/>
 					<FOR-ListItemVariable variable="p" listItemType="ProductInStock">
@@ -413,9 +413,7 @@
 
 
 
-				<Attribute type="Float" name="laborCost"/>
-				<Attribute type="Float" name="averageCost"/>
-				<Attribute type="Float" name="output"/>
+
 				<Attribute type="Float" name="account"/>
 				<Attribute type="Float" name="div"/>
 				<Attribute type="Float" name="profit"/>
@@ -613,7 +611,7 @@
 						
 						int j;
 						if (getApplicationsList().size() > quantity) {
-							for (j = quantity; j < getApplicationsList().size(); j++) {
+							for (j = (int)quantity; j < getApplicationsList().size(); j++) {
 								getApplicationsList().remove(j);
 							}
 						}
@@ -653,7 +651,7 @@
 					<Parameter name="labor" type="Float"/>
 					<Parameter name="capital" type="Float"/>
 					<Body language="Java"><![CDATA[
-						if (f.getPlannedProductionQuantity() == 0.0) {
+						if (getPlannedProductionQuantity() == 0.0) {
 							setProductionQuantity(0.0);
 							return false;
 						}
@@ -991,7 +989,7 @@
 				
 
 				
-				<ReactionRule name="UpdateSpecificSkill_Rule" agentVariable="f">
+				<ReactionRule name="UpdateSpecificSkill_Rule" agentVariable="f"><!--注意updateSpecificSkillLevel不存在-->
 					<documentation>
 						<description>更新特殊技能。</description>
 					</documentation>
@@ -1001,7 +999,7 @@
 					</FOR-ListItemVariable>
 					<DO>
 						<UPDATE-AGT>
-							<UpdateComplexDataPropertyValue complexDataProperty="workers" procedure="updateSpecificSkillLevel">
+							<UpdateComplexDataPropertyValue complexDataProperty="workersInFirm" procedure="updateSpecificSkillLevel">
 								<Argument>
 									<ValueExpr language="Java"><![CDATA[w.getHouseholdId()]]></ValueExpr>
 								</Argument>
@@ -1063,6 +1061,7 @@
 				<ComplexDataProperty name="productsCollection" type="ProductInStock" upperMultiplicity="unbounded"/>
 				<ComplexDataProperty name="productSamples" type="ProductSample" upperMultiplicity="unbounded"/>
 				<!--<ComplexDataProperty name="vacanciesList" type="VacancyList" upperMultiplicity="unbounded"/>-->
+				<ComplexDataProperty name="incomingJobOffers" type="IncomingJobOffer" upperMultiplicity="unbounded"/>
 				
 				<Function name="determineConsumptionBudget" resultType="void">
 					<documentation>
@@ -1085,37 +1084,40 @@
 						<description></description>
 					</documentation>
 					<Body language="Java"><![CDATA[
+						double r = Math.random();
 						double sumOfValues = 0.0;
+						long FI = 0;
 						int i, j;
 						
 						if (getProductSamples().size() == 0) {
-							return 0;
+							FI = 0;
+						}
+						else if (getProductSamples().size() == 1) {
+							FI = getProductSamples().get(0).getFirmId();
 						}
 						else {
-							if (getProductSamples().size() == 1) {
-								return getProductSamples().get(0).getFirmId();
+							for (i = 0; i < getProductSamples().size(); i++) {
+								sumOfValues += getProductSamples().get(i).getValue();
 							}
-							else {
-								for (i = 0; i < getProductSamples().size(); i++) {
-									sumOfValues += getProductSamples().get(i).getValue();
-								}
-								double r = Math.random();
-								for (j = 0; j < getProductSamples().size(); j++) {
-									if (j == 0) {
-										getProductSamples().get(j).setProb(getProductSamples().get(j).getValue() / sumOfValues);
-										if (r < getProductSamples().get(j).getProb()) {
-											return getProductSamples().get(j).getFirmId();
-										}
+							
+							for (j = 0; j < getProductSamples().size(); j++) {
+								if (j == 0) {
+									getProductSamples().get(j).setProb(getProductSamples().get(j).getValue() / sumOfValues);
+									if (r < getProductSamples().get(j).getProb()) {
+										FI = getProductSamples().get(j).getFirmId();
 									}
-									else {
-										getProductSamples().get(j).setProb((getProductSamples().get(j).getValue() + getProductSamples().get(j - 1).getValue()) / sumOfValues);
-										if (r < getProductSamples().get(j).getProb() && r >= getProductSamples().get(j - 1).getProb()) {
-											return getProductSamples().get(j).getFirmId();
-										}
+								}
+								else {
+									getProductSamples().get(j).setValue(getProductSamples().get(j).getValue() + getProductSamples().get(j - 1).getValue());
+									getProductSamples().get(j).setProb(getProductSamples().get(j).getValue() / sumOfValues);
+									if (r < getProductSamples().get(j).getProb() && r >= getProductSamples().get(j - 1).getProb()) {
+										FI = getProductSamples().get(j).getFirmId();
 									}
 								}
 							}
 						}
+							
+						return FI;
 						]]></Body>
 				</Function>
 				
@@ -1489,16 +1491,15 @@
 					<description></description>
 				</documentation>
 				<WHEN eventType="Init"/>
-				<FOR-ObjectVariable variable="h" objectType="Household">
-					<SelectionCondition language="Java"><![CDATA[h.getFirm() == 100]]></SelectionCondition>
-				</FOR-ObjectVariable>
-				<DO>
+				<FOR-ObjectVariable variable="h" objectType="Household"/>
+				<IF language="Java"><![CDATA[h.getFirm() == 100]]></IF>
+				<THEN>
 					<UPDATE-ENV>
 						<UpdateObject objectVariable="h">
 							<Slot property="jobSeeker" value="true"/>
 						</UpdateObject>
 					</UPDATE-ENV>
-				</DO>
+				</THEN>
 			</EnvironmentRule>
 			
 			<!-- at step 1 -->
@@ -1588,7 +1589,7 @@
 			<!-- at step 2 -->
 			<EnvironmentRule name="AtStartOfMonthDetermineConsumptionBudget_Rule"><!--注意别和购买的时间冲突-->
 				<documentation>
-					<description></description>
+					<description>Once a month households receive their income. Depending on the available cash, that is the current income from factor markets plus assets carried over from the previous period, the household sets the budget which it will spend for consumption and consequently determines the remaining part which is saved.</description>
 				</documentation>
 				<WHEN eventType="StartOfMonth"/>
 				<FOR-ObjectVariable variable="h" objectType="Household"/>
@@ -1614,13 +1615,11 @@
 			<!-- at step 2 -->
 			<EnvironmentRule name="AtStartOfMonthDetermineEmployedWorkerAsJobSeeker_Rule">
 				<documentation>
-					<description></description>
+					<description>A randomly determined fraction of employed workers who search on-the-job.</description>
 				</documentation>
 				<WHEN eventType="StartOfMonth"/>
-				<FOR-ObjectVariable variable="h" objectType="Household">
-					<SelectionCondition language="Java"><![CDATA[h.getFirm() != 100]]></SelectionCondition>
-				</FOR-ObjectVariable>
-				<IF language="Java"><![CDATA[Global.wouldBeJobSeeker()]]></IF>
+				<FOR-ObjectVariable variable="h" objectType="Household"/>
+				<IF language="Java"><![CDATA[h.getFirm() != 100 && Global.wouldBeJobSeeker()]]></IF>
 				<THEN>
 					<UPDATE-ENV>
 						<UpdateObject objectVariable="h">
@@ -1633,7 +1632,7 @@
 			<!-- at step 5 -->
 			<EnvironmentRule name="StartBuyPhysicalCapital_Rule">
 				<documentation>
-					<description></description>
+					<description>The existing capital stock depreciates over time and needs to be upgraded if the CGP wants to benefit from the productivity increase of newly produced capital products. Investments follow from a planned or desired capital stock.</description>
 				</documentation>
 				<WHEN eventType="OutMessageEvent" messageType="StartBuyPhysicalCapital" messageVariable="msg"/>
 				<FOR-ObjectVariable variable="f" objectType="Firm">
@@ -1662,7 +1661,7 @@
 			<!-- at step 5 -->
 			<EnvironmentRule name="PostVacancyInformation_Rule">
 				<documentation>
-					<description></description>
+					<description>The CGPs post vacancies including wage offers.</description>
 				</documentation>
 				<WHEN eventType="OutMessageEvent" messageType="PostVacancyInformation" messageVariable="msg"/>
 				<FOR-ObjectVariable variable="f" objectType="Firm">
@@ -1732,7 +1731,7 @@
 				</documentation>
 				<WHEN eventType="EndFirstIterationLaborSupply"/>
 				<FOR-ObjectVariable variable="f" objectType="Firm">
-					<SelectionCondition language="Java"><![CDATA[f.getApplicationsList() > 0]]></SelectionCondition>
+					<SelectionCondition language="Java"><![CDATA[f.getApplicationsList().size() > 0]]></SelectionCondition>
 				</FOR-ObjectVariable>
 				<DO>
 					<UPDATE-ENV>
@@ -1817,7 +1816,7 @@
 				</documentation>
 				<WHEN eventType="AbortLaborSupply"/>
 				<FOR-ObjectVariable variable="f" objectType="Firm">
-					<SelectionCondition language="Java"><![CDATA[f.getApplicationsList() > 0]]></SelectionCondition>
+					<SelectionCondition language="Java"><![CDATA[f.getApplicationsList().size() > 0]]></SelectionCondition>
 				</FOR-ObjectVariable>
 				<DO>
 					<UPDATE-ENV>
@@ -2131,6 +2130,16 @@
 			
 			
 			
+			
+			<Slot property="account" value="0.0"/>
+			<Slot property="div" value="1.0"/>
+			<Slot property="profit" value="0.0"/>
+			
+			<Slot property="region" value="1"/>
+			
+			
+			
+			
 			<PeriodicTimeEvent type="ProductionPlan" occurrenceTime="4"/>
 			<PeriodicTimeEvent type="InFirstIterationRankApplicant" occurrenceTime="7"/>
 			<PeriodicTimeEvent type="InFirstIterationOfferJob" occurrenceTime="8"/>
@@ -2183,6 +2192,16 @@
 
 			
 			
+			<Slot property="account" value="0.0"/>
+			<Slot property="div" value="1.0"/>
+			<Slot property="profit" value="0.0"/>
+
+			<Slot property="region" value="2"/>
+			
+			
+
+			
+			
 			
 			<PeriodicTimeEvent type="ProductionPlan" occurrenceTime="4"/>
 			<PeriodicTimeEvent type="InFirstIterationRankApplicant" occurrenceTime="7"/>
@@ -2206,6 +2225,9 @@
 			<!--<Slot property="vacanciesList">
 				<ValueExpr language="Java"><![CDATA[new ArrayList<sim.model.dataTypes.VacancyList>()]]></ValueExpr>
 				</Slot>-->
+			<Slot property="incomingJobOffers">
+				<ValueExpr language="Java"><![CDATA[new ArrayList<sim.model.dataTypes.IncomingJobOffer>()]]></ValueExpr>
+			</Slot>
 			<Slot property="generalSkillLevel">
 				<ValueExpr language="Java"><![CDATA[Global.lowSkillRegion()]]></ValueExpr>
 			</Slot>
@@ -2250,6 +2272,9 @@
 			<!--<Slot property="vacanciesList">
 				<ValueExpr language="Java"><![CDATA[new ArrayList<sim.model.dataTypes.VacancyList>()]]></ValueExpr>
 				</Slot>-->
+			<Slot property="incomingJobOffers">
+				<ValueExpr language="Java"><![CDATA[new ArrayList<sim.model.dataTypes.IncomingJobOffer>()]]></ValueExpr>
+			</Slot>
 			<Slot property="generalSkillLevel">
 				<ValueExpr language="Java"><![CDATA[Global.lowSkillRegion()]]></ValueExpr>
 			</Slot>
@@ -2296,6 +2321,8 @@
 		<ExogenousEvent occurrenceTime="2" type="StartOfMonth"/>
 		<ExogenousEvent occurrenceTime="20" type="EndOfMonth"/>
 		
+		<ExogenousEvent type="SecondIterationPostVacancyInformation" occurrenceTime="20"/>
+		<ExogenousEvent type="EndFirstIterationLaborSupply" occurrenceTime="20"/>
 		<ExogenousEvent occurrenceTime="20" type="AbortLaborSupply"/>
 		
 		
