@@ -1,8 +1,8 @@
 <?xml version="1.0"?>
 <?xml-stylesheet type="text/xsl" href="prettyprint.xsl"?>
 
-<SimulationScenario version="0.8.4" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-	xsi:schemaLocation="http://aor-simulation.org ../../ext/AORSL/AORSL_0-8-4.xsd"
+<SimulationScenario version="0.9" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xsi:schemaLocation="http://aor-simulation.org ../../../AORSL/AORSL_0-9.xsd"
 	xmlns="http://aor-simulation.org" xmlns:aors="http://aor-simulation.org"
 	xmlns:dc="http://purl.org/dc/elements/1.1/" 
 	scenarioName="Skill_Comm_Economy"
@@ -153,29 +153,26 @@
 		</Globals>
 		
 		<EntityTypes>
-			<MessageType name="CurrentStockLevel">
-				<Attribute type="Float" name="quantity"/>
+			<MessageType name="TellCurrentStockLevel">
+				<Attribute name="quantity" type="Float"/>
 			</MessageType>
-			<MessageType name="SendSalesRevenue">
+			<MessageType name="TellSalesRevenue">
 				<Attribute type="Float" name="revenue"/>
 				<!--<Attribute type="Float" name="quantity"/>-->
 			</MessageType>
-			<MessageType name="StartBuyPhysicalCapital">
+			<MessageType name="BuyPhysicalCapital">
 				<Attribute type="Integer" name="firmId"/>
-				<Attribute type="Float" name="capital"/>
-			</MessageType>
-			<MessageType name="PostVacancyInformation">
-				<Attribute type="Integer" name="firmId"/>
+				<Attribute type="Float" name="requestedPhysicalCapital"/>
 			</MessageType>
 			<!--<MessageType name="StartDownsizing">
 				<Attribute type="Integer" name="firmId"/>
 				</MessageType>-->
 			<!--<MessageType name="DismissalAnnounce"/>-->
-			<MessageType name="StartJobApplication">
+			<MessageType name="TellVacancy">
 				<Attribute type="Integer" name="generalSkillLevel"/>
 				<Attribute type="Float" name="specificSkillLevel"/>
 			</MessageType>
-			<MessageType name="SendJobOffer">
+			<MessageType name="JobOffer">
 				<Attribute type="Float" name="wageOffer"/>
 				<Attribute type="Integer" name="region"/>
 			</MessageType>
@@ -188,52 +185,17 @@
 			<MessageType name="DeliverProduct">
 				<Attribute type="Float" name="quantity"/>
 			</MessageType>
-
-			
-			
-			
-			
-			
-			
-			
-			
-			
-			
-			
-			
-			
-
-			<MessageType name="SendNewPrice">
+			<MessageType name="TellNewPrice">
 				<Attribute type="Float" name="price"/>
 			</MessageType>
-			
-			
-			
-			
-			
-			<MessageType name="UpdateSpecificSkill"/>
 			<MessageType name="ChangeSpecificSkill">
 				<Attribute type="Float" name="specificSkillLevel"/>
 			</MessageType>
-			
 
+			<ActionEventType name="PostVacancyInformation">
+				<Attribute type="Integer" name="firmId"/>
+			</ActionEventType>
 
-	
-
-
-			
-			
-			
-			
-			
-			
-			
-			
-			
-			
-			
-			
-			
 			<ExogenousEventType name="Init"/>
 			<ExogenousEventType name="StartOfWeek" periodicity="5"/>
 			<ExogenousEventType name="StartOfMonth" periodicity="20"/>
@@ -311,7 +273,7 @@
 					</FOR-ListItemVariable>
 					<DO>
 						<SCHEDULE-EVT>
-							<OutMessageEventExpr messageType="CurrentStockLevel">
+							<OutMessageEventExpr messageType="TellCurrentStockLevel">
 								<ReceiverIdRef language="Java"><![CDATA[p.getFirmId()]]></ReceiverIdRef>
 								<Slot property="quantity">
 									<ValueExpr language="Java"><![CDATA[p.getQuantity()]]></ValueExpr>
@@ -344,7 +306,7 @@
 					<documentation>
 						<description></description>
 					</documentation>
-					<WHEN eventType="InMessageEvent" messageType="SendNewPrice" messageVariable="msg" eventVariable="evt"/>
+					<WHEN eventType="InMessageEvent" messageType="TellNewPrice" messageVariable="msg" eventVariable="evt"/>
 					<DO>
 						<UPDATE-AGT>
 							<Call procedure="updatePrice" contextObjectVariable="m">
@@ -430,7 +392,7 @@
 				
 				<Function name="determineOptimalStockLevel" resultType="Float">
 					<documentation>
-						<description>这里的12是需要具体给出的，是根据以往需求得出的。</description>
+						<description xml:lang="cn">这里的12是需要具体给出的，是根据以往需求得出的。</description>
 					</documentation>
 					<Parameter name="price" type="Float"/>
 					<Parameter name="lastCost" type="Float"/>
@@ -674,19 +636,16 @@
 				<PeriodicTimeEventType name="InSecondIterationRankApplicant" periodicity="20"/>
 				<PeriodicTimeEventType name="InSecondIterationOfferJob" periodicity="20"/>
 
-
-
-
-
-
+				<PeriodicTimeEventType name="EndOfMonth_PTE" periodicity="20"/>				
+				
 				<PeriodicTimeEventType name="OfferJobAgain" periodicity="20"/>
 				
 				<!-- at step 3 -->
-				<ReactionRule name="CurrentStockLevel_Rule" agentVariable="f">
+				<ReactionRule name="TellCurrentStockLevel_Rule" agentVariable="f">
 					<documentation>
 						<description>The CGP receives messages from all the malls it serves reporting the current stock level and decides whether and on what scale it restocks the supply.</description>
 					</documentation>
-					<WHEN eventType="InMessageEvent" messageType="CurrentStockLevel" messageVariable="msg" eventVariable="evt"/>
+					<WHEN eventType="InMessageEvent" messageType="TellCurrentStockLevel" messageVariable="msg" eventVariable="evt"/>
 					<IF language="Java"><![CDATA[msg.getQuantity() >= f.determineOptimalStockLevel(f.getProductSalesPrice(), f.getLastUnitCostOfProduction(), f.getHoldingCost())]]></IF>
 					<THEN>
 						<UPDATE-AGT>
@@ -730,7 +689,7 @@
 						<description></description>
 					</documentation>
 					<WHEN eventType="ProductionPlan"/>
-					<IF language="Java"><![CDATA[f.desireProductionQuantity()]]></IF>
+					<IF language="Java"><![CDATA[ f.desireProductionQuantity() ]]></IF>
 					<THEN>
 						<UPDATE-AGT>
 							<Call procedure="determinePlan" contextObjectVariable="f">
@@ -752,19 +711,19 @@
 							</Call>
 						</UPDATE-AGT>
 						<SCHEDULE-EVT>
-							<OutMessageEventExpr messageType="StartBuyPhysicalCapital" receiverIdRefs="0">
+							<ActionEventExpr actionEventType="PostVacancyInformation">
+								<Condition language="Java"><![CDATA[f.getVacancyQuantity() > 0]]></Condition>
+								<Slot property="firmId">
+									<ValueExpr language="Java"><![CDATA[f.getId()]]></ValueExpr>
+								</Slot>
+							</ActionEventExpr>
+							<OutMessageEventExpr messageType="BuyPhysicalCapital" receiverIdRefs="0">
 								<Condition language="Java"><![CDATA[f.getNewInvestments() > 0.0]]></Condition>
 								<Slot property="firmId">
 									<ValueExpr language="Java"><![CDATA[f.getId()]]></ValueExpr>
 								</Slot>
-								<Slot property="capital">
+								<Slot property="requestedPhysicalCapital">
 									<ValueExpr language="Java"><![CDATA[f.getNewInvestments()]]></ValueExpr>
-								</Slot>
-							</OutMessageEventExpr>
-							<OutMessageEventExpr messageType="PostVacancyInformation" receiverIdRefs="0">
-								<Condition language="Java"><![CDATA[f.getVacancyQuantity() > 0]]></Condition>
-								<Slot property="firmId">
-									<ValueExpr language="Java"><![CDATA[f.getId()]]></ValueExpr>
 								</Slot>
 							</OutMessageEventExpr>
 							<!--<OutMessageEventExpr messageType="StartDownsizing" receiverIdRefs="0">
@@ -778,11 +737,11 @@
 				</ReactionRule>
 				
 				<!-- at step 3 -->
-				<ReactionRule name="SendSalesRevenue_Rule" agentVariable="f">
+				<ReactionRule name="TellSalesRevenue_Rule" agentVariable="f">
 					<documentation>
 						<description></description>
 					</documentation>
-					<WHEN eventType="InMessageEvent" messageType="SendSalesRevenue" messageVariable="msg"/>
+					<WHEN eventType="InMessageEvent" messageType="TellSalesRevenue" messageVariable="msg"/>
 					<DO>
 						<UPDATE-AGT>
 							<Slot property="salesRevenue">
@@ -800,7 +759,7 @@
 					<documentation>
 						<description></description>
 					</documentation>
-					<WHEN eventType="InMessageEvent" messageType="StartJobApplication" messageVariable="msg" eventVariable="evt"/>
+					<WHEN eventType="InMessageEvent" messageType="TellVacancy" messageVariable="msg" eventVariable="evt"/>
 					<DO>
 						<UPDATE-AGT>
 							<MultiValuedSlot property="applicationsList">
@@ -868,7 +827,7 @@
 					<IF language="Java"><![CDATA[f.getApplicationsList().size() > 0]]></IF>
 					<THEN>
 						<SCHEDULE-EVT>
-							<OutMessageEventExpr messageType="SendJobOffer">
+							<OutMessageEventExpr messageType="JobOffer">
 								<ReceiverIdRef language="Java"><![CDATA[a.getHouseholdId()]]></ReceiverIdRef>
 								<Slot property="wageOffer">
 									<ValueExpr language="Java"><![CDATA[f.getWageOffer()]]></ValueExpr>
@@ -893,7 +852,7 @@
 					<IF language="Java"><![CDATA[f.getApplicationsList().size() > 0]]></IF>
 					<THEN>
 						<SCHEDULE-EVT>
-							<OutMessageEventExpr messageType="SendJobOffer">
+							<OutMessageEventExpr messageType="JobOffer">
 								<ReceiverIdRef language="Java"><![CDATA[a.getHouseholdId()]]></ReceiverIdRef>
 								<Slot property="wageOffer">
 									<ValueExpr language="Java"><![CDATA[f.getWageOffer()]]></ValueExpr>
@@ -960,40 +919,12 @@
 					</DO>
 				</ReactionRule>
 				
-
-				
-				
-				
-				
-				
-				
-				
-				
-				
-				
-				
-
-				
-				
-				
-				
-				
-				
-				
-				
-				
-				
-
-				
-
-				
-
 				
 				<ReactionRule name="UpdateSpecificSkill_Rule" agentVariable="f"><!--注意updateSpecificSkillLevel不存在-->
 					<documentation>
 						<description>更新特殊技能。</description>
 					</documentation>
-					<WHEN eventType="InMessageEvent" messageType="UpdateSpecificSkill"/>
+					<WHEN eventType="EndOfMonth_PTE"/>
 					<FOR-ListItemVariable variable="w" listItemType="WorkerRecord">
 						<ListExpr language="Java"><![CDATA[f.getWorkers().getList()]]></ListExpr>
 					</FOR-ListItemVariable>
@@ -1249,14 +1180,8 @@
 				</Function>
 				
 
-				
-
 				<PeriodicTimeEventType name="InFirstIterationAcceptJob" periodicity="20"/>
 				<PeriodicTimeEventType name="InSecondIterationAcceptJob" periodicity="20"/>
-
-				
-				
-				
 
 				<PeriodicTimeEventType name="AcceptJobAgain" periodicity="20"/>
 				<PeriodicTimeEventType name="ReduceWage" periodicity="20"/>
@@ -1282,7 +1207,7 @@
 					<documentation>
 						<description></description>
 					</documentation>
-					<WHEN eventType="InMessageEvent" messageType="SendJobOffer" messageVariable="msg" eventVariable="evt"/>
+					<WHEN eventType="InMessageEvent" messageType="JobOffer" messageVariable="msg" eventVariable="evt"/>
 					<IF language="Java"><![CDATA[msg.getRegion() == h.getRegion()]]></IF>
 					<THEN>
 						<UPDATE-AGT>
@@ -1415,28 +1340,6 @@
 			</AgentType>
 		</EntityTypes>
 		
-		
-		
-		
-		
-		
-		
-		
-		
-		
-		
-		
-		
-		
-		
-		
-		
-		
-		
-		
-		
-		
-		
 		<EnvironmentRules>
 			<!-- at step 1 -->
 			<EnvironmentRule name="Create_InitialProductsInStock_Rule">
@@ -1551,14 +1454,14 @@
 						</Call>
 					</UPDATE-ENV>
 					<SCHEDULE-EVT>
-						<InMessageEventExpr messageType="SendSalesRevenue">
+						<InMessageEventExpr messageType="TellSalesRevenue">
 							<SenderIdRef language="Java"><![CDATA[m.getId()]]></SenderIdRef>
 							<ReceiverIdRef language="Java"><![CDATA[h.getSelectFirstProductId()]]></ReceiverIdRef>
 							<Slot property="revenue">
 								<ValueExpr language="Java"><![CDATA[h.getSpendBudgetForFirstProduct()]]></ValueExpr>
 							</Slot>
 						</InMessageEventExpr>
-						<InMessageEventExpr messageType="SendSalesRevenue">
+						<InMessageEventExpr messageType="TellSalesRevenue">
 							<Condition language="Java"><![CDATA[h.getSelectSecondProductId() != 0]]></Condition>
 							<SenderIdRef language="Java"><![CDATA[m.getId()]]></SenderIdRef>
 							<ReceiverIdRef language="Java"><![CDATA[h.getSelectSecondProductId()]]></ReceiverIdRef>
@@ -1630,11 +1533,11 @@
 			</EnvironmentRule>
 			
 			<!-- at step 5 -->
-			<EnvironmentRule name="StartBuyPhysicalCapital_Rule">
+			<EnvironmentRule name="BuyPhysicalCapital_Rule">
 				<documentation>
 					<description>The existing capital stock depreciates over time and needs to be upgraded if the CGP wants to benefit from the productivity increase of newly produced capital products. Investments follow from a planned or desired capital stock.</description>
 				</documentation>
-				<WHEN eventType="OutMessageEvent" messageType="StartBuyPhysicalCapital" messageVariable="msg"/>
+				<WHEN eventType="OutMessageEvent" messageType="BuyPhysicalCapital" messageVariable="msg"/>
 				<FOR-ObjectVariable variable="f" objectType="Firm">
 					<ObjectIdRef language="Java"><![CDATA[msg.getFirmId()]]></ObjectIdRef>
 				</FOR-ObjectVariable>
@@ -1663,12 +1566,12 @@
 				<documentation>
 					<description>The CGPs post vacancies including wage offers.</description>
 				</documentation>
-				<WHEN eventType="OutMessageEvent" messageType="PostVacancyInformation" messageVariable="msg"/>
+				<WHEN eventType="PostVacancyInformation" eventVariable="e"/>
 				<FOR-ObjectVariable variable="f" objectType="Firm">
-					<ObjectIdRef language="Java"><![CDATA[msg.getFirmId()]]></ObjectIdRef>
+					<ObjectIdRef language="Java"><![CDATA[ e.getFirmId() ]]></ObjectIdRef>
 				</FOR-ObjectVariable>
 				<FOR-ObjectVariable variable="h" objectType="Household">
-					<SelectionCondition language="Java"><![CDATA[h.isJobSeeker()]]></SelectionCondition>
+					<SelectionCondition language="Java"><![CDATA[ h.isJobSeeker() ]]></SelectionCondition>
 				</FOR-ObjectVariable>
 				<IF language="Java"><![CDATA[f.getWageOffer() >= h.getWage()]]></IF>
 				<THEN>
@@ -1689,7 +1592,7 @@
 						</UpdateObject>
 						</UPDATE-ENV>-->
 					<SCHEDULE-EVT>
-						<InMessageEventExpr messageType="StartJobApplication">
+						<InMessageEventExpr messageType="TellVacancy">
 							<SenderIdRef language="Java"><![CDATA[h.getId()]]></SenderIdRef>
 							<ReceiverIdRef language="Java"><![CDATA[f.getId()]]></ReceiverIdRef>
 							<Slot property="generalSkillLevel">
@@ -1795,7 +1698,7 @@
 				<IF language="Java"><![CDATA[f.getWageOffer() > h.getWage()]]></IF>
 				<THEN>
 					<SCHEDULE-EVT>
-						<InMessageEventExpr messageType="StartJobApplication">
+						<InMessageEventExpr messageType="TellVacancy">
 							<SenderIdRef language="Java"><![CDATA[h.getId()]]></SenderIdRef>
 							<ReceiverIdRef language="Java"><![CDATA[f.getId()]]></ReceiverIdRef>
 							<Slot property="generalSkillLevel">
@@ -1940,20 +1843,17 @@
 						</UpdateObject>
 					</UPDATE-ENV>
 					<SCHEDULE-EVT>
-						<InMessageEventExpr messageType="SendNewPrice" receiverIdRefs="4">
+						<InMessageEventExpr messageType="TellNewPrice" receiverIdRefs="4">
 							<SenderIdRef language="Java"><![CDATA[f.getId()]]></SenderIdRef>
 							<Slot property="price">
 								<ValueExpr language="Java"><![CDATA[f.getPrice()]]></ValueExpr>
 							</Slot>
 						</InMessageEventExpr>
-						<InMessageEventExpr messageType="SendNewPrice" receiverIdRefs="5">
+						<InMessageEventExpr messageType="TellNewPrice" receiverIdRefs="5">
 							<SenderIdRef language="Java"><![CDATA[f.getId()]]></SenderIdRef>
 							<Slot property="price">
 								<ValueExpr language="Java"><![CDATA[f.getPrice()]]></ValueExpr>
 							</Slot>
-						</InMessageEventExpr>
-						<InMessageEventExpr messageType="UpdateSpecificSkill" senderIdRef="0">
-							<ReceiverIdRef language="Java"><![CDATA[f.getId()]]></ReceiverIdRef>
 						</InMessageEventExpr>
 					</SCHEDULE-EVT>
 				</DO>
