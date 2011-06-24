@@ -1,161 +1,414 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <?xml-stylesheet type="text/xsl" href="prettyprint.xsl"?>
-<SimulationScenario xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-    xsi:schemaLocation="http://aor-simulation.org ../../../AORSL/AORSL_0-9.xsd"
-    xmlns="http://aor-simulation.org"
-    xmlns:dc="http://purl.org/dc/elements/1.1/"
-    xmlns:aors="http://aor-simulation.org"
-    version="0.9"
-    scenarioName="PacMan">
-    
+<SimulationScenario scenarioName="PacMan" version="0.9" xmlns="http://aor-simulation.org"
+    xmlns:aors="http://aor-simulation.org" xmlns:dc="http://purl.org/dc/elements/1.1/"
+    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+    xsi:schemaLocation="http://aor-simulation.org ../../../AORSL/AORSL_0-9.xsd">
     <documentation>
         <dc:creator>Mircea Diaconescu</dc:creator>
         <dc:created>23 Juni 2011</dc:created>
-        <dc:description>
-            Classic Pac Man arcade game.
-        </dc:description>
+        <dc:description> Classic Pac Man arcade game. </dc:description>
     </documentation>
-    
-    <SimulationParameters simulationSteps="10000"/>
+    <SimulationParameters simulationSteps="10000" stepTimeDelay="200" />
     <SimulationModel modelName="PacMan" modelTitle="Pac Man Classic Arcade Game">
         <SpaceModel geometry="Euclidean">
             <TwoDimensionalGrid xMax="20" yMax="11">
                 <!-- determine if the cell role -->
-                <GridCellProperty type="Integer" name="cellRole"/>
+                <GridCellProperty name="cellRole" type="Integer" />
             </TwoDimensionalGrid>
         </SpaceModel>
-        
         <EntityTypes>
-            <PhysicalObjectType name="PillFood"/>     
-            <PhysicalObjectType name="PacMan"/>
-            <PhysicalObjectType name="Enemy"/>
+            <PhysicalObjectType name="PillFood" />
+            <PhysicalAgentType name="PacMan">
+                <!-- flag used to determine if the PacMan has the mouth open or closed -->
+                <Attribute initialValue="false" name="mouthOpen" type="Boolean" />
+            </PhysicalAgentType>
+            <PhysicalObjectType name="Enemy" />
         </EntityTypes>
-        
+        <!-- This rule is used to allow close/open of the PacMan mouth -->
+        <EnvironmentRules>
+            <EnvironmentRule name="OnEachStepRule">
+                <ON-EACH-SIMULATION-STEP />
+                <FOR-ObjectVariable objectIdRef="1" objectType="PacMan" variable="pacMan" />
+                <DO>
+                    <UPDATE-ENV>
+                        <UpdateObject objectVariable="pacMan">
+                            <Slot property="mouthOpen">
+                                <ValueExpr language="Java JavaScript">
+                                    <![CDATA[
+                                        !this.pacMan.isMouthOpen()
+                                    ]]>
+                                </ValueExpr>
+                            </Slot>
+                        </UpdateObject>
+                    </UPDATE-ENV>
+                </DO>
+            </EnvironmentRule>
+        </EnvironmentRules>
     </SimulationModel>
     <InitialState>
         <GridCells>
             <!-- top wall(s) -->
-            <GridCellSet startX="1" endX="20" startY="11" endY="11">
-                <Slot property="cellRole" value="1"/>
+            <GridCellSet endX="20" endY="11" startX="1" startY="11">
+                <Slot property="cellRole" value="1" />
             </GridCellSet>
-            <GridCellSet startX="6" endX="6" startY="9" endY="10">
-                <Slot property="cellRole" value="1"/>
+            <GridCellSet endX="6" endY="10" startX="6" startY="9">
+                <Slot property="cellRole" value="1" />
             </GridCellSet>
-            <GridCellSet startX="15" endX="15" startY="9" endY="10">
-                <Slot property="cellRole" value="1"/>
+            <GridCellSet endX="15" endY="10" startX="15" startY="9">
+                <Slot property="cellRole" value="1" />
             </GridCellSet>
-            
             <!-- bottom wall(s) -->
-            <GridCellSet startX="1" endX="20" startY="1" endY="1">
-                <Slot property="cellRole" value="1"/>
+            <GridCellSet endX="20" endY="1" startX="1" startY="1">
+                <Slot property="cellRole" value="1" />
             </GridCellSet>
-            <GridCellSet startX="6" endX="6" startY="2" endY="3">
-                <Slot property="cellRole" value="1"/>
+            <GridCellSet endX="6" endY="3" startX="6" startY="2">
+                <Slot property="cellRole" value="1" />
             </GridCellSet>
-            <GridCellSet startX="15" endX="15" startY="2" endY="3">
-                <Slot property="cellRole" value="1"/>
+            <GridCellSet endX="15" endY="3" startX="15" startY="2">
+                <Slot property="cellRole" value="1" />
             </GridCellSet>
-            
             <!-- left wall -->
-            <GridCellSet startX="1" endX="1" startY="1" endY="11">
-                <Slot property="cellRole" value="1"/>
+            <GridCellSet endX="1" endY="11" startX="1" startY="1">
+                <Slot property="cellRole" value="1" />
             </GridCellSet>
-            
             <!-- right wall -->
-            <GridCellSet startX="20" endX="20" startY="1" endY="11">
-                <Slot property="cellRole" value="1"/>
+            <GridCellSet endX="20" endY="11" startX="20" startY="1">
+                <Slot property="cellRole" value="1" />
             </GridCellSet>
-            
             <!-- center wall(s) -->
-            <GridCellSet startX="8" endX="9" startY="7" endY="7">
-                <Slot property="cellRole" value="1"/>
+            <GridCellSet endX="9" endY="7" startX="8" startY="7">
+                <Slot property="cellRole" value="1" />
             </GridCellSet>
-            <GridCellSet startX="12" endX="13" startY="7" endY="7">
-                <Slot property="cellRole" value="1"/>
+            <GridCellSet endX="13" endY="7" startX="12" startY="7">
+                <Slot property="cellRole" value="1" />
             </GridCellSet>
-            <GridCellSet startX="8" endX="13" startY="5" endY="5">
-                <Slot property="cellRole" value="1"/>
+            <GridCellSet endX="13" endY="5" startX="8" startY="5">
+                <Slot property="cellRole" value="1" />
             </GridCellSet>
             <GridCell x="8" y="6">
-                <Slot property="cellRole" value="1"/>
+                <Slot property="cellRole" value="1" />
             </GridCell>
             <GridCell x="13" y="6">
-                <Slot property="cellRole" value="1"/>
+                <Slot property="cellRole" value="1" />
             </GridCell>
-            
             <!-- center-down Line-Wall -->
-            <GridCellSet startX="8" endX="13" startY="3" endY="3">
-                <Slot property="cellRole" value="1"/>
+            <GridCellSet endX="13" endY="3" startX="8" startY="3">
+                <Slot property="cellRole" value="1" />
             </GridCellSet>
-            
             <!-- center-top Line-Wall -->
-            <GridCellSet startX="8" endX="13" startY="9" endY="9">
-                <Slot property="cellRole" value="1"/>
+            <GridCellSet endX="13" endY="9" startX="8" startY="9">
+                <Slot property="cellRole" value="1" />
             </GridCellSet>
-            
             <!-- left-down 2-Piece-Wall -->
-            <GridCellSet startX="5" endX="6" startY="5" endY="5">
-                <Slot property="cellRole" value="1"/>
+            <GridCellSet endX="6" endY="5" startX="5" startY="5">
+                <Slot property="cellRole" value="1" />
             </GridCellSet>
-            
             <!-- left-top 2-Piece-Wall -->
-            <GridCellSet startX="5" endX="6" startY="7" endY="7">
-                <Slot property="cellRole" value="1"/>
+            <GridCellSet endX="6" endY="7" startX="5" startY="7">
+                <Slot property="cellRole" value="1" />
             </GridCellSet>
-            
             <!-- right-down 2-Piece-Wall -->
-            <GridCellSet startX="15" endX="16" startY="5" endY="5">
-                <Slot property="cellRole" value="1"/>
+            <GridCellSet endX="16" endY="5" startX="15" startY="5">
+                <Slot property="cellRole" value="1" />
             </GridCellSet>
-            
             <!-- right-top 2-Piece-Wall -->
-            <GridCellSet startX="15" endX="16" startY="7" endY="7">
-                <Slot property="cellRole" value="1"/>
+            <GridCellSet endX="16" endY="7" startX="15" startY="7">
+                <Slot property="cellRole" value="1" />
             </GridCellSet>
-            
             <!-- left-down L-Wall -->
-            <GridCellSet startX="3" endX="3" startY="3" endY="5">
-                <Slot property="cellRole" value="1"/>
+            <GridCellSet endX="3" endY="5" startX="3" startY="3">
+                <Slot property="cellRole" value="1" />
             </GridCellSet>
             <GridCell x="4" y="3">
-                <Slot property="cellRole" value="1"/>
+                <Slot property="cellRole" value="1" />
             </GridCell>
-            
             <!-- left-top L-Wall -->
-            <GridCellSet startX="3" endX="3" startY="7" endY="9">
-                <Slot property="cellRole" value="1"/>
+            <GridCellSet endX="3" endY="9" startX="3" startY="7">
+                <Slot property="cellRole" value="1" />
             </GridCellSet>
             <GridCell x="4" y="9">
-                <Slot property="cellRole" value="1"/>
+                <Slot property="cellRole" value="1" />
             </GridCell>
-            
             <!-- right-down L-Wall -->
-            <GridCellSet startX="18" endX="18" startY="3" endY="5">
-                <Slot property="cellRole" value="1"/>
+            <GridCellSet endX="18" endY="5" startX="18" startY="3">
+                <Slot property="cellRole" value="1" />
             </GridCellSet>
             <GridCell x="17" y="3">
-                <Slot property="cellRole" value="1"/>
+                <Slot property="cellRole" value="1" />
             </GridCell>
-            
             <!-- right-top L-Wall -->
-            <GridCellSet startX="18" endX="18" startY="7" endY="9">
-                <Slot property="cellRole" value="1"/>
+            <GridCellSet endX="18" endY="9" startX="18" startY="7">
+                <Slot property="cellRole" value="1" />
             </GridCellSet>
             <GridCell x="17" y="9">
-                <Slot property="cellRole" value="1"/>
+                <Slot property="cellRole" value="1" />
             </GridCell>
         </GridCells>
-        
+        <PhysicalAgent id="1" name="PacMan" type="PacMan" x="10" y="2" />
+        <!-- First line of Food-Pills-->
+        <PhysicalObjects objectVariable="pillFood" rangeEndID="25" rangeStartID="22" type="PillFood">
+            <Slot property="x">
+                <ValueExpr language="Java JavaScript">
+                   <![CDATA[
+                        pillFood.getId() % 20
+                   ]]>
+               </ValueExpr>
+            </Slot>
+            <Slot property="y">
+                <ValueExpr language="Java JavaScript">
+                    <![CDATA[
+                        parseInt(pillFood.getId() / 20.0) + 1
+                   ]]>
+                </ValueExpr>
+            </Slot>
+        </PhysicalObjects>
+        <PhysicalObjects objectVariable="pillFood" rangeEndID="29" rangeStartID="27" type="PillFood">
+            <Slot property="x">
+                <ValueExpr language="Java JavaScript">
+                    <![CDATA[
+                        pillFood.getId() % 20
+                   ]]>
+                </ValueExpr>
+            </Slot>
+            <Slot property="y">
+                <ValueExpr language="Java JavaScript">
+                    <![CDATA[
+                         parseInt(pillFood.getId() / 20.0) + 1
+                   ]]>
+                </ValueExpr>
+            </Slot>
+        </PhysicalObjects>
+        <PhysicalObjects objectVariable="pillFood" rangeEndID="34" rangeStartID="31" type="PillFood">
+            <Slot property="x">
+                <ValueExpr language="Java JavaScript">
+                    <![CDATA[
+                        pillFood.getId() % 20
+                   ]]>
+                </ValueExpr>
+            </Slot>
+            <Slot property="y">
+                <ValueExpr language="Java JavaScript">
+                    <![CDATA[
+                         parseInt(pillFood.getId() / 20.0) + 1
+                   ]]>
+                </ValueExpr>
+            </Slot>
+        </PhysicalObjects>
+        <PhysicalObjects objectVariable="pillFood" rangeEndID="39" rangeStartID="36" type="PillFood">
+            <Slot property="x">
+                <ValueExpr language="Java JavaScript">
+                    <![CDATA[
+                        pillFood.getId() % 20
+                   ]]>
+                </ValueExpr>
+            </Slot>
+            <Slot property="y">
+                <ValueExpr language="Java JavaScript">
+                    <![CDATA[
+                         parseInt(pillFood.getId() / 20.0) + 1
+                   ]]>
+                </ValueExpr>
+            </Slot>
+        </PhysicalObjects>
+        <!-- Second line of Food-Pills-->
+        <PhysicalObject id="42" objectVariable="pillFood" type="PillFood" x="2" y="3" />
+        <PhysicalObject id="45" objectVariable="pillFood" type="PillFood" x="5" y="3" />
+        <PhysicalObject id="47" objectVariable="pillFood" type="PillFood" x="7" y="3" />
+        <PhysicalObject id="54" objectVariable="pillFood" type="PillFood" x="14" y="3" />
+        <PhysicalObject id="56" objectVariable="pillFood" type="PillFood" x="16" y="3" />
+        <PhysicalObject id="59" objectVariable="pillFood" type="PillFood" x="19" y="3" />
+        <!-- Third line of Food-Pills-->
+        <PhysicalObject id="62" objectVariable="pillFood" type="PillFood" x="2" y="4" />
+        <PhysicalObject id="79" objectVariable="pillFood" type="PillFood" x="19" y="4" />
+        <PhysicalObjects objectVariable="pillFood" rangeEndID="77" rangeStartID="64" type="PillFood">
+            <Slot property="x">
+                <ValueExpr language="Java JavaScript">
+                    <![CDATA[
+                        pillFood.getId() % 20
+                   ]]>
+                </ValueExpr>
+            </Slot>
+            <Slot property="y">
+                <ValueExpr language="Java JavaScript">
+                    <![CDATA[
+                        parseInt(pillFood.getId() / 20.0) + 1
+                   ]]>
+                </ValueExpr>
+            </Slot>
+        </PhysicalObjects>
+        <!-- 4th line of Food-Pills-->
+        <PhysicalObject id="82" objectVariable="pillFood" type="PillFood" x="2" y="5" />
+        <PhysicalObject id="84" objectVariable="pillFood" type="PillFood" x="4" y="5" />
+        <PhysicalObject id="87" objectVariable="pillFood" type="PillFood" x="7" y="5" />
+        <PhysicalObject id="94" objectVariable="pillFood" type="PillFood" x="14" y="5" />
+        <PhysicalObject id="97" objectVariable="pillFood" type="PillFood" x="17" y="5" />
+        <PhysicalObject id="99" objectVariable="pillFood" type="PillFood" x="19" y="5" />
+        <!-- 5th line of Food-Pills-->
+        <PhysicalObjects objectVariable="pillFood" rangeEndID="107" rangeStartID="102"
+            type="PillFood">
+            <Slot property="x">
+                <ValueExpr language="Java JavaScript">
+                    <![CDATA[
+                        pillFood.getId() % 20
+                   ]]>
+                </ValueExpr>
+            </Slot>
+            <Slot property="y">
+                <ValueExpr language="Java JavaScript">
+                    <![CDATA[
+                        parseInt(pillFood.getId() / 20.0) + 1
+                   ]]>
+                </ValueExpr>
+            </Slot>
+        </PhysicalObjects>
+        <PhysicalObjects objectVariable="pillFood" rangeEndID="112" rangeStartID="109"
+            type="PillFood">
+            <Slot property="x">
+                <ValueExpr language="Java JavaScript">
+                    <![CDATA[
+                        pillFood.getId() % 20
+                   ]]>
+                </ValueExpr>
+            </Slot>
+            <Slot property="y">
+                <ValueExpr language="Java JavaScript">
+                    <![CDATA[
+                        parseInt(pillFood.getId() / 20.0) + 1
+                   ]]>
+                </ValueExpr>
+            </Slot>
+        </PhysicalObjects>
+        <PhysicalObjects objectVariable="pillFood" rangeEndID="119" rangeStartID="114"
+            type="PillFood">
+            <Slot property="x">
+                <ValueExpr language="Java JavaScript">
+                    <![CDATA[
+                        pillFood.getId() % 20
+                   ]]>
+                </ValueExpr>
+            </Slot>
+            <Slot property="y">
+                <ValueExpr language="Java JavaScript">
+                    <![CDATA[
+                        parseInt(pillFood.getId() / 20.0) + 1
+                   ]]>
+                </ValueExpr>
+            </Slot>
+        </PhysicalObjects>
+        <!-- 6th line of Food-Pills-->
+        <PhysicalObject id="122" objectVariable="pillFood" type="PillFood" x="2" y="7" />
+        <PhysicalObject id="124" objectVariable="pillFood" type="PillFood" x="4" y="7" />
+        <PhysicalObject id="127" objectVariable="pillFood" type="PillFood" x="7" y="7" />
+        <PhysicalObject id="130" objectVariable="pillFood" type="PillFood" x="10" y="7" />
+        <PhysicalObject id="131" objectVariable="pillFood" type="PillFood" x="11" y="7" />
+        <PhysicalObject id="134" objectVariable="pillFood" type="PillFood" x="14" y="7" />
+        <PhysicalObject id="137" objectVariable="pillFood" type="PillFood" x="17" y="7" />
+        <PhysicalObject id="139" objectVariable="pillFood" type="PillFood" x="19" y="7" />
+        <!-- 7th line of Food-Pills-->
+        <PhysicalObject id="142" objectVariable="pillFood" type="PillFood" x="2" y="8" />
+        <PhysicalObject id="159" objectVariable="pillFood" type="PillFood" x="19" y="8" />
+        <PhysicalObjects objectVariable="pillFood" rangeEndID="157" rangeStartID="144"
+            type="PillFood">
+            <Slot property="x">
+                <ValueExpr language="Java JavaScript">
+                    <![CDATA[
+                        pillFood.getId() % 20
+                   ]]>
+                </ValueExpr>
+            </Slot>
+            <Slot property="y">
+                <ValueExpr language="Java JavaScript">
+                    <![CDATA[
+                        parseInt(pillFood.getId() / 20.0) + 1
+                   ]]>
+                </ValueExpr>
+            </Slot>
+        </PhysicalObjects>
+        <!-- 8th line of Food-Pills-->
+        <PhysicalObject id="162" objectVariable="pillFood" type="PillFood" x="2" y="9" />
+        <PhysicalObject id="165" objectVariable="pillFood" type="PillFood" x="5" y="9" />
+        <PhysicalObject id="167" objectVariable="pillFood" type="PillFood" x="7" y="9" />
+        <PhysicalObject id="174" objectVariable="pillFood" type="PillFood" x="14" y="9" />
+        <PhysicalObject id="176" objectVariable="pillFood" type="PillFood" x="16" y="9" />
+        <PhysicalObject id="179" objectVariable="pillFood" type="PillFood" x="19" y="9" />
+        <!-- 9th line of Food-Pills-->
+        <PhysicalObjects objectVariable="pillFood" rangeEndID="185" rangeStartID="182"
+            type="PillFood">
+            <Slot property="x">
+                <ValueExpr language="Java JavaScript">
+                    <![CDATA[
+                        pillFood.getId() % 20
+                   ]]>
+                </ValueExpr>
+            </Slot>
+            <Slot property="y">
+                <ValueExpr language="Java JavaScript">
+                    <![CDATA[
+                        parseInt(pillFood.getId() / 20.0) + 1
+                   ]]>
+                </ValueExpr>
+            </Slot>
+        </PhysicalObjects>
+        <PhysicalObjects objectVariable="pillFood" rangeEndID="194" rangeStartID="187"
+            type="PillFood">
+            <Slot property="x">
+                <ValueExpr language="Java JavaScript">
+                    <![CDATA[
+                        pillFood.getId() % 20
+                   ]]>
+                </ValueExpr>
+            </Slot>
+            <Slot property="y">
+                <ValueExpr language="Java JavaScript">
+                    <![CDATA[
+                         parseInt(pillFood.getId() / 20.0) + 1
+                   ]]>
+                </ValueExpr>
+            </Slot>
+        </PhysicalObjects>
+        <PhysicalObjects objectVariable="pillFood" rangeEndID="199" rangeStartID="196"
+            type="PillFood">
+            <Slot property="x">
+                <ValueExpr language="Java JavaScript">
+                    <![CDATA[
+                        pillFood.getId() % 20
+                   ]]>
+                </ValueExpr>
+            </Slot>
+            <Slot property="y">
+                <ValueExpr language="Java JavaScript">
+                    <![CDATA[
+                         parseInt(pillFood.getId() / 20.0) + 1
+                   ]]>
+                </ValueExpr>
+            </Slot>
+        </PhysicalObjects>
     </InitialState>
-    
     <UserInterface supportedLanguages="en">
         <AnimationUI>
             <Views>
                 <SpaceView>
                     <TwoDimensionalGridSpaceView2D backgroundColor="black">
-                        <GridCellPropertyVisualizationMap cellViewProperty="fill" property="cellRole" mapType="equalityCaseWise" a0="1" v0="blue"/>
+                        <GridCellPropertyVisualizationMap a0="1" cellViewProperty="fill"
+                            mapType="equalityCaseWise" property="cellRole" v0="blue" />
                     </TwoDimensionalGridSpaceView2D>
                 </SpaceView>
+                <PhysicalObjectView physicalObjectIdRef="1">
+                    <PhysicalShape2D>
+                        <Square>
+                            <ShapePropertyVisualizationMap a0="true" a1="false"
+                                mapType="equalityCaseWise" property="mouthOpen"
+                                shapeProperty="texture" v0="PacMan_open.png" v1="PacMan_close.png"
+                             />
+                        </Square>
+                    </PhysicalShape2D>
+                </PhysicalObjectView>
+                <PhysicalObjectView physicalObjectType="PillFood">
+                    <PhysicalShape2D>
+                        <Circle texture="PillFood.png" />
+                    </PhysicalShape2D>
+                </PhysicalObjectView>
             </Views>
         </AnimationUI>
     </UserInterface>
