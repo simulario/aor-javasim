@@ -1,0 +1,1562 @@
+<?xml version="1.0"?>
+<?xml-stylesheet type="text/xsl" href="prettyprint.xsl"?>
+
+<SimulationScenario version="0.9" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+    xsi:schemaLocation="http://aor-simulation.org ../../../ext/AORSL/AORSL_0-9.xsd"
+    xmlns="http://aor-simulation.org" xmlns:aors="http://aor-simulation.org"
+    xmlns:dc="http://purl.org/dc/elements/1.1/" 
+    scenarioName="Regional_Labor_Markets"
+    scenarioTitle="Regional Labor Markets"
+    simulationManagerDirectory="../../..">
+    
+    <SimulationParameters simulationSteps="4000" timeUnit="D" stepTimeDelay="0"/>
+    <SimulationModel modelName="Regional_Labor_Markets" modelTitle="Regional Labor Markets">
+        <documentation></documentation>
+        
+        <Statistics></Statistics>
+        
+        <DataTypes>
+            <ComplexDataType name="ProductInStock">
+                <Attribute name="firmId" type="Integer"/>
+                <Attribute name="price" type="Float"/>
+                <Attribute name="quantity" type="Float"/>
+            </ComplexDataType>
+            
+            <ComplexDataType name="ProductList">
+                <Attribute name="firmId" type="Integer"/>
+                <Attribute name="value" type="Float"/>
+                <Attribute name="prob" type="Float"/>
+            </ComplexDataType>
+            
+            <ComplexDataType name="OrderList">
+                <Attribute name="mallId" type="Integer"/>
+                <Attribute name="quantity" type="Float"/>
+                <Attribute name="rationing" type="Float"/>
+            </ComplexDataType>
+            
+            <ComplexDataType name="WorkerInFirm">
+                <Attribute name="householdId" type="Integer"/>
+                <Attribute name="wage" type="Float"/>
+                <Attribute name="generalSkillLevel" type="Integer"/>
+                <Attribute name="specificSkillLevel" type="Float"/>
+            </ComplexDataType>
+            
+            <ComplexDataType name="ApplicationList">
+                <Attribute name="householdId" type="Integer"/>
+                <Attribute name="generalSkillLevel" type="Integer"/>
+                <Attribute name="specificSkillLevel" type="Float"/>
+            </ComplexDataType>
+            
+            <ComplexDataType name="JobOfferList">
+                <Attribute name="firmId" type="Integer"/>
+                <Attribute name="wageOffer" type="Float"/>
+                <Attribute name="netWageOffer" type="Float"/>
+            </ComplexDataType>
+        </DataTypes>
+        
+        <Globals>
+            <GlobalVariable name="period" dataType="Integer"/>
+            <GlobalVariable name="comm" dataType="Float"/>
+            
+            <!--<GlobalFunction name="wouldInnovate" resultType="Float">
+                <documentation>
+                    <description></description>
+                </documentation>
+                <Body language="Java"><![CDATA[
+					int r = Random.uniformInt(0, 99);
+					if (r < 10) return 0.05;
+					else return 0.0;
+					]]></Body>
+					</GlobalFunction>-->
+            
+            <GlobalFunction name="wouldBeJobSeeker" resultType="Boolean">
+                <documentation>
+                    <description xml:lang="en">A randomly determined fraction 10% of employed workers who do an on-the-job search.</description>
+                    <description xml:lang="ch"></description>
+                </documentation>
+                <Body language="Java"><![CDATA[
+					int r = Random.uniformInt(0, 99);
+					if (r < 10) return true;
+					else return false;
+					]]></Body>
+			</GlobalFunction>
+            
+            <GlobalFunction name="determineInitialWage" resultType="Float">
+                <documentation>
+                    <description></description>
+                </documentation>
+                <Parameter name="generalSkillLevel" type="Integer"/>
+                <Body language="Java"><![CDATA[
+					if (generalSkillLevel == 1) return 0.96;
+					else if (generalSkillLevel == 2) return 0.98;
+					else if (generalSkillLevel == 3) return 1.0;
+					else if (generalSkillLevel == 4) return 1.02;
+					else return 1.04;
+					]]></Body>
+            </GlobalFunction>
+            
+            <GlobalFunction name="lowSkillRegion" resultType="Integer">
+                <documentation>
+                    <description></description>
+                </documentation>
+                <Body language="Java"><![CDATA[
+					int r = Random.uniformInt(0, 99);
+					if (r < 80) return 1;			// with probability 0.80
+					else if (r < 85) return 2;		// with probability 0.05
+					else if (r < 90) return 3;		// with probability 0.05
+					else if (r < 95) return 4;		// with probability 0.05
+					else return 5;					// with probability 0.05
+					]]></Body>
+            </GlobalFunction>
+            
+            <GlobalFunction name="mediumSkillRegion" resultType="Integer">
+                <documentation>
+                    <description></description>
+                </documentation>
+                <Body language="Java"><![CDATA[
+					int r = Random.uniformInt(0, 99);
+					if (r < 5) return 1;			// with probability 0.05
+					else if (r < 10) return 2;		// with probability 0.05
+					else if (r < 90) return 3;		// with probability 0.80
+					else if (r < 95) return 4;		// with probability 0.05
+					else return 5;					// with probability 0.05
+					]]></Body>
+			</GlobalFunction>
+            
+            <GlobalFunction name="highSkillRegion" resultType="Integer">
+                <documentation>
+                    <description></description>
+                </documentation>
+                <Body language="Java"><![CDATA[
+					int r = Random.uniformInt(0, 99);
+					if (r < 5) return 1;			// with probability 0.05
+					else if (r < 10) return 2;		// with probability 0.05
+					else if (r < 15) return 3;		// with probability 0.05
+					else if (r < 20) return 4;		// with probability 0.05
+					else return 5;					// with probability 0.80
+					]]></Body>
+			</GlobalFunction>
+        </Globals>
+        
+        <EntityTypes>
+            <MessageType name="TellCurrentStockLevel">
+                <Attribute name="quantity" type="Float"/>
+            </MessageType>
+            
+            <MessageType name="TellSalesRevenue">
+                <Attribute name="revenue" type="Float"/>
+                <!--<Attribute name="quantity" type="Float"/>-->
+            </MessageType>
+            
+            <MessageType name="TellVacancy">
+                <Attribute name="generalSkillLevel" type="Integer"/>
+                <Attribute name="specificSkillLevel" type="Float"/>
+            </MessageType>
+            
+            <MessageType name="JobOffer">
+                <Attribute name="wageOffer" type="Float"/>
+                <Attribute name="region" type="Integer"/>
+            </MessageType>
+            
+            <MessageType name="AcceptJob">
+                <Attribute name="wage" type="Float"/>
+                <Attribute name="generalSkillLevel" type="Integer"/>
+                <Attribute name="specificSkillLevel" type="Float"/>
+            </MessageType>
+            
+            <MessageType name="ResignJob"/>
+            
+            <MessageType name="DeliverProduct">
+                <Attribute name="quantity" type="Float"/>
+            </MessageType>
+            
+            <ActionEventType name="PostVacancyInformation">
+                <Attribute name="firmId" type="Integer"/>
+                <Attribute name="wageOffer" type="Float"/>
+            </ActionEventType>
+            
+            <ActionEventType name="InFirstIterationOfferJob"/>
+            
+            <ActionEventType name="DistributeProduct"/>
+            
+            <ActionEventType name="PayDividend">
+                <Attribute name="dividend" type="Float"/>
+            </ActionEventType>
+            
+            <ExogenousEventType name="Init"/>
+            <ExogenousEventType name="StartOfMonth" periodicity="20"/>
+            <ExogenousEventType name="AtWeeklyIndividualConsumption" periodicity="5"/>
+            <ExogenousEventType name="EndFirstIterationLaborSupply" periodicity="20"/>
+            <ExogenousEventType name="EndOfMonth" periodicity="20"/>
+            
+            <AgentType name="Mall">
+                <documentation>
+                    <description>Consumption goods are sold at malls. Malls are treated as local market platforms where CGPs store and offer their products and consumers come to buy goods at posted prices.</description>
+                </documentation>
+                <Attribute name="test" type="Float"/><!--!!!test!!!-->
+                
+                <ComplexDataProperty name="productsInStock" type="ProductInStock" upperMultiplicity="unbounded"/>
+                
+                <Function name="updateInventory" resultType="void">
+                    <documentation>
+                        <description></description>
+                    </documentation>
+                    <Parameter name="firmId" type="Integer"/>
+                    <Parameter name="quantity" type="Float"/>
+                    <Body language="Java"><![CDATA[
+                        int i;
+						for (i = 0; i < getProductsInStock().size(); i++) {
+							if (getProductsInStock().get(i).getFirmId() == firmId) {
+								getProductsInStock().get(i).setQuantity(getProductsInStock().get(i).getQuantity() + quantity);
+							}
+						}
+						]]></Body>
+                </Function>
+                
+                <PeriodicTimeEventType name="AtStartOfMonthCheckStockLevel" periodicity="20"/>
+                
+                <!-- at step 2 -->
+                <ReactionRule name="AtStartOfMonthCheckStockLevel_Rule" agentVariable="m">
+                    <documentation>
+                        <description></description>
+                    </documentation>
+                    <WHEN eventType="AtStartOfMonthCheckStockLevel"/>
+                    <FOR-ListItemVariable variable="p" listItemType="ProductInStock">
+                        <ListExpr language="Java"><![CDATA[ m.getProductsInStock() ]]></ListExpr>
+                    </FOR-ListItemVariable>
+                    <DO>
+                        <SCHEDULE-EVT>
+                            <OutMessageEventExpr messageType="TellCurrentStockLevel">
+                                <ReceiverIdRef language="Java"><![CDATA[ p.getFirmId() ]]></ReceiverIdRef>
+                                <Slot property="quantity">
+                                    <ValueExpr language="Java"><![CDATA[ p.getQuantity() ]]></ValueExpr>
+                                </Slot>
+                            </OutMessageEventExpr>
+                        </SCHEDULE-EVT>
+                    </DO>
+                </ReactionRule>
+                
+                <!-- at step 14 -->
+                <ReactionRule name="DeliverProduct_Rule" agentVariable="m">
+                    <documentation>
+                        <description></description>
+                    </documentation>
+                    <WHEN eventType="InMessageEvent" messageType="DeliverProduct" messageVariable="msg" eventVariable="evt"/>
+                    <DO>
+                        <UPDATE-AGT>
+                            <Call procedure="updateInventory" contextObjectVariable="m">
+                                <Argument parameter="firmId">
+                                    <ValueExpr language="Java"><![CDATA[ evt.getSenderIdRef() ]]></ValueExpr>
+                                </Argument>
+                                <Argument parameter="quantity">
+                                    <ValueExpr language="Java"><![CDATA[ msg.getQuantity() ]]></ValueExpr>
+                                </Argument>
+                            </Call>
+                        </UPDATE-AGT>
+                    </DO>
+                </ReactionRule>
+            </AgentType>
+            
+            <AgentType name="Firm">
+                <documentation>
+                    <description>CGPs use a vintage capital stock and labor to produce the consumption good on a monthly basis. The consumption good is then distributed to the different regions this producer serves. For simplicity it is assumed that all producers offer their products in all regions. Each producer keeps a stock of its products at each of the regional malls and offers the good at a posted price that is updated once a month at the point in time when the stock is replenished.</description>
+                </documentation>
+                <Attribute name="test" type="Float"/><!--!!!test!!!-->
+                
+                <Attribute name="region" type="Integer"/>
+                <Attribute name="productSalesPrice" type="Float"/>
+                <Attribute name="productSalesRevenue" type="Float"/>
+                <!--<Attribute name="productSalesQuantity" type="Float"/>-->
+                <Attribute name="plannedProductionQuantity" type="Float"/>
+                <Attribute name="producedQuantity" type="Float"/>
+                <Attribute name="costOfProduction" type="Float"/><!--abstract definition-->
+                <Attribute name="monthlyRealizedProfit" type="Float"/>
+                <Attribute name="currentBalanceOfSavingAccount" type="Float"/>
+                <Attribute name="equalDividend" type="Float"/>
+                <Attribute name="optimalStockLevel" type="Float"/><!--abstract definition-->
+                <Attribute name="laborSupplyQuantity" type="Integer"/>
+                <Attribute name="wageOffer" type="Float"/>
+                
+                <ComplexDataProperty name="ordersList" type="OrderList" upperMultiplicity="unbounded"/>
+                <ComplexDataProperty name="workersInFirm" type="WorkerInFirm" upperMultiplicity="unbounded"/>
+                <ComplexDataProperty name="applicationsList" type="ApplicationList" upperMultiplicity="unbounded"/>
+                
+                <Function name="desireProductionQuantity" resultType="Boolean"><!--abstract definition-->
+                    <documentation>
+                        <description></description>
+                    </documentation>
+                    <Body language="Java"><![CDATA[
+						double sumOfOrders = 0.0;
+						int i, j;
+						
+						for (i = 0; i < getOrdersList().size(); i++) {
+							sumOfOrders += getOrdersList().get(i).getQuantity();
+						}
+						
+						if (sumOfOrders == 0.0) {
+							setPlannedProductionQuantity(0.0);
+							return false;
+						} 
+						else {
+							for (j = 0; j < getOrdersList().size(); j++) {
+								getOrdersList().get(j).setRationing(getOrdersList().get(j).getQuantity() / sumOfOrders);
+							}
+							setPlannedProductionQuantity(sumOfOrders);
+							return true;
+						}
+						]]></Body>
+                </Function>
+                
+                <Function name="determinePlan" resultType="void"><!--abstract definition-->
+                    <documentation>
+                        <description></description>
+                    </documentation>
+                    <Body language="Java"><![CDATA[
+						setLaborSupplyQuantity((int)Math.ceil(getPlannedProductionQuantity() / 0.8) - getWorkersInFirm().size());
+						]]></Body>
+                </Function>
+                
+                <Function name="determineJobOffer" resultType="void">
+                    <documentation>
+                        <description></description>
+                    </documentation>
+                    <Body language="Java"><![CDATA[
+						java.util.Comparator<sim.model.dataTypes.ApplicationList> comparator;
+						comparator = new java.util.Comparator<sim.model.dataTypes.ApplicationList>() {
+							public int compare(sim.model.dataTypes.ApplicationList a, sim.model.dataTypes.ApplicationList b) {
+								Double p1 = new Double(- a.getGeneralSkillLevel());
+								Double p2 = new Double(- b.getGeneralSkillLevel());
+								Double p3 = new Double(- a.getSpecificSkillLevel());
+								Double p4 = new Double(- b.getSpecificSkillLevel());
+								int i = p1.compareTo(p2);
+								if (i == 0) {
+									return p3.compareTo(p4);
+								}
+								else {
+									return i;
+								}
+							}
+						};
+						
+						java.util.Collections.sort(getApplicationsList(), comparator);
+						
+						int j = (int)getLaborSupplyQuantity();
+						while (j < getApplicationsList().size()) {
+						    getApplicationsList().remove(j);
+						}
+						]]></Body>
+                </Function>
+                
+                <Function name="deleteWorkerRecordFromList" resultType="void">
+                    <documentation>
+                        <description></description>
+                    </documentation>
+                    <Parameter name="householdId" type="Integer"/>
+                    <Body language="Java"><![CDATA[
+						int i;
+						for (i = 0; i < getWorkersInFirm().size(); i++) {
+							if (getWorkersInFirm().get(i).getHouseholdId() == householdId) {
+								getWorkersInFirm().remove(i);
+							}
+						}
+						]]></Body>
+                </Function>
+                
+                <Function name="clearApplicationsList" resultType="void">
+                    <documentation>
+                        <description></description>
+                    </documentation>
+                    <Body language="Java"><![CDATA[
+						getApplicationsList().clear();
+						]]></Body>
+                </Function>
+                
+                <Function name="productionProgress" resultType="void"><!--abstract definition-->
+                    <documentation>
+                        <description></description>
+                    </documentation>
+                    <Body language="Java"><![CDATA[
+						if (getPlannedProductionQuantity() == 0.0) {
+							setProducedQuantity(0.0);
+							setLaborSupplyQuantity(0);
+						}
+						else {
+						    if (getLaborSupplyQuantity() <= 0) {
+						    	setProducedQuantity(getPlannedProductionQuantity());
+						    	setLaborSupplyQuantity(0);
+						    }
+						    else {
+								setProducedQuantity(getPlannedProductionQuantity() - 0.8 * getLaborSupplyQuantity());
+								setLaborSupplyQuantity(0);
+							}
+						}
+						]]></Body>
+                </Function>
+                
+                <Function name="clearOrdersList" resultType="void">
+                    <documentation>
+                        <description></description>
+                    </documentation>
+                    <Body language="Java"><![CDATA[
+						getOrdersList().clear();
+						]]></Body>
+                </Function>
+                
+                <Function name="determineDividend" resultType="void">
+                    <documentation>
+                        <description></description>
+                    </documentation>
+                    <Body language="Java"><![CDATA[
+                        setMonthlyRealizedProfit(getProductSalesRevenue() - getCostOfProduction());
+                        
+                        if (getMonthlyRealizedProfit() <= 0.0) {
+                            setEqualDividend(0.0);
+                            setCurrentBalanceOfSavingAccount(getCurrentBalanceOfSavingAccount() + getMonthlyRealizedProfit());
+                            setMonthlyRealizedProfit(0.0);
+                            setProductSalesRevenue(0.0);
+                        }
+                        else {
+                            if (getCurrentBalanceOfSavingAccount() < 0.0 && Math.abs(getCurrentBalanceOfSavingAccount()) > getProductSalesRevenue()) {
+                                setEqualDividend(0.0);
+                                setCurrentBalanceOfSavingAccount(getCurrentBalanceOfSavingAccount() + getMonthlyRealizedProfit());
+                                setMonthlyRealizedProfit(0.0);
+                                setProductSalesRevenue(0.0);
+                            }
+                            else if (getCurrentBalanceOfSavingAccount() > 0.0 && getCurrentBalanceOfSavingAccount() > getProductSalesRevenue()) {
+                                setEqualDividend(getMonthlyRealizedProfit() / 400);
+                                setMonthlyRealizedProfit(0.0);
+                                setProductSalesRevenue(0.0);
+                            }
+                            else {
+                                setEqualDividend(0.9 * getMonthlyRealizedProfit() / 400);
+                                setCurrentBalanceOfSavingAccount(getCurrentBalanceOfSavingAccount() + (1 - 0.9) * getMonthlyRealizedProfit());
+                                setMonthlyRealizedProfit(0.0);
+                                setProductSalesRevenue(0.0);
+                            }
+                        }
+                        ]]></Body>
+                </Function>
+                
+                <PeriodicTimeEventType name="MakeProductionPlan" periodicity="20"/>
+                <PeriodicTimeEventType name="InFirstIterationRankApplicant" periodicity="20"/>
+                <!--<PeriodicTimeEventType name="StartSecondIterationLaborSupply" periodicity="20"/>-->
+                <!--<PeriodicTimeEventType name="InSecondIterationRankApplicant" periodicity="20"/>-->
+                <PeriodicTimeEventType name="StartOfProduction" periodicity="20"/>
+                <PeriodicTimeEventType name="CalculateDividend" periodicity="20"/>
+                
+                <!-- at step 3 -->
+                <ReactionRule name="TellCurrentStockLevel_Rule" agentVariable="f">
+                    <documentation>
+                        <description xml:lang="en">Every CGP receives messages from all the malls it serves reporting the current stock level and checks once every period whether any of the stocks it keeps at different malls have to be refilled.</description>
+                    </documentation>
+                    <WHEN eventType="InMessageEvent" messageType="TellCurrentStockLevel" messageVariable="msg" eventVariable="evt"/>
+                    <IF language="Java"><![CDATA[ msg.getQuantity() >= f.getOptimalStockLevel() ]]></IF>
+                    <THEN>
+                        <UPDATE-AGT>
+                            <MultiValuedSlot property="ordersList">
+                                <AddLast>
+                                    <ItemExpr language="Java"><![CDATA[
+										new OrderList() {
+											{
+												setMallId(evt.getSenderIdRef());
+												setQuantity(0.0);
+												setRationing(0.0);
+											}
+										}
+										]]></ItemExpr>
+                                </AddLast>
+                            </MultiValuedSlot>
+                        </UPDATE-AGT>
+                    </THEN>
+                    <ELSE>
+                        <UPDATE-AGT>
+                            <MultiValuedSlot property="ordersList">
+                                <AddLast>
+                                    <ItemExpr language="Java"><![CDATA[
+										new OrderList() {
+											{
+												setMallId(evt.getSenderIdRef());
+												setQuantity(f.getOptimalStockLevel() - msg.getQuantity());
+												setRationing(0.0);
+											}
+										}
+										]]></ItemExpr>
+                                </AddLast>
+                            </MultiValuedSlot>
+                        </UPDATE-AGT>
+                    </ELSE>
+                </ReactionRule>
+                
+                <!-- at step 4 -->
+                <ReactionRule name="MakeProductionPlan_Rule" agentVariable="f">
+                    <documentation>
+                        <description></description>
+                    </documentation>
+                    <WHEN eventType="MakeProductionPlan"/>
+                    <IF language="Java"><![CDATA[ f.desireProductionQuantity() ]]></IF>
+                    <THEN>
+                        <UPDATE-AGT>
+                            <Call procedure="determinePlan" contextObjectVariable="f"/>
+                        </UPDATE-AGT>
+                        <SCHEDULE-EVT>
+                            <ActionEventExpr actionEventType="PostVacancyInformation">
+                                <Condition language="Java"><![CDATA[ f.getLaborSupplyQuantity() > 0 ]]></Condition>
+                                <Slot property="firmId">
+                                    <ValueExpr language="Java"><![CDATA[ f.getId() ]]></ValueExpr>
+                                </Slot>
+                                <Slot property="wageOffer">
+                                    <ValueExpr language="Java"><![CDATA[ f.getWageOffer() ]]></ValueExpr>
+                                </Slot>
+                            </ActionEventExpr>
+                        </SCHEDULE-EVT>
+                    </THEN>
+                </ReactionRule>
+                
+                <!-- at step 4 -->
+                <ReactionRule name="TellSalesRevenue_Rule" agentVariable="f">
+                    <documentation>
+                        <description></description>
+                    </documentation>
+                    <WHEN eventType="InMessageEvent" messageType="TellSalesRevenue" messageVariable="msg"/>
+                    <DO>
+                        <UPDATE-AGT>
+                            <Slot property="productSalesRevenue">
+                                <ValueExpr language="Java"><![CDATA[ f.getProductSalesRevenue() + msg.getRevenue() ]]></ValueExpr>
+                            </Slot>
+                            <!--<Slot property="productSalesQuantity">
+                                <ValueExpr language="Java"><![CDATA[ f.getProductSalesQuantity() + msg.getQuantity() ]]></ValueExpr>
+                                </Slot>-->
+                        </UPDATE-AGT>
+                    </DO>
+                </ReactionRule>
+                
+                <!-- at step 6, 15 -->
+                <ReactionRule name="TellVacancy_Rule" agentVariable="f">
+                    <documentation>
+                        <description></description>
+                    </documentation>
+                    <WHEN eventType="InMessageEvent" messageType="TellVacancy" messageVariable="msg" eventVariable="evt"/>
+                    <DO>
+                        <UPDATE-AGT>
+                            <MultiValuedSlot property="applicationsList">
+                                <AddLast>
+                                    <ItemExpr language="Java"><![CDATA[
+										new ApplicationList() {
+											{
+												setHouseholdId(evt.getSenderIdRef());
+												setGeneralSkillLevel(msg.getGeneralSkillLevel());
+												setSpecificSkillLevel(msg.getSpecificSkillLevel());
+											}
+										}
+										]]></ItemExpr>
+                                </AddLast>
+                            </MultiValuedSlot>
+                        </UPDATE-AGT>
+                    </DO>
+                </ReactionRule>
+                
+                <!-- at step 7 -->
+                <ReactionRule name="InFirstIterationRankApplicant_Rule" agentVariable="f">
+                    <documentation>
+                        <description></description>
+                    </documentation>
+                    <WHEN eventType="InFirstIterationRankApplicant"/>
+                    <IF language="Java"><![CDATA[ f.getApplicationsList().size() > 0 ]]></IF>
+                    <THEN>
+                        <UPDATE-AGT>
+                            <Call procedure="determineJobOffer" contextObjectVariable="f"/>
+                        </UPDATE-AGT>
+                        <SCHEDULE-EVT>
+                            <ActionEventExpr actionEventType="InFirstIterationOfferJob"/>
+                        </SCHEDULE-EVT>
+                    </THEN>
+                </ReactionRule>
+                
+                <!-- at step 11, 20 -->
+                <ReactionRule name="AcceptJob_Rule" agentVariable="f">
+                    <documentation>
+                        <description></description>
+                    </documentation>
+                    <WHEN eventType="InMessageEvent" messageType="AcceptJob" messageVariable="msg" eventVariable="evt"/>
+                    <DO>
+                        <UPDATE-AGT>
+                            <Slot property="laborSupplyQuantity">
+                                <ValueExpr language="Java"><![CDATA[ f.getLaborSupplyQuantity() - 1 ]]></ValueExpr>
+                            </Slot>
+                            <MultiValuedSlot property="workersInFirm">
+                                <AddLast>
+                                    <ItemExpr language="Java"><![CDATA[
+										new WorkerInFirm() {
+											{
+												setHouseholdId(evt.getSenderIdRef());
+												setWage(msg.getWage());
+												setGeneralSkillLevel(msg.getGeneralSkillLevel());
+												setSpecificSkillLevel(msg.getSpecificSkillLevel());
+											}
+										}
+										]]></ItemExpr>
+                                </AddLast>
+                            </MultiValuedSlot>
+                        </UPDATE-AGT>
+                    </DO>
+                </ReactionRule>
+                
+                <!-- at step 11, 20 -->
+                <ReactionRule name="ResignJob_Rule" agentVariable="f">
+                    <documentation>
+                        <description></description>
+                    </documentation>
+                    <WHEN eventType="InMessageEvent" messageType="ResignJob" messageVariable="msg" eventVariable="evt"/>
+                    <DO>
+                        <UPDATE-AGT>
+                            <Slot property="laborSupplyQuantity">
+                                <ValueExpr language="Java"><![CDATA[ f.getLaborSupplyQuantity() + 1 ]]></ValueExpr>
+                            </Slot>
+                            <Call procedure="deleteWorkerRecordFromList" contextObjectVariable="f">
+                                <Argument parameter="householdId">
+                                    <ValueExpr language="Java"><![CDATA[ evt.getSenderIdRef() ]]></ValueExpr>
+                                </Argument>
+                            </Call>
+                        </UPDATE-AGT>
+                    </DO>
+                </ReactionRule>
+                
+                <!-- at step 13 -->
+                <!--<ReactionRule name="StartSecondIterationLaborSupply_Rule" agentVariable="f">
+                    <documentation>
+                        <description></description>
+                    </documentation>
+                    <WHEN eventType="StartSecondIterationLaborSupply"/>
+                    <IF language="Java"><![CDATA[ f.getPlannedProductionQuantity() > 0.0 ]]></IF>
+                    <THEN>
+                        <SCHEDULE-EVT>
+                            <ActionEventExpr actionEventType="PostVacancyInformation">
+                                <Condition language="Java"><![CDATA[ f.getLaborSupplyQuantity() > 0 ]]></Condition>
+                                <Slot property="wageOffer">
+                                    <ValueExpr language="Java"><![CDATA[ f.getWageOffer() ]]></ValueExpr>
+                                </Slot>
+                            </ActionEventExpr>
+                        </SCHEDULE-EVT>
+                    </THEN>
+                    </ReactionRule>-->
+                
+                <!-- at step 16 -->
+                <!--<ReactionRule name="InSecondIterationRankApplicant_Rule" agentVariable="f">
+                    <documentation>
+                        <description></description>
+                    </documentation>
+                    <WHEN eventType="InSecondIterationRankApplicant"/>
+                    <IF language="Java"><![CDATA[ f.getApplicationsList().size() > 0 ]]></IF>
+                    <THEN>
+                        <UPDATE-AGT>
+                            <Call procedure="determineJobOffer" contextObjectVariable="f"/>
+                        </UPDATE-AGT>
+                        <SCHEDULE-EVT>
+                            <ActionEventExpr actionEventType="InFirstIterationOfferJob"/>
+                        </SCHEDULE-EVT>
+                    </THEN>
+                    </ReactionRule>-->
+                
+                
+                <!-- at step 12 -->
+                <ReactionRule name="StartOfProduction_Rule" agentVariable="f">
+                    <documentation>
+                        <description></description>
+                    </documentation>
+                    <WHEN eventType="StartOfProduction"/>
+                    <DO>
+                        <UPDATE-AGT>
+                            <Call procedure="productionProgress" contextObjectVariable="f"/>
+                        </UPDATE-AGT>
+                        <SCHEDULE-EVT>
+                            <ActionEventExpr actionEventType="DistributeProduct">
+                                <Condition language="Java"><![CDATA[ f.getProducedQuantity() > 0.0 ]]></Condition>
+                            </ActionEventExpr>
+                        </SCHEDULE-EVT>
+                    </DO>
+                </ReactionRule>
+                
+                <!-- at step 20 -->
+                <ReactionRule name="CalculateDividend_Rule" agentVariable="f">
+                    <documentation>
+                        <description></description>
+                    </documentation>
+                    <WHEN eventType="CalculateDividend"/>
+                    <DO>
+                        <UPDATE-AGT>
+                            <Call procedure="determineDividend" contextObjectVariable="f"/>
+                        </UPDATE-AGT>
+                        <SCHEDULE-EVT>
+                            <ActionEventExpr actionEventType="PayDividend">
+                                <Condition language="Java"><![CDATA[ f.getEqualDividend() > 0.0 ]]></Condition>
+                                <Slot property="dividend">
+                                    <ValueExpr language="Java"><![CDATA[ f.getEqualDividend() ]]></ValueExpr>
+                                </Slot>
+                            </ActionEventExpr>
+                        </SCHEDULE-EVT>
+                    </DO>
+                </ReactionRule>
+            </AgentType>
+            
+            <AgentType name="Household">
+                <documentation>
+                    <description>Each household determines once a month the budget which it will spend for consumption based on its income and its assets carried over from the previous period. Once a week the household then visits the (regional) mall to purchase consumption goods. When visiting the mall each consumer collects information about the range of goods provided and about the prices and inventories of the different goods.</description>
+                </documentation>
+                <Attribute name="test" type="Float"/><!--!!!test!!!-->
+                
+                <Attribute name="region" type="Integer"/>
+                <Attribute name="firm" type="Integer"/>
+                <Attribute name="lastFirm" type="Integer"/>
+                <Attribute name="jobSeeker" type="Boolean"/>
+                <Attribute name="generalSkillLevel" type="Integer"/>
+                <Attribute name="specificSkillLevel" type="Float"/>
+                <Attribute name="currentWage" type="Float"/>
+                <Attribute name="totalIncome" type="Float"/>
+                <Attribute name="meanIncome" type="Float"/>
+                <Attribute name="currentIncome" type="Float"/>
+                <Attribute name="savingAccount" type="Float"/>
+                <Attribute name="cashOnHand" type="Float"/>
+                <Attribute name="consumptionBudget" type="Float"/>
+                <Attribute name="weekConsumptionBudget" type="Float"/>
+                <Attribute name="remainingConsumptionBudget" type="Float"/>
+                <Attribute name="selectFirstProductId" type="Integer"/>
+                <Attribute name="selectSecondProductId" type="Integer"/>
+                <Attribute name="spendBudgetForFirstProduct" type="Float"/>
+                <Attribute name="spendBudgetForSecondProduct" type="Float"/>
+                
+                <ComplexDataProperty name="productsList" type="ProductList" upperMultiplicity="unbounded"/>
+                <ComplexDataProperty name="jobOffersList" type="JobOfferList" upperMultiplicity="unbounded"/>
+                
+                <Function name="determineConsumptionBudget" resultType="void">
+                    <documentation>
+                        <description xml:lang="en">Our decision rule for determining the savings is based on the work of Deaton (1991). Deaton examines the saving behavior of impatient consumers when they are not permitted to borrow. In a scenario with independent and identically distributed income draws, he obtains a consumption function depending on cash on hand, which has the following characteristics: There exists a critical value of cash on hand. When the available liquidity is below this critical value the whole cash on hand will be spent. In the opposite case the agent will save a part of his cash on hand. The assets act like a buffer stock which protect consumption against bad income draws.</description>
+                    </documentation>
+                    <Body language="Java"><![CDATA[
+                        setTotalIncome(getTotalIncome() + getCurrentIncome());
+                        setMeanIncome(getTotalIncome() / Global.getPeriod());
+                        setCashOnHand(getSavingAccount() + getRemainingConsumptionBudget() + getCurrentIncome());
+                        setRemainingConsumptionBudget(0.0);
+                        setCurrentIncome(0.0);
+                        
+						if (getCashOnHand() > 0.9 * getMeanIncome()) {
+							setConsumptionBudget(getCashOnHand() - 0.1 * (getCashOnHand() - 0.9 * getMeanIncome()));
+							setSavingAccount(getCashOnHand() - getConsumptionBudget());
+						}
+						else {
+							setConsumptionBudget(getCashOnHand());
+							setSavingAccount(0.0);
+						}
+						]]></Body>
+                </Function>
+                
+                <Function name="consumptionDecision" resultType="void">
+                    <documentation>
+                        <description xml:lang="en">At the weekly visit to the mall in his region each consumer collects information about the range of goods provided and about the prices and inventories of the different goods. Once the consumer has selected a good he spends his entire budget for that good if the stock at the mall is sufficiently large. In case the consumer cannot spend all his budget on the product selected first, he spends as much as possible, removes that product from the list, updates the logit values and selects another product to spend the remaining consumption budget there. If he is rationed again, he spends as much as possible on the second selected product, rolls over the remaining budget to the following week and finishes the visit to the mall.</description>
+                    </documentation>
+                    <Parameter name="productsCollection" type="List" itemType="ProductInStock"/>
+                    <Body language="Java"><![CDATA[
+						int i, j, k;
+						
+						for (i = 0; i < productsCollection.size(); i++) {
+							if (productsCollection.get(i).getQuantity() > 0.0) {
+								sim.model.dataTypes.ProductList p = new sim.model.dataTypes.ProductList();
+								p.setFirmId(productsCollection.get(i).getFirmId());
+								p.setValue(Math.pow((productsCollection.get(i).getPrice()), (-1 * 8.5)));
+								p.setProb(0.0);
+								getProductsList().add(p);
+							}
+						}
+						
+						setWeekConsumptionBudget(getConsumptionBudget() / 4 + getRemainingConsumptionBudget());
+						setSelectFirstProductId(productSelection());
+						if (getSelectFirstProductId() == 0) {
+						    setSpendBudgetForFirstProduct(0.0);
+						    setSelectSecondProductId(0);
+						    setSpendBudgetForSecondProduct(0.0);
+							setRemainingConsumptionBudget(getWeekConsumptionBudget());
+							setWeekConsumptionBudget(0.0);
+						}
+						else {
+							for (j = 0; j < productsCollection.size(); j++) {
+								if (productsCollection.get(j).getFirmId() == getSelectFirstProductId()) {
+									if (productsCollection.get(j).getQuantity() >= getWeekConsumptionBudget() / productsCollection.get(j).getPrice()) {
+								    	setSpendBudgetForFirstProduct(getWeekConsumptionBudget());
+										productsCollection.get(j).setQuantity(productsCollection.get(j).getQuantity() - getSpendBudgetForFirstProduct() / productsCollection.get(j).getPrice());
+										setRemainingConsumptionBudget(0.0);
+										setWeekConsumptionBudget(0.0);
+										getProductsList().clear();
+									}
+									else {
+								    	setSpendBudgetForFirstProduct(productsCollection.get(j).getQuantity() * productsCollection.get(j).getPrice());
+										productsCollection.get(j).setQuantity(0.0);
+										setWeekConsumptionBudget(getWeekConsumptionBudget() - getSpendBudgetForFirstProduct());
+										deleteProductRecordFromList(getSelectFirstProductId());
+										setSelectSecondProductId(productSelection());
+										if (getSelectSecondProductId() == 0) {
+										    setSpendBudgetForSecondProduct(0.0);
+							            	setRemainingConsumptionBudget(getWeekConsumptionBudget());
+							                setWeekConsumptionBudget(0.0);
+						                }
+						                else {
+											for (k = 0; k < productsCollection.size(); k++) {
+												if (productsCollection.get(k).getFirmId() == getSelectSecondProductId()) {
+													if (productsCollection.get(k).getQuantity() >= getWeekConsumptionBudget() / productsCollection.get(k).getPrice()) {
+											    		setSpendBudgetForSecondProduct(getWeekConsumptionBudget());
+														productsCollection.get(k).setQuantity(productsCollection.get(k).getQuantity() - getSpendBudgetForSecondProduct() / productsCollection.get(k).getPrice());
+														setRemainingConsumptionBudget(0.0);
+														setWeekConsumptionBudget(0.0);
+														getProductsList().clear();
+													}
+													else {
+											    		setSpendBudgetForSecondProduct(productsCollection.get(k).getQuantity() * productsCollection.get(k).getPrice());
+														productsCollection.get(k).setQuantity(0.0);
+														setRemainingConsumptionBudget(getWeekConsumptionBudget() - getSpendBudgetForSecondProduct());
+														setWeekConsumptionBudget(0.0);
+														getProductsList().clear();
+													}
+												}
+											}
+										}
+									}
+								}
+							}
+						}
+						]]></Body>
+                </Function>
+                
+                <Function name="productSelection" resultType="Integer">
+                    <documentation>
+                        <description xml:lang="en"></description>
+                    </documentation>
+                    <Body language="Java"><![CDATA[
+						double r = Math.random();
+						double sumOfValues = 0.0;
+						int FI = 0;
+						int i, j;
+						
+						if (getProductsList().size() == 0) {
+							FI = 0;
+						}
+						else {
+							for (i = 0; i < getProductsList().size(); i++) {
+								sumOfValues += getProductsList().get(i).getValue();
+							}
+							for (j = 0; j < getProductsList().size(); j++) {
+								if (j == 0) {
+									getProductsList().get(j).setProb(getProductsList().get(j).getValue() / sumOfValues);
+									if (r < getProductsList().get(j).getProb()) {
+										FI = (int)getProductsList().get(j).getFirmId();
+									}
+								}
+								else {
+									getProductsList().get(j).setValue(getProductsList().get(j).getValue() + getProductsList().get(j - 1).getValue());
+									getProductsList().get(j).setProb(getProductsList().get(j).getValue() / sumOfValues);
+									if (r < getProductsList().get(j).getProb() && r >= getProductsList().get(j - 1).getProb()) {
+										FI = (int)getProductsList().get(j).getFirmId();
+									}
+								}
+							}
+						}
+							
+						return FI;
+						]]></Body>
+                </Function>
+                
+                <Function name="deleteProductRecordFromList" resultType="void">
+                    <documentation>
+                        <description></description>
+                    </documentation>
+                    <Parameter name="firmId" type="Integer"/>
+                    <Body language="Java"><![CDATA[
+						int i;
+						for (i = 0; i < getProductsList().size(); i++) {
+							if (getProductsList().get(i).getFirmId() == firmId) {
+								getProductsList().remove(i);
+							}
+						}
+						]]></Body>
+                </Function>
+                
+                <Function name="determineJobAcceptance" resultType="void">
+                    <documentation>
+                        <description></description>
+                    </documentation>
+                    <Body language="Java"><![CDATA[
+						java.util.Comparator<sim.model.dataTypes.JobOfferList> comparator;
+						comparator = new java.util.Comparator<sim.model.dataTypes.JobOfferList>() {
+							public int compare(sim.model.dataTypes.JobOfferList a, sim.model.dataTypes.JobOfferList b) {
+								double p1 = - a.getNetWageOffer();
+								double p2 = - b.getNetWageOffer();
+								if (p1 < p2) return -1;
+								if (p1 > p2) return 1;
+								return 0;
+							}
+						};
+						
+						java.util.Collections.sort(getJobOffersList(), comparator);
+						
+						setLastFirm(getFirm());
+						setFirm(getJobOffersList().get(0).getFirmId());
+						setCurrentWage(getJobOffersList().get(0).getWageOffer());
+						setJobSeeker(false);
+						
+						getJobOffersList().clear();
+						]]></Body>
+                </Function>
+                
+                <PeriodicTimeEventType name="AtStartOfMonthDetermineConsumptionBudget" periodicity="20"/>
+                <PeriodicTimeEventType name="InFirstIterationAcceptJob" periodicity="20"/>
+                <!--<PeriodicTimeEventType name="InSecondIterationAcceptJob" periodicity="20"/>-->
+                
+                <!-- at step 2 -->
+                <ReactionRule name="AtStartOfMonthDetermineConsumptionBudget_Rule" agentVariable="h">
+                    <documentation>
+                        <description xml:lang="en">Once a month households receive their income. Depending on the available cash, that is the current income from factor markets (i.e. labor income and dividends distributed by capital and consumption goods producers) plus assets carried over from the previous period, the household sets the budget which it will spend for consumption and consequently determines the remaining part which is saved.</description>
+                    </documentation>
+                    <WHEN eventType="AtStartOfMonthDetermineConsumptionBudget"/>
+                    <DO>
+                        <UPDATE-AGT>
+                            <Call procedure="determineConsumptionBudget" contextObjectVariable="h"/>
+                        </UPDATE-AGT>
+                    </DO>
+                </ReactionRule>
+                
+                <!-- at step 9, 18 -->
+                <ReactionRule name="JobOffer_Rule" agentVariable="h">
+                    <documentation>
+                        <description></description>
+                    </documentation>
+                    <WHEN eventType="InMessageEvent" messageType="JobOffer" messageVariable="msg" eventVariable="evt"/>
+                    <IF language="Java"><![CDATA[ msg.getRegion() == h.getRegion() ]]></IF>
+                    <THEN>
+                        <UPDATE-AGT>
+                            <MultiValuedSlot property="jobOffersList">
+                                <AddLast>
+                                    <ItemExpr language="Java"><![CDATA[
+										new JobOfferList() {
+											{
+												setFirmId(evt.getSenderIdRef());
+												setWageOffer(msg.getWageOffer());
+												setNetWageOffer(msg.getWageOffer());
+											}
+										}
+										]]></ItemExpr>
+                                </AddLast>
+                            </MultiValuedSlot>
+                        </UPDATE-AGT>
+                    </THEN>
+                    <ELSE>
+                        <UPDATE-AGT>
+                            <MultiValuedSlot property="jobOffersList">
+                                <AddLast>
+                                    <ItemExpr language="Java"><![CDATA[
+										new JobOfferList() {
+											{
+												setFirmId(evt.getSenderIdRef());
+												setWageOffer(msg.getWageOffer());
+												setNetWageOffer((1 - Global.getComm()) * msg.getWageOffer());
+											}
+										}
+										]]></ItemExpr>
+                                </AddLast>
+                            </MultiValuedSlot>
+                        </UPDATE-AGT>
+                    </ELSE>
+                </ReactionRule>
+                
+                <!-- at step 10 -->
+                <ReactionRule name="InFirstIterationAcceptJob_Rule" agentVariable="h">
+                    <documentation>
+                        <description></description>
+                    </documentation>
+                    <WHEN eventType="InFirstIterationAcceptJob"/>
+                    <IF language="Java"><![CDATA[ h.getJobOffersList().size() > 0 ]]></IF>
+                    <THEN>
+                        <UPDATE-AGT>
+                            <Call procedure="determineJobAcceptance" contextObjectVariable="h"/>
+                        </UPDATE-AGT>
+                        <SCHEDULE-EVT>
+                            <OutMessageEventExpr messageType="AcceptJob">
+                                <ReceiverIdRef language="Java"><![CDATA[ h.getFirm() ]]></ReceiverIdRef>
+                                <Slot property="wage">
+                                    <ValueExpr language="Java"><![CDATA[ h.getCurrentWage() ]]></ValueExpr>
+                                </Slot>
+                                <Slot property="generalSkillLevel">
+                                    <ValueExpr language="Java"><![CDATA[ h.getGeneralSkillLevel() ]]></ValueExpr>
+                                </Slot>
+                                <Slot property="specificSkillLevel">
+                                    <ValueExpr language="Java"><![CDATA[ h.getSpecificSkillLevel() ]]></ValueExpr>
+                                </Slot>
+                            </OutMessageEventExpr>
+                            <OutMessageEventExpr messageType="ResignJob">
+                                <Condition language="Java"><![CDATA[ h.getLastFirm() != 100 ]]></Condition>
+                                <ReceiverIdRef language="Java"><![CDATA[ h.getLastFirm() ]]></ReceiverIdRef>
+                            </OutMessageEventExpr>
+                        </SCHEDULE-EVT>
+                    </THEN>
+                </ReactionRule>
+                
+                <!-- at step 19 -->
+                <!--<ReactionRule name="InSecondIterationAcceptJob_Rule" agentVariable="h">
+                    <documentation>
+                        <description></description>
+                    </documentation>
+                    <WHEN eventType="InSecondIterationAcceptJob"/>
+                    <IF language="Java"><![CDATA[ h.getJobOffersList().size() > 0 ]]></IF>
+                    <THEN>
+                        <UPDATE-AGT>
+                            <Call procedure="determineJobAcceptance" contextObjectVariable="h"/>
+                        </UPDATE-AGT>
+                        <SCHEDULE-EVT>
+                            <OutMessageEventExpr messageType="AcceptJob">
+                                <ReceiverIdRef language="Java"><![CDATA[ h.getFirm() ]]></ReceiverIdRef>
+                                <Slot property="wage">
+                                    <ValueExpr language="Java"><![CDATA[ h.getCurrentWage() ]]></ValueExpr>
+                                </Slot>
+                                <Slot property="generalSkillLevel">
+                                    <ValueExpr language="Java"><![CDATA[ h.getGeneralSkillLevel() ]]></ValueExpr>
+                                </Slot>
+                                <Slot property="specificSkillLevel">
+                                    <ValueExpr language="Java"><![CDATA[ h.getSpecificSkillLevel() ]]></ValueExpr>
+                                </Slot>
+                            </OutMessageEventExpr>
+                            <OutMessageEventExpr messageType="ResignJob">
+                                <Condition language="Java"><![CDATA[ h.getLastFirm() != 100 ]]></Condition>
+                                <ReceiverIdRef language="Java"><![CDATA[ h.getLastFirm() ]]></ReceiverIdRef>
+                            </OutMessageEventExpr>
+                        </SCHEDULE-EVT>
+                    </THEN>
+                    </ReactionRule>-->
+            </AgentType>
+        </EntityTypes>
+        
+        <EnvironmentRules>
+            <!-- at step 1 -->
+            <EnvironmentRule name="Create_InitialProductsInStock_Rule">
+                <documentation>
+                    <description xml:lang="en">Every CGP keeps a stock of its products at every regional mall.</description>
+                </documentation>
+                <WHEN eventType="Init"/>
+                <FOR-ObjectVariable variable="m" objectType="Mall"/>
+                <FOR-ObjectVariable variable="f" objectType="Firm"/>
+                <DO>
+                    <UPDATE-ENV>
+                        <UpdateObject objectVariable="m">
+                            <MultiValuedSlot property="productsInStock">
+                                <AddLast>
+                                    <ItemExpr language="Java"><![CDATA[
+										new ProductInStock() {
+											{
+												setFirmId(f.getId());
+												setPrice(f.getProductSalesPrice());
+												setQuantity(8.0);
+											}
+										}
+										]]></ItemExpr>
+                                </AddLast>
+                            </MultiValuedSlot>
+                        </UpdateObject>
+                    </UPDATE-ENV>
+                </DO>
+            </EnvironmentRule>
+            
+            <!-- at step 1 -->
+            <EnvironmentRule name="Create_InitialReservationWage_Rule">
+                <documentation>
+                    <description xml:lang="en"></description>
+                </documentation>
+                <WHEN eventType="Init"/>
+                <FOR-ObjectVariable variable="h" objectType="Household"/>
+                <DO>
+                    <UPDATE-ENV>
+                        <UpdateObject objectVariable="h">
+                            <Slot property="currentWage">
+                                <ValueExpr language="Java"><![CDATA[ Global.determineInitialWage(h.getGeneralSkillLevel()) ]]></ValueExpr>
+                            </Slot>
+                        </UpdateObject>
+                    </UPDATE-ENV>
+                </DO>
+            </EnvironmentRule>
+            
+            <!-- at step 1 -->
+            <EnvironmentRule name="Create_InitialUnemployedWorkerAsJobSeeker_Rule">
+                <documentation>
+                    <description></description>
+                </documentation>
+                <WHEN eventType="Init"/>
+                <FOR-ObjectVariable variable="h" objectType="Household"/>
+                <IF language="Java"><![CDATA[ h.getFirm() == 100 ]]></IF>
+                <THEN>
+                    <UPDATE-ENV>
+                        <UpdateObject objectVariable="h">
+                            <Slot property="jobSeeker" value="true"/>
+                        </UpdateObject>
+                    </UPDATE-ENV>
+                </THEN>
+            </EnvironmentRule>
+            
+            <!-- at step 1 -->
+            <EnvironmentRule name="Create_InitialWorkersInFirm_Rule">
+                <documentation>
+                    <description></description>
+                </documentation>
+                <WHEN eventType="Init"/>
+                <FOR-ObjectVariable variable="f" objectType="Firm"/>
+                <FOR-ObjectVariable variable="h" objectType="Household"/>
+                <IF language="Java"><![CDATA[ f.getId() == h.getFirm() ]]></IF>
+                <THEN>
+                    <UPDATE-ENV>
+                        <UpdateObject objectVariable="f">
+                            <MultiValuedSlot property="workersInFirm">
+                                <AddLast>
+                                    <ItemExpr language="Java"><![CDATA[
+										new WorkerInFirm() {
+											{
+												setHouseholdId(h.getId());
+												setWage(h.getCurrentWage());
+												setGeneralSkillLevel(h.getGeneralSkillLevel());
+												setSpecificSkillLevel(h.getSpecificSkillLevel());
+											}
+										}
+										]]></ItemExpr>
+                                </AddLast>
+                            </MultiValuedSlot>
+                        </UpdateObject>
+                    </UPDATE-ENV>
+                </THEN>
+            </EnvironmentRule>
+            
+            <!-- at step 2 -->
+            <EnvironmentRule name="AtStartOfMonthDetermineEmployedWorkerAsJobSeeker_Rule">
+                <documentation>
+                    <description xml:lang="en">A randomly determined fraction of employed workers who search on-the-job.</description>
+                </documentation>
+                <WHEN eventType="StartOfMonth"/>
+                <FOR-ObjectVariable variable="h" objectType="Household"/>
+                <IF language="Java"><![CDATA[ h.getFirm() != 100 && Global.wouldBeJobSeeker() ]]></IF>
+                <THEN>
+                    <UPDATE-ENV>
+                        <UpdateObject objectVariable="h">
+                            <Slot property="jobSeeker" value="true"/>
+                        </UpdateObject>
+                    </UPDATE-ENV>
+                </THEN>
+            </EnvironmentRule>
+            
+            <!-- at step 3 -->
+            <EnvironmentRule name="AtWeeklyIndividualConsumption_Rule">
+                <documentation>
+                    <description></description>
+                </documentation>
+                <WHEN eventType="AtWeeklyIndividualConsumption"/>
+                <FOR-ObjectVariable variable="m" objectType="Mall"/>
+                <FOR-ObjectVariable variable="h" objectType="Household"/>
+                <IF language="Java"><![CDATA[ m.getId() == h.getRegion() ]]></IF>
+                <THEN>
+                    <UPDATE-ENV>
+                        <Call procedure="consumptionDecision" contextObjectVariable="h">
+                            <Argument parameter="productsCollection">
+                                <ValueExpr language="Java"><![CDATA[ m.getProductsInStock() ]]></ValueExpr>
+                            </Argument>
+                        </Call>
+                    </UPDATE-ENV>
+                    <SCHEDULE-EVT>
+                        <InMessageEventExpr messageType="TellSalesRevenue">
+                            <Condition language="Java"><![CDATA[ h.getSelectFirstProductId() != 0 ]]></Condition>
+                            <SenderIdRef language="Java"><![CDATA[ m.getId() ]]></SenderIdRef>
+                            <ReceiverIdRef language="Java"><![CDATA[ h.getSelectFirstProductId() ]]></ReceiverIdRef>
+                            <Slot property="revenue">
+                                <ValueExpr language="Java"><![CDATA[ h.getSpendBudgetForFirstProduct() ]]></ValueExpr>
+                            </Slot>
+                        </InMessageEventExpr>
+                        <InMessageEventExpr messageType="TellSalesRevenue">
+                            <Condition language="Java"><![CDATA[ h.getSelectSecondProductId() != 0 ]]></Condition>
+                            <SenderIdRef language="Java"><![CDATA[ m.getId() ]]></SenderIdRef>
+                            <ReceiverIdRef language="Java"><![CDATA[ h.getSelectSecondProductId() ]]></ReceiverIdRef>
+                            <Slot property="revenue">
+                                <ValueExpr language="Java"><![CDATA[ h.getSpendBudgetForSecondProduct() ]]></ValueExpr>
+                            </Slot>
+                        </InMessageEventExpr>
+                    </SCHEDULE-EVT>
+                </THEN>
+            </EnvironmentRule>
+            
+            <!-- at step 5, 14 -->
+            <EnvironmentRule name="FirmPostVacancyInformation_Rule">
+                <documentation>
+                    <description>The CGPs post vacancies including wage offers.</description>
+                </documentation>
+                <WHEN eventType="PostVacancyInformation" eventVariable="e"/>
+                <FOR-ObjectVariable variable="h" objectType="Household"/>
+                <IF language="Java"><![CDATA[ e.getFirmId() != h.getFirm() && e.getWageOffer() >= h.getCurrentWage() && h.isJobSeeker() ]]></IF>
+                <THEN>
+                    <SCHEDULE-EVT>
+                        <InMessageEventExpr messageType="TellVacancy">
+                            <SenderIdRef language="Java"><![CDATA[ h.getId() ]]></SenderIdRef>
+                            <ReceiverIdRef language="Java"><![CDATA[ e.getActorIdRef() ]]></ReceiverIdRef>
+                            <Slot property="generalSkillLevel">
+                                <ValueExpr language="Java"><![CDATA[ h.getGeneralSkillLevel() ]]></ValueExpr>
+                            </Slot>
+                            <Slot property="specificSkillLevel">
+                                <ValueExpr language="Java"><![CDATA[ h.getSpecificSkillLevel() ]]></ValueExpr>
+                            </Slot>
+                        </InMessageEventExpr>
+                    </SCHEDULE-EVT>
+                </THEN>
+            </EnvironmentRule>
+            
+            <!-- at step 8, 17 -->
+            <EnvironmentRule name="InFirstIterationFirmOfferJob_Rule">
+                <documentation>
+                    <description></description>
+                </documentation>
+                <WHEN eventType="InFirstIterationOfferJob" eventVariable="e"/>
+                <FOR objectVariable="f" objectType="Firm">
+                    <ObjectRef language="Java"><![CDATA[ e.getActor() ]]></ObjectRef>
+                </FOR>
+                <FOR-ListItemVariable variable="a" listItemType="ApplicationList">
+                    <ListExpr language="Java"><![CDATA[ f.getApplicationsList() ]]></ListExpr>
+                </FOR-ListItemVariable>
+                <DO>
+                    <SCHEDULE-EVT>
+                        <InMessageEventExpr messageType="JobOffer">
+                            <SenderIdRef language="Java"><![CDATA[ e.getActorIdRef() ]]></SenderIdRef>
+                            <ReceiverIdRef language="Java"><![CDATA[ a.getHouseholdId() ]]></ReceiverIdRef>
+                            <Slot property="wageOffer">
+                                <ValueExpr language="Java"><![CDATA[ f.getWageOffer() ]]></ValueExpr>
+                            </Slot>
+                            <Slot property="region">
+                                <ValueExpr language="Java"><![CDATA[ f.getRegion() ]]></ValueExpr>
+                            </Slot>
+                        </InMessageEventExpr>
+                    </SCHEDULE-EVT>
+                </DO>
+            </EnvironmentRule>
+            
+            <!-- at step 12 -->
+            <EnvironmentRule name="EndFirstIterationFirmClearApplicationsList_Rule">
+                <documentation>
+                    <description></description>
+                </documentation>
+                <WHEN eventType="EndFirstIterationLaborSupply"/>
+                <FOR-ObjectVariable variable="f" objectType="Firm"/>
+                <IF language="Java"><![CDATA[ f.getApplicationsList().size() > 0 ]]></IF>
+                <THEN>
+                    <UPDATE-ENV>
+                        <Call procedure="clearApplicationsList" contextObjectVariable="f"/>
+                    </UPDATE-ENV>
+                </THEN>
+            </EnvironmentRule>
+            
+            <!-- at step 12 -->
+            <EnvironmentRule name="EndFirstIterationFirmRaiseWageOffer_Rule">
+                <documentation>
+                    <description></description>
+                </documentation>
+                <WHEN eventType="EndFirstIterationLaborSupply"/>
+                <FOR-ObjectVariable variable="f" objectType="Firm"/>
+                <IF language="Java"><![CDATA[ f.getPlannedProductionQuantity() > 0.0 && f.getLaborSupplyQuantity() > 5 ]]></IF>
+                <THEN>
+                    <UPDATE-ENV>
+                        <UpdateObject objectVariable="f">
+                            <Slot property="wageOffer">
+                                <ValueExpr language="Java"><![CDATA[ (1 + 0.02) * f.getWageOffer() ]]></ValueExpr>
+                            </Slot>
+                        </UpdateObject>
+                    </UPDATE-ENV>
+                </THEN>
+            </EnvironmentRule>
+            
+            <!-- at step 12 -->
+            <EnvironmentRule name="EndFirstIterationJobSeekerReduceReservationWage_Rule">
+                <documentation>
+                    <description></description>
+                </documentation>
+                <WHEN eventType="EndFirstIterationLaborSupply"/>
+                <FOR-ObjectVariable variable="h" objectType="Household"/>
+                <IF language="Java"><![CDATA[ h.getFirm() == 100 && (1 - 0.02) * h.getCurrentWage() >= 1.0 ]]></IF>
+                <THEN>
+                    <UPDATE-ENV>
+                        <UpdateObject objectVariable="h">
+                            <Slot property="currentWage">
+                                <ValueExpr language="Java"><![CDATA[ (1 - 0.02) * h.getCurrentWage() ]]></ValueExpr>
+                            </Slot>
+                        </UpdateObject>
+                    </UPDATE-ENV>
+                </THEN>
+            </EnvironmentRule>
+            
+            <!-- at step 13 -->
+            <EnvironmentRule name="FirmDistributeProduct_Rule">
+                <documentation>
+                    <description></description>
+                </documentation>
+                <WHEN eventType="DistributeProduct" eventVariable="e"/>
+                <FOR objectVariable="f" objectType="Firm">
+                    <ObjectRef language="Java"><![CDATA[ e.getActor() ]]></ObjectRef>
+                </FOR>
+                <FOR-ListItemVariable variable="o" listItemType="OrderList">
+                    <ListExpr language="Java"><![CDATA[ f.getOrdersList() ]]></ListExpr>
+                </FOR-ListItemVariable>
+                <DO>
+                    <SCHEDULE-EVT>
+                        <InMessageEventExpr messageType="DeliverProduct">
+                            <SenderIdRef language="Java"><![CDATA[ e.getActorIdRef() ]]></SenderIdRef>
+                            <ReceiverIdRef language="Java"><![CDATA[ o.getMallId() ]]></ReceiverIdRef>
+                            <Slot property="quantity">
+                                <ValueExpr language="Java"><![CDATA[ o.getRationing() * f.getProducedQuantity() ]]></ValueExpr>
+                            </Slot>
+                        </InMessageEventExpr>
+                    </SCHEDULE-EVT>
+                </DO>
+            </EnvironmentRule>
+            
+            <!-- at step 21 -->
+            <EnvironmentRule name="EndOfMonth_Rule">
+                <documentation>
+                    <description></description>
+                </documentation>
+                <WHEN eventType="EndOfMonth"/>
+                <DO>
+                    <UPDATE-ENV>
+                        <IncrementGlobalVariable name="period" value="1"/>
+                    </UPDATE-ENV>
+                </DO>
+            </EnvironmentRule>
+            
+            <!-- at step 21 -->
+            <EnvironmentRule name="AtEndOfMonthFirmClearOrdersList_Rule">
+                <documentation>
+                    <description></description>
+                </documentation>
+                <WHEN eventType="EndOfMonth"/>
+                <FOR-ObjectVariable variable="f" objectType="Firm"/>
+                <DO>
+                    <UPDATE-ENV>
+                        <Call procedure="clearOrdersList" contextObjectVariable="f"/>
+                    </UPDATE-ENV>
+                </DO>
+            </EnvironmentRule>
+            
+            <!-- at step 21 -->
+            <EnvironmentRule name="AtEndOfMonthDetermineEmployedWorkerNotAsJobSeeker_Rule">
+                <documentation>
+                    <description xml:lang="en">需要修改。</description>
+                </documentation>
+                <WHEN eventType="EndOfMonth"/>
+                <FOR-ObjectVariable variable="h" objectType="Household"/>
+                <IF language="Java"><![CDATA[ h.getFirm() != 100 && h.isJobSeeker() ]]></IF>
+                <THEN>
+                    <UPDATE-ENV>
+                        <UpdateObject objectVariable="h">
+                            <Slot property="jobSeeker" value="false"/>
+                        </UpdateObject>
+                    </UPDATE-ENV>
+                </THEN>
+            </EnvironmentRule>
+            
+            <!-- at step 21 -->
+            <EnvironmentRule name="FirmPayDividend_Rule">
+                <documentation>
+                    <description></description>
+                </documentation>
+                <WHEN eventType="PayDividend" eventVariable="e"/>
+                <FOR-ObjectVariable variable="h" objectType="Household"/>
+                <DO>
+                    <UPDATE-ENV>
+                        <UpdateObject objectVariable="h">
+                            <Slot property="currentIncome">
+                                <ValueExpr language="Java"><![CDATA[ h.getCurrentIncome() + e.getDividend() ]]></ValueExpr>
+                            </Slot>
+                        </UpdateObject>
+                    </UPDATE-ENV>
+                </DO>
+            </EnvironmentRule>
+        </EnvironmentRules>
+    </SimulationModel>
+    
+    <InitialState>
+        <Agents type="Mall" rangeStartID="1" rangeEndID="2">
+            <Slot property="productsInStock">
+                <ValueExpr language="Java"><![CDATA[ new ArrayList<sim.model.dataTypes.ProductInStock>() ]]></ValueExpr>
+            </Slot>
+            
+            <Slot property="test" value="0.0"/><!--!!!test!!!-->
+            
+            <PeriodicTimeEvent type="AtStartOfMonthCheckStockLevel" occurrenceTime="2"/>
+        </Agents>
+        
+        <Agents type="Firm" rangeStartID="101" rangeEndID="105">
+            <Slot property="ordersList">
+                <ValueExpr language="Java"><![CDATA[ new ArrayList<sim.model.dataTypes.OrderList>() ]]></ValueExpr>
+            </Slot>
+            <Slot property="workersInFirm">
+                <ValueExpr language="Java"><![CDATA[ new ArrayList<sim.model.dataTypes.WorkerInFirm>() ]]></ValueExpr>
+            </Slot>
+            <Slot property="applicationsList">
+                <ValueExpr language="Java"><![CDATA[ new ArrayList<sim.model.dataTypes.ApplicationList>() ]]></ValueExpr>
+            </Slot>
+            
+            <Slot property="test" value="0.0"/><!--!!!test!!!-->
+            
+            <Slot property="region" value="1"/>
+            <Slot property="productSalesPrice">
+                <RandomVariable>
+                    <Uniform lowerBound="1.75" upperBound="2.25" />
+                </RandomVariable>
+            </Slot>
+            <Slot property="productSalesRevenue" value="0.0"/>
+            <!--<Slot property="productSalesQuantity" value="0.0"/>-->
+            <Slot property="plannedProductionQuantity" value="0.0"/>
+            <Slot property="producedQuantity" value="0.0"/>
+            <Slot property="costOfProduction" value="0.0"/><!--abstract definition-->
+            <Slot property="monthlyRealizedProfit" value="0.0"/>
+            <Slot property="currentBalanceOfSavingAccount" value="0.0"/>
+            <Slot property="equalDividend" value="0.0"/>
+            <Slot property="optimalStockLevel" value="20.0"/><!--abstract definition-->
+            <Slot property="laborSupplyQuantity" value="0"/>
+            <Slot property="wageOffer" value="1.0"/>
+            
+            <PeriodicTimeEvent type="MakeProductionPlan" occurrenceTime="4"/>
+            <PeriodicTimeEvent type="InFirstIterationRankApplicant" occurrenceTime="7"/>
+            <!--<PeriodicTimeEvent type="StartSecondIterationLaborSupply" occurrenceTime="13"/>-->
+            <!--<PeriodicTimeEvent type="InSecondIterationRankApplicant" occurrenceTime="16"/>-->
+            <PeriodicTimeEvent type="StartOfProduction" occurrenceTime="12"/><!--time error-->
+            <PeriodicTimeEvent type="CalculateDividend" occurrenceTime="20"/>
+        </Agents>
+        
+        <Agents type="Firm" rangeStartID="106" rangeEndID="110">
+            <Slot property="ordersList">
+                <ValueExpr language="Java"><![CDATA[ new ArrayList<sim.model.dataTypes.OrderList>() ]]></ValueExpr>
+            </Slot>
+            <Slot property="workersInFirm">
+                <ValueExpr language="Java"><![CDATA[ new ArrayList<sim.model.dataTypes.WorkerInFirm>() ]]></ValueExpr>
+            </Slot>
+            <Slot property="applicationsList">
+                <ValueExpr language="Java"><![CDATA[ new ArrayList<sim.model.dataTypes.ApplicationList>() ]]></ValueExpr>
+            </Slot>
+            
+            <Slot property="test" value="0.0"/><!--!!!test!!!-->
+            
+            <Slot property="region" value="2"/>
+            <Slot property="productSalesPrice">
+                <RandomVariable>
+                    <Uniform lowerBound="1.75" upperBound="2.25" />
+                </RandomVariable>
+            </Slot>
+            <Slot property="productSalesRevenue" value="0.0"/>
+            <!--<Slot property="productSalesQuantity" value="0.0"/>-->
+            <Slot property="plannedProductionQuantity" value="0.0"/>
+            <Slot property="producedQuantity" value="0.0"/>
+            <Slot property="costOfProduction" value="0.0"/><!--abstract definition-->
+            <Slot property="monthlyRealizedProfit" value="0.0"/>
+            <Slot property="currentBalanceOfSavingAccount" value="0.0"/>
+            <Slot property="equalDividend" value="0.0"/>
+            <Slot property="optimalStockLevel" value="20.0"/><!--abstract definition-->
+            <Slot property="laborSupplyQuantity" value="0"/>
+            <Slot property="wageOffer" value="1.0"/>
+            
+            <PeriodicTimeEvent type="MakeProductionPlan" occurrenceTime="4"/>
+            <PeriodicTimeEvent type="InFirstIterationRankApplicant" occurrenceTime="7"/>
+            <!--<PeriodicTimeEvent type="StartSecondIterationLaborSupply" occurrenceTime="13"/>-->
+            <!--<PeriodicTimeEvent type="InSecondIterationRankApplicant" occurrenceTime="16"/>-->
+            <PeriodicTimeEvent type="StartOfProduction" occurrenceTime="12"/><!--time error-->
+            <PeriodicTimeEvent type="CalculateDividend" occurrenceTime="20"/>
+        </Agents>
+        
+        <Agents type="Household" rangeStartID="1001" rangeEndID="1200">
+            <Slot property="productsList">
+                <ValueExpr language="Java"><![CDATA[ new ArrayList<sim.model.dataTypes.ProductList>() ]]></ValueExpr>
+            </Slot>
+            <Slot property="jobOffersList">
+                <ValueExpr language="Java"><![CDATA[ new ArrayList<sim.model.dataTypes.JobOfferList>() ]]></ValueExpr>
+            </Slot>
+            
+            <Slot property="test" value="0.0"/><!--!!!test!!!-->
+            
+            <Slot property="region" value="1"/>
+            <Slot property="firm">
+                <RandomVariable>
+                    <UniformInt lowerBound="100" upperBound="110"/>
+                </RandomVariable>
+            </Slot>
+            <Slot property="lastFirm" value="0"/>
+            <Slot property="jobSeeker" value="false"/>
+            <Slot property="generalSkillLevel">
+                <ValueExpr language="Java"><![CDATA[ Global.lowSkillRegion() ]]></ValueExpr>
+            </Slot>
+            <Slot property="specificSkillLevel" value="1.0"/>
+            <Slot property="currentWage" value="0.0"/>
+            <Slot property="totalIncome" value="0.0"/>
+            <Slot property="meanIncome" value="0.0"/>
+            <Slot property="currentIncome" value="1.0"/>
+            <Slot property="savingAccount" value="0.0"/>
+            <Slot property="cashOnHand" value="0.0"/>
+            <Slot property="consumptionBudget" value="0.0"/>
+            <Slot property="weekConsumptionBudget" value="0.0"/>
+            <Slot property="remainingConsumptionBudget" value="0.0"/>
+            <Slot property="selectFirstProductId" value="0"/>
+            <Slot property="selectSecondProductId" value="0"/>
+            <Slot property="spendBudgetForFirstProduct" value="0.0"/>
+            <Slot property="spendBudgetForSecondProduct" value="0.0"/>
+            
+            <PeriodicTimeEvent type="AtStartOfMonthDetermineConsumptionBudget" occurrenceTime="2"/>
+            <PeriodicTimeEvent type="InFirstIterationAcceptJob" occurrenceTime="10"/>
+            <!--<PeriodicTimeEvent type="InSecondIterationAcceptJob" occurrenceTime="19"/>-->
+        </Agents>
+        
+        <Agents type="Household" rangeStartID="1201" rangeEndID="1400">
+            <Slot property="productsList">
+                <ValueExpr language="Java"><![CDATA[ new ArrayList<sim.model.dataTypes.ProductList>() ]]></ValueExpr>
+            </Slot>
+            <Slot property="jobOffersList">
+                <ValueExpr language="Java"><![CDATA[ new ArrayList<sim.model.dataTypes.JobOfferList>() ]]></ValueExpr>
+            </Slot>
+            
+            <Slot property="test" value="0.0"/><!--!!!test!!!-->
+            
+            <Slot property="region" value="2"/>
+            <Slot property="firm">
+                <RandomVariable>
+                    <UniformInt lowerBound="100" upperBound="110"/>
+                </RandomVariable>
+            </Slot>
+            <Slot property="lastFirm" value="0"/>
+            <Slot property="jobSeeker" value="false"/>
+            <Slot property="generalSkillLevel">
+                <ValueExpr language="Java"><![CDATA[ Global.lowSkillRegion() ]]></ValueExpr>
+            </Slot>
+            <Slot property="specificSkillLevel" value="1.0"/>
+            <Slot property="currentWage" value="0.0"/>
+            <Slot property="totalIncome" value="0.0"/>
+            <Slot property="meanIncome" value="0.0"/>
+            <Slot property="currentIncome" value="1.0"/>
+            <Slot property="savingAccount" value="0.0"/>
+            <Slot property="cashOnHand" value="0.0"/>
+            <Slot property="consumptionBudget" value="0.0"/>
+            <Slot property="weekConsumptionBudget" value="0.0"/>
+            <Slot property="remainingConsumptionBudget" value="0.0"/>
+            <Slot property="selectFirstProductId" value="0"/>
+            <Slot property="selectSecondProductId" value="0"/>
+            <Slot property="spendBudgetForFirstProduct" value="0.0"/>
+            <Slot property="spendBudgetForSecondProduct" value="0.0"/>
+            
+            <PeriodicTimeEvent type="AtStartOfMonthDetermineConsumptionBudget" occurrenceTime="2"/>
+            <PeriodicTimeEvent type="InFirstIterationAcceptJob" occurrenceTime="10"/>
+            <!--<PeriodicTimeEvent type="InSecondIterationAcceptJob" occurrenceTime="19"/>-->
+        </Agents>
+        
+        <GlobalVariable name="period" value="1"/>
+        <GlobalVariable name="comm" value="0.2"/>
+        
+        <ExogenousEvent type="Init" occurrenceTime="1"/>
+        <ExogenousEvent type="StartOfMonth" occurrenceTime="2"/>
+        <ExogenousEvent type="AtWeeklyIndividualConsumption" occurrenceTime="3"/>
+        <ExogenousEvent type="EndFirstIterationLaborSupply" occurrenceTime="12"/>
+        <ExogenousEvent type="EndOfMonth" occurrenceTime="21"/>
+    </InitialState>
+    
+    <UserInterface supportedLanguages="en">
+        <StatisticsUI></StatisticsUI>
+    </UserInterface>
+</SimulationScenario>
