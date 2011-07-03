@@ -13,7 +13,13 @@
     <SimulationModel modelName="Regional_Labor_Markets" modelTitle="Regional Labor Markets">
         <documentation></documentation>
         
-        <Statistics></Statistics>
+        <Statistics>
+            <Variable name="SalesRevenue" dataType="Float">
+                <Source>
+                    <ObjectProperty property="productSalesRevenue" objectType="Firm" objectIdRef="101"/>
+                </Source>
+            </Variable>
+        </Statistics>
         
         <DataTypes>
             <ComplexDataType name="ProductInStock">
@@ -72,7 +78,7 @@
             <GlobalFunction name="wouldBeJobSeeker" resultType="Boolean">
                 <documentation>
                     <description xml:lang="en">A randomly determined fraction 10% of employed workers who do an on-the-job search.</description>
-                    <description xml:lang="ch"></description>
+                    <description xml:lang="ch">随机选取10%的在业人员作为求职者。</description>
                 </documentation>
                 <Body language="Java"><![CDATA[
 					int r = Random.uniformInt(0, 99);
@@ -83,7 +89,8 @@
             
             <GlobalFunction name="determineInitialWage" resultType="Float">
                 <documentation>
-                    <description></description>
+                    <description xml:lang="en">The initial wage of a worker can be determined according to his general skill level.</description>
+                    <description xml:lang="ch">工人的初始工资是由其一般技能水平确定。</description>
                 </documentation>
                 <Parameter name="generalSkillLevel" type="Integer"/>
                 <Body language="Java"><![CDATA[
@@ -97,7 +104,7 @@
             
             <GlobalFunction name="lowSkillRegion" resultType="Integer">
                 <documentation>
-                    <description></description>
+                    <description xml:lang="en">In a low skill region the skill distribution is such that 80% of workers have the lowest general skill level, whereas the remaining workers are equally distributed across the other four levels of general skills.</description>
                 </documentation>
                 <Body language="Java"><![CDATA[
 					int r = Random.uniformInt(0, 99);
@@ -111,7 +118,7 @@
             
             <GlobalFunction name="mediumSkillRegion" resultType="Integer">
                 <documentation>
-                    <description></description>
+                    <description xml:lang="en">In a medium skill region the skill distribution is such that 80% of workers have the general skill level 3, whereas the remaining workers are equally distributed across the other four levels of general skills.</description>
                 </documentation>
                 <Body language="Java"><![CDATA[
 					int r = Random.uniformInt(0, 99);
@@ -125,7 +132,7 @@
             
             <GlobalFunction name="highSkillRegion" resultType="Integer">
                 <documentation>
-                    <description></description>
+                    <description xml:lang="en">In a high skill region the skill distribution is such that 80% of workers have the highest general skill level, whereas the remaining workers are equally distributed across the other four levels of general skills.</description>
                 </documentation>
                 <Body language="Java"><![CDATA[
 					int r = Random.uniformInt(0, 99);
@@ -170,6 +177,10 @@
                 <Attribute name="quantity" type="Float"/>
             </MessageType>
             
+            <MessageType name="TellWage">
+                <Attribute name="wage" type="Float"/>
+            </MessageType>
+            
             <ActionEventType name="PostVacancyInformation">
                 <Attribute name="firmId" type="Integer"/>
                 <Attribute name="wageOffer" type="Float"/>
@@ -178,6 +189,8 @@
             <ActionEventType name="InFirstIterationOfferJob"/>
             
             <ActionEventType name="DistributeProduct"/>
+            
+            <ActionEventType name="PayWage"/>
             
             <ActionEventType name="PayDividend">
                 <Attribute name="dividend" type="Float"/>
@@ -199,7 +212,7 @@
                 
                 <Function name="updateInventory" resultType="void">
                     <documentation>
-                        <description></description>
+                        <description xml:lang="en">The local stock levels at the malls are updated.</description>
                     </documentation>
                     <Parameter name="firmId" type="Integer"/>
                     <Parameter name="quantity" type="Float"/>
@@ -239,7 +252,7 @@
                 <!-- at step 14 -->
                 <ReactionRule name="DeliverProduct_Rule" agentVariable="m">
                     <documentation>
-                        <description></description>
+                        <description xml:lang="en">When the produced quantities are delivered, the local stock levels at the malls are updated.</description>
                     </documentation>
                     <WHEN eventType="InMessageEvent" messageType="DeliverProduct" messageVariable="msg" eventVariable="evt"/>
                     <DO>
@@ -318,7 +331,7 @@
                 
                 <Function name="determineJobOffer" resultType="void">
                     <documentation>
-                        <description></description>
+                        <description xml:lang="en">Every firm ranks the applicants. Applicants with higher general skill levels are ranked higher. If there are two or more applicants with equal general skill levels, but different specific skill levels, the applicant with the higher specific skill level is ranked higher. Based on their ranking firms send job offers to as many applicants as they have vacancies to fill.</description>
                     </documentation>
                     <Body language="Java"><![CDATA[
 						java.util.Comparator<sim.model.dataTypes.ApplicationList> comparator;
@@ -373,7 +386,7 @@
                 
                 <Function name="productionProgress" resultType="void"><!--abstract definition-->
                     <documentation>
-                        <description></description>
+                        <description xml:lang="en">Production takes place.</description>
                     </documentation>
                     <Body language="Java"><![CDATA[
 						if (getPlannedProductionQuantity() == 0.0) {
@@ -404,7 +417,7 @@
                 
                 <Function name="determineDividend" resultType="void">
                     <documentation>
-                        <description></description>
+                        <description xml:lang="en"></description>
                     </documentation>
                     <Body language="Java"><![CDATA[
                         setMonthlyRealizedProfit(getProductSalesRevenue() - getCostOfProduction());
@@ -661,7 +674,7 @@
                 <!-- at step 12 -->
                 <ReactionRule name="StartOfProduction_Rule" agentVariable="f">
                     <documentation>
-                        <description></description>
+                        <description xml:lang="en">Production takes place.</description>
                     </documentation>
                     <WHEN eventType="StartOfProduction"/>
                     <DO>
@@ -672,6 +685,7 @@
                             <ActionEventExpr actionEventType="DistributeProduct">
                                 <Condition language="Java"><![CDATA[ f.getProducedQuantity() > 0.0 ]]></Condition>
                             </ActionEventExpr>
+                            <ActionEventExpr actionEventType="PayWage"/>
                         </SCHEDULE-EVT>
                     </DO>
                 </ReactionRule>
@@ -1027,6 +1041,21 @@
                         </SCHEDULE-EVT>
                     </THEN>
                     </ReactionRule>-->
+                
+                <!-- at step 14 -->
+                <ReactionRule name="TellWage_Rule" agentVariable="h">
+                    <documentation>
+                        <description></description>
+                    </documentation>
+                    <WHEN eventType="InMessageEvent" messageType="TellWage" messageVariable="msg"/>
+                    <DO>
+                        <UPDATE-AGT>
+                            <Slot property="currentIncome">
+                                <ValueExpr language="Java"><![CDATA[ h.getCurrentIncome() + msg.getWage() ]]></ValueExpr>
+                            </Slot>
+                        </UPDATE-AGT>
+                    </DO>
+                </ReactionRule>
             </AgentType>
         </EntityTypes>
         
@@ -1311,6 +1340,31 @@
                 </DO>
             </EnvironmentRule>
             
+            <!-- at step 13 -->
+            <EnvironmentRule name="FirmPayWage_Rule">
+                <documentation>
+                    <description></description>
+                </documentation>
+                <WHEN eventType="PayWage" eventVariable="e"/>
+                <FOR objectVariable="f" objectType="Firm">
+                    <ObjectRef language="Java"><![CDATA[ e.getActor() ]]></ObjectRef>
+                </FOR>
+                <FOR-ListItemVariable variable="w" listItemType="WorkerInFirm">
+                    <ListExpr language="Java"><![CDATA[ f.getWorkersInFirm() ]]></ListExpr>
+                </FOR-ListItemVariable>
+                <DO>
+                    <SCHEDULE-EVT>
+                        <InMessageEventExpr messageType="TellWage">
+                            <SenderIdRef language="Java"><![CDATA[ e.getActorIdRef() ]]></SenderIdRef>
+                            <ReceiverIdRef language="Java"><![CDATA[ w.getHouseholdId() ]]></ReceiverIdRef>
+                            <Slot property="wage">
+                                <ValueExpr language="Java"><![CDATA[ w.getWage() ]]></ValueExpr>
+                            </Slot>
+                        </InMessageEventExpr>
+                    </SCHEDULE-EVT>
+                </DO>
+            </EnvironmentRule>
+            
             <!-- at step 21 -->
             <EnvironmentRule name="EndOfMonth_Rule">
                 <documentation>
@@ -1557,6 +1611,15 @@
     </InitialState>
     
     <UserInterface supportedLanguages="en">
-        <StatisticsUI></StatisticsUI>
+        <StatisticsUI>
+            <StatisticsVariableUI variable="SalesRevenue" comparisonGroup="salesrevenue">
+                <Label>
+                    <Text xml:lang="en">Sales Revenue</Text>
+                </Label>
+                <Hint>
+                    <Text xml:lang="en">sales revenue</Text>
+                </Hint>
+            </StatisticsVariableUI>
+        </StatisticsUI>
     </UserInterface>
 </SimulationScenario>
