@@ -2,7 +2,7 @@
 <?xml-stylesheet type="text/xsl" href="prettyprint.xsl"?>
 
 <SimulationScenario version="0.9" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-    xsi:schemaLocation="http://aor-simulation.org ../../../ext/AORSL/AORSL_0-9.xsd"
+    xsi:schemaLocation="http://aor-simulation.org ../../../AORSL/AORSL_0-9.xsd"
     xmlns="http://aor-simulation.org" xmlns:aors="http://aor-simulation.org"
     xmlns:dc="http://purl.org/dc/elements/1.1/" 
     scenarioName="Regional_Labor_Markets"
@@ -11,14 +11,36 @@
     
     <SimulationParameters simulationSteps="4000" timeUnit="D" stepTimeDelay="0"/>
     <SimulationModel modelName="Regional_Labor_Markets" modelTitle="Regional Labor Markets">
-        <documentation></documentation>
+        <documentation>
+        	<dc:created></dc:created>
+        	<dc:created></dc:created>
+        	<dc:source></dc:source>
+        	<aors:shortDescription xml:lang="en" xmlns="http://www.w3.org/1999/xhtml">
+        		
+        	</aors:shortDescription>
+        	<aors:shortDescription xml:lang="zh" xmlns="http://www.w3.org/1999/xhtml">
+        		
+        	</aors:shortDescription>
+        	<aors:description xml:lang="en" xmlns="http://www.w3.org/1999/xhtml">
+        		
+        	</aors:description>
+        	<aors:description xml:lang="zh" xmlns="http://www.w3.org/1999/xhtml">
+        		
+        	</aors:description>
+        	<informationModelDiagram></informationModelDiagram>
+        	<dc:license>Creative Commons Attribution-NonCommercial-ShareAlike 3.0, 
+        		see http://creativecommons.org/licenses/by-nc-sa/3.0/</dc:license>
+        </documentation>
         
         <Statistics>
-            <Variable name="SalesRevenue" dataType="Float">
-                <Source>
-                    <ObjectProperty property="productSalesRevenue" objectType="Firm" objectIdRef="101"/>
-                </Source>
-            </Variable>
+          <Variable name="outputLowSkillRegion" dataType="Float"/>
+        	<Variable name="outputHighSkillRegion" dataType="Float"/>
+        	<Variable name="totalOutput" dataType="Float">
+        		<Source aggregationFunction="sum">
+        			<ObjectProperty property="producedQuantity" objectType="Firm"/>
+        		</Source>
+        	</Variable>
+        	<Variable name="numberOfCasesWithZeroProduction" dataType="Integer"/>
         </Statistics>
         
         <DataTypes>
@@ -78,7 +100,7 @@
             <GlobalFunction name="wouldBeJobSeeker" resultType="Boolean">
                 <documentation>
                     <description xml:lang="en">A randomly determined fraction 10% of employed workers who do an on-the-job search.</description>
-                    <description xml:lang="ch">随机选取10%的在业人员作为求职者。</description>
+                	<description xml:lang="zh">随机选取10%的在业人员作为求职者。</description>
                 </documentation>
                 <Body language="Java"><![CDATA[
 					int r = Random.uniformInt(0, 99);
@@ -1367,15 +1389,15 @@
             
             <!-- at step 21 -->
             <EnvironmentRule name="EndOfMonth_Rule">
-                <documentation>
-                    <description></description>
-                </documentation>
-                <WHEN eventType="EndOfMonth"/>
-                <DO>
-                    <UPDATE-ENV>
-                        <IncrementGlobalVariable name="period" value="1"/>
-                    </UPDATE-ENV>
-                </DO>
+            	<documentation>
+            		<description></description>
+            	</documentation>
+            	<WHEN eventType="EndOfMonth"/>
+            	<DO>
+            		<UPDATE-ENV>
+            			<IncrementGlobalVariable name="period" value="1"/>
+            		</UPDATE-ENV>
+            	</DO>
             </EnvironmentRule>
             
             <!-- at step 21 -->
@@ -1612,12 +1634,12 @@
     
     <UserInterface supportedLanguages="en">
         <StatisticsUI>
-            <StatisticsVariableUI variable="SalesRevenue" comparisonGroup="salesrevenue">
+        	<StatisticsVariableUI variable="totalOutput">
                 <Label>
-                    <Text xml:lang="en">Sales Revenue</Text>
+                	<Text xml:lang="en">Total output</Text>
                 </Label>
                 <Hint>
-                    <Text xml:lang="en">sales revenue</Text>
+                	<Text xml:lang="en">Total production output per month of all consumption good producers</Text>
                 </Hint>
             </StatisticsVariableUI>
         </StatisticsUI>
