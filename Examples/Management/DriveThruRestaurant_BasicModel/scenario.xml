@@ -1,8 +1,8 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <?xml-stylesheet type="text/xsl" href="prettyprint.xsl"?>
 
-<SimulationScenario version="0.9" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-	xsi:schemaLocation="http://aor-simulation.org ../../../AORSL/ERSL/ERSL_0-9.xsd"
+<SimulationScenario version="0.8" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xsi:schemaLocation="http://aor-simulation.org ../../../AORSL/ERSL/ERSL_0-8.xsd"
 	xmlns="http://aor-simulation.org" xmlns:ers="http://aor-simulation.org"
 	xmlns:dc="http://purl.org/dc/elements/1.1/" scenarioName="DriveThruRestaurant"
 	scenarioTitle="A drive-through restaurant with a menu board, a kitchen and a pickup window"
@@ -28,6 +28,8 @@
 			<Variable name="meanResponseTime" dataType="Float">
 				<Source computeOnlyAtEnd="true">
 					<ValueExpr language="Java">SimStatistics.cumulativeResponseTime.getValue() / SimStatistics.nrOfDepartures.getValue()</ValueExpr>
+					<ValueExpr language="JavaScript">sim.controller.SimStatistics.cumulativeResponseTime.getValue()
+						/ sim.controller.SimStatistics.nrOfDepartures.getValue()</ValueExpr>
 				</Source>
 			</Variable>		
 			<Variable name="menuBoardUtilization" dataType="Float">
@@ -47,12 +49,12 @@
 			</Variable>		
 			<Variable name="maxLengthOfMBQ" dataType="Integer">
 				<Source aggregationFunction="max">
-					<ObjectProperty property="lengthOfQueue" objectType="Queue" objectIdRef="6"/>
+					<ObjectProperty property="lengthOfQueue" objectType="Queue" objectIdRef="6" />
 				</Source>
 			</Variable>
 			<Variable name="maxLengthOfPWQ" dataType="Integer">
 				<Source aggregationFunction="max">
-					<ObjectProperty property="lengthOfQueue" objectType="Queue" objectIdRef="7"/>
+					<ObjectProperty property="lengthOfQueue" objectType="Queue" objectIdRef="7" />
 				</Source>
 			</Variable>
 		</Statistics>
@@ -99,7 +101,7 @@ var r2 = js.util.Random.uniformInt(1,6);
 			<!-- =================================================== -->
 				<Periodicity>
 					<ValueExpr language="Java">Global.twoDice(10)</ValueExpr>
-					<ValueExpr language="JavaScript">drivethrurestaurant.controller.Global.twoDice(10)</ValueExpr>
+					<ValueExpr language="JavaScript">sim.controller.Global.twoDice(10)</ValueExpr>
 				</Periodicity>
 			</ExogenousEventType>
 			<!-- =================================================== -->
@@ -161,7 +163,7 @@ double[] price = {8.90, 9.80, 8.50, 7.20, 7.80, 5.20};
 	return price[(int)pizzaType];
 	               ]]></Body>
 					<Body language="JavaScript"><![CDATA[
-var price = new ArrayList{8.90, 9.80, 8.50, 7.20, 7.80, 5.20};
+var price = new js.util.ArrayList(8.90, 9.80, 8.50, 7.20, 7.80, 5.20);
 	return price[pizzaType];
 				   ]]></Body>
 				</Function>
@@ -202,6 +204,8 @@ this.mb.getMenuBoardQueue().size() >= this.mb.getMaxMenuBoardLineSize()
 				<UPDATE-ENV>
 					<UpdateStatisticsVariable variable="numberOfLostCustomers">
 						<ValueExpr language="Java">SimStatistics.numberOfLostCustomers.getValue() + 1</ValueExpr>
+						<ValueExpr language="JavaScript">sim.controller.SimStatistics.numberOfLostCustomers.getValue()
+						+ 1</ValueExpr>
 					</UpdateStatisticsVariable>
 					<UpdateObject objectVariable="q1">
 						<Slot property="lengthOfQueue">
@@ -232,6 +236,9 @@ this.mb.getMenuBoardQueue().size() >= this.mb.getMaxMenuBoardLineSize()
 						<UpdateStatisticsVariable variable="numberOfCustomers">
 							<ValueExpr language="Java"><![CDATA[
 SimStatistics.numberOfCustomers.getValue() + 1								
+]]></ValueExpr>
+							<ValueExpr language="JavaScript"><![CDATA[
+sim.controller.SimStatistics.numberOfCustomers.getValue() + 1								
 							]]></ValueExpr>
 						</UpdateStatisticsVariable>
 					</UPDATE-ENV>
@@ -258,9 +265,11 @@ SimStatistics.numberOfCustomers.getValue() + 1
 				</FOR-ObjectVariable>
 				<FOR-DataVariable  variable="serviceTimeMB" dataType="Integer">
 					<ValueExpr language="Java">Global.twoDice(10)</ValueExpr>
+					<ValueExpr language="JavaScript">sim.controller.Global.twoDice(10)</ValueExpr>
 				</FOR-DataVariable>
 				<FOR-DataVariable variable="serviceTimeK" dataType="Integer">
 					<ValueExpr language="Java">Global.twoDice(8)</ValueExpr>
+					<ValueExpr language="JavaScript">sim.controller.Global.twoDice(10)</ValueExpr>
 				</FOR-DataVariable>
 				<DO>
 					<UPDATE-ENV>
@@ -280,24 +289,24 @@ SimStatistics.numberOfCustomers.getValue() + 1
 						<UpdateObject objectVariable="mb">
 							<Slot property="menuBoardBusy" value="true"/>
 							<Slot property="utilization">
-								<ValueExpr language="Java">serviceTimeMB</ValueExpr>
+								<ValueExpr language="Java JavaScript">serviceTimeMB</ValueExpr>
 							</Slot>
 						</UpdateObject>
 			      <UpdateObject objectVariable="k">
 			      	<Slot property="utilization">
-			      		<ValueExpr language="Java">serviceTimeK</ValueExpr>
+			      		<ValueExpr language="Java JavaScript">serviceTimeK</ValueExpr>
 			      	</Slot>
 			      </UpdateObject>
 					</UPDATE-ENV>
 					<SCHEDULE-EVT>
 						<CausedEventExpr eventType="EndMenuBoardService">
 							<Delay>
-								<ValueExpr language="Java">serviceTimeMB</ValueExpr>
+								<ValueExpr language="Java JavaScript">serviceTimeMB</ValueExpr>
 							</Delay>
 						</CausedEventExpr>
 						<CausedEventExpr eventType="EndKitchenService">
 							<Delay>
-								<ValueExpr language="Java">serviceTimeK</ValueExpr>
+								<ValueExpr language="Java JavaScript">serviceTimeK</ValueExpr>
 							</Delay>
 							<Slot property="order">
 								<ObjectValueExpr objectVariable="ord"/>
@@ -358,7 +367,7 @@ this.mb.getMenuBoardQueue().size() > 0
 	                   ]]></Condition>
 						</CausedEventExpr>
 						<CausedEventExpr eventType="StartPickupWindowService">
-							<Condition language="Java"><![CDATA[
+							<Condition language="Java JavaScript"><![CDATA[
 ! this.pw.isPickupWindowBusy() 
 	                     ]]></Condition>
 						</CausedEventExpr>
@@ -387,7 +396,7 @@ this.mb.getMenuBoardQueue().size() > 0
 				<FOR-ObjectVariable variable="pw" objectType="PickupWindow" objectIdRef="2" />
 				<FOR-DataVariable variable="serviceTimePW" dataType="Integer">
 					<ValueExpr language="Java">Global.twoDice(10)</ValueExpr>
-					<ValueExpr language="JavaScript">drivethrurestaurant.controller.Global.twoDice(10)</ValueExpr>
+					<ValueExpr language="JavaScript">sim.controller.Global.twoDice(10)</ValueExpr>
 				</FOR-DataVariable>
 			<DO>
 				<UPDATE-ENV>
@@ -427,7 +436,7 @@ this.pw.getPickupWindowQueue().get(0).getOrder()!= null && this.pw.getPickupWind
 				</FOR-ObjectVariable>
 				<FOR-DataVariable variable="serviceTimePW" dataType="Integer">
 					<ValueExpr language="Java">Global.twoDice(10)</ValueExpr>
-					<ValueExpr language="JavaScript">drivethrurestaurant.controller.Global.twoDice(10)</ValueExpr>
+					<ValueExpr language="JavaScript">sim.controller.Global.twoDice(10)</ValueExpr>
 				</FOR-DataVariable>
 				<DO>
 					<UPDATE-ENV>
@@ -477,15 +486,23 @@ this.pw.getPickupWindowQueue().size() < this.pw.getMaxPickupWindowLineSize()
 					</UpdateObject>
 					<UpdateStatisticsVariable variable="nrOfDepartures">
 						<ValueExpr language="Java">SimStatistics.nrOfDepartures.getValue() + 1</ValueExpr>
+						<ValueExpr language="JavaScript">sim.controller.SimStatistics.nrOfDepartures.getValue() + 1</ValueExpr>
 					</UpdateStatisticsVariable>
 					<UpdateStatisticsVariable variable="cumulativeResponseTime">
 						<ValueExpr language="Java"><![CDATA[
 SimStatistics.cumulativeResponseTime.getValue() + evt.getOccurrenceTime() - cust.getArrivalTime()							
+]]></ValueExpr>
+						<ValueExpr language="JavaScript"><![CDATA[
+sim.controller.SimStatistics.cumulativeResponseTime.getValue() + this.evt.getOccurrenceTime() -
+this.cust.getArrivalTime()							
 						]]></ValueExpr>
 					</UpdateStatisticsVariable>
 					<UpdateStatisticsVariable variable="revenue">
 						<ValueExpr language="Java"><![CDATA[
 SimStatistics.revenue.getValue() + pw.pizzaPrice(( int) pw.getPickupWindowQueue().get(0).getOrder().getPizzaType())
+]]></ValueExpr>
+						<ValueExpr language="JavaScript"><![CDATA[
+sim.controller.SimStatistics.revenue.getValue() + this.pw.pizzaPrice( this.pw.getPickupWindowQueue().get(0).getOrder().getPizzaType())
                        ]]></ValueExpr>
 					</UpdateStatisticsVariable>
 					<UpdateObject objectVariable="pw">
@@ -504,15 +521,23 @@ SimStatistics.revenue.getValue() + pw.pizzaPrice(( int) pw.getPickupWindowQueue(
 				<UPDATE-ENV>		
 					<UpdateStatisticsVariable variable="nrOfDepartures">
 						<ValueExpr language="Java">SimStatistics.nrOfDepartures.getValue() + 1</ValueExpr>
+						<ValueExpr language="JavaScript">sim.controller.SimStatistics.nrOfDepartures.getValue() + 1</ValueExpr>
 					</UpdateStatisticsVariable>
 					<UpdateStatisticsVariable variable="cumulativeResponseTime">
 						<ValueExpr language="Java"><![CDATA[
 SimStatistics.cumulativeResponseTime.getValue() + evt.getOccurrenceTime() - cust.getArrivalTime()
                            ]]></ValueExpr>
+						<ValueExpr language="JavaScript"><![CDATA[
+sim.controller.SimStatistics.cumulativeResponseTime.getValue() + this.evt.getOccurrenceTime() -
+this.cust.getArrivalTime()
+                           ]]></ValueExpr>
 					</UpdateStatisticsVariable>				
 					<UpdateStatisticsVariable variable="revenue">
 						<ValueExpr language="Java"><![CDATA[
 SimStatistics.revenue.getValue() + pw.pizzaPrice(( int) cust.getOrder().getPizzaType())
+                           ]]></ValueExpr>
+						<ValueExpr language="Java"><![CDATA[
+sim.controller.SimStatistics.revenue.getValue() + this.pw.pizzaPrice( this.cust.getOrder().getPizzaType())
                            ]]></ValueExpr>
 					</UpdateStatisticsVariable>
 					<UpdateObject objectVariable="q2">
