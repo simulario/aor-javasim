@@ -5,7 +5,7 @@
 	xmlns:aors="http://aor-simulation.org" 
 	xmlns:dc="http://purl.org/dc/elements/1.1/" 
 	xmlns:h="http://www.w3.org/1999/xhtml" 
-	version="0.9" xsi:schemaLocation="http://aor-simulation.org ../../../AORSL/ERSL/ERSL_0-9.xsd" 
+	version="0.8" xsi:schemaLocation="http://aor-simulation.org ../../../AORSL/ERSL/ERSL_0-8.xsd" 
 	scenarioName="SingleServiceQueueWithStatistics" 
 	scenarioTitle="A single service queue with service utilization and maximum queue length statistics" 
 	simulationManagerDirectory="../../..">
@@ -27,55 +27,28 @@
 			<Variable name="serviceUtilization" dataType="Float">
 				<Source computeOnlyAtEnd="true">
 					<ValueExpr language="Java">
-						(float) SimStatistics.totalServiceTime.getValue() / SimParameter.SIMULATION_STEPS * 100
+						(float) SimStatistics.totalServiceTime.getValue() / SimParameter.SIMULATION_STEPS
 					</ValueExpr>
 					<ValueExpr language="JavaScript">
-						parseFloat(sim.controller.SimStatistics.totalServiceTime.getValue()) / parseFloat(sim.controller.SimParameter.SIMULATION_STEPS * 100.0) 
+						parseFloat(sim.controller.SimStatistics.totalServiceTime.getValue()) / parseFloat(sim.controller.SimParameter.SIMULATION_STEPS) 
 					</ValueExpr>
 				</Source>
 			</Variable>
-			<!--
-			<Variable name="maxQueueLength" dataType="Integer">
-				<Source aggregationFunction="max">
-					<GlobalVariable name="queueLength"/>
-				</Source>
-			</Variable>
-			<Variable name="avgQueueLength" dataType="Integer">
-				<Source aggregationFunction="avg">
-					<GlobalVariable name="queueLength"/>
-				</Source>
-			</Variable>
-			-->
 			<Variable name="maxQueueLength" dataType="Integer">
 				<Source>
 					<GlobalVariable name="maxQueueLength"/>
 				</Source>
-			</Variable>
-			<!--
+			</Variable>	
 			<Variable name="avgQueueLength" dataType="Float">
 				<Source>
 					<GlobalVariable name="queueLength"/>
 				</Source>
 			</Variable>
-			-->
-			
-			<Variable name="avgQueueLength" dataType="Float">
-				<Source computeOnlyAtEnd="true">
-					<ValueExpr language="Java"><![CDATA[
-		     (float) Global.sumQueueLength / Global.numberOfChanges		
-						]]></ValueExpr>
-					<ValueExpr language="JavaScript"><![CDATA[
-		     parseFloat(sim.controller.Global.sumQueueLength) / parseFloat(sim.controller.Global.numberOfChanges)	
-						]]></ValueExpr>
-				</Source>
-			</Variable>		
 			
 		</Statistics>
 		<Globals>
 			<GlobalVariable name="queueLength" dataType="Integer"/>
 			<GlobalVariable name="maxQueueLength" dataType="Integer"/>
-			<GlobalVariable name="sumQueueLength" dataType="Integer"/>
-			<GlobalVariable name="numberOfChanges" dataType="Integer"/>
 			<GlobalVariable name="serviceDeskBusy" dataType="Boolean"/>
 			<GlobalFunction name="randomServiceTime" resultType="Integer">
 				<Body language="Java"><![CDATA[
@@ -132,23 +105,14 @@
 				<IF language="JavaScript">sim.controller.Global.serviceDeskBusy</IF>
 				<THEN>
 					<UPDATE-ENV>
-						<IncrementGlobalVariable name="queueLength" value="1"/>
-						<IncrementGlobalVariable name="numberOfChanges" value="1"/>
-						<UpdateGlobalVariable name="sumQueueLength">
-							<ValueExpr language="Java"><![CDATA[
-				Global.sumQueueLength += Global.queueLength				
-							]]></ValueExpr>
-							<ValueExpr language="JavaScript"><![CDATA[
-				sim.controller.Global.sumQueueLength = sim.controller.Global.sumQueueLength + sim.controller.Global.queueLength
-							]]></ValueExpr>
-						</UpdateGlobalVariable>
+						<IncrementGlobalVariable name="queueLength" value="1" />
 						<UpdateGlobalVariable name="maxQueueLength">
 							<ValueExpr language="Java"><![CDATA[
 				( Global.maxQueueLength >= Global.queueLength)? Global.maxQueueLength : Global.queueLength				
 							]]></ValueExpr>
 							<ValueExpr language="JavaScript"><![CDATA[
 			    ( sim.controller.Global.maxQueueLength >= sim.controller.Global.queueLength) ?
-			    sim.controller.Global.maxQueueLength : sim.controller.Global.queueLength		
+			      sim.controller.Global.maxQueueLength : sim.controller.Global.queueLength		
 							]]></ValueExpr>
 						</UpdateGlobalVariable>
 					</UPDATE-ENV>
@@ -202,15 +166,6 @@
 				<ELSE>
 					<UPDATE-ENV>
 						<IncrementGlobalVariable name="queueLength" value="-1"/>
-						<IncrementGlobalVariable name="numberOfChanges" value="1"/>
-						<UpdateGlobalVariable name="sumQueueLength">
-							<ValueExpr language="Java"><![CDATA[
-				Global.sumQueueLength += Global.queueLength				
-							]]></ValueExpr>
-							<ValueExpr language="JavaScript"><![CDATA[
-				sim.controller.Global.sumQueueLength = sim.controller.Global.sumQueueLength + sim.controller.Global.queueLength
-							]]></ValueExpr>
-						</UpdateGlobalVariable>
 						<UpdateGlobalVariable name="maxQueueLength">
 							<ValueExpr language="Java"><![CDATA[
 				(Global.maxQueueLength >= Global.queueLength)? Global.maxQueueLength : Global.queueLength				
