@@ -9,7 +9,9 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
+import java.net.MalformedURLException;
 import java.net.URL;
+import java.net.UnknownHostException;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
@@ -739,9 +741,18 @@ public class SimulationManager {
   public boolean validateSimulation() {
     String xml = this.getProject().getSimulationDescription();
 
-    CodeGenClient wsClient = new CodeGenClient();
+    if (isGenerationWSAvailable()) {
+      CodeGenClient wsClient = new CodeGenClient();
 
-    return wsClient.validate(xml);
+      return wsClient.validate(xml);
+    } else {
+      JOptionPane
+          .showMessageDialog(
+              null,
+              "Cannot access AOR-Generation-WebService! \n Please check your internet connection!",
+              "Internet connection error", JOptionPane.ERROR_MESSAGE);
+      return false;
+    }
   }
 
   /**
@@ -760,20 +771,54 @@ public class SimulationManager {
       File pathForSource = new File(project.getDirectory() + File.separator
           + project.getName() + File.separator + Project.SRC_FOLDER_NAME);
 
-      // create the translation WS client instance
-      CodeGenClient wsClient = new CodeGenClient();
+      if (isGenerationWSAvailable()) {
+        // create the translation WS client instance
+        CodeGenClient wsClient = new CodeGenClient();
 
-      // invoke the translation WS for generating Java source files
-      result = wsClient.generateSource(this.getProject()
-          .getSimulationDescription(), pathForSource);
-
-      this.getProject().setGenerated(result);
+        // invoke the translation WS for generating Java source files
+        result = wsClient.generateSource(this.getProject()
+            .getSimulationDescription(), pathForSource);
+        this.getProject().setGenerated(result);
+      } else {
+        JOptionPane
+            .showMessageDialog(
+                null,
+                "Cannot access AOR-Generation-WebService! \n Please check your internet connection!",
+                "Internet connection error", JOptionPane.ERROR_MESSAGE);
+        return false;
+      }
     } else {
       // project is already generated
       result = true;
     }
 
     return result;
+  }
+
+  /**
+   * Checks if the Code Generation WS is available. The method will return false
+   * also when no Internet/network connection is available.
+   * 
+   * @return true if WS is available, false otherwise.
+   */
+  public boolean isGenerationWSAvailable() {
+    URL url;
+    try {
+      url = new URL(
+          "http://simulario.informatik.tu-cottbus.de:8080/codegen/codegen?wsdl");
+
+      url.openConnection().getInputStream();
+      return true;
+    } catch (MalformedURLException e) {
+      // e.printStackTrace();
+      return false;
+    } catch (UnknownHostException e) {
+      // e.printStackTrace();
+      return false;
+    } catch (IOException e) {
+      // e.printStackTrace();
+      return false;
+    }
   }
 
   /**
