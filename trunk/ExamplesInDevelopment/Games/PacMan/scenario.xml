@@ -9,7 +9,7 @@
         <dc:created>23 Juni 2011</dc:created>
         <dc:description> Classic Pac Man arcade game. </dc:description>
     </documentation>
-    <SimulationParameters simulationSteps="10000" stepTimeDelay="200" />
+    <SimulationParameters simulationSteps="100000" stepTimeDelay="50" />
     <SimulationModel modelName="PacMan" modelTitle="Pac Man Classic Arcade Game">
         <SpaceModel geometry="Euclidean">
             <TwoDimensionalGrid xMax="20" yMax="11">
@@ -28,6 +28,7 @@
         <Globals>
             <GlobalVariable dataType="Integer" initialValue="20" name="MapWidth" />
             <GlobalVariable dataType="Integer" initialValue="11" name="MapHeight" />
+            <GlobalVariable dataType="Integer" initialValue="105" name="remainingPillFoodNumber" />
             <GlobalFunction name="isWallOnCoordinates" resultType="boolean">
                 <Parameter name="x" type="int" />
                 <Parameter name="y" type="int" />
@@ -72,135 +73,9 @@
                 <!-- flag used to determine if the PacMan has the mouth open or closed -->
                 <Attribute initialValue="false" name="mouthOpen" type="Boolean" />
                 <!-- the current moving direction -->
-                <EnumerationProperty name="movingDirection" type="Direction"/>
-
-                <!-- Rule that will try to move the PacMan in East Direction -->
-                <ReactionRule agentVariable="pacman" name="MoveEast_Rule">
-                    <ON-EACH-SIMULATION-STEP />
-                    <IF language="Java JavaScript">
-                        <![CDATA[
-                            !__Global.isWallOnCoordinates(this.pacman.getX() + 1, this.pacman.getY())
-                        ]]>
-                    </IF>
-                    <THEN>
-                        <UPDATE-AGT>
-                            <Slot property="movingDirection" value="__Direction.EAST" />
-                        </UPDATE-AGT>
-                        <SCHEDULE-EVT>
-                            <ActionEventExpr actionEventType="Move">
-                                <Slot property="objectReference">
-                                    <ValueExpr language="Java JavaScript">
-                                        <![CDATA[
-                                            this.pacman
-                                        ]]>
-                                    </ValueExpr>
-                                </Slot>
-                                <Slot property="direction" value="__Direction.EAST" />
-                                <Slot property="x" value="1" />
-                                <Slot property="y" value="0" />
-                            </ActionEventExpr>
-                        </SCHEDULE-EVT>
-                    </THEN>
-                </ReactionRule>
-                <!-- Rule that will try to move the PacMan in North Direction -->
-                <!--ReactionRule agentVariable="pacman" name="MoveNorth_Rule">
-                    <ON-EACH-SIMULATION-STEP />
-                    <IF language="Java JavaScript">
-                        <![CDATA[
-                            !__Global.isWallOnCoordinates(this.pacman.getX(), this.pacman.getY() + 1)
-                            && this.pacman.getMovingDirection() === null
-                        ]]>
-                    </IF>
-                    <THEN>
-                        <UPDATE-AGT>
-                            <Slot property="movingDirection" value="__Direction.NORTH" />
-                        </UPDATE-AGT>
-                        <SCHEDULE-EVT>
-                            <ActionEventExpr actionEventType="Move">
-                                <Slot property="objectReference">
-                                    <ValueExpr language="Java JavaScript">
-                                        <![CDATA[
-                                            this.pacman
-                                        ]]>
-                                    </ValueExpr>
-                                </Slot>
-                                <Slot property="direction" value="__Direction.NORTH" />
-                                <Slot property="x" value="0" />
-                                <Slot property="y" value="1" />
-                            </ActionEventExpr>
-                        </SCHEDULE-EVT>
-                    </THEN>
-                    <ELSE>
-                        <UPDATE-AGT>
-                            <Slot property="movingDirection" value="null" />
-                        </UPDATE-AGT>
-                    </ELSE>
-                </ReactionRule-->
-                <!-- Rule that will try to move the PacMan in West Direction -->
-                <ReactionRule agentVariable="pacman" name="MoveWest_Rule">
-                    <ON-EACH-SIMULATION-STEP />
-                    <IF language="Java JavaScript">
-                        <![CDATA[
-                           !__Global.isWallOnCoordinates(this.pacman.getX() - 1, this.pacman.getY())
-                        ]]>
-                    </IF>
-                    <THEN>
-                        <UPDATE-AGT>
-                            <Slot property="movingDirection" value="__Direction.WEST" />
-                        </UPDATE-AGT>
-                        <SCHEDULE-EVT>
-                            <ActionEventExpr actionEventType="Move">
-                                <Slot property="objectReference">
-                                    <ValueExpr language="Java JavaScript">
-                                        <![CDATA[
-                                            this.pacman
-                                        ]]>
-                                    </ValueExpr>
-                                </Slot>
-                                <Slot property="direction" value="__Direction.WEST" />
-                                <Slot property="x" value="-1" />
-                                <Slot property="y" value="0" />
-                            </ActionEventExpr>
-                        </SCHEDULE-EVT>
-                    </THEN>
-                </ReactionRule>
-                <!-- Rule that will try to move the PacMan in South Direction -->
-                <!--ReactionRule agentVariable="pacman" name="MoveSouth_Rule">
-                    <ON-EACH-SIMULATION-STEP />
-                    <IF language="Java JavaScript">
-                        <![CDATA[
-                            !__Global.isWallOnCoordinates(this.pacman.getX(), this.pacman.getY() - 1)
-                            && this.pacman.getMovingDirection() === null
-                        ]]>
-                    </IF>
-                    <THEN>
-                        <UPDATE-AGT>
-                            <Slot property="movingDirection" value="__Direction.SOUTH" />
-                        </UPDATE-AGT>
-                        <SCHEDULE-EVT>
-                            <ActionEventExpr actionEventType="Move">
-                                <Slot property="objectReference">
-                                    <ValueExpr language="Java JavaScript">
-                                        <![CDATA[
-                                            this.pacman
-                                        ]]>
-                                    </ValueExpr>
-                                </Slot>
-                                <Slot property="direction" value="__Direction.SOUTH" />
-                                <Slot property="x" value="0" />
-                                <Slot property="y" value="-1" />
-                            </ActionEventExpr>
-                        </SCHEDULE-EVT>
-                    </THEN>
-                    <ELSE>
-                        <UPDATE-AGT>
-                            <Slot property="movingDirection" value="null" />
-                        </UPDATE-AGT>
-                    </ELSE>
-                </ReactionRule-->
-                
+                <EnumerationProperty name="movingDirection" type="Direction" />
                 <!-- Action rule invoked when the user decides to move to east -->
-                <ActionRule name="MoveEast_ActionRule" agentVariable="pacman">
+                <ActionRule agentVariable="pacman" name="MoveEast_ActionRule">
                     <IF language="Java JavaScript">
                         <![CDATA[
                             !__Global.isWallOnCoordinates(this.pacman.getX() + 1, this.pacman.getY())
@@ -226,9 +101,8 @@
                         </SCHEDULE-EVT>
                     </THEN>
                 </ActionRule>
-                
                 <!-- Action rule invoked when the user decides to move to west -->
-                <!--ActionRule name="MoveWest_ActionRule" agentVariable="pacman">
+                <ActionRule agentVariable="pacman" name="MoveWest_ActionRule">
                     <IF language="Java JavaScript">
                         <![CDATA[
                            !__Global.isWallOnCoordinates(this.pacman.getX() - 1, this.pacman.getY())
@@ -253,8 +127,61 @@
                             </ActionEventExpr>
                         </SCHEDULE-EVT>
                     </THEN>
-                </ActionRule-->
-                
+                </ActionRule>
+                <!-- Action rule invoked when the user decides to move to North -->
+                <ActionRule agentVariable="pacman" name="MoveNorth_ActionRule">
+                    <IF language="Java JavaScript">
+                    <![CDATA[
+                        !__Global.isWallOnCoordinates(this.pacman.getX(), this.pacman.getY() + 1)
+                    ]]>
+                    </IF>
+                    <THEN>
+                        <UPDATE-AGT>
+                            <Slot property="movingDirection" value="__Direction.NORTH" />
+                        </UPDATE-AGT>
+                        <SCHEDULE-EVT>
+                            <ActionEventExpr actionEventType="Move">
+                                <Slot property="objectReference">
+                                    <ValueExpr language="Java JavaScript">
+                                         <![CDATA[
+                                            this.pacman
+                                         ]]>
+                                    </ValueExpr>
+                                </Slot>
+                                <Slot property="direction" value="__Direction.NORTH" />
+                                <Slot property="x" value="0" />
+                                <Slot property="y" value="1" />
+                            </ActionEventExpr>
+                        </SCHEDULE-EVT>
+                    </THEN>
+                </ActionRule>
+                <!-- Action rule invoked when the user decides to move to South -->
+                <ActionRule agentVariable="pacman" name="MoveSouth_ActionRule">
+                    <IF language="Java JavaScript">
+                    <![CDATA[
+                        !__Global.isWallOnCoordinates(this.pacman.getX(), this.pacman.getY() - 1)
+                    ]]>
+                    </IF>
+                    <THEN>
+                        <UPDATE-AGT>
+                            <Slot property="movingDirection" value="__Direction.SOUTH" />
+                        </UPDATE-AGT>
+                        <SCHEDULE-EVT>
+                            <ActionEventExpr actionEventType="Move">
+                                <Slot property="objectReference">
+                                    <ValueExpr language="Java JavaScript">
+                                         <![CDATA[
+                                            this.pacman
+                                         ]]>
+                                    </ValueExpr>
+                                </Slot>
+                                <Slot property="direction" value="__Direction.SOUTH" />
+                                <Slot property="x" value="0" />
+                                <Slot property="y" value="-1" />
+                            </ActionEventExpr>
+                        </SCHEDULE-EVT>
+                    </THEN>
+                </ActionRule>
             </PhysicalAgentType>
             <!-- The type that represents the PacMan's enemy -->
             <PhysicalObjectType name="Enemy" />
@@ -264,7 +191,12 @@
             <EnvironmentRule name="OnEachStepRule">
                 <ON-EACH-SIMULATION-STEP />
                 <FOR-ObjectVariable objectIdRef="1" objectType="PacMan" variable="pacMan" />
-                <DO>
+                <IF language="JavaScript">
+                    <![CDATA[
+                        __Simulator.getCurrentSimulationStep() % 5 === 0
+                    ]]>
+                </IF>
+                <THEN>
                     <UPDATE-ENV>
                         <UpdateObject objectVariable="pacMan">
                             <Slot property="mouthOpen">
@@ -276,7 +208,7 @@
                             </Slot>
                         </UpdateObject>
                     </UPDATE-ENV>
-                </DO>
+                </THEN>
             </EnvironmentRule>
             <!-- The PacMan finds PillFood in the cell and will eat it -->
             <EnvironmentRule name="PacManEatPillFood">
@@ -303,6 +235,7 @@
                                 ]]>
                             </ObjectRef>
                         </DestroyObject>
+                        <IncrementGlobalVariable name="remainingPillFoodNumber" value="-1" />
                     </UPDATE-ENV>
                 </THEN>
             </EnvironmentRule>
@@ -709,10 +642,11 @@
                                 shapeProperty="texture" v0="PacMan_open.png" v1="PacMan_close.png" />
                             <ShapePropertyVisualizationMap a0="SOUTH" a1="WEST" a2="NORTH" a3="EAST"
                                 mapType="enumerationMap" property="movingDirection"
-                                shapeProperty="horizontalFlip" v0="true" v1="true" v2="false" v3="false" />
+                                shapeProperty="horizontalFlip" v0="true" v1="true" v2="false"
+                                v3="false" />
                             <ShapePropertyVisualizationMap a0="EAST" a1="NORTH" a2="WEST" a3="SOUTH"
                                 mapType="enumerationMap" property="movingDirection"
-                                shapeProperty="rot" v0="0" v1="90" v2="0" v3="-90" />
+                                shapeProperty="rot" v0="0" v1="90" v2="0" v3="90" />
                         </Square>
                     </PhysicalShape2D>
                 </PhysicalObjectView>
@@ -723,19 +657,36 @@
                 </PhysicalObjectView>
             </Views>
             <AgentControlUI>
-                <AgentControlByAgentType type="PacMan" 
-                    suspendRules="MoveEast_Rule MoveWest_Rule MoveNorth_Rule MoveSouth_Rule">
-                    <EventList></EventList>
+                <AgentControlByAgentType htmlTemplate="three_columns"
+                    suspendRules="MoveEast_Rule MoveWest_Rule MoveNorth_Rule MoveSouth_Rule"
+                    type="PacMan">
+                    <EventList />
+                    <OutputField label="Remaining food">
+                        <Label>
+                            <Text>Available food</Text>
+                        </Label>
+                        <Hint>
+                            <Text>The number of available food pieces on the map.</Text>
+                        </Hint>
+                        <Format decimalPlaces="0">
+                            <PackagingUnits>bags</PackagingUnits>
+                        </Format>
+                        <Source>
+                            <GlobalVariable name="remainingPillFoodNumber" />
+                        </Source>
+                    </OutputField>
                     <UserActionEventListener actionRule="MoveEast_ActionRule">
                         <WHEN>
-                            <KeyboardEvent keyIdentifier="Left"/>
-                            <KeyboardEvent keyIdentifier="D"/>
+                            <KeyboardEvent keyIdentifier="Left" />
+                            <KeyboardEvent keyIdentifier="D" />
                         </WHEN>
                     </UserActionEventListener>
                     <UserActionEventListener actionRule="MoveWest_ActionRule">
                         <WHEN>
-                            <KeyboardEvent keyIdentifier="Right"/>
-                            <KeyboardEvent keyIdentifier="A"/>
+                            <KeyboardEvent keyIdentifier="Right" />
+                            <KeyboardEvent keyIdentifier="A" />
+                            <MouseEvent mouseEventType="click" targetName="tgName1" />
+                            <MouseEvent mouseEventType="dblclick" targetName="tgName2" />
                         </WHEN>
                     </UserActionEventListener>
                 </AgentControlByAgentType>
