@@ -19,6 +19,7 @@
         </SpaceModel>
         <DataTypes>
             <Enumeration name="Direction">
+                <EnumerationLiteral>NONE</EnumerationLiteral>
                 <EnumerationLiteral>SOUTH</EnumerationLiteral>
                 <EnumerationLiteral>NORTH</EnumerationLiteral>
                 <EnumerationLiteral>EAST</EnumerationLiteral>
@@ -183,8 +184,45 @@
                     </THEN>
                 </ActionRule>
             </PhysicalAgentType>
-            <!-- The type that represents the PacMan's enemy -->
-            <PhysicalObjectType name="Enemy" />
+            <!-- The type that represents the PacMan's enemy GhostBlinky -->
+            <PhysicalAgentType name="GhostBlinky">
+                <!-- the current moving direction -->
+                <EnumerationProperty name="movingDirection" type="__Direction" />
+                <Function name="getXIncrement" resultType="int">
+                    <Body language="JavaScript">
+                        <![CDATA[
+                            return 1;
+                        ]]>
+                    </Body>
+                </Function>
+                <Function name="getYIncrement" resultType="int">
+                    <Body language="JavaScript">
+                        <![CDATA[
+                            return 0;
+                        ]]>
+                    </Body>
+                </Function>
+            </PhysicalAgentType>
+            
+            <!-- The type that represents the PacMan's enemy GhostBlinky -->
+            <PhysicalAgentType name="GhostInky">
+                <!-- the current moving direction -->
+                <EnumerationProperty name="movingDirection" type="__Direction" />
+                <Function name="getXIncrement" resultType="int">
+                    <Body language="JavaScript">
+                        <![CDATA[
+                            return 1;
+                        ]]>
+                    </Body>
+                </Function>
+                <Function name="getYIncrement" resultType="int">
+                    <Body language="JavaScript">
+                        <![CDATA[
+                            return 0;
+                        ]]>
+                    </Body>
+                </Function>
+            </PhysicalAgentType>
         </EntityTypes>
         <!-- This rule is used to allow close/open of the PacMan mouth -->
         <EnvironmentRules>
@@ -283,6 +321,133 @@
                         </UpdateObject>
                     </UPDATE-ENV>
                 </DO>
+            </EnvironmentRule>
+            <!-- Decide next movement of the Ghost Blinky (red ghost) -->
+            <EnvironmentRule name="MoveGhostsBlinky_Rule">
+                <ON-EACH-SIMULATION-STEP />
+                <FOR-ObjectVariable objectIdRef="10000" objectType="GhostBlinky" variable="blinky" />
+                <FOR-DataVariable dataType="Integer" variable="xIncrement">
+                    <ValueExpr language="Java JavaScript">
+                        <![CDATA[
+                            this.blinky.getXIncrement()
+                        ]]>
+                    </ValueExpr>
+                </FOR-DataVariable>
+                <FOR-DataVariable dataType="Integer" variable="yIncrement">
+                    <ValueExpr language="Java JavaScript">
+                        <![CDATA[
+                            this.blinky.getYIncrement()
+                        ]]>
+                    </ValueExpr>
+                </FOR-DataVariable>
+                <IF language="JavaScript">
+                    <![CDATA[
+                        __Simulator.getCurrentSimulationStep() % 7 === 0
+                    ]]>
+                </IF>
+                <THEN>
+                    <UPDATE-ENV>
+                        <UpdateObject objectVariable="blinky">
+                            <Slot property="x">
+                                <ValueExpr language="Java JavaScript">
+                                    <![CDATA[
+                                        this.blinky.getX() % 19 + this.xIncrement 
+                                    ]]>
+                                </ValueExpr>
+                            </Slot>
+                            <Slot property="y">
+                                <ValueExpr language="Java JavaScript">
+                                    <![CDATA[
+                                         this.blinky.getY() + this.yIncrement
+                                    ]]>
+                                </ValueExpr>
+                            </Slot>
+                            <Slot property="movingDirection">
+                                <ValueExpr language="JavaScript">
+                                    <![CDATA[
+                                        (this.xIncrement === 1 ? __Direction.EAST : 
+                                            (this.xIncrement === -1 ? __Direction.WEST : 
+                                                (this.yIncrement === 1 ? __Direction.NORTH : 
+                                                    (this.yIncrement === -1 ? __Direction.SOUTH : __Direction.NONE))))
+                                    ]]>
+                                </ValueExpr>
+                            </Slot>
+                        </UpdateObject>
+                    </UPDATE-ENV>
+                </THEN>
+            </EnvironmentRule>
+            
+            <!-- Decide next movement of the Ghost Inky (turquoise ghost) -->
+            <EnvironmentRule name="MoveGhostsInky_Rule">
+                <ON-EACH-SIMULATION-STEP />
+                <FOR-ObjectVariable objectIdRef="11000" objectType="GhostInky" variable="inky" />
+                <FOR-DataVariable dataType="Integer" variable="xIncrement">
+                    <ValueExpr language="Java JavaScript">
+                        <![CDATA[
+                            this.inky.getXIncrement()
+                        ]]>
+                    </ValueExpr>
+                </FOR-DataVariable>
+                <FOR-DataVariable dataType="Integer" variable="yIncrement">
+                    <ValueExpr language="Java JavaScript">
+                        <![CDATA[
+                            this.inky.getYIncrement()
+                        ]]>
+                    </ValueExpr>
+                </FOR-DataVariable>
+                <IF language="JavaScript">
+                    <![CDATA[
+                        __Simulator.getCurrentSimulationStep() % 10 === 0
+                    ]]>
+                </IF>
+                <THEN>
+                    <UPDATE-ENV>
+                        <UpdateObject objectVariable="inky">
+                            <Slot property="x">
+                                <ValueExpr language="Java JavaScript">
+                                    <![CDATA[
+                                        this.inky.getX() % 19 + this.xIncrement 
+                                    ]]>
+                                </ValueExpr>
+                            </Slot>
+                            <Slot property="y">
+                                <ValueExpr language="Java JavaScript">
+                                    <![CDATA[
+                                         this.inky.getY() + this.yIncrement
+                                    ]]>
+                                </ValueExpr>
+                            </Slot>
+                            <Slot property="movingDirection">
+                                <ValueExpr language="JavaScript">
+                                    <![CDATA[
+                                        (this.xIncrement === 1 ? __Direction.EAST : 
+                                            (this.xIncrement === -1 ? __Direction.WEST : 
+                                                (this.yIncrement === 1 ? __Direction.NORTH : 
+                                                    (this.yIncrement === -1 ? __Direction.SOUTH : __Direction.NONE))))
+                                    ]]>
+                                </ValueExpr>
+                            </Slot>
+                        </UpdateObject>
+                    </UPDATE-ENV>
+                </THEN>
+            </EnvironmentRule>
+            <!-- CHeck if the PacMan is killed by the ghosts -->
+            <EnvironmentRule name="PacManDies_Rule">
+                <ON-EACH-SIMULATION-STEP/>
+                <FOR-ObjectVariable variable="pacman" objectType="PacMan" objectIdRef="1"/>
+                <FOR-ObjectVariable variable="ghostBlinky" objectType="GhostBlinky" objectIdRef="10000"/>
+                <FOR-ObjectVariable variable="ghostInky" objectType="GhostInky" objectIdRef="11000"/>
+                <IF language="Java JavaScript">
+                    <![CDATA[
+                        (this.pacman.getX() === this.ghostBlinky.getX() && this.pacman.getY() === this.ghostBlinky.getY())
+                        || (this.pacman.getX() === this.ghostInky.getX() && this.pacman.getY() === this.ghostInky.getY())
+                    ]]>
+                </IF>
+                <THEN>
+                    <SCHEDULE-EVT>
+                        <CausedEventExpr eventType="StopSimulation"/>
+                    </SCHEDULE-EVT>
+                </THEN>
             </EnvironmentRule>
         </EnvironmentRules>
     </SimulationModel>
@@ -386,6 +551,8 @@
             </GridCell>
         </GridCells>
         <PhysicalAgent id="1" name="PacMan" type="PacMan" x="10" y="2" />
+        <PhysicalAgent id="10000" name="Blinky" type="GhostBlinky" x="9" y="6" />
+        <PhysicalAgent id="11000" name="Inky" type="GhostInky" x="12" y="6" />
         <!-- First line of Food-Pills-->
         <PhysicalObjects objectVariable="pillFood" rangeEndID="25" rangeStartID="22" type="PillFood">
             <Slot property="x">
@@ -502,23 +669,6 @@
                 </ValueExpr>
             </Slot>
         </PhysicalObjects>
-        <PhysicalObjects objectVariable="pillFood" rangeEndID="112" rangeStartID="109"
-            type="PillFood">
-            <Slot property="x">
-                <ValueExpr language="Java JavaScript">
-                    <![CDATA[
-                        pillFood.getId() % 20
-                   ]]>
-                </ValueExpr>
-            </Slot>
-            <Slot property="y">
-                <ValueExpr language="Java JavaScript">
-                    <![CDATA[
-                        parseInt(pillFood.getId() / 20.0) + 1
-                   ]]>
-                </ValueExpr>
-            </Slot>
-        </PhysicalObjects>
         <PhysicalObjects objectVariable="pillFood" rangeEndID="119" rangeStartID="114"
             type="PillFood">
             <Slot property="x">
@@ -540,8 +690,6 @@
         <PhysicalObject id="122" objectVariable="pillFood" type="PillFood" x="2" y="7" />
         <PhysicalObject id="124" objectVariable="pillFood" type="PillFood" x="4" y="7" />
         <PhysicalObject id="127" objectVariable="pillFood" type="PillFood" x="7" y="7" />
-        <PhysicalObject id="130" objectVariable="pillFood" type="PillFood" x="10" y="7" />
-        <PhysicalObject id="131" objectVariable="pillFood" type="PillFood" x="11" y="7" />
         <PhysicalObject id="134" objectVariable="pillFood" type="PillFood" x="14" y="7" />
         <PhysicalObject id="137" objectVariable="pillFood" type="PillFood" x="17" y="7" />
         <PhysicalObject id="139" objectVariable="pillFood" type="PillFood" x="19" y="7" />
@@ -650,6 +798,28 @@
                         </Square>
                     </PhysicalShape2D>
                 </PhysicalObjectView>
+                <PhysicalObjectView physicalObjectType="GhostBlinky">
+                    <PhysicalShape2D>
+                        <Square>
+                            <ShapePropertyVisualizationMap a0="EAST" a1="NORTH" a2="WEST" a3="SOUTH"
+                                mapType="enumerationMap" property="movingDirection"
+                                shapeProperty="texture" v0="red_ghost_look_east.png"
+                                v1="red_ghost_look_north.png" v2="red_ghost_look_west.png"
+                                v3="red_ghost_look_south.png" v4="red_ghost_look_none.png" />
+                        </Square>
+                    </PhysicalShape2D>
+                </PhysicalObjectView>
+                <PhysicalObjectView physicalObjectType="GhostInky">
+                    <PhysicalShape2D>
+                        <Square>
+                            <ShapePropertyVisualizationMap a0="EAST" a1="NORTH" a2="WEST" a3="SOUTH"
+                                mapType="enumerationMap" property="movingDirection"
+                                shapeProperty="texture" v0="turquoise_ghost_look_east.png"
+                                v1="turquoise_ghost_look_north.png" v2="turquoise_ghost_look_west.png"
+                                v3="turquoise_ghost_look_south.png" v4="turquoise_ghost_look_none.png" />
+                        </Square>
+                    </PhysicalShape2D>
+                </PhysicalObjectView>
                 <PhysicalObjectView physicalObjectType="PillFood">
                     <PhysicalShape2D>
                         <Circle texture="PillFood.png" />
@@ -677,16 +847,26 @@
                     </OutputField>
                     <UserActionEventListener actionRule="MoveEast_ActionRule">
                         <WHEN>
-                            <KeyboardEvent keyIdentifier="Left" />
+                            <KeyboardEvent keyIdentifier="Right" />
                             <KeyboardEvent keyIdentifier="D" />
                         </WHEN>
                     </UserActionEventListener>
                     <UserActionEventListener actionRule="MoveWest_ActionRule">
                         <WHEN>
-                            <KeyboardEvent keyIdentifier="Right" />
+                            <KeyboardEvent keyIdentifier="Left" />
                             <KeyboardEvent keyIdentifier="A" />
-                            <MouseEvent mouseEventType="click" targetName="tgName1" />
-                            <MouseEvent mouseEventType="dblclick" targetName="tgName2" />
+                        </WHEN>
+                    </UserActionEventListener>
+                    <UserActionEventListener actionRule="MoveNorth_ActionRule">
+                        <WHEN>
+                            <KeyboardEvent keyIdentifier="Up" />
+                            <KeyboardEvent keyIdentifier="W" />
+                        </WHEN>
+                    </UserActionEventListener>
+                    <UserActionEventListener actionRule="MoveSouth_ActionRule">
+                        <WHEN>
+                            <KeyboardEvent keyIdentifier="Down" />
+                            <KeyboardEvent keyIdentifier="S" />
                         </WHEN>
                     </UserActionEventListener>
                 </AgentControlByAgentType>
