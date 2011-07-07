@@ -25,17 +25,10 @@
                 <EnumerationLiteral>EAST</EnumerationLiteral>
                 <EnumerationLiteral>WEST</EnumerationLiteral>
             </Enumeration>
-        </DataTypes>
-        <Globals>
-            <GlobalVariable dataType="Integer" initialValue="20" name="MapWidth" />
-            <GlobalVariable dataType="Integer" initialValue="11" name="MapHeight" />
-            <GlobalVariable dataType="Integer" initialValue="105" name="remainingPillFoodNumber" />
-            <GlobalFunction name="isWallOnCoordinates" resultType="boolean">
-                <Parameter name="x" type="int" />
-                <Parameter name="y" type="int" />
-                <Body language="JavaScript">
+            <ComplexDataType name="Map">
+                <ClassDef language="JavaScript">
                     <![CDATA[
-                        var map = [ 
+                        var pacManMapMatrix = [ 
                             [1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1],
                             [1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1],
                             [1, 0, 1, 1, 0, 1, 0, 1, 1, 1, 1, 1, 1, 0, 1, 0, 1, 1, 0, 1],
@@ -49,7 +42,25 @@
                             [1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1]
                         ];
                         
+                        function getPacManMapMatrix() {
+                            return pacManMapMatrix;
+                        }
+                    ]]>
+                </ClassDef>
+            </ComplexDataType>
+        </DataTypes>
+        <Globals>
+            <GlobalVariable dataType="Integer" initialValue="20" name="MapWidth" />
+            <GlobalVariable dataType="Integer" initialValue="11" name="MapHeight" />
+            <GlobalVariable dataType="Integer" initialValue="105" name="remainingPillFoodNumber" />
+            <GlobalFunction name="isWallOnCoordinates" resultType="boolean">
+                <Parameter name="x" type="int" />
+                <Parameter name="y" type="int" />
+                <Body language="JavaScript">
+                    <![CDATA[
+                        var map = getPacManMapMatrix();
                         var rows = map.length;
+                        
                         return map[rows - y][x-1] === 1;
                     ]]>
                 </Body>
@@ -189,8 +200,22 @@
                 <!-- the current moving direction -->
                 <EnumerationProperty name="movingDirection" type="__Direction" />
                 <Function name="getXIncrement" resultType="int">
+                    <Parameter name="pacManX" type="int"/>
+                    <Parameter name="pacManY" type="int"/>
                     <Body language="JavaScript">
                         <![CDATA[
+                            var start = {
+                                x:(__Global.getMapHeight() - this.getY()), 
+                                y: this.getX() - 1
+                            };
+							
+							var end = {
+								x:(__Global.getMapHeight() - pacManY), 
+								y: pacManX - 1
+							};
+							var result = astar.search(start, end, 1);
+                            
+                            alert(result.length)
                             return 1;
                         ]]>
                     </Body>
@@ -325,11 +350,12 @@
             <!-- Decide next movement of the Ghost Blinky (red ghost) -->
             <EnvironmentRule name="MoveGhostsBlinky_Rule">
                 <ON-EACH-SIMULATION-STEP />
+                <FOR-ObjectVariable variable="pacman" objectType="PacMan" objectIdRef="1"/>
                 <FOR-ObjectVariable objectIdRef="10000" objectType="GhostBlinky" variable="blinky" />
                 <FOR-DataVariable dataType="Integer" variable="xIncrement">
                     <ValueExpr language="Java JavaScript">
                         <![CDATA[
-                            this.blinky.getXIncrement()
+                            this.blinky.getXIncrement(this.pacman.getX(), this.pacman.getY())
                         ]]>
                     </ValueExpr>
                 </FOR-DataVariable>
