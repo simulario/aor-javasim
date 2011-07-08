@@ -78,6 +78,12 @@
                 <!-- Reference to the object that will move -->
                 <ReferenceProperty name="objectReference" type="PacMan" />
             </ActionEventType>
+            <!-- The event is triggered when the PacMan eats a PillFood -->
+            <ActionEventType name="EatPillFood"/>
+            <!-- The event is triggered when the PacMan game starts -->
+            <ActionEventType name="StartGame"/>
+            <!-- The event is triggered when the PacMan dies -->
+            <ActionEventType name="PacManDies"/>
             <!-- The type that represents the Pills Food that are eaten by the PacMan -->
             <PhysicalObjectType name="PillFood" />
             <!-- The Lord of the simulation...PacMan -->
@@ -204,7 +210,7 @@
                     <Parameter name="pacManY" type="int"/>
                     <Body language="JavaScript">
                         <![CDATA[
-                            var astar = new js.algorithms.ASTAR(getPacManMapMatrix(), 1);
+                           /* var astar = new js.algorithms.ASTAR(getPacManMapMatrix(), 1);
 
                             var start = {
                                 x: this.getX(), 
@@ -215,7 +221,7 @@
 								x: pacManX, 
 								y: pacManY
 							};
-							var result = astar.search(start, end);
+							var result = astar.search(start, end);*/
                             
                             //alert(result.length)
                             return 1;
@@ -253,6 +259,18 @@
         </EntityTypes>
         <!-- This rule is used to allow close/open of the PacMan mouth -->
         <EnvironmentRules>
+            <!-- The rule executed when the game starts -->
+            <EnvironmentRule name="StartGame_Rule">
+                <ON-EACH-SIMULATION-STEP/>
+                <IF language="JavaScript">
+                    __Simulator.getCurrentSimulationStep() === 1
+                </IF>
+                <THEN>
+                    <SCHEDULE-EVT>
+                        <CausedEventExpr eventType="StartGame"/>
+                    </SCHEDULE-EVT>
+                </THEN>
+            </EnvironmentRule>
             <EnvironmentRule name="OnEachStepRule">
                 <ON-EACH-SIMULATION-STEP />
                 <FOR-ObjectVariable objectIdRef="1" objectType="PacMan" variable="pacMan" />
@@ -302,6 +320,9 @@
                         </DestroyObject>
                         <IncrementGlobalVariable name="remainingPillFoodNumber" value="-1" />
                     </UPDATE-ENV>
+                    <SCHEDULE-EVT>
+                        <CausedEventExpr eventType="EatPillFood"/>
+                    </SCHEDULE-EVT>
                 </THEN>
             </EnvironmentRule>
             <!-- Move one object/agent with the given increments/decrements -->
@@ -473,6 +494,7 @@
                 </IF>
                 <THEN>
                     <SCHEDULE-EVT>
+                        <CausedEventExpr eventType="PacManDies"/>
                         <CausedEventExpr eventType="StopSimulation"/>
                     </SCHEDULE-EVT>
                 </THEN>
@@ -853,6 +875,15 @@
                         <Circle texture="PillFood.png" />
                     </PhysicalShape2D>
                 </PhysicalObjectView>
+                <EventAppearance eventType="EatPillFood">
+                    <Sound soundFile="eating.wav"/>
+                </EventAppearance>
+                <EventAppearance eventType="StartGame">
+                    <Sound soundFile="start.wav"/>
+                </EventAppearance>
+                <EventAppearance eventType="PacManDies">
+                    <Sound soundFile="die.wav"/>
+                </EventAppearance>
             </Views>
             <AgentControlUI>
                 <AgentControlByAgentType htmlTemplate="three_columns"
