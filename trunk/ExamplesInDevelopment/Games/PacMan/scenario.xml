@@ -50,6 +50,7 @@
             </ComplexDataType>
         </DataTypes>
         <Globals>
+            <GlobalVariable name="level" dataType="Integer" minValue="1" maxValue="5" initialValue="3"/>
             <GlobalVariable dataType="Integer" initialValue="20" name="MapWidth" />
             <GlobalVariable dataType="Integer" initialValue="11" name="MapHeight" />
             <GlobalVariable dataType="Integer" initialValue="99" name="remainingPillFoodNumber" />
@@ -428,10 +429,24 @@
                 <ON-EACH-SIMULATION-STEP />
                 <FOR-ObjectVariable objectIdRef="1" objectType="PacMan" variable="pacman" />
                 <FOR-ObjectVariable objectIdRef="10000" objectType="GhostBlinky" variable="blinky" />
+                <FOR-DataVariable variable="xIncrement" dataType="Integer">
+                    <ValueExpr language="JavaScript">
+                        <![CDATA[
+                            this.blinky.getXIncrement(this.pacman.getX(), this.pacman.getY())
+                        ]]>
+                    </ValueExpr>
+                </FOR-DataVariable>
+                <FOR-DataVariable variable="yIncrement" dataType="Integer">
+                    <ValueExpr language="JavaScript">
+                        <![CDATA[
+                            this.blinky.getYIncrement(this.pacman.getX(), this.pacman.getY())
+                        ]]>
+                    </ValueExpr>
+                </FOR-DataVariable>
                 <IF language="JavaScript">
                     <![CDATA[
                         __Simulator.getCurrentSimulationStep() > 25
-                        && __Simulator.getCurrentSimulationStep() % 9 === 0
+                        && __Simulator.getCurrentSimulationStep() % (15 - __Global.getLevel() * 2) === 0
                     ]]>
                 </IF>
                 <THEN>
@@ -440,14 +455,14 @@
                             <Slot property="x">
                                 <ValueExpr language="Java JavaScript">
                                     <![CDATA[
-                                        this.blinky.getX() + this.blinky.getXIncrement(this.pacman.getX(), this.pacman.getY())
+                                        this.blinky.getX() + this.xIncrement
                                     ]]>
                                 </ValueExpr>
                             </Slot>
                             <Slot property="y">
                                 <ValueExpr language="Java JavaScript">
                                     <![CDATA[
-                                         this.blinky.getY() + this.blinky.getYIncrement(this.pacman.getX(), this.pacman.getY())
+                                         this.blinky.getY() + this.yIncrement
                                     ]]>
                                 </ValueExpr>
                             </Slot>
@@ -470,10 +485,24 @@
                 <ON-EACH-SIMULATION-STEP />
                 <FOR-ObjectVariable objectIdRef="1" objectType="PacMan" variable="pacman" />
                 <FOR-ObjectVariable objectIdRef="11000" objectType="GhostInky" variable="inky" />
+                <FOR-DataVariable variable="xIncrement" dataType="Integer">
+                    <ValueExpr language="JavaScript">
+                        <![CDATA[
+                            this.inky.getXIncrement(this.pacman.getX(), this.pacman.getY())
+                        ]]>
+                    </ValueExpr>
+                </FOR-DataVariable>
+                <FOR-DataVariable variable="yIncrement" dataType="Integer">
+                    <ValueExpr language="JavaScript">
+                        <![CDATA[
+                            this.inky.getYIncrement(this.pacman.getX(), this.pacman.getY())
+                        ]]>
+                    </ValueExpr>
+                </FOR-DataVariable>
                 <IF language="JavaScript">
                     <![CDATA[
                         __Simulator.getCurrentSimulationStep() > 25
-                        && __Simulator.getCurrentSimulationStep() % 11 === 0
+                        && __Simulator.getCurrentSimulationStep() % (17 - __Global.getLevel() * 2) === 0
                     ]]>
                 </IF>
                 <THEN>
@@ -482,14 +511,14 @@
                             <Slot property="x">
                                 <ValueExpr language="Java JavaScript">
                                     <![CDATA[
-                                        this.inky.getX() + this.inky.getXIncrement(this.pacman.getX(), this.pacman.getY())
+                                        this.inky.getX() + this.xIncrement
                                     ]]>
                                 </ValueExpr>
                             </Slot>
                             <Slot property="y">
                                 <ValueExpr language="Java JavaScript">
                                     <![CDATA[
-                                         this.inky.getY() + this.inky.getYIncrement(this.pacman.getX(), this.pacman.getY())
+                                         this.inky.getY() + this.yIncrement
                                     ]]>
                                 </ValueExpr>
                             </Slot>
@@ -832,23 +861,34 @@
         </PhysicalObjects>
     </InitialState>
     <UserInterface supportedLanguages="en">
+        <InitialStateUI>
+            <GlobalVariableUI variable="level" widget="Slider" sliderStepSize="1">
+                <Label>
+                    <Text>Difficulty level</Text>
+                </Label>
+                <Hint>
+                    <Text>The level of difficulty: controls the ghosts walking speed.</Text>
+                </Hint>
+            </GlobalVariableUI>
+        </InitialStateUI>
         <AnimationUI>
-            <aors:DisplayDescription  xmlns="http://www.w3.org/1999/xhtml">
+            <aors:DisplayDescription xmlns="http://www.w3.org/1999/xhtml">
                 <aors:HtmlText>
-                    <div style="float:left; height: 275px; width: 500px;">
-                        <img style="width: 350px;" src="media/map_level_1.png"/>
+                    <div style="float:left; width: 40%; padding: 10% 5% 25px;">
+                        <img src="media/map_level_1.png" />
                     </div>
-                    <div style="float:left">
-                        <h3>Story:</h3>
-                        <p> Pac Man is one of the all time classic video gamesan arcade game developed by Namco and first released in Japan in 1979. 
-                            After it's release in the US it became very popular.
-                            When it was released, the popular games were Asteroids and Space Invaders. 
-                        </p>
-                        <h3>How to play:</h3>
-                        <p>    
-                            The aim is simple - work your way through the maze until you have eaten all the dots. 
-                            Avoid the ghosts - you die if they touch you. 
-                        </p>
+                    <div style="float:left; width: 40%; padding: 10% 0px; 5%">
+                        <h4>The story:</h4>
+                        <p> <i>Pac-Man</i> is one of the all time classic video gamesan arcade game
+                            developed by Namco and first released in Japan in 1979. <br />After it's
+                            release in the US it became very popular. When it was released, the
+                            popular games were Asteroids and Space Invaders. </p>
+                        <h4>How to play:</h4>
+                        <p> The aim is simple: work your way through the map until you have eaten
+                            all the available<i>Food Pills</i> (white dots). <br />Avoid the ghosts
+                            (Blinky and Inky) - you die and become a ghost if they touch you. </p>
+                        <h4>Why to play:</h4>
+                        <p> Nostalgie, fun, to much free time...or any othe reason you might think of!</p>
                     </div>
                 </aors:HtmlText>
             </aors:DisplayDescription>
@@ -920,26 +960,28 @@
             <AgentControlUI>
                 <aors:StartPageText xmlns="http://www.w3.org/1999/xhtml">
                     <aors:HtmlText>
-                        <p>You can play the role of <b>PacMan</b>, main character of the classic Pac Man game.</p>
-                        <p>The following actions are on your control:</p>
+                        <p>You play the role of <b>PacMan</b>, the main character of the classic
+                            Pac-Man game.</p>
+                        <p>These are the possible actions you can do:</p>
                         <ul>
-                            <li>Move <b>PacMan</b>:
-                                <ul>
-                                    <li>left: &#8592; or <i>A</i> key</li>
-                                    <li>right: &#8594; or <i>D</i> key</li>
-                                    <li>up: &#8593; or <i>W</i> key</li> 
-                                    <li>down: &#8595; or <i>S</i> key</li>
+                            <li>Move the <b>PacMan</b>: <ul>
+                                    <li>left: '&#8592;' or '<i>A</i>' keys</li>
+                                    <li>right: '&#8594;' or '<i>D</i>' keys</li>
+                                    <li>up: '&#8593;' or '<i>W</i>' keys</li>
+                                    <li>down: '&#8595;' or '<i>S</i>' keys</li>
                                 </ul>
                             </li>
-                            <li>Eat the Food from the cell where you enter.</li>
-                            <li>Try to avoid the Blinky and Inky ghosts for eating you...</li>
+                            <li>Collect the <i>Food Pills</i> from all the cells you enter.</li>
+                            <li>Avoid <i>Blinky</i> and <i>Inky</i>, the unfriendly ghosts, that
+                                will enjoy eating you.</li>
                         </ul>
-                        <p>The goal is to guide the PacMan towards the map and eat all the food.</p>
+                        <p>The goals: <i>guide the PacMan towards the map and collect the food from
+                                all cells</i>.</p>
+                        <p>If <i>Inky</i> or <i>Bliky</i> will catch you, the game is over, but
+                            don't give up, try again!</p>
                     </aors:HtmlText>
                 </aors:StartPageText>
-                <AgentControlByAgentType htmlTemplate="three_columns"
-                    suspendRules="MoveEast_Rule MoveWest_Rule MoveNorth_Rule MoveSouth_Rule"
-                    type="PacMan">
+                <AgentControlByAgentType htmlTemplate="three_columns" type="PacMan">
                     <EventList />
                     <OutputField label="Remaining food">
                         <Label>
@@ -978,6 +1020,8 @@
                             <KeyboardEvent keyIdentifier="Down" />
                             <KeyboardEvent keyIdentifier="S" />
                         </WHEN>
+                    </UserActionEventListener><UserActionEventListener actionRule="f">
+                        <WHEN><MouseEvent targetName="a" mouseEventType="click"></MouseEvent></WHEN>
                     </UserActionEventListener>
                 </AgentControlByAgentType>
             </AgentControlUI>
