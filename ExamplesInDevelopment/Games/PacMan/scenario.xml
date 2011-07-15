@@ -86,8 +86,6 @@
             <ActionEventType name="PacManDies" />
             <!-- The event is triggered when the PacMan wins the game - eated all PillFoods -->
             <ActionEventType name="WinGame" />
-            <!-- The type that represents the Pills Food that are eaten by the PacMan -->
-            <PhysicalObjectType name="PillFood" />
             <!-- The Lord of the simulation...PacMan -->
             <PhysicalAgentType name="PacMan">
                 <!-- flag used to determine if the PacMan has the mouth open or closed -->
@@ -372,28 +370,27 @@
             <EnvironmentRule name="PacManEatPillFood">
                 <ON-EACH-SIMULATION-STEP />
                 <FOR-ObjectVariable objectIdRef="1" objectType="PacMan" variable="pacman" />
-                <FOR-ObjectVariable objectType="PillFood" variable="pillFood">
-                    <SelectionCondition language="Java JavaScript">
-                        <![CDATA[
-                            (this.pacman.getY()-1) * __Global.getMapWidth() + this.pacman.getX() === this.pillFood.getId()
-                        ]]>
-                    </SelectionCondition>
-                </FOR-ObjectVariable>
-                <IF language="Java JavaScript">
+                <IF language="JavaScript">
                     <![CDATA[
-                        this.pillFood !== null
+                        __Simulator.spaceModel.getGridCell(this.pacman.getX(), this.pacman.getY()).getCellRole() === 2
                     ]]>
                 </IF>
                 <THEN>
                     <UPDATE-ENV>
-                        <DestroyObject objectType="PillFood">
-                            <ObjectRef language="Java JavaScript">
-                                <![CDATA[
-                                    this.pillFood
-                                ]]>
-                            </ObjectRef>
-                        </DestroyObject>
                         <IncrementGlobalVariable name="remainingPillFoodNumber" value="-1" />
+                        <UpdateGridCell gridCellVariable="cell">
+                            <XCoordinate language="JavaScript">
+                                <![CDATA[
+                                    this.pacman.getX()
+                                ]]>
+                            </XCoordinate>
+                            <YCoordinate language="JavaScript">
+                                <![CDATA[
+                                    this.pacman.getY()
+                                ]]>
+                            </YCoordinate>
+                            <Slot property="cellRole" value="0" />
+                        </UpdateGridCell>
                     </UPDATE-ENV>
                     <SCHEDULE-EVT>
                         <CausedEventExpr eventType="EatPillFood" />
@@ -540,326 +537,33 @@
         </EnvironmentRules>
     </SimulationModel>
     <InitialState>
-        <GridCells>
-            <!-- top wall(s) -->
-            <GridCellSet endX="20" endY="11" startX="1" startY="11">
-                <Slot property="cellRole" value="1" />
-            </GridCellSet>
-            <GridCellSet endX="6" endY="10" startX="6" startY="9">
-                <Slot property="cellRole" value="1" />
-            </GridCellSet>
-            <GridCellSet endX="15" endY="10" startX="15" startY="9">
-                <Slot property="cellRole" value="1" />
-            </GridCellSet>
-            <!-- bottom wall(s) -->
-            <GridCellSet endX="20" endY="1" startX="1" startY="1">
-                <Slot property="cellRole" value="1" />
-            </GridCellSet>
-            <GridCellSet endX="6" endY="3" startX="6" startY="2">
-                <Slot property="cellRole" value="1" />
-            </GridCellSet>
-            <GridCellSet endX="15" endY="3" startX="15" startY="2">
-                <Slot property="cellRole" value="1" />
-            </GridCellSet>
-            <!-- left wall -->
-            <GridCellSet endX="1" endY="11" startX="1" startY="1">
-                <Slot property="cellRole" value="1" />
-            </GridCellSet>
-            <!-- right wall -->
-            <GridCellSet endX="20" endY="11" startX="20" startY="1">
-                <Slot property="cellRole" value="1" />
-            </GridCellSet>
-            <!-- center wall(s) -->
-            <GridCellSet endX="9" endY="7" startX="8" startY="7">
-                <Slot property="cellRole" value="1" />
-            </GridCellSet>
-            <GridCellSet endX="13" endY="7" startX="12" startY="7">
-                <Slot property="cellRole" value="1" />
-            </GridCellSet>
-            <GridCellSet endX="13" endY="5" startX="8" startY="5">
-                <Slot property="cellRole" value="1" />
-            </GridCellSet>
-            <GridCell x="8" y="6">
-                <Slot property="cellRole" value="1" />
-            </GridCell>
-            <GridCell x="13" y="6">
-                <Slot property="cellRole" value="1" />
-            </GridCell>
-            <!-- center-down Line-Wall -->
-            <GridCellSet endX="13" endY="3" startX="8" startY="3">
-                <Slot property="cellRole" value="1" />
-            </GridCellSet>
-            <!-- center-top Line-Wall -->
-            <GridCellSet endX="13" endY="9" startX="8" startY="9">
-                <Slot property="cellRole" value="1" />
-            </GridCellSet>
-            <!-- left-down 2-Piece-Wall -->
-            <GridCellSet endX="6" endY="5" startX="5" startY="5">
-                <Slot property="cellRole" value="1" />
-            </GridCellSet>
-            <!-- left-top 2-Piece-Wall -->
-            <GridCellSet endX="6" endY="7" startX="5" startY="7">
-                <Slot property="cellRole" value="1" />
-            </GridCellSet>
-            <!-- right-down 2-Piece-Wall -->
-            <GridCellSet endX="16" endY="5" startX="15" startY="5">
-                <Slot property="cellRole" value="1" />
-            </GridCellSet>
-            <!-- right-top 2-Piece-Wall -->
-            <GridCellSet endX="16" endY="7" startX="15" startY="7">
-                <Slot property="cellRole" value="1" />
-            </GridCellSet>
-            <!-- left-down L-Wall -->
-            <GridCellSet endX="3" endY="5" startX="3" startY="3">
-                <Slot property="cellRole" value="1" />
-            </GridCellSet>
-            <GridCell x="4" y="3">
-                <Slot property="cellRole" value="1" />
-            </GridCell>
-            <!-- left-top L-Wall -->
-            <GridCellSet endX="3" endY="9" startX="3" startY="7">
-                <Slot property="cellRole" value="1" />
-            </GridCellSet>
-            <GridCell x="4" y="9">
-                <Slot property="cellRole" value="1" />
-            </GridCell>
-            <!-- right-down L-Wall -->
-            <GridCellSet endX="18" endY="5" startX="18" startY="3">
-                <Slot property="cellRole" value="1" />
-            </GridCellSet>
-            <GridCell x="17" y="3">
-                <Slot property="cellRole" value="1" />
-            </GridCell>
-            <!-- right-top L-Wall -->
-            <GridCellSet endX="18" endY="9" startX="18" startY="7">
-                <Slot property="cellRole" value="1" />
-            </GridCellSet>
-            <GridCell x="17" y="9">
-                <Slot property="cellRole" value="1" />
-            </GridCell>
-        </GridCells>
+        <!-- Pac Man agent -->
         <PhysicalAgent id="1" name="PacMan" type="PacMan" x="10" y="2" />
+        <!-- Ghost Blinky agent -->
         <PhysicalAgent id="10000" name="Blinky" type="GhostBlinky" x="9" y="6" />
+        <!-- Ghost Inky agent -->
         <PhysicalAgent id="11000" name="Inky" type="GhostInky" x="12" y="6" />
-        <!-- First line of Food-Pills-->
-        <PhysicalObjects objectVariable="pillFood" rangeEndID="25" rangeStartID="22" type="PillFood">
-            <Slot property="x">
-                <ValueExpr language="Java JavaScript">
-                   <![CDATA[
-                        pillFood.getId() % 20
-                   ]]>
-               </ValueExpr>
-            </Slot>
-            <Slot property="y">
-                <ValueExpr language="Java JavaScript">
+        <InitializationRule name="InitializeMap">
+            <ForEachGridCell endX="20" endY="11" gridCellVariable="cell" startX="1" startY="1">
+                <Code language="JavaScript">
                     <![CDATA[
-                        parseInt(pillFood.getId() / 20.0) + 1
-                   ]]>
-                </ValueExpr>
-            </Slot>
-        </PhysicalObjects>
-        <PhysicalObjects objectVariable="pillFood" rangeEndID="29" rangeStartID="27" type="PillFood">
-            <Slot property="x">
-                <ValueExpr language="Java JavaScript">
-                    <![CDATA[
-                        pillFood.getId() % 20
-                   ]]>
-                </ValueExpr>
-            </Slot>
-            <Slot property="y">
-                <ValueExpr language="Java JavaScript">
-                    <![CDATA[
-                         parseInt(pillFood.getId() / 20.0) + 1
-                   ]]>
-                </ValueExpr>
-            </Slot>
-        </PhysicalObjects>
-        <PhysicalObjects objectVariable="pillFood" rangeEndID="34" rangeStartID="31" type="PillFood">
-            <Slot property="x">
-                <ValueExpr language="Java JavaScript">
-                    <![CDATA[
-                        pillFood.getId() % 20
-                   ]]>
-                </ValueExpr>
-            </Slot>
-            <Slot property="y">
-                <ValueExpr language="Java JavaScript">
-                    <![CDATA[
-                         parseInt(pillFood.getId() / 20.0) + 1
-                   ]]>
-                </ValueExpr>
-            </Slot>
-        </PhysicalObjects>
-        <PhysicalObjects objectVariable="pillFood" rangeEndID="39" rangeStartID="36" type="PillFood">
-            <Slot property="x">
-                <ValueExpr language="Java JavaScript">
-                    <![CDATA[
-                        pillFood.getId() % 20
-                   ]]>
-                </ValueExpr>
-            </Slot>
-            <Slot property="y">
-                <ValueExpr language="Java JavaScript">
-                    <![CDATA[
-                         parseInt(pillFood.getId() / 20.0) + 1
-                   ]]>
-                </ValueExpr>
-            </Slot>
-        </PhysicalObjects>
-        <!-- Second line of Food-Pills-->
-        <PhysicalObject id="42" objectVariable="pillFood" type="PillFood" x="2" y="3" />
-        <PhysicalObject id="45" objectVariable="pillFood" type="PillFood" x="5" y="3" />
-        <PhysicalObject id="47" objectVariable="pillFood" type="PillFood" x="7" y="3" />
-        <PhysicalObject id="54" objectVariable="pillFood" type="PillFood" x="14" y="3" />
-        <PhysicalObject id="56" objectVariable="pillFood" type="PillFood" x="16" y="3" />
-        <PhysicalObject id="59" objectVariable="pillFood" type="PillFood" x="19" y="3" />
-        <!-- Third line of Food-Pills-->
-        <PhysicalObject id="62" objectVariable="pillFood" type="PillFood" x="2" y="4" />
-        <PhysicalObject id="79" objectVariable="pillFood" type="PillFood" x="19" y="4" />
-        <PhysicalObjects objectVariable="pillFood" rangeEndID="77" rangeStartID="64" type="PillFood">
-            <Slot property="x">
-                <ValueExpr language="Java JavaScript">
-                    <![CDATA[
-                        pillFood.getId() % 20
-                   ]]>
-                </ValueExpr>
-            </Slot>
-            <Slot property="y">
-                <ValueExpr language="Java JavaScript">
-                    <![CDATA[
-                        parseInt(pillFood.getId() / 20.0) + 1
-                   ]]>
-                </ValueExpr>
-            </Slot>
-        </PhysicalObjects>
-        <!-- 4th line of Food-Pills-->
-        <PhysicalObject id="82" objectVariable="pillFood" type="PillFood" x="2" y="5" />
-        <PhysicalObject id="84" objectVariable="pillFood" type="PillFood" x="4" y="5" />
-        <PhysicalObject id="87" objectVariable="pillFood" type="PillFood" x="7" y="5" />
-        <PhysicalObject id="94" objectVariable="pillFood" type="PillFood" x="14" y="5" />
-        <PhysicalObject id="97" objectVariable="pillFood" type="PillFood" x="17" y="5" />
-        <PhysicalObject id="99" objectVariable="pillFood" type="PillFood" x="19" y="5" />
-        <!-- 5th line of Food-Pills-->
-        <PhysicalObjects objectVariable="pillFood" rangeEndID="107" rangeStartID="102"
-            type="PillFood">
-            <Slot property="x">
-                <ValueExpr language="Java JavaScript">
-                    <![CDATA[
-                        pillFood.getId() % 20
-                   ]]>
-                </ValueExpr>
-            </Slot>
-            <Slot property="y">
-                <ValueExpr language="Java JavaScript">
-                    <![CDATA[
-                        parseInt(pillFood.getId() / 20.0) + 1
-                   ]]>
-                </ValueExpr>
-            </Slot>
-        </PhysicalObjects>
-        <PhysicalObjects objectVariable="pillFood" rangeEndID="119" rangeStartID="114"
-            type="PillFood">
-            <Slot property="x">
-                <ValueExpr language="Java JavaScript">
-                    <![CDATA[
-                        pillFood.getId() % 20
-                   ]]>
-                </ValueExpr>
-            </Slot>
-            <Slot property="y">
-                <ValueExpr language="Java JavaScript">
-                    <![CDATA[
-                        parseInt(pillFood.getId() / 20.0) + 1
-                   ]]>
-                </ValueExpr>
-            </Slot>
-        </PhysicalObjects>
-        <!-- 6th line of Food-Pills-->
-        <PhysicalObject id="122" objectVariable="pillFood" type="PillFood" x="2" y="7" />
-        <PhysicalObject id="124" objectVariable="pillFood" type="PillFood" x="4" y="7" />
-        <PhysicalObject id="127" objectVariable="pillFood" type="PillFood" x="7" y="7" />
-        <PhysicalObject id="134" objectVariable="pillFood" type="PillFood" x="14" y="7" />
-        <PhysicalObject id="137" objectVariable="pillFood" type="PillFood" x="17" y="7" />
-        <PhysicalObject id="139" objectVariable="pillFood" type="PillFood" x="19" y="7" />
-        <!-- 7th line of Food-Pills-->
-        <PhysicalObject id="142" objectVariable="pillFood" type="PillFood" x="2" y="8" />
-        <PhysicalObject id="159" objectVariable="pillFood" type="PillFood" x="19" y="8" />
-        <PhysicalObjects objectVariable="pillFood" rangeEndID="157" rangeStartID="144"
-            type="PillFood">
-            <Slot property="x">
-                <ValueExpr language="Java JavaScript">
-                    <![CDATA[
-                        pillFood.getId() % 20
-                   ]]>
-                </ValueExpr>
-            </Slot>
-            <Slot property="y">
-                <ValueExpr language="Java JavaScript">
-                    <![CDATA[
-                        parseInt(pillFood.getId() / 20.0) + 1
-                   ]]>
-                </ValueExpr>
-            </Slot>
-        </PhysicalObjects>
-        <!-- 8th line of Food-Pills-->
-        <PhysicalObject id="162" objectVariable="pillFood" type="PillFood" x="2" y="9" />
-        <PhysicalObject id="165" objectVariable="pillFood" type="PillFood" x="5" y="9" />
-        <PhysicalObject id="167" objectVariable="pillFood" type="PillFood" x="7" y="9" />
-        <PhysicalObject id="174" objectVariable="pillFood" type="PillFood" x="14" y="9" />
-        <PhysicalObject id="176" objectVariable="pillFood" type="PillFood" x="16" y="9" />
-        <PhysicalObject id="179" objectVariable="pillFood" type="PillFood" x="19" y="9" />
-        <!-- 9th line of Food-Pills-->
-        <PhysicalObjects objectVariable="pillFood" rangeEndID="185" rangeStartID="182"
-            type="PillFood">
-            <Slot property="x">
-                <ValueExpr language="Java JavaScript">
-                    <![CDATA[
-                        pillFood.getId() % 20
-                   ]]>
-                </ValueExpr>
-            </Slot>
-            <Slot property="y">
-                <ValueExpr language="Java JavaScript">
-                    <![CDATA[
-                        parseInt(pillFood.getId() / 20.0) + 1
-                   ]]>
-                </ValueExpr>
-            </Slot>
-        </PhysicalObjects>
-        <PhysicalObjects objectVariable="pillFood" rangeEndID="194" rangeStartID="187"
-            type="PillFood">
-            <Slot property="x">
-                <ValueExpr language="Java JavaScript">
-                    <![CDATA[
-                        pillFood.getId() % 20
-                   ]]>
-                </ValueExpr>
-            </Slot>
-            <Slot property="y">
-                <ValueExpr language="Java JavaScript">
-                    <![CDATA[
-                         parseInt(pillFood.getId() / 20.0) + 1
-                   ]]>
-                </ValueExpr>
-            </Slot>
-        </PhysicalObjects>
-        <PhysicalObjects objectVariable="pillFood" rangeEndID="199" rangeStartID="196"
-            type="PillFood">
-            <Slot property="x">
-                <ValueExpr language="Java JavaScript">
-                    <![CDATA[
-                        pillFood.getId() % 20
-                   ]]>
-                </ValueExpr>
-            </Slot>
-            <Slot property="y">
-                <ValueExpr language="Java JavaScript">
-                    <![CDATA[
-                         parseInt(pillFood.getId() / 20.0) + 1
-                   ]]>
-                </ValueExpr>
-            </Slot>
-        </PhysicalObjects>
+                        // get map matrix
+                        var map = getPacManMapMatrix();
+                        
+                        // the left-down corner is (1,1) so need to adjust this
+                        var yPos = __Global.getMapHeight() - cell.getPosY();
+                        
+                        // need to do POS - 1 while the space starts with pos (1,1) 
+                        // but the Map Matrix starts with (0,0)
+                        var xPos = cell.getPosX() - 1;
+                        
+                        // if the map position is 1 also the cell role is 1 (WALL), and if 
+                        // the map position is 0 then the cell role will be 2 (PillFood)
+                        cell.setCellRole(2 - map[yPos][xPos]);
+                    ]]>
+                </Code>
+            </ForEachGridCell>
+        </InitializationRule>
     </InitialState>
     <UserInterface supportedLanguages="en">
         <InitialStateUI>
@@ -875,25 +579,9 @@
         <AnimationUI showZoomControlPanel="false">
             <aors:DisplayDescription xmlns="http://www.w3.org/1999/xhtml">
                 <aors:HtmlText>
-                    <!--
-                    <div style="float:left; width: 40%; padding: 10% 5% 25px;">
-                        <img src="media/map_level_1.png" />
-                    </div>
-                    <div style="float:left; width: 40%; padding: 10% 0px; 5%">
-                        <h4>The story:</h4>
-                        <p> <i>Pac-Man</i> is one of the all time classic video gamesan arcade game
-                            developed by Namco and first released in Japan in 1979. <br />After it's
-                            release in the US it became very popular. When it was released, the
-                            popular games were Asteroids and Space Invaders. </p>
-                        <h4>How to play:</h4>
-                        <p> The aim is simple: work your way through the map until you have eaten
-                            all the available<i>Food Pills</i> (white dots). <br />Avoid the ghosts
-                            (Blinky and Inky) - you die and become a ghost if they touch you. </p>
-                        <h4>Why to play:</h4>
-                        <p> Nostalgie, fun, to much free time...or any othe reason you might think of!</p>
-                        </div>-->
                     <div style="float:left; width: 40%; padding: 7% 50px; text-align: center;">
-                        <img src="media/map_level_1_description.png" style="width: 90%; border: 1px solid black;"/>
+                        <img src="media/map_level_1_description.png"
+                            style="width: 90%; border: 1px solid black;" />
                     </div>
                     <div style="float:left; width: 40%; padding: 7% 0px">
                         <p>You play the role of <b>PacMan</b>, the main character of the classic
@@ -921,8 +609,10 @@
             <Views>
                 <SpaceView>
                     <TwoDimensionalGridSpaceView2D backgroundColor="black">
-                        <GridCellPropertyVisualizationMap a0="1" cellViewProperty="fill"
-                            mapType="equalityCaseWise" property="cellRole" v0="blue" />
+                        <GridCellPropertyVisualizationMap a0="0" a1="1" cellViewProperty="fill"
+                            mapType="equalityCaseWise" property="cellRole" v0="black" v1="blue" />
+                        <GridCellPropertyVisualizationMap a0="2" cellViewProperty="texture"
+                            mapType="equalityCaseWise" property="cellRole" v0="PillFood.png" />
                     </TwoDimensionalGridSpaceView2D>
                 </SpaceView>
                 <PhysicalObjectView physicalObjectIdRef="1">
@@ -963,11 +653,6 @@
                                 v3="turquoise_ghost_look_south.png"
                                 v4="turquoise_ghost_look_none.png" />
                         </Square>
-                    </PhysicalShape2D>
-                </PhysicalObjectView>
-                <PhysicalObjectView physicalObjectType="PillFood">
-                    <PhysicalShape2D>
-                        <Circle texture="PillFood.png" />
                     </PhysicalShape2D>
                 </PhysicalObjectView>
                 <EventAppearance eventType="EatPillFood">
