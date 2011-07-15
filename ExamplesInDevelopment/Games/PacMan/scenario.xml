@@ -25,16 +25,23 @@
                 <EnumerationLiteral>EAST</EnumerationLiteral>
                 <EnumerationLiteral>WEST</EnumerationLiteral>
             </Enumeration>
-            <ComplexDataType name="Map">
-                <ClassDef language="JavaScript">
+        </DataTypes>
+        <Globals>
+            <GlobalVariable dataType="Integer" initialValue="3" maxValue="5" minValue="1"
+                name="level" />
+            <GlobalVariable dataType="Integer" name="MapWidth" />
+            <GlobalVariable dataType="Integer" name="MapHeight" />
+            <GlobalVariable dataType="Integer" name="remainingPillFoodNumber" />
+            <GlobalFunction name="getGameMap" resultType="Array">
+                <Body language="JavaScript">
                     <![CDATA[
-                        var pacManMapMatrix = [ 
+                        var gameMap = [ 
                             [1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1],
                             [1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1],
                             [1, 0, 1, 1, 0, 1, 0, 1, 1, 1, 1, 1, 1, 0, 1, 0, 1, 1, 0, 1],
                             [1, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 1],
-                            [1, 0, 1, 0, 1, 1, 0, 1, 1, 0, 0, 1, 1, 0, 1, 1, 0, 1, 0, 1],
-                            [1, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 1],
+                            [1, 0, 1, 0, 1, 1, 0, 1, 1,-1,-1, 1, 1, 0, 1, 1, 0, 1, 0, 1],
+                            [1, 0, 0, 0, 0, 0, 0, 1,-1,-1,-1,-1, 1, 0, 0, 0, 0, 0, 0, 1],
                             [1, 0, 1, 0, 1, 1, 0, 1, 1, 1, 1, 1, 1, 0, 1, 1, 0, 1, 0, 1],
                             [1, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 1],
                             [1, 0, 1, 1, 0, 1, 0, 1, 1, 1, 1, 1, 1, 0, 1, 0, 1, 1, 0, 1],
@@ -42,25 +49,34 @@
                             [1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1]
                         ];
                         
-                        function getPacManMapMatrix() {
-                            return pacManMapMatrix;
-                        }
+                        return gameMap;
                     ]]>
-                </ClassDef>
-            </ComplexDataType>
-        </DataTypes>
-        <Globals>
-            <GlobalVariable dataType="Integer" initialValue="3" maxValue="5" minValue="1"
-                name="level" />
-            <GlobalVariable dataType="Integer" initialValue="20" name="MapWidth" />
-            <GlobalVariable dataType="Integer" initialValue="11" name="MapHeight" />
-            <GlobalVariable dataType="Integer" initialValue="99" name="remainingPillFoodNumber" />
+                </Body>
+            </GlobalFunction>
+            <GlobalFunction name="getNumberOfFoodCells" resultType="int">
+                <Body language="JavaScript">
+                    <![CDATA[
+                        var result = 0;
+                        var map = __Global.getGameMap();
+                        var n = map.length;
+                        var m = (n > 0 ? map[0].length : 0);
+                        for(var i = 0; i < n; i++) {
+                            for(var j = 0; j < m; j++) {
+                                if(map[i][j] === 0) {
+                                    result++;
+                                }
+                            }
+                        }
+                        return result;
+                    ]]>
+                </Body>
+            </GlobalFunction>
             <GlobalFunction name="isWallOnCoordinates" resultType="boolean">
                 <Parameter name="x" type="int" />
                 <Parameter name="y" type="int" />
                 <Body language="JavaScript">
                     <![CDATA[
-                        var map = getPacManMapMatrix();
+                        var map = __Global.getGameMap();
                         var rows = map.length;
                         
                         return map[rows - y][x-1] === 1;
@@ -94,7 +110,7 @@
                 <EnumerationProperty name="movingDirection" type="Direction" />
                 <!-- Action rule invoked when the user decides to move to east -->
                 <ActionRule agentVariable="pacman" name="MoveEast_ActionRule">
-                    <IF language="Java JavaScript">
+                    <IF language="JavaScript">
                         <![CDATA[
                             !__Global.isWallOnCoordinates(this.pacman.getX() + 1, this.pacman.getY())
                         ]]>
@@ -114,7 +130,7 @@
                 </ActionRule>
                 <!-- Action rule invoked when the user decides to move to west -->
                 <ActionRule agentVariable="pacman" name="MoveWest_ActionRule">
-                    <IF language="Java JavaScript">
+                    <IF language="JavaScript">
                         <![CDATA[
                            !__Global.isWallOnCoordinates(this.pacman.getX() - 1, this.pacman.getY())
                         ]]>
@@ -134,7 +150,7 @@
                 </ActionRule>
                 <!-- Action rule invoked when the user decides to move to North -->
                 <ActionRule agentVariable="pacman" name="MoveNorth_ActionRule">
-                    <IF language="Java JavaScript">
+                    <IF language="JavaScript">
                     <![CDATA[
                         !__Global.isWallOnCoordinates(this.pacman.getX(), this.pacman.getY() + 1)
                     ]]>
@@ -154,7 +170,7 @@
                 </ActionRule>
                 <!-- Action rule invoked when the user decides to move to South -->
                 <ActionRule agentVariable="pacman" name="MoveSouth_ActionRule">
-                    <IF language="Java JavaScript">
+                    <IF language="JavaScript">
                     <![CDATA[
                         !__Global.isWallOnCoordinates(this.pacman.getX(), this.pacman.getY() - 1)
                     ]]>
@@ -182,7 +198,7 @@
                     <Parameter name="pacManY" type="int" />
                     <Body language="JavaScript">
                         <![CDATA[
-                            var astar = new js.algorithms.ASTAR(getPacManMapMatrix(), 1);
+                            var astar = new js.algorithms.ASTAR(__Global.getGameMap(), 1);
                             var currentX = this.getX();
                             var currentY = this.getY();
                             var start = {
@@ -210,7 +226,7 @@
                     <Parameter name="pacManY" type="int" />
                     <Body language="JavaScript">
                         <![CDATA[
-                            var astar = new js.algorithms.ASTAR(getPacManMapMatrix(), 1);
+                            var astar = new js.algorithms.ASTAR(__Global.getGameMap(), 1);
                             var currentX = this.getX();
                             var currentY = this.getY();
                             var start = {
@@ -243,7 +259,7 @@
                     <Parameter name="pacManY" type="int" />
                     <Body language="JavaScript">
                         <![CDATA[
-                            var astar = new js.algorithms.ASTAR(getPacManMapMatrix(), 1);
+                            var astar = new js.algorithms.ASTAR(__Global.getGameMap(), 1);
                             var currentX = this.getX();
                             var currentY = this.getY();
                             var start = {
@@ -271,7 +287,7 @@
                     <Parameter name="pacManY" type="int" />
                     <Body language="JavaScript">
                         <![CDATA[
-                            var astar = new js.algorithms.ASTAR(getPacManMapMatrix(), 1);
+                            var astar = new js.algorithms.ASTAR(__Global.getGameMap(), 1);
                             var currentX = this.getX();
                             var currentY = this.getY();
                             var start = {
@@ -302,7 +318,9 @@
             <EnvironmentRule name="StartGame_Rule">
                 <ON-EACH-SIMULATION-STEP />
                 <IF language="JavaScript">
-                    __Simulator.getCurrentSimulationStep() === 1
+                    <![CDATA[
+                        __Simulator.getCurrentSimulationStep() === 1
+                    ]]>
                 </IF>
                 <THEN>
                     <SCHEDULE-EVT>
@@ -314,7 +332,9 @@
             <EnvironmentRule name="WinGame_Rule">
                 <ON-EACH-SIMULATION-STEP />
                 <IF language="JavaScript">
+                    <![CDATA[
                     __Global.getRemainingPillFoodNumber() === 0
+                    ]]>
                 </IF>
                 <THEN>
                     <SCHEDULE-EVT>
@@ -330,7 +350,7 @@
                 <FOR-ObjectVariable objectIdRef="10000" objectType="GhostBlinky"
                     variable="ghostBlinky" />
                 <FOR-ObjectVariable objectIdRef="11000" objectType="GhostInky" variable="ghostInky" />
-                <IF language="Java JavaScript">
+                <IF language="JavaScript">
                     <![CDATA[
                         (this.pacman.getX() === this.ghostBlinky.getX() && this.pacman.getY() === this.ghostBlinky.getY())
                         || (this.pacman.getX() === this.ghostInky.getX() && this.pacman.getY() === this.ghostInky.getY())
@@ -356,7 +376,7 @@
                     <UPDATE-ENV>
                         <UpdateObject objectVariable="pacMan">
                             <Slot property="mouthOpen">
-                                <ValueExpr language="Java JavaScript">
+                                <ValueExpr language="JavaScript">
                                     <![CDATA[
                                         !this.pacMan.isMouthOpen()
                                     ]]>
@@ -405,14 +425,14 @@
                     <UPDATE-ENV>
                         <UpdateObject objectVariable="pacMan">
                             <Slot property="x">
-                                <ValueExpr language="Java JavaScript">
+                                <ValueExpr language="JavaScript">
                                     <![CDATA[
                                         this.pacMan.getX() + this.moveEvent.getX()
                                     ]]>
                                 </ValueExpr>
                             </Slot>
                             <Slot property="y">
-                                <ValueExpr language="Java JavaScript">
+                                <ValueExpr language="JavaScript">
                                     <![CDATA[
                                         this.pacMan.getY() + this.moveEvent.getY()
                                     ]]>
@@ -451,14 +471,14 @@
                     <UPDATE-ENV>
                         <UpdateObject objectVariable="blinky">
                             <Slot property="x">
-                                <ValueExpr language="Java JavaScript">
+                                <ValueExpr language="JavaScript">
                                     <![CDATA[
                                         this.blinky.getX() + this.xIncrement
                                     ]]>
                                 </ValueExpr>
                             </Slot>
                             <Slot property="y">
-                                <ValueExpr language="Java JavaScript">
+                                <ValueExpr language="JavaScript">
                                     <![CDATA[
                                          this.blinky.getY() + this.yIncrement
                                     ]]>
@@ -507,14 +527,14 @@
                     <UPDATE-ENV>
                         <UpdateObject objectVariable="inky">
                             <Slot property="x">
-                                <ValueExpr language="Java JavaScript">
+                                <ValueExpr language="JavaScript">
                                     <![CDATA[
                                         this.inky.getX() + this.xIncrement
                                     ]]>
                                 </ValueExpr>
                             </Slot>
                             <Slot property="y">
-                                <ValueExpr language="Java JavaScript">
+                                <ValueExpr language="JavaScript">
                                     <![CDATA[
                                          this.inky.getY() + this.yIncrement
                                     ]]>
@@ -537,6 +557,30 @@
         </EnvironmentRules>
     </SimulationModel>
     <InitialState>
+        <!-- the map width (number of columns) -->
+        <GlobalVariable name="MapWidth">
+            <ValueExpr language="JavaScript">
+                <![CDATA[
+                    __Global.getGameMap()[0].length
+                ]]>
+            </ValueExpr>
+        </GlobalVariable>
+        <!-- the map height (number of rows) -->
+        <GlobalVariable name="MapHeight">
+            <ValueExpr language="JavaScript">
+                <![CDATA[
+                    __Global.getGameMap().length
+                ]]>
+            </ValueExpr>
+        </GlobalVariable>
+        <!-- the initial number of cells that have contains Pill Food -->
+        <GlobalVariable name="remainingPillFoodNumber">
+            <ValueExpr language="JavaScript">
+                <![CDATA[
+                    __Global.getNumberOfFoodCells()
+                ]]>
+            </ValueExpr>
+        </GlobalVariable>
         <!-- Pac Man agent -->
         <PhysicalAgent id="1" name="PacMan" type="PacMan" x="10" y="2" />
         <!-- Ghost Blinky agent -->
@@ -548,7 +592,7 @@
                 <Code language="JavaScript">
                     <![CDATA[
                         // get map matrix
-                        var map = getPacManMapMatrix();
+                        var map = __Global.getGameMap();
                         
                         // the left-down corner is (1,1) so need to adjust this
                         var yPos = __Global.getMapHeight() - cell.getPosY();
@@ -557,8 +601,9 @@
                         // but the Map Matrix starts with (0,0)
                         var xPos = cell.getPosX() - 1;
                         
-                        // if the map position is 1 also the cell role is 1 (WALL), and if 
-                        // the map position is 0 then the cell role will be 2 (PillFood)
+                        // if the map position is 1 also the cell role is 1 (WALL), if 
+                        // the map position is 0 then the cell role will be 2 (PillFood), 
+                        // and if the map position is -1 then the cell role is 3 (complete empty)
                         cell.setCellRole(2 - map[yPos][xPos]);
                     ]]>
                 </Code>
@@ -609,8 +654,9 @@
             <Views>
                 <SpaceView>
                     <TwoDimensionalGridSpaceView2D backgroundColor="black">
-                        <GridCellPropertyVisualizationMap a0="0" a1="1" cellViewProperty="fill"
-                            mapType="equalityCaseWise" property="cellRole" v0="black" v1="blue" />
+                        <GridCellPropertyVisualizationMap a0="0" a1="1" a2="3"
+                            cellViewProperty="fill" mapType="equalityCaseWise" property="cellRole"
+                            v0="black" v1="blue" v2="black" />
                         <GridCellPropertyVisualizationMap a0="2" cellViewProperty="texture"
                             mapType="equalityCaseWise" property="cellRole" v0="PillFood.png" />
                     </TwoDimensionalGridSpaceView2D>
