@@ -27,6 +27,9 @@
             </Enumeration>
         </DataTypes>
         <Globals>
+            <GlobalVariable dataType="Integer" name="score" />
+            <GlobalVariable dataType="Integer" name="passedTime" />
+            <GlobalVariable dataType="Integer" name="startTime" />
             <GlobalVariable dataType="Integer" initialValue="3" maxValue="5" minValue="1"
                 name="level" />
             <GlobalVariable dataType="Integer" name="MapWidth" />
@@ -323,6 +326,15 @@
                     ]]>
                 </IF>
                 <THEN>
+                    <UPDATE-ENV>
+                        <UpdateGlobalVariable name="startTime">
+                            <ValueExpr language="JavaScript">
+                                <![CDATA[
+                                    (new Date()).getTime()
+                                ]]>
+                            </ValueExpr>
+                        </UpdateGlobalVariable>
+                    </UPDATE-ENV>
                     <SCHEDULE-EVT>
                         <CausedEventExpr eventType="StartGame" />
                     </SCHEDULE-EVT>
@@ -374,6 +386,13 @@
                 </IF>
                 <THEN>
                     <UPDATE-ENV>
+                        <UpdateGlobalVariable name="passedTime">
+                            <ValueExpr language="JavaScript">
+                                <![CDATA[
+                                    parseInt(((new Date()).getTime() - __Global.getStartTime()) / 1000)
+                                ]]>
+                            </ValueExpr>
+                        </UpdateGlobalVariable>
                         <UpdateObject objectVariable="pacMan">
                             <Slot property="mouthOpen">
                                 <ValueExpr language="JavaScript">
@@ -389,6 +408,20 @@
             <!-- The PacMan finds PillFood in the cell and will eat it -->
             <EnvironmentRule name="PacManEatPillFood">
                 <ON-EACH-SIMULATION-STEP />
+                <FOR-DataVariable dataType="Integer" variable="currentPeriod">
+                    <ValueExpr language="JavaScript">
+                        <![CDATA[
+                            25 - parseInt(__Simulator.getCurrentSimulationStep() / 100)
+                        ]]>
+                    </ValueExpr>
+                </FOR-DataVariable>
+                <FOR-DataVariable dataType="Integer" variable="gainedPoints">
+                    <ValueExpr language="JavaScript">
+                        <![CDATA[
+                             this.currentPeriod > 1 ? this.currentPeriod : 1
+                        ]]>
+                    </ValueExpr>
+                </FOR-DataVariable>
                 <FOR-ObjectVariable objectIdRef="1" objectType="PacMan" variable="pacman" />
                 <IF language="JavaScript">
                     <![CDATA[
@@ -398,6 +431,13 @@
                 <THEN>
                     <UPDATE-ENV>
                         <IncrementGlobalVariable name="remainingPillFoodNumber" value="-1" />
+                        <UpdateGlobalVariable name="score">
+                            <ValueExpr language="JavaScript">
+                                <![CDATA[
+                                   __Global.getScore() +  this.gainedPoints
+                                ]]>
+                            </ValueExpr>
+                        </UpdateGlobalVariable>
                         <UpdateGridCell gridCellVariable="cell">
                             <XCoordinate language="JavaScript">
                                 <![CDATA[
@@ -557,6 +597,10 @@
         </EnvironmentRules>
     </SimulationModel>
     <InitialState>
+        <!-- the initial score the player get -->
+        <GlobalVariable name="score" value="0" />
+        <!-- keep tracking of the time past from start of the simulation -->
+        <GlobalVariable name="passedTime" value="0" />
         <!-- the map width (number of columns) -->
         <GlobalVariable name="MapWidth">
             <ValueExpr language="JavaScript">
@@ -742,16 +786,42 @@
                     <EventList />
                     <OutputField label="Remaining food">
                         <Label>
-                            <Text>Available food</Text>
+                            <Text>Remaining food</Text>
                         </Label>
                         <Hint>
-                            <Text>The number of available food pieces on the map.</Text>
+                            <Text>The number of remaining food pieces on the map.</Text>
                         </Hint>
                         <Format decimalPlaces="0">
                             <PackagingUnits>bags</PackagingUnits>
                         </Format>
                         <Source>
                             <GlobalVariable name="remainingPillFoodNumber" />
+                        </Source>
+                    </OutputField>
+                    <OutputField label="Score">
+                        <Label>
+                            <Text>Score</Text>
+                        </Label>
+                        <Hint>
+                            <Text>Your current score.</Text>
+                        </Hint>
+                        <Format decimalPlaces="0" />
+                        <Source>
+                            <GlobalVariable name="score" />
+                        </Source>
+                    </OutputField>
+                    <OutputField label="Elapsed time">
+                        <Label>
+                            <Text>Elapsed time</Text>
+                        </Label>
+                        <Hint>
+                            <Text>The time passed from simulation start, up to now.</Text>
+                        </Hint>
+                        <Format decimalPlaces="0">
+                            <Time>s</Time>
+                        </Format>
+                        <Source>
+                            <GlobalVariable name="passedTime" />
                         </Source>
                     </OutputField>
                     <UserActionEventListener>
