@@ -51,10 +51,24 @@
 		</xs:documentation></xs:annotation>
 		<xs:complexType>
       <xs:sequence>
-      	<xs:element name="EventList" type="aors:EventList.type"/>
-      	<xs:element name="OutputField" type="aors:OutputField.type" minOccurs="0" maxOccurs="unbounded"/>
-      	<xs:element name="UserActionForm" type="aors:UserActionForm.type" minOccurs="0" maxOccurs="unbounded"/>
-      	<xs:element name="UserActionEventListener" type="aors:UserActionEventListener.type" minOccurs="0" maxOccurs="unbounded"/>
+      	<xs:element name="TopOutputPanel" type="aors:HorizontalOutputPanel.type" minOccurs="0" maxOccurs="1">
+      		<xs:annotation><xs:documentation>For rendering a group of up to seven output fields in a horizontal bar on the top of the canvas. </xs:documentation></xs:annotation>
+      	</xs:element>
+      	<xs:element name="BottomOutputPanel" type="aors:HorizontalOutputPanel.type" minOccurs="0" maxOccurs="1">
+      		<xs:annotation><xs:documentation>For rendering a group of oup to seven utput fields in a horizontal bar on the bottom of the canvas. </xs:documentation></xs:annotation>
+      	</xs:element>
+      	<xs:element name="LeftOutputPanel" type="aors:VerticalOutputPanel.type" minOccurs="0" maxOccurs="1">
+      		<xs:annotation><xs:documentation>For rendering an event list or up to seven output field groups in a vertical bar on the left of the canvas. </xs:documentation></xs:annotation>
+      	</xs:element>
+      	<xs:element name="RightOutputPanel" type="aors:VerticalOutputPanel.type" minOccurs="0" maxOccurs="1">
+      		<xs:annotation><xs:documentation>For rendering an event list or up to seven output field groups in a vertical bar on the right of the canvas. </xs:documentation></xs:annotation>
+      	</xs:element>
+      	<xs:element name="UserActionForm" type="aors:UserActionForm.type" minOccurs="0" maxOccurs="unbounded">
+      		<xs:annotation><xs:documentation>For allowing (re-)actions with parameters. </xs:documentation></xs:annotation>
+      	</xs:element>
+      	<xs:element name="UserActionEventListener" type="aors:UserActionEventListener.type" minOccurs="0" maxOccurs="unbounded">
+      		<xs:annotation><xs:documentation>For allowing actions without parameters by mapping a user interface event to an action rule. </xs:documentation></xs:annotation>
+      	</xs:element>
       </xs:sequence>
       <xs:attribute name="type" type="aors:CanonicalName" use="required">
       	<xs:annotation><xs:documentation>A list of agent names specifying those agents (defined in the initial state) that are playable by a human user. </xs:documentation></xs:annotation>
@@ -75,6 +89,35 @@
 			</xs:attribute>
 		</xs:complexType>
   </xs:element>
+	<!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->
+	<xs:complexType name="HorizontalOutputPanel.type">
+	<!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->
+		<xs:sequence>
+			<xs:element ref="aors:OutputFieldGroup"/>
+		</xs:sequence>
+	</xs:complexType>
+	<!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->
+	<xs:complexType name="VerticalOutputPanel.type">
+	<!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->
+		<xs:choice>
+			<xs:element name="EventList" type="aors:EventList.type"/>
+			<xs:sequence>
+				<xs:element ref="aors:OutputFieldGroup" maxOccurs="7"/>
+			</xs:sequence>
+		</xs:choice>
+		<xs:attribute name="width" type="aors:PositiveInteger-OR-Pixel-OR-Percent.type" use="optional"/>
+	</xs:complexType>
+	<!-- =================================================================== -->
+	<xs:element name="OutputFieldGroup">
+	<!-- =================================================================== -->
+		<xs:complexType>
+			<xs:sequence>
+				<xs:element ref="aors:Label"/>
+				<xs:element name="OutputField" type="aors:OutputField.type" maxOccurs="7"/>
+			</xs:sequence>
+			<xs:attribute name="label" type="xs:string" use="required"/>
+		</xs:complexType>
+	</xs:element>
 	<!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->	
 	<xs:complexType name="EventList.type">
 	<!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->
@@ -246,57 +289,50 @@
 	<!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->
 	<xs:complexType name="UserActionEventListener.type">
 	<!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->
-		<xs:annotation><xs:documentation>A user action event listener maps an agent control user interface event to an action rule of the agent 
+		<xs:annotation><xs:documentation>A user action event listener maps a user interface event to an action rule of the agent 
 			such that when an event of the specified type occurs, the action rule will be invoked. </xs:documentation></xs:annotation>
 		<xs:sequence>
 		<xs:element name="WHEN">
 			<xs:annotation><xs:documentation>User interface events are defined in the DOM3-Specification [http://www.w3.org/TR/DOM-Level-3-Events]. </xs:documentation></xs:annotation>
 			<xs:complexType>
 				<xs:choice maxOccurs="unbounded">
-					<xs:element ref="aors:KeyboardEvent"/>
-					<xs:element ref="aors:MouseEvent"/>            
+					<xs:element ref="aors:KeyboardEventExpr"/>
+					<xs:element ref="aors:MouseEventExpr"/>            
 				</xs:choice>
 			</xs:complexType>
 		</xs:element>
-			<xs:element name="IF">
-				<xs:complexType>
-					<xs:attribute name="objectType" type="aors:CanonicalName" use="optional"/>
-					<xs:attribute name="objectIdRef" type="xs:long" use="optional"/>
-					<xs:attribute name="objectName" type="xs:string" use="optional"/>
-				</xs:complexType>
-			</xs:element>
-			<xs:element name="EXECUTE">
-				<xs:complexType>
-					<xs:sequence>
-						<xs:element name="ArgumentSlot" minOccurs="0" maxOccurs="unbounded">
-							<xs:annotation><xs:documentation>Allows to set the value of a parameter. </xs:documentation></xs:annotation>
-							<xs:complexType>
-								<xs:choice>
-									<xs:element ref="aors:ValueExpr"/>
-									<xs:element name="PropertyValueExpr">
-										<xs:annotation><xs:documentation>Allows to specify a property value expression of the form o.p or o.getP(), where p is a property 
-											and the object reference o is obtained via getObjectById(...) or getObjectByName(...). </xs:documentation></xs:annotation>
-										<xs:complexType>
-											<xs:attribute name="objectType" type="aors:CanonicalName" use="optional"/>
-											<xs:attribute name="objectIdRef" type="xs:long" use="optional"/>
-											<xs:attribute name="objectName" type="xs:string" use="optional"/>
-											<xs:attribute name="property" type="aors:CanonicalName" use="required"/>
-										</xs:complexType>
-									</xs:element>
-								</xs:choice>
-								<xs:attribute name="parameter" type="aors:CanonicalName" use="required"/>
-								<xs:attribute name="value" type="xs:string" use="optional"/>
-								<xs:attribute name="objectTypeNameAsValue" type="aors:CanonicalName" use="optional"/>
-							</xs:complexType>		
-						</xs:element>
-					</xs:sequence>
-					<xs:attribute name="actionRule" type="aors:CanonicalName" use="required"/> 
-				</xs:complexType>
-			</xs:element>
+		<xs:element name="EXECUTE">
+			<xs:complexType>
+				<xs:sequence>
+					<xs:element name="ArgumentSlot" minOccurs="0" maxOccurs="unbounded">
+						<xs:annotation><xs:documentation>Allows to set the value of a parameter. </xs:documentation></xs:annotation>
+						<xs:complexType>
+							<xs:choice>
+								<xs:element name="TargetTypeName"/>
+								<xs:element name="TargetObjectName"/>
+								<xs:element name="TargetObjectIdRef"/>
+								<xs:element name="TargetX"/>
+								<xs:element name="TargetY"/>
+								<xs:element name="TargetObjectPropertyValueExpr">
+									<xs:annotation><xs:documentation>Allows to specify a property value expression of the form o.p or o.getP(), where p is a property 
+										and the object reference o, representing the UI event's target object, is obtained via getObjectById(...) or getObjectByName(...). </xs:documentation></xs:annotation>
+									<xs:complexType>
+										<xs:attribute name="property" type="aors:CanonicalName" use="required"/>
+									</xs:complexType>
+								</xs:element>
+							</xs:choice>
+							<xs:attribute name="parameter" type="aors:CanonicalName" use="required"/>
+							<xs:attribute name="value" type="xs:string" use="optional"/>
+						</xs:complexType>		
+					</xs:element>
+				</xs:sequence>
+				<xs:attribute name="actionRule" type="aors:CanonicalName" use="required"/> 
+			</xs:complexType>
+		</xs:element>
 		</xs:sequence>
 	</xs:complexType>
 	<!-- =================================================================== -->	
-	<xs:element name="KeyboardEvent">
+	<xs:element name="KeyboardEventExpr">
 	<!-- =================================================================== -->
 		<xs:complexType>
 			<xs:attribute name="keyIdentifier" type="aors:KeyIdentifiers.type" use="required"/>
@@ -313,7 +349,7 @@
 		</xs:attribute>
 	</xs:attributeGroup>	
 	<!-- =================================================================== -->
-	<xs:element name="MouseEvent">
+	<xs:element name="MouseEventExpr">
 	<!-- =================================================================== -->	
 		<xs:complexType>
 			<xs:attribute name="mouseEventType" use="required">
@@ -327,24 +363,29 @@
 					</xs:restriction>
 				</xs:simpleType>
 			</xs:attribute>
-			<xs:attribute name="targetType" type="aors:CanonicalName" use="optional">
-				<xs:annotation><xs:documentation>The type of the target: either "2D-Space" or "GridCell" or an object type. </xs:documentation></xs:annotation>			
-			</xs:attribute>
-			<xs:attribute name="targetIdRef" type="xs:long" use="optional">
-				<xs:annotation><xs:documentation>A reference to the ID of the target object, if targetType is an object type. </xs:documentation></xs:annotation>			
-			</xs:attribute>
-			<xs:attribute name="targetName" type="xs:string" use="optional">
-				<xs:annotation><xs:documentation>The name of the target object, if targetType is an object type. </xs:documentation></xs:annotation>						
-			</xs:attribute>
-			<xs:attribute name="targetX" type="xs:nonNegativeInteger" use="optional">
-				<xs:annotation><xs:documentation>The X ccordinate of the target grid cell or the space, if targetType is "GridCell" or "2D-Space". </xs:documentation></xs:annotation>						
-			</xs:attribute>
-			<xs:attribute name="targetY" type="xs:nonNegativeInteger" use="optional">
-				<xs:annotation><xs:documentation>The Y ccordinate of the target grid cell or the space, if targetType is "GridCell" or "2D-Space". </xs:documentation></xs:annotation>						
-			</xs:attribute>
+			<xs:attributeGroup ref="aors:EventTarget.attrGrp"/>
 			<xs:attributeGroup ref="aors:KeyModifiers.attrGrp"/>
 		</xs:complexType>
 	</xs:element>
+	<!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->
+	<xs:attributeGroup name="EventTarget.attrGrp">
+	<!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->
+		<xs:attribute name="targetType" type="aors:CanonicalName" use="optional">
+			<xs:annotation><xs:documentation>The type of the target: either "2D-Space" or "GridCell" or an object type. </xs:documentation></xs:annotation>			
+		</xs:attribute>
+		<xs:attribute name="targetObjectIdRef" type="xs:long" use="optional">
+			<xs:annotation><xs:documentation>A reference to the ID of the target object, if targetType is an object type. </xs:documentation></xs:annotation>			
+		</xs:attribute>
+		<xs:attribute name="targetObjectName" type="xs:string" use="optional">
+			<xs:annotation><xs:documentation>The name of the target object, if targetType is an object type. </xs:documentation></xs:annotation>						
+		</xs:attribute>
+		<xs:attribute name="targetX" type="xs:nonNegativeInteger" use="optional">
+			<xs:annotation><xs:documentation>The X ccordinate of the target grid cell or the space, if targetType is "GridCell" or "2D-Space". </xs:documentation></xs:annotation>						
+		</xs:attribute>
+		<xs:attribute name="targetY" type="xs:nonNegativeInteger" use="optional">
+			<xs:annotation><xs:documentation>The Y ccordinate of the target grid cell or the space, if targetType is "GridCell" or "2D-Space". </xs:documentation></xs:annotation>						
+		</xs:attribute>
+	</xs:attributeGroup>
 	<!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->
 	<xs:simpleType name="KeyIdentifiers.type">
 	<!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->
