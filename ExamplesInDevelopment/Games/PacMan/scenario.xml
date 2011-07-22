@@ -17,6 +17,10 @@
                 <GridCellProperty name="cellRole" type="Integer" />
             </TwoDimensionalGrid>
         </SpaceModel>
+        
+        <Statistics>
+            <Variable name="numberOfMovements" dataType="Integer"/>
+        </Statistics>
         <DataTypes>
             <Enumeration name="Direction">
                 <EnumerationLiteral>NONE</EnumerationLiteral>
@@ -479,6 +483,13 @@
                                 </ValueExpr>
                             </Slot>
                         </UpdateObject>
+                        <UpdateStatisticsVariable variable="numberOfMovements">
+                            <ValueExpr language="JavaScript">
+                                <![CDATA[
+                                   __SimStatistics.numberOfMovements.getValue() + 1
+                                ]]>
+                            </ValueExpr>
+                        </UpdateStatisticsVariable>
                     </UPDATE-ENV>
                 </DO>
             </EnvironmentRule>
@@ -656,10 +667,7 @@
     </InitialState>
     <UserInterface supportedLanguages="en">
         <InitialStateUI>
-            <GlobalVariableUI sliderStepSize="1" variable="level" widget="Slider">
-                <Label>
-                    <Text>Difficulty level</Text>
-                </Label>
+            <GlobalVariableUI sliderStepSize="1" variable="level" widget="Slider" label="Difficulty level">
                 <Hint>
                     <Text>The level of difficulty: controls the ghosts walking speed.</Text>
                 </Hint>
@@ -783,77 +791,75 @@
                     </aors:HtmlText>
                 </aors:StartPageText>
                 <AgentControlByAgentType htmlTemplate="three_columns" type="PacMan">
-                    <EventList />
-                    <OutputField label="Remaining food">
-                        <Label>
-                            <Text>Remaining food</Text>
-                        </Label>
-                        <Hint>
-                            <Text>The number of remaining food pieces on the map.</Text>
-                        </Hint>
-                        <Format decimalPlaces="0">
-                            <PackagingUnits>bags</PackagingUnits>
-                        </Format>
-                        <Source>
-                            <GlobalVariable name="remainingPillFoodNumber" />
-                        </Source>
-                    </OutputField>
-                    <OutputField label="Score">
-                        <Label>
-                            <Text>Score</Text>
-                        </Label>
-                        <Hint>
-                            <Text>Your current score.</Text>
-                        </Hint>
-                        <Format decimalPlaces="0" />
-                        <Source>
-                            <GlobalVariable name="score" />
-                        </Source>
-                    </OutputField>
-                    <OutputField label="Elapsed time">
-                        <Label>
-                            <Text>Elapsed time</Text>
-                        </Label>
-                        <Hint>
-                            <Text>The time passed from simulation start, up to now.</Text>
-                        </Hint>
-                        <Format decimalPlaces="0">
-                            <Time>s</Time>
-                        </Format>
-                        <Source>
-                            <GlobalVariable name="passedTime" />
-                        </Source>
-                    </OutputField>
+                    <TopOutputPanel>
+                        <OutputFieldGroup>
+                            <OutputField label="Remaining food">
+                                <Hint>
+                                    <Text>The number of remaining food pieces on the map.</Text>
+                                </Hint>
+                                <Source>
+                                    <GlobalVariable name="remainingPillFoodNumber" />
+                                </Source>
+                            </OutputField>
+                            <OutputField label="Score">
+                                <Hint>
+                                    <Text>Your current score.</Text>
+                                </Hint>
+                                <Source>
+                                    <GlobalVariable name="score" />
+                                </Source>
+                            </OutputField>
+                            <OutputField label="Elapsed time">
+                                <Hint>
+                                    <Text>The time passed from simulation start, up to now.</Text>
+                                </Hint>
+                                <Format decimalPlaces="0">
+                                    <Time>s</Time>
+                                </Format>
+                                <Source>
+                                    <GlobalVariable name="passedTime" />
+                                </Source>
+                            </OutputField>
+                        </OutputFieldGroup>
+                    </TopOutputPanel>
+                    <BottomOutputPanel>
+                        <OutputFieldGroup>
+                            <OutputField label="Number of visited cells">
+                                <Hint>
+                                    <Text>The number of movements you have made.</Text>
+                                </Hint>
+                                <Source>
+                                    <StatisticsVariable name="numberOfMovements" />
+                                </Source>
+                            </OutputField>
+                        </OutputFieldGroup>
+                    </BottomOutputPanel>
                     <UserActionEventListener>
                         <WHEN>
-                            <KeyboardEvent keyIdentifier="Right" />
-                            <KeyboardEvent keyIdentifier="D" />
+                            <KeyboardEventExpr keyIdentifier="Right" />
+                            <KeyboardEventExpr keyIdentifier="D" />
                         </WHEN>
-                        <IF />
                         <EXECUTE actionRule="MoveEast_ActionRule" />
                     </UserActionEventListener>
                     <UserActionEventListener>
                         <WHEN>
-                            <KeyboardEvent keyIdentifier="Left" />
-                            <KeyboardEvent keyIdentifier="A" />
+                            <KeyboardEventExpr keyIdentifier="Left" />
+                            <KeyboardEventExpr keyIdentifier="A" />
                         </WHEN>
-                        <IF />
                         <EXECUTE actionRule="MoveWest_ActionRule" />
                     </UserActionEventListener>
                     <UserActionEventListener>
                         <WHEN>
-                            <KeyboardEvent keyIdentifier="Up" />
-                            <KeyboardEvent keyIdentifier="W" />
+                            <KeyboardEventExpr keyIdentifier="Up" />
+                            <KeyboardEventExpr keyIdentifier="W" />
                         </WHEN>
-                        <IF />
                         <EXECUTE actionRule="MoveNorth_ActionRule" />
                     </UserActionEventListener>
                     <UserActionEventListener>
                         <WHEN>
-                            <KeyboardEvent keyIdentifier="Down" />
-                            <KeyboardEvent keyIdentifier="S" />
+                            <KeyboardEventExpr keyIdentifier="Down" />
+                            <KeyboardEventExpr keyIdentifier="S" />
                         </WHEN>
-                        <IF />
                         <EXECUTE actionRule="MoveSouth_ActionRule" />
                     </UserActionEventListener>
                 </AgentControlByAgentType>
