@@ -15,7 +15,8 @@
 			<dc:creator>Uwe Herrmann</dc:creator>
 			<dc:created>20101107</dc:created>
 			<dc:contributor>Gerd Wagner</dc:contributor>
-			<dc:modified>20110318</dc:modified>
+			<dc:contributor>Oana Nicolae</dc:contributor>
+			<dc:modified>20110725</dc:modified>
 			<dc:description>The daily demand (say, for TVs in an electronics shop) is normally distributed, 
 				with a mean of 5 units and a standard deviation of 1.8 units. Hint: round off demands to 
 				the closest integer during simulation. A replenishment order is placed when the quantity in stock 
@@ -32,30 +33,46 @@
 					<ValueExpr language="Java">
 						(float) SimStatistics.totalNumberOfLostSales.getValue() / SimParameter.SIMULATION_STEPS
 					</ValueExpr>
+					<ValueExpr language="JavaScript">
+						__SimStatistics.totalNumberOfLostSales.getValue() / __SimParameter.SIMULATION_STEPS
+					</ValueExpr>
 				</Source>
 			</Variable>
 		</Statistics>
         
 		<Globals>
-			<GlobalVariable name="productQuantityInStock" dataType="Integer"/>
-			<GlobalVariable name="REORDER_LEVEL" dataType="Integer" initialValue="20"/>
-			<GlobalVariable name="REORDER_UP_TO_LEVEL" dataType="Integer" initialValue="30"/>
+			<GlobalVariable name="productQuantityInStock" dataType="Integer" />
+			<GlobalVariable name="REORDER_LEVEL" dataType="Integer" initialValue="20" />
+			<GlobalVariable name="REORDER_UP_TO_LEVEL" dataType="Integer" initialValue="30" />
 			<!-- ======================================================== -->
 			<GlobalFunction name="randomDailyDemand" resultType="Integer">
 				<!-- ======================================================== -->
 				<Body language="Java"><![CDATA[
-		int r = Random.uniformInt(0,99);
-		if (r<1) return 10; 			
-		else if (r<2) return 1;
-		else if (r<6) return 2;
-		else if (r<14) return 3;
-		else if (r<30) return 4;
-		else if (r<51) return 5;
-		else if (r<72) return 6;
-		else if (r<88) return 7;
-		else if (r<96) return 8;
-		else return 9;
-		]]></Body>
+		          int r = Random.uniformInt(0,99);
+		          if (r < 1) return 10; 			
+		          else if (r < 2) return 1;
+		          else if (r < 6) return 2;
+		          else if (r < 14) return 3;
+		          else if (r < 30) return 4;
+		          else if (r < 51) return 5;
+		          else if (r < 72) return 6;
+		          else if (r < 88) return 7;
+		          else if (r < 96) return 8;
+		          else return 9;
+		  ]]></Body>
+		       <Body language="JavaScript"><![CDATA[
+		          var r = js.util.Random.uniformInt(0,99);
+		          if (r < 1) return 10; 			
+		          else if (r < 2) return 1;
+		          else if (r < 6) return 2;
+		          else if (r < 14) return 3;
+		          else if (r < 30) return 4;
+		          else if (r < 51) return 5;
+		          else if (r < 72) return 6;
+		          else if (r < 88) return 7;
+		          else if (r < 96) return 8;
+		          else return 9;
+		   ]]></Body>
 			</GlobalFunction>
 		</Globals>
 
@@ -85,24 +102,29 @@
 				<WHEN eventType="DailyDemand"/>
 				<FOR dataVariable="demand" dataType="Integer">
 					<ValueExpr language="Java"> Random.normalInt( 5, 1.8) </ValueExpr>
+					<ValueExpr language="JavaScript"> js.util.Random.normalInt( 5, 1.8) </ValueExpr>
 				</FOR>
 				<IF language="Java"><![CDATA[ Global.productQuantityInStock >= demand ]]></IF>
+				<IF language="JavaScript"><![CDATA[ __Global.productQuantityInStock >= this.demand ]]></IF>
 				<THEN>
 					<UPDATE-ENV>
 						<UpdateGlobalVariable name="productQuantityInStock">
 							<ValueExpr language="Java"> Global.productQuantityInStock - demand </ValueExpr>
+							<ValueExpr language="JavaScript"> __Global.productQuantityInStock - this.demand </ValueExpr>
 						</UpdateGlobalVariable>
 					</UPDATE-ENV>
 					<SCHEDULE-EVT>
 						<CausedEventExpr eventType="Delivery">
 							<Condition language="Java"><![CDATA[ Global.productQuantityInStock < Global.REORDER_LEVEL	]]></Condition>
+							<Condition language="JavaScript"><![CDATA[ __Global.productQuantityInStock < __Global.REORDER_LEVEL	]]></Condition>
 							<Delay>
 								<DiscreteRandomVariable>
-									<UniformInt lowerBound="2" upperBound="4"/>
+									<UniformInt lowerBound="2" upperBound="4" />
 								</DiscreteRandomVariable>
 							</Delay>
 							<Slot property="quantity">
 								<ValueExpr language="Java"> Global.REORDER_UP_TO_LEVEL - Global.productQuantityInStock </ValueExpr>
+								<ValueExpr language="JavaScript"> __Global.REORDER_UP_TO_LEVEL - __Global.productQuantityInStock </ValueExpr>
 							</Slot>
 						</CausedEventExpr>
 					</SCHEDULE-EVT>
@@ -113,6 +135,9 @@
 							<ValueExpr language="Java">
 								SimStatistics.totalNumberOfLostSales.getValue() + demand - Global.productQuantityInStock
 							</ValueExpr>
+							<ValueExpr language="JavaScript">
+								__SimStatistics.totalNumberOfLostSales.getValue() + this.demand - __Global.productQuantityInStock
+							</ValueExpr>
 						</UpdateStatisticsVariable>
 						<UpdateGlobalVariable name="productQuantityInStock" value="0" />
 					</UPDATE-ENV>
@@ -120,11 +145,11 @@
 						<CausedEventExpr eventType="Delivery">
 							<Delay>
 								<DiscreteRandomVariable>
-									<UniformInt lowerBound="2" upperBound="4"/>
+									<UniformInt lowerBound="2" upperBound="4" />
 								</DiscreteRandomVariable>
 							</Delay>
 							<Slot property="quantity">
-								<GlobalVariableValueExpr variable="REORDER_UP_TO_LEVEL"/>
+								<GlobalVariableValueExpr variable="REORDER_UP_TO_LEVEL" />
 							</Slot>
 						</CausedEventExpr>
 					</SCHEDULE-EVT>
@@ -136,22 +161,23 @@
 				<documentation>
 					<dc:description>On Delivery, the number of ordered items gets added to the productQuantityInStock.</dc:description>
 				</documentation>
-				<WHEN eventType="Delivery" eventVariable="d"/>
+				<WHEN eventType="Delivery" eventVariable="d" />
 				<DO>
 					<UPDATE-ENV>
 						<UpdateGlobalVariable name="productQuantityInStock">
 							<ValueExpr language="Java">Global.productQuantityInStock + d.getQuantity()</ValueExpr>
+							<ValueExpr language="JavaScript">__Global.productQuantityInStock + this.d.getQuantity()</ValueExpr>
 						</UpdateGlobalVariable>
 					</UPDATE-ENV>
 				</DO>
 			</EnvironmentRule>			
-		</EnvironmentRules>
+		</EnvironmentRules> 
 	</SimulationModel>
 	<!-- =========================================== -->
 	<InitialState>
 		<!-- =========================================== -->
-		<GlobalVariable name="productQuantityInStock" value="20"/>
-		<ExogenousEvent type="DailyDemand" occurrenceTime="1"/>
+		<GlobalVariable name="productQuantityInStock" value="20" />
+		<ExogenousEvent type="DailyDemand" occurrenceTime="1" />
 	</InitialState>
 	<!-- =========================================== -->
 	<UserInterface supportedLanguages="en">
@@ -168,7 +194,6 @@
 				</Hint>
 				<Format decimalPlaces="1"><Math>%</Math></Format>
 			</StatisticsVariableUI>
-		</StatisticsUI>
-		
+		</StatisticsUI>	
 	</UserInterface>
 </SimulationScenario>
