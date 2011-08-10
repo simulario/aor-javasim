@@ -5,7 +5,7 @@
 	xmlns:aors="http://aor-simulation.org" 
 	xmlns:dc="http://purl.org/dc/elements/1.1/" 
 	xmlns:h="http://www.w3.org/1999/xhtml" 
-	version="0.8" xsi:schemaLocation="http://aor-simulation.org ../../../AORSL/ERSL/ERSL_0-8.xsd" 
+	version="0.9" xsi:schemaLocation="http://aor-simulation.org ../../../AORSL/ERSL/ERSL_0-9.xsd" 
 	scenarioName="SingleServiceQueueWithStatistics" 
 	scenarioTitle="A single service queue with service utilization and maximum queue length statistics" 
 	simulationManagerDirectory="../../..">
@@ -17,7 +17,8 @@
 		<documentation>
 			<dc:creator>Gerd Wagner</dc:creator>
 			<dc:created>20081001</dc:created>
-			<dc:modified>20091026</dc:modified>
+			<dc:modified>20110810</dc:modified>
+			<dc:contributor>Oana Nicolae</dc:contributor>
 			<dc:description>Customers arrive at random times at a service desk where they have to wait in a queue when the service desk is serviceDeskBusy. The time between two customer arrivals is uniformly distributed between 1 and 8 minutes. The times for completing a service vary from 1 to 6 minutes, with probabilities 0.1, 0.2, 0.3, 0.25, 0.1, 0.05, respectively. Two statistics are to be collected: service utilization (total service time divided by total time) and maximum queue length. </dc:description>
 			<processModelDiagram>BPMN-Diagram.png</processModelDiagram>
 		</documentation>
@@ -40,14 +41,14 @@
 				</Source>
 			</Variable>	
 			<Variable name="avgQueueLength" dataType="Float">
-				<Source>
+				<Source aggregationFunction="avg">
 					<GlobalVariable name="queueLength"/>
 				</Source>
 			</Variable>
 			
 		</Statistics>
 		<Globals>
-			<GlobalVariable name="queueLength" dataType="Integer"/>
+			<GlobalVariable name="queueLength" dataType="Float"/>
 			<GlobalVariable name="maxQueueLength" dataType="Integer"/>
 			<GlobalVariable name="serviceDeskBusy" dataType="Boolean"/>
 			<GlobalFunction name="randomServiceTime" resultType="Integer">
@@ -168,7 +169,7 @@
 						<IncrementGlobalVariable name="queueLength" value="-1"/>
 						<UpdateGlobalVariable name="maxQueueLength">
 							<ValueExpr language="Java"><![CDATA[
-				(Global.maxQueueLength >= Global.queueLength)? Global.maxQueueLength : Global.queueLength				
+				( Global.maxQueueLength >= Global.queueLength)? Global.maxQueueLength : Global.queueLength				
 							]]></ValueExpr>
 							<ValueExpr language="JavaScript"><![CDATA[
 			    ( sim.controller.Global.maxQueueLength >= sim.controller.Global.queueLength) ?
@@ -194,11 +195,11 @@
 	<!-- =================================================== -->
 	<InitialState>
 		<!-- =================================================== -->
-		<GlobalVariable name="serviceDeskBusy" value="false"/>
-		<GlobalVariable name="queueLength" value="0"/>
-		<GlobalVariable name="sumQueueLength" value="0"/>
-		<GlobalVariable name="numberOfChanges" value="0"/>
-		<ExogenousEvent type="CustomerArrival" occurrenceTime="1"/>
+		<GlobalVariable name="serviceDeskBusy" value="false" />
+		<GlobalVariable name="queueLength" value="0" />
+		<GlobalVariable name="sumQueueLength" value="0" />
+		<GlobalVariable name="numberOfChanges" value="0" />
+		<ExogenousEvent type="CustomerArrival" occurrenceTime="1" />
 	</InitialState>
 	<!-- =================================================== -->
 	<UserInterface supportedLanguages="english">
@@ -219,7 +220,7 @@
 					<Text xml:lang="es">Cual es el tiempo promedio de uso del servicio?</Text>
 					<Text xml:lang="ro">Care este timpul mediu de utilizare a serviciului?</Text>
 				</Hint>
-				<Format decimalPlaces="1"><Math>%</Math></Format>
+				<Format decimalPlaces="2"><Math>%</Math></Format>
 			</StatisticsVariableUI>
 			<StatisticsVariableUI variable="avgQueueLength">
 				<Label>
@@ -236,6 +237,7 @@
 					<Text xml:lang="es">Cual es el tamaño maximo de la cola?</Text>
 					<Text xml:lang="ro">Care este dimensiunea medie a listei de asteptare?</Text>
 				</Hint>
+				<Format decimalPlaces="2"><Length>m</Length></Format>
 			</StatisticsVariableUI>
 			<StatisticsVariableUI variable="maxQueueLength">
 				<Label>
