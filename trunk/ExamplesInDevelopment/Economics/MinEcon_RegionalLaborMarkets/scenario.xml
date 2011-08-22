@@ -39,7 +39,14 @@
 			<Variable name="outputLowSkillRegion" dataType="Float"/>
 			<Variable name="outputHighSkillRegion" dataType="Float"/>
 			<Variable name="totalOutput" dataType="Float"/>
-			<Variable name="numberOfCasesWithZeroProduction" dataType="Integer"/>
+			<Variable name="numberOfCommutersFromLowToHighSkillRegion" dataType="Integer"/>
+			<Variable name="numberOfCommutersFromHighToLowSkillRegion" dataType="Integer"/>
+			<Variable name="averagePriceLowSkillRegion" dataType="Float"/>
+			<Variable name="averagePriceHighSkillRegion" dataType="Float"/>
+			<Variable name="capitalStockLowSkillRegion" dataType="Float"/>
+			<Variable name="capitalStockHighSkillRegion" dataType="Float"/>
+			<Variable name="totalLaborIncomeOfWorkersLowSkillRegion" dataType="Float"/>
+			<Variable name="totalLaborIncomeOfWorkersHighSkillRegion" dataType="Float"/>
 		</Statistics>
 		
 		<DataTypes>
@@ -97,6 +104,14 @@
 			
 			<GlobalVariable name="producedQuantityLowSkillRegion" dataType="Float"/><!--abstract definition-->
 			<GlobalVariable name="producedQuantityHighSkillRegion" dataType="Float"/><!--abstract definition-->
+			<GlobalVariable name="commutingEmployeesLowSkillRegion" dataType="Integer"/><!--abstract definition-->
+			<GlobalVariable name="commutingEmployeesHighSkillRegion" dataType="Integer"/><!--abstract definition-->
+			<GlobalVariable name="priceLowSkillRegion" dataType="Float"/><!--abstract definition-->
+			<GlobalVariable name="priceHighSkillRegion" dataType="Float"/><!--abstract definition-->
+			<GlobalVariable name="totalLaborIncomeLowSkillRegion" dataType="Float"/><!--abstract definition-->
+			<GlobalVariable name="totalLaborIncomeHighSkillRegion" dataType="Float"/><!--abstract definition-->
+			<GlobalVariable name="capitalLowSkillRegion" dataType="Float"/><!--abstract definition-->
+			<GlobalVariable name="capitalHighSkillRegion" dataType="Float"/><!--abstract definition-->
 			
 			<GlobalFunction name="wouldInnovate" resultType="Float">
 				<documentation>
@@ -258,7 +273,7 @@
 			<ExogenousEventType name="EndSecondIterationLaborSupply" periodicity="24"/>
 			<ExogenousEventType name="EndOfMonth" periodicity="24"/>
 			
-			<AgentType name="IGFirm">
+			<AgentType name="CapitalGoodsProducer">
 				<documentation>
 					<description xml:lang="en">Capital goods producer supplies investment goods infinitely at an exogenously given price. The quality of supplied investment goods increases randomly over time. Profit of capital goods producer is uniformly distributed to all households.</description>
 				</documentation>
@@ -373,7 +388,7 @@
 				</ReactionRule>
 			</AgentType>
 			
-			<AgentType name="Firm">
+			<AgentType name="ConsumptionGoodsProducer">
 				<documentation>
 					<description xml:lang="en">CGPs use a vintage capital stock and labor to produce the consumption good on a monthly basis. The consumption good is then distributed to the different regions this producer serves. For simplicity it is assumed that all producers offer their products in all regions. Each producer keeps a stock of its products at each of the regional malls and offers the good at a posted price that is updated once a month at the point in time when the stock is replenished.</description>
 				</documentation>
@@ -394,7 +409,7 @@
 				<Attribute name="monthlyRealizedProfit" type="Float"/>
 				<Attribute name="currentBalanceOfSavingAccount" type="Float"/>
 				<Attribute name="equalDividend" type="Float"/>
-				<Attribute name="optimalStockLevel" type="Float"/><!--abstract definition-->
+				<!--<Attribute name="optimalStockLevel" type="Float"/>-->
 				<Attribute name="laborSupplyQuantity" type="Integer"/>
 				<Attribute name="wageOffer" type="Float"/>
 				
@@ -402,7 +417,7 @@
 				<Attribute name="ALPHA" type="Float" initialValue="0.662" isStatic="true"/>
 				<!-- capital intensity of production -->
 				<Attribute name="BETA" type="Float" initialValue="0.338" isStatic="true"/>
-
+				
 				<Attribute name="lastFourProducedQuantities" type="Float" upperMultiplicity="unbounded"/>
 				
 				<ComplexDataProperty name="productDemands" type="ProductDemandRecord" upperMultiplicity="unbounded"/>
@@ -435,7 +450,7 @@
 							if (p.getDemand() > p.getMaximumDemand()) {
 								p.setMaximumDemand(p.getDemand());
 							}
-							p.setOptimalStockLevel((getProductSalesPrice() - (1 - 0.95) * getUnitCostOfProduction()) / (getProductSalesPrice() + 0.1) * p.getMaximumDemand());
+							p.setOptimalStockLevel((getProductSalesPrice() - (1 - 0.95) * getUnitCostOfProduction()) / (getProductSalesPrice() + 0.1) * p.getMaximumDemand() * 2.2);
 							p.setDemand(0.0);
 						}
 						]]></Body>
@@ -552,7 +567,7 @@
 				
 				<Function name="downsizingIncumbentWorkforce" resultType="Boolean">
 					<documentation>
-						<description xml:lang="en">In case of downsizing the incumbent workforce, the firm dismisses workers with lowest general skill levels first.</description>
+						<description xml:lang="en">In case of downsizing the incumbent workforce, the CGP dismisses workers with lowest general skill levels first.</description>
 					</documentation>
 					<Body language="Java"><![CDATA[
 						java.util.Comparator<sim.model.dataTypes.WorkerInFirm> comparator;
@@ -673,7 +688,7 @@
 				
 				<Function name="determineDividend" resultType="void">
 					<documentation>
-						<description xml:lang="en">Similar to the capital goods producer, we assume that all households hold equal shares in all consumption goods producers, consequently the dividends are equally distributed to the households. In order to avoid exceeding accumulations of savings as well as excessive indebtedness, we employ a simple dividend policy that provides different dividend rates depending on the current balance of saving account. The rule states that a firm pays no dividends, if the balance is negative and the debt is on a scale above the last monthly revenue. If the balance is positive and savings are above the monthly revenue, the firm disburses all profits. In the remaining case, if the balance is between these critical levels, a fixed proportion div ∈ [0,1] of profits is paid out.</description>
+						<description xml:lang="en">Similar to the capital goods producer, we assume that all households hold equal shares in all consumption goods producers, consequently the dividends are equally distributed to the households. In order to avoid exceeding accumulations of savings as well as excessive indebtedness, we employ a simple dividend policy that provides different dividend rates depending on the current balance of saving account. The rule states that a CGP pays no dividends, if the balance is negative and the debt is on a scale above the last monthly revenue. If the balance is positive and savings are above the monthly revenue, the CGP disburses all profits. In the remaining case, if the balance is between these critical levels, a fixed proportion div ∈ [0,1] of profits is paid out.</description>
 					</documentation>
 					<Body language="Java"><![CDATA[
 						setCostOfProduction(getGrossInvestment() + determineLaborCost());
@@ -742,7 +757,7 @@
 						<description xml:lang="en"><!-- at step 3 -->Every CGP receives messages from all the malls it serves reporting the current stock level and checks once every period whether any of the stocks it keeps at different malls have to be refilled.</description>
 					</documentation>
 					<WHEN eventType="InMessageEvent" messageType="TellCurrentStockLevel" messageVariable="msg" eventVariable="evt"/>
-					<IF language="Java"><![CDATA[ msg.getQuantity() >= f.getOptimalStockLevel() ]]></IF>
+					<IF language="Java"><![CDATA[ msg.getQuantity() >= f.getDemandRecordFromListWithId(evt.getSenderIdRef()).getOptimalStockLevel() ]]></IF>
 					<THEN>
 						<UPDATE-AGT>
 							<MultiValuedSlot property="inventoryPositions">
@@ -768,7 +783,7 @@
 										new InventoryPosition() {
 											{
 												setMallId(evt.getSenderIdRef());
-												setQuantity(f.getOptimalStockLevel() - msg.getQuantity());
+												setQuantity(f.getDemandRecordFromListWithId(evt.getSenderIdRef()).getOptimalStockLevel() - msg.getQuantity());
 												setAdjustmentFactor(0.0);
 											}
 										}
@@ -820,7 +835,7 @@
 									<ValueExpr language="Java"><![CDATA[ f.getId() ]]></ValueExpr>
 								</Slot>
 								<Slot property="wageOffer">
-									<ValueExpr language="Java"><![CDATA[ f.getWageOffer() ]]></ValueExpr>
+									<ValueExpr language="Java"><![CDATA[ f.getWageOffer() * f.determineAverageSpecificSkillLevel() ]]></ValueExpr>
 								</Slot>
 							</ActionEventExpr>
 						</SCHEDULE-EVT>
@@ -878,7 +893,7 @@
 				
 				<ReactionRule name="InFirstIterationRankApplicant_Rule" agentVariable="f">
 					<documentation>
-						<description xml:lang="en"><!-- at step 9 -->Every CGP ranks the applicants. Applicants with higher general skill levels are ranked higher. If there are two or more applicants with equal general skill levels, but different specific skill levels, the applicant with the higher specific skill level is ranked higher. Based on their ranking firms send job offers to as many applicants as they have vacancies to fill.</description>
+						<description xml:lang="en"><!-- at step 9 -->Every CGP ranks the applicants. Applicants with higher general skill levels are ranked higher. If there are two or more applicants with equal general skill levels, but different specific skill levels, the applicant with the higher specific skill level is ranked higher. Based on their ranking CGPs send job offers to as many applicants as they have vacancies to fill.</description>
 					</documentation>
 					<WHEN eventType="InFirstIterationRankApplicant"/>
 					<IF language="Java"><![CDATA[ f.getJobApplications().size() > 0 ]]></IF>
@@ -952,7 +967,7 @@
 									<ValueExpr language="Java"><![CDATA[ f.getId() ]]></ValueExpr>
 								</Slot>
 								<Slot property="wageOffer">
-									<ValueExpr language="Java"><![CDATA[ f.getWageOffer() ]]></ValueExpr>
+									<ValueExpr language="Java"><![CDATA[ f.getWageOffer() * f.determineAverageSpecificSkillLevel() ]]></ValueExpr>
 								</Slot>
 							</ActionEventExpr>
 						</SCHEDULE-EVT>
@@ -961,7 +976,7 @@
 				
 				<ReactionRule name="InSecondIterationRankApplicant_Rule" agentVariable="f">
 					<documentation>
-						<description xml:lang="en"><!-- at step 18 -->Every CGP ranks the applicants. Applicants with higher general skill levels are ranked higher. If there are two or more applicants with equal general skill levels, but different specific skill levels, the applicant with the higher specific skill level is ranked higher. Based on their ranking firms send job offers to as many applicants as they have vacancies to fill.</description>
+						<description xml:lang="en"><!-- at step 18 -->Every CGP ranks the applicants. Applicants with higher general skill levels are ranked higher. If there are two or more applicants with equal general skill levels, but different specific skill levels, the applicant with the higher specific skill level is ranked higher. Based on their ranking CGPs send job offers to as many applicants as they have vacancies to fill.</description>
 					</documentation>
 					<WHEN eventType="InSecondIterationRankApplicant"/>
 					<IF language="Java"><![CDATA[ f.getJobApplications().size() > 0 ]]></IF>
@@ -1044,6 +1059,7 @@
 				<Attribute name="generalSkillLevel" type="Integer"/>
 				<Attribute name="specificSkillLevel" type="Float"/>
 				<Attribute name="currentWage" type="Float"/>
+				<Attribute name="laborIncome" type="Float"/>
 				<Attribute name="totalIncome" type="Float"/>
 				<Attribute name="meanIncome" type="Float"/>
 				<Attribute name="currentIncome" type="Float"/>
@@ -1394,15 +1410,21 @@
 					<IF language="Java"><![CDATA[ msg.getRegion() == h.getRegion() ]]></IF>
 					<THEN>
 						<UPDATE-AGT>
+							<Slot property="laborIncome">
+								<ValueExpr language="Java"><![CDATA[ msg.getWage() ]]></ValueExpr>
+							</Slot>
 							<Slot property="currentIncome">
-								<ValueExpr language="Java"><![CDATA[ h.getCurrentIncome() + msg.getWage() ]]></ValueExpr>
+								<ValueExpr language="Java"><![CDATA[ h.getCurrentIncome() + h.getLaborIncome() ]]></ValueExpr>
 							</Slot>
 						</UPDATE-AGT>
 					</THEN>
 					<ELSE>
 						<UPDATE-AGT>
+							<Slot property="laborIncome">
+								<ValueExpr language="Java"><![CDATA[ msg.getWage() - Global.getComm() ]]></ValueExpr>
+							</Slot>
 							<Slot property="currentIncome">
-								<ValueExpr language="Java"><![CDATA[ h.getCurrentIncome() + msg.getWage() - Global.getComm() ]]></ValueExpr>
+								<ValueExpr language="Java"><![CDATA[ h.getCurrentIncome() + h.getLaborIncome() ]]></ValueExpr>
 							</Slot>
 						</UPDATE-AGT>
 					</ELSE>
@@ -1431,7 +1453,7 @@
 				</documentation>
 				<WHEN eventType="Init"/>
 				<FOR-ObjectVariable variable="m" objectType="Mall"/>
-				<FOR-ObjectVariable variable="f" objectType="Firm"/>
+				<FOR-ObjectVariable variable="f" objectType="ConsumptionGoodsProducer"/>
 				<DO>
 					<UPDATE-ENV>
 						<UpdateObject objectVariable="m">
@@ -1457,7 +1479,7 @@
 											{
 												setMallId(m.getId());
 												setDemand(0.0);
-												setMaximumDemand(0.0);
+												setMaximumDemand(8.0);
 												setOptimalStockLevel(0.0);
 											}
 										}
@@ -1507,7 +1529,7 @@
 					<description xml:lang="en">Confirm the incumbent workforce of Every CGP.</description>
 				</documentation>
 				<WHEN eventType="Init"/>
-				<FOR-ObjectVariable variable="f" objectType="Firm"/>
+				<FOR-ObjectVariable variable="f" objectType="ConsumptionGoodsProducer"/>
 				<FOR-ObjectVariable variable="h" objectType="Household"/>
 				<IF language="Java"><![CDATA[ f.getId() == h.getFirm() ]]></IF>
 				<THEN>
@@ -1546,6 +1568,52 @@
 						</UpdateObject>
 					</UPDATE-ENV>
 				</THEN>
+			</EnvironmentRule>
+			
+			<EnvironmentRule name="AtStartOfMonthStatistics_Rule">
+				<documentation>
+					<description xml:lang="en">Make statistics.</description>
+				</documentation>
+				<WHEN eventType="StartOfMonth"/>
+				<FOR-ObjectVariable variable="f" objectType="ConsumptionGoodsProducer"/>
+				<IF language="Java"><![CDATA[ f.getRegion() == 1 ]]></IF>
+				<THEN>
+					<UPDATE-ENV>
+						<UpdateGlobalVariable name="priceLowSkillRegion">
+							<ValueExpr language="Java"><![CDATA[ Global.getPriceLowSkillRegion() + f.getProductSalesPrice() ]]></ValueExpr>
+						</UpdateGlobalVariable>
+					</UPDATE-ENV>
+				</THEN>
+				<ELSE>
+					<UPDATE-ENV>
+						<UpdateGlobalVariable name="priceHighSkillRegion">
+							<ValueExpr language="Java"><![CDATA[ Global.getPriceHighSkillRegion() + f.getProductSalesPrice() ]]></ValueExpr>
+						</UpdateGlobalVariable>
+					</UPDATE-ENV>
+				</ELSE>
+			</EnvironmentRule>
+			
+			<EnvironmentRule name="AtStartOfMonthStatistics1_Rule">
+				<documentation>
+					<description xml:lang="en">Make statistics.</description>
+				</documentation>
+				<WHEN eventType="StartOfMonth"/>
+				<FOR-ObjectVariable variable="h" objectType="Household"/>
+				<IF language="Java"><![CDATA[ h.getRegion() == 1 ]]></IF>
+				<THEN>
+					<UPDATE-ENV>
+						<UpdateGlobalVariable name="totalLaborIncomeLowSkillRegion">
+							<ValueExpr language="Java"><![CDATA[ Global.getTotalLaborIncomeLowSkillRegion() + h.getLaborIncome() ]]></ValueExpr>
+						</UpdateGlobalVariable>
+					</UPDATE-ENV>
+				</THEN>
+				<ELSE>
+					<UPDATE-ENV>
+						<UpdateGlobalVariable name="totalLaborIncomeHighSkillRegion">
+							<ValueExpr language="Java"><![CDATA[ Global.getTotalLaborIncomeHighSkillRegion() + h.getLaborIncome() ]]></ValueExpr>
+						</UpdateGlobalVariable>
+					</UPDATE-ENV>
+				</ELSE>
 			</EnvironmentRule>
 			
 			<EnvironmentRule name="AtWeeklyIndividualConsumption_Rule">
@@ -1591,13 +1659,13 @@
 				</THEN>
 			</EnvironmentRule>
 			
-			<EnvironmentRule name="FirmBuyNewInvestment_Rule">
+			<EnvironmentRule name="ConsumptionGoodsProducerBuyNewInvestment_Rule">
 				<documentation>
 					<description xml:lang="en"><!-- at step 5 -->A CGP purchases the needed investments from the (unique) capital goods producer thereby improving the quality of its capital stock. The quality of the capital stock of a CGP is updated as old capital is replaced by new investments.</description>
 				</documentation>
 				<WHEN eventType="BuyNewInvestment" eventVariable="e"/>
-				<FOR objectVariable="i" objectType="IGFirm" objectIdRef="11"/>
-				<FOR objectVariable="f" objectType="Firm">
+				<FOR objectVariable="i" objectType="CapitalGoodsProducer" objectIdRef="11"/>
+				<FOR objectVariable="f" objectType="ConsumptionGoodsProducer">
 					<ObjectRef language="Java"><![CDATA[ e.getActor() ]]></ObjectRef>
 				</FOR>
 				<DO>
@@ -1625,12 +1693,12 @@
 				</DO>
 			</EnvironmentRule>
 			
-			<EnvironmentRule name="FirmDismissWorker_Rule">
+			<EnvironmentRule name="ConsumptionGoodsProducerDismissWorker_Rule">
 				<documentation>
 					<description xml:lang="en"><!-- at step 5 -->The CGP dismisses workers.</description>
 				</documentation>
 				<WHEN eventType="DismissWorker" eventVariable="e"/>
-				<FOR objectVariable="f" objectType="Firm">
+				<FOR objectVariable="f" objectType="ConsumptionGoodsProducer">
 					<ObjectRef language="Java"><![CDATA[ e.getActor() ]]></ObjectRef>
 				</FOR>
 				<FOR-ListItemVariable variable="w" listItemType="WorkerInFirm">
@@ -1658,7 +1726,7 @@
 				</DO>
 			</EnvironmentRule>
 			
-			<EnvironmentRule name="FirmPostVacancyInformation_Rule">
+			<EnvironmentRule name="ConsumptionGoodsProducerPostVacancyInformation_Rule">
 				<documentation>
 					<description xml:lang="en"><!-- at step 7, 16 -->The CGPs post vacancies including wage offers.</description>
 				</documentation>
@@ -1681,12 +1749,12 @@
 				</THEN>
 			</EnvironmentRule>
 			
-			<EnvironmentRule name="InFirstIterationFirmOfferJob_Rule">
+			<EnvironmentRule name="InFirstIterationConsumptionGoodsProducerOfferJob_Rule">
 				<documentation>
 					<description xml:lang="en"><!-- at step 10, 19 -->CGPs send job offers to as many applicants as they have vacancies to fill.</description>
 				</documentation>
 				<WHEN eventType="InFirstIterationOfferJob" eventVariable="e"/>
-				<FOR objectVariable="f" objectType="Firm">
+				<FOR objectVariable="f" objectType="ConsumptionGoodsProducer">
 					<ObjectRef language="Java"><![CDATA[ e.getActor() ]]></ObjectRef>
 				</FOR>
 				<FOR-ListItemVariable variable="a" listItemType="JobApplicationRecord">
@@ -1698,7 +1766,7 @@
 							<SenderIdRef language="Java"><![CDATA[ e.getActorIdRef() ]]></SenderIdRef>
 							<ReceiverIdRef language="Java"><![CDATA[ a.getHouseholdId() ]]></ReceiverIdRef>
 							<Slot property="wageOffer">
-								<ValueExpr language="Java"><![CDATA[ f.getWageOffer() ]]></ValueExpr>
+								<ValueExpr language="Java"><![CDATA[ f.getWageOffer() * f.determineAverageSpecificSkillLevel() ]]></ValueExpr>
 							</Slot>
 							<Slot property="region">
 								<ValueExpr language="Java"><![CDATA[ f.getRegion() ]]></ValueExpr>
@@ -1708,12 +1776,12 @@
 				</DO>
 			</EnvironmentRule>
 			
-			<EnvironmentRule name="EndFirstIterationFirmClearJobApplications_Rule">
+			<EnvironmentRule name="EndFirstIterationConsumptionGoodsProducerClearJobApplications_Rule">
 				<documentation>
 					<description xml:lang="en"><!-- at step 14 -->After an iteration CGPs clear the list of applicants.</description>
 				</documentation>
 				<WHEN eventType="EndFirstIterationLaborSupply"/>
-				<FOR-ObjectVariable variable="f" objectType="Firm"/>
+				<FOR-ObjectVariable variable="f" objectType="ConsumptionGoodsProducer"/>
 				<IF language="Java"><![CDATA[ f.getJobApplications().size() > 0 ]]></IF>
 				<THEN>
 					<UPDATE-ENV>
@@ -1722,13 +1790,13 @@
 				</THEN>
 			</EnvironmentRule>
 			
-			<EnvironmentRule name="EndFirstIterationFirmRaiseWageOffer_Rule">
+			<EnvironmentRule name="EndFirstIterationConsumptionGoodsProducerRaiseWageOffer_Rule">
 				<documentation>
 					<description xml:lang="en"><!-- at step 14 -->If the number of vacancies after first iteration not filled exceeds some threshold, the CGP raises the wage offer.</description>
 				</documentation>
 				<WHEN eventType="EndFirstIterationLaborSupply"/>
-				<FOR-ObjectVariable variable="f" objectType="Firm"/>
-				<IF language="Java"><![CDATA[ f.getLaborSupplyQuantity() > 2 ]]></IF>
+				<FOR-ObjectVariable variable="f" objectType="ConsumptionGoodsProducer"/>
+				<IF language="Java"><![CDATA[ f.getLaborSupplyQuantity() > 5 ]]></IF>
 				<THEN>
 					<UPDATE-ENV>
 						<UpdateObject objectVariable="f">
@@ -1758,12 +1826,12 @@
 				</THEN>
 			</EnvironmentRule>
 			
-			<EnvironmentRule name="EndSecondIterationFirmClearJobApplications_Rule">
+			<EnvironmentRule name="EndSecondIterationConsumptionGoodsProducerClearJobApplications_Rule">
 				<documentation>
 					<description xml:lang="en"><!-- at step 23 -->After an iteration CGPs clear the list of applicants.</description>
 				</documentation>
 				<WHEN eventType="EndSecondIterationLaborSupply"/>
-				<FOR-ObjectVariable variable="f" objectType="Firm"/>
+				<FOR-ObjectVariable variable="f" objectType="ConsumptionGoodsProducer"/>
 				<IF language="Java"><![CDATA[ f.getJobApplications().size() > 0 ]]></IF>
 				<THEN>
 					<UPDATE-ENV>
@@ -1772,12 +1840,63 @@
 				</THEN>
 			</EnvironmentRule>
 			
-			<EnvironmentRule name="FirmDistributeProduct_Rule">
+			<EnvironmentRule name="EndSecondIterationStatistics_Rule">
+				<documentation>
+					<description xml:lang="en"><!-- at step 23 -->Make statistics.</description>
+				</documentation>
+				<WHEN eventType="EndSecondIterationLaborSupply"/>
+				<FOR-ObjectVariable variable="f" objectType="ConsumptionGoodsProducer"/>
+				<IF language="Java"><![CDATA[ f.getRegion() == 1 ]]></IF>
+				<THEN>
+					<UPDATE-ENV>
+						<UpdateGlobalVariable name="capitalLowSkillRegion">
+							<ValueExpr language="Java"><![CDATA[ Global.getCapitalLowSkillRegion() + f.getGrossInvestment() ]]></ValueExpr>
+						</UpdateGlobalVariable>
+					</UPDATE-ENV>
+				</THEN>
+				<ELSE>
+					<UPDATE-ENV>
+						<UpdateGlobalVariable name="capitalHighSkillRegion">
+							<ValueExpr language="Java"><![CDATA[ Global.getCapitalHighSkillRegion() + f.getGrossInvestment() ]]></ValueExpr>
+						</UpdateGlobalVariable>
+					</UPDATE-ENV>
+				</ELSE>
+			</EnvironmentRule>
+			
+			<EnvironmentRule name="EndSecondIterationStatisticsLowSkillRegion_Rule">
+				<documentation>
+					<description xml:lang="en"><!-- at step 23 -->Make statistics.</description>
+				</documentation>
+				<WHEN eventType="EndSecondIterationLaborSupply"/>
+				<FOR-ObjectVariable variable="h" objectType="Household"/>
+				<IF language="Java"><![CDATA[ h.getId() <= 1200 && h.getFirm() > 105 ]]></IF>
+				<THEN>
+					<UPDATE-ENV>
+						<IncrementGlobalVariable name="commutingEmployeesLowSkillRegion" value="1"/>
+					</UPDATE-ENV>
+				</THEN>
+			</EnvironmentRule>
+			
+			<EnvironmentRule name="EndSecondIterationStatisticsHighSkillRegion_Rule">
+				<documentation>
+					<description xml:lang="en"><!-- at step 23 -->Make statistics.</description>
+				</documentation>
+				<WHEN eventType="EndSecondIterationLaborSupply"/>
+				<FOR-ObjectVariable variable="h" objectType="Household"/>
+				<IF language="Java"><![CDATA[ h.getId() > 1200 && h.getFirm() > 100 && h.getFirm() <= 105 ]]></IF>
+				<THEN>
+					<UPDATE-ENV>
+						<IncrementGlobalVariable name="commutingEmployeesHighSkillRegion" value="1"/>
+					</UPDATE-ENV>
+				</THEN>
+			</EnvironmentRule>
+			
+			<EnvironmentRule name="ConsumptionGoodsProducerDistributeProduct_Rule">
 				<documentation>
 					<description xml:lang="en"><!-- at step 24 -->The produced quantities are delivered by the CGP to the malls it serves.</description>
 				</documentation>
 				<WHEN eventType="DistributeProduct" eventVariable="e"/>
-				<FOR objectVariable="f" objectType="Firm">
+				<FOR objectVariable="f" objectType="ConsumptionGoodsProducer">
 					<ObjectRef language="Java"><![CDATA[ e.getActor() ]]></ObjectRef>
 				</FOR>
 				<FOR-ListItemVariable variable="o" listItemType="InventoryPosition">
@@ -1818,12 +1937,12 @@
 				</ELSE>
 			</EnvironmentRule>
 			
-			<EnvironmentRule name="FirmPayWage_Rule">
+			<EnvironmentRule name="ConsumptionGoodsProducerPayWage_Rule">
 				<documentation>
 					<description xml:lang="en"><!-- at step 24 -->Wages for the full month are paid to all workers.</description>
 				</documentation>
 				<WHEN eventType="PayWage" eventVariable="e"/>
-				<FOR objectVariable="f" objectType="Firm">
+				<FOR objectVariable="f" objectType="ConsumptionGoodsProducer">
 					<ObjectRef language="Java"><![CDATA[ e.getActor() ]]></ObjectRef>
 				</FOR>
 				<FOR-ListItemVariable variable="w" listItemType="WorkerInFirm">
@@ -1845,12 +1964,12 @@
 				</DO>
 			</EnvironmentRule>
 			
-			<EnvironmentRule name="FirmIncreaseSpecificSkillLevel_Rule">
+			<EnvironmentRule name="ConsumptionGoodsProducerIncreaseSpecificSkillLevel_Rule">
 				<documentation>
 					<description xml:lang="en"><!-- at step 24 -->The specific skill levels of workers are updated.</description>
 				</documentation>
 				<WHEN eventType="IncreaseSpecificSkillLevel" eventVariable="e"/>
-				<FOR objectVariable="f" objectType="Firm">
+				<FOR objectVariable="f" objectType="ConsumptionGoodsProducer">
 					<ObjectRef language="Java"><![CDATA[ e.getActor() ]]></ObjectRef>
 				</FOR>
 				<FOR-ListItemVariable variable="w" listItemType="WorkerInFirm">
@@ -1916,18 +2035,50 @@
 						<UpdateStatisticsVariable variable="totalOutput">
 							<ValueExpr language="Java"><![CDATA[ Global.getProducedQuantityLowSkillRegion() + Global.getProducedQuantityHighSkillRegion() ]]></ValueExpr>
 						</UpdateStatisticsVariable>
+						<UpdateStatisticsVariable variable="numberOfCommutersFromLowToHighSkillRegion">
+							<ValueExpr language="Java"><![CDATA[ Global.getCommutingEmployeesLowSkillRegion() ]]></ValueExpr>
+						</UpdateStatisticsVariable>
+						<UpdateStatisticsVariable variable="numberOfCommutersFromHighToLowSkillRegion">
+							<ValueExpr language="Java"><![CDATA[ Global.getCommutingEmployeesHighSkillRegion() ]]></ValueExpr>
+						</UpdateStatisticsVariable>
+						<UpdateStatisticsVariable variable="averagePriceLowSkillRegion">
+							<ValueExpr language="Java"><![CDATA[ Global.getPriceLowSkillRegion() / 5 ]]></ValueExpr>
+						</UpdateStatisticsVariable>
+						<UpdateStatisticsVariable variable="averagePriceHighSkillRegion">
+							<ValueExpr language="Java"><![CDATA[ Global.getPriceHighSkillRegion() / 5 ]]></ValueExpr>
+						</UpdateStatisticsVariable>
+						<UpdateStatisticsVariable variable="capitalStockLowSkillRegion">
+							<ValueExpr language="Java"><![CDATA[ Global.getCapitalLowSkillRegion() ]]></ValueExpr>
+						</UpdateStatisticsVariable>
+						<UpdateStatisticsVariable variable="capitalStockHighSkillRegion">
+							<ValueExpr language="Java"><![CDATA[ Global.getCapitalHighSkillRegion() ]]></ValueExpr>
+						</UpdateStatisticsVariable>
+						<UpdateStatisticsVariable variable="totalLaborIncomeOfWorkersLowSkillRegion">
+							<ValueExpr language="Java"><![CDATA[ Global.getTotalLaborIncomeLowSkillRegion() ]]></ValueExpr>
+						</UpdateStatisticsVariable>
+						<UpdateStatisticsVariable variable="totalLaborIncomeOfWorkersHighSkillRegion">
+							<ValueExpr language="Java"><![CDATA[ Global.getTotalLaborIncomeHighSkillRegion() ]]></ValueExpr>
+						</UpdateStatisticsVariable>
 						<UpdateGlobalVariable name="producedQuantityLowSkillRegion" value="0.0"/>
 						<UpdateGlobalVariable name="producedQuantityHighSkillRegion" value="0.0"/>
+						<UpdateGlobalVariable name="commutingEmployeesLowSkillRegion" value="0"/>
+						<UpdateGlobalVariable name="commutingEmployeesHighSkillRegion" value="0"/>
+						<UpdateGlobalVariable name="priceLowSkillRegion" value="0.0"/>
+						<UpdateGlobalVariable name="priceHighSkillRegion" value="0.0"/>
+						<UpdateGlobalVariable name="capitalLowSkillRegion" value="0.0"/>
+						<UpdateGlobalVariable name="capitalHighSkillRegion" value="0.0"/>
+						<UpdateGlobalVariable name="totalLaborIncomeLowSkillRegion" value="0.0"/>
+						<UpdateGlobalVariable name="totalLaborIncomeHighSkillRegion" value="0.0"/>
 					</UPDATE-ENV>
 				</DO>
 			</EnvironmentRule>
 			
-			<EnvironmentRule name="AtEndOfMonthFirmClearInventoryPositions_Rule">
+			<EnvironmentRule name="AtEndOfMonthConsumptionGoodsProducerClearInventoryPositions_Rule">
 				<documentation>
 					<description xml:lang="en"><!-- at step 25 -->CGPs clear the list of inventory positions.</description>
 				</documentation>
 				<WHEN eventType="EndOfMonth"/>
-				<FOR-ObjectVariable variable="f" objectType="Firm"/>
+				<FOR-ObjectVariable variable="f" objectType="ConsumptionGoodsProducer"/>
 				<DO>
 					<UPDATE-ENV>
 						<UpdateObject objectVariable="f">
@@ -1976,7 +2127,7 @@
 				</THEN>
 			</EnvironmentRule>
 			
-			<EnvironmentRule name="IGFirmPayEqualShare_Rule">
+			<EnvironmentRule name="CapitalGoodsProducerPayEqualShare_Rule">
 				<documentation>
 					<description xml:lang="en"><!-- at step 25 -->All households hold equal shares in capital goods producer.</description>
 				</documentation>
@@ -1993,7 +2144,7 @@
 				</DO>
 			</EnvironmentRule>
 			
-			<EnvironmentRule name="FirmPayDividend_Rule">
+			<EnvironmentRule name="ConsumptionGoodsProducerPayDividend_Rule">
 				<documentation>
 					<description xml:lang="en"><!-- at step 25 -->The CGP pays dividends to all households.</description>
 				</documentation>
@@ -2010,7 +2161,7 @@
 				</DO>
 			</EnvironmentRule>
 			
-			<EnvironmentRule name="FirmSetNewPrice_Rule">
+			<EnvironmentRule name="ConsumptionGoodsProducerSetNewPrice_Rule">
 				<documentation>
 					<description xml:lang="en"><!-- at step 25 -->Once the CGP determines to update the price for all regions where it offers its goods, the new price is sent to the regional malls and posted there for the following month.</description>
 				</documentation>
@@ -2033,7 +2184,7 @@
 	</SimulationModel>
 	
 	<InitialState>
-		<Agent type="IGFirm" id="11">
+		<Agent type="CapitalGoodsProducer" id="11">
 			<Slot property="test" value="0.0"/><!--!!!test!!!-->
 			
 			<Slot property="investmentSalesRevenue" value="0.0"/>
@@ -2052,7 +2203,7 @@
 			<PeriodicTimeEvent type="AtStartOfMonthCheckStockLevel" occurrenceTime="2"/>
 		</Agents>
 		
-		<Agents type="Firm" rangeStartID="101" rangeEndID="105">
+		<Agents type="ConsumptionGoodsProducer" rangeStartID="101" rangeEndID="105">
 			<Slot property="productDemands">
 				<ValueExpr language="Java"><![CDATA[ new ArrayList<sim.model.dataTypes.ProductDemandRecord>() ]]></ValueExpr>
 			</Slot>
@@ -2098,7 +2249,7 @@
 			<Slot property="monthlyRealizedProfit" value="0.0"/>
 			<Slot property="currentBalanceOfSavingAccount" value="0.0"/>
 			<Slot property="equalDividend" value="0.0"/>
-			<Slot property="optimalStockLevel" value="20.0"/><!--abstract definition-->
+			<!--<Slot property="optimalStockLevel" value="20.0"/>-->
 			<Slot property="laborSupplyQuantity" value="0"/>
 			<Slot property="wageOffer" value="1.0"/>
 			
@@ -2110,7 +2261,7 @@
 			<PeriodicTimeEvent type="CalculateDividend" occurrenceTime="24"/>
 		</Agents>
 		
-		<Agents type="Firm" rangeStartID="106" rangeEndID="110">
+		<Agents type="ConsumptionGoodsProducer" rangeStartID="106" rangeEndID="110">
 			<Slot property="productDemands">
 				<ValueExpr language="Java"><![CDATA[ new ArrayList<sim.model.dataTypes.ProductDemandRecord>() ]]></ValueExpr>
 			</Slot>
@@ -2156,7 +2307,7 @@
 			<Slot property="monthlyRealizedProfit" value="0.0"/>
 			<Slot property="currentBalanceOfSavingAccount" value="0.0"/>
 			<Slot property="equalDividend" value="0.0"/>
-			<Slot property="optimalStockLevel" value="20.0"/><!--abstract definition-->
+			<!--<Slot property="optimalStockLevel" value="20.0"/>-->
 			<Slot property="laborSupplyQuantity" value="0"/>
 			<Slot property="wageOffer" value="1.0"/>
 			
@@ -2191,6 +2342,7 @@
 			</Slot>
 			<Slot property="specificSkillLevel" value="1.0"/>
 			<Slot property="currentWage" value="1.0"/>
+			<Slot property="laborIncome" value="0.0"/>
 			<Slot property="totalIncome" value="0.0"/>
 			<Slot property="meanIncome" value="0.0"/>
 			<Slot property="currentIncome" value="1.0"/>
@@ -2234,6 +2386,7 @@
 			</Slot>
 			<Slot property="specificSkillLevel" value="1.0"/>
 			<Slot property="currentWage" value="1.0"/>
+			<Slot property="laborIncome" value="0.0"/>
 			<Slot property="totalIncome" value="0.0"/>
 			<Slot property="meanIncome" value="0.0"/>
 			<Slot property="currentIncome" value="1.0"/>
@@ -2255,13 +2408,21 @@
 		</Agents>
 		
 		<GlobalVariable name="period" value="1"/>
-		<GlobalVariable name="comm" value="0.2"/>
+		<GlobalVariable name="comm" value="0.05"/>
 		<GlobalVariable name="investmentSalesPrice" value="1.0"/>
 		<GlobalVariable name="qualityOfInvestment" value="1.0"/>
 		<GlobalVariable name="innovationProbability" value="0.0"/>
 		
 		<GlobalVariable name="producedQuantityLowSkillRegion" value="0.0"/><!--abstract definition-->
 		<GlobalVariable name="producedQuantityHighSkillRegion" value="0.0"/><!--abstract definition-->
+		<GlobalVariable name="commutingEmployeesLowSkillRegion" value="0"/><!--abstract definition-->
+		<GlobalVariable name="commutingEmployeesHighSkillRegion" value="0"/><!--abstract definition-->
+		<GlobalVariable name="priceLowSkillRegion" value="0.0"/><!--abstract definition-->
+		<GlobalVariable name="priceHighSkillRegion" value="0.0"/><!--abstract definition-->
+		<GlobalVariable name="totalLaborIncomeLowSkillRegion" value="0.0"/><!--abstract definition-->
+		<GlobalVariable name="totalLaborIncomeHighSkillRegion" value="0.0"/><!--abstract definition-->
+		<GlobalVariable name="capitalLowSkillRegion" value="0.0"/><!--abstract definition-->
+		<GlobalVariable name="capitalHighSkillRegion" value="0.0"/><!--abstract definition-->
 		
 		<ExogenousEvent type="Init" occurrenceTime="1"/>
 		<ExogenousEvent type="StartOfMonth" occurrenceTime="2"/>
@@ -2297,6 +2458,78 @@
 				</Label>
 				<Hint>
 					<Text xml:lang="en">Total production output per month of all consumption good producers</Text>
+				</Hint>
+			</StatisticsVariableUI>
+			
+			<StatisticsVariableUI variable="numberOfCommutersFromLowToHighSkillRegion">
+				<Label>
+					<Text xml:lang="en">Number of commuters from low to high skill region</Text>
+				</Label>
+				<Hint>
+					<Text xml:lang="en">Number of commuters from low to high skill region</Text>
+				</Hint>
+			</StatisticsVariableUI>
+			
+			<StatisticsVariableUI variable="numberOfCommutersFromHighToLowSkillRegion">
+				<Label>
+					<Text xml:lang="en">Number of commuters from high to low skill region</Text>
+				</Label>
+				<Hint>
+					<Text xml:lang="en">Number of commuters from high to low skill region</Text>
+				</Hint>
+			</StatisticsVariableUI>
+			
+			<StatisticsVariableUI variable="averagePriceLowSkillRegion">
+				<Label>
+					<Text xml:lang="en">Prices in the low skill region</Text>
+				</Label>
+				<Hint>
+					<Text xml:lang="en">Prices in the low skill region</Text>
+				</Hint>
+			</StatisticsVariableUI>
+			
+			<StatisticsVariableUI variable="averagePriceHighSkillRegion">
+				<Label>
+					<Text xml:lang="en">Prices in the high skill region</Text>
+				</Label>
+				<Hint>
+					<Text xml:lang="en">Prices in the high skill region</Text>
+				</Hint>
+			</StatisticsVariableUI>
+			
+			<StatisticsVariableUI variable="capitalStockLowSkillRegion">
+				<Label>
+					<Text xml:lang="en">Capital stock in the low skill region</Text>
+				</Label>
+				<Hint>
+					<Text xml:lang="en">Capital stock in the low skill region</Text>
+				</Hint>
+			</StatisticsVariableUI>
+			
+			<StatisticsVariableUI variable="capitalStockHighSkillRegion">
+				<Label>
+					<Text xml:lang="en">Capital stock in the high skill region</Text>
+				</Label>
+				<Hint>
+					<Text xml:lang="en">Capital stock in the high skill region</Text>
+				</Hint>
+			</StatisticsVariableUI>
+			
+			<StatisticsVariableUI variable="totalLaborIncomeOfWorkersLowSkillRegion">
+				<Label>
+					<Text xml:lang="en">Total labor income of workers in the low skill region</Text>
+				</Label>
+				<Hint>
+					<Text xml:lang="en">Total labor income of workers in the low skill region</Text>
+				</Hint>
+			</StatisticsVariableUI>
+			
+			<StatisticsVariableUI variable="totalLaborIncomeOfWorkersHighSkillRegion">
+				<Label>
+					<Text xml:lang="en">Total labor income of workers in the high skill region</Text>
+				</Label>
+				<Hint>
+					<Text xml:lang="en">Total labor income of workers in the high skill region</Text>
 				</Hint>
 			</StatisticsVariableUI>
 		</StatisticsUI>
