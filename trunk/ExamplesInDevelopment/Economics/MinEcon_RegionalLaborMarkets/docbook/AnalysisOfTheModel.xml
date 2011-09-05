@@ -1,0 +1,1990 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<?xml-model href="http://www.oasis-open.org/docbook/xml/5.0/rng/docbookxi.rng" schematypens="http://relaxng.org/ns/structure/1.0"?>
+<chapter xmlns="http://docbook.org/ns/docbook" 
+        xmlns:xi="http://www.w3.org/2001/XInclude"
+        xmlns:xlink="http://www.w3.org/1999/xlink" version="5.0">
+	<title>Analysis of the model</title>
+	<para>This chapter focuses on the analysis of the model. All the features will be listed. They are
+		quite necessary for reconstruction of the model in AOR simulator. Moreover, a UML class
+		diagram and two BPMN models are created for representing the model. This is a very important
+		step.</para>
+	<section>
+		<title>Data extraction</title>
+		<para>In general, there are three ingredients in this model: market, agent and activity.
+			Markets do not act, because they have no intentions and cannot perform actions. However,
+			they can provide some contexts for agents to act in. Agents always act within markets.
+			They take some activities with different roles. Therefore, the analysis is concentrated
+			on agents, which are involved in different markets and characterized by different
+			actions. As mentioned, there are four types of agents: household, CGP, mall and IGP.
+			Agents and their activities are discussed in depth as follows.</para>
+		<section>
+			<title>Household</title>
+			<para>The model consists of a large number of households, who are simultaneously taking
+				the roles of buyers and workers. Households receive their income and determine how
+				much to spend and how much to save. In general, the household makes some decisions
+				with the related roles affecting the markets as follows.</para>
+			<orderedlist>
+				<listitem>
+					<para>Allocate budget on consumption and saving</para>
+				</listitem>
+				<listitem>
+					<para>Choice of consumption goods</para>
+				</listitem>
+				<listitem>
+					<para>Search for a job</para>
+				</listitem>
+				<listitem>
+					<para>Acquire specific skills</para>
+				</listitem>
+			</orderedlist>
+			<section>
+				<title>Allocate budget on consumption and saving</title>
+				<para>The household acting as the role of buyer (or consumer) sets once a month the
+					consumption budget which is spent on the consumption goods market and
+					consequently determines the remaining part which is saved.</para>
+				<table frame="all">
+					<title>The savings decision</title>
+					<tgroup cols="5" align="center">
+						<colspec colname="c1" colnum="1" colwidth="1.0*"/>
+						<colspec colname="c2" colnum="2" colwidth="1.0*"/>
+						<colspec colname="c3" colnum="3" colwidth="1.0*"/>
+						<colspec colname="c4" colnum="4" colwidth="1.5*"/>
+						<colspec colname="c5" colnum="5" colwidth="0.5*"/>
+						<thead valign="middle">
+							<row>
+								<entry>Variable/Parameter</entry>
+								<entry>Symbol</entry>
+								<entry>Name (in the sim model)</entry>
+								<entry>Description</entry>
+								<entry>Value</entry>
+							</row>
+						</thead>
+						<tbody valign="middle">
+							<row>
+								<entry>personal consumption budget</entry>
+								<entry><emphasis role="italic"
+										>B<superscript>cons</superscript></emphasis></entry>
+								<entry>consumptionBudget</entry>
+								<entry>The consumer decides about the budget that he will spend for
+									consumption</entry>
+								<entry/>
+							</row>
+							<row>
+								<entry>the available liquidity</entry>
+								<entry><emphasis role="italic"
+										>Liq<superscript>Avail</superscript></emphasis></entry>
+								<entry>cashOnHand</entry>
+								<entry>The cash on hand that contains current income (i.e. labor
+									income and dividends distributed by capital and consumption
+									goods producers) and assets carried over from the previous
+									period</entry>
+								<entry/>
+							</row>
+							<row>
+								<entry>mean income</entry>
+								<entry><emphasis role="italic"
+										>Inc<superscript>Mean</superscript></emphasis></entry>
+								<entry>meanIncome</entry>
+								<entry>The mean individual (labor) income of a consumer over the
+									last periods</entry>
+								<entry/>
+							</row>
+							<row>
+								<entry>the percentage of mean income</entry>
+								<entry>&#x03a6;</entry>
+								<entry>phi</entry>
+								<entry>&#x03a6; &#x2264; 1 is the percentage of the mean income such
+									that the consumer spends all cash on hand below that
+									level</entry>
+								<entry><emphasis role="italic">0.9</emphasis></entry>
+							</row>
+							<row>
+								<entry>marginal saving propensity</entry>
+								<entry>&#x3ba;</entry>
+								<entry>savingPropensity</entry>
+								<entry>0 &lt; &#x3ba; &lt; 1 is the saving propensity</entry>
+								<entry><emphasis role="italic">0.1</emphasis></entry>
+							</row>
+						</tbody>
+					</tgroup>
+				</table>
+				<para><emphasis role="bold">Algorithm:</emphasis> There exists a critical value
+					&#x03a6; &#x2217; <emphasis role="italic"
+						>Inc<superscript>Mean</superscript></emphasis> of cash on hand to determine
+					how much cash on hand will be spent for consumption in this month. When the
+					available liquidity <emphasis role="italic"
+						>Liq<superscript>Avail</superscript></emphasis> is below this critical value
+					the whole cash on hand will be spent. Thus, the consumption budget <inlineequation>
+						<math display="block" xmlns="http://www.w3.org/1998/Math/MathML">
+							<mrow>
+								<msup>
+									<mi>B</mi>
+									<mrow>
+										<mi>c</mi>
+										<mi>o</mi>
+										<mi>n</mi>
+										<mi>s</mi>
+									</mrow>
+								</msup>
+								<mo>=</mo>
+								<mi>L</mi>
+								<mi>i</mi>
+								<msup>
+									<mi>q</mi>
+									<mrow>
+										<mi>A</mi>
+										<mi>v</mi>
+										<mi>a</mi>
+										<mi>i</mi>
+										<mi>l</mi>
+									</mrow>
+								</msup>
+							</mrow>
+						</math>
+					</inlineequation>. In the opposite case the consumer will save a part of his
+					cash on hand, so he sets his consumption budget according to the following
+					consumption rule</para>
+				<equation>
+					<math display="block" xmlns="http://www.w3.org/1998/Math/MathML">
+						<mrow>
+							<msup>
+								<mi>B</mi>
+								<mrow>
+									<mi>c</mi>
+									<mi>o</mi>
+									<mi>n</mi>
+									<mi>s</mi>
+								</mrow>
+							</msup>
+							<mo>=</mo>
+							<mi>L</mi>
+							<mi>i</mi>
+							<msup>
+								<mi>q</mi>
+								<mrow>
+									<mi>A</mi>
+									<mi>v</mi>
+									<mi>a</mi>
+									<mi>i</mi>
+									<mi>l</mi>
+								</mrow>
+							</msup>
+							<mo>&#x2212;</mo>
+							<mi>k</mi>
+							<mo>&#x2217;</mo>
+							<mrow>
+								<mo>(</mo>
+								<mrow>
+									<mi>L</mi>
+									<mi>i</mi>
+									<msup>
+										<mi>q</mi>
+										<mrow>
+											<mi>A</mi>
+											<mi>v</mi>
+											<mi>a</mi>
+											<mi>i</mi>
+											<mi>l</mi>
+										</mrow>
+									</msup>
+									<mo>&#x2212;</mo>
+									<mi>&#x03A6;</mi>
+									<mo>&#x2217;</mo>
+									<mi>I</mi>
+									<mi>n</mi>
+									<msup>
+										<mi>c</mi>
+										<mrow>
+											<mi>M</mi>
+											<mi>e</mi>
+											<mi>a</mi>
+											<mi>n</mi>
+										</mrow>
+									</msup>
+								</mrow>
+								<mo>)</mo>
+							</mrow>
+						</mrow>
+					</math>
+				</equation>
+			</section>
+			<section>
+				<title>Choice of consumption goods</title>
+				<para>The consumer purchases consumption goods according to his consumption budget.
+					He splits the consumption budget into four equal shares, each of which is used
+					for shopping per week. After determining the weekly budget, each consumer visits
+					once a week to the mall in his region to buy goods. When visiting the mall he
+					collects information about prices and quantities of different goods and then
+					purchases goods according to his preference and available stocks of goods at
+					posted prices. The model includes neither any kind of horizontal product
+					differentiation, nor any kind of quality differentiation. Therefore, choice
+					probabilities depend solely on prices.</para>
+				<para>Consumers make their purchasing decisions based on the prices of different
+					goods using a stochastic rule as described in a standard logit model. In the
+					marketing literature it is standard to describe individual consumption
+					decisions. This model represents the stochastic influence of factors not
+					explicitly modeled on consumption decisions, see [Guadagni and Little
+					1983].</para>
+				<table frame="all">
+					<title>Selection of consumption goods</title>
+					<tgroup cols="5" align="center">
+						<colspec colname="c1" colnum="1" colwidth="1.0*"/>
+						<colspec colname="c2" colnum="2" colwidth="1.0*"/>
+						<colspec colname="c3" colnum="3" colwidth="1.0*"/>
+						<colspec colname="c4" colnum="4" colwidth="1.5*"/>
+						<colspec colname="c5" colnum="5" colwidth="0.5*"/>
+						<thead valign="middle">
+							<row>
+								<entry>Variable/Parameter</entry>
+								<entry>Symbol</entry>
+								<entry>Name (in the sim model)</entry>
+								<entry>Description</entry>
+								<entry>Value</entry>
+							</row>
+						</thead>
+						<tbody valign="middle">
+							<row>
+								<entry>the selection probability</entry>
+								<entry><emphasis role="italic">Prob</emphasis></entry>
+								<entry>selectionProbability</entry>
+								<entry>The consumer decides which consumption good to buy on the
+									basis of the selection probability of every consumption good
+									sampled by him</entry>
+								<entry/>
+							</row>
+							<row>
+								<entry>available stocks of goods</entry>
+								<entry><emphasis role="italic"
+										>G<subscript>week</subscript></emphasis></entry>
+								<entry>availableProducts</entry>
+								<entry>A list of available products at the attended mall will be created in week (of
+									period)</entry>
+								<entry/>
+							</row>
+							<row>
+								<entry>the price of the consumption good</entry>
+								<entry><emphasis role="italic"
+									>p<subscript>i</subscript></emphasis></entry>
+								<entry>productSalesPrice</entry>
+								<entry>The price of the consumption good i</entry>
+								<entry/>
+							</row>
+							<row>
+								<entry>the value of the consumption good</entry>
+								<entry><emphasis role="italic"
+										>v(p<subscript>i</subscript>)</emphasis></entry>
+								<entry>consumptionValue</entry>
+								<entry>A function whose parameter is p<subscript>i</subscript>
+									determines the subjective value of the consumption good i for
+									consumer</entry>
+								<entry><emphasis role="italic"
+										>-ln(p<subscript>i</subscript>)</emphasis></entry>
+							</row>
+							<row>
+								<entry>the intensity of choice by consumer</entry>
+								<entry>&#x03bb;<emphasis role="italic"
+											><superscript>cons</superscript></emphasis></entry>
+								<entry>intensityOfProductChoice</entry>
+								<entry>The intensity of choice by consumer</entry>
+								<entry><emphasis role="italic">8.5</emphasis></entry>
+							</row>
+						</tbody>
+					</tgroup>
+				</table>
+				<para><emphasis role="bold">Algorithm:</emphasis> The decision of a consumer which
+					consumption good to buy is random, where purchasing probabilities are based on
+					the values he attaches to the different choices he is aware of. The consumer
+					selects one consumption good i &#x2208; <emphasis role="italic"
+							>G<subscript>week</subscript></emphasis>, where the selection
+					probability reads</para>
+				<equation>
+					<math display="block" xmlns="http://www.w3.org/1998/Math/MathML">
+						<mrow>
+							<mi>P</mi>
+							<mi>r</mi>
+							<mi>o</mi>
+							<mi>b</mi>
+							<mo>=</mo>
+							<mfrac>
+								<mrow>
+									<mi>E</mi>
+									<mi>x</mi>
+									<mi>p</mi>
+									<mrow>
+										<mo>[</mo>
+										<mrow>
+											<msup>
+												<mi>&#x03BB;</mi>
+												<mrow>
+												<mi>c</mi>
+												<mi>o</mi>
+												<mi>n</mi>
+												<mi>s</mi>
+												</mrow>
+											</msup>
+											<mo>&#x2217;</mo>
+											<mi>v</mi>
+											<mrow>
+												<mo>(</mo>
+												<mrow>
+												<msub>
+												<mi>p</mi>
+												<mi>i</mi>
+												</msub>
+												</mrow>
+												<mo>)</mo>
+											</mrow>
+										</mrow>
+										<mo>]</mo>
+									</mrow>
+								</mrow>
+								<mrow>
+									<mstyle displaystyle="true">
+										<msub>
+											<mo>&#x2211;</mo>
+											<mrow>
+												<mi>i</mi>
+												<mo>&#x2208;</mo>
+												<msub>
+												<mi>G</mi>
+												<mrow>
+												<mi>w</mi>
+												<mi>e</mi>
+												<mi>e</mi>
+												<mi>k</mi>
+												</mrow>
+												</msub>
+											</mrow>
+										</msub>
+										<mrow>
+											<mi>E</mi>
+											<mi>x</mi>
+											<mi>p</mi>
+											<mrow>
+												<mo>[</mo>
+												<mrow>
+												<msup>
+												<mi>&#x03BB;</mi>
+												<mrow>
+												<mi>c</mi>
+												<mi>o</mi>
+												<mi>n</mi>
+												<mi>s</mi>
+												</mrow>
+												</msup>
+												<mo>&#x2217;</mo>
+												<mi>v</mi>
+												<mrow>
+												<mo>(</mo>
+												<mrow>
+												<msub>
+												<mi>p</mi>
+												<mi>i</mi>
+												</msub>
+												</mrow>
+												<mo>)</mo>
+												</mrow>
+												</mrow>
+												<mo>]</mo>
+											</mrow>
+										</mrow>
+									</mstyle>
+								</mrow>
+							</mfrac>
+						</mrow>
+					</math>
+				</equation>
+				<para>Once the consumer has selected a consumption good he tries to spend the whole
+					weekly budget for that consumption good if the stock at the mall is sufficiently
+					large. In case the consumer cannot spend all his budget on the consumption good
+					selected first, he has a single opportunity to select another good. If the
+					budget is then not completely spent, the remaining amount is rolled over to the
+					following week.</para>
+			</section>
+			<section>
+				<title>Search for a job</title>
+				<para>On the labor market households who are job seekers search for jobs (there are
+					the unemployed plus a certain fraction of on-the-job searchers). They see posted
+					vacancies and apply to the ones if the wage offers exceed the current
+					reservation wage of the job seeker. After applying they receive zero, one or
+					more job offers and rank these offers with respect to the wage offer. In case
+					the offered position is outside the home region of the job seeker, commuting
+					costs are subtracted from the offered wage. If two or more wage offers are equal
+					then these are ordered randomly. Job seekers accept at most one job with the
+					highest offered wage and update their reservation wage which is the new wage. If
+					job seekers are still unemployed they decrease their reservation wage.</para>
+			</section>
+			<section>
+				<title>Acquire specific skills</title>
+				<para>The household is characterized by a general skill level and specific skills.
+					His general skill level is determined by outside factors like government and
+					economic policy. The specific skills of workers are acquired on the job.</para>
+				<table frame="all">
+					<title>Specific skills (of workers) decision</title>
+					<tgroup cols="5" align="center">
+						<colspec colname="c1" colnum="1" colwidth="1.0*"/>
+						<colspec colname="c2" colnum="2" colwidth="1.0*"/>
+						<colspec colname="c3" colnum="3" colwidth="1.0*"/>
+						<colspec colname="c4" colnum="4" colwidth="1.5*"/>
+						<colspec colname="c5" colnum="5" colwidth="0.5*"/>
+						<thead valign="middle">
+							<row>
+								<entry>Variable/Parameter</entry>
+								<entry>Symbol</entry>
+								<entry>Name (in the sim model)</entry>
+								<entry>Description</entry>
+								<entry>Value</entry>
+							</row>
+						</thead>
+						<tbody valign="middle">
+							<row>
+								<entry>the average quality of the capital stock</entry>
+								<entry><emphasis role="italic"
+									>A<subscript>i</subscript></emphasis></entry>
+								<entry>averageQualityOfCapitalStock</entry>
+								<entry>The average quality of the investment goods employed by CGP
+									i</entry>
+								<entry/>
+							</row>
+							<row>
+								<entry>general skill level</entry>
+								<entry><emphasis role="italic"
+										>b<superscript>gen</superscript></emphasis></entry>
+								<entry>generalSkillLevel</entry>
+								<entry>Every worker has a level of general skills <inlineequation>
+										<math display="block"
+											xmlns="http://www.w3.org/1998/Math/MathML">
+											<mrow>
+												<msup>
+												<mi>b</mi>
+												<mrow>
+												<mi>g</mi>
+												<mi>e</mi>
+												<mi>n</mi>
+												</mrow>
+												</msup>
+												<mo>&#x2208;</mo>
+												<mrow>
+												<mo>{</mo>
+												<mrow>
+												<mn>1,</mn>
+												<mo>&#x2026;</mo>
+												<mo>,</mo>
+												<msubsup>
+												<mi>b</mi>
+												<mrow>
+												<mi>max</mi>
+												</mrow>
+												<mrow>
+												<mi>g</mi>
+												<mi>e</mi>
+												<mi>n</mi>
+												</mrow>
+												</msubsup>
+												</mrow>
+												<mo>}</mo>
+												</mrow>
+											</mrow>
+										</math>
+									</inlineequation></entry>
+								<entry><emphasis role="italic">[1&#x2026;5]</emphasis></entry>
+							</row>
+							<row>
+								<entry>specific skill level</entry>
+								<entry><emphasis role="italic"
+									>b<subscript>t</subscript></emphasis></entry>
+								<entry>specificSkillLevel</entry>
+								<entry>Every worker has a level of specific skills in period
+									t</entry>
+								<entry/>
+							</row>
+							<row>
+								<entry>increasing in the general skill level of the worker</entry>
+								<entry>&#x03c7;<emphasis role="italic"
+											>(b<superscript>gen</superscript>)</emphasis></entry>
+								<entry>chi</entry>
+								<entry>A function whose parameter is b<superscript>gen</superscript>
+									governs the speed of specific skill improvement</entry>
+								<entry/>
+							</row>
+						</tbody>
+					</tgroup>
+				</table>
+				<para><emphasis role="bold">Algorithm:</emphasis> While being employed each worker
+					adjusts his specific skills to the average quality of the capital stock of his
+					employer. The adjustment speed &#x03c7;<emphasis role="italic"
+							>(b<superscript>gen</superscript>)</emphasis> depends positively on the
+					general skill level of the worker.</para>
+				<equation>
+					<math display="block" xmlns="http://www.w3.org/1998/Math/MathML">
+						<mrow>
+							<msub>
+								<mi>b</mi>
+								<mrow>
+									<mi>t</mi>
+									<mo>+</mo>
+									<mn>1</mn>
+								</mrow>
+							</msub>
+							<mo>=</mo>
+							<msub>
+								<mi>b</mi>
+								<mi>t</mi>
+							</msub>
+							<mo>+</mo>
+							<mi>&#x03C7;</mi>
+							<mrow>
+								<mo>(</mo>
+								<mrow>
+									<msup>
+										<mi>b</mi>
+										<mrow>
+											<mi>g</mi>
+											<mi>e</mi>
+											<mi>n</mi>
+										</mrow>
+									</msup>
+								</mrow>
+								<mo>)</mo>
+							</mrow>
+							<mo>&#x2217;</mo>
+							<mrow>
+								<mo>(</mo>
+								<mrow>
+									<msub>
+										<mi>A</mi>
+										<mi>i</mi>
+									</msub>
+									<mo>&#x2212;</mo>
+									<msub>
+										<mi>b</mi>
+										<mi>t</mi>
+									</msub>
+								</mrow>
+								<mo>)</mo>
+							</mrow>
+						</mrow>
+					</math>
+				</equation>
+				<para>where the formula of the function &#x03c7;<emphasis role="italic"
+							>(b<superscript>gen</superscript>)</emphasis> is</para>
+				<equation>
+					<math display="block" xmlns="http://www.w3.org/1998/Math/MathML">
+						<mrow>
+							<mi>&#x03C7;</mi>
+							<mrow>
+								<mo>(</mo>
+								<mrow>
+									<msup>
+										<mi>b</mi>
+										<mrow>
+											<mi>g</mi>
+											<mi>e</mi>
+											<mi>n</mi>
+										</mrow>
+									</msup>
+								</mrow>
+								<mo>)</mo>
+							</mrow>
+							<mo>=</mo>
+							<mn>1</mn>
+							<mo>&#x2212;</mo>
+							<msup>
+								<mrow>
+									<mn>0.5</mn>
+								</mrow>
+								<mrow>
+									<mn>1</mn>
+									<mo>/</mo>
+									<mrow>
+										<mo>(</mo>
+										<mrow>
+											<mn>20</mn>
+											<mo>+</mo>
+											<mn>0.25</mn>
+											<mo>&#x2217;</mo>
+											<mrow>
+												<mo>(</mo>
+												<mrow>
+												<msup>
+												<mi>b</mi>
+												<mrow>
+												<mi>g</mi>
+												<mi>e</mi>
+												<mi>n</mi>
+												</mrow>
+												</msup>
+												<mo>&#x2212;</mo>
+												<mn>1</mn>
+												</mrow>
+												<mo>)</mo>
+											</mrow>
+											<mo>&#x2217;</mo>
+											<mrow>
+												<mo>(</mo>
+												<mrow>
+												<mn>4</mn>
+												<mo>&#x2212;</mo>
+												<mn>20</mn>
+												</mrow>
+												<mo>)</mo>
+											</mrow>
+										</mrow>
+										<mo>)</mo>
+									</mrow>
+								</mrow>
+							</msup>
+						</mrow>
+					</math>
+				</equation>
+				<para>Brief interpretation: There are 5 general skill groups 1 to 5, where 1 is the
+					lowest skill group and 5 is the group with the highest skills. A worker from
+					skill group 1 needs 20 months to close half of the gap between his specific
+					skills and the technology of his employer, where a worker of skill group 5 needs
+					only one fifth of that time, namely 4 months. Therefore, the higher the general
+					skill level of a worker, the faster he acquires the specific skills associated
+					with a given job.</para>
+			</section>
+		</section>
+		<section>
+			<title>Consumption goods producer (CGP)</title>
+			<para>The CGP plays the role of buyer, seller and employer and makes a large number of
+				decisions to influence the markets. Overall, it operates the sequence of events in
+				the following way:</para>
+			<orderedlist>
+				<listitem>
+					<para>Product stock (optimal inventory) decision</para>
+				</listitem>
+				<listitem>
+					<para>Production inputs (labor and capital) decision</para>
+				</listitem>
+				<listitem>
+					<para>Investment (in investment goods) decision</para>
+				</listitem>
+				<listitem>
+					<para>Employment (hiring and firing) decision</para>
+				</listitem>
+				<listitem>
+					<para>Production (quantity) decision</para>
+				</listitem>
+				<listitem>
+					<para>Pricing decision (which price to set)</para>
+				</listitem>
+				<listitem>
+					<para>Dividend payment decision</para>
+				</listitem>
+			</orderedlist>
+			<section>
+				<title>Product stock (optimal inventory) decision</title>
+				<para>The operating cycle starts with product stock decision. The CGP keeps a stock of its
+					products at every regional mall. It decides once a month whether the inventories
+					at different malls need to be refilled in order to try to avoid the shortage of
+					supplied goods and maximize the expected profit. To that end the CGP checks the
+					current stock level reported by each mall it serves and determines an optimal
+					stock level for each mall using a standard managerial method, which is based on
+					a solution to the "newsvendor problem", faced by a newsvendor trying to decide
+					how many newspapers to stock on a newsstand before observing demand, trying to
+					avoid both overage and underage costs if  he orders too much or if he orders too
+					little, see [Hillier and Lieberman 1986].</para>
+				<table frame="all">
+					<title>Quantity choice</title>
+					<tgroup cols="5" align="center">
+						<colspec colname="c1" colnum="1" colwidth="1.0*"/>
+						<colspec colname="c2" colnum="2" colwidth="1.0*"/>
+						<colspec colname="c3" colnum="3" colwidth="1.0*"/>
+						<colspec colname="c4" colnum="4" colwidth="1.5*"/>
+						<colspec colname="c5" colnum="5" colwidth="0.5*"/>
+						<thead valign="middle">
+							<row>
+								<entry>Variable/Parameter</entry>
+								<entry>Symbol</entry>
+								<entry>Name (in the sim model)</entry>
+								<entry>Description</entry>
+								<entry>Value</entry>
+							</row>
+						</thead>
+						<tbody valign="middle">
+							<row>
+								<entry>the optimal stock level</entry>
+								<entry><emphasis role="italic">Y</emphasis></entry>
+								<entry>optimalStockLevel</entry>
+								<entry>The CGP replenishes its stock at each mall in every period up
+									to a given optimal stock level</entry>
+								<entry/>
+							</row>
+							<row>
+								<entry>the price of the consumption good</entry>
+								<entry><emphasis role="italic"
+									>p<subscript>i</subscript></emphasis></entry>
+								<entry>productSalesPrice</entry>
+								<entry>The price of the consumption good i</entry>
+								<entry/>
+							</row>
+							<row>
+								<entry>the unit cost of production</entry>
+								<entry><emphasis role="italic"
+										>c<subscript>t-1</subscript></emphasis></entry>
+								<entry>unitCostOfProduction</entry>
+								<entry>The unit cost of production in period t - 1 (the previous
+									period)</entry>
+								<entry/>
+							</row>
+							<row>
+								<entry>holding cost</entry>
+								<entry><emphasis role="italic"
+										>C<superscript>inv</superscript></emphasis></entry>
+								<entry>holdingCost</entry>
+								<entry>Holding cost per unit remaining at the mall for one
+									period</entry>
+								<entry><emphasis role="italic">0.1</emphasis></entry>
+							</row>
+							<row>
+								<entry>monthly discount factor</entry>
+								<entry>&#x03c1;</entry>
+								<entry>rho</entry>
+								<entry>The discount rate which takes into account the time value of
+									money</entry>
+								<entry><emphasis role="italic">0.95</emphasis></entry>
+							</row>
+							<row>
+								<entry>the current stock level</entry>
+								<entry><emphasis role="italic">SL</emphasis></entry>
+								<entry>currentStockLevel</entry>
+								<entry>The level of the stock which is checked at each mall</entry>
+								<entry/>
+							</row>
+							<row>
+								<entry>the desired replenishment quantity</entry>
+								<entry><emphasis role="italic"
+									>D<subscript>r</subscript></emphasis></entry>
+								<entry>replenishmentQuantity</entry>
+								<entry>The desired replenishment quantity at the mall in region
+									r</entry>
+								<entry/>
+							</row>
+							<row>
+								<entry>the sum of the orders</entry>
+								<entry><emphasis role="italic"
+										>D<superscript>plan</superscript></emphasis></entry>
+								<entry>sumOfOrders</entry>
+								<entry>The sum of the planned delivery volumes for the malls</entry>
+								<entry/>
+							</row>
+							<row>
+								<entry>the planned output</entry>
+								<entry><emphasis role="italic"
+										>Q<superscript>plan</superscript></emphasis></entry>
+								<entry>plannedOutput</entry>
+								<entry>The planned output that is used for the determination of the
+									input factor needs</entry>
+								<entry/>
+							</row>
+							<row>
+								<entry>a linear combination</entry>
+								<entry>&#x03be;</entry>
+								<entry>xi</entry>
+								<entry>For combining the planned current demand with weight xi and
+									the historic demand with weight (1 - xi)</entry>
+								<entry><emphasis role="italic">0.5</emphasis></entry>
+							</row>
+						</tbody>
+					</tgroup>
+				</table>
+				<para><emphasis role="bold">Algorithm:</emphasis> In order to determine the optimal
+					stock level the CGP estimates the demand distribution based on demands reported
+					by the mall in the previous T months. Because the estimated demand distribution
+					is not clearly spelled out in the original model, suppose now that the <emphasis
+						role="italic">D</emphasis> demand follows a uniform distribution
+					(continuous) between <emphasis role="italic"
+						>D<subscript>min</subscript></emphasis> and <emphasis role="italic"
+							>D<subscript>max</subscript></emphasis> among the last sales. The value
+					of the optimal stock level satisfies the equation</para>
+				<equation>
+					<math display="block" xmlns="http://www.w3.org/1998/Math/MathML">
+						<mrow>
+							<msup>
+								<mi>&#x03A6;</mi>
+								<mrow>
+									<mi>p</mi>
+									<mi>l</mi>
+									<mi>a</mi>
+									<mi>n</mi>
+								</mrow>
+							</msup>
+							<mrow>
+								<mo>(</mo>
+								<mi>Y</mi>
+								<mo>)</mo>
+							</mrow>
+							<mo>=</mo>
+							<mfrac>
+								<mrow>
+									<msub>
+										<mi>p</mi>
+										<mi>i</mi>
+									</msub>
+									<mo>&#x2212;</mo>
+									<mrow>
+										<mo>(</mo>
+										<mrow>
+											<mn>1</mn>
+											<mo>&#x2212;</mo>
+											<mi>&#x03C1;</mi>
+										</mrow>
+										<mo>)</mo>
+									</mrow>
+									<mo>&#x2217;</mo>
+									<msub>
+										<mi>c</mi>
+										<mrow>
+											<mi>t</mi>
+											<mo>&#x2212;</mo>
+											<mn>1</mn>
+										</mrow>
+									</msub>
+								</mrow>
+								<mrow>
+									<msub>
+										<mi>p</mi>
+										<mi>i</mi>
+									</msub>
+									<mo>+</mo>
+									<msup>
+										<mi>C</mi>
+										<mrow>
+											<mi>i</mi>
+											<mi>n</mi>
+											<mi>v</mi>
+										</mrow>
+									</msup>
+								</mrow>
+							</mfrac>
+						</mrow>
+					</math>
+				</equation>
+				<para>Here &#x03a6;<emphasis role="italic"><superscript>plan</superscript>(Y)</emphasis> denotes
+					the cumulative distribution function (CDF) of the estimated demand
+					distribution.</para>
+				<para>The CGP applies an optimal inventory policy to determine whether and how much
+					to replenish inventory. The optimal inventory policy is the following:</para>
+				<itemizedlist>
+					<listitem>
+						<para>If the current stock level is greater than or equal to the optimal
+							stock level <inlineequation>
+								<math display="block" xmlns="http://www.w3.org/1998/Math/MathML">
+									<mrow>
+										<mi>S</mi>
+										<mi>L</mi>
+										<mo>&#x2265;</mo>
+										<mi>Y</mi>
+									</mrow>
+								</math>
+							</inlineequation>, the CGP does not need to replenish inventory <inlineequation>
+								<math display="block" xmlns="http://www.w3.org/1998/Math/MathML">
+									<mrow>
+										<msub>
+											<mi>D</mi>
+											<mi>r</mi>
+										</msub>
+										<mtext>=</mtext>
+										<mn>0</mn>
+									</mrow>
+								</math>
+							</inlineequation>.</para>
+					</listitem>
+					<listitem>
+						<para>If the current stock level is less than the optimal stock level <inlineequation>
+								<math display="block" xmlns="http://www.w3.org/1998/Math/MathML">
+									<mrow>
+										<mi>S</mi>
+										<mi>L</mi>
+										<mo>&#x003C;</mo>
+										<mi>Y</mi>
+									</mrow>
+								</math>
+							</inlineequation>, the CGP needs to replenish inventory <inlineequation>
+								<math display="block" xmlns="http://www.w3.org/1998/Math/MathML">
+									<mrow>
+										<msub>
+											<mi>D</mi>
+											<mi>r</mi>
+										</msub>
+										<mo>=</mo>
+										<mi>Y</mi>
+										<mo>&#x2212;</mo>
+										<mi>S</mi>
+										<mi>L</mi>
+									</mrow>
+								</math>
+							</inlineequation>.</para>
+					</listitem>
+				</itemizedlist>
+			</section>
+			<section>
+				<title>Production inputs (labor and capital) decision</title>
+				<para>After completing the planned output, the CGP computes the required factor
+					inputs. In this model for producing the homogenous consumption good two input
+					factors are used, i.e. labor and capital. Based on the planned output the
+					corresponding demand for capital and labor are determined.</para>
+				<table frame="all">
+					<title>Factor demand</title>
+					<tgroup cols="5" align="center">
+						<colspec colname="c1" colnum="1" colwidth="1.0*"/>
+						<colspec colname="c2" colnum="2" colwidth="1.0*"/>
+						<colspec colname="c3" colnum="3" colwidth="1.0*"/>
+						<colspec colname="c4" colnum="4" colwidth="1.5*"/>
+						<colspec colname="c5" colnum="5" colwidth="0.5*"/>
+						<thead valign="middle">
+							<row>
+								<entry>Variable/Parameter</entry>
+								<entry>Symbol</entry>
+								<entry>Name (in the sim model)</entry>
+								<entry>Description</entry>
+								<entry>Value</entry>
+							</row>
+						</thead>
+						<tbody valign="middle">
+							<row>
+								<entry>the planned output</entry>
+								<entry><emphasis role="italic"
+										>Q<superscript>plan</superscript></emphasis></entry>
+								<entry>plannedOutput</entry>
+								<entry>The planned output that is used for the determination of the
+									input factor needs</entry>
+								<entry/>
+							</row>
+							<row>
+								<entry>labor intensity of production</entry>
+								<entry>&#x03b1;</entry>
+								<entry>alpha</entry>
+								<entry morerows="1">0 &lt; &#x03b1;, &#x03b2; and &#x03b1; +
+									&#x03b2; = 1 &#x03b1; and &#x03b2; are the output elasticities
+									of labor and capital</entry>
+								<entry><emphasis role="italic">0.662</emphasis></entry>
+							</row>
+							<row>
+								<entry>capital intensity of production</entry>
+								<entry>&#x03b2;</entry>
+								<entry>beta</entry>
+								<entry><emphasis role="italic">0.338</emphasis></entry>
+							</row>
+							<row>
+								<entry>the average quality of the capital stock</entry>
+								<entry><emphasis role="italic"
+									>A<subscript>i</subscript></emphasis></entry>
+								<entry>averageQualityOfCapitalStock</entry>
+								<entry>The average quality of the investment goods employed by CGP
+									i</entry>
+								<entry/>
+							</row>
+							<row>
+								<entry>the average level of specific skills of employees</entry>
+								<entry><emphasis role="italic">B</emphasis></entry>
+								<entry>averageSpecificSkillLevel</entry>
+								<entry>The average level of specific skills of employees</entry>
+								<entry/>
+							</row>
+							<row>
+								<entry>labor input</entry>
+								<entry><emphasis role="italic"
+										>L<superscript>plan</superscript></emphasis></entry>
+								<entry>plannedLaborInput</entry>
+								<entry>The planned labor force is directly related to the planned
+									production quantity</entry>
+								<entry/>
+							</row>
+							<row>
+								<entry>capital input</entry>
+								<entry><emphasis role="italic"
+										>K<superscript>plan</superscript></emphasis></entry>
+								<entry>grossInvestment</entry>
+								<entry>The planned capital stock is directly related to the planned
+									production quantity</entry>
+								<entry/>
+							</row>
+							<row>
+								<entry>the price of the investment good</entry>
+								<entry><emphasis role="italic"
+										>p<superscript>inv</superscript></emphasis></entry>
+								<entry>investmentSalesPrice</entry>
+								<entry>The price of the investment good</entry>
+								<entry/>
+							</row>
+							<row>
+								<entry>The average wage of employees</entry>
+								<entry><emphasis role="italic"
+										>w<superscript>e</superscript></emphasis></entry>
+								<entry>laborPrice</entry>
+								<entry>The average wage of employees</entry>
+								<entry/>
+							</row>
+						</tbody>
+					</tgroup>
+				</table>
+				<para><emphasis role="bold">Algorithm:</emphasis> Two cases have to be considered
+					for the factor demand determination:</para>
+				<equation>
+					<math display="block" xmlns="http://www.w3.org/1998/Math/MathML">
+						<mtable columnalign="left">
+							<mtr>
+								<mtd>
+									<msup>
+										<mi>K</mi>
+										<mrow>
+											<mi>P</mi>
+											<mi>L</mi>
+											<mi>A</mi>
+											<mi>N</mi>
+										</mrow>
+									</msup>
+									<mo>=</mo>
+									<mfrac>
+										<mrow>
+											<msup>
+												<mrow>
+												<mrow>
+												<mo>(</mo>
+												<mrow>
+												<mi>&#x03B2;</mi>
+												<mo>&#x2217;</mo>
+												<msup>
+												<mi>w</mi>
+												<mi>e</mi>
+												</msup>
+												</mrow>
+												<mo>)</mo>
+												</mrow>
+												</mrow>
+												<mi>&#x03B1;</mi>
+											</msup>
+											<mo>&#x2217;</mo>
+											<msup>
+												<mi>Q</mi>
+												<mrow>
+												<mi>p</mi>
+												<mi>l</mi>
+												<mi>a</mi>
+												<mi>n</mi>
+												</mrow>
+											</msup>
+										</mrow>
+										<mrow>
+											<msup>
+												<mrow>
+												<mrow>
+												<mo>(</mo>
+												<mrow>
+												<mi>&#x03B1;</mi>
+												<mo>&#x2217;</mo>
+												<msup>
+												<mi>p</mi>
+												<mrow>
+												<mi>i</mi>
+												<mi>n</mi>
+												<mi>v</mi>
+												</mrow>
+												</msup>
+												</mrow>
+												<mo>)</mo>
+												</mrow>
+												</mrow>
+												<mi>&#x03B1;</mi>
+											</msup>
+											<mo>&#x2217;</mo>
+											<mi>min</mi>
+											<mrow>
+												<mo>[</mo>
+												<mrow>
+												<msub>
+												<mi>A</mi>
+												<mi>i</mi>
+												</msub>
+												<mo>,</mo>
+												<mi>B</mi>
+												</mrow>
+												<mo>]</mo>
+											</mrow>
+										</mrow>
+									</mfrac>
+								</mtd>
+							</mtr>
+							<mtr>
+								<mtd>
+									<msup>
+										<mi>L</mi>
+										<mrow>
+											<mi>P</mi>
+											<mi>L</mi>
+											<mi>A</mi>
+											<mi>N</mi>
+										</mrow>
+									</msup>
+									<mo>=</mo>
+									<mfrac>
+										<mrow>
+											<msup>
+												<mrow>
+												<mrow>
+												<mo>(</mo>
+												<mrow>
+												<mi>&#x03B1;</mi>
+												<mo>&#x2217;</mo>
+												<msup>
+												<mi>p</mi>
+												<mrow>
+												<mi>i</mi>
+												<mi>n</mi>
+												<mi>v</mi>
+												</mrow>
+												</msup>
+												</mrow>
+												<mo>)</mo>
+												</mrow>
+												</mrow>
+												<mi>&#x03B2;</mi>
+											</msup>
+											<mo>&#x2217;</mo>
+											<msup>
+												<mi>Q</mi>
+												<mrow>
+												<mi>p</mi>
+												<mi>l</mi>
+												<mi>a</mi>
+												<mi>n</mi>
+												</mrow>
+											</msup>
+										</mrow>
+										<mrow>
+											<msup>
+												<mrow>
+												<mrow>
+												<mo>(</mo>
+												<mrow>
+												<mi>&#x03B2;</mi>
+												<mo>&#x2217;</mo>
+												<msup>
+												<mi>w</mi>
+												<mi>e</mi>
+												</msup>
+												</mrow>
+												<mo>)</mo>
+												</mrow>
+												</mrow>
+												<mi>&#x03B2;</mi>
+											</msup>
+											<mo>&#x2217;</mo>
+											<mi>min</mi>
+											<mrow>
+												<mo>[</mo>
+												<mrow>
+												<msub>
+												<mi>A</mi>
+												<mi>i</mi>
+												</msub>
+												<mo>,</mo>
+												<mi>B</mi>
+												</mrow>
+												<mo>]</mo>
+											</mrow>
+										</mrow>
+									</mfrac>
+								</mtd>
+							</mtr>
+						</mtable>
+					</math>
+				</equation>
+				<para>and if <inlineequation>
+						<math display="block" xmlns="http://www.w3.org/1998/Math/MathML">
+							<mrow>
+								<msup>
+									<mi>K</mi>
+									<mrow>
+										<mi>P</mi>
+										<mi>L</mi>
+										<mi>A</mi>
+										<mi>N</mi>
+									</mrow>
+								</msup>
+								<mo>&#x2265;</mo>
+								<mrow>
+									<mo>(</mo>
+									<mrow>
+										<mn>1</mn>
+										<mo>&#x2212;</mo>
+										<mi>&#x03B4;</mi>
+									</mrow>
+									<mo>)</mo>
+								</mrow>
+								<mo>&#x2217;</mo>
+								<msub>
+									<mi>K</mi>
+									<mrow>
+										<mi>t</mi>
+										<mo>&#x2212;</mo>
+										<mn>1</mn>
+									</mrow>
+								</msub>
+							</mrow>
+						</math>
+					</inlineequation>, the desired capital and labor stocks read <inlineequation>
+						<math display="block" xmlns="http://www.w3.org/1998/Math/MathML">
+							<mrow>
+								<msup>
+									<mi>K</mi>
+									<mrow>
+										<mi>P</mi>
+										<mi>L</mi>
+										<mi>A</mi>
+										<mi>N</mi>
+									</mrow>
+								</msup>
+								<mo>=</mo>
+								<msup>
+									<mi>K</mi>
+									<mrow>
+										<mi>p</mi>
+										<mi>l</mi>
+										<mi>a</mi>
+										<mi>n</mi>
+									</mrow>
+								</msup>
+							</mrow>
+						</math>
+					</inlineequation> and <inlineequation>
+						<math display="block" xmlns="http://www.w3.org/1998/Math/MathML">
+							<mrow>
+								<msup>
+									<mi>L</mi>
+									<mrow>
+										<mi>P</mi>
+										<mi>L</mi>
+										<mi>A</mi>
+										<mi>N</mi>
+									</mrow>
+								</msup>
+								<mo>=</mo>
+								<msup>
+									<mi>L</mi>
+									<mrow>
+										<mi>p</mi>
+										<mi>l</mi>
+										<mi>a</mi>
+										<mi>n</mi>
+									</mrow>
+								</msup>
+							</mrow>
+						</math>
+					</inlineequation>. Otherwise,</para>
+				<equation>
+					<math display="block" xmlns="http://www.w3.org/1998/Math/MathML">
+						<mtable columnalign="left">
+							<mtr>
+								<mtd>
+									<msup>
+										<mi>K</mi>
+										<mrow>
+											<mi>p</mi>
+											<mi>l</mi>
+											<mi>a</mi>
+											<mi>n</mi>
+										</mrow>
+									</msup>
+									<mo>=</mo>
+									<mrow>
+										<mo>(</mo>
+										<mrow>
+											<mn>1</mn>
+											<mo>&#x2212;</mo>
+											<mi>&#x03B4;</mi>
+										</mrow>
+										<mo>)</mo>
+									</mrow>
+									<mo>&#x2217;</mo>
+									<msub>
+										<mi>K</mi>
+										<mrow>
+											<mi>t</mi>
+											<mo>&#x2212;</mo>
+											<mn>1</mn>
+										</mrow>
+									</msub>
+								</mtd>
+							</mtr>
+							<mtr>
+								<mtd>
+									<msup>
+										<mi>L</mi>
+										<mrow>
+											<mi>p</mi>
+											<mi>l</mi>
+											<mi>a</mi>
+											<mi>n</mi>
+										</mrow>
+									</msup>
+									<mo>=</mo>
+									<msup>
+										<mrow>
+											<mo>(</mo>
+											<mrow>
+												<mfrac>
+												<mrow>
+												<msup>
+												<mi>Q</mi>
+												<mrow>
+												<mi>p</mi>
+												<mi>l</mi>
+												<mi>a</mi>
+												<mi>n</mi>
+												</mrow>
+												</msup>
+												</mrow>
+												<mrow>
+												<msup>
+												<mrow>
+												<mrow>
+												<mo>(</mo>
+												<mrow>
+												<mrow>
+												<mo>(</mo>
+												<mrow>
+												<mn>1</mn>
+												<mo>&#x2212;</mo>
+												<mi>&#x03B4;</mi>
+												</mrow>
+												<mo>)</mo>
+												</mrow>
+												<mo>&#x2217;</mo>
+												<msub>
+												<mi>K</mi>
+												<mrow>
+												<mi>t</mi>
+												<mo>&#x2212;</mo>
+												<mn>1</mn>
+												</mrow>
+												</msub>
+												</mrow>
+												<mo>)</mo>
+												</mrow>
+												</mrow>
+												<mi>&#x03B2;</mi>
+												</msup>
+												<mo>&#x2217;</mo>
+												<mi>min</mi>
+												<mrow>
+												<mo>[</mo>
+												<mrow>
+												<msub>
+												<mi>A</mi>
+												<mi>i</mi>
+												</msub>
+												<mo>,</mo>
+												<mi>B</mi>
+												</mrow>
+												<mo>]</mo>
+												</mrow>
+												</mrow>
+												</mfrac>
+											</mrow>
+											<mo>)</mo>
+										</mrow>
+										<mrow>
+											<mfrac>
+												<mn>1</mn>
+												<mi>&#x03B1;</mi>
+											</mfrac>
+										</mrow>
+									</msup>
+								</mtd>
+							</mtr>
+						</mtable>
+					</math>
+				</equation>
+			</section>
+			<section>
+				<title>Investment (in investment goods) decision</title>
+				<para>The existing capital stock of the CGP depreciates over time. Once there is a
+					positive demand for investment goods, the CGP purchases the needed amount from
+					the IGP thereby upgrading its capital stock.</para>
+				<table frame="all">
+					<title>Investment demand</title>
+					<tgroup cols="5" align="center">
+						<colspec colname="c1" colnum="1" colwidth="1.0*"/>
+						<colspec colname="c2" colnum="2" colwidth="1.0*"/>
+						<colspec colname="c3" colnum="3" colwidth="1.0*"/>
+						<colspec colname="c4" colnum="4" colwidth="1.5*"/>
+						<colspec colname="c5" colnum="5" colwidth="0.5*"/>
+						<thead valign="middle">
+							<row>
+								<entry>Variable/Parameter</entry>
+								<entry>Symbol</entry>
+								<entry>Name (in the sim model)</entry>
+								<entry>Description</entry>
+								<entry>Value</entry>
+							</row>
+						</thead>
+						<tbody valign="middle">
+							<row>
+								<entry>the gross investment</entry>
+								<entry><emphasis role="italic"
+									>K<subscript>t</subscript></emphasis></entry>
+								<entry>grossInvestment</entry>
+								<entry>The stock of machines etc. needed for production</entry>
+								<entry/>
+							</row>
+							<row>
+								<entry>the new investment</entry>
+								<entry><emphasis role="italic">I</emphasis></entry>
+								<entry>newInvestment</entry>
+								<entry>The CGP needs more investments in order to expand its
+									production scale</entry>
+								<entry/>
+							</row>
+							<row>
+								<entry>the depreciation rate of capital</entry>
+								<entry>&#x03b4;</entry>
+								<entry>delta</entry>
+								<entry>The depreciation rate of capital</entry>
+								<entry><emphasis role="italic">0.01</emphasis></entry>
+							</row>
+						</tbody>
+					</tgroup>
+				</table>
+				<para><emphasis role="bold">Algorithm:</emphasis> The capital stock of the CGP is
+					updated as old capital is replaced by new investments.</para>
+				<equation>
+					<math display="block" xmlns="http://www.w3.org/1998/Math/MathML">
+						<mrow>
+							<msub>
+								<mi>K</mi>
+								<mrow>
+									<mi>t</mi>
+									<mo>+</mo>
+									<mn>1</mn>
+								</mrow>
+							</msub>
+							<mo>=</mo>
+							<mrow>
+								<mo>(</mo>
+								<mrow>
+									<mn>1</mn>
+									<mo>&#x2212;</mo>
+									<mi>&#x03B4;</mi>
+								</mrow>
+								<mo>)</mo>
+							</mrow>
+							<mo>&#x2217;</mo>
+							<msub>
+								<mi>K</mi>
+								<mi>t</mi>
+							</msub>
+							<mo>+</mo>
+							<mi>I</mi>
+						</mrow>
+					</math>
+				</equation>
+			</section>
+			<section>
+				<title>Employment (hiring and firing) decision</title>
+				<para>After determining the required labor force during the calculation of planned
+					production inputs, the CGP compares it to the existing labor force, and then
+					decides to post vacancies or to dismiss workers depending on the difference
+					between the required labor force and the existing labor force. In case a CGP has
+					to downsize the labor force, it fires workers with the lowest general skill
+					levels until the needed number of workers is reached.</para>
+				<para>In another case, if a CGP has a positive demand for labor, vacancies are
+					posted together with a wage offer. The incoming applications are ranked with
+					respect to the general skill level. More specifically, applicants with higher
+					general skill levels are ranked higher. If there exist two or more applicants
+					who have the same general skill level, they are ranked by chance. The CGP sends
+					as many job offers as it has vacancies to the highest ranked applicants. If the
+					CGP then receives job acceptances from the applicants, it updates the number of
+					employees and the number of vacancies. Otherwise there are still some vacancies
+					and the CGP increases the offered wage.</para>
+			</section>
+			<section>
+				<title>Production (quantity) decision</title>
+				<para>After the two input factors are completed, the CGP starts with the actual
+					production cycle. The production technology is represented by a Cobb-Douglas
+					type production function. In economics, the Cobb-Douglas functional form of
+					production functions is widely used to represent the relationship of an output
+					to inputs. In this model for producing the homogenous consumption good two input
+					factors are used, i.e. labor and capital.</para>
+				<table frame="all">
+					<title>Factor demand</title>
+					<tgroup cols="5" align="center">
+						<colspec colname="c1" colnum="1" colwidth="1.0*"/>
+						<colspec colname="c2" colnum="2" colwidth="1.0*"/>
+						<colspec colname="c3" colnum="3" colwidth="1.0*"/>
+						<colspec colname="c4" colnum="4" colwidth="1.5*"/>
+						<colspec colname="c5" colnum="5" colwidth="0.5*"/>
+						<thead valign="middle">
+							<row>
+								<entry>Variable/Parameter</entry>
+								<entry>Symbol</entry>
+								<entry>Name (in the sim model)</entry>
+								<entry>Description</entry>
+								<entry>Value</entry>
+							</row>
+						</thead>
+						<tbody valign="middle">
+							<row>
+								<entry>the quantity of production</entry>
+								<entry><emphasis role="italic">Q</emphasis></entry>
+								<entry>producedQuantity</entry>
+								<entry>The quantity of production</entry>
+								<entry/>
+							</row>
+							<row>
+								<entry>labor intensity of production</entry>
+								<entry>&#x03b1;</entry>
+								<entry>alpha</entry>
+								<entry morerows="1">0 &lt; &#x03b1;, &#x03b2; and &#x03b1; +
+									&#x03b2; = 1 &#x03b1; and &#x03b2; are the output elasticities
+									of labor and capital</entry>
+								<entry><emphasis role="italic">0.662</emphasis></entry>
+							</row>
+							<row>
+								<entry>capital intensity of production</entry>
+								<entry>&#x03b2;</entry>
+								<entry>beta</entry>
+								<entry><emphasis role="italic">0.338</emphasis></entry>
+							</row>
+							<row>
+								<entry>the average quality of the capital stock</entry>
+								<entry><emphasis role="italic"
+									>A<subscript>i</subscript></emphasis></entry>
+								<entry>averageQualityOfCapitalStock</entry>
+								<entry>The average quality of the investment goods employed by CGP
+									i</entry>
+								<entry/>
+							</row>
+							<row>
+								<entry>the average level of specific skills of employees</entry>
+								<entry><emphasis role="italic">B</emphasis></entry>
+								<entry>averageSpecificSkillLevel</entry>
+								<entry>The average level of specific skills of employees</entry>
+								<entry/>
+							</row>
+							<row>
+								<entry>labor input</entry>
+								<entry><emphasis role="italic">L</emphasis></entry>
+								<entry>plannedLaborInput</entry>
+								<entry>The planned labor force is directly related to the planned
+									production quantity</entry>
+								<entry/>
+							</row>
+							<row>
+								<entry>capital input</entry>
+								<entry><emphasis role="italic">K</emphasis></entry>
+								<entry>grossInvestment</entry>
+								<entry>The planned capital stock is directly related to the planned
+									production quantity</entry>
+								<entry/>
+							</row>
+						</tbody>
+					</tgroup>
+				</table>
+				<para><emphasis role="bold">Algorithm:</emphasis> The production quantity of a CGP
+					is given by</para>
+				<equation>
+					<math display="block" xmlns="http://www.w3.org/1998/Math/MathML">
+						<mrow>
+							<mi>Q</mi>
+							<mo>=</mo>
+							<mi>min</mi>
+							<mrow>
+								<mo>[</mo>
+								<mrow>
+									<mi>B</mi>
+									<mo>,</mo>
+									<msub>
+										<mi>A</mi>
+										<mi>i</mi>
+									</msub>
+								</mrow>
+								<mo>]</mo>
+							</mrow>
+							<mo>&#x2217;</mo>
+							<msup>
+								<mi>L</mi>
+								<mi>&#x03B1;</mi>
+							</msup>
+							<mo>&#x2217;</mo>
+							<msup>
+								<mi>K</mi>
+								<mi>&#x03B2;</mi>
+							</msup>
+						</mrow>
+					</math>
+				</equation>
+				<para>where,</para>
+				<para><inlineequation>
+						<math display="block" xmlns="http://www.w3.org/1998/Math/MathML">
+							<mrow>
+								<mi>min</mi>
+								<mrow>
+									<mo>[</mo>
+									<mrow>
+										<mi>B</mi>
+										<mo>,</mo>
+										<msub>
+											<mi>A</mi>
+											<mi>i</mi>
+										</msub>
+									</mrow>
+									<mo>]</mo>
+								</mrow>
+							</mrow>
+						</math>
+					</inlineequation>: Complementarity between <emphasis role="italic">B</emphasis>
+					and <emphasis role="italic">A<subscript>i</subscript></emphasis>.</para>
+				<para>The CGP distributes the output from a central inventory to the local outlet
+					malls where it tries to sell its merchandise.</para>
+			</section>
+			<section>
+				<title>Pricing decision (which price to set)</title>
+				<para>The price of the consumption good produced by the CGP changes with the unit
+					cost in production.</para>
+				<table frame="all">
+					<title>Pricing</title>
+					<tgroup cols="5" align="center">
+						<colspec colname="c1" colnum="1" colwidth="1.0*"/>
+						<colspec colname="c2" colnum="2" colwidth="1.0*"/>
+						<colspec colname="c3" colnum="3" colwidth="1.0*"/>
+						<colspec colname="c4" colnum="4" colwidth="1.0*"/>
+						<colspec colname="c5" colnum="5" colwidth="1.0*"/>
+						<thead valign="middle">
+							<row>
+								<entry>Variable/Parameter</entry>
+								<entry>Symbol</entry>
+								<entry>Name (in the sim model)</entry>
+								<entry>Description</entry>
+								<entry>Value</entry>
+							</row>
+						</thead>
+						<tbody valign="middle">
+							<row>
+								<entry>the price of the consumption good</entry>
+								<entry><emphasis role="italic"
+									>p<subscript>i</subscript></emphasis></entry>
+								<entry>productSalesPrice</entry>
+								<entry>The price of the consumption good i</entry>
+								<entry/>
+							</row>
+							<row>
+								<entry>Mark-up factor</entry>
+								<entry>&#x03bc;</entry>
+								<entry>markUpFactor</entry>
+								<entry>The difference between the cost of a product and its sales
+									price</entry>
+								<entry><emphasis role="italic">0.2</emphasis></entry>
+							</row>
+							<row>
+								<entry>the unit cost of production</entry>
+								<entry><emphasis role="italic"
+										>c<subscript>t-1</subscript></emphasis></entry>
+								<entry>unitCostOfProduction</entry>
+								<entry>The unit cost of production in period t - 1 (the previous
+									period)</entry>
+								<entry/>
+							</row>
+						</tbody>
+					</tgroup>
+				</table>
+				<para><emphasis role="bold">Algorithm:</emphasis> The CGP sets the price of its
+					product according to the standard rule</para>
+				<equation>
+					<math display="block" xmlns="http://www.w3.org/1998/Math/MathML">
+						<mrow>
+							<msub>
+								<mi>p</mi>
+								<mi>i</mi>
+							</msub>
+							<mo>=</mo>
+							<mrow>
+								<mo>(</mo>
+								<mrow>
+									<mn>1</mn>
+									<mo>+</mo>
+									<mi>&#x03BC;</mi>
+								</mrow>
+								<mo>)</mo>
+							</mrow>
+							<mo>&#x2217;</mo>
+							<msub>
+								<mi>c</mi>
+								<mrow>
+									<mi>t</mi>
+									<mo>&#x2212;</mo>
+									<mn>1</mn>
+								</mrow>
+							</msub>
+						</mrow>
+					</math>
+				</equation>
+			</section>
+			<section>
+				<title>Dividend payment decision</title>
+				<para>At the end of every month CGPs have to check whether they are in a profitable
+					position that households can receive dividends from them. The CGP pays dividends
+					depending on its monthly realized profit and current balance of saving account
+					according to a simple dividend policy.</para>
+				<table frame="all">
+					<title>Dividend payment decision</title>
+					<tgroup cols="5" align="center">
+						<colspec colname="c1" colnum="1" colwidth="1.0*"/>
+						<colspec colname="c2" colnum="2" colwidth="1.0*"/>
+						<colspec colname="c3" colnum="3" colwidth="1.0*"/>
+						<colspec colname="c4" colnum="4" colwidth="1.5*"/>
+						<colspec colname="c5" colnum="5" colwidth="0.5*"/>
+						<thead valign="middle">
+							<row>
+								<entry>Variable/Parameter</entry>
+								<entry>Symbol</entry>
+								<entry>Name (in the sim model)</entry>
+								<entry>Description</entry>
+								<entry>Value</entry>
+							</row>
+						</thead>
+						<tbody valign="middle">
+							<row>
+								<entry>the sales revenue</entry>
+								<entry><emphasis role="italic"
+										>Rev<subscript>t</subscript></emphasis></entry>
+								<entry>productSalesRevenue</entry>
+								<entry>The sales revenue in period t</entry>
+								<entry/>
+							</row>
+							<row>
+								<entry>cost of production</entry>
+								<entry><emphasis role="italic">C</emphasis></entry>
+								<entry>costOfProduction</entry>
+								<entry>The production cost</entry>
+								<entry/>
+							</row>
+							<row>
+								<entry>the monthly realized profit</entry>
+								<entry><emphasis role="italic">Pro</emphasis></entry>
+								<entry>monthlyRealizedProfit</entry>
+								<entry>The monthly realized profit is the difference between the
+									sales revenue and the production cost</entry>
+								<entry><emphasis role="italic"
+										>Rev<subscript>t</subscript>-C</emphasis></entry>
+							</row>
+							<row>
+								<entry>the current balance of saving account</entry>
+								<entry><emphasis role="italic">Acc</emphasis></entry>
+								<entry>currentBalanceOfSavingAccount</entry>
+								<entry>The current balance of saving account</entry>
+								<entry/>
+							</row>
+							<row>
+								<entry>the dividends</entry>
+								<entry><emphasis role="italic">Div</emphasis></entry>
+								<entry>dividends</entry>
+								<entry>The CGP pays dividends to all households</entry>
+								<entry/>
+							</row>
+							<row>
+								<entry>a fixed proportion</entry>
+								<entry><emphasis role="italic">div</emphasis></entry>
+								<entry>div</entry>
+								<entry>The CGP pays a fixed proportion <inlineequation>
+										<math display="block"
+											xmlns="http://www.w3.org/1998/Math/MathML">
+											<mrow>
+												<mi>d</mi>
+												<mi>i</mi>
+												<mi>v</mi>
+												<mo>&#x2208;</mo>
+												<mrow>
+												<mo>[</mo>
+												<mrow>
+												<mn>0,1</mn>
+												</mrow>
+												<mo>]</mo>
+												</mrow>
+											</mrow>
+										</math>
+									</inlineequation> of its profit as dividends to all
+									households</entry>
+								<entry><emphasis role="italic">0.9</emphasis></entry>
+							</row>
+						</tbody>
+					</tgroup>
+				</table>
+				<para><emphasis role="bold">Algorithm:</emphasis> If the monthly realized profit of
+					a CGP is not positive, the CGP pays no dividends and the losses are entered on
+					the current balance of saving account. In case of positive profit, the CGP pays
+					dividends based on a simple dividend policy that defines three kinds of dividend
+					rates depending on the current balance of saving account. The rule states</para>
+				<orderedlist>
+					<listitem>
+						<para>If the balance is negative <inlineequation>
+								<math display="block" xmlns="http://www.w3.org/1998/Math/MathML">
+									<mrow>
+										<mi>A</mi>
+										<mi>c</mi>
+										<mi>c</mi>
+										<mo>&#x003C;</mo>
+										<mn>0</mn>
+									</mrow>
+								</math>
+							</inlineequation> and the debt is on a scale above the last monthly
+							revenue <inlineequation>
+								<math display="block" xmlns="http://www.w3.org/1998/Math/MathML">
+									<mrow>
+										<mrow>
+											<mo>|</mo>
+											<mrow>
+												<mi>A</mi>
+												<mi>c</mi>
+												<mi>c</mi>
+											</mrow>
+											<mo>|</mo>
+										</mrow>
+										<mo>&#x003E;</mo>
+										<mi>R</mi>
+										<mi>e</mi>
+										<msub>
+											<mi>v</mi>
+											<mrow>
+												<mi>t</mi>
+												<mo>&#x2212;</mo>
+												<mn>1</mn>
+											</mrow>
+										</msub>
+									</mrow>
+								</math>
+							</inlineequation>, the CGP pays no dividends <inlineequation>
+								<math display="block" xmlns="http://www.w3.org/1998/Math/MathML">
+									<mrow>
+										<mi>D</mi>
+										<mi>i</mi>
+										<mi>v</mi>
+										<mo>=</mo>
+										<mn>0</mn>
+									</mrow>
+								</math>
+							</inlineequation>.</para>
+					</listitem>
+					<listitem>
+						<para>If the balance is positive <inlineequation>
+								<math display="block" xmlns="http://www.w3.org/1998/Math/MathML">
+									<mrow>
+										<mi>A</mi>
+										<mi>c</mi>
+										<mi>c</mi>
+										<mo>&#x003E;</mo>
+										<mn>0</mn>
+									</mrow>
+								</math>
+							</inlineequation> and savings are above the monthly revenue <inlineequation>
+								<math display="block" xmlns="http://www.w3.org/1998/Math/MathML">
+									<mrow>
+										<mi>A</mi>
+										<mi>c</mi>
+										<mi>c</mi>
+										<mo>&#x003E;</mo>
+										<mi>R</mi>
+										<mi>e</mi>
+										<msub>
+											<mi>v</mi>
+											<mi>t</mi>
+										</msub>
+									</mrow>
+								</math>
+							</inlineequation>, the CGP disburses all profits as dividends <inlineequation>
+								<math display="block" xmlns="http://www.w3.org/1998/Math/MathML">
+									<mrow>
+										<mi>D</mi>
+										<mi>i</mi>
+										<mi>v</mi>
+										<mo>=</mo>
+										<mi>P</mi>
+										<mi>r</mi>
+										<mi>o</mi>
+									</mrow>
+								</math>
+							</inlineequation>.</para>
+					</listitem>
+					<listitem>
+						<para>In the remaining case, if the balance is between these critical levels
+							of the above two cases, the CGP pays out a fixed proportion of profits
+							as dividends <inlineequation>
+								<math display="block" xmlns="http://www.w3.org/1998/Math/MathML">
+									<mrow>
+										<mi>D</mi>
+										<mi>i</mi>
+										<mi>v</mi>
+										<mo>=</mo>
+										<mi>d</mi>
+										<mi>i</mi>
+										<mi>v</mi>
+										<mo>&#x2217;</mo>
+										<mi>P</mi>
+										<mi>r</mi>
+										<mi>o</mi>
+									</mrow>
+								</math>
+							</inlineequation>.</para>
+					</listitem>
+				</orderedlist>
+			</section>
+		</section>
+		<section>
+			<title>Mall</title>
+			<para>Mall is modeled as a passive agent in this model, so it cannot take decisions.
+				This agent performs the selling role of CGP in the region. It keeps and receives
+				consumption goods produced by CGPs, then sells them and collects every product sales
+				revenue that is reported back to the corresponding CGP.</para>
+		</section>
+		<section>
+			<title>Capital Goods Producer (IGP)</title>
+			<para>In this model, the IGP is unique and acts globally. It only has one role and plays
+				the role of seller on the investment goods market. It supplies investment goods
+				infinitely to all CGPs. The investment good as a kind of productive factor of CGP
+				has two properties, i.e. quality and price, which are increased by simple
+				rules.</para>
+			<itemizedlist>
+				<listitem>
+					<para>The quality and price of the investment good increase over time due to
+						technological change. The price varies with the quality.</para>
+				</listitem>
+				<listitem>
+					<para>Every month the quality is increased by 5% with probability 10% where with
+						probability 90% there is no change of quality.</para>
+				</listitem>
+			</itemizedlist>
+			<para>Finally, in order to close the model, the monthly revenue of the IGP is uniformly
+				distributed to all households.</para>
+		</section>
+	</section>
+	<section>
+		<title>UML and BPMN</title>
+		<para>In order to show agents and their interactions more clearly.</para>
+		<section>
+			<title>UML</title>
+			<para>Each agent class is represented by a set of attributes and methods that operate on the
+				agent class. A UML class diagram is a convenient way of representing the agents of
+				the model.</para>
+		</section>
+		<section>
+			<title>BPMN</title>
+			<para>The Business Process Modeling Notation (BPMN) is a graphical notation for
+				describing various kinds of processes. The main notational elements in BPMN are
+					<emphasis role="italic">FlowObjects</emphasis>, that are contained in <emphasis
+					role="italic">Pools</emphasis> and connected via <emphasis role="italic"
+					>Sequence-</emphasis> and <emphasis role="italic">MessageFlows</emphasis>. They
+				subdivide in <emphasis role="italic">Events</emphasis>, atomic and composite
+					<emphasis role="italic">Activities</emphasis> and <emphasis role="italic"
+					>Gateways</emphasis> for forking and joining. SequenceFlows describe the
+				sequence in which the several FlowObjects have to be completed, while MessageFlows
+				describe the exchange of messages between Pools. Thus, BPMN combines the definition
+				of local workflows and the interaction between them.</para>
+			<para>The model consists of two pools: CGPs and households. The process model based on
+				the search-and-matching process is used to represent the interaction between CGPs
+				and households in the labor market.</para>
+		</section>
+	</section>
+</chapter>
