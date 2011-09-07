@@ -77,6 +77,9 @@
       </Variable>
       <Variable dataType="Float" name="systemCosts" />
     </Statistics>
+    <Globals>
+      <GlobalVariable name="currentWeek" dataType="Integer" initialValue="1"/>
+    </Globals>
     <EntityTypes>
       <MessageType name="Order">
         <Attribute name="quantity" type="Integer" />
@@ -547,6 +550,7 @@
 		        				]]>
               </ValueExpr>
             </UpdateStatisticsVariable>
+            <IncrementGlobalVariable name="currentWeek" value="1"/>
           </UPDATE-ENV>
         </DO>
       </EnvironmentRule>
@@ -740,7 +744,7 @@
       </StatisticsVariableUI>
     </StatisticsUI>
     <AnimationUI>
-      <aors:DisplayDescription xmlns="http://www.w3.org/1999/xhtml">
+      <aors:StartPageText xmlns="http://www.w3.org/1999/xhtml">
         <aors:HtmlText>
           <p> Each of the supply chain nodes Retailer, Wholesaler, Distributor, Factory is
             represented by a rectangle. The properties of the interemdiate nodes (Retailer,
@@ -818,7 +822,24 @@
           </ul>
           <p>Die linke Seite zeigt die quadratische Kunden Menge der bestellten Bier Einheiten. </p>
         </aors:HtmlText>
-      </aors:DisplayDescription>
+      </aors:StartPageText>
+      <aors:HelpText xmlns="http://www.w3.org/1999/xhtml">
+        <aors:HtmlText><p>In this management simulation there is a <strong>beer supply chain</strong> consisting of four nodes: 
+          Retailer, Wholesaler, Distributor	and Factory. Retailer, Wholesaler and Distributor have one upstream node 
+          to order and receive beer	from, while Wholesaler, Distributor	and Factory have one downstream node 
+          to receive orders from and deliver beer to. An order takes
+          7 days and a delivery takes 14 days. At the end of a week every node decides how much beer
+          to order and calculates its costs for current stock and outstanding orders.</p></aors:HtmlText>
+        <aors:HtmlText xml:lang="de"><p>In diesem Planspiel geht es um eine <strong>Bier-Lieferkette</strong>, 
+          die aus vier Knoten besteht: Brauerei, Distributionszentrum, Großhändler und Einzelhändler. 
+          Distributionszentrum, Großhändler und Einzelhändler haben je einen Vorgängerknoten, bei dem sie Bier
+          bestellen und von dem sie die Bierlieferungen erhalten. Brauerei, Distributionszentrum und Großhändler
+          haben je einen Nachfolgerknoten, von dem sie Bestellungen erhalten und den sie mit Bier beliefern.
+          Eine Bestellung kommt nach 7 Tagen an, während eine Lieferung erst nach 14 Tagen ankommt. Am Ende
+          jeder Woche werden für jeden Knoten die angefallenen Kosten (für das Lager und die Nachlieferungen) aktualisiert 
+          und Distributionszentrum,	Großhändler und Einzelhändler müssen entscheiden, wie viele Kästen Bier	sie 
+          bestellen wollen.</p></aors:HtmlText>
+      </aors:HelpText>
       <Views>
         <SpaceView canvasColor="darkgrey" canvasHeight="464" canvasWidth="1334">
           <TwoDimensionalSpaceView2D backgroundImage="OneDollarBill.jpg" />
@@ -941,90 +962,109 @@
         </ObjectView>
       </Views>
       <AgentControlUI waitForUserInput="true">
-      	<aors:StartPageText xmlns="http://www.w3.org/1999/xhtml">
-      		<aors:HtmlText><p>In this management simulation there is a <strong>beer supply chain</strong> consisting of four nodes: 
-      			Retailer, Wholesaler, Distributor	and Factory. Retailer, Wholesaler and Distributor have one upstream node 
-      			to order and receive beer	from, while Wholesaler, Distributor	and Factory have one downstream node 
-      			to receive orders from and deliver beer to. An order takes
-      			7 days and a delivery takes 14 days. At the end of a week every node decides how much beer
-      			to order and calculates its costs for current stock and outstanding orders.</p></aors:HtmlText>
-      		<aors:HtmlText xml:lang="de"><p>In diesem Planspiel geht es um eine <strong>Bier-Lieferkette</strong>, 
-      			die aus vier Knoten besteht: Brauerei, Distributionszentrum, Großhändler und Einzelhändler. 
-      			Distributionszentrum, Großhändler und Einzelhändler haben je einen Vorgängerknoten, bei dem sie Bier
-      			bestellen und von dem sie die Bierlieferungen erhalten. Brauerei, Distributionszentrum und Großhändler
-      			haben je einen Nachfolgerknoten, von dem sie Bestellungen erhalten und den sie mit Bier beliefern.
-      			Eine Bestellung kommt nach 7 Tagen an, während eine Lieferung erst nach 14 Tagen ankommt. Am Ende
-      			jeder Woche werden für jeden Knoten die angefallenen Kosten (für das Lager und die Nachlieferungen) aktualisiert 
-      			und Distributionszentrum,	Großhändler und Einzelhändler müssen entscheiden, wie viele Kästen Bier	sie 
-      			bestellen wollen.</p></aors:HtmlText>
-      	</aors:StartPageText>
       	<AgentControlByAgentType type="IntermediarySupplyChainNode"
-          suspendRules="EndOfWeek_OrderingBeer_R1_Rule EndOfWeek_OrderingBeer_R2_Rule 
+            suspendReactionRules="EndOfWeek_OrderingBeer_R1_Rule EndOfWeek_OrderingBeer_R2_Rule 
             EndOfWeek_OrderingBeer_R3_Rule EndOfWeek_OrderingBeer_R4_Rule"
             cssFile="basic.css" htmlTemplate="three_columns">
-      		<!-- ~~~~~~~~~~~~ -->
-      		<EventList>
-      			<!-- ~~~~~~~~~~~~ -->
-      			<InMessageEventView messageType="Order" label="Incoming Order" showSender="false" icon="Order.png">
-      				<Label>
-      					<Text xml:lang="de">Eingehender Auftrag</Text>
-      				</Label>
-      				<MessageProperty name="quantity" label="Order quantity">
-      					<Label>
-      						<Text xml:lang="de">Bestellmenge</Text>
-      					</Label>
-      					<Format decimalPlaces="0"><PackagingUnits>crates</PackagingUnits></Format>
-      				</MessageProperty>				
-      			</InMessageEventView>
-      			<InMessageEventView messageType="BeerDelivery" label="Delivery" showSender="false" icon="BeerDelivery.png">
-      				<Label>
-      					<Text xml:lang="de">Eingehende Lieferung</Text>
-      				</Label>
-      				<MessageProperty name="quantity" label="Delivered quantity">
-      					<Label>
-      						<Text xml:lang="de">Liefermenge</Text>
-      					</Label>
-      					<Format decimalPlaces="0"><PackagingUnits>crates</PackagingUnits></Format>
-      				</MessageProperty>				
-      			</InMessageEventView>          			
-      		</EventList>
-      		<!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->
-      		<OutputField label="Inventory" agentAttribute="inventory">
-      			<!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->
-      			<Label>
-      				<Text xml:lang="de">Lagermenge</Text>
-      			</Label>
-      			<Hint>
-      				<Text>How many crates of beer are in stock?</Text>
-      				<Text xml:lang="de">Wieviele Kästen Bier sind auf Lager?</Text>
-      			</Hint>
-      			<Format decimalPlaces="0"><PackagingUnits>crates</PackagingUnits></Format>
-      		  <Source><ObjectAttribute objectType="Customer" objectIdRef="5" attribute="order"/></Source>
-      		</OutputField>
-      		<!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->
-      		<OutputField label="Backorders" agentAttribute="backorderQuantity">
-      			<!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->
-      			<Label>
-      				<Text xml:lang="de">Nachliefermenge</Text>
-      			</Label>
-      			<Hint>
-      				<Text>How many crates of beer are in backlog?</Text>
-      				<Text xml:lang="de">Wieviele Kästen Bier müssen nachgeliefert werden?</Text>
-      			</Hint>
-      			<Format decimalPlaces="0"><PackagingUnits>crates</PackagingUnits></Format>
-      		</OutputField>
-      		<!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->
-      		<OutputField label="Total costs" agentAttribute="costs">
-      		<!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->
-      			<Label>
-      				<Text xml:lang="de">Gesamtkosten</Text>
-      			</Label>
-      			<Hint>
-      				<Text>Which costs have been accumulated meanwhile?</Text>
-      				<Text xml:lang="de">Welche Kosten sind bisher aufgelaufen?</Text>
-      			</Hint>
-      			<Format decimalPlaces="2"><Currency>EUR(€)</Currency></Format>
-      		</OutputField>
+      	 
+      		<BottomOutputPanel>
+      		  <OutputFieldGroup>
+      		    <OutputField label="Current week">
+      		      <Source>
+      		        <GlobalVariable name="currentWeek"/>
+      		      </Source>
+      		    </OutputField>
+      		  </OutputFieldGroup>
+      		</BottomOutputPanel>
+      	  
+      	  <LeftOutputPanel width="250">
+      		  <OutputFieldGroup label="Your state">
+      		    <!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->
+      		    <OutputField label="Inventory" agentAttribute="inventory">
+      		      <!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->
+      		      <Label>
+      		        <Text xml:lang="de">Lagermenge</Text>
+      		      </Label>
+      		      <Hint>
+      		        <Text>How many crates of beer are in stock?</Text>
+      		        <Text xml:lang="de">Wieviele Kästen Bier sind auf Lager?</Text>
+      		      </Hint>
+      		      <Format decimalPlaces="0"><PackagingUnits>crates</PackagingUnits></Format>
+      		      <Source><ObjectAttribute objectType="Customer" objectIdRef="5" attribute="order"/></Source>
+      		    </OutputField>
+      		    <!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->
+      		    <OutputField label="Backorders" agentAttribute="backorderQuantity">
+      		      <!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->
+      		      <Label>
+      		        <Text xml:lang="de">Nachliefermenge</Text>
+      		      </Label>
+      		      <Hint>
+      		        <Text>How many crates of beer are in backlog?</Text>
+      		        <Text xml:lang="de">Wieviele Kästen Bier müssen nachgeliefert werden?</Text>
+      		      </Hint>
+      		      <Format decimalPlaces="0"><PackagingUnits>crates</PackagingUnits></Format>
+      		    </OutputField>
+      		    <!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->
+      		    <OutputField label="Cost" agentAttribute="costs">
+      		      <!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->
+      		      <Label>
+      		        <Text xml:lang="de">Kosten</Text>
+      		      </Label>
+      		      <Hint>
+      		        <Text>Your current costs.</Text>
+      		        <Text xml:lang="de">Ihre laufenden Kosten.</Text>
+      		      </Hint>
+      		      <Format decimalPlaces="2"><Currency>EUR(€)</Currency></Format>
+      		    </OutputField>
+      		  </OutputFieldGroup>
+      		  <OutputFieldGroup label="System state">
+      		    <!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->
+      		    <OutputField label="Total costs" agentAttribute="costs">
+      		      <!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->
+      		      <Label>
+      		        <Text xml:lang="de">Gesamtkosten</Text>
+      		      </Label>
+      		      <Hint>
+      		        <Text>Which costs have been accumulated meanwhile?</Text>
+      		        <Text xml:lang="de">Welche Kosten sind bisher aufgelaufen?</Text>
+      		      </Hint>
+      		      <Format decimalPlaces="2"><Currency>EUR(€)</Currency></Format>
+      		      <Source>
+      		        <StatisticsVariable name="systemCosts"/>
+      		      </Source>
+      		    </OutputField>
+      		  </OutputFieldGroup>
+      	  </LeftOutputPanel>
+      	  
+      	  <RightOutputPanel>
+      	    <!-- ~~~~~~~~~~~~ -->
+      	    <EventList>
+      	      <!-- ~~~~~~~~~~~~ -->
+      	      <InMessageEventView messageType="Order" label="Incoming Order" showSender="false" icon="Order.png" keepInListTime="7">
+      	        <Label>
+      	          <Text xml:lang="de">Eingehender Auftrag</Text>
+      	        </Label>
+      	        <MessageProperty name="quantity" label="Order quantity">
+      	          <Label>
+      	            <Text xml:lang="de">Bestellmenge</Text>
+      	          </Label>
+      	          <Format decimalPlaces="0"><PackagingUnits>crates</PackagingUnits></Format>
+      	        </MessageProperty>        
+      	      </InMessageEventView>
+      	      <InMessageEventView messageType="BeerDelivery" label="Delivery" showSender="false" icon="BeerDelivery.png" keepInListTime="7">
+      	        <Label>
+      	          <Text xml:lang="de">Eingehende Lieferung</Text>
+      	        </Label>
+      	        <MessageProperty name="quantity" label="Delivered quantity">
+      	          <Label>
+      	            <Text xml:lang="de">Liefermenge</Text>
+      	          </Label>
+      	          <Format decimalPlaces="0"><PackagingUnits>crates</PackagingUnits></Format>
+      	        </MessageProperty>        
+      	      </InMessageEventView>                
+      	    </EventList>
+      	  </RightOutputPanel>
+      	
       		<!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->
       		<UserActionForm actionRule="SendOrder" enabledWhenEventOfType="EndOfWeek" label="Order">
      			<!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->
@@ -1043,12 +1083,6 @@
       			</ActionRuleParameterUI>
       		</UserActionForm>
       		<!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->
-      		<UserActionEventListener actionRule="aRule">
-     			<!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->
-      			<WHEN>
-              <MouseEvent mouseEventType="click" targetName="anObject" />
-            </WHEN>
-          </UserActionEventListener>
         </AgentControlByAgentType>
       </AgentControlUI>
     </AnimationUI>
