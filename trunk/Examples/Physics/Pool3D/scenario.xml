@@ -1,0 +1,299 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<SimulationScenario xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+  xsi:schemaLocation="http://aor-simulation.org ../../../../../../AOR-Complete/trunk/AORSL/AORSL_0-9.xsd"
+  xmlns:dc="http://purl.org/dc/elements/1.1/"
+  xmlns="http://aor-simulation.org"
+  xmlns:aors="http://aor-simulation.org"
+  scenarioName="PoolTable"
+  scenarioTitle="Pool table"
+  version="0.9">
+  <SimulationParameters simulationSteps="300" />
+  <SimulationModel modelName="PoolTable" modelTitle="Pool Table with integrated physics">
+    <documentation>
+      <dc:description> A simple eight-ball pool table demonstrating 3D physics capabilities. </dc:description>
+      <dc:creator>Gabriel Diaconita</dc:creator>
+      <dc:contributor>Mircea Diaconescu</dc:contributor>
+      <dc:created>March, 28, 2011</dc:created>
+    </documentation>
+    <SpaceModel geometry="Euclidean" spatialDistanceUnit="m">
+      <ThreeDimensional xMax="3" yMax="3" zMax="3" gravitation="9.81E0" />
+    </SpaceModel>
+    <Statistics>
+      <Variable dataType="Float" initialValue="0" name="maxHeight" />
+    </Statistics>
+    <Globals>
+      <GlobalVariable dataType="Float" initialValue="9.81" name="gravitation" />
+      <GlobalVariable dataType="Integer" initialValue="0" maxValue="360" minValue="0"
+        name="shotAngle" />
+      <GlobalVariable dataType="Float" initialValue="14.2" maxValue="40" minValue="0"
+        name="shotForce" />
+    </Globals>
+    <EntityTypes>
+      <ExogenousEventType name="Shot" periodicity="50">
+        <StopCondition language="Java JavaScript">
+          <![CDATA[this.getOccurrenceTime() > 1]]>
+        </StopCondition>
+      </ExogenousEventType>
+      <ExogenousEventType name="Step" periodicity="1" />
+      <PhysicalObjectType name="Felt" physicsType="INFINITE_MASS">
+        <Attribute name="Friction" type="Float" />
+      </PhysicalObjectType>
+      <PhysicalObjectType name="Rail" physicsType="INFINITE_MASS" />
+      <PhysicalObjectType name="Support" physicsType="INFINITE_MASS" />
+      <PhysicalObjectType name="PoolBall">
+        <Function name="getDirectionalForceVector" resultType="List&lt;float>">
+          <Parameter name="Amplitude" type="float" />
+          <Parameter name="DirectionAngle" type="float" />
+          <Body language="JavaScript">
+            <![CDATA[
+              var angle = physEngine.PhysicsHelper.degToRad(DirectionAngle);
+              var dirX = Amplitude * Math.cos(angle);
+              var dirY = Amplitude * Math.sin(angle);
+              return [dirX, dirY];
+            ]]>
+          </Body>
+        </Function>
+      </PhysicalObjectType>
+      <PhysicalObjectType name="Cue_Ball" superType="PoolBall" />
+      <PhysicalObjectType name="Eight_Ball" superType="PoolBall" />
+      <PhysicalObjectType name="Stripe_Ball" superType="PoolBall" />
+      <PhysicalObjectType name="Solid_Ball" superType="PoolBall" />
+      <PhysicalObjectType name="BallNo1" superType="Solid_Ball" />
+      <PhysicalObjectType name="BallNo2" superType="Solid_Ball" />
+      <PhysicalObjectType name="BallNo3" superType="Solid_Ball" />
+      <PhysicalObjectType name="BallNo4" superType="Solid_Ball" />
+      <PhysicalObjectType name="BallNo5" superType="Solid_Ball" />
+      <PhysicalObjectType name="BallNo6" superType="Solid_Ball" />
+      <PhysicalObjectType name="BallNo7" superType="Solid_Ball" />
+      <PhysicalObjectType name="BallNo8" superType="Eight_Ball" />
+      <PhysicalObjectType name="BallNo9" superType="PoolBall" />
+      <PhysicalObjectType name="BallNo10" superType="Stripe_Ball" />
+      <PhysicalObjectType name="BallNo11" superType="Stripe_Ball" />
+      <PhysicalObjectType name="BallNo12" superType="Stripe_Ball" />
+      <PhysicalObjectType name="BallNo13" superType="Stripe_Ball" />
+      <PhysicalObjectType name="BallNo14" superType="Stripe_Ball" />
+      <PhysicalObjectType name="BallNo15" superType="Stripe_Ball" />
+    </EntityTypes>
+    <EnvironmentRules>
+      <EnvironmentRule name="ShotCueBallRule">
+        <WHEN eventType="Shot" eventVariable="shotEvent" />
+        <FOR objectIdRef="471" objectType="Cue_Ball" objectVariable="ball" />
+        <DO>
+          <UPDATE-ENV>
+            <UpdateObject objectVariable="ball">
+              <Slot property="vx">
+                <ValueExpr language="Java JavaScript">
+                  <![CDATA[this.ball.getDirectionalForceVector(sim.controller.Global.getShotForce(), sim.controller.Global.getShotAngle())[0]]]>
+                </ValueExpr>
+              </Slot>
+              <Slot property="vy">
+                <ValueExpr language="Java JavaScript">
+                  <![CDATA[this.ball.getDirectionalForceVector(sim.controller.Global.getShotForce(), sim.controller.Global.getShotAngle())[1]]]>
+                </ValueExpr>
+              </Slot>
+            </UpdateObject>
+          </UPDATE-ENV>
+        </DO>
+      </EnvironmentRule>
+      <EnvironmentRule name="SyncBall">
+        <WHEN eventType="Step" eventVariable="stepEvent" />
+        <FOR objectType="PoolBall" objectVariable="ball" />
+        <DO>
+          <UPDATE-ENV>
+            <UpdateObject objectVariable="ball">
+              <Slot property="x">
+                <ValueExpr language="Java JavaScript"><![CDATA[this.ball.get_x()]]></ValueExpr>
+              </Slot>
+              <Slot property="y">
+                <ValueExpr language="Java JavaScript"><![CDATA[this.ball.get_y()]]></ValueExpr>
+              </Slot>
+              <Slot property="z">
+                <ValueExpr language="Java JavaScript"><![CDATA[this.ball.get_z()]]></ValueExpr>
+              </Slot>
+              <Slot property="rotX">
+                <ValueExpr language="Java JavaScript"><![CDATA[this.ball.getRotX()]]></ValueExpr>
+              </Slot>
+              <Slot property="rotY">
+                <ValueExpr language="Java JavaScript"><![CDATA[this.ball.getRotY()]]></ValueExpr>
+              </Slot>
+              <Slot property="rotZ">
+                <ValueExpr language="Java JavaScript"><![CDATA[this.ball.getRotZ()]]></ValueExpr>
+              </Slot>
+            </UpdateObject>
+          </UPDATE-ENV>
+        </DO>
+      </EnvironmentRule>
+    </EnvironmentRules>
+  </SimulationModel>
+  <InitialState>
+    <!-- Table -->
+    <PhysicalObject shape3D="box" depth="0.05" height="1.27" id="1000" m="100" name="Felt" objectVariable="felt" type="Felt" width="2.54" x="1.5" y="1.27" z="-0.87">
+      <Slot property="friction" value="1"/>
+    </PhysicalObject>
+    
+    <!-- BALLS -->
+    <PhysicalObject shape3D="sphere" id="471" m="0.17" name="ball0" type="Cue_Ball" width="0.1143" x="0.7" y="1.207" z="-0.96" />
+    <PhysicalObject shape3D="sphere" id="2471" m="0.17" name="ball1" type="BallNo1" width="0.1143" x="1.777" y="1.207" z="-0.958" />
+    <PhysicalObject shape3D="sphere" id="2472" m="0.17" name="ball2" type="BallNo2" width="0.1143" x="1.886" y="1.264" z="-0.958" />
+    <PhysicalObject shape3D="sphere" id="2473" m="0.17" name="ball3" type="BallNo3" width="0.1143" x="1.886" y="1.140" z="-0.958" />
+    <PhysicalObject shape3D="sphere" id="2474" m="0.17" name="ball4" type="BallNo4" width="0.1143" x="1.995" y="1.321" z="-0.958" />
+    <PhysicalObject shape3D="sphere" id="2475" m="0.17" name="ball5" type="BallNo5" width="0.1143" x="1.995" y="1.197" z="-0.958" />
+    <PhysicalObject shape3D="sphere" id="2476" m="0.17" name="ball6" type="BallNo6" width="0.1143" x="1.995" y="1.073" z="-0.958" />
+    <PhysicalObject shape3D="sphere" id="2477" m="0.17" name="ball7" type="BallNo7" width="0.1143" x="2.104" y="1.378" z="-0.958" />
+    <PhysicalObject shape3D="sphere" id="2478" m="0.17" name="ball8" type="BallNo8" width="0.1143" x="2.104" y="1.254" z="-0.958" />
+    <PhysicalObject shape3D="sphere" id="2479" m="0.17" name="ball9" type="BallNo9" width="0.1143" x="2.104" y="1.130" z="-0.958" />
+    <PhysicalObject shape3D="sphere" id="24710" m="0.17" name="ball10" type="BallNo10" width="0.1143" x="2.104" y="1.006" z="-0.958" />
+    <PhysicalObject shape3D="sphere" id="24711" m="0.17" name="ball11" type="BallNo11" width="0.1143" x="2.213" y="1.436" z="-0.958" />
+    <PhysicalObject shape3D="sphere" id="24712" m="0.17" name="ball12" type="BallNo12" width="0.1143" x="2.213" y="1.311" z="-0.958" />
+    <PhysicalObject shape3D="sphere" id="24713" m="0.17" name="ball13" type="BallNo13" width="0.1143" x="2.213" y="1.187" z="-0.958" />
+    <PhysicalObject shape3D="sphere" id="24714" m="0.17" name="ball14" type="BallNo14" width="0.1143" x="2.213" y="1.063" z="-0.958" />
+    <PhysicalObject shape3D="sphere" id="24715" m="0.17" name="ball15" type="BallNo15" width="0.1143" x="2.213" y="0.938" z="-0.958" />
+    
+    <!-- table margins -->
+    <PhysicalObject shape3D="box" depth="0.2" height="1.2" id="2710" m="9999.17" name="railLeft" objectVariable="rail" type="Rail" width="0.1143" x="0.23" y="1.27" z="-0.8857" />
+    <PhysicalObject shape3D="box" depth="0.2" height="0.1143" id="2711" m="9999.17" name="railTop" objectVariable="rail" type="Rail" width="2.6" x="1.5" y="1.905" z="-0.8857" />
+    <PhysicalObject shape3D="box" depth="0.2" height="1.2" id="2712" m="9999.17" name="railRight" objectVariable="rail" type="Rail" width="0.1143" x="2.77" y="1.27" z="-0.8857" />
+    <PhysicalObject shape3D="box" depth="0.2" height="0.1143" id="2713" m="9999.17" name="railBottom" objectVariable="rail" type="Rail" width="2.6" x="1.5" y="0.635" z="-0.8857" />
+    <PhysicalObject shape3D="box" depth="0.70" height="1" m="100" name="support" objectVariable="rail" type="Support" width="2.14" x="1.5" y="1.27" z="-0.45" />
+    
+    <ExogenousEvent occurrenceTime="1" type="Shot" />
+    <ExogenousEvent occurrenceTime="1" type="Step" />
+    
+  </InitialState>
+  <UserInterface supportedLanguages="en">
+    <InitialStateUI>
+      <GlobalVariableUI sliderStepSize="10" variable="shotAngle" widget="Slider">
+        <Label>
+          <Text xml:lang="en">Cue shot angle</Text>
+        </Label>
+        <Hint>
+          <Text>The angle at which the cue ball is shot the next time</Text>
+        </Hint>
+      </GlobalVariableUI>
+      <GlobalVariableUI sliderStepSize="0.2" variable="shotForce" widget="Slider">
+        <Label>
+          <Text xml:lang="en">Cue shot velocity</Text>
+        </Label>
+        <Hint>
+          <Text>The velocity at which the cue ball is shot the next time</Text>
+        </Hint>
+      </GlobalVariableUI>
+      <GlobalVariableUI variable="gravitation">
+        <Label>
+          <Text xml:lang="en">Gravitation</Text>
+        </Label>
+        <Hint>
+          <Text>The gravitation on the environment</Text>
+        </Hint>
+        <Format decimalPlaces="2">
+          <Physics>m/s²</Physics>
+        </Format>
+      </GlobalVariableUI>
+    </InitialStateUI>
+    <AnimationUI>
+      <Views>
+        <SpaceView canvasColorRGB="220 220 220">
+          <TwoDimensionalSpaceView3D>
+            <Skybox />
+            <GlobalCamera eyePosition="0 -3 -3" lookAt="0 0 0" upVector="0 1 0"/>
+          </TwoDimensionalSpaceView3D>
+        </SpaceView>
+        <PhysicalObjectView physicalObjectType="Felt">
+          <PhysicalShape3D>
+            <Cuboid texture="felt.jpg" />
+          </PhysicalShape3D>
+        </PhysicalObjectView>
+        <PhysicalObjectView physicalObjectType="Support">
+          <PhysicalShape3D>
+            <Cuboid texture="support.png" />
+          </PhysicalShape3D>
+        </PhysicalObjectView>
+        <PhysicalObjectView physicalObjectType="Rail">
+          <PhysicalShape3D>
+            <Cuboid texture="rail.png" />
+          </PhysicalShape3D>
+        </PhysicalObjectView>
+        <PhysicalObjectView physicalObjectType="Cue_Ball">
+          <PhysicalShape3D>
+            <Sphere texture="white.png" />
+          </PhysicalShape3D>
+        </PhysicalObjectView>
+        <PhysicalObjectView physicalObjectType="BallNo1">
+          <PhysicalShape3D>
+            <Sphere texture="ball01.png" />
+          </PhysicalShape3D>
+        </PhysicalObjectView>
+        <PhysicalObjectView physicalObjectType="BallNo2">
+          <PhysicalShape3D>
+            <Sphere texture="ball02.png" />
+          </PhysicalShape3D>
+        </PhysicalObjectView>
+        <PhysicalObjectView physicalObjectType="BallNo3">
+          <PhysicalShape3D>
+            <Sphere texture="ball03.png" />
+          </PhysicalShape3D>
+        </PhysicalObjectView>
+        <PhysicalObjectView physicalObjectType="BallNo4">
+          <PhysicalShape3D>
+            <Sphere texture="ball04.png" />
+          </PhysicalShape3D>
+        </PhysicalObjectView>
+        <PhysicalObjectView physicalObjectType="BallNo5">
+          <PhysicalShape3D>
+            <Sphere texture="ball05.png" />
+          </PhysicalShape3D>
+        </PhysicalObjectView>
+        <PhysicalObjectView physicalObjectType="BallNo6">
+          <PhysicalShape3D>
+            <Sphere texture="ball06.png" />
+          </PhysicalShape3D>
+        </PhysicalObjectView>
+        <PhysicalObjectView physicalObjectType="BallNo7">
+          <PhysicalShape3D>
+            <Sphere texture="ball07.png" />
+          </PhysicalShape3D>
+        </PhysicalObjectView>
+        <PhysicalObjectView physicalObjectType="BallNo8">
+          <PhysicalShape3D>
+            <Sphere texture="ball08.png" />
+          </PhysicalShape3D>
+        </PhysicalObjectView>
+        <PhysicalObjectView physicalObjectType="BallNo9">
+          <PhysicalShape3D>
+            <Sphere texture="ball09.png" />
+          </PhysicalShape3D>
+        </PhysicalObjectView>
+        <PhysicalObjectView physicalObjectType="BallNo10">
+          <PhysicalShape3D>
+            <Sphere texture="ball10.png" />
+          </PhysicalShape3D>
+        </PhysicalObjectView>
+        <PhysicalObjectView physicalObjectType="BallNo11">
+          <PhysicalShape3D>
+            <Sphere texture="ball11.png" />
+          </PhysicalShape3D>
+        </PhysicalObjectView>
+        <PhysicalObjectView physicalObjectType="BallNo12">
+          <PhysicalShape3D>
+            <Sphere texture="ball12.png" />
+          </PhysicalShape3D>
+        </PhysicalObjectView>
+        <PhysicalObjectView physicalObjectType="BallNo13">
+          <PhysicalShape3D>
+            <Sphere texture="ball13.png" />
+          </PhysicalShape3D>
+        </PhysicalObjectView>
+        <PhysicalObjectView physicalObjectType="BallNo14">
+          <PhysicalShape3D>
+            <Sphere texture="ball14.png" />
+          </PhysicalShape3D>
+        </PhysicalObjectView>
+        <PhysicalObjectView physicalObjectType="BallNo15">
+          <PhysicalShape3D>
+            <Sphere texture="ball15.png" />
+          </PhysicalShape3D>
+        </PhysicalObjectView>
+      </Views>
+    </AnimationUI>
+  </UserInterface>
+</SimulationScenario>
