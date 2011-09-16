@@ -142,7 +142,7 @@
 			</xsl:otherwise>
 		</xsl:choose>
 		<xsl:if test="$first = 'true'">
-			<xsl:apply-templates select="." mode="facetts">
+			<xsl:apply-templates select="." mode="facets">
 				<xsl:with-param name="documentNodes" select="$documentNodes"/>
 			</xsl:apply-templates>
 		</xsl:if>
@@ -190,7 +190,7 @@
 			</xsl:otherwise>
 		</xsl:choose>
 		<xsl:if test="$first = 'true'">
-			<xsl:apply-templates select="." mode="facetts">
+			<xsl:apply-templates select="." mode="facets">
 				<xsl:with-param name="documentNodes" select="$documentNodes"/>
 			</xsl:apply-templates>
 		</xsl:if>
@@ -335,27 +335,27 @@
 
 	<!-- xs:simpleType -->
 
-	<xsl:template match="xs:simpleType" mode="facetts">
-		<xsl:param name="usedFacetts"/>
+	<xsl:template match="xs:simpleType" mode="facets">
+		<xsl:param name="usedFacets"/>
 		<xsl:param name="documentNodes"/>
-		<xsl:apply-templates select="xs:restriction" mode="facetts">
-			<xsl:with-param name="usedFacetts" select="$usedFacetts"/>
+		<xsl:apply-templates select="xs:restriction" mode="facets">
+			<xsl:with-param name="usedFacets" select="$usedFacets"/>
 			<xsl:with-param name="documentNodes" select="$documentNodes"/>
 		</xsl:apply-templates>
 	</xsl:template>
 
 	<!-- xs:restriction -->
 
-	<xsl:template match="xs:simpleType/xs:restriction" mode="facetts">
-		<xsl:param name="usedFacetts">
+	<xsl:template match="xs:simpleType/xs:restriction" mode="facets">
+		<xsl:param name="usedFacets">
 			<xsl:call-template name="x1f:List.createEmptyList">
 				<xsl:with-param name="duplicate-free" select="true()"/>
 			</xsl:call-template>
 		</xsl:param>
 		<xsl:param name="documentNodes"/>
-		<xsl:variable name="newUsedFacetts">
+		<xsl:variable name="newUsedFacets">
 			<xsl:call-template name="x1f:List.appendEntries">
-				<xsl:with-param name="list" select="$usedFacetts"/>
+				<xsl:with-param name="list" select="$usedFacets"/>
 				<xsl:with-param name="entries">
 					<xsl:for-each select="xs:*[local-name() != 'annoation' and local-name() != 'simpleType']">
 						<xsl:call-template name="x1f:List.Entry.createEntry">
@@ -367,20 +367,20 @@
 		</xsl:variable>
 		<xsl:choose>
 			<xsl:when test="@base and $documentNodes/xs:simpleType[@name = current()/@base or @name = substring-after(current()/@base,':')]">
-				<xsl:apply-templates select="$documentNodes/xs:simpleType[@name = current()/@base or @name = substring-after(current()/@base,':')]" mode="facetts">
-					<xsl:with-param name="usedFacetts" select="$newUsedFacetts"/>
+				<xsl:apply-templates select="$documentNodes/xs:simpleType[@name = current()/@base or @name = substring-after(current()/@base,':')]" mode="facets">
+					<xsl:with-param name="usedFacets" select="$newUsedFacets"/>
 					<xsl:with-param name="documentNodes" select="$documentNodes"/>
 				</xsl:apply-templates>
 			</xsl:when>
 			<xsl:otherwise>
-				<xsl:apply-templates select="xs:simpleType" mode="facetts">
-					<xsl:with-param name="usedFacetts" select="$newUsedFacetts"/>
+				<xsl:apply-templates select="xs:simpleType" mode="facets">
+					<xsl:with-param name="usedFacets" select="$newUsedFacets"/>
 					<xsl:with-param name="documentNodes" select="$documentNodes"/>
 				</xsl:apply-templates>
 			</xsl:otherwise>
 		</xsl:choose>
-		<xsl:apply-templates select="xs:minInclusive | xs:maxInclusive | xs:minExclusive | xs:maxExclusive | xs:totalDigits | xs:fractionDigits | xs:length | xs:minLength | xs:maxLength | xs:whiteSpace | xs:enumeration[count(preceding-sibling::xs:enumeration) = 0] | xs:pattern[count(preceding-sibling::xs:pattern) = 0]" mode="facetts">
-			<xsl:with-param name="usedFacetts" select="$usedFacetts"/>
+		<xsl:apply-templates select="xs:minInclusive | xs:maxInclusive | xs:minExclusive | xs:maxExclusive | xs:totalDigits | xs:fractionDigits | xs:length | xs:minLength | xs:maxLength | xs:whiteSpace | xs:enumeration[count(preceding-sibling::xs:enumeration) = 0] | xs:pattern[count(preceding-sibling::xs:pattern) = 0]" mode="facets">
+			<xsl:with-param name="usedFacets" select="$usedFacets"/>
 			<xsl:with-param name="baseType" select="$documentNodes/xs:simpleType[@name = current()/@base or @name = substring-after(current()/@base,':')] | xs:simpleType"/>
 			<xsl:with-param name="documentNodes" select="$documentNodes"/>
 		</xsl:apply-templates>
@@ -388,12 +388,12 @@
 
 	<!-- xs:minInclusive | xs:maxInclusive | xs:minExclusive | xs:maxExclusive | xs:totalDigits | xs:fractionDigits| xs:length | xs:minLength | xs:maxLength | xs:whitespace -->
 
-	<xsl:template match="xs:minInclusive | xs:maxInclusive | xs:minExclusive | xs:maxExclusive | xs:totalDigits | xs:fractionDigits| xs:length | xs:minLength | xs:maxLength | xs:whitespace" mode="facetts">
-		<xsl:param name="usedFacetts"/>
+	<xsl:template match="xs:minInclusive | xs:maxInclusive | xs:minExclusive | xs:maxExclusive | xs:totalDigits | xs:fractionDigits| xs:length | xs:minLength | xs:maxLength | xs:whitespace" mode="facets">
+		<xsl:param name="usedFacets"/>
 		<xsl:param name="documentNodes"/>
 		<xsl:variable name="alreadyUsed">
 			<xsl:call-template name="x1f:List.containsValue">
-				<xsl:with-param name="list" select="$usedFacetts"/>
+				<xsl:with-param name="list" select="$usedFacets"/>
 				<xsl:with-param name="value" select="local-name()"/>
 			</xsl:call-template>
 		</xsl:variable>
@@ -409,12 +409,12 @@
 
 	<!-- xs:enumeration -->
 
-	<xsl:template match="xs:enumeration[count(preceding-sibling::xs:enumeration) = 0]" mode="facetts">
-		<xsl:param name="usedFacetts"/>
+	<xsl:template match="xs:enumeration[count(preceding-sibling::xs:enumeration) = 0]" mode="facets">
+		<xsl:param name="usedFacets"/>
 		<xsl:param name="documentNodes"/>
 		<xsl:variable name="alreadyUsed">
 			<xsl:call-template name="x1f:List.containsValue">
-				<xsl:with-param name="list" select="$usedFacetts"/>
+				<xsl:with-param name="list" select="$usedFacets"/>
 				<xsl:with-param name="value" select="local-name()"/>
 			</xsl:call-template>
 		</xsl:variable>
@@ -424,26 +424,26 @@
 			</dt>
 			<dd>
 				<xsl:value-of select="@value"/>
-				<xsl:apply-templates select="following-sibling::xs:enumeration" mode="facetts">
+				<xsl:apply-templates select="following-sibling::xs:enumeration" mode="facets">
 					<xsl:with-param name="documentNodes" select="$documentNodes"/>
 				</xsl:apply-templates>
 			</dd>
 		</xsl:if>
 	</xsl:template>
 
-	<xsl:template match="xs:enumeration[count(preceding-sibling::xs:enumeration) > 0]" mode="facetts">
+	<xsl:template match="xs:enumeration[count(preceding-sibling::xs:enumeration) > 0]" mode="facets">
 		<xsl:value-of select="concat(' | ',@value)"/>
 	</xsl:template>
 
 	<!-- xs:pattern -->
 
-	<xsl:template match="xs:pattern[count(preceding-sibling::xs:pattern) = 0]" mode="facetts">
-		<xsl:param name="usedFacetts"/>
+	<xsl:template match="xs:pattern[count(preceding-sibling::xs:pattern) = 0]" mode="facets">
+		<xsl:param name="usedFacets"/>
 		<xsl:param name="baseType"/>
 		<xsl:param name="documentNodes"/>
 		<xsl:variable name="alreadyUsed">
 			<xsl:call-template name="x1f:List.containsValue">
-				<xsl:with-param name="list" select="$usedFacetts"/>
+				<xsl:with-param name="list" select="$usedFacets"/>
 				<xsl:with-param name="value" select="local-name()"/>
 			</xsl:call-template>
 		</xsl:variable>
