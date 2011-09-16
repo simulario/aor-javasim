@@ -29,7 +29,7 @@
 				<xs:annotation><xs:documentation>One of the agents defined in the initial state and defined to be playable in an AgentControlByAgentType element. </xs:documentation></xs:annotation>
 			</xs:attribute>
 			<xs:attribute name="waitForUserInput" type="xs:boolean" use="optional" default="false">
-    		<xs:annotation><xs:documentation>Interrupt the simulation while waiting for the user input. In the case of a single-user simulation this will not be combined with a timeout, while in the case of a multi-user simulation it will be combined with a timeout. </xs:documentation></xs:annotation>
+				<xs:annotation><xs:documentation>In the case of a single-user simulation this means interrupt the simulation run while waiting for the user input. In the case of a multi-user simulation this means that rounds are sequential, and the simulator waits for the user input for some time (defined by the timeout setting); otherwise rounds are parallelized in the sense that any agent simulator may transmit action decisions/events for a simulation step during a time period determined by the timeout setting. </xs:documentation></xs:annotation>
     	</xs:attribute>
     	<xs:attribute name="timeoutSec" type="xs:positiveInteger" use="optional">
     		<xs:annotation><xs:documentation>The timeout for the human-controlled agents' response time in number of seconds. This attribute is only meaningful for asynchronous ("round-based") MULTI-USER simulations. </xs:documentation></xs:annotation>
@@ -43,7 +43,7 @@
 	<xs:element name="AgentControlByAgentType">
 	<!-- =================================================================== -->
 		<xs:annotation><xs:documentation>
-			The UI has 3 basic elements: output panels containing either a perception event list or output fields, 
+			The agent control UI has 3 basic elements: output panels containing either a current event list or output fields, 
 			user action forms allowing to enter parameter values for actions that can be performed at any time 
 			or in response to certain events, and user action event listeners.
 		</xs:documentation></xs:annotation>
@@ -246,13 +246,21 @@
 			<xs:element ref="aors:Label" minOccurs="0"/>
 			<xs:element name="ActionRuleParameterUI" type="aors:ParameterUI.type" minOccurs="0" maxOccurs="unbounded"/>
 		</xs:sequence>
-		<xs:attribute name="actionRule" type="aors:CanonicalName" use="required"/>
 		<xs:attribute name="label" type="xs:string" use="required"/>
-		<xs:attribute name="icon" type="xs:anyURI" use="optional">
-			<xs:annotation><xs:documentation xml:lang="en">An icon file from the media folder. </xs:documentation></xs:annotation>
-		</xs:attribute>
+		<xs:attributeGroup ref="aors:UserActionForm.attributes"/>
+	</xs:complexType>
+	<!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->
+	<xs:attributeGroup name="UserActionForm.attributes">
+	<!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->
+		<xs:attribute name="actionRule" type="aors:CanonicalName" use="required"/>
 		<xs:attribute name="enabledWhenEventOfType" type="aors:CanonicalName" use="optional">
-			<xs:annotation><xs:documentation>The type of the events that enable this user action. If this attribute is used, the user action represents a reaction to an event and the form will only pop up when such an event occurs; otherwise the user action represents an action and the form will be visible all the time.</xs:documentation></xs:annotation>
+			<xs:annotation><xs:documentation>The type of events that enable this user action form. If this attribute is used, the user action represents a reaction to an event and the form will only pop up when such an event occurs; otherwise the user action represents an action and the form will be visible all the time.</xs:documentation></xs:annotation>
+		</xs:attribute>
+		<xs:attribute name="enabledWhenInMessageOfType " type="aors:CanonicalName" use="optional">
+			<xs:annotation><xs:documentation>The type of incoming messages that enable this user action form. If this attribute is used, the user action represents a reaction to an incoming message and the form will only pop up when such a message arrives; otherwise the user action represents an action and the form will be visible all the time.</xs:documentation></xs:annotation>
+		</xs:attribute>
+		<xs:attribute name="image" type="xs:anyURI" use="optional">
+			<xs:annotation><xs:documentation xml:lang="en">An image file from the media folder. </xs:documentation></xs:annotation>
 		</xs:attribute>
 		<xs:attribute name="positioning" use="required">
 			<xs:simpleType>
@@ -265,18 +273,18 @@
 					<xs:enumeration value="RightBottom"/>
 				</xs:restriction>
 			</xs:simpleType>
-		</xs:attribute>
-	</xs:complexType>
+		</xs:attribute>		
+	</xs:attributeGroup>
 	<!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->
 	<xs:complexType name="MultiChoiceUserActionForm.type">
 	<!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->
-		<xs:annotation><xs:documentation>A multi-choice user action form provides an enumeration of selectable options. The associated action rule must have exactly one rule parameter (of type Integer), which is set to the number of the selected option . </xs:documentation></xs:annotation>
+		<xs:annotation><xs:documentation>A multi-choice user action form provides an enumeration of selectable options. The associated action rule must have exactly one rule parameter (of type Integer), which is set to the number of the selected option. </xs:documentation></xs:annotation>
 		<xs:sequence>
 			<xs:element ref="aors:Hint" minOccurs="0"/>
 			<xs:element name="Options">
 				<xs:complexType>
 					<xs:sequence>
-						<xs:element name="Option">
+						<xs:element name="Option" maxOccurs="7">
 							<xs:complexType>
 								<xs:sequence>
 									<xs:element name="Text" type="aors:Text" maxOccurs="unbounded"/>																
@@ -287,12 +295,9 @@
 				</xs:complexType>
 			</xs:element>
 		</xs:sequence>
-		<xs:attribute name="actionRule" type="aors:CanonicalName" use="required"/>
-		<xs:attribute name="icon" type="xs:anyURI" use="optional">
-			<xs:annotation><xs:documentation xml:lang="en">An icon file from the media folder. </xs:documentation></xs:annotation>
-		</xs:attribute>
-		<xs:attribute name="enabledWhenEventOfType" type="aors:CanonicalName" use="optional">
-			<xs:annotation><xs:documentation>The type of the events that enable this user action. If this attribute is used, the user action represents a reaction to an event and the form will only pop up when such an event occurs; otherwise the user action represents an action and the form will be visible all the time.</xs:documentation></xs:annotation>
+		<xs:attributeGroup ref="aors:UserActionForm.attributes"/>
+		<xs:attribute name="allowMultiSelection" type="xs:boolean" use="optional" default="false">
+			<xs:annotation><xs:documentation>A multiple selection leads to a set of sequence  numbers. </xs:documentation></xs:annotation>
 		</xs:attribute>
 	</xs:complexType>
 	<!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->

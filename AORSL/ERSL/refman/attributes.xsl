@@ -56,7 +56,7 @@
 							<thead>
 								<tr>
 									<th scope="col">Required Attribute</th>
-									<th scope="col">Documentation / Facetts</th>
+									<th scope="col">Documentation / Facets</th>
 								</tr>
 							</thead>
 							<tbody>
@@ -72,7 +72,7 @@
 							<thead>
 								<tr>
 									<th scope="col">Optional Attribute</th>
-									<th scope="col">Documentation / Facetts</th>
+									<th scope="col">Documentation / Facets</th>
 								</tr>
 							</thead>
 							<tbody>
