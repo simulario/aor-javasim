@@ -5,9 +5,11 @@
         xmlns:xlink="http://www.w3.org/1999/xlink" version="5.0">
 	<title>Analysis of the model</title>
 	<para>This chapter focuses on the analysis of the model. All the features will be listed. They are
-		quite necessary for reconstruction of the model in AOR simulator. Moreover, a UML class
-		diagram and two BPMN models are created for representing the model. This is a very important
-		step.</para>
+		quite necessary for reconstruction of the model in AOR simulator. Moreover, in order to
+		better understand the model, UML class diagram and BPMN model are applied. They are powerful
+		tools for representing complex structures and relationships. The aim is to operationalize
+		the abstract data of the model into easy readable graphical notations. This is a very
+		important step, because it can improve efficiency of model reconstruction.</para>
 	<section>
 		<title>Data extraction</title>
 		<para>In general, there are three ingredients in this model: market, agent and activity.
@@ -19,10 +21,14 @@
 			Agents and their activities are discussed in depth as follows.</para>
 		<section>
 			<title>Household</title>
-			<para>The model consists of a large number of households, who are simultaneously taking
-				the roles of buyers and workers. Households receive their income and determine how
-				much to spend and how much to save. In general, the household makes some decisions
-				with the related roles affecting the markets as follows.</para>
+			<para>The model consists of a large number of households, who are simultaneously taking the roles
+				of buyers and workers. In the consumption goods market, households determine the
+				monthly and weekly consumption budgets, and then visit a mall in order to decide and
+				purchase the provided goods for the weekly consumption. In the labor market, if a
+				household is employed, he receives a wage from his current employer. When a
+				household is unemployed, he receives unemployment benefit from the government and
+				sends job applications to CGPs that have opened vacancies. In general, the household
+				makes some decisions with the related roles affecting the markets as follows.</para>
 			<orderedlist>
 				<listitem>
 					<para>Allocate budget on consumption and saving</para>
@@ -415,7 +421,7 @@
 					job seekers are still unemployed they decrease their reservation wage.</para>
 			</section>
 			<section>
-				<title>Acquire specific skills</title>
+				<title>Acquire specific skills (Household update specific skills)</title>
 				<para>The household is characterized by a general skill level and specific skills.
 					His general skill level is determined by outside factors like government and
 					economic policy. The specific skills of workers are acquired on the job.</para>
@@ -648,9 +654,15 @@
 		</section>
 		<section>
 			<title>Consumption goods producer (CGP)</title>
-			<para>The CGP plays the role of buyer, seller and employer and makes a large number of
-				decisions to influence the markets. Overall, it operates the sequence of events in
-				the following way:</para>
+			<para>The CGP plays the role of buyer, seller and employer and makes a large number of decisions
+				to influence the markets. At the consumption goods market, the CGP computes the
+				planned production quantity and determines the required input factors for producing
+				the planned output. After passing the factor markets it produces and distributes the
+				output among the malls. CGPs are active on the labor market after the production
+				planning but before the production takes place. They lay off workers if number of
+				employees is bigger than the actual labor demand and employ workers if number of
+				employees is smaller than the actual labor demand. Overall, the CGP operates the
+				sequence of events in the following way:</para>
 			<orderedlist>
 				<listitem>
 					<para>Product stock (optimal inventory) decision</para>
@@ -1638,8 +1650,11 @@
 						</math>
 					</inlineequation>: Complementarity between <emphasis role="italic">B</emphasis>
 					and <emphasis role="italic">A<subscript>i</subscript></emphasis>.</para>
-				<para>The CGP distributes the output from a central inventory to the local outlet
-					malls where it tries to sell its merchandise.</para>
+				<para>productivity is given by the minimum of average specific skills and average
+					quality of the capital stock of the CGP.</para>
+				<para>The CGP distributes the output among the malls. Because the realized production volume
+					does not necessarily correspond to the planned output, the CGP determines the
+					actual delivery quantities proportionally to the intended quantities:</para>
 			</section>
 			<section>
 				<title>Pricing decision (which price to set)</title>
@@ -1962,15 +1977,29 @@
 	</section>
 	<section>
 		<title>UML and BPMN</title>
-		<para>In order to show agents and their interactions more clearly.</para>
+		<para>In order to show agents and their interactions more clearly. a UML class diagram and two
+			BPMN models are created.</para>
 		<section>
 			<title>UML</title>
-			<para>Each agent class is represented by a set of attributes and methods that operate on the
-				agent class. A UML class diagram is a convenient way of representing the agents of
-				the model.</para>
+			<para>The UML class diagram describes the static structure of the model. It is a convenient way
+				of representing the agents of the model. Each agent class is represented by a set of
+				attributes and methods that operate on the agent class. As mentioned, there are four
+				types of agents in the model: household, consumption goods producer, mall and
+				capital Goods Producer.</para>
+			<figure>
+				<title>UML Class Diagram</title>
+				<mediaobject>
+					<imageobject>
+						<imagedata fileref="png/uml.png"/>
+					</imageobject>
+				</mediaobject>
+			</figure>
 		</section>
 		<section>
 			<title>BPMN</title>
+			<para>Basically, the BPMN specification defines how a task must look like, which
+				constructs can be connected to each other, etc. in a meaning that cannot be
+				misinterpreted.</para>
 			<para>The Business Process Modeling Notation (BPMN) is a graphical notation for
 				describing various kinds of processes. The main notational elements in BPMN are
 					<emphasis role="italic">FlowObjects</emphasis>, that are contained in <emphasis
@@ -1982,9 +2011,86 @@
 				sequence in which the several FlowObjects have to be completed, while MessageFlows
 				describe the exchange of messages between Pools. Thus, BPMN combines the definition
 				of local workflows and the interaction between them.</para>
-			<para>The model consists of two pools: CGPs and households. The process model based on
-				the search-and-matching process is used to represent the interaction between CGPs
-				and households in the labor market.</para>
+			<section>
+				<title>Labor market interaction</title>
+				<para>According to the procedures described in the previous sections CGPs review
+					once a month whether to post vacancies for production workers. Job seekers check
+					for vacancies. The matching between vacancies and job seekers workers in the
+					following way:</para>
+				<para>Step 1: The CGPs post vacancies including wage offers.</para>
+				<para>Step 2: Every job seeker extracts from the list of vacancies those postings to
+					which he fits in terms of his reservation wage net of commuting cotsts that may
+					arise if he applies for a job in a region where he does not live. He sends an
+					exogenous determined number of applications to randomly chosen CGPs.</para>
+				<para>Step 3: If the number of applicants is smaller or equal to the number of
+					vacancies the CGPs send job offers to every applicant. If the number of
+					applicants is higher than the number of vacancies CGPs send job offers to as
+					many applicants as they have vacancies to fill. Applicants with higher general
+					skill levels are more likely to receive a job offer.</para>
+				<para>Step 4: Each worker ranks the incoming job offers according to the wages net
+					of commuting costs that may arise if he was to accept a job in the region where
+					he does not live. Each worker accepts the highest ranked job offer at the
+					advertised wage rate. After acceptance a worker ignores all other job offers and
+					outstanding applications.</para>
+				<para>Step 5: Vacancy lists are adjusted for filled jobs and the labor force is
+					adjusted for new employees.</para>
+				<para>Step 6: If the number of unfilled vacancies exceeds some threshold the CGP
+					raises the base wage offer. If an unemployed job seeker did not find a job he
+					reduces his reservation wage. Go to step 1.</para>
+				<para>The cycle is aborted after two iterations even if not all CGPs may have
+					satisfied their demand for labor. This might lead to rationing of CGPs on the
+					labor market and therefore to deviations of actual output quantities from the
+					planned quantities.</para>
+				<para>The model consists of two pools: CGPs and households. The process model based
+					on the search-and-matching process is used to represent the interaction between
+					CGPs and households in the labor market.</para>
+				<figure>
+					<title>Labor Market Interaction</title>
+					<mediaobject>
+						<imageobject>
+							<imagedata fileref="png/2.png"/>
+						</imageobject>
+					</mediaobject>
+				</figure>
+			</section>
+			<section>
+				<title>Consumption market interaction</title>
+				<para>The consumption goods market is modeled as a decentralized goods market. Each
+					local market is represented by an outlet mall at which the consumption goods
+					producers can offer and sell their products to their customers. While firms are
+					free to serve all malls regardless their spatial proximity, households are
+					limited in choosing their market places by allowing them only to visit that mall
+					which is located in the direct neighborhood.</para>
+				<para>Households go shopping once a week and then they try to spend their entire
+					weekly consumption budget for one good. At the beginning of their shopping
+					procedure they get information about the prices of all available goods at the
+					mall, but they get no information about the available quantities. The decision
+					on which good to buy is described in Section 3.6.4.</para>
+				<para>Households have asynchronized shopping days and thus on each day of the months
+					there may be shopping activities in the mall. The consumption requests for the
+					different goods are collected by the mall and, if the total demand for one good
+					exceeds its mall inventory level then the mall has to ration the demand. In this
+					case the mall sets a rationing quota corresponding to the percentage of the
+					total demand that can be satisfied with the available goods. Each households
+					receives then the indicated percentage of her requested consumption.</para>
+				<para>After the shopping activity rationed households have still budget at hand.
+					Those households have the opportunity to spend the remaining budget for another
+					good in a second shopping loop. In this case the shopping process is repeated as
+					described above.</para>
+				<para>The production of the consumption goods firm follows a fixed time schedule
+					with fix production and delivery dates. Even if the mall stock is completely
+					sold out it can only be refilled at the fixed delivery date. Consequently, all
+					the demand that exceeds the expected value of the monthly sales and the
+					additional buffer can not be satisfied.</para>
+				<figure>
+					<title>Consumption Market Interaction</title>
+					<mediaobject>
+						<imageobject>
+							<imagedata fileref="png/1.png"/>
+						</imageobject>
+					</mediaobject>
+				</figure>
+			</section>
 		</section>
 	</section>
 </chapter>
