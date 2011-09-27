@@ -150,9 +150,9 @@
 					<xsl:apply-templates select="." mode="annotations">
 						<xsl:with-param name="documentNodes" select="$documentNodes"/>					
 					</xsl:apply-templates>
-					<xsl:apply-templates select="." mode="elements.superelements">
+					<!--xsl:apply-templates select="." mode="elements.superelements">
 						<xsl:with-param name="documentNodes" select="$documentNodes"/>
-					</xsl:apply-templates>
+					</xsl:apply-templates-->
 					<xsl:apply-templates select="." mode="content">
 						<xsl:with-param name="documentNodes" select="$documentNodes"/>
 					</xsl:apply-templates>
