@@ -13,7 +13,7 @@ import javax.media.opengl.GL2;
 public class Camera2D {
 
   // Camera coordinates
-  private double x, y;
+  private double x, y, z;
 
   // Camera rotation angle
   private double zRot;
@@ -76,7 +76,7 @@ public class Camera2D {
 
     // Reset camera coordinates
     x = y = 0;
-
+    z = 400;
     // Reset rotation angle
     zRot = 0;
 
@@ -98,7 +98,7 @@ public class Camera2D {
     // Scroll left
     if (scrollLeft == true)
       x += SCROLL_SPEED * (elapsedTime / 1000.0);
-
+    
     // Scroll up
     if (scrollUp == true)
       y -= SCROLL_SPEED * (elapsedTime / 1000.0);
@@ -183,4 +183,8 @@ public class Camera2D {
     rotateCounterclockwise = status;
   }
 
+  public double[] getPosition() {
+	  double[] position = {x, y, z};
+	  return position;
+  }
 }

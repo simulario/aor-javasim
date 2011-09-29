@@ -6,16 +6,18 @@ import javax.media.opengl.GL2;
 import javax.media.opengl.glu.GLU;
 
 import aors.module.visopengl3d.engine.TessellatedPolygon;
+import aors.module.visopengl3d.shape.Cylinder;
 import aors.module.visopengl3d.space.model.OneDimSpaceModel;
 import aors.module.visopengl3d.space.view.Alignment;
 import aors.module.visopengl3d.utility.Color;
 import aors.space.Space;
 
+
 /**
  * A track is a component of a one dimensional space model. It can either be
  * aligned vertically, horizontally or circular.
  * 
- * @author Sebastian Mucha
+ * @author Sebastian Mucha, Susanne Schölzel
  * @since March 4th, 2010
  * 
  */
@@ -138,27 +140,27 @@ public class Track implements SpaceComponent {
    * @param glu
    */
   private void drawTrack(GL2 gl, GLU glu) {
-    // Rectangle storing the offsets of the track
-    double offset[] = new double[4];
+	 	//Create and initialize new cylinder which should represent the track
+	    Cylinder cylinder = new Cylinder();
+	    cylinder.setWidth(trackWidth);	    
+	    cylinder.setFill(trackColor);
+	    cylinder.setZ(0);
 
-    // Prepare the rectangle
-    if (alignment.equals(Alignment.horizontal)) {
-      offset[0] = x1;
-      offset[1] = y1 - (trackWidth / 2);
-      offset[2] = x2;
-      offset[3] = y2 + (trackWidth / 2);
-    } else {
-      offset[0] = x1 - (trackWidth / 2);
-      offset[1] = y1;
-      offset[2] = x2 + (trackWidth / 2);
-      offset[3] = y2;
-    }
-
-    // Apply track color
-    gl.glColor4dv(trackColor.getColor(), 0);
-
-    // Draw the track as a rectangle
-    gl.glRectd(offset[0], offset[1], offset[2], offset[3]);
+    
+	    if (alignment.equals(Alignment.horizontal)) {
+	    	cylinder.setHeight(x2-x1);
+	    	cylinder.setX(x1 + (x2-x1)/2);
+	    	cylinder.setY(y1);
+	    	cylinder.setRotZ(90);
+	    } else {
+	    	cylinder.setHeight(y2-y1);
+	    	cylinder.setX(x1);
+	    	cylinder.setY(y1 + (y2-y1)/2);
+	    }
+    
+	    // generate display list for cylinder and draw it
+	    cylinder.generateDisplayList(gl, glu);
+	    cylinder.display(gl, glu);
   }
 
   /**

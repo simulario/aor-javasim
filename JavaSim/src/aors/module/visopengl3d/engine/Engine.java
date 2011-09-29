@@ -29,8 +29,8 @@ import aors.module.visopengl3d.space.model.SpaceModel;
 import aors.module.visopengl3d.space.view.Face;
 import aors.module.visopengl3d.space.view.GridSpaceView;
 import aors.module.visopengl3d.space.view.Skybox;
-import aors.module.visopengl3d.space.view.SpaceView;
 import aors.module.visopengl3d.space.view.TwoDimSpaceView;
+import aors.module.visopengl3d.utility.Camera2D;
 import aors.module.visopengl3d.utility.Offset;
 import aors.module.visopengl3d.utility.TextureLoader;
 import aors.space.Space;
@@ -98,9 +98,15 @@ public class Engine implements GLEventListener {
 
     // Reset model view matrix stack
     gl.glLoadIdentity();
-
+    
+    // determine elapsed time
+    camera.getElapsedTime();
     // Apply camera transformations
+    camera.zoom(gl);
+    
     camera.scroll(gl);
+    camera.rotate(gl);
+    
 
     // Display the space model & objects
     if (spaceModel != null) {
@@ -114,8 +120,7 @@ public class Engine implements GLEventListener {
       
       Skybox skybox = spaceModel.getSpaceView().getSkybox();
       if(skybox != null) {
-    	double[] cameraPosition = {camera.getX(), camera.getY(), camera.getZ()};
-      	skybox.setPosition(cameraPosition);
+      	skybox.setPosition(camera.getPosition());
       	skybox.display(gl, glu);
       }
 
@@ -1201,7 +1206,7 @@ public class Engine implements GLEventListener {
 
     // Apply matrix rotation
     gl.glRotated(rotation, 0.0f, 0.0f, 1.0f);
-
+    
     // Display the shape
     shape.display(gl, glu);
 
