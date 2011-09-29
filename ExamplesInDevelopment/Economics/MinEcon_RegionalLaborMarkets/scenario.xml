@@ -450,7 +450,7 @@
 							if (p.getDemand() > p.getMaximumDemand()) {
 								p.setMaximumDemand(p.getDemand());
 							}
-							p.setOptimalStockLevel((getProductSalesPrice() - (1 - 0.95) * getUnitCostOfProduction()) / (getProductSalesPrice() + 0.1) * p.getMaximumDemand() * 2.2);
+							p.setOptimalStockLevel((getProductSalesPrice() - (1 - 0.95) * getUnitCostOfProduction()) / (getProductSalesPrice() + 0.05) * p.getMaximumDemand() * 2);
 							p.setDemand(0.0);
 						}
 						]]></Body>
@@ -694,7 +694,7 @@
 						setCostOfProduction(getGrossInvestment() + determineLaborCost());
 						if (getProducedQuantity() > 0.0) {
 							setUnitCostOfProduction(getCostOfProduction() / getProducedQuantity());
-							setProductSalesPrice((1 + 0.2) * getUnitCostOfProduction());
+							setProductSalesPrice((1 + 0.02) * getUnitCostOfProduction());
 						}
 						setMonthlyRealizedProfit(getProductSalesRevenue() - getCostOfProduction());
 						
@@ -1492,12 +1492,12 @@
 			</EnvironmentRule>
 			
 			<!--<EnvironmentRule name="Create_InitialReservationWage_Rule">
-		    <documentation>
-		    	<description xml:lang="en">Get an initial reservation wage of every household on the basis of his general skill level.</description>
-		    </documentation>
-		    <WHEN eventType="Init"/>
-		    <FOR-ObjectVariable variable="h" objectType="Household"/>
-		    <DO>
+		    	<documentation>
+		    		<description xml:lang="en">Get an initial reservation wage of every household on the basis of his general skill level.</description>
+		    	</documentation>
+		    	<WHEN eventType="Init"/>
+		    	<FOR-ObjectVariable variable="h" objectType="Household"/>
+		    	<DO>
 					<UPDATE-ENV>
 						<UpdateObject objectVariable="h">
 							<Slot property="currentWage">
@@ -1850,14 +1850,14 @@
 				<THEN>
 					<UPDATE-ENV>
 						<UpdateGlobalVariable name="capitalLowSkillRegion">
-							<ValueExpr language="Java"><![CDATA[ Global.getCapitalLowSkillRegion() + f.getGrossInvestment() ]]></ValueExpr>
+							<ValueExpr language="Java"><![CDATA[ Global.getCapitalLowSkillRegion() + f.getTotalQualityOfCapitalStock() ]]></ValueExpr>
 						</UpdateGlobalVariable>
 					</UPDATE-ENV>
 				</THEN>
 				<ELSE>
 					<UPDATE-ENV>
 						<UpdateGlobalVariable name="capitalHighSkillRegion">
-							<ValueExpr language="Java"><![CDATA[ Global.getCapitalHighSkillRegion() + f.getGrossInvestment() ]]></ValueExpr>
+							<ValueExpr language="Java"><![CDATA[ Global.getCapitalHighSkillRegion() + f.getTotalQualityOfCapitalStock() ]]></ValueExpr>
 						</UpdateGlobalVariable>
 					</UPDATE-ENV>
 				</ELSE>
@@ -2104,7 +2104,7 @@
 					<UPDATE-ENV>
 						<UpdateObject objectVariable="h">
 							<Slot property="currentIncome">
-								<ValueExpr language="Java"><![CDATA[ h.getCurrentIncome() + 1.0 ]]></ValueExpr>
+								<ValueExpr language="Java"><![CDATA[ h.getCurrentIncome() + 0.5 ]]></ValueExpr>
 							</Slot>
 						</UpdateObject>
 					</UPDATE-ENV>
@@ -2434,7 +2434,7 @@
 	
 	<UserInterface supportedLanguages="en">
 		<StatisticsUI>
-			<StatisticsVariableUI variable="outputLowSkillRegion">
+			<StatisticsVariableUI comparisonGroup="Output" variable="outputLowSkillRegion">
 				<Label>
 					<Text xml:lang="en">Output in low skill region</Text>
 				</Label>
@@ -2443,7 +2443,7 @@
 				</Hint>
 			</StatisticsVariableUI>
 			
-			<StatisticsVariableUI variable="outputHighSkillRegion">
+			<StatisticsVariableUI comparisonGroup="Output" variable="outputHighSkillRegion">
 				<Label>
 					<Text xml:lang="en">Output in high skill region</Text>
 				</Label>
@@ -2452,7 +2452,7 @@
 				</Hint>
 			</StatisticsVariableUI>
 			
-			<StatisticsVariableUI variable="totalOutput">
+			<StatisticsVariableUI comparisonGroup="Output" variable="totalOutput">
 				<Label>
 					<Text xml:lang="en">Total output</Text>
 				</Label>
@@ -2461,7 +2461,7 @@
 				</Hint>
 			</StatisticsVariableUI>
 			
-			<StatisticsVariableUI variable="numberOfCommutersFromLowToHighSkillRegion">
+			<StatisticsVariableUI comparisonGroup="NumberOfCommuters" variable="numberOfCommutersFromLowToHighSkillRegion">
 				<Label>
 					<Text xml:lang="en">Number of commuters from low to high skill region</Text>
 				</Label>
@@ -2470,7 +2470,7 @@
 				</Hint>
 			</StatisticsVariableUI>
 			
-			<StatisticsVariableUI variable="numberOfCommutersFromHighToLowSkillRegion">
+			<StatisticsVariableUI comparisonGroup="NumberOfCommuters" variable="numberOfCommutersFromHighToLowSkillRegion">
 				<Label>
 					<Text xml:lang="en">Number of commuters from high to low skill region</Text>
 				</Label>
@@ -2479,7 +2479,7 @@
 				</Hint>
 			</StatisticsVariableUI>
 			
-			<StatisticsVariableUI variable="averagePriceLowSkillRegion">
+			<StatisticsVariableUI comparisonGroup="AveragePrice" variable="averagePriceLowSkillRegion">
 				<Label>
 					<Text xml:lang="en">Prices in the low skill region</Text>
 				</Label>
@@ -2488,7 +2488,7 @@
 				</Hint>
 			</StatisticsVariableUI>
 			
-			<StatisticsVariableUI variable="averagePriceHighSkillRegion">
+			<StatisticsVariableUI comparisonGroup="AveragePrice" variable="averagePriceHighSkillRegion">
 				<Label>
 					<Text xml:lang="en">Prices in the high skill region</Text>
 				</Label>
@@ -2497,7 +2497,7 @@
 				</Hint>
 			</StatisticsVariableUI>
 			
-			<StatisticsVariableUI variable="capitalStockLowSkillRegion">
+			<StatisticsVariableUI comparisonGroup="CapitalStock" variable="capitalStockLowSkillRegion">
 				<Label>
 					<Text xml:lang="en">Capital stock in the low skill region</Text>
 				</Label>
@@ -2506,7 +2506,7 @@
 				</Hint>
 			</StatisticsVariableUI>
 			
-			<StatisticsVariableUI variable="capitalStockHighSkillRegion">
+			<StatisticsVariableUI comparisonGroup="CapitalStock" variable="capitalStockHighSkillRegion">
 				<Label>
 					<Text xml:lang="en">Capital stock in the high skill region</Text>
 				</Label>
@@ -2515,7 +2515,7 @@
 				</Hint>
 			</StatisticsVariableUI>
 			
-			<StatisticsVariableUI variable="totalLaborIncomeOfWorkersLowSkillRegion">
+			<StatisticsVariableUI comparisonGroup="TotalLaborIncomeOfWorkers" variable="totalLaborIncomeOfWorkersLowSkillRegion">
 				<Label>
 					<Text xml:lang="en">Total labor income of workers in the low skill region</Text>
 				</Label>
@@ -2524,7 +2524,7 @@
 				</Hint>
 			</StatisticsVariableUI>
 			
-			<StatisticsVariableUI variable="totalLaborIncomeOfWorkersHighSkillRegion">
+			<StatisticsVariableUI comparisonGroup="TotalLaborIncomeOfWorkers" variable="totalLaborIncomeOfWorkersHighSkillRegion">
 				<Label>
 					<Text xml:lang="en">Total labor income of workers in the high skill region</Text>
 				</Label>
