@@ -253,7 +253,7 @@ public class Engine implements GLEventListener {
     // Reset model view matrix stack
     gl.glMatrixMode(GL2.GL_MODELVIEW);
     gl.glLoadIdentity();
-
+    
     // Initialize the drawing area
     drawingArea = new Offset((-width / 2) + BORDER, (-height / 2) + BORDER,
         (width / 2) - BORDER, (height / 2) - BORDER);
