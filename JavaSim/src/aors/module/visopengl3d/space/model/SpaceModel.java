@@ -8,6 +8,7 @@ import javax.media.opengl.glu.GLU;
 import aors.GeneralSpaceModel;
 import aors.GeneralSpaceModel.SpaceType;
 import aors.module.visopengl3d.space.component.SpaceComponent;
+import aors.module.visopengl3d.space.component.Track;
 import aors.module.visopengl3d.space.view.SpaceView;
 import aors.module.visopengl3d.utility.Offset;
 import aors.module.visopengl3d.xml.XMLReader;
@@ -116,6 +117,11 @@ public abstract class SpaceModel {
    * @param glu
    */
   public void compileDisplayList(GL2 gl, GLU glu) {
+	  for (SpaceComponent comp : spaceComponents) {
+		  if(comp instanceof Track)
+	      ((Track)comp).generateDisplayList(gl, glu);
+	    }
+	  
     // Get a denominator for the display list
     displayList = gl.glGenLists(1);
 

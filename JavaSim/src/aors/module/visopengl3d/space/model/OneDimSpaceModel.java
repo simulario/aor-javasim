@@ -39,7 +39,7 @@ public class OneDimSpaceModel extends SpaceModel {
     // Set up the space components with respect to the alignment
     if (oneDimSpaceView.getAlignment().equals(Alignment.horizontal)
         || oneDimSpaceView.getAlignment().equals(Alignment.vertical)) {
-      initializeLinearTracks();
+      initializeLinearTracks(gl, glu);
     } else {
       initializeCircularTracks();
     }
@@ -48,7 +48,7 @@ public class OneDimSpaceModel extends SpaceModel {
   /**
    * Creates and initializes linear space components.
    */
-  private void initializeLinearTracks() {
+  private void initializeLinearTracks(GL2 gl, GLU glu) {
     // Minimal distance between tracks
     final double MIN_DISTANCE = 30;
 
@@ -115,6 +115,8 @@ public class OneDimSpaceModel extends SpaceModel {
           .getAlignment());
       ((Track) spaceComponents.get(i)).setSpaceModel(this);
       ((Track) spaceComponents.get(i)).setupTrackDimensions(xMax);
+      
+      
     }
   }
 

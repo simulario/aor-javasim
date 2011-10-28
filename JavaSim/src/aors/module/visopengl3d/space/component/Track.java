@@ -71,6 +71,9 @@ public class Track implements SpaceComponent {
 
   // Distance in percent between each track
   private double distancePercentage;
+  
+  // Display list
+  protected int displayList = -1;
 
   /**
    * Creates a new Track instance that is either vertically or horizontally
@@ -133,6 +136,55 @@ public class Track implements SpaceComponent {
     }
   }
 
+  
+  /**
+   * Generates Cylinder for a track that is aligned either vertically or horizontally.
+   * 
+   * @param gl
+   * @param glu
+   */
+  public void generateDisplayList(GL2 gl, GLU glu) {
+	  if (alignment.equals(Alignment.horizontal)
+			  || alignment.equals(Alignment.vertical)) {
+		 	//Create and initialize new cylinder which should represent the track
+		    Cylinder cylinder = new Cylinder();
+		    cylinder.setWidth(trackWidth);	    
+		    cylinder.setFill(trackColor);
+		    cylinder.setZ(0);
+
+		    if (alignment.equals(Alignment.horizontal)) {
+		    	cylinder.setHeight(x2-x1);
+		    	cylinder.setX(x1 + (x2-x1)/2);
+		    	cylinder.setY(y1);
+		    	cylinder.setRotZ(90);
+		    } else {
+		    	cylinder.setHeight(y2-y1);
+		    	cylinder.setX(x1);
+		    	cylinder.setY(y1 + (y2-y1)/2);
+		    }
+	    
+		    // generate display list for cylinder
+		    cylinder.generateDisplayList(gl, glu);
+
+		    // Get a denominator for the display list
+		    displayList = gl.glGenLists(1);
+
+		    // Create the display list
+		    gl.glNewList(displayList, GL2.GL_COMPILE);
+		    
+		    gl.glPushMatrix();
+		    
+		    gl.glTranslated(cylinder.getX(), cylinder.getY(), cylinder.getZ());
+		    gl.glRotated(cylinder.getRotZ(), 0.0, 0.0, 1.0);
+		    
+		    cylinder.display(gl, glu);
+		    
+		    gl.glPopMatrix();
+		    
+		    gl.glEndList();
+	  }
+  }
+  
   /**
    * Draws a track that is aligned either vertically or horizontally.
    * 
@@ -140,27 +192,9 @@ public class Track implements SpaceComponent {
    * @param glu
    */
   private void drawTrack(GL2 gl, GLU glu) {
-	 	//Create and initialize new cylinder which should represent the track
-	    Cylinder cylinder = new Cylinder();
-	    cylinder.setWidth(trackWidth);	    
-	    cylinder.setFill(trackColor);
-	    cylinder.setZ(0);
-
-    
-	    if (alignment.equals(Alignment.horizontal)) {
-	    	cylinder.setHeight(x2-x1);
-	    	cylinder.setX(x1 + (x2-x1)/2);
-	    	cylinder.setY(y1);
-	    	cylinder.setRotZ(90);
-	    } else {
-	    	cylinder.setHeight(y2-y1);
-	    	cylinder.setX(x1);
-	    	cylinder.setY(y1 + (y2-y1)/2);
-	    }
-    
-	    // generate display list for cylinder and draw it
-	    cylinder.generateDisplayList(gl, glu);
-	    cylinder.display(gl, glu);
+	  if (displayList != -1) {
+	      gl.glCallList(displayList);
+	  }
   }
 
   /**
