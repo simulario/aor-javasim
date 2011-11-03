@@ -121,11 +121,11 @@ public class Camera2D {
   public void rotate(GL2 gl) {
     // Rotate clockwise
     if (rotateClockwise == true)
-      zRot -= ROTATION_SPEED * (elapsedTime / 1000.0);
+      zRot += ROTATION_SPEED * (elapsedTime / 1000.0);
 
     // Rotate counterclockwise
     if (rotateCounterclockwise == true)
-      zRot += ROTATION_SPEED * (elapsedTime / 1000.0);
+      zRot -= ROTATION_SPEED * (elapsedTime / 1000.0);
 
     // Apply the camera rotation
     gl.glRotated(zRot, 0, 0, 1);

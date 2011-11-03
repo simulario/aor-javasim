@@ -10,7 +10,7 @@ import javax.media.opengl.awt.GLCanvas;
 /**
  * Event handler for keyboard events.
  * 
- * @author Sebastian Mucha
+ * @author Sebastian Mucha, Susanne Schölzel
  * @since March 16th, 2010
  * 
  */
@@ -56,13 +56,13 @@ public class KeyboardEventHandler implements KeyListener {
       
       // Rotate clockwise when the colon key was pressed
       if (e.getKeyCode() == KeyEvent.VK_PERIOD) {
-        camera.rotateCounterclockwise(true);
+        camera.rotateClockwise(true);
     	canvas.display();
       }
       
       // Rotate counterclockwise when the comma key was pressed
       if (e.getKeyCode() == KeyEvent.VK_COMMA) {
-        camera.rotateClockwise(true);
+        camera.rotateCounterclockwise(true);
     	canvas.display();
       }
       
@@ -108,13 +108,13 @@ public class KeyboardEventHandler implements KeyListener {
       
       // Rotate clockwise when the colon key was pressed
       if (e.getKeyCode() == KeyEvent.VK_PERIOD) {
-        camera.rotateCounterclockwise(false);
+        camera.rotateClockwise(false);
     	canvas.display();
       }
       
       // Rotate counterclockwise when the comma key was pressed
       if (e.getKeyCode() == KeyEvent.VK_COMMA) {
-        camera.rotateClockwise(false);
+        camera.rotateCounterclockwise(false);
     	canvas.display();
       }
   }

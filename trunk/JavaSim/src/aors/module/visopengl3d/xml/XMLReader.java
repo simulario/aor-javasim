@@ -13,7 +13,6 @@ import org.w3c.dom.Node;
 import org.w3c.dom.NodeList;
 
 import aors.GeneralSpaceModel.SpaceType;
-import aors.module.visopengl3d.engine.Camera2D;
 import aors.module.visopengl3d.lang.LanguageManager;
 import aors.module.visopengl3d.shape.Cube;
 import aors.module.visopengl3d.shape.Cuboid;
@@ -400,6 +399,8 @@ public class XMLReader {
       }
     }
     
+    readGlobalCamera(node, spaceView);
+    
     return spaceView;
   }
 
@@ -488,21 +489,24 @@ public class XMLReader {
 	return skybox;
   }
   
+  
   /*
    * Sets the global camera as read from the XML simulation description.
    * 
    * @param node SpaceView3D node
    * 
    */
-  private void readGlobalCamera(Node node, Camera2D globalCamera) {
+  private void readGlobalCamera(Node node, TwoDimSpaceView spaceView) {
 	
 	// Retrieve child nodes of the "SpaceView3D" node
 	NodeList childNodes = node.getChildNodes();
 
-	// Search for GlobalCamera node and if necessary initialize the global camera
+	// Search for GlobalCamera node and if necessary initialize the global camera parameters eyePosition, lookAt and upVector in TwoDimSpaceView
 	for (int i = 0; i < childNodes.getLength(); i++) {
-	  if (childNodes.item(i).getNodeName().equals(Camera2D.GLOBAL_CAMERA)) {
+	  if (childNodes.item(i).getNodeName().equals(TwoDimSpaceView.GLOBAL_CAMERA)) {
 	    
+		spaceView.setHasGlobalCameraPosition(true);  
+		  
 	    // Retrieve the attributes of a "GlobalCamera" node
 	    NamedNodeMap globalCameraAttributes = childNodes.item(i).getAttributes();
 	        
@@ -516,39 +520,39 @@ public class XMLReader {
 	      value = value.trim();
 
 	      // Check which attributes where found and initialize the members
-	      if (name.equals(Camera2D.POSITION)) {
-	        double[] position = new double[3];
+	      if (name.equals(TwoDimSpaceView.EYE_POSITION)) {
+	        double[] eyePosition = new double[3];
 	        
 	        String[] splittedString = value.split(" ");
 	        
 	        int count = 0;
 	        for (int k=0; k<splittedString.length; k++) {
 	        	if(!splittedString[k].equals("") && count <= 2) {
-	        		position[count] = Double.valueOf(splittedString[k]);
+	        		eyePosition[count] = Double.valueOf(splittedString[k]);
 	        		count++;
 	        	}
 	        }
 	        
-	        globalCamera.setPosition(position);
+	        spaceView.setEyePosition(eyePosition);
 	      }
 
-	      else if (name.equals(Camera2D.VIEW_VECTOR)) {
-	    	double[] viewVector = new double[3];
+	      else if (name.equals(TwoDimSpaceView.LOOK_AT)) {
+	    	double[] lookAt = new double[3];
 		        
 		    String[] splittedString = value.split(" ");
 		        
 		    int count = 0;
 		    for (int k=0; k<splittedString.length; k++) {
 		        if(!splittedString[k].equals("") && count <= 2) {
-		        	viewVector[count] = Double.valueOf(splittedString[k]);
+		        	lookAt[count] = Double.valueOf(splittedString[k]);
 		        	count++;
 		        }
 		    }
 		    
-		    globalCamera.setViewVector(viewVector);
+		    spaceView.setLookAt(lookAt);
 	      }
 	          
-	      else if (name.equals(Camera2D.UP_VECTOR)) {
+	      else if (name.equals(TwoDimSpaceView.UP_VECTOR)) {
 	    	double[] upVector = new double[3];
 		        
 		    String[] splittedString = value.split(" ");
@@ -561,7 +565,7 @@ public class XMLReader {
 		        }
 		    }
 		    
-		    globalCamera.setUpVector(upVector);
+		    spaceView.setUpVector(upVector);
 	      }	  
 	    }
 	  }
