@@ -174,8 +174,8 @@ public class Track implements SpaceComponent {
 		    
 		    gl.glPushMatrix();
 		    
-		    gl.glTranslated(cylinder.getX(), cylinder.getY(), cylinder.getZ());
-		    gl.glRotated(cylinder.getRotZ(), 0.0, 0.0, 1.0);
+		    //gl.glTranslated(cylinder.getX(), cylinder.getY(), cylinder.getZ());
+		    //gl.glRotated(cylinder.getRotZ(), 0.0, 0.0, 1.0);
 		    
 		    cylinder.display(gl, glu);
 		    

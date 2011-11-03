@@ -29,6 +29,7 @@ import aors.module.visopengl3d.space.model.SpaceModel;
 import aors.module.visopengl3d.space.view.Face;
 import aors.module.visopengl3d.space.view.GridSpaceView;
 import aors.module.visopengl3d.space.view.Skybox;
+import aors.module.visopengl3d.space.view.SpaceView;
 import aors.module.visopengl3d.space.view.TwoDimSpaceView;
 import aors.module.visopengl3d.utility.Camera2D;
 import aors.module.visopengl3d.utility.Offset;
@@ -43,7 +44,7 @@ import com.sun.opengl.util.texture.Texture;
  * 2D rendering engine, containing methods to initialize rendering, handle
  * resizes and display a single frame.
  * 
- * @author Sebastian Mucha
+ * @author Sebastian Mucha, Susanne Schölzel
  * @since March 16th, 2010
  * 
  */
@@ -218,7 +219,9 @@ public class Engine implements GLEventListener {
     }
 
     // Create the camera model
-    camera = new Camera2D();
+    if(camera == null) {
+      camera = new Camera2D();
+    }
 
     // Set up event handlers
     mouseEvtHandler.setEngine(this);
@@ -248,7 +251,18 @@ public class Engine implements GLEventListener {
     // Define a perspective viewing volume
     glu.gluPerspective(45, aspect, 1, 1000);
     // Set the camera position
-    glu.gluLookAt(0, 0, 400, 0, 0, 0, 0, 1, 0);
+    SpaceView spaceView = spaceModel.getSpaceView();
+    if(spaceView instanceof TwoDimSpaceView && ((TwoDimSpaceView)spaceView).getHasGlobalCameraPosition()) {
+    	TwoDimSpaceView twoDimSpaceView = (TwoDimSpaceView)spaceView;
+    	double[] eyePosition = twoDimSpaceView.getEyePosition();
+    	double[] lookAt = twoDimSpaceView.getLookAt();
+    	double[] upVector = twoDimSpaceView.getUpVector();
+    	glu.gluLookAt(eyePosition[0], eyePosition[1], eyePosition[2],
+    				  lookAt[0], lookAt[1], lookAt[2],
+    				  upVector[0], upVector[1], upVector[2]);
+    } else {
+    	glu.gluLookAt(0, 0, 400, 0, 0, 0, 0, 1, 0);
+    }
     
     // Reset model view matrix stack
     gl.glMatrixMode(GL2.GL_MODELVIEW);

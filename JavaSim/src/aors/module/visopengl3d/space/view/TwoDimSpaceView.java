@@ -7,7 +7,7 @@ import com.sun.opengl.util.texture.Texture;
 /**
  * Two dimensional, continuous space view.
  * 
- * @author Sebastian Mucha
+ * @author Sebastian Mucha, Susanne Schölzel
  * @since March 17th, 2010
  * 
  */
@@ -22,6 +22,13 @@ public class TwoDimSpaceView extends SpaceView {
   public static final String BACKGROUND_COLOR_RGB = "backgroundColorRGB";
   public static final String BORDER_COLOR = "borderColor";
   public static final String BORDER_COLOR_RGB = "borderColorRGB";
+  
+  public static final String GLOBAL_CAMERA = "GlobalCamera";
+	
+  public static final String EYE_POSITION = "eyePosition";
+  public static final String LOOK_AT = "lookAt";
+  public static final String UP_VECTOR = "upVector";
+
 
   // Background color
   private Color backgroundColor = Color.BLACK;
@@ -32,6 +39,13 @@ public class TwoDimSpaceView extends SpaceView {
   // Background image
   private Texture backgroundImg;
   private String backgroundImgFilename;
+  
+  private double[] eyePosition = new double[3];
+  private double[] lookAt = new double[3];
+  private double[] upVector = new double[3];
+  
+  private boolean hasGlobalCameraPosition = false;
+  
 
   public Color getBackgroundColor() {
     return backgroundColor;
@@ -63,5 +77,37 @@ public class TwoDimSpaceView extends SpaceView {
 
   public void setBackgroundImgFilename(String backgroundImgFilename) {
     this.backgroundImgFilename = backgroundImgFilename;
+  }
+  
+  public double[] getEyePosition() {	
+	return eyePosition;
+  }
+	  
+  public void setEyePosition(double[] eyePosition) {
+	this.eyePosition = eyePosition;
+  }
+	  
+  public double[] getLookAt() {
+	return lookAt;
+  }
+	  
+  public void setLookAt(double[] lookAt) {
+	this.lookAt = lookAt;
+  }
+  
+  public double[] getUpVector() {
+	return upVector;
+  }
+  
+  public void setUpVector(double[] upVector) {
+	this.upVector = upVector;
+  }
+  
+  public boolean getHasGlobalCameraPosition() {
+	return hasGlobalCameraPosition;
+  }
+
+  public void setHasGlobalCameraPosition(boolean hasGlobalCameraPosition) {
+	this.hasGlobalCameraPosition = hasGlobalCameraPosition;
   }
 }

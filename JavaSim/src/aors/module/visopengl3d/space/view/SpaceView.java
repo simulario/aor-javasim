@@ -28,6 +28,7 @@ public abstract class SpaceView {
   
   // Skybox
   protected Skybox skybox;
+  
 
   public Color getCanvasColor() {
     return canvasColor;
