@@ -1,0 +1,390 @@
+<?xml-stylesheet type="text/xsl" href="prettyprint.xsl"?>
+<SimulationScenario xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xsi:schemaLocation="http://aor-simulation.org ../../../AORSL/AORSL_0-9.xsd"
+	xmlns:dc="http://purl.org/dc/elements/1.1/"
+ xmlns="http://aor-simulation.org"
+ xmlns:aors="http://aor-simulation.org"
+ version="0.9"
+ scenarioName="SchellingSegregationModel"
+ simulationManagerDirectory="../../..">
+ <SimulationParameters simulationSteps="50" stepDuration="1" timeUnit="M" stepTimeDelay="100"/>
+ <SimulationModel modelName="SchellingSegregationModel" modelTitle="Schelling's Segregation Model">
+  <documentation>
+  	<dc:title>The Schelling Segregation Model</dc:title>
+  	<dc:title xml:lang="de">Das Schelling-Segregationsmodell</dc:title>
+  	<dc:created>20090301</dc:created>
+   <dc:creator>Gabriel Diaconita</dc:creator>
+   <dc:creator>Gerd Wagner</dc:creator>
+   <dc:contributor>Oana Nicolae</dc:contributor>
+   <dc:contributor>Mircea Diaconescu</dc:contributor>
+   <dc:modified>20110314</dc:modified>
+  	<dc:license>Creative Commons Attribution-NonCommercial-ShareAlike 3.0, 
+  	see http://creativecommons.org/licenses/by-nc-sa/3.0/</dc:license>
+  	<shortDescription>A grid space model where each grid cell represents a resident of some kind
+  	(shown with different colors). In each simulation step, all residents check if they are happy
+  	with their neighborhood. If they are not, they move to a location where they are more happy
+  	with their neighborhood.</shortDescription>
+  	<shortDescription xml:lang="de">Ein Gitterraum-Simulationsmodell, bei dem jede Gitterzelle 
+  		einen Bewohner eines bestimmten Typs repräsentiert (unterschiedliche Typen werden mit 
+  		verschiedenen Farben angezeigt). In jedem Simulationsschritt prüfen die Bewohner, 
+  		ob sie mit ihrer Nachbarschaft zufrieden sind. Wenn nicht, dann ziehen sie in eine andere Gegend, 
+  		wo sie zufriedener mit der Nachbarschaft sind.</shortDescription>
+  	<description xmlns:h="http://www.w3.org/1999/xhtml">
+  		<h:p>Thomas C. Schelling, who is a co-recipient of the 2005 Nobel Prize in Economics, published a paper 
+  			proposing a theory about the persistence of racial or ethnic segregation despite an environment of 
+  			growing tolerance ("Dynamic Models of Segregation", Journal of Mathematical Sociology 1, 1971, 143-186.). 
+  			He suggested that even if individuals tolerate racial diversity, if they also remain uneasy 
+  			about being a minority in the locality, segregation will still be the equilibrium situation.</h:p>
+  		<h:p>Schelling placed pennies and dimes on a chess board and moved them around according to various rules. 
+  			He interpreted the board as a city, with each square of the board representing a house or a lot. 
+  			He interpreted the pennies and dimes as residents representing any two groups in society, 
+  			such as two different races of people, boys and girls, smokers and non-smokers, etc. 
+  			The neighborhood of a resident occupying any location on the board consisted of the squares 
+  			adjacent to this location. Thus, interior (non-edge) residents could have up to	eight neighbors, 
+  			non-corner edge residents could have a maximum of five neighbors,	and corner edge residents could have 
+  			a maximum of three neighbors. Rules could be specified that determined whether a particular resident 
+  			was happy in its current location. If it was unhappy, it would try to move to another location on 
+  			the board, or possibly just exit the board entirely. As can be expected, Schelling found that 
+  			the board quickly evolved into a strongly segregated location pattern	if the residents' 
+  			&quot;happiness rules&quot; were specified so that segregation was heavily favored. Surprisingly, 
+  			however, he also found that initially integrated boards tipped into full segregation even if the 
+  			residents' happiness rules expressed only a mild preference for having neighbors of their own type.</h:p>
+  		<h:p>This model is not really an agent-based model, but rather a cellular-automata model
+  			without any objects, agents and events.</h:p>
+  		<h:p>This problem description has been extracted from the paper 
+  			<h:a href="http://cress.soc.surrey.ac.uk/~scs1ng/ngpub/paper148_NG.pdf">Varieties of Emergence</h:a> by Nigel Gilbert 
+  			and from the page <h:a href="http://www.econ.iastate.edu/tesfatsi/abmread.htm#Modeling">On-Line Guide for Newcomers to 
+ 				Agent-Based Modeling in the Social Sciences</h:a> by Robert Axelrod and Leigh Tesfatsion.</h:p>
+  	</description>
+  </documentation>
+
+<SpaceModel geometry="Euclidean">
+	<TwoDimensionalGrid xMax="25" yMax="25" gridCellMaxOccupancy="1">
+		<GridCellProperty name="kindOfResident" type="Integer"/>
+		<!-- =================================================================== -->
+		<GridCellFunction name="neighborhoodSimilarityLevel" resultType="Float">
+		<!-- =================================================================== -->
+			<documentation><dc:description>This function returns the neighborhood similarity level of the resident on a certain location given a certain awareness radius. </dc:description></documentation>
+			<Parameter name="posX" type="int"/>
+			<Parameter name="posY" type="int"/>
+			<Parameter name="radius" type="int"/>
+			<Body language="Java">
+			<![CDATA[
+				int neighboursCount = 0, myKindNeighboursCount = 0; 
+				long kind = -1;
+				int xMax = (int) Simulator.spaceModel.getXMax();
+				int yMax = (int) Simulator.spaceModel.getYMax();
+				// we look for neighbours in the specified radius making sure we don't check the current location
+				for (int x = posX - radius; x <= posX + radius; x++)
+					for (int y = posY - radius; y <= posY + radius; y++)
+						if (x >= 1 && x <= xMax && y >= 1 && y <= yMax 
+							&& !(x == this.getPosX() && y == this.getPosY()) && !(x == posX && y == posY)) {
+						kind = Simulator.spaceModel.getGridCell(x,y).getKindOfResident();
+						if (kind != -1) neighboursCount++;
+						if (kind == this.getKindOfResident()) myKindNeighboursCount++;
+				}
+				if (neighboursCount == 0) return 1;  //avoid division by zero
+				else return myKindNeighboursCount / neighboursCount; 
+			]]>
+			</Body>
+			<Body language="JavaScript">
+			<![CDATA[
+				var neighboursCount = 0, myKindNeighboursCount = 0; 
+				var kind = -1;
+				var xMax = parseInt(sim.controller.Simulator.spaceModel.getXMax());
+				var yMax = parseInt(sim.controller.Simulator.spaceModel.getYMax());
+				// we look for neighbours in the specified radius making sure we don't check the current location
+				for (var x = posX - radius; x <= posX + radius; x++)
+					for (var y = posY - radius; y <= posY + radius; y++)
+						if (x >= 1 && x <= xMax && y >= 1 && y <= yMax 
+							&& !(x == this.getPosX() && y == this.getPosY()) && !(x == posX && y == posY)) {
+						kind = sim.controller.Simulator.spaceModel.getGridCell(x,y).getKindOfResident();
+						if (kind != -1) neighboursCount++;
+						if (kind == this.getKindOfResident()) myKindNeighboursCount++;
+				}
+				if (neighboursCount == 0) return 1;  //avoid division by zero
+				else return parseInt(myKindNeighboursCount / neighboursCount); 
+			]]>
+			</Body>
+		</GridCellFunction>	
+		<!-- =================================================================== -->
+		<GridCellFunction name="isHappyOnCurrentLocation" resultType="Boolean">
+		<!-- =================================================================== -->
+			<documentation><dc:description>This function checks if an agent is happy on its current location. A value of 1 for the parameter radius means to check just the direct neighbours (at most 8), a value of 2 means level 2 neighbours (at most 8+16), etc.</dc:description></documentation>
+			<Parameter name="radius" type="int"/>
+			<Body language="Java">
+			<![CDATA[
+				return ( this.neighborhoodSimilarityLevel( (int)this.getPosX(), (int)this.getPosY(), radius) >= Global.intoleranceLevel( this.getKindOfResident() ));
+			]]>
+			</Body>
+			<Body language="JavaScript">
+			<![CDATA[
+				return ( this.neighborhoodSimilarityLevel(this.getPosX(), this.getPosY(), radius) >= sim.controller.Global.intoleranceLevel( this.getKindOfResident() ));
+			]]>
+			</Body>
+		</GridCellFunction>			
+		<!-- =================================================================== -->
+		<GridCellFunction name="wouldBeHappyOnNewLocation" resultType="Boolean">
+		<!-- =================================================================== -->
+			<documentation><dc:description>This function checks if an agent will be happy in a potential new location given by the (newX,newY) parameters. A value of 1 for the parameter radius means to check just the direct neighbours (at most 8), a value of 2 means level 2 neighbours (at most 8+16), etc.</dc:description></documentation>
+			<Parameter name="newX" type="int"/>
+			<Parameter name="newY" type="int"/>
+			<Parameter name="radius" type="int"/>
+			<Body language="Java">
+			<![CDATA[
+				return this.neighborhoodSimilarityLevel(newX, newY, radius) >= Global.intoleranceLevel( this.getKindOfResident());
+			]]>
+			</Body>
+			<Body language="JavaScript">
+			<![CDATA[
+				return this.neighborhoodSimilarityLevel(parseInt(newX), parseInt(newY), parseInt(radius)) >= sim.controller.Global.intoleranceLevel( this.getKindOfResident());
+			]]>
+			</Body>
+		</GridCellFunction>	
+		<!-- ============================================================================ -->
+		<GridCellFunction name="getSuitableLocation" resultType="aors.util.reftypes.Position">
+	  <!-- ============================================================================ -->
+			<documentation><dc:description>This function searches for a location that is near by and on which the agent would be happy by inspecting locations one by one in a concentric movement around the agent's current position. </dc:description></documentation>
+			<Body language="Java">
+			<![CDATA[
+			int Xmin = 1, Ymin = 1;
+			int Xmax = (int) Simulator.spaceModel.getXMax();  // the space border 
+			int Ymax = (int) Simulator.spaceModel.getYMax(); 
+			int x0 = (int) this.getPosX();  // the agent's current position (its grid cell coordinates)
+			int y0 = (int) this.getPosY();
+			int X,Y;
+			// the maximum distance of the current grid cell to one of the border lines
+			int maxDistance = Math.max( Math.max( Xmax-x0, x0-Xmin), Math.max( Ymax-y0, y0-Ymin));
+			
+			for (int d=1; d <= maxDistance; d++) {
+			  Y = y0 - d;
+			  if ( Y >= Ymin) {  // inspect the line below the current position
+			    for ( X = Math.max( x0-d, Xmin); X < Math.min( x0+d, Xmax); X++) {
+			      if ( Simulator.spaceModel.getGridCell(X,Y).getKindOfResident()==-1 && this.wouldBeHappyOnNewLocation(X,Y,1)) 
+			        return new aors.util.reftypes.Position(X,Y);
+			    }
+			  }
+			  X = x0 + d;
+			  if ( X <= Xmax) {  // inspect the line to the right of the current position
+			    for ( Y = Math.max( y0-d, Ymin); Y < Math.min( y0+d, Ymax); Y++) {
+			      if ( Simulator.spaceModel.getGridCell(X,Y).getKindOfResident()==-1 && this.wouldBeHappyOnNewLocation(X,Y,1)) 
+			        return new aors.util.reftypes.Position(X,Y);
+			    }
+			  }
+			  Y = y0 + d;
+			  if ( Y <= Ymax) {  // inspect the line above the current position
+			    for ( X = Math.min( x0+d, Xmax); X > Math.max( x0-d, Xmin); X--) {
+			      if ( Simulator.spaceModel.getGridCell(X,Y).getKindOfResident()==-1 && this.wouldBeHappyOnNewLocation(X,Y,1)) 
+			        return new aors.util.reftypes.Position(X,Y);
+			    }
+			  }
+			  X = x0 - d;
+			  if ( X >= Xmin) {  // inspect the line to the left of the current position
+			    for ( Y = Math.min( y0+d, Ymax); Y > Math.max( y0-d, Ymin); Y--) {
+			      if ( Simulator.spaceModel.getGridCell(X,Y).getKindOfResident()==-1 && this.wouldBeHappyOnNewLocation(X,Y,1)) 
+			        return new aors.util.reftypes.Position(X,Y);
+			    }
+			  }
+			}
+			 // if none of the previous conditions hold, then the agent remains on his initial location
+			 return null;
+			]]>
+			</Body>
+			<Body language="JavaScript">
+			<![CDATA[
+			var Xmin = 1, Ymin = 1;
+			var Xmax = sim.controller.Simulator.spaceModel.getXMax();  // the space border 
+			var Ymax = sim.controller.Simulator.spaceModel.getYMax(); 
+			var x0 = this.getPosX();  // the agent's current position (its grid cell coordinates)
+			var y0 = this.getPosY();
+			var X=0,Y=0;
+			
+			// the maximum distance of the current grid cell to one of the border lines
+			var maxDistance = Math.max( Math.max( Xmax-x0, x0-Xmin), Math.max( Ymax-y0, y0-Ymin));
+			
+			for (var d=1; d <= maxDistance; d++) {
+			  Y = y0 - d;
+			  if ( Y >= Ymin) {  // inspect the line below the current position
+			    for ( X = Math.max( x0-d, Xmin); X < Math.min( x0+d, Xmax); X++) {
+			      if ( sim.controller.Simulator.spaceModel.getGridCell(X,Y).getKindOfResident()==-1 && this.wouldBeHappyOnNewLocation(X,Y,1)) 
+			    	  return new aors.util.reftypes.Position(parseInt(X),parseInt(Y));
+			    }
+			  }
+			  X = x0 + d;
+			  if ( X <= Xmax) {  // inspect the line to the right of the current position
+			    for ( Y = Math.max( y0-d, Ymin); Y < Math.min( y0+d, Ymax); Y++) {
+			      if ( sim.controller.Simulator.spaceModel.getGridCell(X,Y).getKindOfResident()==-1 && this.wouldBeHappyOnNewLocation(X,Y,1)) 
+			    	  return new aors.util.reftypes.Position(parseInt(X),parseInt(Y));
+			    }
+			  }
+			  Y = y0 + d;
+			  if ( Y <= Ymax) {  // inspect the line above the current position
+			    for ( X = Math.min( x0+d, Xmax); X > Math.max( x0-d, Xmin); X--) {
+			      if ( sim.controller.Simulator.spaceModel.getGridCell(X,Y).getKindOfResident()==-1 && this.wouldBeHappyOnNewLocation(X,Y,1)) 
+			    	  return new aors.util.reftypes.Position(parseInt(X),parseInt(Y));
+			    }
+			  }
+			  X = x0 - d;
+			  if ( X >= Xmin) {  // inspect the line to the left of the current position
+			    for ( Y = Math.min( y0+d, Ymax); Y > Math.max( y0-d, Ymin); Y--) {
+			      if ( sim.controller.Simulator.spaceModel.getGridCell(X,Y).getKindOfResident()==-1 && this.wouldBeHappyOnNewLocation(X,Y,1)) 
+			    	  return new aors.util.reftypes.Position(parseInt(X),parseInt(Y));
+			    }
+			  }
+			}
+			 // if none of the previous conditions hold, then the agent remains on his initial location
+			 return null;
+			]]>
+			</Body>
+		</GridCellFunction>
+	</TwoDimensionalGrid>
+</SpaceModel>
+
+<Globals>
+	<GlobalVariable name="intoleranceLevel0" dataType="Float" minValue="0" maxValue="1"/>
+	<GlobalVariable name="intoleranceLevel1" dataType="Float" minValue="0" maxValue="1"/>
+	<GlobalVariable name="intoleranceLevel2" dataType="Float" minValue="0" maxValue="1"/>
+	
+	<!-- =================================================================== -->
+	<GlobalFunction name="intoleranceLevel" resultType="Float">
+	<!-- =================================================================== -->
+		<documentation><description>This function assigns an intolerane level as defined by the corresponding "intoleranceLevel" global variable to any kind of resident. </description></documentation>
+		<Parameter name="kind" type="Integer"/>
+		<Body language="Java">
+		<![CDATA[
+			double i = 0.2;
+			int k = (int) kind;
+			switch (k) {
+				case 0: i = Global.intoleranceLevel0; break;
+				case 1: i = Global.intoleranceLevel1; break;
+				case 2: i = Global.intoleranceLevel2; break;
+			}
+			return i;
+		]]>
+		</Body>
+		<Body language="JavaScript">
+		<![CDATA[
+			var i = 0.2;
+			var k = parseInt(kind);
+			switch (k) {
+				case 0: i = sim.controller.Global.intoleranceLevel0; break;
+				case 1: i = sim.controller.Global.intoleranceLevel1; break;
+				case 2: i = sim.controller.Global.intoleranceLevel2; break;
+			}
+			return i;
+		]]>
+		</Body>
+	</GlobalFunction>
+</Globals>
+
+<EnvironmentRules>
+ 	<!-- =================================================================== -->
+	<EnvironmentRule name="IfUnhappyThenMoveRule">
+	<!-- =================================================================== -->
+		<documentation><dc:description>If a resident is not happy AND there exists a free location where she would be happy, then she moves to this location. As a consequence, the currently occupied grid cell's kindOfResident value is set to -1 for indicating that the cell is now free, and the newly occupied grid cell's kindOfResident value is set to the kind value of the resident. If there is no free location on which she would be happy, then she leaves the grid. In order to allow observing the segregation process by slowing it down, only a fraction of the resident objects (those whose id value modulo 10 is equal to a random integer between 1 and 10) are relocated at each step. </dc:description></documentation>
+		<ON-EACH-SIMULATION-STEP/>
+		<DO>
+			<UPDATE-ENV>
+				<ForEachGridCell gridCellVariable="gc">
+				  <Selection>
+					<Condition language="Java">
+					  <![CDATA[
+							gc.getKindOfResident() > -1 && ! gc.isHappyOnCurrentLocation(1) 
+							&& gc.getPosX()%10 == Random.uniformInt(0,9)  // slow down the segregation
+					  ]]>
+					</Condition>
+					<Condition language="JavaScript">
+					  <![CDATA[
+							gc.getKindOfResident() > -1 && ! gc.isHappyOnCurrentLocation(1) 
+							&& gc.getPosX()%8 == js.util.Random.uniformInt(0,7)  // slow down the segregation
+					  ]]>
+					</Condition>
+				  </Selection>
+				  <Code language="Java">
+				  <![CDATA[ 
+					aors.util.reftypes.Position newPos = gc.getSuitableLocation();
+					if (newPos != null) {
+					  Simulator.spaceModel.getGridCell( (int)newPos.getX(), (int)newPos.getY()).setKindOfResident( gc.getKindOfResident());
+					  Simulator.spaceModel.getGridCell( (int)gc.getPosX(), (int)gc.getPosY()).setKindOfResident(-1);
+					}
+					else {
+					  Simulator.spaceModel.getGridCell( (int)gc.getPosX(), (int)gc.getPosY()).setKindOfResident(-1);
+					}
+				  ]]>
+				  </Code>	
+				   <Code language="JavaScript">
+				  <![CDATA[ 
+					var newPos = gc.getSuitableLocation();
+					if (newPos != null) {
+				      sim.controller.Simulator.spaceModel.getGridCell(newPos.getX(), newPos.getY()).setKindOfResident( gc.getKindOfResident());
+					  sim.controller.Simulator.spaceModel.getGridCell(gc.getPosX(), gc.getPosY()).setKindOfResident(-1);
+					}
+					else {
+					  sim.controller.Simulator.spaceModel.getGridCell(gc.getPosX(), gc.getPosY()).setKindOfResident(-1);
+					}
+				  ]]>
+				  </Code>	
+				</ForEachGridCell>
+			</UPDATE-ENV>
+		</DO>
+	</EnvironmentRule>
+</EnvironmentRules>
+</SimulationModel>
+<!-- =================================================================== -->
+<InitialState>
+<!-- =================================================================== -->	   
+	<GridCells>
+		<Slot property="kindOfResident">
+			<RandomVariable>
+				<UniformInt lowerBound="-1" upperBound="2"/>
+			</RandomVariable>
+		</Slot>
+	</GridCells>
+	<GlobalVariable name="intoleranceLevel0" value="0.1"/>
+	<GlobalVariable name="intoleranceLevel1" value="0.1"/>
+	<GlobalVariable name="intoleranceLevel2" value="0.2"/>
+</InitialState>
+<!-- =================================================================== -->
+<UserInterface supportedLanguages="en">
+<!-- =================================================================== -->
+	<InitialStateUI>
+		<GlobalVariableUI variable="intoleranceLevel0" inputFieldLength="0.25">
+			<Label>
+				<Text xml:lang="en">Intolerance G0</Text>
+			</Label>
+			<Hint>
+				<Text>This is the same-neighbor percentage value required by group 0 residents for being happy.</Text>
+			</Hint>
+			<Format decimalPlaces="1"><Math>%</Math></Format>
+		</GlobalVariableUI>
+		<GlobalVariableUI variable="intoleranceLevel1" inputFieldLength="0.5">
+			<Label>
+				<Text xml:lang="en">Intolerance G1</Text>
+			</Label>
+			<Hint>
+				<Text>This is the same-neighbor percentage value required by group 1 residents for being happy.</Text>
+			</Hint>
+			<Format decimalPlaces="1"><Math>%</Math></Format>
+		</GlobalVariableUI>
+		<GlobalVariableUI variable="intoleranceLevel2" inputFieldLength="0.75">
+			<Label>
+				<Text xml:lang="en">Intolerance G2</Text>
+			</Label>
+			<Hint>
+				<Text>This is the same-neighbor percentage value required by group 2 residents for being happy.</Text>
+			</Hint>
+			<Format decimalPlaces="1"><Math>%</Math></Format>
+		</GlobalVariableUI>
+	</InitialStateUI>
+	<AnimationUI>
+		<Views>
+			<SpaceView>
+				<TwoDimensionalGridSpaceView2D>
+					<GridCellPropertyVisualizationMap cellViewProperty="fill" property="kindOfResident" mapType="caseWise" v0="white" a0="0" v1="green" a1="1" v2="yellow" a2="2" v3="red"/>
+				</TwoDimensionalGridSpaceView2D>
+			</SpaceView>
+		</Views>
+	</AnimationUI>
+	
+</UserInterface>
+</SimulationScenario>

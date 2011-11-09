@@ -1,0 +1,563 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<?xml-stylesheet type="text/xsl" href="prettyprint.xsl"?>
+
+<SimulationScenario xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+ xsi:schemaLocation="http://aor-simulation.org ../../../AORSL/AORSL_0-9.xsd"
+ xmlns:dc="http://purl.org/dc/elements/1.1/"
+ xmlns="http://aor-simulation.org"
+ xmlns:aors="http://aor-simulation.org"
+ xmlns:h="http://www.w3.org/1999/xhtml"
+ version="0.9"
+ scenarioName="TheBlindJumper"
+ scenarioTitle="The Blind Jumper: Emerging semantics through reinforcement learning"
+ simulationManagerDirectory="../../..">
+	<SimulationParameters simulationSteps="500" stepDuration="1" timeUnit="s" stepTimeDelay="100"/>
+	<SimulationModel modelName="TheBlindJumper" modelTitle="The Blind Jumper">
+		<documentation>
+			<dc:created xml:lang="en">20090821</dc:created>
+			<dc:creator>Gerd Wagner</dc:creator>
+			<dc:modified>20110110</dc:modified>
+			<dc:source xml:lang="de">Peter Fleissner and Gregor Fleissner: "Beyond the Chinese Room: The blind jumper - 
+			Self-organised semantics and pragmatics on the computer". In: W. Hofkirchner (Ed.) Information 
+			und Selbstorganisation - Annäherungen an eine vereinheitlichte Theorie der Information, 
+			Innsbruck Wien: StudienVerlag, pp. 325-340, 1998.</dc:source>
+			<description><h:p>In this model there is an agent (the "jumper") that is not able to see 
+				the size of the barrier over which it has to jump, and there is another agent (the "speaker") 
+				that is able to see how wide the barrier is and tries to communicate this to the jumper. 
+				However, both agents first have to learn which symbols to use for communicating the size 
+				of the barrier. Both agents can perceive the success or failure of a jump (a jump fails if 
+				it is too short or too long), and then update their symbol interpretation function accordingly.</h:p>
+				<h:p>This problem description has been extracted from the paper 
+				<h:em><h:a href="http://peter.fleissner.org/petergre/documents/blinderspringer.html">Beyond the 
+				Chinese Room: The blind jumper</h:a> - Self-organised semantics and pragmatics on the computer</h:em> 
+				by Peter Fleissner and Gregor Fleissner. There is also an 
+				<h:a href="http://igw.tuwien.ac.at/peterf/springer/default.htm">implementation</h:a> of this model 
+				by its authors.</h:p>
+				<h:p>The not yet licensed blind jumper cartoon is from http://www.iclipart.com.</h:p></description>
+		</documentation>
+  
+	<SpaceModel geometry="Euclidean" spatialDistanceUnit="m">
+		<TwoDimensionalGrid xMax="5" yMax="1">
+			<GridCellProperty name="isBarrierCell" type="Integer"/>
+		</TwoDimensionalGrid>
+	</SpaceModel>
+	<DataTypes>
+		<ComplexDataType name="ProbabilityMatrix">
+			<ClassDef language="Java"><![CDATA[
+			public void print( double[][] P) {
+			  int M = P.length; 	  // number of rows
+			  int N = P[0].length;  // number of columns
+			  for (int i=0; i < M; i++) {
+			    for (int j=0; j < N; j++) {
+			      System.out.print( P[i][j] + " ");
+			    }
+			    System.out.println();
+				}
+	          System.out.println();
+			}
+			public void normalize( double[][] P, int row) {
+			  double rowSum = 0;
+			  for (int j=0; j < P[row].length; j++) rowSum = rowSum + P[row][j];
+			  for (int j=0; j < P[row].length; j++) P[row][j] = P[row][j] / rowSum;
+			}
+			public int maxIndex( double[][] P, long r) {
+			  int row = (int) r-1;
+			  int max = 0;
+			  for (int j=1; j < P[row].length; j++) { 
+			    if (P[row][j] > P[row][max]) max = j;
+				}
+			  return max+1;	
+			}
+			public void successUpdate( double[][] P, long r, long c) {
+			  int row = (int) r-1;
+			  int col = (int) c-1;
+				P[row][col] = P[row][col] * (1 + Global.alpha);
+				for (int j=0; j < P[row].length; j++) { 
+				  if (j != col) P[row][j] = (1 - Global.alpha) * P[row][j];
+				}
+				normalize( P, row);
+			}
+			public void failureUpdate( double[][] P, long r, long c) {
+			  int row = (int) r-1;
+			  int col = (int) c-1;
+				P[row][col] = P[row][col] * (1 - Global.alpha);
+				for (int j=0; j < P[row].length; j++) { 
+				  if (j != col) P[row][j] = (1 + Global.alpha) * P[row][j];
+				}
+				normalize( P, row);
+			}
+			]]></ClassDef>
+			<ClassDef language="JavaScript"><![CDATA[			    
+			sim.model.dataTypes.ProbabilityMatrix.prototype.print = function(P) {
+			  var M = P.length; 	  // number of rows
+			  var N = P[0].length;    // number of columns
+			  var i, j;
+			  for (i=0; i < M; i++) {
+			  	var outputMess = "";
+				for (j=0; j < N; j++) {
+				  outputMess += (P[i][j] + ", ");
+				}
+				simConsole.message(outputMess);
+			  }
+			}
+			sim.model.dataTypes.ProbabilityMatrix.prototype.normalize = function(P, row) {
+			  var rowSum = 0;
+			  var j;
+			  for (j=0; j < P[row].length; j++) {
+				rowSum = rowSum + P[row][j];
+			  }
+			  for (j=0; j < P[row].length; j++) {
+				P[row][j] = P[row][j] / rowSum;
+			  }
+			}
+			
+			sim.model.dataTypes.ProbabilityMatrix.prototype.maxIndex = function(P, r) {
+			  var row = r-1;
+			  var j, max = 0;
+			  for (j=1; j < P[row].length; j++) { 
+				if (P[row][j] > P[row][max]) {
+				  max = j;
+				}
+			  }
+			  return (max+1);	
+			}
+			
+			sim.model.dataTypes.ProbabilityMatrix.prototype.successUpdate = function(P, r, c) {
+			  var row = r-1;
+			  var col = c-1;
+			  var j;
+			  P[row][col] = P[row][col] * (1 + sim.controller.Global.alpha);
+			  for (j=0; j < P[row].length; j++) { 
+				if (j != col) {
+				  P[row][j] = (1 - sim.controller.Global.alpha) * P[row][j];
+				}
+		      }
+			  this.normalize( P, row);
+			}
+			
+			sim.model.dataTypes.ProbabilityMatrix.prototype.failureUpdate = function(P, r, c) {
+			  var row = r-1;
+			  var col = c-1;
+			  var j;
+			  P[row][col] = P[row][col] * (1 - sim.controller.Global.alpha);
+			  for (j=0; j < P[row].length; j++) { 
+				if (j != col) {
+				  P[row][j] = (1 + sim.controller.Global.alpha) * P[row][j];
+				}
+			  }
+			  this.normalize( P, row);
+			}	
+			]]></ClassDef>
+		</ComplexDataType>
+		<ComplexDataType name="ProbabilityMatrix_3_3" superType="ProbabilityMatrix">
+			<ClassDef language="Java"><![CDATA[
+			private double[][] P = new double[3][3];
+
+			public ProbabilityMatrix_3_3() {
+			  int M = P.length; 		// number of rows
+			  int N = P[0].length;      // number of columns
+			  double p0 = 1.0 / N; 
+			  for (int i=0; i < M; i++) {
+				for (int j=0; j < N; j++) {
+				  P[i][j] = p0;
+				}
+			  }
+			}
+			public int maxIndex( long r) {
+			  return maxIndex( this.P, r);	
+			}
+			public void successUpdate( long r, long c) {
+			  successUpdate( this.P, r, c);
+			}
+			public void failureUpdate( long r, long c) {
+			  failureUpdate( this.P, r, c);
+			}
+			]]></ClassDef>
+			<ClassDef language="JavaScript"><![CDATA[	
+			  var __P1 = new Array(new Array(3), new Array(3), new Array(3));
+			  var __M1 = __P1.length; 		// number of rows
+			  var __N1 = __P1[0].length;      // number of columns
+			  var __i1, __j1, __p01 = 1.0 / __N1; 
+			  for (__i1=0; __i1 < __M1; __i1++) {
+			    for (__j1=0; __j1 < __N1; __j1++) {
+			      __P1[__i1][__j1] = __p01;
+			    }
+			  }		
+			  sim.model.dataTypes.ProbabilityMatrix_3_3.prototype.maxIndex = function(r) {
+			  	return sim.model.dataTypes.ProbabilityMatrix.prototype.maxIndex(__P1, r);	
+			  }
+			  sim.model.dataTypes.ProbabilityMatrix_3_3.prototype.successUpdate = function(r, c) {
+			    sim.model.dataTypes.ProbabilityMatrix.prototype.successUpdate(__P1, r, c);
+			  }
+			  sim.model.dataTypes.ProbabilityMatrix_3_3.prototype.failureUpdate = function(r, c) {
+			    sim.model.dataTypes.ProbabilityMatrix.prototype.failureUpdate(__P1, r, c);
+			  }
+			]]></ClassDef>
+		</ComplexDataType>
+		<ComplexDataType name="ProbabilityMatrix_3_4" superType="ProbabilityMatrix">
+			<ClassDef language="Java"><![CDATA[
+			private double[][] P = new double[3][4];
+
+			public ProbabilityMatrix_3_4() {
+			  int M = P.length; 		// number of rows
+		      int N = P[0].length;     // number of columns
+			  double p0 = 1.0 / N; 
+			  for (int i=0; i < M; i++) {
+				for (int j=0; j < N; j++) {
+				  P[i][j] = p0;
+				  }
+			   }
+			}		
+			public int maxIndex( long r) {
+			   return maxIndex( this.P, r);	
+			}
+			public void successUpdate( long r, long c) {
+			   successUpdate( this.P, r, c);
+			}
+			public void failureUpdate( long r, long c) {
+			   failureUpdate( this.P, r, c);
+			}
+			]]></ClassDef>
+			<ClassDef language="JavaScript"><![CDATA[	
+			var __P2 = new Array(new Array(4), new Array(4), new Array(4));
+			var __M2 = __P2.length; 		// number of rows
+		    var __N2 = __P2[0].length;    // number of columns
+		    var __p02 = 1.0 / __N2; 
+			var __i2, __j2;
+			for (__i2=0; __i2 < __M2; __i2++) {
+		      for (__j2 = 0; __j2 < __N2; __j2++) {
+		         __P2[__i2][__j2] = __p02;
+		      }
+			}
+		    sim.model.dataTypes.ProbabilityMatrix_3_4.prototype.maxIndex = function(r) {
+			  return sim.model.dataTypes.ProbabilityMatrix.prototype.maxIndex(__P2, r);	
+			}
+			sim.model.dataTypes.ProbabilityMatrix_3_4.prototype.successUpdate = function(r, c) {
+			  sim.model.dataTypes.ProbabilityMatrix.prototype.successUpdate(__P2, r, c);
+			}
+			sim.model.dataTypes.ProbabilityMatrix_3_4.prototype.failureUpdate = function(r, c) {
+			  sim.model.dataTypes.ProbabilityMatrix.prototype.failureUpdate(__P2, r, c);
+			}	
+			]]></ClassDef>
+		</ComplexDataType>
+	</DataTypes>
+		<Globals>
+			<GlobalVariable name="alpha" dataType="Float" minValue="0" maxValue="1"/>
+		</Globals>	
+		<EntityTypes>
+		<MessageType name="Tell">
+			<Attribute name="distanceSymbol" type="String"/>
+		</MessageType>
+		<ActionEventType name="Jump">
+			<Attribute name="distance" type="Integer"/>
+		</ActionEventType>
+		<PerceptionEventType name="Success"/>
+		<PerceptionEventType name="Failure"/>
+		<PerceptionEventType name="ObserveNewBarrier">
+			<Attribute name="size" type="Integer"/>
+		</PerceptionEventType>
+		<CausedEventType name="CreateNewBarrier">
+			<Attribute name="size" type="Integer"/>
+		</CausedEventType>
+		<PhysicalObjectType name="Barrier">
+			<Attribute name="size" type="Integer"/>
+		</PhysicalObjectType>
+	<!-- =================================================================== -->
+	<PhysicalAgentType name="Jumper">
+	<!-- =================================================================== -->
+		<documentation><description>Each RL rule defines a number of relevant situation types (based on the triggering 
+			perception event and one of a finite number of state conditions) and enumerates them with the help of a 
+			<h:em>state index</h:em>. This state index corresponds to the row of the learning automata (LA) matrix. 
+			The action event scheduled by the rule has a parameter for which the rule is using a finite number of values 
+			corresponding to the number of columns of the LA matrix. By using a lookup function searching for the maximum 
+			value in the matrix row determined by the current state index, the RL rule associates an agent state with a 
+			specific action (given by the combination of the rule's action event type and the value of the action parameter).
+		</description></documentation>
+		<InheritedAttributeSettings attribute="x" initialValue="1" maxValue="5" minValue="1"/>
+		<InheritedAttributeSettings attribute="y" initialValue="1" maxValue="5" minValue="1"/>
+		<Attribute name="currentJumpRuleStateIndex" type="Integer"/>
+		<Attribute name="currentActionParameterValueIndex" type="Integer"/>
+		<ComplexDataProperty name="jumpSuccessProbMat" type="ProbabilityMatrix_3_4"/>
+		<!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->
+		<ReactionRule name="Jump_AgtRule" agentVariable="agt">
+		<!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->
+			<documentation><description>When the jumper receives a Tell message with one of the distance symbols "A", "B" and "C" (corresponding to a state index of 1, 2 or 3), it stores this state index in the attribute <h:code>currentJumpRuleStateIndex</h:code>. Then it looks up the maximum value in the row of the success probability matrix given by this index and stores the column number of this value in the attribute <h:code>currentActionParameterValueIndex</h:code>. Finally, it jumps with a distance corresponding to this index.</description></documentation>
+			<WHEN eventType="InMessageEvent" messageType="Tell" messageVariable="m"/>
+			<DO>
+				<UPDATE-AGT>
+					<Slot property="currentJumpRuleStateIndex">
+						<ValueExpr language="Java"><![CDATA[
+					( m.getDistanceSymbol().equals("A")) ? 1 :
+					( m.getDistanceSymbol().equals("B")) ? 2 : 3
+					]]></ValueExpr>
+						<ValueExpr language="JavaScript"><![CDATA[
+					( this.m.getDistanceSymbol() == "A") ? 1 :
+					( this.m.getDistanceSymbol() == "B") ? 2 : 3
+					]]></ValueExpr>
+					</Slot>
+					<Slot property="currentActionParameterValueIndex">
+						<ValueExpr language="Java"><![CDATA[
+					( agt.getJumpSuccessProbMat().maxIndex( ( m.getDistanceSymbol().equals("A")) ? 1 :
+					( m.getDistanceSymbol().equals("B")) ? 2 : 3))	
+					]]></ValueExpr>
+						<ValueExpr language="Java JavaScript"><![CDATA[
+					( this.agt.getJumpSuccessProbMat().maxIndex( (this.m.getDistanceSymbol() == "A") ? 1 :
+					( this.m.getDistanceSymbol() == "B") ? 2 : 3))	
+				    ]]></ValueExpr>
+					</Slot>
+				</UPDATE-AGT>
+				<SCHEDULE-EVT>
+					<ActionEventExpr actionEventType="Jump" delay="5">
+						<Slot property="distance">
+							<ValueExpr language="Java JavaScript"><![CDATA[
+							this.agt.getCurrentActionParameterValueIndex()	
+						     ]]></ValueExpr>
+						</Slot>
+					</ActionEventExpr>
+				</SCHEDULE-EVT>
+			</DO>
+		</ReactionRule>
+		<!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->
+		<ReactionRule name="OnSuccessUpdateProbabilityMatrix_AgtRule" agentVariable="agt">
+		<!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->
+			<documentation><description>When the jumper receives the Success reinforcement signal, it updates its success probability matrix accordingly, i.e. the matrix value corresponding to the current state and the chosen action parameter value will be increased relativeley to the other values of the same row. </description></documentation>
+			<WHEN eventType="Success"/>
+			<DO>
+				<UPDATE-AGT>
+					<UpdateComplexDataPropertyValue complexDataProperty="jumpSuccessProbMat" procedure="successUpdate">
+						<Argument>
+							<ValueExpr language="Java JavaScript">this.agt.getCurrentJumpRuleStateIndex()</ValueExpr>
+						</Argument>
+						<Argument>
+							<ValueExpr language="Java JavaScript">this.agt.getCurrentActionParameterValueIndex()</ValueExpr>
+						</Argument>
+					</UpdateComplexDataPropertyValue>
+				</UPDATE-AGT>
+			</DO>
+		</ReactionRule>
+		<!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->
+		<ReactionRule name="OnFailureUpdateProbabilityMatrix_AgtRule" agentVariable="agt">
+		<!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->
+			<documentation><description>When the jumper receives the Failure reinforcement signal, it updates its success probability matrix accordingly, i.e. the matrix value corresponding to the current state and the chosen action parameter value will be decreased relativeley to the other values of the same row. </description></documentation>
+			<WHEN eventType="Failure"/>
+			<DO>
+				<UPDATE-AGT>
+					<UpdateComplexDataPropertyValue complexDataProperty="jumpSuccessProbMat" procedure="failureUpdate">
+						<Argument>
+							<ValueExpr language="Java JavaScript">this.agt.getCurrentJumpRuleStateIndex()</ValueExpr>
+						</Argument>
+						<Argument>
+							<ValueExpr language="Java JavaScript">this.agt.getCurrentActionParameterValueIndex()</ValueExpr>
+						</Argument>
+					</UpdateComplexDataPropertyValue>
+				</UPDATE-AGT>
+			</DO>
+		</ReactionRule>
+	</PhysicalAgentType>
+	<!-- =================================================================== -->
+	<PhysicalAgentType name="Speaker">
+	<!-- =================================================================== -->
+		<Attribute name="currentTellRuleStateIndex" type="Integer" />
+		<Attribute name="currentActionParameterValueIndex" type="Integer" />
+		<ComplexDataProperty name="tellSuccessProbMat" type="ProbabilityMatrix_3_3" />
+		<!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->
+		<ReactionRule name="Tell_AgtRule" agentVariable="agt">
+		<!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->
+			<documentation><description>When the speaker perceives a new barrier with size 1-3 (corresponding to a state index of 1-3), it stores the state index as well as the action parameter value index pointing to the maximum value, and then it sends a Tell message with a distance symbol corresponding to this parameter value.</description></documentation>
+			<WHEN eventType="ObserveNewBarrier" eventVariable="e"/>
+			<DO>
+				<UPDATE-AGT>
+					<Slot property="currentTellRuleStateIndex"><ValueExpr language="Java JavaScript">this.e.getSize()</ValueExpr></Slot>
+					<Slot property="currentActionParameterValueIndex">
+						<ValueExpr language="Java JavaScript"><![CDATA[
+						( this.agt.getTellSuccessProbMat().maxIndex( this.agt.getCurrentTellRuleStateIndex()) )	
+						]]></ValueExpr>
+					</Slot>
+				</UPDATE-AGT>
+				<SCHEDULE-EVT>
+					<OutMessageEventExpr messageType="Tell" receiverIdRefs="2">
+						<Slot property="distanceSymbol">
+						  <ValueExpr language="Java JavaScript"><![CDATA[
+					      ( this.agt.getCurrentActionParameterValueIndex() == 1) ? "A" :
+					      ( this.agt.getCurrentActionParameterValueIndex() == 2) ? "B" : "C"
+				          ]]></ValueExpr>
+						</Slot>
+					</OutMessageEventExpr>
+				</SCHEDULE-EVT>
+			</DO>
+		</ReactionRule>
+		<!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->
+		<ReactionRule name="OnSuccessUpdateProbabilityMatrix_AgtRule" agentVariable="agt">
+		<!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->
+			<documentation><description>When the speaker receives the Success reinforcement signal, it updates its success probability matrix accordingly, i.e. the matrix value corresponding to the current state and the chosen action parameter value will be increased relatively to the other values of the same row. </description></documentation>
+			<WHEN eventType="Success"/>
+			<DO>
+				<UPDATE-AGT>
+					<UpdateComplexDataPropertyValue complexDataProperty="tellSuccessProbMat" procedure="successUpdate">
+						<Argument>
+							<ValueExpr language="Java JavaScript">this.agt.getCurrentTellRuleStateIndex()</ValueExpr>
+						</Argument>
+						<Argument>
+							<ValueExpr language="Java JavaScript">this.agt.getCurrentActionParameterValueIndex()</ValueExpr>
+						</Argument>
+					</UpdateComplexDataPropertyValue>
+				</UPDATE-AGT>
+			</DO>
+		</ReactionRule>
+		<!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->
+		<ReactionRule name="OnFailureUpdateProbabilityMatrix_AgtRule" agentVariable="agt">
+		<!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->
+			<documentation><description>When the speaker receives the Failure reinforcement signal, it updates its success probability matrix accordingly, i.e. the matrix value corresponding to the current state and the chosen action parameter value will be decreased relatively to the other values of the same row.</description></documentation>
+			<WHEN eventType="Failure"/>
+			<DO>
+				<UPDATE-AGT>
+					<UpdateComplexDataPropertyValue complexDataProperty="tellSuccessProbMat" procedure="failureUpdate">
+						<Argument>
+							<ValueExpr language="Java JavaScript">this.agt.getCurrentTellRuleStateIndex()</ValueExpr>
+						</Argument>
+						<Argument>
+							<ValueExpr language="Java JavaScript">this.agt.getCurrentActionParameterValueIndex()</ValueExpr>
+						</Argument>
+					</UpdateComplexDataPropertyValue>
+				</UPDATE-AGT>
+			</DO>
+		</ReactionRule>
+	</PhysicalAgentType>
+</EntityTypes>
+
+<EnvironmentRules>
+ 	<!-- =================================================================== -->
+	<EnvironmentRule name="Jump_EnvRule">
+	<!-- =================================================================== -->
+	<documentation><dc:description></dc:description></documentation>
+		<WHEN eventType="Jump" eventVariable="e"/>
+		<FOR-ObjectVariable variable="b" objectType="Barrier" objectIdRef="1"/>
+		<DO>
+			<UPDATE-ENV>
+				<UpdateObject>
+					<ObjectRef objectType="Jumper" language="Java JavaScript">this.e.getActor()</ObjectRef>
+					<Slot property="x">
+						<ValueExpr language="Java">(( Jumper)e.getActor()).getX() + e.getDistance()</ValueExpr>
+						<ValueExpr language="JavaScript">( this.e.getActor()).getX() + this.e.getDistance()</ValueExpr>
+					</Slot>
+				</UpdateObject>
+			</UPDATE-ENV>
+			<SCHEDULE-EVT>
+				<CausedEventExpr eventType="CreateNewBarrier" delay="5">
+					<Slot property="size"><RandomVariable><UniformInt lowerBound="1" upperBound="3"/></RandomVariable></Slot>
+				</CausedEventExpr>
+			</SCHEDULE-EVT>
+		</DO>
+		<IF language="Java JavaScript">this.e.getDistance() == this.b.getSize()+1</IF>
+		<THEN>
+			<SCHEDULE-EVT>
+				<PerceptionEventExpr eventType="Success" perceiverIdRefs="2 3"/>
+			</SCHEDULE-EVT>
+		</THEN>
+		<ELSE>
+			<SCHEDULE-EVT>
+				<PerceptionEventExpr eventType="Failure" perceiverIdRefs="2 3"/>
+			</SCHEDULE-EVT>			
+		</ELSE>
+	</EnvironmentRule>
+	<!-- =================================================================== -->
+	<EnvironmentRule name="CreateNewBarrier_EnvRule">
+	<!-- =================================================================== -->
+	<documentation><dc:description></dc:description></documentation>
+   	<WHEN eventType="CreateNewBarrier" eventVariable="e"/>
+	<FOR-ObjectVariable variable="b" objectType="Barrier" objectIdRef="1" />
+	<FOR-ObjectVariable variable="j" objectType="Jumper" objectIdRef="2"/>
+   	<DO>
+   		<UPDATE-ENV>
+   			<UpdateObject objectVariable="j">
+   				<Slot property="x" value="1"/>
+   			</UpdateObject>
+   			<UpdateObject objectVariable="b">
+   				<Slot property="size"><ValueExpr language="Java JavaScript">this.e.getSize()</ValueExpr></Slot>
+   			</UpdateObject>
+   			<ForEachGridCell startX="3" endX="4" startY="1" endY="1" gridCellVariable="c">
+   				 <Slot property="isBarrierCell">
+   				 	<ValueExpr language="Java JavaScript"> ( this.e.getSize() + 1 >= c.getPosX()) ?  1 : 0 </ValueExpr>
+   				 </Slot>
+   			</ForEachGridCell>
+   		</UPDATE-ENV>
+   		<SCHEDULE-EVT>
+   			<PerceptionEventExpr eventType="ObserveNewBarrier" perceiverIdRefs="3">
+   				<Slot property="size"><ValueExpr language="Java JavaScript">this.e.getSize()</ValueExpr></Slot>
+   			</PerceptionEventExpr>
+   		</SCHEDULE-EVT>
+   	</DO>
+	</EnvironmentRule>
+</EnvironmentRules>
+ </SimulationModel>
+
+<!-- =================================================================== -->
+<InitialState>
+<!-- =================================================================== -->
+	<GlobalVariable name="alpha" value="0.1"/> <!-- learning factor -->	
+	<CausedEvent type="CreateNewBarrier" occurrenceTime="1">
+		<Slot property="size" value="1"/>
+	</CausedEvent>  
+	<PhysicalObject type="Barrier" id="1" x="2" y="1">
+		<Slot property="size" value="1"/>
+	</PhysicalObject>
+	<GridCells>
+		<GridCellSet startX="1" endX="5" startY="1" endY="1" creationLoopVar="cell">
+			<Slot property="isBarrierCell">
+				<ValueExpr language="Java JavaScript"><![CDATA[cell.getPosX() == 2 ? 1 : 0]]></ValueExpr>
+			</Slot>
+		</GridCellSet>
+	</GridCells>
+	<PhysicalAgent name="Speaker" type="Speaker" id="3" x="5" y="1"/>
+	<PhysicalAgent name="Blind_Jumper" type="Jumper" id="2" x="1" y="1"/>
+</InitialState>
+ 
+	<!-- =================================================================== -->
+	<UserInterface supportedLanguages="en de">
+	<!-- =================================================================== -->
+		<AnimationUI>
+			<!--<DisplayDescription>
+				<HtmlText xml:lang="en">
+					<h:h1>The Blind Jumper</h:h1>
+					<h:p>The "blind jumper" is not able to see the size <h:br />
+					of the barrier over which it has to jump, as opposed to<h:br /> 
+					the "speaker" who tries to communicate this<h:br />
+					to the blind jumper. However, both agents first have<h:br /> 
+					to learn which symbols to use for communicating<h:br />
+                    the	size of the barrier.</h:p></HtmlText>
+			</DisplayDescription>-->
+			<Views>
+				<SpaceView canvasColor="lightgrey">
+					<TwoDimensionalGridSpaceView2D backgroundColor="white">
+						<GridCellPropertyVisualizationMap cellViewProperty="fill" property="isBarrierCell" mapType="caseWise" v0="lightyellow" a0="1" v1="brown"/>
+					</TwoDimensionalGridSpaceView2D>
+				</SpaceView>
+				<PhysicalObjectView physicalObjectType="Jumper" displayName="true">
+					<PhysicalShape2D><Rectangle texture="blind_man.png"/></PhysicalShape2D>
+				</PhysicalObjectView>
+				<PhysicalObjectView physicalObjectType="Speaker" displayName="true">
+					<PhysicalShape2D>
+						<Rectangle>
+							<ShapePropertyVisualizationMap shapeProperty="texture" property="currentTellRuleStateIndex" mapType="equalityCaseWise" 
+								a0="0" v0="cartoon-man-wearing-suit.png" 
+								a1="1" v1="cartoon-man-wearing-suit_1.png" 
+								a2="2" v2="cartoon-man-wearing-suit_2.png"
+								a3="3" v3="cartoon-man-wearing-suit_3.png"/> 
+						</Rectangle>
+					</PhysicalShape2D>
+				</PhysicalObjectView>
+				<EventAppearance eventType="Failure">
+					<MidiSound instrumentName="REED_BaritoneSax" noteSequence="24/500/120"/>
+				</EventAppearance>
+				<EventAppearance eventType="Success">
+					<MidiSound instrumentName="ORGAN_Harmonica" noteSequence="48/250 55/250"/>
+				</EventAppearance>
+				<EventAppearance eventType="OutMessageEvent" messageType="Tell" duration="500">
+					<MidiSound instrumentName="ORGAN_Harmonica">
+						<MidiSonificationMap soundProperty="note" property="distanceSymbol" mapType="equalityCaseWise" a0="A" v0="30" a1="B" v1="36" a2="C" v2="40"/>
+					</MidiSound>
+				</EventAppearance>
+			</Views>
+		</AnimationUI>
+	</UserInterface>
+</SimulationScenario>

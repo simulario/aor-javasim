@@ -1,0 +1,2036 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<?xml-stylesheet type="text/xsl" href="prettyprint.xsl"?>
+
+<SimulationScenario xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xsi:schemaLocation="http://aor-simulation.org ../../../ext/aorsl/AORSL-0-8-3.xsd" xmlns="http://aor-simulation.org"
+	xmlns:dc="http://purl.org/dc/elements/1.1/" xmlns:aors="http://aor-simulation.org"
+	version="0.8.3" scenarioName="ThiefAndPolice" scenarioTitle="Thief and Police in traffic simulation"
+	simulationManagerDirectory="../../..">
+	
+	<SimulationParameters simulationSteps="10000" stepDuration="1" stepTimeDelay="100"/>
+	
+	<SimulationModel modelName="ThiefAndPolice" modelTitle="ThiefAndPolice">
+		<documentation>
+			<dc:created>20091201</dc:created>
+			<dc:creator>Thimo Hörster</dc:creator>
+			<dc:source>...</dc:source>
+			<description>...</description>
+		</documentation>
+  		
+  		<!-- keine ENUMS möglich, daher Integer -->
+		<SpaceModel dimensions="2" geometry="Euclidean" discrete="true" xMax="29" yMax="29">
+			<GridCellProperty name="cellType" type="Integer"/> <!-- 0 = none; 1 = street; 2 = crossing -->
+			<GridCellProperty name="crossingType" type="Integer"/> <!-- 1 = NESW; 2 = NES; 3 = NEW; 4 = NSW; 5 = ESW; 6 = NE; 7 = NW; 8 = SE; 9 = SW; -->
+			<GridCellProperty name="carID" type="Integer"/>
+		</SpaceModel>
+		
+		<DataTypes>
+			<Enumeration name="Direction4">
+				<EnumerationLiteral>N</EnumerationLiteral>
+				<EnumerationLiteral>E</EnumerationLiteral>
+				<EnumerationLiteral>S</EnumerationLiteral>
+				<EnumerationLiteral>W</EnumerationLiteral>
+			</Enumeration>
+			<Enumeration name="ThiefState">
+				<EnumerationLiteral>BANK</EnumerationLiteral>
+				<EnumerationLiteral>CHASE</EnumerationLiteral>
+				<EnumerationLiteral>ROBBING</EnumerationLiteral>
+				<EnumerationLiteral>HIDEOUT</EnumerationLiteral>
+			</Enumeration>
+			<Enumeration name="PoliceState">
+				<EnumerationLiteral>PATROL</EnumerationLiteral>
+				<EnumerationLiteral>CHASE</EnumerationLiteral>
+				<EnumerationLiteral>BLOCK</EnumerationLiteral>
+			</Enumeration>
+			<Enumeration name="TrafficState">
+				<EnumerationLiteral>DESTINATION</EnumerationLiteral>
+			</Enumeration>
+			<ComplexDataType name="ProbabilityMatrix_Thief">
+				<ClassDef language="Java">
+					<![CDATA[
+					private double[][] P = new double[15][4];
+					double alpha = 0.1;
+
+					public ProbabilityMatrix_Thief() {
+						int M = P.length;
+						int N = P[0].length;
+						double p0 = 1 / N; 
+						for (int i=0; i < M; i++) {
+							for (int j=0; j < N; j++) {
+								P[i][j] = p0;
+							}
+						}
+					}		
+					public int maxIndex(long r) {
+					  	int row = (int)r-1;
+						int max = 0;
+						for (int j=1; j < P[row].length; j++) { 
+							if (P[row][j] > P[row][max]) {
+								max = j;
+							}
+						}
+						return max+1;	
+					}
+					public void successUpdate(long r, long c) {
+					  	int row = (int)r-1;
+					  	int col = (int)c-1;
+						P[row][col] = P[row][col] + alpha * (1 - P[row][col]);
+						for (int j=0; j < P[row].length; j++) { 
+							if (j != col) {
+								P[row][j] = (1-alpha)*P[row][j];
+							}
+						}
+					}
+					public void failureUpdate(long r, long c) {
+					 	int row = (int)r-1;
+					  	int col = (int)c-1;
+						P[row][col] = P[row][col] - alpha * (1 - P[row][col]);
+						for (int j=0; j < P[row].length; j++) { 
+							if (j != col) {
+								P[row][j] = (1+alpha)*P[row][j];
+							}
+						}
+					}
+					]]>
+				</ClassDef>
+			</ComplexDataType>
+		</DataTypes>
+		
+		<EntityTypes>
+			<MessageType name="TellTarget">
+				<Attribute name="thiefX" type="Integer"/>
+				<Attribute name="thiefY" type="Integer"/>
+			</MessageType>
+			<MessageType name="TellChief">
+				<Attribute name="thiefX" type="Integer"/>
+				<Attribute name="thiefY" type="Integer"/>
+			</MessageType>
+			<MessageType name="AbortChase" />
+			
+			<PerceptionEventType name="PrepareToAct"/>
+			<PerceptionEventType name="PrepareToDestinationMove"/>
+			<PerceptionEventType name="PrepareToRandomMove"/>
+			<PerceptionEventType name="PrepareToLearningMove"/>
+			
+			<ActionEventType name="Move" />
+			<ActionEventType name="ThiefAct" />
+			<ActionEventType name="PoliceAct" />
+			<ActionEventType name="ThiefWin" />
+			<ActionEventType name="ThiefLost" />	
+			
+			<!-- Car -->		
+			<PhysicalAgentType name="Car">
+				<EnumerationProperty name="comingFrom" type="Direction4"/>
+				<EnumerationProperty name="direction" type="Direction4"/>
+				<Attribute type="Integer" name="destinationX"/>
+				<Attribute type="Integer" name="destinationY"/>
+				<Attribute type="Float" name="speed"/>
+				<Attribute type="Float" name="progressInCell"/>
+				<Attribute type="Integer" name="lastSubState1"/>
+				<Attribute type="Integer" name="lastSubState2"/>
+				<Attribute type="Integer" name="lastAction"/>
+				<ComplexDataProperty name="ProbMat" type="ProbabilityMatrix_Thief"/>
+				
+				<Function name="getCrossingDirection" resultType="Direction4">
+					<Body language="Java">
+						<![CDATA[
+						int xCurrent = (int)this.getX();
+						int yCurrent = (int)this.getY();
+						int crossType = (int)Simulator.spaceModel.getGridCell(xCurrent, yCurrent).getCrossingType();
+						Direction4 dir4 = Direction4.N;
+						
+						if (crossType == 1) {
+							int random = Random.uniformInt(0,3);
+							switch (random) {
+								case 0: dir4 = Direction4.N; break;
+								case 1: dir4 = Direction4.E; break;
+								case 2: dir4 = Direction4.S; break;
+								case 3: dir4 = Direction4.W; break;
+							}
+						}
+						
+						if (crossType == 2) {
+							int random = Random.uniformInt(0,2);
+							switch (random) {
+								case 0: dir4 = Direction4.N; break;
+								case 1: dir4 = Direction4.E; break;
+								case 2: dir4 = Direction4.S; break;
+							}
+						}
+						
+						if (crossType == 3) {
+							int random = Random.uniformInt(0,2);
+							switch (random) {
+								case 0: dir4 = Direction4.N; break;
+								case 1: dir4 = Direction4.E; break;
+								case 2: dir4 = Direction4.W; break;
+							}
+						}
+						
+						if (crossType == 4) {
+							int random = Random.uniformInt(0,2);
+							switch (random) {
+								case 0: dir4 = Direction4.N; break;
+								case 1: dir4 = Direction4.S; break;
+								case 2: dir4 = Direction4.W; break;
+							}
+						}
+						
+						if (crossType == 5) {
+							int random = Random.uniformInt(0,2);
+							switch (random) {
+								case 0: dir4 = Direction4.E; break;
+								case 1: dir4 = Direction4.S; break;
+								case 2: dir4 = Direction4.W; break;
+							}
+						}						
+						
+						if (dir4 == this.getComingFrom()) {
+							dir4 = getCrossingDirection();
+						}
+						
+						return dir4;				
+						]]>
+					</Body>
+				</Function>
+				<Function name="getStreetDirection" resultType="Direction4">
+					<Body language="Java">
+						<![CDATA[
+						int xCurrent = (int)this.getX();
+						int yCurrent = (int)this.getY();
+						Direction4 dir4 = Direction4.N;
+						int nextCellType  = (int)Simulator.spaceModel.getGridCell(xCurrent + (int)this.getOffsetX(), yCurrent + (int)this.getOffsetY()).getCellType();
+						int northCellType = (int)Simulator.spaceModel.getGridCell(xCurrent + 0, yCurrent + 1).getCellType();
+						int eastCellType  = (int)Simulator.spaceModel.getGridCell(xCurrent + 1, yCurrent + 0).getCellType();
+						int southCellType = (int)Simulator.spaceModel.getGridCell(xCurrent + 0, yCurrent - 1).getCellType();
+						int westCellType  = (int)Simulator.spaceModel.getGridCell(xCurrent - 1, yCurrent + 0).getCellType();
+						
+						if (nextCellType == 0) {
+							switch (this.getDirection()) {
+								case N: if (eastCellType == 1) { dir4 = Direction4.E; break; }
+										if (westCellType == 1) { dir4 = Direction4.W; break; }
+										dir4 = this.getComingFrom();
+										break;
+								case E: if (northCellType == 1) { dir4 = Direction4.N; break; }
+										if (southCellType == 1) { dir4 = Direction4.S; break; }
+										dir4 = this.getComingFrom();
+										break;
+								case S: if (eastCellType == 1) { dir4 = Direction4.E; break; }
+										if (westCellType == 1) { dir4 = Direction4.W; break; }
+										dir4 = this.getComingFrom();
+										break;
+								case W: if (northCellType == 1) { dir4 = Direction4.N; break; }
+										if (southCellType == 1) { dir4 = Direction4.S; break; }
+										dir4 = this.getComingFrom();
+										break;
+							}
+						} else {
+							dir4 = this.getDirection();
+						}
+						
+						return dir4;
+						]]>
+					</Body>
+				</Function>
+				<Function name="setComingFrom" resultType="Direction4">
+					<Body language="Java">
+						<![CDATA[
+						Direction4 dir4 = Direction4.N;
+						if (this.getDirection() == Direction4.N) { dir4 = Direction4.S; }
+						if (this.getDirection() == Direction4.E) { dir4 = Direction4.W; }
+						if (this.getDirection() == Direction4.S) { dir4 = Direction4.N; }
+						if (this.getDirection() == Direction4.W) { dir4 = Direction4.E; }
+						
+						return dir4;
+						]]>
+					</Body>
+				</Function>
+				<Function name="getOffsetX" resultType="Integer">
+					<Body language="Java">
+						<![CDATA[
+						int offsetX = 0;
+						switch (this.getDirection()) {
+							case N: offsetX = 0; break;
+							case E: offsetX = 1; break;
+							case S: offsetX = 0; break;
+							case W: offsetX = -1; break;
+							default: offsetX = 0;
+						}
+						
+						if (offsetX < 0) {
+							offsetX = (int)Math.ceil(offsetX * this.getProgressInCell());
+						}
+						
+						if (offsetX > 0) {
+							offsetX = (int)Math.floor(offsetX * this.getProgressInCell());
+						}
+						
+						return offsetX;
+		          		]]>
+					</Body>
+				</Function>
+				<Function name="getOffsetY" resultType="Integer">
+					<Body language="Java">
+						<![CDATA[
+						int offsetY = 0;
+						switch (this.getDirection()) {
+							case N: offsetY = 1; break;
+							case E: offsetY = 0; break;
+							case S: offsetY = -1; break;
+							case W: offsetY = 0; break;
+							default: offsetY = 0;
+						}
+						
+						if (offsetY < 0) {
+							offsetY = (int)Math.ceil(offsetY * this.getProgressInCell());
+						}
+						
+						if (offsetY > 0) {
+							offsetY = (int)Math.floor(offsetY * this.getProgressInCell());
+						}
+						
+						return offsetY;
+						]]>
+					</Body>
+				</Function>				
+				<Function name="getCrossingDirectionWithDestination" resultType="Direction4">
+					<Body language="Java">
+						<![CDATA[
+						int xCurrent = (int)this.getX();
+						int yCurrent = (int)this.getY();
+						int crossType = (int)Simulator.spaceModel.getGridCell(xCurrent, yCurrent).getCrossingType();
+						Direction4 dir4 = Direction4.N;
+						int distanceNorth = (int)this.getDistanceToDestination(xCurrent + 0, yCurrent + 1);
+						int distanceEast  = (int)this.getDistanceToDestination(xCurrent + 1, yCurrent + 0);
+						int distanceSouth = (int)this.getDistanceToDestination(xCurrent + 0, yCurrent - 1);
+						int distanceWest  = (int)this.getDistanceToDestination(xCurrent - 1, yCurrent + 0);
+						
+						if (crossType == 1) {							
+							if (distanceNorth <= distanceEast && distanceNorth <= distanceSouth && distanceNorth <= distanceWest) {
+								dir4 = Direction4.N;
+							}
+							
+							if (distanceEast <= distanceNorth && distanceEast <= distanceSouth && distanceEast <= distanceWest) {
+								dir4 = Direction4.E;
+							}
+							
+							if (distanceSouth <= distanceNorth && distanceSouth <= distanceEast && distanceSouth <= distanceWest) {
+								dir4 = Direction4.S;
+							}
+							
+							if (distanceWest <= distanceNorth && distanceWest <= distanceEast && distanceWest <= distanceSouth) {
+								dir4 = Direction4.W;
+							}
+						}
+						
+						if (crossType == 2) {							
+							if (distanceNorth <= distanceEast && distanceNorth <= distanceSouth) {
+								dir4 = Direction4.N;
+							}
+							
+							if (distanceEast <= distanceNorth && distanceEast <= distanceSouth) {
+								dir4 = Direction4.E;
+							}
+							
+							if (distanceSouth <= distanceNorth && distanceSouth <= distanceEast) {
+								dir4 = Direction4.S;
+							}
+						}
+						
+						if (crossType == 3) {							
+							if (distanceNorth <= distanceEast && distanceNorth <= distanceWest) {
+								dir4 = Direction4.N;
+							}
+							
+							if (distanceEast <= distanceNorth && distanceEast <= distanceWest) {
+								dir4 = Direction4.E;
+							}
+							
+							if (distanceWest <= distanceNorth && distanceWest <= distanceEast) {
+								dir4 = Direction4.W;
+							}
+						}
+						
+						if (crossType == 4) {
+							if (distanceNorth <= distanceSouth && distanceNorth <= distanceWest) {
+								dir4 = Direction4.N;
+							}
+							
+							if (distanceSouth <= distanceNorth && distanceSouth <= distanceWest) {
+								dir4 = Direction4.S;
+							}
+							
+							if (distanceWest <= distanceNorth && distanceWest <= distanceSouth) {
+								dir4 = Direction4.W;
+							}
+						}
+						
+						if (crossType == 5) {
+							if (distanceEast <= distanceSouth && distanceEast <= distanceWest) {
+								dir4 = Direction4.E;
+							}
+							
+							if (distanceSouth <= distanceEast && distanceSouth <= distanceWest) {
+								dir4 = Direction4.S;
+							}
+							
+							if (distanceWest <= distanceEast && distanceWest <= distanceSouth) {
+								dir4 = Direction4.W;
+							}
+						}				
+						
+						return dir4;
+						]]>
+					</Body>
+				</Function>
+				<Function name="getStreetDirectionWithDestination" resultType="Direction4">
+					<Body language="Java">
+						<![CDATA[
+						int xCurrent = (int)this.getX();
+						int yCurrent = (int)this.getY();
+						Direction4 dir4 = Direction4.N;
+						Direction4 dir4_2 = Direction4.N;
+						Direction4 dir4_3 = Direction4.N;
+						int distanceNorth = (int)this.getDistanceToDestination(xCurrent + 0, yCurrent + 1);
+						int distanceEast  = (int)this.getDistanceToDestination(xCurrent + 1, yCurrent + 0);
+						int distanceSouth = (int)this.getDistanceToDestination(xCurrent + 0, yCurrent - 1);
+						int distanceWest  = (int)this.getDistanceToDestination(xCurrent - 1, yCurrent + 0);
+						
+						dir4_3 = this.getStreetDirection();
+						dir4_2 = this.setComingFrom();
+						
+						switch (dir4_3) {
+							case N:	
+								switch (dir4_2) {
+									case N:	dir4 = Direction4.N;
+											break;
+									case E:	if (distanceNorth <= distanceEast) { dir4 = Direction4.N; } else { dir4 = Direction4.E; }
+											break;
+									case W:	if (distanceNorth <= distanceWest) { dir4 = Direction4.N; } else { dir4 = Direction4.W; }
+											break;
+									case S:	if (distanceNorth <= distanceSouth) { dir4 = Direction4.N; } else { dir4 = Direction4.S; }
+											break;
+								}
+								break;
+							case E:
+								switch (dir4_2) {
+									case N:	if (distanceEast <= distanceNorth) { dir4 = Direction4.E; } else { dir4 = Direction4.N; }
+											break;
+									case E:	dir4 = Direction4.E;
+											break;
+									case W:	if (distanceEast <= distanceWest) { dir4 = Direction4.E; } else { dir4 = Direction4.W; }
+											break;
+									case S:	if (distanceEast <= distanceSouth) { dir4 = Direction4.E; } else { dir4 = Direction4.S; }
+											break;
+								}
+								break;
+							case W:
+								switch (dir4_2) {
+									case N:	if (distanceWest <= distanceNorth) { dir4 = Direction4.W; } else { dir4 = Direction4.N; }
+											break;
+									case E:	if (distanceWest <= distanceEast) { dir4 = Direction4.W; } else { dir4 = Direction4.E; }
+											break;
+									case W:	dir4 = Direction4.W;
+											break;
+									case S:	if (distanceWest <= distanceSouth) { dir4 = Direction4.W; } else { dir4 = Direction4.S; }
+											break;
+								}
+								break;
+							case S:
+								switch (dir4_2) {
+									case N:	if (distanceSouth <= distanceNorth) { dir4 = Direction4.S; } else { dir4 = Direction4.N; }
+											break;
+									case E:	if (distanceSouth <= distanceEast) { dir4 = Direction4.S; } else { dir4 = Direction4.E; }
+											break;
+									case W:	if (distanceSouth <= distanceWest) { dir4 = Direction4.S; } else { dir4 = Direction4.W; }
+											break;
+									case S:	dir4 = Direction4.S;
+											break;
+								}
+								break;
+						}
+						
+						return dir4;						
+						]]>
+						</Body>
+				</Function>	
+				<Function name="getDistanceToDestination" resultType="Integer">
+					<Parameter name="xPos" type="Integer"/>
+					<Parameter name="yPos" type="Integer"/>
+					<Body language="Java">
+						<![CDATA[
+						int distance = 0;	
+						int destX = (int)this.getDestinationX();
+						int destY = (int)this.getDestinationY();
+						
+						distance = (destX - (int)xPos)*(destX - (int)xPos) + (destY - (int)yPos)*(destY - (int)yPos);
+							
+						return distance;
+						]]>						
+					</Body>
+				</Function>
+				<Function name="getDistanceToXY" resultType="Integer">
+					<Parameter name="x" type="Integer"/>
+					<Parameter name="y" type="Integer"/>
+					<Body language="Java">
+						<![CDATA[
+						int distance = 0;	
+						int xCurrent = (int)this.getX();
+						int yCurrent = (int)this.getY();
+						
+						distance = ((int)x - (int)xCurrent)*((int)x - (int)xCurrent) + ((int)y - (int)yCurrent)*((int)y - (int)yCurrent);
+							
+						return distance;
+						]]>						
+					</Body>
+				</Function>
+				<Function name="atDestination" resultType="Boolean">
+					<Body language="Java">
+						<![CDATA[
+						int xCurrent = (int)this.getX();
+						int yCurrent = (int)this.getY();
+						
+						if (xCurrent == (int)this.getDestinationX() && yCurrent == (int)this.getDestinationY()) {
+							return true;
+						}
+						
+						return false;
+						]]>
+					</Body>
+				</Function>
+				<Function name="setProgressInCell" resultType="Float">
+					<Body language="Java">
+						<![CDATA[
+							float progress = 0;
+							
+							progress = (float)this.getProgressInCell() - (float)Math.floor(this.getProgressInCell());
+							progress = (float)progress + (float)this.getSpeed();
+							
+							return progress;
+						]]>
+					</Body>
+				</Function>				
+				<Function name="resolveSubState1" resultType="Integer">
+					<Body language="Java">
+						<![CDATA[
+						int result = 0;
+						int xCurrent = (int)this.getX();
+						int yCurrent = (int)this.getY();
+						int northCellType = (int)Simulator.spaceModel.getGridCell(xCurrent + 0, yCurrent + 1).getCellType();
+						int eastCellType  = (int)Simulator.spaceModel.getGridCell(xCurrent + 1, yCurrent + 0).getCellType();
+						int southCellType = (int)Simulator.spaceModel.getGridCell(xCurrent + 0, yCurrent - 1).getCellType();
+						int westCellType  = (int)Simulator.spaceModel.getGridCell(xCurrent - 1, yCurrent + 0).getCellType();
+						
+						if (northCellType != 0 && eastCellType != 0 && southCellType != 0 && westCellType != 0) {
+							result = 1;
+						}
+						
+						if (northCellType != 0 && eastCellType != 0 && southCellType != 0 && westCellType == 0) {
+							result = 2;
+						}
+						
+						if (northCellType != 0 && eastCellType != 0 && southCellType == 0 && westCellType != 0) {
+							result = 3;
+						}
+						
+						if (northCellType != 0 && eastCellType == 0 && southCellType != 0 && westCellType != 0) {
+							result = 4;
+						}
+						
+						if (northCellType == 0 && eastCellType != 0 && southCellType != 0 && westCellType != 0) {
+							result = 5;
+						}
+						
+						if (northCellType != 0 && eastCellType != 0 && southCellType == 0 && westCellType == 0) {
+							result = 6;
+						}
+						
+						if (northCellType != 0 && eastCellType == 0 && southCellType != 0 && westCellType == 0) {
+							result = 7;
+						}
+						
+						if (northCellType != 0 && eastCellType == 0 && southCellType == 0 && westCellType != 0) {
+							result = 8;
+						}
+						
+						if (northCellType == 0 && eastCellType != 0 && southCellType != 0 && westCellType == 0) {
+							result = 9;
+						}
+						
+						if (northCellType == 0 && eastCellType != 0 && southCellType == 0 && westCellType != 0) {
+							result = 10;
+						}
+						
+						if (northCellType == 0 && eastCellType == 0 && southCellType != 0 && westCellType != 0) {
+							result = 11;
+						}
+						
+						if (northCellType != 0 && eastCellType == 0 && southCellType == 0 && westCellType == 0) {
+							result = 12;
+						}
+						
+						if (northCellType == 0 && eastCellType != 0 && southCellType == 0 && westCellType == 0) {
+							result = 13;
+						}
+						
+						if (northCellType == 0 && eastCellType == 0 && southCellType != 0 && westCellType == 0) {
+							result = 14;
+						}
+						
+						if (northCellType == 0 && eastCellType == 0 && southCellType == 0 && westCellType != 0) {
+							result = 15;
+						}
+						
+						return (int)result;
+						]]>
+					</Body>
+				</Function>
+				<Function name="resolveAction" resultType="Integer">
+					<Parameter name="state" type="Integer"/>
+					<Body language="Java">
+						<![CDATA[
+						int result = 0;
+						
+						result = (int)this.getProbMat().maxIndex(state);
+						
+						return result;
+						]]>
+					</Body>
+				</Function>
+				<Function name="actionToDirection" resultType="Direction4">
+					<Parameter name="action" type="Integer"/>
+					<Body language="Java">
+						<![CDATA[
+						Direction4 dir4 = Direction4.N;
+						
+						switch ((int)action) {
+							case 1: dir4 = Direction4.N;
+									break;
+							case 2: dir4 = Direction4.E;
+									break;
+							case 3: dir4 = Direction4.S;
+									break;
+							case 4: dir4 = Direction4.W;
+									break;
+						}
+						
+						return dir4;
+						]]>
+					</Body>
+				</Function>
+						
+				<AgentRule name="PrepareToMoveRandomRule" agentVariable="car">
+					<WHEN eventType="PrepareToRandomMove" />
+					<IF language="Java"><![CDATA[ (int)Simulator.spaceModel.getGridCell((int)car.getX(), (int)car.getY()).getCellType() == 2 ]]></IF>
+					<THEN>
+						<UPDATE-AGT>
+							<Slot property="direction"><![CDATA[ car.getCrossingDirection() ]]></Slot>
+							<Slot property="comingFrom"><![CDATA[ car.setComingFrom() ]]></Slot>
+							<Slot property="progressInCell"><![CDATA[ car.setProgressInCell() ]]></Slot>
+						</UPDATE-AGT>
+						<SCHEDULE-EVT>
+							<ActionEventExpr actionEventType="Move"/>
+						</SCHEDULE-EVT>
+					</THEN>
+					<ELSE>
+						<UPDATE-AGT>
+							<Slot property="direction"><![CDATA[ car.getStreetDirection() ]]></Slot>
+							<Slot property="comingFrom"><![CDATA[ car.setComingFrom() ]]></Slot>
+							<Slot property="progressInCell"><![CDATA[ car.setProgressInCell() ]]></Slot>
+						</UPDATE-AGT>
+						<SCHEDULE-EVT>
+							<ActionEventExpr actionEventType="Move"/>
+						</SCHEDULE-EVT>						
+					</ELSE>
+				</AgentRule>
+				<AgentRule name="PrepareToDestinationMoveRule" agentVariable="car">
+					<WHEN eventType="PrepareToDestinationMove" />
+					<IF language="Java"><![CDATA[ (int)Simulator.spaceModel.getGridCell((int)car.getX(), (int)car.getY()).getCellType() == 2 ]]></IF>
+					<THEN>
+						<UPDATE-AGT>
+							<Slot property="direction"><![CDATA[ car.getCrossingDirectionWithDestination() ]]></Slot>
+							<Slot property="comingFrom"><![CDATA[ car.setComingFrom() ]]></Slot>
+							<Slot property="progressInCell"><![CDATA[ car.setProgressInCell() ]]></Slot>
+						</UPDATE-AGT>
+						<SCHEDULE-EVT>
+							<ActionEventExpr actionEventType="Move"/>
+						</SCHEDULE-EVT>
+					</THEN>
+					<ELSE>
+						<UPDATE-AGT>
+							<Slot property="direction"><![CDATA[ car.getStreetDirectionWithDestination() ]]></Slot>
+							<Slot property="comingFrom"><![CDATA[ car.setComingFrom() ]]></Slot>
+							<Slot property="progressInCell"><![CDATA[ car.setProgressInCell() ]]></Slot>
+						</UPDATE-AGT>
+						<SCHEDULE-EVT>
+							<ActionEventExpr actionEventType="Move"/>
+						</SCHEDULE-EVT>						
+					</ELSE>
+				</AgentRule>
+				<AgentRule name="PrepareToLearningMoveRule" agentVariable="car">
+					<WHEN eventType="PrepareToLearningMove"/>
+					<UPDATE-AGT>
+						<Slot property="direction"><![CDATA[ car.actionToDirection((int)car.getLastAction()) ]]></Slot>
+						<Slot property="comingFrom"><![CDATA[ car.setComingFrom() ]]></Slot>
+						<Slot property="progressInCell"><![CDATA[ car.setProgressInCell() ]]></Slot>
+					</UPDATE-AGT>
+					<SCHEDULE-EVT>
+						<ActionEventExpr actionEventType="Move"/>
+					</SCHEDULE-EVT>	
+				</AgentRule>
+			</PhysicalAgentType>
+			
+			<!-- Thief -->
+			<PhysicalAgentType name="Thief" superType="Car">
+				<EnumerationProperty name="currentState" type="ThiefState"/>
+				<Attribute type="Integer" name="observeRange"/>
+				<Attribute type="Integer" name="robbTime"/>
+				<Attribute type="Integer" name="lastDistanceToPolice"/>
+				
+				<Function name="perceptPolice" resultType="Boolean">
+					<Body language="Java">
+						<![CDATA[
+							int carID = 0;
+							int i = 0;
+							int j = 0;
+							int gridX = 0;
+							int gridY = 0;
+							
+							for (i = (int)this.getObserveRange() * -1; i <= (int)this.getObserveRange(); i++) {								
+								for (j = (int)this.getObserveRange() * -1; j <= (int)this.getObserveRange(); j++) {
+									
+									gridX = (int)this.getX() + i;
+									gridY = (int)this.getY() + j;
+									
+									if (gridX < 1  ) { gridX = 1;  }
+									if (gridX > 29 ) { gridX = 29; }
+									if (gridY < 1  ) { gridY = 1;  }
+									if (gridY > 29 ) { gridY = 29; }
+									
+									carID = (int)Simulator.spaceModel.getGridCell(gridX, gridY).getCarID();
+									
+									if (carID > 1 && carID < 6) {
+										return true;
+									}
+								}
+							}					
+							
+							return false;
+						]]>
+					</Body>
+				</Function>
+				<Function name="getNearestPoliceDistance" resultType="Integer">
+					<Body language="Java">
+						<![CDATA[
+							int carID = 0;
+							int i = 0;
+							int j = 0;
+							int gridX = 0;
+							int gridY = 0;
+							int distance = -1;
+							int nearestPoliceX = 0;
+							int nearestPoliceY = 0;
+							int result = 0;
+
+							for (i = (int)this.getObserveRange() * -1; i < (int)this.getObserveRange(); i++) {								
+								for (j = (int)this.getObserveRange() * -1; j < (int)this.getObserveRange(); j++) {
+									
+									gridX = (int)this.getX() + i;
+									gridY = (int)this.getY() + j;
+									
+									if (gridX < 1  ) { gridX = 1;  }
+									if (gridX > 29 ) { gridX = 29; }
+									if (gridY < 1  ) { gridY = 1;  }
+									if (gridY > 29 ) { gridY = 29; }
+									
+									carID = (int)Simulator.spaceModel.getGridCell(gridX, gridY).getCarID();	
+									
+									if (carID > 1 && carID < 6) {
+										if (distance > (int)this.getDistanceToXY((int)this.getX() + i,(int)this.getY() + j) || distance == -1) {
+											distance = (int)this.getDistanceToXY((int)this.getX() + i,(int)this.getY() + j);
+											nearestPoliceX = (int)this.getX() + i;
+											nearestPoliceY = (int)this.getY() + j;
+										}
+									}
+								}
+							}					
+							
+							result = distance;
+							
+							return result; 
+						]]>
+					</Body>
+				</Function>
+				<Function name="hasRobbed" resultType="Boolean">
+					<Body language="Java">
+						<![CDATA[
+						if ((int)this.getRobbTime() == 50) {
+							return true;
+						}
+						
+						return false;						
+						]]>
+					</Body>
+				</Function>
+				
+				<AgentRule name="ActRule" agentVariable="thief">
+					<WHEN eventType="PrepareToAct"/>
+					<SCHEDULE-EVT>
+						<ActionEventExpr actionEventType="ThiefAct" />
+					</SCHEDULE-EVT>
+				</AgentRule>
+				<AgentRule name="ChangeStateFromChaseToBank" agentVariable="thief">
+					<WHEN eventType="PrepareToAct"/>
+					<IF language="Java"><![CDATA[ !thief.perceptPolice() && !thief.hasRobbed() && thief.getCurrentState() != ThiefState.ROBBING ]]></IF>
+					<UPDATE-AGT>
+						<Slot property="currentState"><![CDATA[ ThiefState.BANK ]]></Slot>
+						<Slot property="destinationX"><![CDATA[ 14 ]]></Slot>
+						<Slot property="destinationY"><![CDATA[ 15 ]]></Slot>
+						<Slot property="speed"><![CDATA[ 0.2 ]]></Slot>
+					</UPDATE-AGT>
+				</AgentRule>
+				<AgentRule name="ChangeStateFromChaseToHideout" agentVariable="thief">
+					<WHEN eventType="PrepareToAct"/>
+					<IF language="Java"><![CDATA[ !thief.perceptPolice() && thief.hasRobbed() ]]></IF>
+					<UPDATE-AGT>
+						<Slot property="currentState"><![CDATA[ ThiefState.HIDEOUT ]]></Slot>
+						<Slot property="destinationX"><![CDATA[ 26 ]]></Slot>
+						<Slot property="destinationY"><![CDATA[ 3 ]]></Slot>
+						<Slot property="speed"><![CDATA[ 0.2 ]]></Slot>
+					</UPDATE-AGT>
+				</AgentRule>
+				<AgentRule name="ChangeStateToChase" agentVariable="thief">
+					<WHEN eventType="PrepareToAct"/>
+					<IF language="Java"><![CDATA[ thief.perceptPolice() && thief.getCurrentState() != ThiefState.CHASE ]]></IF>
+					<UPDATE-AGT>
+						<Slot property="currentState"><![CDATA[ ThiefState.CHASE ]]></Slot>
+						<Slot property="speed"><![CDATA[ 0.2 ]]></Slot>
+						<Slot property="lastDistanceToPolice"><![CDATA[ thief.getNearestPoliceDistance() ]]></Slot>
+						<Slot property="lastSubState1"><![CDATA[	thief.resolveSubState1() ]]></Slot>
+						<Slot property="lastAction"><![CDATA[ thief.resolveAction((int)thief.getLastSubState1()) ]]></Slot>
+					</UPDATE-AGT>
+				</AgentRule>
+				<AgentRule name="ChaseWithSucess" agentVariable="thief">
+					<WHEN eventType="PrepareToAct"/>
+					<IF language="Java"><![CDATA[ thief.perceptPolice() && thief.getCurrentState() == ThiefState.CHASE  && thief.getNearestPoliceDistance() > thief.getLastDistanceToPolice() ]]></IF>
+					<UPDATE-AGT>
+						<UpdateComplexDataPropertyValue complexDataProperty="ProbMat" procedure="successUpdate">
+							<Argument>
+								<![CDATA[ (long)thief.getLastSubState1() ]]>
+							</Argument>
+							<Argument>
+								<![CDATA[ (long)thief.getLastAction() ]]>
+							</Argument>
+						</UpdateComplexDataPropertyValue>
+						<Slot property="lastSubState1"><![CDATA[	thief.resolveSubState1() ]]></Slot>
+						<Slot property="lastAction"><![CDATA[ thief.resolveAction((int)thief.getLastSubState1()) ]]></Slot>
+						<Slot property="lastDistanceToPolice"><![CDATA[ thief.getNearestPoliceDistance() ]]></Slot>
+					</UPDATE-AGT>
+				</AgentRule>
+				<AgentRule name="ChaseWithFailure" agentVariable="thief">
+					<WHEN eventType="PrepareToAct"/>
+					<IF language="Java"><![CDATA[ thief.perceptPolice() && thief.getCurrentState() == ThiefState.CHASE  && thief.getNearestPoliceDistance() < thief.getLastDistanceToPolice() ]]></IF>
+					<UPDATE-AGT>
+						<UpdateComplexDataPropertyValue complexDataProperty="ProbMat" procedure="failureUpdate">
+							<Argument>
+								<![CDATA[ (long)thief.getLastSubState1() ]]>
+							</Argument>
+							<Argument>
+								<![CDATA[ (long)thief.getLastAction() ]]>
+							</Argument>
+						</UpdateComplexDataPropertyValue>
+						<Slot property="lastSubState1"><![CDATA[	thief.resolveSubState1() ]]></Slot>
+						<Slot property="lastAction"><![CDATA[ thief.resolveAction((int)thief.getLastSubState1()) ]]></Slot>
+						<Slot property="lastDistanceToPolice"><![CDATA[ thief.getNearestPoliceDistance() ]]></Slot>
+					</UPDATE-AGT>
+				</AgentRule>
+				<AgentRule name="ChangeStateFromBankToRobbing" agentVariable="thief">
+					<WHEN eventType="PrepareToAct"/>
+					<IF language="Java"><![CDATA[ thief.atDestination() && thief.getCurrentState() == ThiefState.BANK ]]></IF>
+					<UPDATE-AGT>
+						<Slot property="currentState"><![CDATA[ ThiefState.ROBBING ]]></Slot>
+						<Slot property="speed"><![CDATA[ 0.0 ]]></Slot>
+					</UPDATE-AGT>
+				</AgentRule>
+				<AgentRule name="ChangeStateFromRobbingToRobbing" agentVariable="thief">
+					<WHEN eventType="PrepareToAct"/>
+					<IF language="Java"><![CDATA[ thief.getCurrentState() == ThiefState.ROBBING && !thief.hasRobbed() ]]></IF>
+					<UPDATE-AGT>
+						<Slot property="robbTime"><![CDATA[ thief.getRobbTime() + 1 ]]></Slot>
+					</UPDATE-AGT>
+				</AgentRule>
+				<AgentRule name="ChangeStateFromRobbingToHideout" agentVariable="thief">
+					<WHEN eventType="PrepareToAct"/>
+					<IF language="Java"><![CDATA[ thief.getCurrentState() == ThiefState.ROBBING && thief.hasRobbed() ]]></IF>
+					<UPDATE-AGT>
+						<Slot property="currentState"><![CDATA[ ThiefState.HIDEOUT ]]></Slot>
+						<Slot property="destinationX"><![CDATA[ 26 ]]></Slot>
+						<Slot property="destinationY"><![CDATA[ 3 ]]></Slot>
+						<Slot property="speed"><![CDATA[ 0.2 ]]></Slot>
+					</UPDATE-AGT>
+				</AgentRule>
+				<AgentRule name="ChangeToWin" agentVariable="thief">
+					<WHEN eventType="PrepareToAct"/>
+					<IF language="Java"><![CDATA[ thief.getCurrentState() == ThiefState.HIDEOUT && thief.atDestination() ]]></IF>
+					<UPDATE-AGT>
+						<Slot property="speed"><![CDATA[ 0.0 ]]></Slot>
+					</UPDATE-AGT>
+					<SCHEDULE-EVT>
+						<ActionEventExpr actionEventType="ThiefWin" />
+					</SCHEDULE-EVT>
+				</AgentRule>
+				<AgentRule name="ChangeToLose" agentVariable="thief">
+					<WHEN eventType="PrepareToAct"/>
+					<IF language="Java"><![CDATA[ thief.getCurrentState() == ThiefState.CHASE && thief.atDestination() ]]></IF>
+					<UPDATE-AGT>
+						<Slot property="speed"><![CDATA[ 0.0 ]]></Slot>
+					</UPDATE-AGT>
+					<SCHEDULE-EVT>
+						<ActionEventExpr actionEventType="ThiefLost" />
+					</SCHEDULE-EVT>
+				</AgentRule>
+			</PhysicalAgentType>
+			
+			<!-- Police -->
+			<PhysicalAgentType name="Police" superType="Car">
+				<EnumerationProperty name="currentState" type="PoliceState"/>
+				<Attribute type="Integer" name="observeRange"/>
+				<Attribute type="Integer" name="thiefX"/>
+				<Attribute type="Integer" name="thiefY"/>
+				
+				<Function name="perceptThief" resultType="Boolean">
+					<Body language="Java">
+						<![CDATA[
+							int carID = 0;
+							int i = 0;
+							int j = 0;
+							int gridX = 0;
+							int gridY = 0;
+							
+							for (i = (int)this.getObserveRange() * -1; i <= (int)this.getObserveRange(); i++) {								
+								for (j = (int)this.getObserveRange() * -1; j <= (int)this.getObserveRange(); j++) {
+									
+									gridX = (int)this.getX() + i;
+									gridY = (int)this.getY() + j;
+									
+									if (gridX < 1  ) { gridX = 1;  }
+									if (gridX > 29 ) { gridX = 29; }
+									if (gridY < 1  ) { gridY = 1;  }
+									if (gridY > 29 ) { gridY = 29; }
+									
+									carID = (int)Simulator.spaceModel.getGridCell(gridX, gridY).getCarID();
+									
+									if (carID == 1) {
+										return true;
+									}
+								}
+							}					
+							
+							return false;
+						]]>
+					</Body>
+				</Function>
+				<Function name="getPerceptedThief" resultType="Integer">
+					<Parameter name="XY" type="String"/>
+					<Body language="Java">
+						<![CDATA[
+							int carID = 0;
+							int i = 0;
+							int j = 0;
+							int gridX = 0;
+							int gridY = 0;
+							int thiefX = 0;
+							int thiefY = 0;
+							
+							for (i = (int)this.getObserveRange() * -1; i <= (int)this.getObserveRange(); i++) {								
+								for (j = (int)this.getObserveRange() * -1; j <= (int)this.getObserveRange(); j++) {
+									
+									gridX = (int)this.getX() + i;
+									gridY = (int)this.getY() + j;
+									
+									if (gridX < 1  ) { gridX = 1;  }
+									if (gridX > 29 ) { gridX = 29; }
+									if (gridY < 1  ) { gridY = 1;  }
+									if (gridY > 29 ) { gridY = 29; }
+									
+									carID = (int)Simulator.spaceModel.getGridCell(gridX, gridY).getCarID();
+									
+									if (carID == 1) {
+										thiefX = (int)this.getX() + i;
+										thiefY = (int)this.getY() + j;
+									}
+								}
+							}					
+							
+							if (XY == "X") { return thiefX; }
+							if (XY == "Y") { return thiefY; }
+							
+							return 0;
+						]]>
+					</Body>
+				</Function>
+
+				<AgentRule name="ActRule" agentVariable="police">
+					<WHEN eventType="PrepareToAct"/>
+					<SCHEDULE-EVT>
+						<ActionEventExpr actionEventType="PoliceAct" />
+					</SCHEDULE-EVT>
+				</AgentRule>
+				<AgentRule name="TellTargetToChief" agentVariable="police">
+					<WHEN eventType="PrepareToAct"/>
+					<IF language="Java"><![CDATA[ police.perceptThief() ]]></IF>
+					<SCHEDULE-EVT>
+						<OutMessageEventExpr messageType="TellChief" receiverIdRefs="2">
+							<Slot property="thiefX"><![CDATA[ police.getPerceptedThief("X") ]]></Slot>
+							<Slot property="thiefY"><![CDATA[ police.getPerceptedThief("Y") ]]></Slot>
+						</OutMessageEventExpr>
+					</SCHEDULE-EVT>
+				</AgentRule>
+				<AgentRule name="ChangeStateToPatrolRule" agentVariable="police">
+					<WHEN eventType="InMessageEvent" messageType="AbortChase" messageVariable="m"/>
+					<UPDATE-AGT>
+						<Slot property="currentState"><![CDATA[ PoliceState.PATROL ]]></Slot>
+						<Slot property="speed"><![CDATA[ 0.2 ]]></Slot>
+					</UPDATE-AGT>
+				</AgentRule>
+				<AgentRule name="ChangeStateToBlockRule" agentVariable="police">
+					<WHEN eventType="PrepareToAct"/>
+					<IF language="Java"><![CDATA[ police.atDestination() ]]></IF>
+					<UPDATE-AGT>
+						<Slot property="currentState"><![CDATA[ PoliceState.BLOCK ]]></Slot>
+						<Slot property="speed"><![CDATA[ 0 ]]></Slot>
+					</UPDATE-AGT>
+				</AgentRule>
+				<AgentRule name="GetTargetMessageRule" agentVariable="police">
+					<WHEN eventType="InMessageEvent" messageType="TellTarget" messageVariable="m"/>
+					<UPDATE-AGT>
+						<Slot property="currentState"><![CDATA[ PoliceState.CHASE ]]></Slot>
+						<Slot property="DestinationX"><![CDATA[ m.getThiefX() ]]></Slot>
+						<Slot property="DestinationY"><![CDATA[ m.getThiefY() ]]></Slot>
+						<Slot property="speed"><![CDATA[ 0.2 ]]></Slot>
+					</UPDATE-AGT>
+				</AgentRule>
+			</PhysicalAgentType>
+			
+			<!-- Chief -->
+			<PhysicalAgentType name="Chief" superType="Police">
+				<Function name="getBlockPos" resultType="Integer">
+					<Parameter name="thiefX" type="Integer"/>
+					<Parameter name="thiefY" type="Integer"/>
+					<Parameter name="XY" type="String"/>
+					<Parameter name="blockPos" type="Integer"/>
+					<Body language="Java">
+						<![CDATA[
+						int result = 0;
+						int northCellType = (int)Simulator.spaceModel.getGridCell((int)thiefX + 0, (int)thiefY + 1).getCellType();
+						int eastCellType  = (int)Simulator.spaceModel.getGridCell((int)thiefX + 1, (int)thiefY + 0).getCellType();
+						int southCellType = (int)Simulator.spaceModel.getGridCell((int)thiefX + 0, (int)thiefY - 1).getCellType();
+						int westCellType  = (int)Simulator.spaceModel.getGridCell((int)thiefX - 1, (int)thiefY + 0).getCellType();
+						
+						switch ((int)blockPos) {
+								case 1: 
+									if (northCellType != 0) {
+										thiefY = thiefY + 1;
+										break;
+									} else {
+										blockPos++;
+									}
+								case 2: 
+									if (eastCellType != 0) {
+										thiefX = thiefX + 1;
+										break;
+									} else {
+										blockPos++;
+									}
+								case 3: 
+									if (southCellType != 0) {
+										thiefY = thiefY - 1;
+										break;
+									} else {
+										blockPos++;
+									}
+								case 4: 
+									if (westCellType != 0) {
+										thiefX = thiefX - 1;
+										break;
+									} else {
+										blockPos++;
+									}
+							}
+						
+						if (XY == "X") { result = (int)thiefX; }
+						if (XY == "Y") { result = (int)thiefY; }
+						
+						return result;
+						]]>
+					</Body>
+				</Function>
+				
+				<AgentRule name="TellTargets" agentVariable="chief">
+					<WHEN eventType="InMessageEvent" messageType="TellChief" messageVariable="m"/>
+					<UPDATE-AGT>
+						<Slot property="currentState"><![CDATA[ PoliceState.CHASE ]]></Slot>
+						<Slot property="DestinationX"><![CDATA[ chief.getBlockPos(m.getThiefX(), m.getThiefY(), "X", 1) ]]></Slot>
+						<Slot property="DestinationY"><![CDATA[ chief.getBlockPos(m.getThiefX(), m.getThiefY(), "Y", 1) ]]></Slot>
+						<Slot property="speed"><![CDATA[ 0.2 ]]></Slot>
+					</UPDATE-AGT>
+					<SCHEDULE-EVT>
+						<OutMessageEventExpr messageType="TellTarget" receiverIdRefs="3">
+							<Slot property="thiefX"><![CDATA[ chief.getBlockPos(m.getThiefX(), m.getThiefY(), "X", 2) ]]></Slot>
+							<Slot property="thiefY"><![CDATA[ chief.getBlockPos(m.getThiefX(), m.getThiefY(), "Y", 2) ]]></Slot>
+						</OutMessageEventExpr>
+						<OutMessageEventExpr messageType="TellTarget" receiverIdRefs="4">
+							<Slot property="thiefX"><![CDATA[ chief.getBlockPos(m.getThiefX(), m.getThiefY(), "X", 3) ]]></Slot>
+							<Slot property="thiefY"><![CDATA[ chief.getBlockPos(m.getThiefX(), m.getThiefY(), "Y", 3) ]]></Slot>
+						</OutMessageEventExpr>
+						<OutMessageEventExpr messageType="TellTarget" receiverIdRefs="5">
+							<Slot property="thiefX"><![CDATA[ chief.getBlockPos(m.getThiefX(), m.getThiefY(), "X", 4) ]]></Slot>
+							<Slot property="thiefY"><![CDATA[ chief.getBlockPos(m.getThiefX(), m.getThiefY(), "Y", 4) ]]></Slot>
+						</OutMessageEventExpr>
+					</SCHEDULE-EVT>
+				</AgentRule>
+			</PhysicalAgentType>
+			
+			<!-- Traffic -->
+			<PhysicalAgentType name="Traffic" superType="Car">
+				<EnumerationProperty name="currentState" type="TrafficState"/>
+				
+				<AgentRule name="ChangeStateRule" agentVariable="traffic">
+					<WHEN eventType="PrepareToAct"/>
+					<SCHEDULE-EVT>
+						
+					</SCHEDULE-EVT>
+				</AgentRule>
+			</PhysicalAgentType>
+			
+			<!-- Bank -->
+			<PhysicalObjectType name="Bank" />
+			
+			<!-- Hideout -->
+			<PhysicalObjectType name="Hideout" />
+		</EntityTypes>
+
+		<EnvironmentRules>
+			<EnvironmentRule name="CarNextSimulationStepRule">
+				<ON-EACH-SIMULATION-STEP/>
+				<FOR objectVariable="car" objectType="Car"/>
+				<SCHEDULE-EVT>
+					<PerceptionEventExpr eventType="PrepareToAct">
+						<PerceiverIdRef language="Java"><![CDATA[ car.getId() ]]></PerceiverIdRef>
+					</PerceptionEventExpr>
+				</SCHEDULE-EVT>
+			</EnvironmentRule>
+			
+			<EnvironmentRule name="ThiefActRule">
+				<WHEN eventType="ThiefAct" eventVariable="e"/>
+				<FOR objectVariable="thief" objectType="Thief">
+					<ObjectRef language="Java"><![CDATA[ e.getActor() ]]></ObjectRef>
+				</FOR>
+				<IF language="Java"><![CDATA[ thief.getCurrentState() == ThiefState.CHASE ]]></IF>
+				<THEN>
+					<SCHEDULE-EVT>
+						<PerceptionEventExpr eventType="PrepareToLearningMove">
+							<PerceiverIdRef language="Java"><![CDATA[ thief.getId() ]]></PerceiverIdRef>
+						</PerceptionEventExpr>
+					</SCHEDULE-EVT>
+				</THEN>
+				<ELSE>
+					<SCHEDULE-EVT>
+						<PerceptionEventExpr eventType="PrepareToDestinationMove">
+							<PerceiverIdRef language="Java"><![CDATA[ thief.getId() ]]></PerceiverIdRef>
+						</PerceptionEventExpr>
+					</SCHEDULE-EVT>
+				</ELSE>
+			</EnvironmentRule>
+			
+			<EnvironmentRule name="PoliceActRule">
+				<WHEN eventType="PoliceAct" eventVariable="e"/>
+				<FOR objectVariable="police" objectType="Police">
+					<ObjectRef language="Java"><![CDATA[ e.getActor() ]]></ObjectRef>
+				</FOR>
+				<IF language="Java"><![CDATA[ police.getCurrentState() == PoliceState.PATROL ]]></IF>
+				<THEN>
+					<SCHEDULE-EVT>
+						<PerceptionEventExpr eventType="PrepareToRandomMove">
+							<PerceiverIdRef language="Java"><![CDATA[ police.getId() ]]></PerceiverIdRef>
+						</PerceptionEventExpr>
+					</SCHEDULE-EVT>
+				</THEN>
+				<ELSE>
+					<SCHEDULE-EVT>
+						<PerceptionEventExpr eventType="PrepareToDestinationMove">
+							<PerceiverIdRef language="Java"><![CDATA[ police.getId() ]]></PerceiverIdRef>
+						</PerceptionEventExpr>
+					</SCHEDULE-EVT>					
+				</ELSE>
+			</EnvironmentRule>
+			
+			<EnvironmentRule name="MoveRule">
+				<WHEN eventType="Move" eventVariable="e"/>
+				<FOR objectVariable="car" objectType="Car">
+					<ObjectRef language="Java"><![CDATA[ e.getActor() ]]></ObjectRef>
+				</FOR>
+				<!--<IF language="Java"><![CDATA[ car.getId() == 1 && (int)Simulator.spaceModel.getGridCell((int)car.getX() + (int)car.getOffsetX(), (int)car.getY() + (int)car.getOffsetY()).getCarID() != 0 ]]></IF>-->
+				<UPDATE-ENV>
+					<UpdateGridCell>
+						<XCoordinate language="Java"><![CDATA[ (int)car.getX() ]]></XCoordinate>
+						<YCoordinate language="Java"><![CDATA[ (int)car.getY() ]]></YCoordinate>
+						<Slot property="carID" value="0"/>
+					</UpdateGridCell>
+					<UpdateObject objectVariable="car">
+						<Slot property="x"><![CDATA[ (int)car.getX() + car.getOffsetX() ]]></Slot>
+						<Slot property="y"><![CDATA[ (int)car.getY() + car.getOffsetY() ]]></Slot>
+					</UpdateObject>
+					<UpdateGridCell>
+						<XCoordinate language="Java"><![CDATA[ (int)car.getX() ]]></XCoordinate>
+						<YCoordinate language="Java"><![CDATA[ (int)car.getY() ]]></YCoordinate>
+						<Slot property="carID"><![CDATA[ car.getId() ]]></Slot>
+					</UpdateGridCell>
+				</UPDATE-ENV>
+			</EnvironmentRule>
+			
+			<EnvironmentRule name="ThiefWinRule">
+				<WHEN eventType="ThiefWin" eventVariable="e"/>
+				<UPDATE-ENV>
+					<DestroyObject objectType="Thief" />
+				</UPDATE-ENV>
+			</EnvironmentRule>
+		</EnvironmentRules>
+		
+	</SimulationModel>
+	
+	<InitialState>
+		<PhysicalAgent type="Thief" id="1" x="12" y="21">
+			<Slot property="direction"  value="Direction4.S"/>
+			<Slot property="comingFrom" value="Direction4.N"/>
+			<Slot property="currentState" value="ThiefState.BANK"/>
+			<Slot property="destinationX" value="14"/>
+			<Slot property="destinationY" value="15"/>
+			<Slot property="observeRange" value="3"/>
+			<Slot property="robbTime"     value="0"/>
+			<Slot property="speed" value="0.2"/>
+			<Slot property="progressInCell" value="0"/>
+		</PhysicalAgent>
+		<PhysicalAgent type="Chief" id="2" x="6" y="24">
+			<Slot property="direction" value="Direction4.S"/>
+			<Slot property="comingFrom" value="Direction4.N"/>
+			<Slot property="currentState" value="ThiefState.BANK"/>
+			<Slot property="observeRange" value="3"/>
+			<Slot property="speed" value="0.2"/>
+			<Slot property="progressInCell" value="0"/>
+		</PhysicalAgent>		
+		<PhysicalAgent type="Police" id="3" x="24" y="24">
+			<Slot property="direction" value="Direction4.E"/>
+			<Slot property="comingFrom" value="Direction4.W"/>
+			<Slot property="currentState" value="PoliceState.PATROL"/>
+			<Slot property="observeRange" value="3"/>
+			<Slot property="speed" value="0.2"/>
+			<Slot property="progressInCell" value="0"/>
+		</PhysicalAgent>		
+		<PhysicalAgent type="Police" id="4" x="12" y="6">
+		    <Slot property="direction" value="Direction4.E"/>
+			<Slot property="comingFrom" value="Direction4.W"/>
+			<Slot property="currentState" value="PoliceState.PATROL"/>
+			<Slot property="observeRange" value="5"/>
+			<Slot property="speed" value="0.5"/>
+			<Slot property="progressInCell" value="5"/>
+		</PhysicalAgent>		
+		<PhysicalAgent type="Police" id="5" x="24" y="6">
+			<Slot property="direction" value="Direction4.S"/>
+			<Slot property="comingFrom" value="Direction4.N"/>
+			<Slot property="currentState" value="PoliceState.PATROL"/>
+			<Slot property="observeRange" value="8"/>
+			<Slot property="speed" value="0.8"/>
+			<Slot property="progressInCell" value="8"/>
+		</PhysicalAgent>
+		
+		<PhysicalObject type="Bank" id="6" x="14" y="14"/>
+		<PhysicalObject type="Hideout" id="7" x="26" y="4"/>
+		
+		<GridCells>
+			<GridCellSet startX="1" endX="29" startY="1" endY="29">
+				<Slot property="cellType" value="0" />
+				<Slot property="carID" value="0" />
+			</GridCellSet>
+						
+			<GridCellSet startX="3" endX="27" startY="3" endY="3">
+				<Slot property="cellType" value="1" />
+			</GridCellSet>
+			<GridCellSet startX="3" endX="27" startY="6" endY="6">
+				<Slot property="cellType" value="1" />
+			</GridCellSet>
+			<GridCellSet startX="3" endX="27" startY="9" endY="9">
+				<Slot property="cellType" value="1" />
+			</GridCellSet>
+			<GridCellSet startX="3" endX="27" startY="12" endY="12">
+				<Slot property="cellType" value="1" />
+			</GridCellSet>
+			<GridCellSet startX="3" endX="27" startY="15" endY="15">
+				<Slot property="cellType" value="1" />
+			</GridCellSet>
+			<GridCellSet startX="3" endX="27" startY="18" endY="18">
+				<Slot property="cellType" value="1" />
+			</GridCellSet>
+			<GridCellSet startX="3" endX="27" startY="21" endY="21">
+				<Slot property="cellType" value="1" />
+			</GridCellSet>
+			<GridCellSet startX="3" endX="27" startY="24" endY="24">
+				<Slot property="cellType" value="1" />
+			</GridCellSet>
+			<GridCellSet startX="3" endX="27" startY="27" endY="27">
+				<Slot property="cellType" value="1" />
+			</GridCellSet>
+			<GridCellSet startX="3" endX="3" startY="3" endY="27">
+				<Slot property="cellType" value="1" />
+			</GridCellSet>
+			<GridCellSet startX="6" endX="6" startY="3" endY="27">
+				<Slot property="cellType" value="1" />
+			</GridCellSet>
+			<GridCellSet startX="9" endX="9" startY="3" endY="27">
+				<Slot property="cellType" value="1" />
+			</GridCellSet>
+			<GridCellSet startX="12" endX="12" startY="3" endY="27">
+				<Slot property="cellType" value="1" />
+			</GridCellSet>
+			<GridCellSet startX="15" endX="15" startY="3" endY="27">
+				<Slot property="cellType" value="1" />
+			</GridCellSet>
+			<GridCellSet startX="18" endX="18" startY="3" endY="27">
+				<Slot property="cellType" value="1" />
+			</GridCellSet>
+			<GridCellSet startX="21" endX="21" startY="3" endY="27">
+				<Slot property="cellType" value="1" />
+			</GridCellSet>
+			<GridCellSet startX="24" endX="24" startY="3" endY="27">
+				<Slot property="cellType" value="1" />
+			</GridCellSet>
+			<GridCellSet startX="27" endX="27" startY="3" endY="27">
+				<Slot property="cellType" value="1" />
+			</GridCellSet>
+			
+			<GridCell x="6" y="3">
+				<Slot property="cellType" value="2" />
+				<Slot property="crossingType" value="3" />
+			</GridCell>
+			<GridCell x="9" y="3">
+				<Slot property="cellType" value="2" />
+				<Slot property="crossingType" value="3" />
+			</GridCell>
+			<GridCell x="12" y="3">
+				<Slot property="cellType" value="2" />
+				<Slot property="crossingType" value="3" />
+			</GridCell>
+			<GridCell x="15" y="3">
+				<Slot property="cellType" value="2" />
+				<Slot property="crossingType" value="3" />
+			</GridCell>
+			<GridCell x="18" y="3">
+				<Slot property="cellType" value="2" />
+				<Slot property="crossingType" value="3" />
+			</GridCell>
+			<GridCell x="21" y="3">
+				<Slot property="cellType" value="2" />
+				<Slot property="crossingType" value="3" />
+			</GridCell>
+			<GridCell x="24" y="3">
+				<Slot property="cellType" value="2" />
+				<Slot property="crossingType" value="3" />
+			</GridCell>
+			
+			<GridCell x="3" y="6">
+				<Slot property="cellType" value="2" />
+				<Slot property="crossingType" value="2" />
+			</GridCell>
+			<GridCell x="6" y="6">
+				<Slot property="cellType" value="2" />
+				<Slot property="crossingType" value="1" />
+			</GridCell>
+			<GridCell x="9" y="6">
+				<Slot property="cellType" value="2" />
+				<Slot property="crossingType" value="1" />
+			</GridCell>
+			<GridCell x="12" y="6">
+				<Slot property="cellType" value="2" />
+				<Slot property="crossingType" value="1" />
+			</GridCell>
+			<GridCell x="15" y="6">
+				<Slot property="cellType" value="2" />
+				<Slot property="crossingType" value="1" />
+			</GridCell>
+			<GridCell x="18" y="6">
+				<Slot property="cellType" value="2" />
+				<Slot property="crossingType" value="1" />
+			</GridCell>
+			<GridCell x="21" y="6">
+				<Slot property="cellType" value="2" />
+				<Slot property="crossingType" value="1" />
+			</GridCell>
+			<GridCell x="24" y="6">
+				<Slot property="cellType" value="2" />
+				<Slot property="crossingType" value="1" />
+			</GridCell>
+			<GridCell x="27" y="6">
+				<Slot property="cellType" value="2" />
+				<Slot property="crossingType" value="4" />
+			</GridCell>
+			
+			<GridCell x="3" y="9">
+				<Slot property="cellType" value="2" />
+				<Slot property="crossingType" value="2" />
+			</GridCell>
+			<GridCell x="6" y="9">
+				<Slot property="cellType" value="2" />
+				<Slot property="crossingType" value="1" />
+			</GridCell>
+			<GridCell x="9" y="9">
+				<Slot property="cellType" value="2" />
+				<Slot property="crossingType" value="1" />
+			</GridCell>
+			<GridCell x="12" y="9">
+				<Slot property="cellType" value="2" />
+				<Slot property="crossingType" value="1" />
+			</GridCell>
+			<GridCell x="15" y="9">
+				<Slot property="cellType" value="2" />
+				<Slot property="crossingType" value="1" />
+			</GridCell>
+			<GridCell x="18" y="9">
+				<Slot property="cellType" value="2" />
+				<Slot property="crossingType" value="1" />
+			</GridCell>
+			<GridCell x="21" y="9">
+				<Slot property="cellType" value="2" />
+				<Slot property="crossingType" value="1" />
+			</GridCell>
+			<GridCell x="24" y="9">
+				<Slot property="cellType" value="2" />
+				<Slot property="crossingType" value="1" />
+			</GridCell>
+			<GridCell x="27" y="9">
+				<Slot property="cellType" value="2" />
+				<Slot property="crossingType" value="4" />
+			</GridCell>
+			
+			<GridCell x="3" y="12">
+				<Slot property="cellType" value="2" />
+				<Slot property="crossingType" value="2" />
+			</GridCell>
+			<GridCell x="6" y="12">
+				<Slot property="cellType" value="2" />
+				<Slot property="crossingType" value="1" />
+			</GridCell>
+			<GridCell x="9" y="12">
+				<Slot property="cellType" value="2" />
+				<Slot property="crossingType" value="1" />
+			</GridCell>
+			<GridCell x="12" y="12">
+				<Slot property="cellType" value="2" />
+				<Slot property="crossingType" value="1" />
+			</GridCell>
+			<GridCell x="15" y="12">
+				<Slot property="cellType" value="2" />
+				<Slot property="crossingType" value="1" />
+			</GridCell>
+			<GridCell x="18" y="12">
+				<Slot property="cellType" value="2" />
+				<Slot property="crossingType" value="1" />
+			</GridCell>
+			<GridCell x="21" y="12">
+				<Slot property="cellType" value="2" />
+				<Slot property="crossingType" value="1" />
+			</GridCell>
+			<GridCell x="24" y="12">
+				<Slot property="cellType" value="2" />
+				<Slot property="crossingType" value="1" />
+			</GridCell>
+			<GridCell x="27" y="12">
+				<Slot property="cellType" value="2" />
+				<Slot property="crossingType" value="4" />
+			</GridCell>
+			
+			<GridCell x="3" y="15">
+				<Slot property="cellType" value="2" />
+				<Slot property="crossingType" value="2" />
+			</GridCell>
+			<GridCell x="6" y="15">
+				<Slot property="cellType" value="2" />
+				<Slot property="crossingType" value="1" />
+			</GridCell>
+			<GridCell x="9" y="15">
+				<Slot property="cellType" value="2" />
+				<Slot property="crossingType" value="1" />
+			</GridCell>
+			<GridCell x="12" y="15">
+				<Slot property="cellType" value="2" />
+				<Slot property="crossingType" value="1" />
+			</GridCell>
+			<GridCell x="15" y="15">
+				<Slot property="cellType" value="2" />
+				<Slot property="crossingType" value="1" />
+			</GridCell>
+			<GridCell x="18" y="15">
+				<Slot property="cellType" value="2" />
+				<Slot property="crossingType" value="1" />
+			</GridCell>
+			<GridCell x="21" y="15">
+				<Slot property="cellType" value="2" />
+				<Slot property="crossingType" value="1" />
+			</GridCell>
+			<GridCell x="24" y="15">
+				<Slot property="cellType" value="2" />
+				<Slot property="crossingType" value="1" />
+			</GridCell>
+			<GridCell x="27" y="15">
+				<Slot property="cellType" value="2" />
+				<Slot property="crossingType" value="4" />
+			</GridCell>
+			
+			<GridCell x="3" y="18">
+				<Slot property="cellType" value="2" />
+				<Slot property="crossingType" value="2" />
+			</GridCell>
+			<GridCell x="6" y="18">
+				<Slot property="cellType" value="2" />
+				<Slot property="crossingType" value="1" />
+			</GridCell>
+			<GridCell x="9" y="18">
+				<Slot property="cellType" value="2" />
+				<Slot property="crossingType" value="1" />
+			</GridCell>
+			<GridCell x="12" y="18">
+				<Slot property="cellType" value="2" />
+				<Slot property="crossingType" value="1" />
+			</GridCell>
+			<GridCell x="15" y="18">
+				<Slot property="cellType" value="2" />
+				<Slot property="crossingType" value="1" />
+			</GridCell>
+			<GridCell x="18" y="18">
+				<Slot property="cellType" value="2" />
+				<Slot property="crossingType" value="1" />
+			</GridCell>
+			<GridCell x="21" y="18">
+				<Slot property="cellType" value="2" />
+				<Slot property="crossingType" value="1" />
+			</GridCell>
+			<GridCell x="24" y="18">
+				<Slot property="cellType" value="2" />
+				<Slot property="crossingType" value="1" />
+			</GridCell>
+			<GridCell x="27" y="18">
+				<Slot property="cellType" value="2" />
+				<Slot property="crossingType" value="4" />
+			</GridCell>
+			
+			<GridCell x="3" y="21">
+				<Slot property="cellType" value="2" />
+				<Slot property="crossingType" value="2" />
+			</GridCell>
+			<GridCell x="6" y="21">
+				<Slot property="cellType" value="2" />
+				<Slot property="crossingType" value="1" />
+			</GridCell>
+			<GridCell x="9" y="21">
+				<Slot property="cellType" value="2" />
+				<Slot property="crossingType" value="1" />
+			</GridCell>
+			<GridCell x="12" y="21">
+				<Slot property="cellType" value="2" />
+				<Slot property="crossingType" value="1" />
+			</GridCell>
+			<GridCell x="15" y="21">
+				<Slot property="cellType" value="2" />
+				<Slot property="crossingType" value="1" />
+			</GridCell>
+			<GridCell x="18" y="21">
+				<Slot property="cellType" value="2" />
+				<Slot property="crossingType" value="1" />
+			</GridCell>
+			<GridCell x="21" y="21">
+				<Slot property="cellType" value="2" />
+				<Slot property="crossingType" value="1" />
+			</GridCell>
+			<GridCell x="24" y="21">
+				<Slot property="cellType" value="2" />
+				<Slot property="crossingType" value="1" />
+			</GridCell>
+			<GridCell x="27" y="21">
+				<Slot property="cellType" value="2" />
+				<Slot property="crossingType" value="4" />
+			</GridCell>
+			
+			<GridCell x="3" y="24">
+				<Slot property="cellType" value="2" />
+				<Slot property="crossingType" value="2" />
+			</GridCell>
+			<GridCell x="6" y="24">
+				<Slot property="cellType" value="2" />
+				<Slot property="crossingType" value="1" />
+			</GridCell>
+			<GridCell x="9" y="24">
+				<Slot property="cellType" value="2" />
+				<Slot property="crossingType" value="1" />
+			</GridCell>
+			<GridCell x="12" y="24">
+				<Slot property="cellType" value="2" />
+				<Slot property="crossingType" value="1" />
+			</GridCell>
+			<GridCell x="15" y="24">
+				<Slot property="cellType" value="2" />
+				<Slot property="crossingType" value="1" />
+			</GridCell>
+			<GridCell x="18" y="24">
+				<Slot property="cellType" value="2" />
+				<Slot property="crossingType" value="1" />
+			</GridCell>
+			<GridCell x="21" y="24">
+				<Slot property="cellType" value="2" />
+				<Slot property="crossingType" value="1" />
+			</GridCell>
+			<GridCell x="24" y="24">
+				<Slot property="cellType" value="2" />
+				<Slot property="crossingType" value="1" />
+			</GridCell>
+			<GridCell x="27" y="24">
+				<Slot property="cellType" value="2" />
+				<Slot property="crossingType" value="4" />
+			</GridCell>
+			
+			<GridCell x="6" y="27">
+				<Slot property="cellType" value="2" />
+				<Slot property="crossingType" value="5" />
+			</GridCell>
+			<GridCell x="9" y="27">
+				<Slot property="cellType" value="2" />
+				<Slot property="crossingType" value="5" />
+			</GridCell>
+			<GridCell x="12" y="27">
+				<Slot property="cellType" value="2" />
+				<Slot property="crossingType" value="5" />
+			</GridCell>
+			<GridCell x="15" y="27">
+				<Slot property="cellType" value="2" />
+				<Slot property="crossingType" value="5" />
+			</GridCell>
+			<GridCell x="18" y="27">
+				<Slot property="cellType" value="2" />
+				<Slot property="crossingType" value="5" />
+			</GridCell>
+			<GridCell x="21" y="27">
+				<Slot property="cellType" value="2" />
+				<Slot property="crossingType" value="5" />
+			</GridCell>
+			<GridCell x="24" y="27">
+				<Slot property="cellType" value="2" />
+				<Slot property="crossingType" value="5" />
+			</GridCell>			
+		</GridCells>
+	</InitialState>
+	 
+	<Views>
+		<SpaceView>
+			<Grid>
+				<VisualizationMap cellViewProperty="fill" cellProperty="cellType" caseWise="true" v0="black" a0="1" v1="white" a1="2" v2="rgb(200,200,200)"/>
+			</Grid>
+		</SpaceView>
+		
+		<View physicalObjectType="Thief" shape2D="square">
+			<ShapeSlot shapeProperty="fill" value="red"/>
+			<ShapeSlot shapeProperty="width" value="5"/>
+			<ShapeSlot shapeProperty="height" value="5"/>
+		</View>
+		<View physicalObjectType="Police" shape2D="square">
+			<ShapeSlot shapeProperty="fill" value="blue"/>
+			<ShapeSlot shapeProperty="width" value="5"/>
+			<ShapeSlot shapeProperty="height" value="5"/>
+		</View>
+		<View physicalObjectType="Chief" shape2D="square">
+			<ShapeSlot shapeProperty="fill" value="blue"/>
+			<ShapeSlot shapeProperty="width" value="5"/>
+			<ShapeSlot shapeProperty="height" value="5"/>
+		</View>
+		
+		<View physicalObjectType="Bank" shape2D="square">
+			<ShapeSlot shapeProperty="fill" value="green"/>
+		</View>
+		<View physicalObjectType="Hideout" shape2D="square">
+			<ShapeSlot shapeProperty="fill" value="yellow"/>
+		</View>
+	</Views>
+	
+	
+	<UserInterface>
+	    <InitialStateUI>
+	        
+	        <AgentUI agentType="Thief">
+	               
+	            <PropertyUI property="x">
+                    <Label>
+                        <Text xml:lang="en">X-EN</Text>
+                        <Text xml:lang="de">X-DE</Text>
+                    </Label>
+                    <Hint>
+                        <Text xml:lang="en">X-EN</Text>
+                        <Text xml:lang="de">X-DE</Text>
+                    </Hint>
+                </PropertyUI>
+                
+                <PropertyUI property="y">
+                    <Label>
+                        <Text xml:lang="en">Y-EN</Text>
+                        <Text xml:lang="de">Y-DE</Text>
+                    </Label>
+                    <Hint>
+                        <Text xml:lang="en">Y-EN</Text>
+                        <Text xml:lang="de">Y-DE</Text>
+                    </Hint>
+                </PropertyUI>
+                
+                <PropertyUI property="direction">
+                    <Label>
+                        <Text xml:lang="en">direction-EN</Text>
+                        <Text xml:lang="de">direction-DE</Text>
+                    </Label>
+                    <Hint>
+                        <Text xml:lang="en">direction-EN</Text>
+                        <Text xml:lang="de">direction-DE</Text>
+                    </Hint>
+                </PropertyUI>
+                
+                <PropertyUI property="comingFrom">
+                    <Label>
+                        <Text xml:lang="en">comingFrom-EN</Text>
+                        <Text xml:lang="de">comingFrom-DE</Text>
+                    </Label>
+                    <Hint>
+                        <Text xml:lang="en">comingFrom-EN</Text>
+                        <Text xml:lang="de">comingFrom-DE</Text>
+                    </Hint>
+                </PropertyUI>
+                
+                <PropertyUI property="currentState">
+                    <Label>
+                        <Text xml:lang="en">currentState-EN</Text>
+                        <Text xml:lang="de">currentState-DE</Text>
+                    </Label>
+                    <Hint>
+                        <Text xml:lang="en">currentState-EN</Text>
+                        <Text xml:lang="de">currentState-DE</Text>
+                    </Hint>
+                </PropertyUI>
+                
+               <PropertyUI property="destinationX">
+                    <Label>
+                        <Text xml:lang="en">destinationX-EN</Text>
+                        <Text xml:lang="de">destinationX-DE</Text>
+                    </Label>
+                    <Hint>
+                        <Text xml:lang="en">destinationX-EN</Text>
+                        <Text xml:lang="de">destinationX-DE</Text>
+                    </Hint>
+                </PropertyUI>
+                
+                <PropertyUI property="destinationY">
+                    <Label>
+                        <Text xml:lang="en">destinationY-EN</Text>
+                        <Text xml:lang="de">destinationY-DE</Text>
+                    </Label>
+                    <Hint>
+                        <Text xml:lang="en">destinationY-EN</Text>
+                        <Text xml:lang="de">destinationY-DE</Text>
+                    </Hint>
+                </PropertyUI>
+                
+                <PropertyUI property="observeRange">
+                    <Label>
+                        <Text xml:lang="en">observeRange-EN</Text>
+                        <Text xml:lang="de">observeRange-DE</Text>
+                    </Label>
+                    <Hint>
+                        <Text xml:lang="en">observeRange-EN</Text>
+                        <Text xml:lang="de">observeRange-DE</Text>
+                    </Hint>
+                </PropertyUI>
+                
+                <PropertyUI property="robbTime">
+                    <Label>
+                        <Text xml:lang="en">robbTime-EN</Text>
+                        <Text xml:lang="de">robbTime-DE</Text>
+                    </Label>
+                    <Hint>
+                        <Text xml:lang="en">robbTime-EN</Text>
+                        <Text xml:lang="de">robbTime-DE</Text>
+                    </Hint>
+                </PropertyUI>
+                
+                 <PropertyUI property="speed">
+                    <Label>
+                        <Text xml:lang="en">speed-EN</Text>
+                        <Text xml:lang="de">speed-DE</Text>
+                    </Label>
+                    <Hint>
+                        <Text xml:lang="en">speed-EN</Text>
+                        <Text xml:lang="de">speed-DE</Text>
+                    </Hint>
+                </PropertyUI>
+                
+                <PropertyUI property="progressInCell">
+                    <Label>
+                        <Text xml:lang="en">progressInCell-EN</Text>
+                        <Text xml:lang="de">progressInCell-DE</Text>
+                    </Label>
+                    <Hint>
+                        <Text xml:lang="en">progressInCell-EN</Text>
+                        <Text xml:lang="de">progressInCell-DE</Text>
+                    </Hint>
+                </PropertyUI>
+                
+          </AgentUI>
+          
+          
+         <AgentUI agentType="Chief">
+	               
+	            <PropertyUI property="x">
+                    <Label>
+                        <Text xml:lang="en">X-EN</Text>
+                        <Text xml:lang="de">X-DE</Text>
+                    </Label>
+                    <Hint>
+                        <Text xml:lang="en">X-EN</Text>
+                        <Text xml:lang="de">X-DE</Text>
+                    </Hint>
+                </PropertyUI>
+                
+                <PropertyUI property="y">
+                    <Label>
+                        <Text xml:lang="en">Y-EN</Text>
+                        <Text xml:lang="de">Y-DE</Text>
+                    </Label>
+                    <Hint>
+                        <Text xml:lang="en">Y-EN</Text>
+                        <Text xml:lang="de">Y-DE</Text>
+                    </Hint>
+                </PropertyUI>
+                
+                <PropertyUI property="direction">
+                    <Label>
+                        <Text xml:lang="en">direction-EN</Text>
+                        <Text xml:lang="de">direction-DE</Text>
+                    </Label>
+                    <Hint>
+                        <Text xml:lang="en">direction-EN</Text>
+                        <Text xml:lang="de">direction-DE</Text>
+                    </Hint>
+                </PropertyUI>
+                
+                <PropertyUI property="comingFrom">
+                    <Label>
+                        <Text xml:lang="en">comingFrom-EN</Text>
+                        <Text xml:lang="de">comingFrom-DE</Text>
+                    </Label>
+                    <Hint>
+                        <Text xml:lang="en">comingFrom-EN</Text>
+                        <Text xml:lang="de">comingFrom-DE</Text>
+                    </Hint>
+                </PropertyUI>
+                
+                <PropertyUI property="currentState">
+                    <Label>
+                        <Text xml:lang="en">currentState-EN</Text>
+                        <Text xml:lang="de">currentState-DE</Text>
+                    </Label>
+                    <Hint>
+                        <Text xml:lang="en">currentState-EN</Text>
+                        <Text xml:lang="de">currentState-DE</Text>
+                    </Hint>
+                </PropertyUI>
+                
+               <PropertyUI property="observeRange">
+                    <Label>
+                        <Text xml:lang="en">observeRange-EN</Text>
+                        <Text xml:lang="de">observeRange-DE</Text>
+                    </Label>
+                    <Hint>
+                        <Text xml:lang="en">observeRange-EN</Text>
+                        <Text xml:lang="de">observeRange-DE</Text>
+                    </Hint>
+                </PropertyUI>
+                
+                
+                <PropertyUI property="speed">
+                    <Label>
+                        <Text xml:lang="en">speed-EN</Text>
+                        <Text xml:lang="de">speed-DE</Text>
+                    </Label>
+                    <Hint>
+                        <Text xml:lang="en">speed-EN</Text>
+                        <Text xml:lang="de">speed-DE</Text>
+                    </Hint>
+                </PropertyUI>
+                
+                <PropertyUI property="progressInCell">
+                    <Label>
+                        <Text xml:lang="en">progressInCell-EN</Text>
+                        <Text xml:lang="de">progressInCell-DE</Text>
+                    </Label>
+                    <Hint>
+                        <Text xml:lang="en">progressInCell-EN</Text>
+                        <Text xml:lang="de">progressInCell-DE</Text>
+                    </Hint>
+                </PropertyUI>
+                
+          </AgentUI>
+          
+          
+            <AgentUI agentType="Police">
+	               
+	            <PropertyUI property="x">
+                    <Label>
+                        <Text xml:lang="en">X-EN</Text>
+                        <Text xml:lang="de">X-DE</Text>
+                    </Label>
+                    <Hint>
+                        <Text xml:lang="en">X-EN</Text>
+                        <Text xml:lang="de">X-DE</Text>
+                    </Hint>
+                </PropertyUI>
+                
+                <PropertyUI property="y">
+                    <Label>
+                        <Text xml:lang="en">Y-EN</Text>
+                        <Text xml:lang="de">Y-DE</Text>
+                    </Label>
+                    <Hint>
+                        <Text xml:lang="en">Y-EN</Text>
+                        <Text xml:lang="de">Y-DE</Text>
+                    </Hint>
+                </PropertyUI>
+                
+                <PropertyUI property="direction">
+                    <Label>
+                        <Text xml:lang="en">direction-EN</Text>
+                        <Text xml:lang="de">direction-DE</Text>
+                    </Label>
+                    <Hint>
+                        <Text xml:lang="en">direction-EN</Text>
+                        <Text xml:lang="de">direction-DE</Text>
+                    </Hint>
+                </PropertyUI>
+                
+                <PropertyUI property="comingFrom">
+                    <Label>
+                        <Text xml:lang="en">comingFrom-EN</Text>
+                        <Text xml:lang="de">comingFrom-DE</Text>
+                    </Label>
+                    <Hint>
+                        <Text xml:lang="en">comingFrom-EN</Text>
+                        <Text xml:lang="de">comingFrom-DE</Text>
+                    </Hint>
+                </PropertyUI>
+                
+                <PropertyUI property="currentState">
+                    <Label>
+                        <Text xml:lang="en">currentState-EN</Text>
+                        <Text xml:lang="de">currentState-DE</Text>
+                    </Label>
+                    <Hint>
+                        <Text xml:lang="en">currentState-EN</Text>
+                        <Text xml:lang="de">currentState-DE</Text>
+                    </Hint>
+                </PropertyUI>
+                
+               <PropertyUI property="observeRange">
+                    <Label>
+                        <Text xml:lang="en">observeRange-EN</Text>
+                        <Text xml:lang="de">observeRange-DE</Text>
+                    </Label>
+                    <Hint>
+                        <Text xml:lang="en">observeRange-EN</Text>
+                        <Text xml:lang="de">observeRange-DE</Text>
+                    </Hint>
+                </PropertyUI>
+                
+                
+                <PropertyUI property="speed">
+                    <Label>
+                        <Text xml:lang="en">speed-EN</Text>
+                        <Text xml:lang="de">speed-DE</Text>
+                    </Label>
+                    <Hint>
+                        <Text xml:lang="en">speed-EN</Text>
+                        <Text xml:lang="de">speed-DE</Text>
+                    </Hint>
+                </PropertyUI>
+                
+                <PropertyUI property="progressInCell">
+                    <Label>
+                        <Text xml:lang="en">progressInCell-EN</Text>
+                        <Text xml:lang="de">progressInCell-DE</Text>
+                    </Label>
+                    <Hint>
+                        <Text xml:lang="en">progressInCell-EN</Text>
+                        <Text xml:lang="de">progressInCell-DE</Text>
+                    </Hint>
+                </PropertyUI>
+                
+          </AgentUI>
+          
+          <ObjectUI  objectType="Bank">
+          
+                  <PropertyUI property="x">
+                    <Label>
+                        <Text xml:lang="en">X-EN</Text>
+                        <Text xml:lang="de">X-DE</Text>
+                    </Label>
+                    <Hint>
+                        <Text xml:lang="en">X-EN</Text>
+                        <Text xml:lang="de">X-DE</Text>
+                    </Hint>
+                </PropertyUI>
+                
+                <PropertyUI property="y">
+                    <Label>
+                        <Text xml:lang="en">Y-EN</Text>
+                        <Text xml:lang="de">Y-DE</Text>
+                    </Label>
+                    <Hint>
+                        <Text xml:lang="en">Y-EN</Text>
+                        <Text xml:lang="de">Y-DE</Text>
+                    </Hint>
+                </PropertyUI>
+                       
+          </ObjectUI>
+          
+          
+           <ObjectUI  objectType="Hideout">
+          
+                  <PropertyUI property="x">
+                    <Label>
+                        <Text xml:lang="en">X-EN</Text>
+                        <Text xml:lang="de">X-DE</Text>
+                    </Label>
+                    <Hint>
+                        <Text xml:lang="en">X-EN</Text>
+                        <Text xml:lang="de">X-DE</Text>
+                    </Hint>
+                </PropertyUI>
+                
+                <PropertyUI property="y">
+                    <Label>
+                        <Text xml:lang="en">Y-EN</Text>
+                        <Text xml:lang="de">Y-DE</Text>
+                    </Label>
+                    <Hint>
+                        <Text xml:lang="en">Y-EN</Text>
+                        <Text xml:lang="de">Y-DE</Text>
+                    </Hint>
+                </PropertyUI>
+                      
+          </ObjectUI>
+          
+      </InitialStateUI>
+	
+	
+	</UserInterface>
+	
+</SimulationScenario>

@@ -1,0 +1,317 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<?xml-stylesheet type="text/xsl" href="prettyprint.xsl"?>
+<SimulationScenario 
+    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+    xsi:schemaLocation="http://aor-simulation.org ../../../AORSL/ERSL/ERSL_0-9.xsd"
+    xmlns="http://aor-simulation.org"
+    xmlns:aors="http://aor-simulation.org"
+    xmlns:dc="http://purl.org/dc/elements/1.1/"
+    version="0.9"
+    scenarioName="GameOfLife">
+    
+	<SimulationParameters simulationSteps="10000" stepDuration="100" timeUnit="ms" stepTimeDelay="100"/>
+    
+	<SimulationModel modelName="GameOfLife" modelTitle="GameOfLife">
+		<documentation>
+			<dc:creator>Sebastian Mucha</dc:creator>
+			<dc:created>20100511</dc:created>
+			<dc:modified>20100716</dc:modified>
+			<dc:contributor>Gerd Wagner</dc:contributor>
+			<description xmlns:h="http://www.w3.org/1999/xhtml">
+				A model of the classical <h:em>Game of Life</h:em> introduced by John Horton Conway. The space consists of a grid of cells,
+				which can be dead or alive.	The model proceeds in steps. At each step, the new status of a cell is computed based on the status of its neighbors 
+				with the following four rules:
+				<h:ol>
+					<h:li>A dead cell with exactly three living neighbors will become alive.</h:li>
+					<h:li>A living cell with fewer than two living neighbors will die (from loneliness).</h:li>
+					<h:li>A living cell with two or three living neighbors will stay alive.</h:li>
+					<h:li>A living cell with more than three living neighbors will die (from over-crowdedness).</h:li>
+				</h:ol></description>
+		</documentation>
+		<!-- =============================== -->
+		<SpaceModel geometry="Euclidean">
+		<!-- =============================== -->
+			<TwoDimensionalGrid xMax="50" yMax="50">
+				<GridCellProperty name="alive" type="Boolean"/>
+				<!-- The cell status for the next step: -1 = dead, 1 = alive, 0 = unknown -->
+				<GridCellProperty type="Integer" name="nextStatus" minValue="-1" maxValue="1"/>
+				<!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->				
+				<GridCellFunction name="numberOfLivingNeighbors" resultType="Integer">
+				<!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->				
+					<documentation><description>Determines the number of living neighbors of a cell.	</description></documentation>
+					<Body language="Java"><![CDATA[
+int count = 0;
+int posX = (int) this.getPosX();
+int posY = (int) this.getPosY();
+int xMax = (int) Simulator.spaceModel.getXMax();
+int yMax = (int) Simulator.spaceModel.getYMax();
+for (int x = posX-1; x <= posX+1; x++)
+	for (int y = posY-1; y <= posY+1; y++)
+		if (x >= 1 && x <= xMax && y >= 1 && y <= yMax 
+				&& !(x == posX && y == posY)) {
+			if (Simulator.spaceModel.getGridCell(x,y).isAlive()) count++;
+		}
+return count; 
+					]]></Body>
+					<Body language="JavaScript"><![CDATA[                    
+int count = 0;
+int posX = this.getPosX();
+int posY = this.getPosY();
+var xMax = gameoflife.controller.Simulator.spaceModel.getXMax();
+var yMax = gameoflife.controller.Simulator.spaceModel.getYMax();
+	for (var x = posX-1; x <= posX+1; x++)
+		for (var y = posY-1; y <= posY+1; y++)
+			if (x >= 1 && x <= xMax && y >= 1 && y <= yMax 
+					&& !(x == posX && y == posY)) {
+				if (gameoflife.controller.Simulator.spaceModel.getGridCell(x,y).isAlive()) count++;
+			}
+return count;
+					]]></Body>
+				</GridCellFunction>
+				<!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->				
+				<GridCellFunction name="newCellStatus" resultType="Integer">
+				<!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->				
+					<documentation><description xmlns:h="http://www.w3.org/1999/xhtml">Computes the new status of a cell based on the status of its neighbors with the following four rules:
+					<h:ol>
+						<h:li>A dead cell with exactly three living neighbors will become alive.</h:li>
+						<h:li>A living cell with two or three living neighbors will stay alive.</h:li>
+						<h:li>A living cell with fewer than two living neighbors will die (from loneliness).</h:li>
+						<h:li>A living cell with more than three living neighbors will die (from over-crowdedness).</h:li>
+					</h:ol>
+					</description></documentation>
+					<Body language="Java"><![CDATA[
+long count = this.numberOfLivingNeighbors();
+if (!this.isAlive()) {
+	if (count == 3) return 1; 
+  else return 0;
+  }
+else {
+	if (count == 2 || count == 3) return 1;
+  else return 0;
+  }
+					]]></Body>
+					<Body language="JavaScript"><![CDATA[
+var count = this.numberOfLivingNeighbors();
+if (!this.isAlive()) {
+	if (count == 3) return 1; 
+  else return 0;
+  }
+else {
+	if (count == 2 || count == 3) return 1;
+  else return 0;
+  }
+					]]></Body>
+				</GridCellFunction>				
+			</TwoDimensionalGrid>
+		</SpaceModel>
+
+		<Globals>
+			<GlobalVariable name="listOfLivingCells" refDataType="SpaceModel.SimGridCell" upperMultiplicity="unbounded"/>
+		</Globals>
+
+		<EnvironmentRules>
+			<!-- =================================================================== -->
+			<EnvironmentRule name="ComputeNextGeneration_EnvRule">
+			<!-- =================================================================== -->
+				<ON-EACH-SIMULATION-STEP/>
+				<!-- Funktioniert die Variablendeklarationen so ohne Wertzuweisung? -->
+				<FOR-ListItemVariable variable="nc" listItemType="SpaceModel.SimGridCell"/>
+				<FOR-ListVariable variable="newList" listItemType="SpaceModel.SimGridCell"/>
+				<DO>
+					<UPDATE-ENV>
+						<ForEachGridCell gridCellVariable="gc" selectionList="Global.listOfLivingCells">							
+							<Code language="Java"><![CDATA[
+// reset nextStatus to unknown for all cells in the neighborhood
+System.out.println("reset nextStatus");
+int posX = (int) gc.getPosX();
+int posY = (int) gc.getPosY();
+int xMax = (int) Simulator.spaceModel.getXMax();
+int yMax = (int) Simulator.spaceModel.getYMax();
+for (int x = posX-1; x <= posX+1; x++)
+	for (int y = posY-1; y <= posY+1; y++)
+		if (x >= 1 && x <= xMax && y >= 1 && y <= yMax ) {
+			Simulator.spaceModel.getGridCell(x,y).setNextStatus(0);
+		}
+							]]></Code>
+							<Code language="JavaScript"><![CDATA[
+var posX = gc.getPosX();
+var posY = gc.getPosY();
+var xMax = gameoflife.controller.Simulator.spaceModel.getXMax();
+var yMax = gameoflife.controller.Simulator.spaceModel.getYMax();
+for (var x = posX-1; x <= posX+1; x++)
+	for (var y = posY-1; y <= posY+1; y++)
+		if (x >= 1 && x <= xMax && y >= 1 && y <= yMax ) {
+			gc.setNextStatus(0);
+		}
+							]]></Code>			
+						</ForEachGridCell>
+
+						<ForEachGridCell gridCellVariable="gc" selectionList="Global.listOfLivingCells">
+							<Code language="Java"><![CDATA[
+// compute nextStatus avoiding repeated computations
+System.out.println("compute nextStatus");
+int posX = (int) gc.getPosX();
+int posY = (int) gc.getPosY();
+int xMax = (int) Simulator.spaceModel.getXMax();
+int yMax = (int) Simulator.spaceModel.getYMax();
+for (int x = posX-1; x <= posX+1; x++)
+	for (int y = posY-1; y <= posY+1; y++)
+		if (x >= 1 && x <= xMax && y >= 1 && y <= yMax ) {
+			nc = Simulator.spaceModel.getGridCell(x,y);
+			if (nc.getNextStatus() == 0) nc.setNextStatus( nc.newCellStatus());
+		}
+							]]></Code>			
+							<Code language="JavaScript"><![CDATA[
+// compute nextStatus avoiding repeated computations
+var posX = gc.getPosX();
+var posY = gc.getPosY();
+var xMax = gameoflife.controller.Simulator.spaceModel.getXMax();
+var yMax = gameoflife.controller.Simulator.spaceModel.getYMax();
+var nc;
+for (var x = posX-1; x <= posX+1; x++)
+	for (var y = posY-1; y <= posY+1; y++)
+		if (x >= 1 && x <= xMax && y >= 1 && y <= yMax ) {
+			nc = gameoflife.controller.Simulator.spaceModel.getGridCell(x,y);
+			if (nc.getNextStatus() == 0) nc.setNextStatus( nc.newCellStatus());
+		}
+								]]></Code>			
+							</ForEachGridCell>
+
+						<ForEachGridCell gridCellVariable="gc" selectionList="Global.listOfLivingCells">
+							<Code language="Java"><![CDATA[
+// assign new alive values from nextStatus and build the new list of living cells
+System.out.println("assign new alive values");
+int posX = (int) gc.getPosX();
+int posY = (int) gc.getPosY();
+int xMax = (int) Simulator.spaceModel.getXMax();
+int yMax = (int) Simulator.spaceModel.getYMax();
+for (int x = posX-1; x <= posX+1; x++)
+	for (int y = posY-1; y <= posY+1; y++)
+		if (x >= 1 && x <= xMax && y >= 1 && y <= yMax ) {
+			nc = Simulator.spaceModel.getGridCell(x,y);
+			if (nc.getNextStatus() == 1) {
+				nc.setAlive(true);
+				newList.add( nc);
+			}
+			else nc.setAlive(false);
+		}
+							]]></Code>
+						</ForEachGridCell>						
+						<UpdateGlobalVariable name="listOfLivingCells"><!-- clear() and addAll( newList) -->
+							<ValueExpr language="Java">newList</ValueExpr>
+						</UpdateGlobalVariable>
+					</UPDATE-ENV>
+				</DO>
+			</EnvironmentRule>
+		</EnvironmentRules>		
+	</SimulationModel>
+	
+	<InitialState>        
+		<GridCells>
+			<!-- Glidergun -->
+			<GridCellSet startX="1" endX="50" startY="1" endY="50">
+				<Slot property="alive" value="false"/>
+			</GridCellSet>
+			
+			<GridCellSet startX="2" endX="3" startY="44" endY="45">
+				<Slot property="alive" value="true"/>
+			</GridCellSet>
+			
+			<GridCellSet startX="12" endX="12" startY="43" endY="45">
+				<Slot property="alive" value="true"/>
+			</GridCellSet>
+			
+			<GridCell x="13" y="46">
+				<Slot property="alive" value="true"/>
+			</GridCell>
+			
+			<GridCell x="13" y="42">
+				<Slot property="alive" value="true"/>
+			</GridCell>
+			
+			<GridCellSet startX="14" endX="15" startY="47" endY="47">
+				<Slot property="alive" value="true"/>
+			</GridCellSet>
+			
+			<GridCellSet startX="14" endX="15" startY="41" endY="41">
+				<Slot property="alive" value="true"/>
+			</GridCellSet>
+			
+			<GridCell x="16" y="44">
+				<Slot property="alive" value="true"/>
+			</GridCell>
+			
+			<GridCell x="17" y="46">
+				<Slot property="alive" value="true"/>
+			</GridCell>
+			
+			<GridCell x="17" y="42">
+				<Slot property="alive" value="true"/>
+			</GridCell>
+			
+			<GridCellSet startX="18" endX="18" startY="43" endY="45">
+				<Slot property="alive" value="true"/>
+			</GridCellSet>
+			
+			<GridCell x="19" y="44">
+				<Slot property="alive" value="true"/>
+			</GridCell>
+			
+			<GridCellSet startX="22" endX="23" startY="45" endY="47">
+				<Slot property="alive" value="true"/>
+			</GridCellSet>
+			
+			<GridCell x="24" y="44">
+				<Slot property="alive" value="true"/>
+			</GridCell>
+			
+			<GridCell x="24" y="48">
+				<Slot property="alive" value="true"/>
+			</GridCell>
+			
+			<GridCellSet startX="26" endX="26" startY="48" endY="49">
+				<Slot property="alive" value="true"/>
+			</GridCellSet>
+			
+			<GridCellSet startX="26" endX="26" startY="43" endY="44">
+				<Slot property="alive" value="true"/>
+			</GridCellSet>
+			
+			<GridCellSet startX="36" endX="37" startY="46" endY="47">
+				<Slot property="alive" value="true"/>
+			</GridCellSet>
+			
+			<!-- Randomly initialized board -->
+			<!--
+				<GridCellSet startX="1" endX="50" startY="1" endY="50">
+				<Slot property="status">
+				<RandomVariable>
+				<UniformInt lowerBound="0" upperBound="1"/>
+				</RandomVariable>
+				</Slot>
+				</GridCellSet>
+			-->
+		</GridCells>
+		<InitializationRule name="Ir1">
+			<ForEachGridCell gridCellVariable="gc">
+				<Selection copyToList="Global.listOfLivingCells">
+					<Condition language="Java"> gc.isAlive() </Condition>
+					<Condition language="JavaScript"> gc.isAlive() </Condition>
+				</Selection>
+			</ForEachGridCell>
+		</InitializationRule>
+	</InitialState>
+	
+	<UserInterface supportedLanguages="en">
+		<AnimationUI>
+			<Views>
+				<SpaceView canvasColor="darkgrey">
+					<TwoDimensionalGridSpaceView2D stroke="black" strokeWidth="1px">
+						<!--<GridCellPropertyVisualizationMap cellViewProperty="fill" property="alive" mapType="equalityCaseWise" a0="false" v0="white" a1="true" v1="red"/>-->
+						<GridCellPropertyVisualizationMap cellViewProperty="fill" property="nextStatus" mapType="equalityCaseWise" a0="-1" v0="black" a1="0" v1="white" a2="1" v2="red"/>
+					</TwoDimensionalGridSpaceView2D>
+				</SpaceView>
+			</Views>
+		</AnimationUI>       
+	</UserInterface>
+</SimulationScenario>

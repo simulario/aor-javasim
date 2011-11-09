@@ -1,0 +1,752 @@
+<?xml-stylesheet type="text/xsl" href="prettyprint.xsl"?>
+<SimulationScenario version="0.6" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+  xsi:schemaLocation="http://aor-simulation.org ../../../ext/aorsl/AORSL-0-7.xsd"
+  xmlns="http://aor-simulation.org" xmlns:aors="http://aor-simulation.org"
+  xmlns:dc="http://purl.org/dc/elements/1.1/" scenarioName="SocialBehavior"
+  scenarioTitle="Social Behavior"
+  simulationManagerDirectory="../../..">
+
+  <SimulationParameters simulationSteps="10000" stepTimeDelay="0"/>
+  <SimulationModel modelName="SocialBehavior" baseURI="http://aors.example.net/SB#">
+
+    <documentation>
+      <dc:creator>Mircea Diaconescu</dc:creator>
+      <dc:creator>Oana Nicolae</dc:creator>
+      <dc:description> Primitive society interaction. </dc:description>
+    </documentation>
+
+    <SpaceModel dimensions="2" geometry="Euclidean" discrete="true" xMax="50" yMax="50"
+    spatialDistanceUnit="m"/>
+    
+    <!-- Data types -->
+    <DataTypes>
+      <ComplexDataType name="Advance">
+        <Attribute type="Integer" name="x"/>
+        <Attribute type="Integer" name="y"/>
+      </ComplexDataType>
+    </DataTypes>
+
+    <EntityTypes>
+
+      <!-- message for asking about warehouses -->
+      <MessageType name="AskAboutWarehouse" superType="Ask"/>
+      
+      <!-- message for informing about known existing wild animals -->
+      <MessageType name="TellAboutWildAnimals" superType="Tell"/>
+      
+      <!-- message for informing about non existing or moved wild animals -->
+      <MessageType name="UntellAboutWildAnimals" superType="Untell"/>
+      
+      <!-- message for negotiate meat for cereals -->
+      <MessageType name="NegotiateMeat4Cereals">
+        <Attribute type="Integer" name="quantity"/>
+        <Attribute type="Float" name="exchangeRatio"/>
+      </MessageType>
+      
+      <!-- message for negotiate cereals for meat -->
+      <MessageType name="NegotiateCereals4Meat">
+        <Attribute type="Integer" name="quantity"/>
+        <Attribute type="Float" name="exchangeRatio"/>
+      </MessageType>
+      
+      <!-- periodic time event used by the environment to create new wild animals -->
+      <ExogenousEventType name="TimeForWildAnimal">
+        <Periodicity language="Java">100</Periodicity>
+      </ExogenousEventType>
+      
+      <!--Action type for Moving an agent/object -->
+      <ActionEventType name="Move">
+        <ComplexDataProperty name="advance" type="Advance"/>
+      </ActionEventType>
+
+      <!-- Action type for Create agents/objects -->
+      <ActionEventType name="Create">
+        <Attribute type="Integer" name="objectId"/>
+      </ActionEventType>
+
+      <!-- Action type for Destroy agents/objects -->
+      <ActionEventType name="Destroy">
+        <Attribute type="Integer" name="objectId"/>
+      </ActionEventType>
+      
+      <!-- Action type for killing an animal -->
+      <ActionEventType name="KillAnimal">
+        <Attribute type="Integer" name="animalId"/>
+      </ActionEventType>
+      
+      <!-- deploy food to hunters warehouse -->
+      <ActionEventType name="DeployFoodToHunterWarehouse"/>
+      
+      <!-- deploy food to farmers warehouse -->
+      <ActionEventType name="DeployFoodToFarmerWarehouse"/>
+
+      <!-- Warehouse object type -->
+      <PhysicalObjectType name="Warehouse">
+        <Attribute type="Float" name="meatLevel"/>
+        <Attribute type="Float" name="cerealsLevel"/>
+      </PhysicalObjectType>
+
+      <!-- the super type of all Living agents -->
+      <PhysicalAgentType name="LivingBeing" autoPerception="true" idPerceivable="true"/> 
+
+      <!-- Wild Animal agent type -->
+      <PhysicalAgentType name="WildAnimal" superType="LivingBeing">
+
+        <Attribute type="Float" name="attackPower"/>
+        <Attribute type="Boolean" name="dangerous"/>
+        
+        <SubjectiveFunction name="getAdvanceDirection" resultType="Advance">
+          <Body language="Java">
+            <![CDATA[
+              
+              long advanceX = 0;
+              long advanceY = 0;
+            
+              int stepX = Random.uniformInt(1,2);
+              int stepY = Random.uniformInt(1,2);
+  
+              // compute the step of X advance
+              switch(stepX) {
+                // move forward
+                case 1: 
+                  advanceX = 1;
+                  break;
+                    
+                // move backward
+                case 2: 
+                  advanceX = -1;
+                  break;
+              }
+                
+              // compute the step of Y advance
+              switch(stepY) {
+                // move forward
+                case 1: 
+                  advanceY = 1;
+                  break;
+                    
+                // move backward
+                case 2: 
+                  advanceY = -1;
+                  break;
+              }
+        
+              return new Advance(advanceX, advanceY);
+               
+            ]]>
+          </Body>
+        </SubjectiveFunction>
+
+        <!-- periodic time event used for wild animals -->
+        <PeriodicTimeEventType name="SimulationStep">
+          <Periodicity language="Java">Random.uniformInt(1,100)</Periodicity>
+        </PeriodicTimeEventType>
+
+        <!-- Move rule for wild animals -->
+        <ReactionRule name="MoveWildAnimal_Rule" agentVariable="wildAnimal">
+          <documentation>
+            <dc:description>
+              From time to time, the wild animal is moving 
+              random in one neighboring cell.
+            </dc:description>
+          </documentation>
+          <WHEN eventType="SimulationStep"/>
+          <SCHEDULE-EVT>
+            <ActionEventExpr actionEventType="Move">
+              <Slot xsi:type="aors:OpaqueExprSlot" property="advance">
+                <ValueExpr language="Java">wildAnimal.getAdvanceDirection()</ValueExpr>
+              </Slot>
+            </ActionEventExpr>
+          </SCHEDULE-EVT>
+        </ReactionRule>
+
+      </PhysicalAgentType>
+
+      <!-- Aborigen Agent Type -->
+      <PhysicalAgentType name="Aborigen" superType="TrustfulAndSincere" autoPerception="true" idPerceivable="true">
+        <Attribute type="Float" name="appetite"/>
+        <Attribute type="Float" name="energy"/>
+        <Attribute type="Integer" name="foodQuantity"/>
+        
+        <SelfBeliefAttribute type="String" name="homeTribe"/>
+        
+        <BeliefEntityType name="WildAnimal">
+          <BeliefAttribute type="Integer" name="x"/>
+          <BeliefAttribute type="Integer" name="y"/>
+          <BeliefAttribute type="Boolean" name="dangerous"/>
+          <BeliefAttribute type="Boolean" name="existing"/>
+        </BeliefEntityType>
+        
+        <BeliefEntityType name="Warehouse">
+          <BeliefAttribute type="Integer" name="x"/>
+          <BeliefAttribute type="Integer" name="y"/>
+        </BeliefEntityType>
+        
+        <SubjectiveFunction name="getAdvanceDirection" resultType="Advance">
+          <Parameter name="targetX" type="Long"/>
+          <Parameter name="targetY" type="Long"/>
+          <Body language="Java">
+            <![CDATA[
+              
+              long advanceX = 0;
+              long advanceY = 0;
+            
+              if(targetX == null || targetY == null) {
+                int stepX = Random.uniformInt(1,2);
+                int stepY = Random.uniformInt(1,2);
+  
+                // compute the step of X advance
+                switch(stepX) {
+                  // move forward
+                  case 1: 
+                    advanceX = 1;
+                    break;
+                    
+                  // move backward
+                  case 2: 
+                    advanceX = -1;
+                    break;
+                }
+                
+                // compute the step of Y advance
+                switch(stepY) {
+                  // move forward
+                  case 1: 
+                    advanceY = 1;
+                    break;
+                    
+                  // move backward
+                  case 2: 
+                    advanceY = -1;
+                    break;
+                }
+                return new Advance(advanceX, advanceY);  
+              }
+              else {
+                long currentX = (long)((PhysicalAgentObject)this.getAgentObject()).getX();
+                long currentY = (long)((PhysicalAgentObject)this.getAgentObject()).getY();
+            
+                long xD = targetX - currentX;
+                long yD = targetY - currentY;
+                
+                if(xD == 0) {
+                  advanceX = 0;
+                }
+                
+                if(yD == 0) {
+                  advanceY = 0;
+                }
+                
+                if(xD > 0) {
+                  advanceX = 1;
+                }
+                
+                if(yD > 0) {
+                  advanceY = 1;
+                }
+                
+                if(xD < 0) {
+                  advanceX = -1;
+                }
+                
+                if(yD < 0) {
+                  advanceY = -1;
+                }
+                
+                return new Advance(advanceX, advanceY);
+              }
+            ]]>
+          </Body>
+        </SubjectiveFunction>
+
+        <PeriodicTimeEventType name="SimulationStep">
+          <Periodicity language="Java">1</Periodicity>
+        </PeriodicTimeEventType>
+        
+        <!-- inform other perceived aborigen about all known wild animals -->
+        <ReactionRule name="InformAboutDiscoveredWildAnimals">
+          <documentation>
+            <dc:description>
+              When an aborigen meets another aborigen, he inform it about all known wild animals on the map,
+              and also inform it about wild animals that are not anymore were them were supposed to be.
+            </dc:description>
+          </documentation>
+          <WHEN eventType="PhysicalObjectPerceptionEvent" physicalObjectType="Aborigen" eventVariable="e"/>
+          <FOR beliefEntityVariable="wildAnimal" beliefEntityType="WildAnimal"/>
+          <SCHEDULE-EVT>
+            <CreateDescription descriptionVariable="wildAnimalsDesc" beliefEntityVariable="wildAnimal" properties="x y dangerous"/>
+            <OutMessageEventExpr messageType="TellAboutWildAnimals">
+              <Condition language="Java">
+                wildAnimal.isExisting()
+              </Condition>
+              <ReceiverIdRef language="Java">
+                e.getPerceivedPhysicalObjectIdRef()
+              </ReceiverIdRef>
+              <Slot xsi:type="aors:OpaqueExprSlot" property="infoSet">
+                <ValueExpr language="Java">wildAnimalsDesc</ValueExpr>
+              </Slot>
+            </OutMessageEventExpr>
+            <OutMessageEventExpr messageType="UntellAboutWildAnimals">
+              <Condition language="Java">
+                !wildAnimal.isExisting()
+              </Condition>
+              <ReceiverIdRef language="Java">
+                e.getPerceivedPhysicalObjectIdRef()
+              </ReceiverIdRef>
+              <Slot xsi:type="aors:OpaqueExprSlot" property="infoSet">
+                <ValueExpr language="Java">wildAnimalsDesc</ValueExpr>
+              </Slot>
+            </OutMessageEventExpr>
+          </SCHEDULE-EVT>
+        </ReactionRule>
+      </PhysicalAgentType>
+
+      <!-- Hunter Agent Type -->
+      <PhysicalAgentType name="Hunter" superType="Aborigen">
+        
+        <SelfBeliefAttribute type="Boolean" name="deployToWarehouse"/>
+
+        <PeriodicTimeEventType name="SimulationStep">
+          <Periodicity language="Java">1</Periodicity>
+        </PeriodicTimeEventType>
+
+        <!-- the hunter has found an wild animal -->
+        <ReactionRule name="FoundWildAnimalRule" agentVariable="hunter">
+          <documentation>
+            <dc:description>
+              The hunter found an Wildanimal. He kill the animal and get the amount of meat. 
+            </dc:description>
+          </documentation>
+          <WHEN eventType="PhysicalObjectPerceptionEvent" physicalObjectType="WildAnimal" eventVariable="e"/>
+          <IF language="Java">
+            <![CDATA[
+              !hunter.isDeployToWarehouse()
+            ]]>
+          </IF>
+          <UPDATE-AGT>
+            <SelfBeliefSlot xsi:type="aors:SimpleSlot" property="deployToWarehouse" value="true"/>
+          </UPDATE-AGT>
+          <SCHEDULE-EVT>
+            <ActionEventExpr actionEventType="KillAnimal">
+              <Slot xsi:type="aors:OpaqueExprSlot" property="animalId">
+                <ValueExpr language="Java">
+                  e.getPerceivedPhysicalObject().getId()
+                </ValueExpr>
+              </Slot>
+            </ActionEventExpr>
+          </SCHEDULE-EVT>
+        </ReactionRule>
+        
+        <!-- The hunter have got the meat of an wild animal, then it goes to Warehouse to deploy it -->
+        <ReactionRule name="GoDeployMeatToWarehouseRule" agentVariable="hunter">
+          <WHEN eventType="SimulationStep"/>
+          <FOR beliefEntityVariable="warehouse" beliefEntityIdRef="1"/>
+          <IF language="Java">
+            <![CDATA[
+              hunter.isDeployToWarehouse()
+            ]]>
+          </IF>
+          <SCHEDULE-EVT>
+            <ActionEventExpr actionEventType="Move">
+              <Slot xsi:type="aors:OpaqueExprSlot" property="advance">
+                <ValueExpr language="Java">
+                  hunter.getAdvanceDirection(((Warehouse)warehouse).getX(), ((Warehouse)warehouse).getY())
+                </ValueExpr>
+              </Slot>
+            </ActionEventExpr>
+          </SCHEDULE-EVT>
+        </ReactionRule>
+        
+        
+        <!-- auto moving for this hunter (look for wild animal or go to Warehouse for leaving meat)-->
+        <ReactionRule name="SelfAutoMoveRule" agentVariable="hunter">
+          <WHEN eventType="SimulationStep"/>
+          <IF language="Java">
+            <![CDATA[
+              !hunter.isDeployToWarehouse()
+            ]]>
+          </IF>
+          <SCHEDULE-EVT>
+            <ActionEventExpr actionEventType="Move">
+              <Slot xsi:type="aors:OpaqueExprSlot" property="advance">
+                <ValueExpr language="Java">hunter.getAdvanceDirection(null,null)</ValueExpr>
+              </Slot>
+            </ActionEventExpr>
+          </SCHEDULE-EVT>
+        </ReactionRule>    
+        
+        <!-- the hunter was arrived to warehouse, then he will leave here any available meat quantity it may have -->
+        <ReactionRule name="FoundWarehouse_Rule" agentVariable="hunter">
+          <WHEN eventType="PhysicalObjectPerceptionEvent" physicalObjectType="Warehouse" eventVariable="e"/>
+          <UPDATE-AGT>
+            <SelfBeliefSlot xsi:type="aors:SimpleSlot" property="deployToWarehouse" value="false"/>
+          </UPDATE-AGT>
+          <SCHEDULE-EVT>
+            <ActionEventExpr actionEventType="DeployFoodToHunterWarehouse"/>
+          </SCHEDULE-EVT>
+        </ReactionRule>
+        
+        
+      </PhysicalAgentType>
+
+      <!-- Farmer Agent Type -->
+      <PhysicalAgentType name="Farmer" superType="Aborigen"> </PhysicalAgentType>
+
+      <!-- TradesMan_F Agent Type -->
+      <PhysicalAgentType name="TradesMan_F" superType="Aborigen"> </PhysicalAgentType>
+
+      <!-- TradesMan_H Agent Type -->
+      <PhysicalAgentType name="TradesMan_H" superType="Aborigen"> 
+        <ReactionRule name="DiscoverNewWildAnimal" agentVariable="tradesman">
+          <documentation>
+            <dc:description>
+              A new Wild Animal is discovered. Create a belief about him.
+            </dc:description>
+          </documentation>
+          <WHEN eventType="PhysicalObjectPerceptionEvent" physicalObjectType="WildAnimal" eventVariable="e"/>
+          <IF language="Java">
+            tradesman.getBeliefEntityById(e.getPerceivedPhysicalObject().getId()) == null
+          </IF>
+          <UPDATE-AGT>
+            <CreateBeliefEntity beliefEntityType="WildAnimal">
+              <BeliefEntityIdRef language="Java">e.getPerceivedPhysicalObject().getId()</BeliefEntityIdRef>
+              <BeliefSlot xsi:type="aors:OpaqueExprSlot" property="x">
+                <ValueExpr language="Java">(long)e.getPerceivedPhysicalObject().getX()</ValueExpr>
+              </BeliefSlot>
+              <BeliefSlot xsi:type="aors:OpaqueExprSlot" property="y">
+                <ValueExpr language="Java">(long)e.getPerceivedPhysicalObject().getY()</ValueExpr>
+              </BeliefSlot>
+            </CreateBeliefEntity>
+          </UPDATE-AGT>
+        </ReactionRule>
+        
+        <ReactionRule name="RediscoverWildAnimalRule" agentVariable="tradesman">
+          <documentation>
+            <dc:description>
+              A Wild Animal is rediscovered in a new position. Update the belief about him.
+            </dc:description>
+          </documentation>
+          <WHEN eventType="PhysicalObjectPerceptionEvent" physicalObjectType="WildAnimal" eventVariable="e"/>
+          <IF language="Java">
+            tradesman.getBeliefEntityById(e.getPerceivedPhysicalObject().getId()) != null
+          </IF>
+          <UPDATE-AGT>
+            <UpdateBeliefEntity>
+              <BeliefEntityIdRef language="Java">e.getPerceivedPhysicalObject().getId()</BeliefEntityIdRef>
+              <BeliefSlot xsi:type="aors:OpaqueExprSlot" property="x">
+                <ValueExpr language="Java">(long)e.getPerceivedPhysicalObject().getX()</ValueExpr>
+              </BeliefSlot>
+              <BeliefSlot xsi:type="aors:OpaqueExprSlot" property="y">
+                <ValueExpr language="Java">(long)e.getPerceivedPhysicalObject().getY()</ValueExpr>
+              </BeliefSlot>
+            </UpdateBeliefEntity>
+          </UPDATE-AGT>
+        </ReactionRule>
+        
+       <!-- <ReactionRule name="AskAboutWarehouseRule" agentVariable="tradesman">
+          <documentation>
+            <dc:description>
+              A Tradesman_H ask a meet aborigen about the Farmer's Warehouse
+            </dc:description>
+          </documentation>
+          <WHEN eventType="PhysicalObjectPerceptionEvent" physicalObjectType="Aborigen" eventVariable="e"/>
+          <IF language="Java">
+            tradesman.getBeliefEntitiesByType("Warehouse").size() !=0
+          </IF>
+          <SCHEDULE-EVT>
+            <OutMessageEventExpr messageType="AskAboutWarehouse">
+              <ReceiverIdRef language="Java">
+                  e.getPerceivedPhysicalObjectIdRef()
+              </ReceiverIdRef>
+              <Slot xsi:type="aors:SimpleSlot" property="beliefEntityType" value='"Warehouse"'/>
+              <Slot xsi:type="aors:SimpleSlot" property="queryLanguage" value='"SPARQL"'/>
+              <Slot xsi:type="aors:SimpleSlot" property="queryString"
+                value="SELECT ?id ?x ?y WHERE {?id rdf:type :Warehouse; :name 'Warehouse Farmers'; :x ?x; :y ?y.}"/>
+            </OutMessageEventExpr>
+          </SCHEDULE-EVT>
+        </ReactionRule>-->
+        
+        <!--<ReactionRule name="NegotiateMeatForCerealsRule" agentVariable="tradesman">
+          <WHEN eventType="PhysicalObjectPerceptionEvent" physicalObjectType="Warehouse" eventVariable="e"/>
+         <IF language="Java">
+           
+         </IF>
+          <SCHEDULE-EVT>
+            <OutMessageEventExpr messageType="NegotiateMeatForCereals">
+              <ReceiverIdRef language="Java">
+                e.getPerceivedPhysicalObjectIdRef()
+              </ReceiverIdRef>
+              <Slot xsi:type="aors:OpaqueExprSlot" property="quantity">
+                <ValueExpr language="Java">tradesman.getMeatQuantity()</ValueExpr>
+              </Slot>
+              <Slot xsi:type="aors:OpaqueExprSlot" property="exchangeRatio">
+                <ValueExpr language="Java">tradesman.getExchangeRatio()</ValueExpr>
+              </Slot>
+            </OutMessageEventExpr>
+          </SCHEDULE-EVT>
+        </ReactionRule>-->
+        
+        
+        
+      </PhysicalAgentType>
+
+    </EntityTypes>
+
+    <!-- =================================================== -->
+    <EnvironmentRules>
+      
+      <!-- move agent rule -->
+      <EnvironmentRule name="MoveAgentRule">
+        <documentation>
+          <dc:description> Move the agent, based on the received x,y deplacement. </dc:description>
+        </documentation>
+        <WHEN eventType="Move" eventVariable="evt"/>
+        <UPDATE-ENV>
+          <UpdateObject>
+            <ObjectRef objectType="Physical" language="Java"> evt.getActor() </ObjectRef>
+            <Slot xsi:type="aors:OpaqueExprSlot" property="x">
+              <ValueExpr language="Java">
+                Simulator.spaceModel.newX((Physical)evt.getActor(),evt.getAdvance().getX())
+              </ValueExpr>
+            </Slot>
+            <Slot xsi:type="aors:OpaqueExprSlot" property="y">
+              <ValueExpr language="Java">
+                Simulator.spaceModel.newY((Physical)evt.getActor(),evt.getAdvance().getY())
+              </ValueExpr>
+            </Slot>
+          </UpdateObject>
+        </UPDATE-ENV>
+      </EnvironmentRule>
+
+      <!-- destroy agent or object rule -->
+      <EnvironmentRule name="DestroyAgentRule">
+        <documentation>
+          <dc:description> Destroy an agent/object </dc:description>
+        </documentation>
+        <WHEN eventType="Destroy" eventVariable="evt"/>
+        <UPDATE-ENV>
+          <DestroyObject>
+            <ObjectIdRef language="Java"> ((Destroy)evt).getObjectId() </ObjectIdRef>
+          </DestroyObject>
+        </UPDATE-ENV>
+      </EnvironmentRule>
+      
+      <!-- an wild animal was catched, so update the agent meat wuantity and destroy the animal -->
+      <EnvironmentRule name="KillAnimalRule">
+        <documentation>
+          <dc:description> Kill an wild animal and get the meat quantity. </dc:description>
+        </documentation>
+        <WHEN eventType="KillAnimal" eventVariable="evt"/>
+        <FOR objectVariable="aborigen" objectType="Aborigen">
+          <ObjectRef language="Java">evt.getActor()</ObjectRef>
+        </FOR>
+        <FOR objectVariable="animal" objectType="WildAnimal">
+          <ObjectIdRef language="Java">evt.getAnimalId()</ObjectIdRef>
+        </FOR>
+        <UPDATE-ENV>
+          <UpdateObject objectVariable="aborigen">
+            <Slot xsi:type="OpaqueExprSlot" property="foodQuantity">
+              <ValueExpr language="Java"> (int)(animal.getM() * 0.8) </ValueExpr>
+            </Slot>
+          </UpdateObject>
+          <DestroyObject>
+            <ObjectIdRef language="Java"> ((KillAnimal)evt).getAnimalId() </ObjectIdRef>
+          </DestroyObject>
+        </UPDATE-ENV>
+      </EnvironmentRule>
+      
+      <!-- deploy food quantity to warehouse -->
+      <EnvironmentRule name="DelpoyFoodToHunterWarehouseRule">
+        <documentation>
+          <dc:description> Deplow food to the warehouse. </dc:description>
+        </documentation>
+        <WHEN eventType="DeployFoodToHunterWarehouse" eventVariable="evt"/>
+        <FOR objectVariable="aborigen" objectType="Aborigen">
+          <ObjectRef language="Java">evt.getActor()</ObjectRef>
+        </FOR>
+        <FOR objectVariable="warehouse" objectType="Warehouse" objectIdRef="1"/>
+        <UPDATE-ENV>
+          <UpdateObject objectVariable="warehouse">
+            <Slot xsi:type="aors:OpaqueExprSlot" property="meatLevel">
+              <ValueExpr language="Java">
+                aborigen.getFoodQuantity()
+              </ValueExpr>
+            </Slot>
+          </UpdateObject>
+          <UpdateObject objectVariable="aborigen">
+            <Slot xsi:type="aors:SimpleSlot" property="foodQuantity" value="0"/>
+          </UpdateObject>
+        </UPDATE-ENV>
+      </EnvironmentRule>
+      
+      <EnvironmentRule name="CreateWildAnimal">
+        <documentation>
+          <dc:description> Create an Wild Animal </dc:description>
+        </documentation>
+        <WHEN eventType="TimeForWildAnimal" eventVariable="e"/>
+        <UPDATE-ENV>
+          <Create>
+            <PhysicalAgent type="WildAnimal">
+              <Slot xsi:type="aors:OpaqueExprSlot" property="x">
+                <ValueExpr language="Java">Random.uniformInt(1,50)</ValueExpr>
+              </Slot>
+              <Slot xsi:type="aors:OpaqueExprSlot" property="y">
+                <ValueExpr language="Java">Random.uniformInt(1,50)</ValueExpr>
+              </Slot>
+              <Slot xsi:type="aors:OpaqueExprSlot" property="attackPower">
+                <ValueExpr language="Java">Random.uniformInt(1,5)</ValueExpr>
+              </Slot>
+              <Slot xsi:type="aors:OpaqueExprSlot" property="m">
+                <ValueExpr language="Java">Random.uniformInt(1,30)</ValueExpr>
+              </Slot>
+              <Slot xsi:type="aors:OpaqueExprSlot" property="dangerous">
+                <ValueExpr language="Java">(Random.uniformInt(1,3) == 2 ? true: false)</ValueExpr>
+              </Slot>
+              <PeriodicTimeEvent occurrenceTime="3" type="SimulationStep"/>
+            </PhysicalAgent>
+          </Create>
+        </UPDATE-ENV>
+      </EnvironmentRule>
+
+    </EnvironmentRules>
+  </SimulationModel>
+
+  <InitialState>
+    <!-- put hunters tribe wareouse on the map -->
+    <PhysicalObject type="Warehouse" id="1" name="warehouse_h">
+      <Slot xsi:type="aors:SimpleSlot" property="x" value="1"/>
+      <Slot xsi:type="aors:SimpleSlot" property="y" value="1"/>
+    </PhysicalObject>
+    
+    <!-- put farmers tribe wareouse on the map -->
+    <PhysicalObject type="Warehouse" id="2" name="warehouse_f">
+      <Slot xsi:type="aors:SimpleSlot" property="x" value="50"/>
+      <Slot xsi:type="aors:SimpleSlot" property="y" value="50"/>
+    </PhysicalObject>
+
+    <!-- Put wild animals on the map -->
+    <PhysicalAgents type="WildAnimal" rangeStartID="10001" rangeEndID="10025">
+      <Slot xsi:type="aors:OpaqueExprSlot" property="x">
+        <ValueExpr language="Java">Random.uniformInt(1,50)</ValueExpr>
+      </Slot>
+      <Slot xsi:type="aors:OpaqueExprSlot" property="y">
+        <ValueExpr language="Java">Random.uniformInt(1,50)</ValueExpr>
+      </Slot>
+      <Slot xsi:type="aors:OpaqueExprSlot" property="attackPower">
+        <ValueExpr language="Java">Random.uniformInt(1,5)</ValueExpr>
+      </Slot>
+      <Slot xsi:type="aors:OpaqueExprSlot" property="m">
+        <ValueExpr language="Java">Random.uniformInt(1,30)</ValueExpr>
+      </Slot>
+      <Slot xsi:type="aors:OpaqueExprSlot" property="dangerous">
+        <ValueExpr language="Java">(Random.uniformInt(1,3) == 2 ? true: false)</ValueExpr>
+      </Slot>
+      <PeriodicTimeEvent occurrenceTime="3" type="SimulationStep"/>
+    </PhysicalAgents>
+
+    <!-- Put Hunters on the map -->
+    <PhysicalAgents type="Hunter" rangeStartID="1001" rangeEndID="1010">
+      <Slot xsi:type="aors:OpaqueExprSlot" property="x">
+        <ValueExpr language="Java">Random.uniformInt(1,50)</ValueExpr>
+      </Slot>
+      <Slot xsi:type="aors:OpaqueExprSlot" property="y">
+        <ValueExpr language="Java">Random.uniformInt(1,15)</ValueExpr>
+      </Slot>
+      <BeliefEntity type="Warehouse" idRef="1">
+        <BeliefSlot xsi:type="aors:SimpleSlot" property="name" value="warehouse_h"/>
+        <BeliefSlot xsi:type="aors:SimpleSlot" property="x" value="1"/>
+        <BeliefSlot xsi:type="aors:SimpleSlot" property="y" value="1"/>
+      </BeliefEntity>
+      <PeriodicTimeEvent occurrenceTime="1" type="SimulationStep"/>
+    </PhysicalAgents>
+
+    <!-- Put Trades Mans from tribe H (hunters) on the map -->
+    <PhysicalAgents type="TradesMan_H" rangeStartID="1101" rangeEndID="1105">
+      <Slot xsi:type="aors:OpaqueExprSlot" property="x">
+        <ValueExpr language="Java">Random.uniformInt(1,50)</ValueExpr>
+      </Slot>
+      <Slot xsi:type="aors:OpaqueExprSlot" property="y">
+        <ValueExpr language="Java">Random.uniformInt(1,15)</ValueExpr>
+      </Slot>
+      <BeliefEntity type="Warehouse" idRef="1">
+        <BeliefSlot xsi:type="aors:SimpleSlot" property="name" value="warehouse_h"/>
+        <BeliefSlot xsi:type="aors:SimpleSlot" property="x" value="1"/>
+        <BeliefSlot xsi:type="aors:SimpleSlot" property="y" value="1"/>
+      </BeliefEntity>
+      <PeriodicTimeEvent occurrenceTime="1" type="SimulationStep"/>
+    </PhysicalAgents>
+
+    <!-- Put Farmers on the map -->
+    <PhysicalAgents type="Farmer" rangeStartID="2001" rangeEndID="2015">
+      <Slot xsi:type="aors:OpaqueExprSlot" property="x">
+        <ValueExpr language="Java">Random.uniformInt(1,50)</ValueExpr>
+      </Slot>
+      <Slot xsi:type="aors:OpaqueExprSlot" property="y">
+        <ValueExpr language="Java">Random.uniformInt(35,50)</ValueExpr>
+      </Slot>
+      <BeliefEntity type="Warehouse" idRef="2">
+        <BeliefSlot xsi:type="aors:SimpleSlot" property="name" value="warehouse_f"/>
+        <BeliefSlot xsi:type="aors:SimpleSlot" property="x" value="1"/>
+        <BeliefSlot xsi:type="aors:SimpleSlot" property="y" value="1"/>
+      </BeliefEntity>
+      <PeriodicTimeEvent occurrenceTime="1" type="SimulationStep"/>
+    </PhysicalAgents>
+
+    <!-- Put Trades Mans from tribe F (farmers) on the map -->
+    <PhysicalAgents type="TradesMan_F" rangeStartID="2101" rangeEndID="2105">
+      <Slot xsi:type="aors:OpaqueExprSlot" property="x">
+        <ValueExpr language="Java">Random.uniformInt(1,50)</ValueExpr>
+      </Slot>
+      <Slot xsi:type="aors:OpaqueExprSlot" property="y">
+        <ValueExpr language="Java">Random.uniformInt(35,50)</ValueExpr>
+      </Slot>
+      <BeliefEntity type="Warehouse" idRef="2">
+        <BeliefSlot xsi:type="aors:SimpleSlot" property="name" value="warehouse_f"/>
+        <BeliefSlot xsi:type="aors:SimpleSlot" property="x" value="1"/>
+        <BeliefSlot xsi:type="aors:SimpleSlot" property="y" value="1"/>
+      </BeliefEntity>
+      <PeriodicTimeEvent occurrenceTime="1" type="SimulationStep"/>
+    </PhysicalAgents>
+    
+    <!-- the exogenous event used for creating new wild animal -->
+    <ExogenousEvent occurrenceTime="1" type="TimeForWildAnimal"/>
+  </InitialState>
+
+  <Views>
+    <View physicalObjectType="Warehouse" shape2D="rectangle">
+      <ShapeSlot shapeProperty="fill" value="black"/>
+      <ShapeSlot shapeProperty="width" value="10"/>
+      <ShapeSlot shapeProperty="height" value="10"/>
+    </View>
+
+    <View physicalObjectType="Hunter" shape2D="circle">
+      <ShapeSlot shapeProperty="fill" value="blue"/>
+      <ShapeSlot shapeProperty="r" value="3"/>
+    </View>
+
+    <View physicalObjectType="TradesMan_H" shape2D="circle">
+      <ShapeSlot shapeProperty="fill" value="yellow"/>
+      <ShapeSlot shapeProperty="r" value="3"/>
+    </View>
+
+    <View physicalObjectType="Farmer" shape2D="rectangle">
+      <ShapeSlot shapeProperty="fill" value="green"/>
+      <ShapeSlot shapeProperty="width" value="7"/>
+      <ShapeSlot shapeProperty="height" value="7"/>
+    </View>
+
+    <View physicalObjectType="TradesMan_F" shape2D="rectangle">
+      <ShapeSlot shapeProperty="fill" value="yellow"/>
+      <ShapeSlot shapeProperty="width" value="7"/>
+      <ShapeSlot shapeProperty="height" value="7"/>
+    </View>
+
+    <View physicalObjectType="WildAnimal" shape2D="rectangle">
+      <ShapeSlot shapeProperty="fill" value="red"/>
+      <ShapeSlot shapeProperty="width" value="3"/>
+      <ShapeSlot shapeProperty="height" value="3"/>
+    </View>
+  </Views>
+
+
+</SimulationScenario>

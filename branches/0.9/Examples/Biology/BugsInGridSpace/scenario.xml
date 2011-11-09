@@ -1,0 +1,401 @@
+<?xml version="1.0"?>
+<?xml-stylesheet type="text/xsl" href="prettyprint.xsl"?>
+
+<SimulationScenario xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+ xsi:schemaLocation="http://aor-simulation.org ../../../AORSL/AORSL_0-9.xsd"
+ xmlns="http://aor-simulation.org"
+ xmlns:dc="http://purl.org/dc/elements/1.1/"
+ xmlns:aors="http://aor-simulation.org"
+ xmlns:h="http://www.w3.org/1999/xhtml"
+ version="0.9"
+ scenarioName="BugsGrowingInGridSpace"
+ scenarioTitle="100 bugs move around randomly in a 50x50 grid space, feeding and growing"
+ simulationManagerDirectory="../../..">
+  <SimulationParameters simulationSteps="500" stepDuration="100" timeUnit="D" stepTimeDelay="150"/>
+
+  <SimulationModel modelName="BugsInGridSpace" modelTitle="Bugs moving around randomly in a grid space feeding and growing with food represented as a grid cell property">
+
+    <documentation>
+      <dc:creator>Gerd Wagner</dc:creator>
+      <dc:created>20100320</dc:created>
+    	<dc:source>Railsback, S., Lytinen, S., and Jackson, S. (2006). Agent-based Simulation Platforms: Review and Development Recommendations. Simulation 82(9), p. 609 - 623.</dc:source>
+    	<description><h:p>This is a kind of "Stupid Model", as described in (<h:a href="http://www.humboldt.edu/~ecomodel/documents/ABMPlatformReview.pdf">Railsback, Lytinen and Jackson; 2006</h:a>). Bugs move around randomly in a grid space. They feed and grow. Food is represented as a grid cell property. When a bug arrives on a new cell, it eats the available food. Bugs also reproduce and cannibalize each other, implemented in the following way:</h:p>
+    		<h:ul><h:li>When two male (or female) bugs meet in one cell the older bug eats the younger one.</h:li>
+    			<h:li>When a bug male and female meet each other in a cell they reproduce if both of them are older than the maturity level (= 20 Days), otherwise the older bug eats the younger one. The pregnant female bug will give birth to a new bug after some time interval: the pregnancy interval (= 3 Days).</h:li></h:ul> </description>
+    </documentation>
+
+    <SpaceModel geometry="Toroidal" spatialDistanceUnit="cm">
+      <TwoDimensionalGrid xMax="5" yMax="5" gridCellMaxOccupancy="1">
+        <GridCellProperty name="foodLevel" type="Float"/>
+      </TwoDimensionalGrid>
+    </SpaceModel>
+
+    <Globals>
+      <GlobalVariable name="maturityLevel" dataType="Integer"/>
+      <GlobalVariable name="pregnancyInterval" dataType="Integer"/>
+      <GlobalFunction name="randomGender" resultType="String">
+        <Body language="Java"><![CDATA[
+int value = Random.uniformInt(0,1);
+ String gender;
+  if (value == 0) gender = "m";
+  else gender = "f";
+  return gender;
+  				]]></Body>
+      </GlobalFunction>
+    </Globals>
+
+    <EntityTypes>
+      <ActionEventType name="Move"/>
+      <ActionEventType name="Eat"/>
+      <ActionEventType name="Reproduce"/>
+      <ActionEventType name="Eat_EachOther">
+        <ReferenceProperty name="bug" type="Bug"/>
+      </ActionEventType>
+      <CausedEventType name="BugIsBorn">
+      	<Attribute type="Integer" name="motherBugId"/>
+      </CausedEventType>
+      <PerceptionEventType name="ArrivalOnNewCell"/>
+
+      <!-- =================================================================-->
+      <PhysicalAgentType name="Bug" autoPerception="true" idPerceivable="true">
+        <!-- =============================================================== -->
+        <Attribute name="gender" type="String"/>
+        <Attribute name="age" type="Integer"/>
+      	<Attribute name="isPregnant" type="Boolean"/>  
+      	<!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->   	
+        <PeriodicTimeEventType name="GoOn">
+        	<!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->
+          <Periodicity>
+          	<DiscreteRandomVariable>
+          		<UniformInt lowerBound="1" upperBound="3" />
+          	</DiscreteRandomVariable>
+          </Periodicity>
+        </PeriodicTimeEventType>
+
+        <!-- ~~~~~~~~~~~~~~~~~~~~~~~~~ -->
+        <ReactionRule name="GoOn_Rule">
+          <!-- ~~~~~~~~~~~~~~~~~~~~~~~ -->
+          <documentation>
+            <dc:description>When receiving the periodic reminder signal to go on, the bug moves.</dc:description>
+          </documentation>
+          <WHEN eventType="GoOn"/>
+          <DO>
+            <SCHEDULE-EVT>
+              <ActionEventExpr actionEventType="Move"/>
+            </SCHEDULE-EVT>
+          </DO>
+        </ReactionRule>
+        <!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->
+        <ReactionRule name="ArrivalOnNewCell_Rule">
+          <!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->
+          <documentation>
+            <dc:description>When the bug arrives on a new cell, it eats the available food.</dc:description>
+          </documentation>
+          <WHEN eventType="ArrivalOnNewCell"/>
+          <DO>
+            <SCHEDULE-EVT>
+              <ActionEventExpr actionEventType="Eat"/>
+            </SCHEDULE-EVT>
+          </DO>
+        </ReactionRule>
+        <!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->
+        <ReactionRule name="BugPerceivesBug_Rule" agentVariable="b">
+          <!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->
+        	<documentation>
+        		<dc:description>When the bug perceives other bug their reproduce or they eat eachother.</dc:description>
+        	</documentation>
+          <WHEN eventType="PhysicalObjectPerceptionEvent" physicalObjectType="Bug" eventVariable="e" perceivedObjectVariable="percBug"/>
+          <FOR dataVariable="gender" dataType="String">
+            <ValueExpr language="Java"><![CDATA[
+this.percBug.getGender()
+              ]]></ValueExpr>
+          </FOR>
+          <FOR dataVariable="age" dataType="Integer">
+            <ValueExpr language="Java">
+              <![CDATA[
+this.percBug.getAge()
+              ]]></ValueExpr>
+          </FOR>
+          <IF language="Java"><![CDATA[
+! b.getGender().equals(gender)
+            ]]></IF>
+          <THEN>
+            <SCHEDULE-EVT>
+              <ActionEventExpr actionEventType="Reproduce">
+                <Condition language="Java"><![CDATA[
+b.getAge() >= Global.getMaturityLevel() && age >= Global.getMaturityLevel()  						
+      					]]></Condition>
+              </ActionEventExpr>
+              <ActionEventExpr actionEventType="Eat_EachOther">
+                <Condition language="Java"><![CDATA[
+b.getAge() < Global.getMaturityLevel() || age < Global.getMaturityLevel()   						
+								]]></Condition>
+                <Slot property="bug">
+                  <ValueExpr language="Java"><![CDATA[
+this.percBug    							
+      							]]></ValueExpr>
+                </Slot>
+              </ActionEventExpr>
+            </SCHEDULE-EVT>
+          </THEN>
+          <ELSE>
+            <SCHEDULE-EVT>
+              <ActionEventExpr actionEventType="Eat_EachOther">
+                <Condition language="Java"><![CDATA[
+b.getM() != this.percBug.getM()    						
+      						]]></Condition>
+                <Slot property="bug">
+                  <ValueExpr language="Java"><![CDATA[
+this.percBug     							
+      						]]></ValueExpr>
+                </Slot>
+              </ActionEventExpr>
+            </SCHEDULE-EVT>
+          </ELSE>
+        </ReactionRule>
+        <!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->
+        <ReactionRule name="UpdateBugAge_Rule" agentVariable="b">
+          <!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->
+          <ON-EACH-SIMULATION-STEP/>
+          <DO>
+            <UPDATE-AGT>
+              <Slot property="age">
+                <ValueExpr language="Java"><![CDATA[
+ b.getAge() + 1    						
+      						]]></ValueExpr>
+              </Slot>
+            </UPDATE-AGT>
+          </DO>
+        </ReactionRule>
+      </PhysicalAgentType>
+    </EntityTypes>
+    <EnvironmentRules>
+      <!-- =================================================== -->
+      <EnvironmentRule name="Move_Rule">
+        <!-- =================================================== -->
+        <documentation>
+          <dc:description>When a bug performs a move action, its position is updated by adding one of the vectors {-1,0,1} x {-1,0,1} chosen at random using the predefined SpaceModel methods newX/newY. In addition, a perception event that it has arrived at a new cell is created for the bug.</dc:description>
+        </documentation>
+        <WHEN eventType="Move" eventVariable="e"/>
+        <FOR objectVariable="b" objectType="Bug">
+          <ObjectRef language="Java">e.getActor()</ObjectRef>
+        </FOR>
+        <DO>
+          <UPDATE-ENV>
+            <UpdateObject objectVariable="b">
+              <Slot property="x">
+                <ValueExpr language="Java"><![CDATA[
+Simulator.spaceModel.newX( b, Random.uniformInt(3)-1)                	
+                	]]></ValueExpr>
+              </Slot>
+              <Slot property="y">
+                <ValueExpr language="Java"><![CDATA[
+Simulator.spaceModel.newY( b, Random.uniformInt(3)-1)                	
+                	]]></ValueExpr>
+              </Slot>
+            </UpdateObject>
+          </UPDATE-ENV>
+          <SCHEDULE-EVT>
+            <PerceptionEventExpr eventType="ArrivalOnNewCell">
+              <PerceiverIdRef language="Java">e.getActorIdRef()</PerceiverIdRef>
+            </PerceptionEventExpr>
+          </SCHEDULE-EVT>
+        </DO>
+      </EnvironmentRule>
+      <!-- ============================== -->
+      <EnvironmentRule name="Eat_Rule">
+        <!-- =========================== -->
+        <documentation>
+          <dc:description>When a bug has performed an Eat action, it grows by 1/5 of the food level of its cell and the food level of the cell is decreased to 1/2.</dc:description>
+        </documentation>
+        <WHEN eventType="Eat" eventVariable="e"/>
+        <FOR objectVariable="b" objectType="Bug">
+          <ObjectRef language="Java">e.getActor()</ObjectRef>
+        </FOR>
+        <IF language="Java"><![CDATA[
+Simulator.spaceModel.getGridCell( (int) b.getX(), (int) b.getY()).getFoodLevel() > 0        	
+        	]]></IF>
+        <THEN>
+          <UPDATE-ENV>
+            <UpdateObject objectVariable="b">
+              <Slot property="m">
+                <ValueExpr language="Java"><![CDATA[
+b.getM() + Simulator.spaceModel.getGridCell( (int)b.getX(), (int) b.getY()).getFoodLevel() / 5.0                	
+                ]]></ValueExpr>
+              </Slot>
+            </UpdateObject>
+            <UpdateGridCell gridCellVariable="gridCell">
+              <XCoordinate language="Java">(int) b.getX()</XCoordinate>
+              <YCoordinate language="Java">(int) b.getY()</YCoordinate>
+              <Slot property="foodLevel">
+              	<ValueExpr language="Java"><![CDATA[
+gridCell.getFoodLevel() - gridCell.getFoodLevel()/2.0
+             ]]></ValueExpr>
+              </Slot>
+            </UpdateGridCell>
+          </UPDATE-ENV>
+        </THEN>
+      </EnvironmentRule>
+      <!-- =================================================== -->
+      <EnvironmentRule name="Eat_EachOther_Rule">
+       <!-- =================================================== -->
+        <WHEN eventType="Eat_EachOther" eventVariable="e"/>
+        <FOR objectVariable="b1" objectType="Bug">
+          <ObjectRef language="Java">e.getActor()</ObjectRef>
+        </FOR>
+        <FOR objectVariable="b2" objectType="Bug">
+          <ObjectRef language="Java">(Bug)e.getBug()</ObjectRef>
+        </FOR>
+        <IF language="Java"><![CDATA[
+b1.getM() > b2.getM()   			
+          ]]></IF>
+        <THEN>
+          <UPDATE-ENV>
+            <UpdateObject objectVariable="b1">
+              <Slot property="m">
+                <ValueExpr language="Java"><![CDATA[
+b1.getM() + b2.getM()/5   						
+    						  ]]></ValueExpr>
+              </Slot>
+            </UpdateObject>
+            <DestroyObject objectVariable="b2"/>
+          </UPDATE-ENV>
+        </THEN>
+        <ELSE>
+          <UPDATE-ENV>
+            <UpdateObject objectVariable="b2">
+              <Slot property="m">
+                <ValueExpr language="Java"><![CDATA[
+b2.getM() + b1.getM()/5   						
+    						  ]]></ValueExpr>
+              </Slot>
+            </UpdateObject>
+            <DestroyObject objectVariable="b1"/>
+          </UPDATE-ENV>
+        </ELSE>
+      </EnvironmentRule>
+      <!-- =================================================== -->
+      <EnvironmentRule name="Reproduce_Rule">
+        <!-- =================================================== -->
+        <WHEN eventType="Reproduce" eventVariable="e"/>
+      	<FOR objectVariable="b" objectType="Bug">
+      		<ObjectRef language="Java">e.getActor()</ObjectRef>
+      	</FOR>
+        <DO>
+        	<UPDATE-ENV>
+        		<UpdateObject objectVariable="b">
+        			<Slot property="isPregnant" value="true" />
+        		</UpdateObject>
+        	</UPDATE-ENV>
+          <SCHEDULE-EVT>
+            <CausedEventExpr eventType="BugIsBorn">
+              <Delay>
+                <ValueExpr language="Java"><![CDATA[
+Global.getPregnancyInterval()                	
+                	]]></ValueExpr>
+              </Delay>
+            	<Slot property="motherBugId">
+            		<ValueExpr language="Java">b.getId()</ValueExpr>
+            	</Slot>
+            </CausedEventExpr>
+          </SCHEDULE-EVT>
+        </DO>
+      </EnvironmentRule>
+      <!-- =================================================== -->
+      <EnvironmentRule name="BugIsBorn_Rule">
+        <!-- =================================================== -->
+        <WHEN eventType="BugIsBorn" eventVariable="e"/>
+      	<FOR objectVariable="mb" objectType="Bug">
+      		<ObjectIdRef language="Java">e.getMotherBugId()</ObjectIdRef>
+      	</FOR>
+        <DO>
+          <UPDATE-ENV>
+          	<UpdateObject objectVariable="mb">
+          		<Slot property="isPregnant" value="false" />
+          	</UpdateObject>
+            <Create>
+              <PhysicalAgent type="Bug" hasRandomPosition="true" m="1">
+                <Slot property="age" value="0"/>
+                <Slot property="gender">
+                  <ValueExpr language="Java"><![CDATA[
+ Global.randomGender()   								
+    								]]></ValueExpr>
+                </Slot>
+              	<Slot property="isPregnant" value="false" />
+              	<PeriodicTimeEvent occurrenceTime="1" type="GoOn"/>
+              </PhysicalAgent>
+            </Create>
+          </UPDATE-ENV>
+        </DO>
+      </EnvironmentRule>
+    </EnvironmentRules>
+  </SimulationModel>
+  <!-- =================================================== -->
+  <InitialState>
+    <!-- =================================================== -->
+    <PhysicalAgents type="Bug" rangeStartID="1" rangeEndID="10" hasRandomPosition="true">
+      <Slot property="m" value="1"/>
+      <Slot property="age" value="0"/>
+    	<Slot property="isPregnant" value="false" />
+      <Slot property="gender">
+        <ValueExpr language="Java"><![CDATA[
+Global.randomGender()   			
+    		  ]]></ValueExpr>
+      </Slot>
+      <PeriodicTimeEvent occurrenceTime="1" type="GoOn"/>
+    </PhysicalAgents>
+
+    <GlobalVariable name="maturityLevel" value="20"/>
+    <GlobalVariable name="pregnancyInterval" value="3"/>
+    <GridCells>
+      <Slot property="foodLevel">
+      	<RandomVariable>
+      		<Uniform lowerBound="0" upperBound="10" />
+      	</RandomVariable>
+      </Slot>
+    </GridCells>
+  </InitialState>
+ <!-- ============= -->
+  <UserInterface>
+  	<!-- ============= -->
+    <AnimationUI>
+    	<aors:DisplayDescription xmlns="http://www.w3.org/1999/xhtml">
+    	  <aors:HtmlText>
+    	    <h:p>Bugs move around randomly in a grid space. They feed, grow and reproduce. 
+    	      Food is represented as a grid cell property. When a bug arrives on a new cell, 
+    	      it eats the available food.</h:p>
+    	    <h:ul>
+    	      <li>Male bugs are represented as blue circles</li>
+    	      <li>Female bugs are represented as pink circles</li>
+    	      <li>Pregnant females are represented as red circles</li>
+    	    </h:ul>
+    	    <h:p>When two male (or female) bugs meet in one cell the older one eats the 
+    	      younger one.</h:p>
+    	    <h:p>When a male and female meet in a cell they 
+    	      reproduce if both of them are older than the maturity level (= 20 Days), otherwise the 
+    	      older bug eats the younger one.</h:p>
+    	    <h:p>A pregnant female will have an offspring after the pregnancy time (= 3 Days).</h:p>
+    	  </aors:HtmlText>
+    	</aors:DisplayDescription>
+      <Views>
+        <SpaceView>
+        		<TwoDimensionalGridSpaceView2D stroke="black">
+        			<GridCellPropertyVisualizationMap cellViewProperty="fill" property="foodLevel" mapType="caseWise" v0="white" a0="1" v1="128 255 128" a1="3" v2="172 255 172" a2="6" v3="0 255 0" a3="8" v4="0 204 0" />
+        		</TwoDimensionalGridSpaceView2D>
+        </SpaceView>    	
+   <!-- ============================================= -->
+    <PhysicalObjectView physicalObjectType="Bug">
+   <!-- ============================================= -->
+       <PhysicalShape2D>
+          <Circle fill="brown" strokeWidth="4" stroke="black">
+            <ShapePropertyVisualizationMap shapeProperty="r" property="m" mapType="polynomial" a0="0.2" a1="0.008" />
+          	<ShapePropertyVisualizationMap shapeProperty="fill" property="gender" mapType="equalityCaseWise" v0="blue" a0="m" v1="pink" a1="f" />
+          	<ShapePropertyVisualizationMap shapeProperty="fill" property="isPregnant" mapType="equalityCaseWise" v0="red" a0="true" v1="pink" a1="false" />
+          </Circle>
+       </PhysicalShape2D>
+    	<DisplayInfo property="age" content=" days old"></DisplayInfo>
+      </PhysicalObjectView>
+    </Views>
+  </AnimationUI>
+</UserInterface>
+</SimulationScenario>

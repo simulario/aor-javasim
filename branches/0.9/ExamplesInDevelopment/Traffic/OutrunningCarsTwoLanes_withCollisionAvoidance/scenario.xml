@@ -1,0 +1,390 @@
+<?xml version="1.0"?>
+<?xml-stylesheet type="text/xsl" href="prettyprint.xsl"?>
+
+<SimulationScenario xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+ xsi:schemaLocation="http://aor-simulation.org ../../../AORSL/AORSL_0-9.xsd"
+ xmlns:dc="http://purl.org/dc/elements/1.1/"
+ xmlns="http://aor-simulation.org"
+ xmlns:aors="http://aor-simulation.org"
+ version="0.9"
+ scenarioName="OutrunningCars_with_CollisionAvoidance"
+ scenarioTitle="Running cars on a two lane highway."
+ simulationManagerDirectory="../../..">
+
+  <SimulationParameters simulationSteps="10000" stepDuration="100" timeUnit="ms" stepTimeDelay="0"
+    randomSeed="100"/>
+
+  <SimulationModel modelName="OutrunningCars_withCollisionAvoidance"
+    modelTitle="Cars that outrun each other on a Highway and try to avoid collisions.">
+
+    <documentation>
+      <dc:description> This examples models cars with distinct velocities moving on a lane. If a car
+        perceives another car it will use the second lane of the track to outrun the car while
+        trying to avoid collisions with other physical objects. </dc:description>
+    </documentation>
+    
+    <SpaceModel spatialDistanceUnit="m" geometry="Toroidal">
+  	  <OneDimensional multiplicity="2" xMax="5000" autoKinematics="true" autoCollisionDetection="true"/>
+  	</SpaceModel>
+
+    <EntityTypes>
+
+      <!-- ActionEvents for switching lanes on track. -->
+      <ActionEventType name="SwitchToLeftLane"/>
+      <ActionEventType name="SwitchToRightLane"/>
+
+      <!-- ActionsEvents for decrease the car speed -->
+      <ActionEventType name="SlowDown">
+        <Attribute name="velocity" type="Float"/>
+      </ActionEventType>
+
+      <!-- ActionsEvents for increase the car speed -->
+      <ActionEventType name="SpeedUp">
+        <Attribute name="velocity" type="Float"/>
+      </ActionEventType>
+
+      <!-- The vehicle perceive its speed -->
+      <PerceptionEventType name="UpdateVelocityBelief">
+        <Attribute name="velocity" type="Float"/>
+      </PerceptionEventType>
+
+      <!-- automated objects that are moving on tracks -->
+      <PhysicalObjectType name="Ball" idPerceivable="true"/>
+
+      <!-- Definition of Car agent -->
+      <PhysicalAgentType name="Car" autoPerception="true" memorySize="100" idPerceivable="true">
+        <SelfBeliefAttribute name="myLane" type="Integer"/>
+        <SelfBeliefAttribute name="maxVelocity" type="Float"/>
+        <SelfBeliefAttribute name="myVelocity" type="Float"/>
+        <SelfBeliefAttribute name="distanceInLane" type="Float"/>
+
+        <!-- On each step event -->
+        <PeriodicTimeEventType name="SimulationStep">
+          <Periodicity>
+            <ValueExpr language="Java">1</ValueExpr>
+          </Periodicity>
+        </PeriodicTimeEventType>
+
+        <!-- Update belief of the car about its velocity -->
+        <ReactionRule name="UpdateVelocityBelief_Rule" agentVariable="vehicle">
+          <documentation>
+            <dc:description> The vehicle update its belief about its actual speed. </dc:description>
+          </documentation>
+          <WHEN eventType="UpdateVelocityBelief" eventVariable="e"/>
+          <DO>
+            <UPDATE-AGT>
+              <SelfBeliefSlot property="myVelocity">
+                <ValueExpr language="Java"> e.getVelocity() </ValueExpr>
+              </SelfBeliefSlot>
+            </UPDATE-AGT>
+          </DO>
+        </ReactionRule>
+
+        <!-- the car has detected an object in front but can't outrun since another object comes from back on lane 2 -->
+        <ReactionRule name="ObjectInFrontDetected_SlowDown_Rule" agentVariable="car">
+          <documentation>
+            <dc:description> The car has detected another object in its front (car or ball). It
+              can't start an overrun since another object comes from back on lane 2.
+            </dc:description>
+          </documentation>
+          <WHEN eventType="PhysicalObjectPerceptionEvent" eventVariable="evt"/>
+          <IF language="Java">
+            <![CDATA[
+							evt.getPerceivedPhysicalObject().getY() == car.getMyLane()
+							&& evt.getPerceptionAngle() == 0.0
+							&& car.getMyVelocity() - 2 >= 0
+						]]>
+          </IF>
+          <THEN>
+            <SCHEDULE-EVT>
+              <ActionEventExpr actionEventType="SlowDown">
+                <Slot property="velocity" value="2"/>
+              </ActionEventExpr>
+            </SCHEDULE-EVT>
+          </THEN>
+        </ReactionRule>
+
+        <!-- the car has detected an object in front and no object on left lane is seen - start left overrun -->
+        <ReactionRule name="StartOutrunLeft_Rule" agentVariable="car">
+          <documentation>
+            <dc:description> The car has detected another object in its front (car or ball). Car
+              starts a left outrun. </dc:description>
+          </documentation>
+          <WHEN eventType="PhysicalObjectPerceptionEvent" eventVariable="evt"/>
+          <IF language="Java">
+            <![CDATA[
+							car.getMyLane() == 2 
+							&& evt.getPerceivedPhysicalObject().getY() == car.getMyLane()
+							&& evt.getPerceptionAngle() == 0.0
+							&& car.getFirstIndexWith("perceptionAngle > %d && perceptionAngle < %d", 180.5, 359.5) == -1
+							&& car.getMyVelocity() < (car.getMaxVelocity() - car.getMaxVelocity()/10.0)
+							&& car.getDistanceInLane() >= 1500
+						]]>
+          </IF>
+          <THEN>
+            <UPDATE-AGT>
+              <SelfBeliefSlot property="myLane" value="1"/>
+              <SelfBeliefSlot property="distanceInLane" value="0"/>
+            </UPDATE-AGT>
+            <SCHEDULE-EVT>
+              <ActionEventExpr actionEventType="SwitchToLeftLane"/>
+            </SCHEDULE-EVT>
+          </THEN>
+        </ReactionRule>
+
+        <!-- the car has detected an object in front and no object on right lane is seen - start right overrun -->
+        <ReactionRule name="StartOutrunRight_Rule" agentVariable="car">
+          <documentation>
+            <dc:description> The car has has overrun the object and it has free place on lane 1.
+            </dc:description>
+          </documentation>
+          <WHEN eventType="PhysicalObjectPerceptionEvent" eventVariable="evt"/>
+          <IF language="Java">
+            <![CDATA[
+							car.getMyLane() == 1 
+							&& evt.getPerceivedPhysicalObject().getY() == car.getMyLane()
+							&& evt.getPerceptionAngle() == 0.0
+							&& car.getFirstIndexWith("perceptionAngle > %d && perceptionAngle < %d", 0.1, 179.9) == -1
+							&& car.getMyVelocity() < (car.getMaxVelocity() - car.getMaxVelocity()/10.0) 
+							&& car.getDistanceInLane() >= 1500
+						]]>
+          </IF>
+          <THEN>
+            <UPDATE-AGT>
+              <SelfBeliefSlot property="myLane" value="2"/>
+              <SelfBeliefSlot property="distanceInLane" value="0"/>
+            </UPDATE-AGT>
+            <SCHEDULE-EVT>
+              <ActionEventExpr actionEventType="SwitchToRightLane"/>
+            </SCHEDULE-EVT>
+          </THEN>
+        </ReactionRule>
+
+
+        <!-- Cars increase their speed if the maximum speed is not reached -->
+        <ReactionRule name="IncreaseCarSpeed_Rule" agentVariable="car">
+          <documentation>
+            <dc:description> The car increase the speed if no object is in front. </dc:description>
+          </documentation>
+          <WHEN eventType="SimulationStep"/>
+          <IF language="Java">
+            <![CDATA[
+							car.getMyVelocity() < car.getMaxVelocity()
+						]]>
+          </IF>
+          <THEN>
+            <SCHEDULE-EVT>
+              <ActionEventExpr actionEventType="SpeedUp">
+                <Slot property="velocity" value="0.5"/>
+              </ActionEventExpr>
+            </SCHEDULE-EVT>
+          </THEN>
+        </ReactionRule>
+
+        <!--  compute the distance done on this lane -->
+        <ReactionRule name="UpdateDistanceOnLane" agentVariable="car">
+          <documentation>
+            <dc:description> Update the distance done on this lane from the last switch.
+            </dc:description>
+          </documentation>
+          <WHEN eventType="SimulationStep"/>
+          <DO>
+            <UPDATE-AGT>
+              <SelfBeliefSlot property="distanceInLane">
+                <ValueExpr language="Java"> car.getDistanceInLane() + car.getMyVelocity()
+                </ValueExpr>
+              </SelfBeliefSlot>
+            </UPDATE-AGT>
+          </DO>
+        </ReactionRule>
+
+      </PhysicalAgentType>
+
+    </EntityTypes>
+
+    <!-- =================== Environment rules ========================== -->
+    <EnvironmentRules>
+      <!-- the car speed is decreased with a specified amount -->
+      <EnvironmentRule name="SlowDown_EnvRule">
+        <documentation>
+          <dc:description> When a car agent has performed a SlowDown action, the environment
+            simulator adjusts its velocity accordingly. The result velocity can't be lower than 0
+            (not moving back!). </dc:description>
+        </documentation>
+        <WHEN eventType="SlowDown" eventVariable="e"/>
+        <DO>
+          <UPDATE-ENV>
+            <UpdateObject>
+              <ObjectRef objectType="Car" language="Java">e.getActor()</ObjectRef>
+              <Slot property="vx">
+                <ValueExpr language="Java">
+                  <![CDATA[
+              						((Car) e.getActor()).getVx() - e.getVelocity() 
+              					]]>
+                </ValueExpr>
+              </Slot>
+            </UpdateObject>
+          </UPDATE-ENV>
+          <SCHEDULE-EVT>
+            <PerceptionEventExpr eventType="UpdateVelocityBelief">
+              <PerceiverIdRef language="Java">e.getActor().getId()</PerceiverIdRef>
+              <Slot property="velocity">
+                <ValueExpr language="Java"> ((Car) e.getActor()).getVx() </ValueExpr>
+              </Slot>
+            </PerceptionEventExpr>
+          </SCHEDULE-EVT>
+        </DO>
+      </EnvironmentRule>
+
+      <!-- the car speed is increased with a particular value -->
+      <EnvironmentRule name="SpeedUp_EnvRule">
+        <documentation>
+          <dc:description> When a car agent has performed a SpeedUp action, the environment
+            simulator adjusts its velocity accordingly. </dc:description>
+        </documentation>
+        <WHEN eventType="SpeedUp" eventVariable="e"/>
+        <DO>
+          <UPDATE-ENV>
+            <UpdateObject>
+              <ObjectRef objectType="Car" language="Java">e.getActor()</ObjectRef>
+              <Slot property="vx">
+                <ValueExpr language="Java">
+                  <![CDATA[
+									((Car) e.getActor()).getVx() + e.getVelocity()
+								]]>
+                </ValueExpr>
+              </Slot>
+            </UpdateObject>
+          </UPDATE-ENV>
+          <SCHEDULE-EVT>
+            <PerceptionEventExpr eventType="UpdateVelocityBelief">
+              <PerceiverIdRef language="Java">e.getActor().getId()</PerceiverIdRef>
+              <Slot property="velocity">
+                <ValueExpr language="Java"> ((Car) e.getActor()).getVx() </ValueExpr>
+              </Slot>
+            </PerceptionEventExpr>
+          </SCHEDULE-EVT>
+        </DO>
+      </EnvironmentRule>
+
+      <!-- the car is switched to left lane -->
+      <EnvironmentRule name="SwitchToLeftLane_EnvRule">
+        <documentation>
+          <dc:description> The car is switched to left lane. </dc:description>
+        </documentation>
+        <WHEN eventType="SwitchToLeftLane" eventVariable="e"/>
+        <DO>
+          <UPDATE-ENV>
+            <UpdateObject>
+              <ObjectRef objectType="Car" language="Java">e.getActor()</ObjectRef>
+              <Slot property="y" value="1"/>
+            </UpdateObject>
+          </UPDATE-ENV>
+        </DO>
+      </EnvironmentRule>
+
+      <!-- the car is switched to right lane -->
+      <EnvironmentRule name="SwitchToRightLane_EnvRule">
+        <documentation>
+          <dc:description> The car is switched to right lane. </dc:description>
+        </documentation>
+        <WHEN eventType="SwitchToRightLane" eventVariable="e"/>
+        <DO>
+          <UPDATE-ENV>
+            <UpdateObject>
+              <ObjectRef objectType="Car" language="Java">e.getActor()</ObjectRef>
+              <Slot property="y" value="2"/>
+            </UpdateObject>
+          </UPDATE-ENV>
+        </DO>
+      </EnvironmentRule>
+
+      <!-- If the cars ar colliding then remove them from the scene -->
+      <EnvironmentRule name="CollidingCarsEnvRule">
+        <WHEN eventType="CollisionEvent" eventVariable="evt"/>
+        <DO>
+          <UPDATE-ENV>
+            <DestroyObject objectType="Car">
+              <ObjectRef language="Java">evt.getPhysicalObject1()</ObjectRef>
+            </DestroyObject>
+            <DestroyObject objectType="Car">
+              <ObjectRef language="Java">evt.getPhysicalObject2()</ObjectRef>
+            </DestroyObject>
+          </UPDATE-ENV>
+        </DO>
+      </EnvironmentRule>
+
+    </EnvironmentRules>
+
+  </SimulationModel>
+
+  <!-- ===================== Set the Initial State ======================= -->
+  <InitialState>
+
+    <PhysicalAgents type="Car" rangeStartID="1" rangeEndID="25" y="2" width="50"
+      perceptionRadius="125" height="30">
+      <!-- Car x coordinate -->
+      <Slot property="x">
+        <ValueExpr language="Java">car.getId()*150</ValueExpr>
+      </Slot>
+
+      <!-- Initialy, cars starts with a null speed -->
+      <Slot property="vx" value="0"/>
+
+      <!-- cars starts on the right lane -->
+      <SelfBeliefSlot property="myLane" value="2"/>
+
+      <!-- the car have a random maximum speed -->
+      <SelfBeliefSlot property="maxVelocity">
+        <ValueExpr language="Java">Random.uniform(20, 30)</ValueExpr>
+      </SelfBeliefSlot>
+
+      <!-- the actual car velocity -->
+      <SelfBeliefSlot property="myVelocity" value="0"/>
+
+      <!-- a periodic time event that starts on step 1 -->
+      <PeriodicTimeEvent occurrenceTime="1" type="SimulationStep"/>
+    </PhysicalAgents>
+
+    <!-- the ball 1 run on track 1 with a constant speed -->
+    <PhysicalObject type="Ball" id="10001" name="ball_1" x="3500" vx="15" y="1" m="1" width="25"/>
+
+    <!-- the bal 2 run on the second track with a constant speed -->
+    <PhysicalObject type="Ball" id="10002" name="ball_2" x="3500" vx="10" y="2" m="1" width="25"/>
+
+  </InitialState>
+
+  <!-- ======================== Define Views & Sounds ================================== -->
+  <UserInterface>
+    <AnimationUI>
+      <Views>
+        <SpaceView canvasColor="grey">
+          <OneDimensionalSpaceView2D mode="circular" trackColor="blue" trackWidth="80px"/>
+        </SpaceView>
+        <PhysicalObjectView physicalObjectType="Car">
+          <PhysicalShape2D>
+            <Rectangle fill="green"/>
+          </PhysicalShape2D>
+        </PhysicalObjectView>
+
+        <PhysicalObjectView physicalObjectType="Ball">
+          <PhysicalShape2D>
+            <Circle fill="black"/>
+          </PhysicalShape2D>
+        </PhysicalObjectView>
+
+        <!-- A sound is played when a car is switching to first lane -->
+        <EventAppearance eventType="SwitchToLeftLane" duration="300">
+          <MidiSound instrumentNo="10" noteSequence="96/300"/>
+        </EventAppearance>
+
+        <!-- A sound is played when a car is switch to second lane -->
+        <EventAppearance eventType="SwitchToRightLane" duration="300">
+          <MidiSound instrumentNo="20" noteSequence="80/300"/>
+        </EventAppearance>
+      </Views>
+    </AnimationUI>
+
+  </UserInterface>
+
+</SimulationScenario>

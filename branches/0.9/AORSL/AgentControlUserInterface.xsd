@@ -1,0 +1,500 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<?xml-stylesheet type="text/xsl" href="ersl/refman/refman.xsl"?>
+
+<xs:schema xmlns:xs="http://www.w3.org/2001/XMLSchema" xmlns:aors="http://aor-simulation.org" xmlns:xml="http://www.w3.org/XML/1998/namespace"
+  targetNamespace="http://aor-simulation.org" elementFormDefault="qualified">
+
+	<!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->
+	<xs:redefine schemaLocation="ERSL/UserInterface.xsd">
+		<!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->
+		<xs:complexType name="AnimationUI.type">
+			<xs:complexContent>
+				<xs:extension base="aors:AnimationUI.type">
+					<xs:sequence>
+						<xs:element ref="aors:AgentControlUI" minOccurs="0"/>
+					</xs:sequence>          
+				</xs:extension>
+			</xs:complexContent>
+		</xs:complexType>
+	</xs:redefine>
+
+	<!-- =================================================================== -->
+	<xs:element name="AgentControlUI">
+	<!-- =================================================================== -->
+		<xs:complexType>
+      <xs:sequence>
+      	<xs:element ref="aors:AgentControlByAgentType" maxOccurs="unbounded"/>
+      </xs:sequence>
+			<xs:attribute name="initiallyPlayedAgent" type="aors:CanonicalName" use="optional">
+				<xs:annotation><xs:documentation>One of the agents defined in the initial state and defined to be playable in an AgentControlByAgentType element. </xs:documentation></xs:annotation>
+			</xs:attribute>
+			<xs:attribute name="waitForUserInput" type="xs:boolean" use="optional" default="false">
+				<xs:annotation><xs:documentation>In the case of a single-user simulation this means interrupt the simulation run while waiting for the user input. In the case of a multi-user simulation this means that rounds are sequential, and the simulator waits for the user input for some time (defined by the timeout setting); otherwise rounds are parallelized in the sense that any agent simulator may transmit action decisions/events for a simulation step during a time period determined by the timeout setting. </xs:documentation></xs:annotation>
+    	</xs:attribute>
+    	<xs:attribute name="timeoutSec" type="xs:positiveInteger" use="optional">
+    		<xs:annotation><xs:documentation>The timeout for the human-controlled agents' response time in number of seconds. This attribute is only meaningful for asynchronous ("round-based") MULTI-USER simulations. </xs:documentation></xs:annotation>
+    	</xs:attribute>
+    	<xs:attribute name="roundEventType" type="aors:CanonicalName" use="optional">
+    		<xs:annotation><xs:documentation>If waitForUserInput is true, then this attribute specifies the type of exogenous event that defines the start of a new round when the simulator would ask the user-controlled agent simulators for their user inputs. </xs:documentation></xs:annotation>
+    	</xs:attribute>
+    </xs:complexType>
+  </xs:element>
+	<!-- =================================================================== -->
+	<xs:element name="AgentControlByAgentType">
+	<!-- =================================================================== -->
+		<xs:annotation><xs:documentation>
+			The agent control UI has 3 basic elements: output panels containing either a current event list or output fields, 
+			user action forms allowing to enter parameter values for actions that can be performed at any time 
+			or in response to certain events, and user action event listeners.
+		</xs:documentation></xs:annotation>
+		<xs:complexType>
+      <xs:sequence>
+      	<xs:element name="TopOutputPanel" type="aors:HorizontalOutputPanel.type" minOccurs="0" maxOccurs="1">
+      		<xs:annotation><xs:documentation>For rendering a group of up to seven output fields in a horizontal bar on the top of the canvas. </xs:documentation></xs:annotation>
+      	</xs:element>
+      	<xs:element name="BottomOutputPanel" type="aors:HorizontalOutputPanel.type" minOccurs="0" maxOccurs="1">
+      		<xs:annotation><xs:documentation>For rendering a group of up to seven utput fields in a horizontal bar on the bottom of the canvas. </xs:documentation></xs:annotation>
+      	</xs:element>
+      	<xs:element name="LeftOutputPanel" type="aors:VerticalOutputPanel.type" minOccurs="0" maxOccurs="1">
+      		<xs:annotation><xs:documentation>For rendering an event list or up to seven output field groups in a vertical bar on the left of the canvas. </xs:documentation></xs:annotation>
+      	</xs:element>
+      	<xs:element name="RightOutputPanel" type="aors:VerticalOutputPanel.type" minOccurs="0" maxOccurs="1">
+      		<xs:annotation><xs:documentation>For rendering an event list or up to seven output field groups in a vertical bar on the right of the canvas. </xs:documentation></xs:annotation>
+      	</xs:element>
+      	<xs:element name="UserActionForm" type="aors:UserActionForm.type" minOccurs="0" maxOccurs="unbounded">
+      		<xs:annotation><xs:documentation>For allowing (re-)actions with parameters. </xs:documentation></xs:annotation>
+      	</xs:element>
+      	<xs:element name="MultiChoiceUserActionForm" type="aors:MultiChoiceUserActionForm.type" minOccurs="0" maxOccurs="unbounded">
+      		<xs:annotation><xs:documentation>For allowing (re-)actions with a single parameter by presenting a small number of possible choices/options such that the value of the action event parameter is given by the selected option. </xs:documentation></xs:annotation>
+      	</xs:element>
+      	<xs:element name="UserActionEventListener" type="aors:UserActionEventListener.type" minOccurs="0" maxOccurs="unbounded">
+      		<xs:annotation><xs:documentation>For allowing actions without parameters by mapping a user interface event to an action rule. </xs:documentation></xs:annotation>
+      	</xs:element>
+      </xs:sequence>
+      <xs:attribute name="type" type="aors:CanonicalName" use="required">
+      	<xs:annotation><xs:documentation>The agent type, instances of which can be controlled with the specified UI. </xs:documentation></xs:annotation>
+      </xs:attribute>
+    	<xs:attribute name="playableAgents" type="aors:ListOfCanonicalName" use="optional">
+    		<xs:annotation><xs:documentation>A list of agent names specifying those agents (defined in the initial state) that are playable by a human user. </xs:documentation></xs:annotation>
+    	</xs:attribute>
+      <xs:attribute name="suspendReactionRules" type="aors:ListOfCanonicalName" use="optional">
+      	<xs:annotation><xs:documentation>Allows to specify a list of reaction rules that will not be executed, when an agent of the specified type is controlled by a user. </xs:documentation></xs:annotation>				
+      </xs:attribute>
+			<xs:attribute name="htmlTemplate" type="xs:anyURI" use="optional">
+				<xs:annotation><xs:documentation>Allows to specify a pre-defined or user-defined HTML template for the user interface. 
+					If no value is provided for this attribute, a default template will be used. </xs:documentation></xs:annotation>				
+			</xs:attribute>
+			<xs:attribute name="cssFile" type="xs:anyURI" use="optional">
+				<xs:annotation><xs:documentation>Allows to specify a pre-defined or user-defined CSS file for styling the user interface. 
+					If no value is provided for this attribute, a default style will be used. </xs:documentation></xs:annotation>								
+			</xs:attribute>
+		</xs:complexType>
+  </xs:element>
+	<!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->
+	<xs:complexType name="HorizontalOutputPanel.type">
+	<!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->
+		<xs:sequence>
+			<xs:element ref="aors:OutputFieldGroup"/>
+		</xs:sequence>
+	</xs:complexType>
+	<!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->
+	<xs:complexType name="VerticalOutputPanel.type">
+	<!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->
+		<xs:choice>
+			<xs:element name="EventList" type="aors:EventList.type"/>
+			<xs:sequence>
+				<xs:element ref="aors:OutputFieldGroup" maxOccurs="7"/>
+			</xs:sequence>
+		</xs:choice>
+		<xs:attribute name="width" type="aors:PositiveInteger-OR-Pixel-OR-Percent.type" use="optional"/>
+	</xs:complexType>
+	<!-- =================================================================== -->
+	<xs:element name="OutputFieldGroup">
+	<!-- =================================================================== -->
+		<xs:complexType>
+			<xs:sequence>
+				<xs:element ref="aors:Label" minOccurs="0"/>
+				<xs:element name="OutputField" type="aors:OutputField.type" maxOccurs="7">
+					<xs:annotation><xs:documentation>
+						Output fields allow to display information about the agent itself, about other objects or about statistics.
+					</xs:documentation></xs:annotation>
+				</xs:element>
+			</xs:sequence>
+			<xs:attribute name="label" type="xs:string" use="optional"/>
+			<xs:attribute name="image" type="xs:anyURI" use="optional">
+				<xs:annotation><xs:documentation xml:lang="en">An image file from the media folder. </xs:documentation></xs:annotation>
+			</xs:attribute>
+			<xs:attribute name="backgroundImage" type="xs:anyURI" use="optional">
+				<xs:annotation><xs:documentation xml:lang="en">An image file from the media folder to be used as a background. </xs:documentation></xs:annotation>
+			</xs:attribute>
+		</xs:complexType>
+	</xs:element>
+	<!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->	
+	<xs:complexType name="EventList.type">
+	<!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->
+		<xs:choice maxOccurs="unbounded">
+			<xs:element name="PerceptionEventView" minOccurs="0" maxOccurs="unbounded">
+				<xs:annotation><xs:documentation>For showing generic perception events. </xs:documentation></xs:annotation>
+				<xs:complexType>
+					<xs:sequence>
+						<xs:element ref="aors:Label" minOccurs="0"/>
+						<xs:element name="EventProperty" type="aors:PropertyView.type" minOccurs="0" maxOccurs="unbounded"/>    							
+					</xs:sequence>
+					<xs:attribute name="perceptionEventType" type="aors:CanonicalName" use="required"/>
+					<xs:attributeGroup ref="aors:EventView.CommonAttributes"/>
+				</xs:complexType>
+			</xs:element>
+			<xs:element name="PhysicalObjectPerceptionEventView" minOccurs="0" maxOccurs="unbounded">
+				<xs:annotation><xs:documentation>For showing physical object perception events. </xs:documentation></xs:annotation>
+				<xs:complexType>
+					<xs:sequence>
+						<xs:element ref="aors:Label" minOccurs="0"/>
+						<xs:element name="ObjectProperty" type="aors:PropertyView.type" minOccurs="0" maxOccurs="unbounded"/>    							
+					</xs:sequence>
+					<xs:attribute name="objectType" type="aors:CanonicalName" use="required"/>
+					<xs:attribute name="showObjectId" type="xs:boolean" use="optional" default="false"/>
+					<xs:attribute name="showObjectName" type="xs:boolean" use="optional" default="false"/>
+					<xs:attribute name="showDistance" type="xs:boolean" use="optional" default="false"/>
+					<xs:attribute name="showPerceptionAngle" type="xs:boolean" use="optional" default="false"/>
+					<xs:attributeGroup ref="aors:EventView.CommonAttributes"/>
+				</xs:complexType>
+			</xs:element>
+			<xs:element name="InMessageEventView" minOccurs="0" maxOccurs="unbounded">
+				<xs:annotation><xs:documentation>For showing in-message events. </xs:documentation></xs:annotation>
+				<xs:complexType>
+					<xs:sequence>
+						<xs:element ref="aors:Label" minOccurs="0"/>
+						<xs:element name="MessageProperty" type="aors:PropertyView.type" minOccurs="0" maxOccurs="unbounded"/>    							
+					</xs:sequence>
+					<xs:attribute name="messageType" type="aors:CanonicalName" use="required"/>
+					<xs:attribute name="showSender" type="xs:boolean" use="optional" default="true"/>
+					<xs:attributeGroup ref="aors:EventView.CommonAttributes"/>
+				</xs:complexType>
+			</xs:element>
+			<xs:element name="PeriodicTimeEventView" minOccurs="0" maxOccurs="unbounded">
+				<xs:annotation><xs:documentation>For showing periodic time events. </xs:documentation></xs:annotation>
+				<xs:complexType>
+					<xs:sequence>
+						<xs:element ref="aors:Label" minOccurs="0"/>
+					</xs:sequence>
+					<xs:attribute name="periodicTimeEventType" type="aors:CanonicalName" use="required"/>
+					<xs:attributeGroup ref="aors:EventView.CommonAttributes"/>
+				</xs:complexType>
+			</xs:element>
+		</xs:choice>
+		<xs:attribute name="showReminderEvents" type="xs:boolean" use="optional" default="false"/>
+	</xs:complexType>  
+	<!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->
+	<xs:complexType name="PropertyView.type">
+	<!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->
+		<xs:sequence>
+			<xs:element ref="aors:Label" minOccurs="0"/>
+			<xs:element ref="aors:Format" minOccurs="0"/>
+		</xs:sequence>
+		<xs:attribute name="name" type="aors:CanonicalName" use="required"/>
+		<xs:attribute name="label" type="xs:string" use="required"/>
+		<!--xs:attribute name="fieldLength" use="optional">
+			<xs:annotation><xs:documentation>The length of the property field in cm. </xs:documentation></xs:annotation>
+			<xs:simpleType>
+				<xs:restriction base="xs:float">
+					<xs:minExclusive value="0.0"/>
+				</xs:restriction>
+			</xs:simpleType>
+		</xs:attribute-->
+	</xs:complexType>
+	<!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->
+	<xs:attributeGroup name="EventView.CommonAttributes">
+	<!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->
+		<xs:attribute name="label" type="xs:string" use="required"/>
+		<xs:attribute name="icon" type="xs:anyURI" use="optional">
+			<xs:annotation><xs:documentation xml:lang="en">An icon file from the media folder. </xs:documentation></xs:annotation>
+		</xs:attribute>
+		<xs:attribute name="keepInListTime" type="xs:positiveInteger" use="optional" default="1">
+			<xs:annotation><xs:documentation xml:lang="en">The time (in simulation steps) how long the perception event is kept in the list. </xs:documentation></xs:annotation>
+		</xs:attribute>
+	</xs:attributeGroup>
+	<!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->
+	<xs:complexType name="OutputField.type">
+	<!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->
+		<xs:sequence>
+			<xs:group ref="aors:Field.CommonElem"/>
+			<xs:element name="Source" minOccurs="0">
+				<xs:complexType>
+					<xs:choice>
+						<xs:element name="GlobalVariable">
+							<xs:complexType>
+								<xs:attribute name="name" type="aors:CanonicalName" use="required"/>
+							</xs:complexType>
+						</xs:element>	
+						<xs:element name="StatisticsVariable">
+							<xs:complexType>
+								<xs:attribute name="name" type="aors:CanonicalName" use="required"/>
+							</xs:complexType>
+						</xs:element>	
+						<xs:element name="ObjectAttribute">
+							<xs:annotation><xs:documentation xml:lang="en">An attribute of another object/agent. </xs:documentation></xs:annotation>
+							<xs:complexType>
+								<xs:attribute name="objectType" type="aors:CanonicalName" use="required"/>
+								<xs:attribute name="objectIdRef" type="xs:long" use="required"/>
+								<xs:attribute name="attribute" type="aors:CanonicalName" use="required"/>
+							</xs:complexType>
+						</xs:element>
+					</xs:choice>
+				</xs:complexType>
+			</xs:element>
+		</xs:sequence>
+		<xs:attribute name="label" type="xs:string" use="required"/>
+		<xs:attribute name="agentAttribute" type="aors:CanonicalName" use="optional">
+			<xs:annotation><xs:documentation xml:lang="en">An attribute of the controlled agent as the source of the output field. In the case of a PI agent this is an attribute of the agent object, otherwise of the agent subject. </xs:documentation></xs:annotation>			
+		</xs:attribute>
+	</xs:complexType>
+	<!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->
+	<xs:complexType name="UserActionForm.type">
+	<!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->
+		<xs:sequence>
+			<xs:element ref="aors:Label" minOccurs="0"/>
+			<xs:element name="ActionRuleParameterUI" type="aors:ParameterUI.type" minOccurs="0" maxOccurs="unbounded"/>
+		</xs:sequence>
+		<xs:attribute name="label" type="xs:string" use="required"/>
+		<xs:attributeGroup ref="aors:UserActionForm.attributes"/>
+	</xs:complexType>
+	<!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->
+	<xs:attributeGroup name="UserActionForm.attributes">
+	<!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->
+		<xs:attribute name="actionRule" type="aors:CanonicalName" use="required"/>
+		<xs:attribute name="enabledWhenEventOfType" type="aors:CanonicalName" use="optional">
+			<xs:annotation><xs:documentation>The type of events that enable this user action form. If this attribute is used, the user action represents a reaction to an event and the form will only pop up when such an event occurs; otherwise the user action represents an action and the form will be visible all the time.</xs:documentation></xs:annotation>
+		</xs:attribute>
+		<xs:attribute name="enabledWhenInMessageOfType " type="aors:CanonicalName" use="optional">
+			<xs:annotation><xs:documentation>The type of incoming messages that enable this user action form. If this attribute is used, the user action represents a reaction to an incoming message and the form will only pop up when such a message arrives; otherwise the user action represents an action and the form will be visible all the time.</xs:documentation></xs:annotation>
+		</xs:attribute>
+		<xs:attribute name="image" type="xs:anyURI" use="optional">
+			<xs:annotation><xs:documentation xml:lang="en">An image file from the media folder. </xs:documentation></xs:annotation>
+		</xs:attribute>
+		<xs:attribute name="positioning" use="required">
+			<xs:simpleType>
+				<xs:restriction base="xs:string">
+					<xs:enumeration value="LeftTop"/>
+					<xs:enumeration value="LeftBottom"/>
+					<xs:enumeration value="CenterTop"/>
+					<xs:enumeration value="CenterBottom"/>
+					<xs:enumeration value="RightTop"/>
+					<xs:enumeration value="RightBottom"/>
+				</xs:restriction>
+			</xs:simpleType>
+		</xs:attribute>		
+	</xs:attributeGroup>
+	<!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->
+	<xs:complexType name="MultiChoiceUserActionForm.type">
+	<!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->
+		<xs:annotation><xs:documentation>A multi-choice user action form provides an enumeration of selectable options. The associated action rule must have exactly one rule parameter, which is set to the value of the selected option. </xs:documentation></xs:annotation>
+		<xs:sequence>
+			<xs:element ref="aors:HtmlText" minOccurs="0" maxOccurs="unbounded">
+				<xs:annotation><xs:documentation>For providing a hint or for asking a question. </xs:documentation></xs:annotation>
+			</xs:element>
+			<xs:element name="Options">
+				<xs:complexType>
+					<xs:sequence>
+						<xs:element name="Option" maxOccurs="7">
+							<xs:complexType>
+								<xs:sequence>
+									<xs:element name="Text" type="aors:Text" maxOccurs="unbounded"/>																
+								</xs:sequence>
+								<xs:attribute name="value" type="xs:string" use="required">
+									<xs:annotation><xs:documentation>The option value that will be returned after the user has made the selection. </xs:documentation></xs:annotation>
+								</xs:attribute>
+								<xs:attribute name="default" type="xs:boolean" use="optional" default="false">
+									<xs:annotation><xs:documentation>If this attribute is set to true, then this option will be activated (checked) by default. </xs:documentation></xs:annotation>
+								</xs:attribute>
+							</xs:complexType>
+						</xs:element>
+					</xs:sequence>
+				</xs:complexType>
+			</xs:element>
+		</xs:sequence>
+		<xs:attributeGroup ref="aors:UserActionForm.attributes"/>
+		<xs:attribute name="actionRuleParameter" type="aors:CanonicalName" use="required">
+			<xs:annotation><xs:documentation>The parameter of the action rule to which the selected option's value will be assigned. </xs:documentation></xs:annotation>
+		</xs:attribute>
+		<xs:attribute name="allowMultiSelection" type="xs:boolean" use="optional" default="false">
+			<xs:annotation><xs:documentation>A multiple selection results in a set/list of option values. </xs:documentation></xs:annotation>
+		</xs:attribute>
+	</xs:complexType>
+	<!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->
+	<xs:complexType name="UserActionEventListener.type">
+	<!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->
+		<xs:annotation><xs:documentation>A user action event listener maps a user interface event to an action rule of the agent 
+			such that when an event of the specified type occurs, the action rule will be invoked. </xs:documentation></xs:annotation>
+		<xs:sequence>
+		<xs:element name="WHEN">
+			<xs:annotation><xs:documentation>User interface events are defined in the DOM3-Specification [http://www.w3.org/TR/DOM-Level-3-Events]. </xs:documentation></xs:annotation>
+			<xs:complexType>
+				<xs:choice maxOccurs="unbounded">
+					<xs:element ref="aors:KeyboardEventExpr"/>
+					<xs:element ref="aors:MouseEventExpr"/>            
+				</xs:choice>
+			</xs:complexType>
+		</xs:element>
+		<xs:element name="EXECUTE">
+			<xs:complexType>
+				<xs:sequence>
+					<xs:element name="ArgumentSlot" minOccurs="0" maxOccurs="unbounded">
+						<xs:annotation><xs:documentation>Allows to set the value of a parameter. </xs:documentation></xs:annotation>
+						<xs:complexType>
+							<xs:choice>
+								<xs:element name="TargetTypeName"/>
+								<xs:element name="TargetObjectName"/>
+								<xs:element name="TargetObjectIdRef"/>
+								<xs:element name="TargetX"/>
+								<xs:element name="TargetY"/>
+								<xs:element name="TargetObjectPropertyValueExpr">
+									<xs:annotation><xs:documentation>Allows to specify a property value expression of the form o.p or o.getP(), where p is a property 
+										and the object reference o, representing the UI event's target object, is obtained via getObjectById(...) or getObjectByName(...). </xs:documentation></xs:annotation>
+									<xs:complexType>
+										<xs:attribute name="property" type="aors:CanonicalName" use="required"/>
+									</xs:complexType>
+								</xs:element>
+							</xs:choice>
+							<xs:attribute name="parameter" type="aors:CanonicalName" use="required"/>
+							<xs:attribute name="value" type="xs:string" use="optional"/>
+						</xs:complexType>		
+					</xs:element>
+				</xs:sequence>
+				<xs:attribute name="actionRule" type="aors:CanonicalName" use="required"/> 
+			</xs:complexType>
+		</xs:element>
+		</xs:sequence>
+	</xs:complexType>
+	<!-- =================================================================== -->	
+	<xs:element name="KeyboardEventExpr">
+	<!-- =================================================================== -->
+		<xs:complexType>
+			<xs:attribute name="keyIdentifier" type="aors:KeyIdentifiers.type" use="required"/>
+			<xs:attributeGroup ref="aors:KeyModifiers.attrGrp"/>
+		</xs:complexType>
+	</xs:element>
+	<!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->
+	<xs:attributeGroup name="KeyModifiers.attrGrp">
+	<!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->
+		<xs:attribute name="shiftKey" type="xs:boolean" use="optional"/>
+		<xs:attribute name="ctrlKey" type="xs:boolean" use="optional"/>
+		<xs:attribute name="altKey" type="xs:boolean" use="optional">
+			<xs:annotation><xs:documentation>On Macintosh systems this key modifier corresponds to the Option key modifier. </xs:documentation></xs:annotation>
+		</xs:attribute>
+	</xs:attributeGroup>	
+	<!-- =================================================================== -->
+	<xs:element name="MouseEventExpr">
+	<!-- =================================================================== -->	
+		<xs:complexType>
+			<xs:attribute name="mouseEventType" use="required">
+				<xs:simpleType>
+					<xs:annotation><xs:documentation>See http://www.w3.org/TR/2009/WD-DOM-Level-3-Events-20090908/#events-mouseevents </xs:documentation></xs:annotation>
+					<xs:restriction base="xs:string">
+						<xs:enumeration value="click"/>
+						<xs:enumeration value="dblclick"/>
+						<xs:enumeration value="mousedown"/>
+						<xs:enumeration value="mouseup"/>
+					</xs:restriction>
+				</xs:simpleType>
+			</xs:attribute>
+			<xs:attributeGroup ref="aors:EventTarget.attrGrp"/>
+			<xs:attributeGroup ref="aors:KeyModifiers.attrGrp"/>
+		</xs:complexType>
+	</xs:element>
+	<!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->
+	<xs:attributeGroup name="EventTarget.attrGrp">
+	<!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->
+		<xs:attribute name="targetType" type="aors:CanonicalName" use="optional">
+			<xs:annotation><xs:documentation>The type of the target: either "2D-Space" or "GridCell" or an object type. </xs:documentation></xs:annotation>			
+		</xs:attribute>
+		<xs:attribute name="targetObjectIdRef" type="xs:long" use="optional">
+			<xs:annotation><xs:documentation>A reference to the ID of the target object, if targetType is an object type. </xs:documentation></xs:annotation>			
+		</xs:attribute>
+		<xs:attribute name="targetObjectName" type="xs:string" use="optional">
+			<xs:annotation><xs:documentation>The name of the target object, if targetType is an object type. </xs:documentation></xs:annotation>						
+		</xs:attribute>
+		<xs:attribute name="targetX" type="xs:nonNegativeInteger" use="optional">
+			<xs:annotation><xs:documentation>The X ccordinate of the target grid cell or the space, if targetType is "GridCell" or "2D-Space". </xs:documentation></xs:annotation>						
+		</xs:attribute>
+		<xs:attribute name="targetY" type="xs:nonNegativeInteger" use="optional">
+			<xs:annotation><xs:documentation>The Y ccordinate of the target grid cell or the space, if targetType is "GridCell" or "2D-Space". </xs:documentation></xs:annotation>						
+		</xs:attribute>
+	</xs:attributeGroup>
+	<!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->
+	<xs:simpleType name="KeyIdentifiers.type">
+	<!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->
+		<xs:annotation><xs:documentation>See http://www.w3.org/TR/2009/WD-DOM-Level-3-Events-20090908/#keyset-keyidentifiers </xs:documentation></xs:annotation>
+		<xs:restriction base="xs:string">
+			<xs:enumeration value="Down"/>
+			<xs:enumeration value="Left"/>
+			<xs:enumeration value="Right"/>
+			<xs:enumeration value="Up"/>
+			<xs:enumeration value="Enter">
+				<xs:annotation><xs:documentation>This key identifier shall be also used for the Return (Macintosh numpad) key. </xs:documentation></xs:annotation>
+			</xs:enumeration>
+			<xs:enumeration value="F1"/>
+			<xs:enumeration value="F2"/>
+			<xs:enumeration value="F3"/>
+			<xs:enumeration value="F4"/>
+			<xs:enumeration value="F5"/>
+			<xs:enumeration value="F6"/>
+			<xs:enumeration value="F7"/>
+			<xs:enumeration value="F8"/>
+			<xs:enumeration value="F9"/>
+			<xs:enumeration value="F10"/>
+			<xs:enumeration value="F11"/>
+			<xs:enumeration value="F12"/>
+			<xs:enumeration value="Insert"/>
+			<xs:enumeration value="Del">
+				<xs:annotation><xs:documentation>This key identifier shall be also used for the key labeled 'delete' MacOS keyboards when modified by the 'Fn' key.</xs:documentation></xs:annotation>
+			</xs:enumeration>
+			<xs:enumeration value="Backspace">
+				<xs:annotation><xs:documentation>This key identifier shall be also used for the key labeled 'delete' MacOS keyboards when not modified by the 'Fn' key.</xs:documentation></xs:annotation>
+			</xs:enumeration>
+			<xs:enumeration value="PageDown"/>
+			<xs:enumeration value="PageUp"/>
+			<xs:enumeration value="Tab"/>
+			<xs:enumeration value="Esc"/>
+			<xs:enumeration value="Spacebar"/>
+			<xs:enumeration value="#"/>
+			<xs:enumeration value="+"/>
+			<xs:enumeration value="-"/>
+			<xs:enumeration value="1"/>
+			<xs:enumeration value="2"/>
+			<xs:enumeration value="3"/>
+			<xs:enumeration value="4"/>
+			<xs:enumeration value="5"/>
+			<xs:enumeration value="6"/>
+			<xs:enumeration value="7"/>
+			<xs:enumeration value="8"/>
+			<xs:enumeration value="9"/>
+			<xs:enumeration value="0"/>
+			<xs:enumeration value="A"/>
+			<xs:enumeration value="B"/>
+			<xs:enumeration value="C"/>
+			<xs:enumeration value="D"/>
+			<xs:enumeration value="E"/>
+			<xs:enumeration value="F"/>
+			<xs:enumeration value="G"/>
+			<xs:enumeration value="H"/>
+			<xs:enumeration value="I"/>
+			<xs:enumeration value="J"/>
+			<xs:enumeration value="K"/>
+			<xs:enumeration value="L"/>
+			<xs:enumeration value="M"/>
+			<xs:enumeration value="N"/>
+			<xs:enumeration value="O"/>
+			<xs:enumeration value="P"/>
+			<xs:enumeration value="Q"/>
+			<xs:enumeration value="R"/>
+			<xs:enumeration value="S"/>
+			<xs:enumeration value="T"/>
+			<xs:enumeration value="U"/>
+			<xs:enumeration value="V"/>
+			<xs:enumeration value="W"/>
+			<xs:enumeration value="X"/>
+			<xs:enumeration value="Y"/>
+			<xs:enumeration value="Z"/>
+		</xs:restriction>
+	</xs:simpleType>	
+</xs:schema>

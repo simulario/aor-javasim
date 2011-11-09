@@ -1,0 +1,390 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<xs:schema
+		xmlns:ers="http://aor-simulation.org"
+		xmlns:h="http://www.w3.org/1999/xhtml"
+		xmlns:xs="http://www.w3.org/2001/XMLSchema"
+		targetNamespace="http://aor-simulation.org"
+		elementFormDefault="qualified"
+		attributeFormDefault="unqualified">
+	<xs:include schemaLocation="UMLetc.xsd"/>
+	<!-- =================================================================== -->
+	<xs:element name="Entity" type="ers:Entity.type" abstract="true"/>
+	<!-- =================================================================== -->
+	<xs:complexType name="Entity.type">
+		<xs:sequence>
+			<xs:element ref="ers:Slot" minOccurs="0" maxOccurs="unbounded"/>
+		</xs:sequence>
+		<xs:attribute name="type" type="ers:CanonicalName" use="required"/>
+		<xs:attribute name="id" type="xs:long" use="optional"/>
+		<xs:attribute name="name" type="xs:NCName" use="optional"/>
+	</xs:complexType>
+	<!-- =================================================================== -->
+	<xs:element name="Object" type="ers:Object.type" substitutionGroup="ers:Entity"/>
+	<!-- =================================================================== -->
+	<xs:complexType name="Object.type">
+		<xs:complexContent>
+			<xs:extension base="ers:Entity.type">
+				<xs:sequence>
+					<xs:element name="ObjectID" type="ers:OpaqueExpression" minOccurs="0" maxOccurs="unbounded"/>
+					<xs:element name="Component" type="ers:Object.type" minOccurs="0" maxOccurs="unbounded"/>
+				</xs:sequence>
+<!--  DROPPED in 0.8.4
+				<xs:attribute name="addToCollection" type="ers:CanonicalName" use="optional">
+					<xs:annotation><xs:documentation>Can be used to add the newly created object to a collection defined in the simulation  model.</xs:documentation></xs:annotation>
+				</xs:attribute>
+-->
+				<xs:attribute name="objectVariable" type="ers:CanonicalName" use="optional">
+					<xs:annotation><xs:documentation>Allows to define an object variable that can be used in the following object creation statements for accessing properies and functions of that object.</xs:documentation></xs:annotation>
+				</xs:attribute>
+			</xs:extension>
+		</xs:complexContent>
+	</xs:complexType>
+	<!-- =================================================================== -->
+	<xs:element name="PhysicalObject" type="ers:PhysicalObject.type" substitutionGroup="ers:Object">
+	<!-- =================================================================== -->
+		<xs:annotation><xs:documentation>A physical object is considered a rigid body in the sense of physics. See also <h:a href="http://en.wikipedia.org/wiki/Rigid_body">Wikipedia</h:a>.</xs:documentation></xs:annotation>
+	</xs:element>
+	<xs:complexType name="PhysicalObject.type">
+		<xs:complexContent>
+			<xs:extension base="ers:Object.type">
+				<xs:attributeGroup ref="ers:PhysicalObject.attributes"/>
+			</xs:extension>
+		</xs:complexContent>
+	</xs:complexType>
+	<!-- =================================================================== -->
+	<xs:attributeGroup name="PhysicalObject.attributes">
+	<!-- =================================================================== -->
+		<xs:attribute name="hasRandomPosition" type="xs:boolean" use="optional" default="false"/>
+		<xs:attribute name="ignorePositionConstraint" type="xs:boolean" use="optional" default="false"/>
+		<xs:attribute name="m" type="xs:double" use="optional" default="0">
+			<xs:annotation><xs:documentation>The mass of a physical object in gram.</xs:documentation></xs:annotation>
+		</xs:attribute>
+		<xs:attribute name="materialType">
+			<xs:annotation><xs:documentation>The material type determines the restitution and friction of a physical object.</xs:documentation></xs:annotation>
+			<xs:simpleType>
+				<xs:restriction base="xs:string">
+					<xs:enumeration value="Wood"/>
+					<xs:enumeration value="Iron"/>
+					<xs:enumeration value="Aluminium"/>
+					<xs:enumeration value="Rubber"/>
+					<xs:enumeration value="Stone"/>
+				</xs:restriction>
+			</xs:simpleType>
+		</xs:attribute>
+
+		<xs:attribute name="width" type="xs:double" use="optional" default="0">
+			<xs:annotation><xs:documentation>The spatial extension of a 2D rectangular (or 3D box-shaped) physical object is given in terms of width and height (and depth) in the unit as defined in the space model (spatialDistanceUnit). </xs:documentation></xs:annotation>
+		</xs:attribute>
+		<xs:attribute name="height" type="xs:double" use="optional" default="0"/>
+		<xs:attribute name="depth" type="xs:double" use="optional" default="0"/>
+
+		<xs:attribute name="points" type="ers:CoordinatePairSequence.type" use="optional">
+			<xs:annotation><xs:documentation>Provides a list of points in counter-clockwise order in the syntax of a space-separated XML attribute value list such as points="1.5,2 -2,2 -2.5,1.5". </xs:documentation></xs:annotation>
+		</xs:attribute>
+		
+		<xs:attribute name="shape2D" use="optional" default="rectangle">
+			<xs:annotation><xs:documentation>Defines the shape of a 2D object. By default, this is a rectangle. In the case of a circle, its radius is given by the width attribute. In the case of a polygon, the points attribute provides the list of points in counter-clockwise order. </xs:documentation></xs:annotation>
+			<xs:simpleType>
+				<xs:restriction base="xs:string">
+					<xs:enumeration value="rectangle"/>
+					<xs:enumeration value="circle"/>
+					<xs:enumeration value="polygon"/>
+				</xs:restriction>
+			</xs:simpleType>
+		</xs:attribute>
+		<xs:attribute name="shape3D" use="optional" default="box">
+			<xs:annotation><xs:documentation>Defines the shape of a 3D object. By default, this is a box (cuboid). In the case of a sphere, its radius is given by the width attribute. In the case of a cylinder or a cone, the radius is given by the width attribute and the height is given by the height attribute. </xs:documentation></xs:annotation>
+			<xs:simpleType>
+				<xs:restriction base="xs:string">
+					<xs:enumeration value="box"/>
+					<xs:enumeration value="sphere"/>
+					<xs:enumeration value="cylinder"/>
+					<xs:enumeration value="cone"/>
+					<xs:enumeration value="mesh"/>
+				</xs:restriction>
+			</xs:simpleType>
+		</xs:attribute>
+		
+		<xs:attribute name="pos" type="ers:DoubleTriple.type" use="optional" default="0 0 0">
+			<xs:annotation><xs:documentation>The linear position of a physical object given in the unit as defined in the space model (spatialDistanceUnit).</xs:documentation></xs:annotation>
+		</xs:attribute>
+		<xs:attribute name="x" type="xs:double" use="optional" default="0">
+			<xs:annotation><xs:documentation>The x coordinate of the linear position (first component of the pos vector) of a physical object given in the unit as defined in the space model (spatialDistanceUnit).</xs:documentation></xs:annotation>
+		</xs:attribute>
+		<xs:attribute name="y" type="xs:double" use="optional" default="0">
+			<xs:annotation><xs:documentation>The y coordinate of the linear position (2nd component of the pos vector) of a physical object given in the unit as defined in the space model (spatialDistanceUnit).</xs:documentation></xs:annotation>
+		</xs:attribute>
+		<xs:attribute name="z" type="xs:double" use="optional" default="0">
+			<xs:annotation><xs:documentation>The z coordinate of the linear position (3rd component of the pos vector) of a physical object given in the unit as defined in the space model (spatialDistanceUnit).</xs:documentation></xs:annotation>
+		</xs:attribute>
+
+		<xs:attribute name="v" type="ers:DoubleTriple.type" use="optional" default="0 0 0">
+			<xs:annotation><xs:documentation>The vector v = (vx,vy,vz) is the linear velocity of a physical object in meter/seconds. </xs:documentation></xs:annotation>
+		</xs:attribute>
+		<xs:attribute name="vx" type="xs:double" use="optional" default="0">
+			<xs:annotation><xs:documentation>The first component of the linear velocity vector v = (vx,vy,vz) in m/sec. </xs:documentation></xs:annotation>
+		</xs:attribute>
+		<xs:attribute name="vy" type="xs:double" use="optional" default="0">
+			<xs:annotation><xs:documentation>The 2nd component of the linear velocity vector v = (vx,vy,vz) in m/sec. </xs:documentation></xs:annotation>
+		</xs:attribute>
+		<xs:attribute name="vz" type="xs:double" use="optional" default="0">
+			<xs:annotation><xs:documentation>The 3rd component of the linear velocity vector v = (vx,vy,vz) in m/sec. </xs:documentation></xs:annotation>
+		</xs:attribute>
+		
+		<xs:attribute name="a" type="ers:DoubleTriple.type" use="optional" default="0 0 0">
+			<xs:annotation><xs:documentation>The vector a = (ax,ay,az) is the linear acceleration of a physical object in meter per second squared. </xs:documentation></xs:annotation>
+		</xs:attribute>
+		<xs:attribute name="ax" type="xs:double" use="optional" default="0">
+			<xs:annotation><xs:documentation>The first component of the linear acceleration vector a = (ax,ay,az) in meter per second squared. </xs:documentation></xs:annotation>
+		</xs:attribute>
+		<xs:attribute name="ay" type="xs:double" use="optional" default="0">
+			<xs:annotation><xs:documentation>The 2nd component of the linear acceleration vector a = (ax,ay,az) in meter per second squared. </xs:documentation></xs:annotation>
+		</xs:attribute>
+		<xs:attribute name="az" type="xs:double" use="optional" default="0">
+			<xs:annotation><xs:documentation>The 3rd component of the linear acceleration vector a = (ax,ay,az) in meter per second squared. </xs:documentation></xs:annotation>
+		</xs:attribute>
+		
+		<xs:attribute name="rot2D" type="xs:double" use="optional" default="0">
+			<xs:annotation><xs:documentation>The angular position of a 2D-physical object in radians (1 rad = 180/pi = 57.2958 degrees).</xs:documentation></xs:annotation>
+		</xs:attribute>
+		<xs:attribute name="rot2DinDegrees" type="xs:double" use="optional" default="0">
+			<xs:annotation><xs:documentation>The angular position of a 2D-physical object in degrees. </xs:documentation></xs:annotation>
+		</xs:attribute>
+		
+		<xs:attribute name="rot" type="ers:DoubleTriple.type" use="optional" default="0 0 0">
+			<xs:annotation><xs:documentation>The vector rot = ( rotX, rotY, rotZ) is the angular position of a 3D-physical object in radians where 1 rad = 180/pi = 57.2958 degrees, see <h:a href="http://wiki.secondlife.com/wiki/Rotation">Second Life</h:a> and <h:a href="http://en.wikipedia.org/wiki/Yaw,_pitch_and_roll">Wikipedia</h:a>. </xs:documentation></xs:annotation>
+		</xs:attribute>
+		<xs:attribute name="rotInDegrees" type="ers:DoubleTriple.type" use="optional" default="0 0 0">
+			<xs:annotation><xs:documentation>The vector rotInDegrees = ( rotXinDegrees, rotYinDegrees, rotZinDegrees) is the angular position of a 3D-physical object in degrees, see <h:a href="http://wiki.secondlife.com/wiki/Rotation">Second Life</h:a> and <h:a href="http://en.wikipedia.org/wiki/Yaw,_pitch_and_roll">Wikipedia</h:a>. </xs:documentation></xs:annotation>
+		</xs:attribute>
+		<xs:attribute name="rotX" type="xs:double" use="optional" default="0">
+			<xs:annotation><xs:documentation>The first component of the angular position vector rot = ( rotX, rotY, rotZ). </xs:documentation></xs:annotation>
+		</xs:attribute>
+		<xs:attribute name="rotXinDegrees" type="xs:double" use="optional" default="0">
+			<xs:annotation><xs:documentation>The first component of the angular position vector rotInDegrees = ( rotXinDegrees, rotYinDegrees, rotZinDegrees). </xs:documentation></xs:annotation>
+		</xs:attribute>
+		<xs:attribute name="rotY" type="xs:double" use="optional" default="0">
+			<xs:annotation><xs:documentation>The 2nd component of the angular position vector rot = ( rotX, rotY, rotZ). </xs:documentation></xs:annotation>
+		</xs:attribute>
+		<xs:attribute name="rotYinDegrees" type="xs:double" use="optional" default="0">
+			<xs:annotation><xs:documentation>The 2nd component of the angular position vector rotInDegrees = ( rotXinDegrees, rotYinDegrees, rotZinDegrees). </xs:documentation></xs:annotation>
+		</xs:attribute>
+		<xs:attribute name="rotZ" type="xs:double" use="optional" default="0">
+			<xs:annotation><xs:documentation>The 3rd component of the angular position vector rot = ( rotX, rotY, rotZ). </xs:documentation></xs:annotation>
+		</xs:attribute>
+		<xs:attribute name="rotZinDegrees" type="xs:double" use="optional" default="0">
+			<xs:annotation><xs:documentation>The 3rd component of the angular position vector rotInDegrees = ( rotXinDegrees, rotYinDegrees, rotZinDegrees). </xs:documentation></xs:annotation>
+		</xs:attribute>
+		
+		<xs:attribute name="omega2D" type="xs:double" use="optional" default="0">
+			<xs:annotation>
+				<xs:documentation>The rotational velocity of a 2D-physical object in radians per second.</xs:documentation>
+			</xs:annotation>
+		</xs:attribute>
+		<xs:attribute name="omega2DinDegrees" type="xs:double" use="optional" default="0">
+			<xs:annotation>
+				<xs:documentation>The rotational velocity of a 2D-physical object in degrees per second.</xs:documentation>
+			</xs:annotation>
+		</xs:attribute>
+		
+		<xs:attribute name="omega" type="ers:DoubleTriple.type" use="optional" default="0 0 0">
+			<xs:annotation><xs:documentation>The vector omega = (omegaX,omegaY,omegaZ) is the angular velocity of a 3D-physical object in radians per second. </xs:documentation></xs:annotation>
+		</xs:attribute>
+		<xs:attribute name="omegaX" type="xs:double" use="optional" default="0">
+			<xs:annotation><xs:documentation>The first component of the angular velocity vector (omegaX,omegaY,omegaZ) in radians per second. </xs:documentation></xs:annotation>
+		</xs:attribute>
+		<xs:attribute name="omegaY" type="xs:double" use="optional" default="0">
+			<xs:annotation><xs:documentation>The 2nd component of the angular velocity vector (omegaX,omegaY,omegaZ) in radians per second. </xs:documentation></xs:annotation>
+		</xs:attribute>
+		<xs:attribute name="omegaZ" type="xs:double" use="optional" default="0">
+			<xs:annotation><xs:documentation>The 3rd component of the angular velocity vector (omegaX,omegaY,omegaZ) in radians per second. </xs:documentation></xs:annotation>
+		</xs:attribute>
+		
+		<xs:attribute name="omegaInDegrees" type="ers:DoubleTriple.type" use="optional" default="0 0 0">
+			<xs:annotation><xs:documentation>The vector omegaInDegrees = (omegaXinDegrees,omegaYinDegrees,omegaZinDegrees) is the angular velocity of a 3D-physical object in degrees per second. </xs:documentation></xs:annotation>
+		</xs:attribute>
+		<xs:attribute name="omegaXinDegrees" type="xs:double" use="optional" default="0">
+			<xs:annotation><xs:documentation>The first component of the angular velocity omegaInDegrees = (omegaXinDegrees,omegaYinDegrees,omegaZinDegrees) in degrees per second. </xs:documentation></xs:annotation>
+		</xs:attribute>
+		<xs:attribute name="omegaYinDegrees" type="xs:double" use="optional" default="0">
+			<xs:annotation><xs:documentation>The 2nd component of the angular velocity vector omegaInDegrees = (omegaXinDegrees,omegaYinDegrees,omegaZinDegrees) in degrees per second. </xs:documentation></xs:annotation>
+		</xs:attribute>
+		<xs:attribute name="omegaZinDegrees" type="xs:double" use="optional" default="0">
+			<xs:annotation><xs:documentation>The 3rd component of the angular velocity vector omegaInDegrees = (omegaXinDegrees,omegaYinDegrees,omegaZinDegrees) in degrees per second. </xs:documentation></xs:annotation>
+		</xs:attribute>
+
+		<xs:attribute name="alpha2D" type="xs:double" use="optional" default="0">
+			<xs:annotation>
+				<xs:documentation>The rotational acceleration of a 2D-physical object in radians per second squared.</xs:documentation>
+			</xs:annotation>
+		</xs:attribute>
+		<xs:attribute name="alpha2DinDegrees" type="xs:double" use="optional" default="0">
+			<xs:annotation>
+				<xs:documentation>The rotational acceleration of a 2D-physical object in degrees per second squared.</xs:documentation>
+			</xs:annotation>
+		</xs:attribute>
+
+		<xs:attribute name="alpha" type="ers:DoubleTriple.type" use="optional" default="0 0 0">
+			<xs:annotation><xs:documentation>The vector alpha = (alphaX,alphaY,alphaZ) is the angular acceleration of a 3D-physical object in radians per second squared. </xs:documentation></xs:annotation>
+		</xs:attribute>
+		<xs:attribute name="alphaX" type="xs:double" use="optional" default="0">
+			<xs:annotation><xs:documentation>The first component of the angular acceleration vector alpha = (alphaX,alphaY,alphaZ) in radians per second squared. </xs:documentation></xs:annotation>
+		</xs:attribute>
+		<xs:attribute name="alphaY" type="xs:double" use="optional" default="0">
+			<xs:annotation><xs:documentation>The 2nd component of the angular acceleration vector alpha = (alphaX,alphaY,alphaZ) in radians per second squared. </xs:documentation></xs:annotation>
+		</xs:attribute>
+		<xs:attribute name="alphaZ" type="xs:double" use="optional" default="0">
+			<xs:annotation><xs:documentation>The 3rd component of the angular acceleration vector alpha = (alphaX,alphaY,alphaZ) in radians per second squared. </xs:documentation></xs:annotation>
+		</xs:attribute>
+		
+		<xs:attribute name="alphaInDegrees" type="ers:DoubleTriple.type" use="optional" default="0 0 0">
+			<xs:annotation><xs:documentation>The vector alphaInDegrees = (alphaXinDegrees,alphaYinDegrees,alphaZinDegrees) is the angular acceleration of a 3D-physical object in degrees per second squared. </xs:documentation></xs:annotation>
+		</xs:attribute>
+		<xs:attribute name="alphaXinDegrees" type="xs:double" use="optional" default="0">
+			<xs:annotation><xs:documentation>The first component of the angular acceleration vector alphaInDegrees = (alphaXinDegrees,alphaYinDegrees,alphaZinDegrees) in degrees per second squared. </xs:documentation></xs:annotation>
+		</xs:attribute>
+		<xs:attribute name="alphaYinDegrees" type="xs:double" use="optional" default="0">
+			<xs:annotation><xs:documentation>The 2nd component of the angular acceleration vector alphaInDegrees = (alphaXinDegrees,alphaYinDegrees,alphaZinDegrees) in degrees per second squared. </xs:documentation></xs:annotation>
+		</xs:attribute>
+		<xs:attribute name="alphaZinDegrees" type="xs:double" use="optional" default="0">
+			<xs:annotation><xs:documentation>The 3rd component of the angular acceleration vector alphaInDegrees = (alphaXinDegrees,alphaYinDegrees,alphaZinDegrees) in degrees per second squared. </xs:documentation></xs:annotation>
+		</xs:attribute>
+	</xs:attributeGroup>
+	
+	<!-- =================================================================== -->
+	<xs:element name="AtomicEvent" type="ers:AtomicEvent.type" abstract="true" substitutionGroup="ers:Entity"/>
+	<!-- =================================================================== -->
+	<xs:complexType name="AtomicEvent.type">
+		<xs:complexContent>
+			<xs:extension base="ers:AtomicEvent-0.type">
+				<xs:attribute name="occurrenceTime" type="xs:positiveInteger" use="optional"/>
+			</xs:extension>
+		</xs:complexContent>
+	</xs:complexType>
+	<xs:complexType name="AtomicEvent-0.type">
+		<xs:complexContent>
+			<xs:restriction base="ers:Entity.type">
+				<xs:sequence>
+					<xs:element ref="ers:Slot" minOccurs="0" maxOccurs="unbounded"/>
+				</xs:sequence>
+				<xs:attribute name="type" type="ers:CanonicalName" use="required"/>
+				<xs:attribute name="id" type="xs:long" use="prohibited"/>
+				<xs:attribute name="name" type="xs:NCName" use="prohibited"/>
+			</xs:restriction>
+		</xs:complexContent>
+	</xs:complexType>
+	<!-- =================================================================== -->
+	<xs:element name="EnvironmentEvent" type="ers:EnvironmentEvent.type" abstract="true" substitutionGroup="ers:AtomicEvent"/>
+	<!-- =================================================================== -->
+	<xs:complexType name="EnvironmentEvent.type">
+		<xs:complexContent>
+			<xs:restriction base="ers:AtomicEvent.type">
+				<xs:sequence>
+					<xs:element ref="ers:Slot" minOccurs="0" maxOccurs="unbounded"/>
+				</xs:sequence>
+				<xs:attribute name="type" type="ers:CanonicalName" use="required"/>
+				<xs:attribute name="occurrenceTime" type="xs:positiveInteger" use="required"/>
+			</xs:restriction>
+		</xs:complexContent>
+	</xs:complexType>
+	<!-- =================================================================== -->
+	<xs:element name="ExogenousEvent" type="ers:ExogeneousEvent.type" substitutionGroup="ers:EnvironmentEvent"/>
+	<!-- =================================================================== -->
+	<xs:complexType name="ExogeneousEvent.type">
+		<xs:complexContent>
+			<xs:extension base="ers:EnvironmentEvent.type"/>
+		</xs:complexContent>
+	</xs:complexType>
+	<!-- =================================================================== -->
+	<xs:element name="CausedEvent" type="ers:ExogeneousEvent.type" substitutionGroup="ers:EnvironmentEvent"/>
+	<!-- =================================================================== -->
+	<xs:complexType name="CausedEvent.type">
+		<xs:complexContent>
+			<xs:extension base="ers:EnvironmentEvent.type"/>
+		</xs:complexContent>
+	</xs:complexType>
+	<!-- =================================================================== -->
+	<xs:element name="Objects" type="ers:ObjectSet.type"/>
+	<!-- =================================================================== -->
+	<xs:complexType name="ObjectSet.type">
+		<xs:sequence>
+			<xs:element name="RangeStartID" type="ers:OpaqueExpression" minOccurs="0" maxOccurs="unbounded"/>
+			<xs:element name="RangeEndID" type="ers:OpaqueExpression" minOccurs="0" maxOccurs="unbounded"/>
+			<xs:element ref="ers:Slot" minOccurs="0" maxOccurs="unbounded"/>
+		</xs:sequence>
+		<xs:attribute name="type" type="xs:string" use="required"/>
+		<xs:attribute name="rangeStartID" type="xs:long" use="optional"/>
+		<xs:attribute name="rangeEndID" type="xs:long" use="optional"/>
+		<xs:attribute name="objectVariable" type="ers:CanonicalName" use="optional"/>
+		<xs:attribute name="creationLoopVar" type="ers:CanonicalName" use="optional"/>
+	</xs:complexType>
+	<!-- ***  Physical Objects  *** -->
+	<xs:element name="PhysicalObjects" type="ers:PhysicalObjectSet.type" substitutionGroup="ers:Objects"/>
+	<xs:complexType name="PhysicalObjectSet.type">
+		<xs:complexContent>
+			<xs:extension base="ers:ObjectSet.type">
+				<xs:attributeGroup ref="ers:PhysicalObject.attributes"/>
+			</xs:extension>
+		</xs:complexContent>
+	</xs:complexType>
+	<!-- =================================================================== -->
+	<xs:element name="GridCells">
+	<!-- =================================================================== -->
+		<xs:complexType>
+			<xs:choice>
+				<xs:choice maxOccurs="unbounded">
+					<xs:element name="GridCell" type="ers:GridCell.type"/>
+					<xs:element name="GridCellSet" type="ers:GridCellSet.type"/>
+				</xs:choice>
+				<xs:element ref="ers:Slot" maxOccurs="unbounded"/>
+			</xs:choice>
+		</xs:complexType>
+	</xs:element>
+	<xs:complexType name="GridCell.type">
+		<xs:sequence>
+			<xs:element ref="ers:Slot" maxOccurs="unbounded"/>
+		</xs:sequence>
+		<xs:attribute name="x" type="xs:double" use="required"/>
+		<xs:attribute name="y" type="xs:double" use="required"/>
+	</xs:complexType>
+	<xs:complexType name="GridCellSet.type">
+		<xs:sequence>
+			<xs:element ref="ers:Slot" maxOccurs="unbounded"/>
+		</xs:sequence>
+		<xs:attribute name="startX" type="xs:nonNegativeInteger" use="required"/>
+		<xs:attribute name="endX" type="xs:nonNegativeInteger" use="required"/>
+		<xs:attribute name="startY" type="xs:nonNegativeInteger" use="required"/>
+		<xs:attribute name="endY" type="xs:nonNegativeInteger" use="required"/>
+		<xs:attribute name="creationLoopVar" type="ers:CanonicalName" use="optional"/>
+	</xs:complexType>
+	<!-- DROPPED in 0.8.4 =================================================================== 
+	<xs:element name="Collection" type="ers:Collection.type" substitutionGroup="ers:Object"/>
+	<xs:complexType name="Collection.type">
+		<xs:complexContent>
+			<xs:extension base="ers:Collection.type0">
+				<xs:attribute name="itemType" type="ers:CanonicalName" use="required"/>
+			</xs:extension>
+		</xs:complexContent>
+	</xs:complexType>
+	<xs:complexType name="Collection.type0">
+		<xs:complexContent>
+			<xs:restriction base="ers:Object.type">
+				<xs:sequence>
+					<xs:element ref="ers:Slot" minOccurs="0" maxOccurs="unbounded"/>
+				</xs:sequence>
+				<xs:attribute name="id" type="xs:long" use="optional"/>
+				<xs:attribute name="name" type="xs:NCName" use="optional"/>
+				<xs:attribute name="type" use="required">
+					<xs:simpleType>
+						<xs:restriction base="ers:CanonicalName">
+							<xs:enumeration value="FIFO_QUEUE"/>
+							<xs:enumeration value="LIFO_QUEUE"/>
+							<xs:enumeration value="SET"/>
+						</xs:restriction>
+					</xs:simpleType>
+				</xs:attribute>
+			</xs:restriction>
+		</xs:complexContent>
+	</xs:complexType>
+	-->
+</xs:schema>

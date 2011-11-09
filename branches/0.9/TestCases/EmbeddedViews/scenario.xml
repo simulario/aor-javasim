@@ -1,0 +1,213 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<?xml-stylesheet type="text/xsl" href="prettyprint.xsl"?>
+
+<SimulationScenario version="0.8.4" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" 
+	xsi:schemaLocation="http://aor-simulation.org ../../AORSL/AORSL_0-8-4.xsd" 
+	xmlns="http://aor-simulation.org" xmlns:aors="http://aor-simulation.org" 
+	xmlns:dc="http://purl.org/dc/elements/1.1/" xmlns:h="http://www.w3.org/1999/xhtml"
+	scenarioName="TwoDimensionalAnimationTestCase" scenarioTitle="" simulationManagerDirectory="../../..">
+	<SimulationParameters simulationSteps="500" stepDuration="1" timeUnit="s" stepTimeDelay="100"/>
+	<SimulationModel modelName="TwoDimensionalAnimationTestCase" modelTitle="twoDimensionalAnimationTestCase">
+		<documentation>
+		<dc:created>20091123</dc:created>
+		<dc:creator>Gerd Wagner</dc:creator>
+		<description><h:p>The purpose of this model is to illustrate how simple 2D animations can be defined with
+			the help of the AORSL concepts of <h:em>embedded views</h:em> and <h:em>shape maps</h:em>. 
+				The animated character, which is rendered as a circle, has the following embedded views:</h:p>
+			<h:ol>
+				<h:li>Left eye</h:li>
+				<h:li>Right eye</h:li>
+				<h:li>Mouth</h:li>
+			</h:ol>
+			<h:p>The eyes and the mouth are defined as <h:em>shape maps</h:em> such that they change their 
+				shape depending on the value of some property.</h:p>
+		</description>
+	</documentation>
+  
+	<SpaceModel geometry="Toroidal" spatialDistanceUnit="m">
+		<TwoDimensional xMax="10" yMax="10" autoKinematics="true"/>
+	</SpaceModel>
+  
+	<DataTypes>
+		<Enumeration name="EyeSizeEnumLit">
+			<EnumerationLiteral>SMALL</EnumerationLiteral>
+			<EnumerationLiteral>MEDIUM</EnumerationLiteral>
+			<EnumerationLiteral>LARGE</EnumerationLiteral>
+		</Enumeration>
+		<Enumeration name="EyeStateEnumLit">
+			<EnumerationLiteral>OPEN</EnumerationLiteral>
+			<EnumerationLiteral>CLOSED</EnumerationLiteral>
+		</Enumeration>
+		<Enumeration name="EyeColorEnumLit">
+			<EnumerationLiteral>BLUE</EnumerationLiteral>
+			<EnumerationLiteral>GREEN</EnumerationLiteral>
+			<EnumerationLiteral>GREY</EnumerationLiteral>
+		</Enumeration>
+		<Enumeration name="MouthSizeEnumLit">
+			<EnumerationLiteral>SMALL</EnumerationLiteral>
+			<EnumerationLiteral>MEDIUM</EnumerationLiteral>
+			<EnumerationLiteral>LARGE</EnumerationLiteral>
+		</Enumeration>
+		<Enumeration name="MouthStateEnumLit">
+			<EnumerationLiteral>CLOSED</EnumerationLiteral>
+			<EnumerationLiteral>OPEN</EnumerationLiteral>
+			<EnumerationLiteral>SMILING</EnumerationLiteral>
+			<EnumerationLiteral>DOWN</EnumerationLiteral>
+			<EnumerationLiteral>LAUGHING</EnumerationLiteral>
+		</Enumeration>
+	</DataTypes>
+	<EntityTypes>
+		<!-- =================================================================== -->
+		<PhysicalAgentType name="AnimatedCharacter">
+		<!-- =================================================================== -->
+			<documentation><description>An animated character has two eyes and a mouth that can be animated.</description></documentation>
+			<Attribute name="currentBlinkSpeed" type="Integer"/>
+			<EnumerationProperty name="leftEyeSize" type="EyeSizeEnumLit"/>
+			<EnumerationProperty name="leftEyeColor" type="EyeColorEnumLit"/>
+			<EnumerationProperty name="leftEyeState" type="EyeStateEnumLit"/>
+			<EnumerationProperty name="rightEyeSize" type="EyeSizeEnumLit"/>
+			<EnumerationProperty name="rightEyeColor" type="EyeColorEnumLit"/>
+			<EnumerationProperty name="rightEyeState" type="EyeStateEnumLit"/>
+			<EnumerationProperty name="mouthSize" type="MouthSizeEnumLit"/>
+			<EnumerationProperty name="mouthState" type="MouthStateEnumLit"/>
+			<PeriodicTimeEventType name="PeriodicBlink">
+				<Periodicity><ValueExpr language="Java">getCurrentBlinkSpeed()</ValueExpr></Periodicity>
+			</PeriodicTimeEventType>
+			<!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->
+			<ReactionRule name="PeriodicBlink_AgtRule">
+			<!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->
+				<documentation><description>Periodically close the eyes.</description></documentation>
+				<WHEN eventType="PeriodicBlink"/>
+				<DO>
+					<UPDATE-AGT>
+						<Slot property="leftEyeState" value="EyeStateEnumLit.CLOSED"/>
+						<Slot property="rightEyeState" value="EyeStateEnumLit.CLOSED"/>
+						<Slot property="mouthState" value="MouthStateEnumLit.CLOSED"/>
+					</UPDATE-AGT>
+					<SCHEDULE-EVT>
+						<ReminderEventExpr reminderMsg="OpenEyes">
+							<Delay><DiscreteRandomVariable><UniformInt lowerBound="4" upperBound="8"/></DiscreteRandomVariable></Delay>
+						</ReminderEventExpr>
+					</SCHEDULE-EVT>
+				</DO>
+			</ReactionRule>
+			<!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->
+			<ReactionRule name="OpenEyesAfterPeriodicBlink_AgtRule">
+			<!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->
+				<documentation><description>After closing the eyes, open them again with some delay.</description></documentation>
+				<WHEN eventType="ReminderEvent" reminderMsg="OpenEyes"/>
+				<DO>
+					<UPDATE-AGT>
+						<Slot property="leftEyeState" value="EyeStateEnumLit.OPEN"/>
+						<Slot property="rightEyeState" value="EyeStateEnumLit.OPEN"/>
+						<Slot property="mouthState" value="MouthStateEnumLit.SMILING"/>
+					</UPDATE-AGT>
+				</DO>
+			</ReactionRule>
+		</PhysicalAgentType>
+	</EntityTypes>
+</SimulationModel>
+
+<!-- =================================================================== -->
+<InitialState>
+<!-- =================================================================== -->
+	<PhysicalAgent type="AnimatedCharacter" id="1" x="1" y="1" width="2" height="2" vx="0.1">
+		<Slot property="leftEyeState" value="EyeStateEnumLit.OPEN"/>
+		<Slot property="rightEyeState" value="EyeStateEnumLit.OPEN"/>
+		<Slot property="leftEyeSize" value="EyeSizeEnumLit.MEDIUM"/>
+		<Slot property="leftEyeColor" value="EyeColorEnumLit.BLUE"/>
+		<Slot property="rightEyeSize" value="EyeSizeEnumLit.SMALL"/>
+		<Slot property="rightEyeColor" value="EyeColorEnumLit.BLUE"/>
+		<Slot property="currentBlinkSpeed" value="20"/>
+		<Slot property="mouthSize" value="MouthSizeEnumLit.MEDIUM"/>
+		<Slot property="mouthState" value="MouthStateEnumLit.CLOSED"/>
+		<PeriodicTimeEvent type="PeriodicBlink" occurrenceTime="5"/>
+	</PhysicalAgent>
+</InitialState>
+ 
+<!-- =================================================================== -->
+<UserInterface>
+<!-- =================================================================== -->
+	<AnimationUI>
+		<DisplayDescription>
+			<HtmlText>
+				<h:p>This is a simple demo for the AORSL concepts of <h:strong><h:em> embedded views</h:em></h:strong> and <h:strong><h:em> shape maps</h:em></h:strong>.	The animated character, which is rendered as a circle, has the following embedded views:</h:p>
+				<h:ol>
+					<h:li>Left eye</h:li>
+					<h:li>Right eye</h:li>
+					<h:li>Mouth</h:li>
+				</h:ol>
+				<h:p>The eyes and the mouth are defined as <h:em> shape maps</h:em> such that they change their shape depending on the value of some property.</h:p>
+			</HtmlText>
+		</DisplayDescription>
+		<Views>
+			<SpaceView canvasColor="green">
+				<TwoDimensionalSpaceView2D backgroundImage="backgrounds/LigtgrayBrickWall.jpg"/>
+			</SpaceView>
+			<!-- =================================================================== -->
+			<PhysicalObjectView physicalObjectType="AnimatedCharacter">
+			<!-- =================================================================== -->
+				<PhysicalShape2D>
+					<Circle fill="yellow"/>
+				</PhysicalShape2D>
+				<AttachedShape2D offsetX="-20%" offsetY="15%">  <!-- Left Eye -->
+					<Shape2dVisualizationMap property="leftEyeState">
+						<Case value="EyeStateEnumLit.OPEN">
+							<Shape2D>
+								<Circle>
+									<ShapePropertyVisualizationMap  shapeProperty="r" property="leftEyeSize" mapType="enumerationMap" a0="EyeSizeEnumLit.SMALL" v0="6%" a1="EyeSizeEnumLit.MEDIUM" v1="8%" a2="EyeSizeEnumLit.LARGE" v2="10%"/>
+									<ShapePropertyVisualizationMap  shapeProperty="fill" property="leftEyeColor" mapType="enumerationMap" a0="EyeColorEnumLit.BLUE" v0="blue" a1="EyeColorEnumLit.GREEN" v1="green" a2="EyeColorEnumLit.GREY" v2="grey"/>
+								</Circle>
+							</Shape2D>
+						</Case>
+						<Case value="EyeStateEnumLit.CLOSED">
+							<Shape2D>
+								<Polyline points="-10,0 10,0" stroke="black" strokeWidth="2"/>
+							</Shape2D>
+						</Case>
+					</Shape2dVisualizationMap >
+				</AttachedShape2D>
+				<AttachedShape2D offsetX="20%" offsetY="15%">  <!-- Right Eye -->
+					<Shape2dVisualizationMap  property="rightEyeState">
+						<Case value="EyeStateEnumLit.OPEN">
+							<Shape2D>
+								<Circle>
+									<ShapePropertyVisualizationMap  shapeProperty="r" property="rightEyeSize" mapType="enumerationMap" a0="EyeSizeEnumLit.SMALL" v0="6%" a1="EyeSizeEnumLit.MEDIUM" v1="8%" a2="EyeSizeEnumLit.LARGE" v2="10%"/>
+									<ShapePropertyVisualizationMap  shapeProperty="fill" property="rightEyeColor" mapType="enumerationMap" a0="EyeColorEnumLit.BLUE" v0="blue" a1="EyeColorEnumLit.GREEN" v1="green" a2="EyeColorEnumLit.GREY" v2="grey"/>
+								</Circle>
+							</Shape2D>
+						</Case>
+						<Case value="EyeStateEnumLit.CLOSED">
+							<Shape2D>
+								<Polyline points="-8,0 8,0" stroke="black" strokeWidth="2"/>
+							</Shape2D>
+						</Case>
+					</Shape2dVisualizationMap >
+				</AttachedShape2D>
+				<AttachedShape2D offsetX="0%" offsetY="-25%">  <!-- Mouth -->
+					<Shape2dVisualizationMap  property="mouthState">
+						<Case value="MouthStateEnumLit.CLOSED">
+							<Shape2D>
+								<Polyline points="-20,0 20,0" stroke="red" strokeWidth="4"/>
+							</Shape2D>
+						</Case>
+						<Case value="MouthStateEnumLit.OPEN">
+							<Shape2D>
+								<Ellipse fill="red">
+									<ShapePropertyVisualizationMap  shapeProperty="rx" property="mouthSize" mapType="enumerationMap" a0="MouthSizeEnumLit.SMALL" v0="6%" a1="MouthSizeEnumLit.MEDIUM" v1="10%" a2="MouthSizeEnumLit.LARGE" v2="14%"/>
+									<ShapePropertyVisualizationMap  shapeProperty="ry" property="mouthSize" mapType="enumerationMap" a0="MouthSizeEnumLit.SMALL" v0="3%" a1="MouthSizeEnumLit.MEDIUM" v1="5%" a2="MouthSizeEnumLit.LARGE" v2="7%"/>
+								</Ellipse>
+							</Shape2D>
+						</Case>
+						<Case value="MouthStateEnumLit.SMILING">
+							<Shape2D>
+								<Polyline points="-20,5 0,0 20,5" stroke="red" strokeWidth="5"/>
+							</Shape2D>
+						</Case>
+					</Shape2dVisualizationMap >
+				</AttachedShape2D>
+			</PhysicalObjectView>
+		</Views>
+	</AnimationUI>
+</UserInterface>
+</SimulationScenario>
