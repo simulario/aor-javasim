@@ -250,6 +250,7 @@ public class Engine implements GLEventListener {
     double aspect = ((double)width)/((double)height);
     // Define a perspective viewing volume
     glu.gluPerspective(45, aspect, 1, 1000);
+  
     // Set the camera position
     SpaceView spaceView = spaceModel.getSpaceView();
     if(spaceView instanceof TwoDimSpaceView && ((TwoDimSpaceView)spaceView).getHasGlobalCameraPosition()) {
