@@ -59,6 +59,11 @@
 			<!-- ============================================== -->
 				<Attribute name="quantity" type="Integer"/>
 			</CausedEventType>
+			<!-- ================================================== -->
+			<ObjectType name="Queue">
+				<!-- ================================================== -->
+				<Attribute name="queueLength" type="Integer"/>
+			</ObjectType>
 		</EntityTypes>
 
 		<EnvironmentRules>
@@ -79,13 +84,14 @@
 					<ValueExpr language="Java"> Random.normalInt( 5, 1.8) </ValueExpr>
 					<ValueExpr language="JavaScript"> js.util.Random.normalInt( 5, 1.8) </ValueExpr>
 				</FOR>
+				<FOR objectVariable="q" objectType="Queue" objectIdRef="1" />
 				<IF language="Java"><![CDATA[ Global.productQuantityInStock >= demand ]]></IF>
 				<IF language="JavaScript"><![CDATA[ __Global.productQuantityInStock >= this.demand ]]></IF>
 				<THEN>
 					<UPDATE-ENV>
 						<UpdateGlobalVariable name="productQuantityInStock">
-							<ValueExpr language="Java"> Global.productQuantityInStock - demand </ValueExpr>
-							<ValueExpr language="JavaScript"> __Global.productQuantityInStock - this.demand </ValueExpr>
+							<ValueExpr language="Java"><![CDATA[ Global.productQuantityInStock - demand ]]></ValueExpr>
+							<ValueExpr language="JavaScript"><![CDATA[ __Global.productQuantityInStock - this.demand ]]></ValueExpr>
 						</UpdateGlobalVariable>
 					</UPDATE-ENV>
 					<SCHEDULE-EVT>
@@ -98,8 +104,8 @@
 								</DiscreteRandomVariable>
 							</Delay>
 							<Slot property="quantity">
-								<ValueExpr language="Java"> Global.REORDER_UP_TO_LEVEL - Global.productQuantityInStock </ValueExpr>
-								<ValueExpr language="JavaScript"> __Global.REORDER_UP_TO_LEVEL - __Global.productQuantityInStock </ValueExpr>
+								<ValueExpr language="Java"><![CDATA[ Global.REORDER_UP_TO_LEVEL - Global.productQuantityInStock ]]></ValueExpr>
+								<ValueExpr language="JavaScript"><![CDATA[ __Global.REORDER_UP_TO_LEVEL - __Global.productQuantityInStock ]]></ValueExpr>
 							</Slot>
 						</CausedEventExpr>
 					</SCHEDULE-EVT>
@@ -114,6 +120,12 @@
 								__SimStatistics.totalNumberOfLostSales.getValue() + this.demand - __Global.productQuantityInStock
 							</ValueExpr>
 						</UpdateStatisticsVariable>
+						<UpdateObject objectVariable="q">
+							<Slot property="queueLength">
+								<ValueExpr language="Java">SimStatistics.totalNumberOfLostSales.getValue()</ValueExpr>
+								<ValueExpr language="JavaScript">__SimStatistics.totalNumberOfLostSales.getValue()</ValueExpr>
+							</Slot>
+						</UpdateObject>
 						<UpdateGlobalVariable name="productQuantityInStock" value="0" />
 					</UPDATE-ENV>
 					<SCHEDULE-EVT>
@@ -153,6 +165,9 @@
 		<!-- =========================================== -->
 		<GlobalVariable name="productQuantityInStock" value="20" />
 		<ExogenousEvent type="DailyDemand" occurrenceTime="1" />
+		<Object type="Queue" id="1" name="queue">
+			<Slot property="queueLength" value="0" />
+		</Object>
 	</InitialState>
 	<!-- =========================================== -->
 	<UserInterface supportedLanguages="en">
@@ -243,7 +258,22 @@
 						</div>	
 					</aors:HtmlText>
 				</aors:HelpText>
-				<Views></Views>
+				<Views>
+					<SpaceView>
+						<TwoDimensionalSpaceView2D backgroundColor="darkgrey" />
+					</SpaceView>
+					<!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->
+					<ObjectView objectType="Queue" objectIdRef="1">
+						<!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->
+						<Shape2D x="20px" y="300px">
+							<Rectangle positioning="LeftCenter" fill="yellow" height="10" width="1" stroke="black" strokeWidth="2">
+								<ShapePropertyVisualizationMap shapeProperty="width" property="queueLength"
+									mapType="polynomial" a0="0" a1="10"/>
+							</Rectangle>
+						</Shape2D>
+						<DisplayInfo content="Lost Sales"  property="queueLength"/>
+					</ObjectView>
+				</Views>
 		</AnimationUI>
 	</UserInterface>
 </SimulationScenario>
