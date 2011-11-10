@@ -443,6 +443,23 @@ cust.getOrderNo()
 						</UPDATE-AGT>
 					</DO>
 				</ReactionRule>
+				<!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->
+				<ReactionRule name="ConfirmOrder1_Rule" agentVariable="cust">
+					<!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->
+					<documentation>
+						<description> The customer at the PW serice desk is announced that his order is arrived. While waiting for other preparations at the PW desk the customer is not asked anymore about his orderNo information.</description>
+					</documentation>
+					<WHEN eventType="InMessageEvent" messageType="ConfirmOrder"/>
+					<DO>
+						<SCHEDULE-EVT>
+							<OutMessageEventExpr messageType="ConfirmOrder" receiverIdRefs="0">
+								<Slot property="orderNo">
+									<ValueExpr language="Java">cust.getOrderNo()</ValueExpr>
+								</Slot>
+							</OutMessageEventExpr>
+						</SCHEDULE-EVT>
+					</DO>
+				</ReactionRule>
 			</AgentType>
 		</EntityTypes>
 		<EnvironmentRules>
@@ -488,7 +505,7 @@ SimStatistics.numberOfLostCustomers.getValue() + 1
 						</UpdateObject>
 						<UpdateObject objectVariable="q1">
 							<Slot property="lengthOfQueue">
-								<ValueExpr language="Java">mb.getMenuBoardQueue().size()</ValueExpr>
+								<ValueExpr language="Java">q1.getLengthOfQueue() + 1</ValueExpr>
 							</Slot>
 						</UpdateObject>
 						<UpdateStatisticsVariable variable="numberOfCustomers">
@@ -575,12 +592,12 @@ mes.getOrderNo()
 			    			<Slot property="waitingForOrderToArrive" value="true"/>
 			    		</UpdateObject>
 			    		<UpdateObject objectVariable="mb">
+			    			<Slot property="menuBoardBusy">
+			    				<ValueExpr language="Java">mb.getMenuBoardQueue().size() == 1 ? false :true</ValueExpr>
+			    			</Slot>
 			    			<MultiValuedSlot property="menuBoardQueue">
 			    				<RemoveFirst itemVariable="cust"/>
 			    			</MultiValuedSlot>
-			    			<Slot property="menuBoardBusy">
-			    				<ValueExpr language="Java">mb.getMenuBoardQueue().size() == 0 ? false :true</ValueExpr>
-			    			</Slot>
 			    		</UpdateObject>
 			    		<UpdateObject objectVariable="pw">
 			    			<MultiValuedSlot property="pickupWindowQueue">
@@ -589,12 +606,12 @@ mes.getOrderNo()
 			    		</UpdateObject>
 			    		<UpdateObject objectVariable="q1">
 			    			<Slot property="lengthOfQueue">
-			    				<ValueExpr language="Java">mb.getMenuBoardQueue().size()</ValueExpr>
+			    				<ValueExpr language="Java">q1.getLengthOfQueue() - 1</ValueExpr>
 			    			</Slot>
 			    		</UpdateObject>
 			    		<UpdateObject objectVariable="q2">
 			    			<Slot property="lengthOfQueue">
-			    				<ValueExpr language="Java">pw.getPickupWindowQueue().size()</ValueExpr>
+			    				<ValueExpr language="Java">q2.getLengthOfQueue() + 1</ValueExpr>
 			    			</Slot>
 			    		</UpdateObject>
 			    	</UPDATE-ENV>
@@ -622,7 +639,7 @@ mb.getMenuBoardQueue().size() > 0
 				<FOR objectVariable="pw" objectType="PickupWindow" objectIdRef="2"/>
 				<FOR objectVariable="cust1" objectType="Customer">
 					<ObjectRef language="Java">pw.getPickupWindowQueue().get(0)</ObjectRef>
-				</FOR>	
+				</FOR>			
 				<DO>
 					<UPDATE-ENV>
 						<UpdateObject objectVariable="pw">
@@ -674,12 +691,12 @@ mb.getMenuBoardQueue().size() > 0 && mb.getMenuBoardQueue().get(0).isWaitingForP
 						</UpdateObject>
 						<UpdateObject objectVariable="q1">
 							<Slot property="lengthOfQueue">
-								<ValueExpr language="Java">mb.getMenuBoardQueue().size()</ValueExpr>
+								<ValueExpr language="Java">q1.getLengthOfQueue() - 1</ValueExpr>
 							</Slot>
 						</UpdateObject>
 						<UpdateObject objectVariable="q2">
 							<Slot property="lengthOfQueue">
-								<ValueExpr language="Java">pw.getPickupWindowQueue().size()</ValueExpr>
+								<ValueExpr language="Java">q2.getLengthOfQueue() + 1</ValueExpr>
 							</Slot>
 						</UpdateObject>
 					</UPDATE-ENV>
@@ -706,15 +723,10 @@ mb.getMenuBoardQueue().size() > 0
 					<ObjectRef language="Java">pw.getPickupWindowQueue().get(0)</ObjectRef>
 				</FOR>
 				<IF language="Java"><![CDATA[
-pw.getPickupWindowQueue().size() < pw.getMaxPickupQL() 
+pw.getPickupWindowQueue().size() < pw.getMaxPickupQL() - 1
                 ]]></IF>
 				<THEN>
 					<UPDATE-ENV>
-						<UpdateObject objectVariable="q2">
-							<Slot property="lengthOfQueue">
-								<ValueExpr language="Java">pw.getPickupWindowQueue().size()-1</ValueExpr>
-							</Slot>
-						</UpdateObject>
 						<UpdateStatisticsVariable variable="nrOfDepartures">
 							<ValueExpr language="Java"><![CDATA[
 SimStatistics.nrOfDepartures.getValue() + 1						
@@ -730,8 +742,14 @@ SimStatistics.cumulativeResponseTime.getValue() + evt.getOccurrenceTime() - cust
 								<ValueExpr language="Java">pw.getPickupWindowQueue().size() == 1 ? false : true</ValueExpr>
 							</Slot>
 							<MultiValuedSlot property="pickupWindowQueue">
-								<RemoveFirst itemVariable="cust"/>
+								<RemoveFirst itemVariable="cust" />
 							</MultiValuedSlot>
+						</UpdateObject>
+						<DestroyObject objectVariable="cust" />
+						<UpdateObject objectVariable="q2">
+							<Slot property="lengthOfQueue">
+								<ValueExpr language="Java">q2.getLengthOfQueue() - 1</ValueExpr>
+							</Slot>
 						</UpdateObject>
 					</UPDATE-ENV>
 					<SCHEDULE-EVT>
@@ -760,9 +778,10 @@ SimStatistics.cumulativeResponseTime.getValue() + evt.getOccurrenceTime() - cust
 								<RemoveFirst itemVariable="cust"/>
 							</MultiValuedSlot>
 						</UpdateObject>
+						<DestroyObject objectVariable="cust" />
 						<UpdateObject objectVariable="q2">
 							<Slot property="lengthOfQueue">
-								<ValueExpr language="Java">pw.getPickupWindowQueue().size()</ValueExpr>
+								<ValueExpr language="Java">q2.getLengthOfQueue() - 1</ValueExpr>
 							</Slot>
 						</UpdateObject>
 					</UPDATE-ENV>
