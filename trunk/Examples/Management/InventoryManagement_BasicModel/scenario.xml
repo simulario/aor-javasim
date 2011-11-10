@@ -8,7 +8,7 @@
 	scenarioTitle="Inventory Management"
 	simulationManagerDirectory="../../..">
 
-	<SimulationParameters simulationSteps="5000" stepDuration="1" timeUnit="D"/>
+	<SimulationParameters simulationSteps="365" stepDuration="1" timeUnit="D"/>
 
 	<SimulationModel modelName="BasicInventoryManagement" modelTitle="A simple inventory management system with lost sales statistics">
 
@@ -23,8 +23,7 @@
 				Simulation of a daily inventory management.
 			</shortDescription>
 			<dc:description>The daily demand (say, for TVs in an electronics shop) is normally distributed, 
-				with a mean of 5 units and a standard deviation of 1.8 units. Hint: round off demands to 
-				the closest integer during simulation. A replenishment order is placed when the quantity in stock 
+				with a mean of 5 units and a standard deviation of 1.8 units. A replenishment order is placed when the quantity in stock 
 				falls below the reorder level. The quantity of a replenishment order is computed as the reorder-up-to-level 
 				minus the quantity in stock. Lead time is distributed uniformly between 1 and 3 days. 
 				If a demand occurs on a day when the productQuantityInStock level is zero, the sale is lost. 
@@ -50,36 +49,6 @@
 			<GlobalVariable name="productQuantityInStock" dataType="Integer" />
 			<GlobalVariable name="REORDER_LEVEL" dataType="Integer" initialValue="20" />
 			<GlobalVariable name="REORDER_UP_TO_LEVEL" dataType="Integer" initialValue="30" />
-			<!-- ======================================================== -->
-			<GlobalFunction name="randomDailyDemand" resultType="Integer">
-				<!-- ======================================================== -->
-				<Body language="Java"><![CDATA[
-		          int r = Random.uniformInt(0,99);
-		          if (r < 1) return 10; 			
-		          else if (r < 2) return 1;
-		          else if (r < 6) return 2;
-		          else if (r < 14) return 3;
-		          else if (r < 30) return 4;
-		          else if (r < 51) return 5;
-		          else if (r < 72) return 6;
-		          else if (r < 88) return 7;
-		          else if (r < 96) return 8;
-		          else return 9;
-		       ]]></Body>
-		       <Body language="JavaScript"><![CDATA[
-		          var r = js.util.Random.uniformInt(0,99);
-		          if (r < 1) return 10; 			
-		          else if (r < 2) return 1;
-		          else if (r < 6) return 2;
-		          else if (r < 14) return 3;
-		          else if (r < 30) return 4;
-		          else if (r < 51) return 5;
-		          else if (r < 72) return 6;
-		          else if (r < 88) return 7;
-		          else if (r < 96) return 8;
-		          else return 9;
-		   ]]></Body>
-			</GlobalFunction>
 		</Globals>
 
 		<EntityTypes>
@@ -87,7 +56,7 @@
 			<ExogenousEventType name="DailyDemand" periodicity="1" />
 			<!-- ================================================== -->
 			<CausedEventType name="Delivery">
-				<!-- ============================================== -->
+			<!-- ============================================== -->
 				<Attribute name="quantity" type="Integer"/>
 			</CausedEventType>
 		</EntityTypes>
@@ -95,7 +64,7 @@
 		<EnvironmentRules>
 			<!-- =========================================== -->
 			<EnvironmentRule name="DailyDemand_Rule">
-				<!-- =========================================== -->
+			<!-- =========================================== -->
 				<documentation>
 					<dc:description>On DailyDemand, if the productQuantityInStock is greater than or equal to the demand, 
 						the demand is subtracted from the productQuantityInStock. Else if the productQuantityInStock 
@@ -187,7 +156,7 @@
 	</InitialState>
 	<!-- =========================================== -->
 	<UserInterface supportedLanguages="en">
-		<!-- =========================================== -->
+	<!-- =========================================== -->
 		<StatisticsUI>
 			<StatisticsVariableUI variable="percentageOfLostSales">
 				<Label>
