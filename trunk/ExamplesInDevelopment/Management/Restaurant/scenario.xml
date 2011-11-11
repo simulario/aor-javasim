@@ -45,12 +45,32 @@ SimStatistics.cumulativeResponseTime.getValue() / SimStatistics.nrOfDepartures.g
 					<ObjectProperty property="lengthOfQueue" objectType="Queue" objectIdRef="7"/>
 				</Source>
 			</Variable>
+			
+			<!-- =================================================== -->
+			
+			
 			<Variable name="bankMenuBoard" dataType="Integer">
 				<Source computeOnlyAtEnd="true">
 					<ObjectProperty property="bank" objectType="MenuBoard" />					
 				</Source>
 			</Variable>
+			<Variable name="bankPickUpWindow" dataType="Integer">
+				<Source computeOnlyAtEnd="true">
+					<ObjectProperty property="bank" objectType="PickupWindow" />					
+				</Source>
+			</Variable>
+			<Variable name="bankKitchen" dataType="Integer">
+				<Source computeOnlyAtEnd="true">
+					<ObjectProperty property="bank" objectType="Kitchen" />					
+				</Source>
+			</Variable>
+			<Variable name="bankManager" dataType="Integer">
+				<Source computeOnlyAtEnd="true">
+					<ObjectProperty property="bank" objectType="Manager" />					
+				</Source>
+			</Variable>
 		</Statistics>
+		
 
 		<Globals>
 			<GlobalFunction name="twoDice" resultType="Integer">
@@ -122,12 +142,7 @@ int r2 = Random.uniformInt(1,6);
 			</ExogenousEventType>
 			<!-- =================================================== -->
 			
-<!-- ============================================================================================================== -->			
-
-			<ExogenousEventType name="EndOfMonth" periodicity="30"/>
-		
-<!-- ============================================================================================================== -->		
-			
+			<!-- =================================================== -->
 			<CausedEventType name="StartMenuBoardService"/>
 			<!-- =================================================== -->
 			<CausedEventType name="StartPickupWindowService"/>
@@ -146,8 +161,10 @@ int r2 = Random.uniformInt(1,6);
 			</AgentType>
 			<!-- =================================================== -->
 			<AgentType name="Employee" superType="Person">
+				
 				<Attribute type="Integer" name="bank"/>
-				<ReactionRule name="AskForMoneyRule" agentVariable="emp">
+				<PeriodicTimeEventType name="EndOfMonth" periodicity="30"/>
+				<ReactionRule name="EndOfMonthRule" agentVariable="emp">
 					<documentation>
 					<dc:description>At every 30 days by simulating a real employee, he ask for the paycheck</dc:description>  
 					</documentation>
@@ -164,10 +181,10 @@ int r2 = Random.uniformInt(1,6);
 			<!-- =================================================== -->
 			<AgentType name="Manager" superType="Person">
 				<Attribute type="Integer" name="bank"/>
+				<PeriodicTimeEventType name="EndOfMonth" periodicity="30"/>
 				<ReactionRule name="AskForMoneyRule" agentVariable="man">
 					<documentation>
-									
-					<dc:description>/dc>dc>description>At every 30 days by simulating a real employee, he ask for the paycheck</dc:description>  
+					<dc:description>/dc>dc>description>At every 30 days by simulating a real manager his bank increases or decreases</dc:description>  
 					</documentation>
 					<WHEN eventType="EndOfMonth"/>
 					<DO>
@@ -927,6 +944,11 @@ mes.getCustID()
 	<!-- =================================================== -->
 	<InitialState>
 	<!-- =================================================== -->
+		<Agent type="Manager" name="BillGates" id="10">
+			<Slot property="bank" value="0"/>
+			<PeriodicTimeEvent type="EndOfMonth" occurrenceTime="30"/>
+		</Agent>
+		
 		<Agent type="MenuBoard" name="MB" id="1">
 		<!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->
 			<Slot property="bank" value="0"/>		
@@ -936,21 +958,24 @@ mes.getCustID()
 				<ValueExpr language="Java"><![CDATA[ new ArrayList<Customer>()]]></ValueExpr>
 				<ValueExpr language="JavaScript">new js.util.ArrayList()</ValueExpr>
 			</Slot>
+			<PeriodicTimeEvent type="EndOfMonth" occurrenceTime="30"/>
 		</Agent>
 		<!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->
 		<Agent type="Kitchen" name="K" id="5">
-			<Slot property="bank" value="0"/>
+			<Slot property="bank" value="1"/>
+			<PeriodicTimeEvent type="EndOfMonth" occurrenceTime="30"/>
 		</Agent>
 		<!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->
 		<Agent type="PickupWindow" name="PW" id="2">
 		<!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->
-			<Slot property="bank" value="0"/>
+			<Slot property="bank" value="2"/>
 			<Slot property="pickupWindowBusy" value="false"/>
 			<Slot property="maxPickupQL" value="5"/>
 			<Slot property="pickupWindowQueue">
 				<ValueExpr language="Java"><![CDATA[ new ArrayList<Customer>()]]></ValueExpr>
 				<ValueExpr language="JavaScript">new js.util.ArrayList()</ValueExpr>
 			</Slot>
+			<PeriodicTimeEvent type="EndOfMonth" occurrenceTime="30"/>
 		</Agent>
 		<!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->
 		<Object type="Queue" id="6" name="MBQueue">
@@ -1073,6 +1098,8 @@ mes.getCustID()
 					<Text xml:lang="ro">Care este dimensiunea maxima a listei de asteptare pentru serviciul de distributie comenzi?</Text>
 				</Hint>
 			</StatisticsVariableUI>
+			<!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->
+			
 			<StatisticsVariableUI variable="bankMenuBoard">
 				<Label>
 					<Text xml:lang="en">The bank of the OrderTaker at the end of the simulation</Text>
@@ -1083,6 +1110,37 @@ mes.getCustID()
 					<Text xml:lang="ro">Cat are in banca sefu?</Text>
 				</Hint>
 			</StatisticsVariableUI>
+			<StatisticsVariableUI variable="bankKitchen">
+				<Label>
+					<Text xml:lang="en">The bank of the Chef at the end of the simulation</Text>
+					<Text xml:lang="ro">Cat a castigat la finalul simularii bucatarul</Text>
+				</Label>
+				<Hint>
+					<Text xml:lang="en">Bank of the Chef?</Text>
+					<Text xml:lang="ro">Cat are in banca bucatarul?</Text>
+				</Hint>
+			</StatisticsVariableUI>
+			<StatisticsVariableUI variable="bankPickUpWindow">
+				<Label>
+					<Text xml:lang="en">The bank of the waitress at the end of the simulation</Text>
+					<Text xml:lang="ro">Cat a castigat la finalul simularii chelnerita</Text>
+				</Label>
+				<Hint>
+					<Text xml:lang="en">Bank of the waitress?</Text>
+					<Text xml:lang="ro">Cat are in banca chelnerita?</Text>
+				</Hint>
+			</StatisticsVariableUI>
+			<StatisticsVariableUI variable="bankManager">
+				<Label>
+					<Text xml:lang="en">The bank of the manager at the end of the simulation</Text>
+					<Text xml:lang="ro">Cat a castigat la finalul simularii sefu</Text>
+				</Label>
+				<Hint>
+					<Text xml:lang="en">Bank of the manager?</Text>
+					<Text xml:lang="ro">Cat are in banca sefu?</Text>
+				</Hint>
+			</StatisticsVariableUI>
+			
 		</StatisticsUI>
 		<!-- ================================================== -->
 		<AnimationUI>
