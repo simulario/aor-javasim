@@ -49,16 +49,16 @@
 		</xs:documentation></xs:annotation>
 		<xs:complexType>
       <xs:sequence>
-      	<xs:element name="TopOutputPanel" type="aors:HorizontalOutputPanel.type" minOccurs="0" maxOccurs="1">
+      	<xs:element name="TopOutputPanel" type="aors:HorizontalAgtCtrlOutputPanel.type" minOccurs="0" maxOccurs="1">
       		<xs:annotation><xs:documentation>For rendering a group of up to seven output fields in a horizontal bar on the top of the canvas. </xs:documentation></xs:annotation>
       	</xs:element>
-      	<xs:element name="BottomOutputPanel" type="aors:HorizontalOutputPanel.type" minOccurs="0" maxOccurs="1">
+      	<xs:element name="BottomOutputPanel" type="aors:HorizontalAgtCtrlOutputPanel.type" minOccurs="0" maxOccurs="1">
       		<xs:annotation><xs:documentation>For rendering a group of up to seven utput fields in a horizontal bar on the bottom of the canvas. </xs:documentation></xs:annotation>
       	</xs:element>
-      	<xs:element name="LeftOutputPanel" type="aors:VerticalOutputPanel.type" minOccurs="0" maxOccurs="1">
+      	<xs:element name="LeftOutputPanel" type="aors:VerticalAgtCtrlOutputPanel.type" minOccurs="0" maxOccurs="1">
       		<xs:annotation><xs:documentation>For rendering an event list or up to seven output field groups in a vertical bar on the left of the canvas. </xs:documentation></xs:annotation>
       	</xs:element>
-      	<xs:element name="RightOutputPanel" type="aors:VerticalOutputPanel.type" minOccurs="0" maxOccurs="1">
+      	<xs:element name="RightOutputPanel" type="aors:VerticalAgtCtrlOutputPanel.type" minOccurs="0" maxOccurs="1">
       		<xs:annotation><xs:documentation>For rendering an event list or up to seven output field groups in a vertical bar on the right of the canvas. </xs:documentation></xs:annotation>
       	</xs:element>
       	<xs:element name="UserActionForm" type="aors:UserActionForm.type" minOccurs="0" maxOccurs="unbounded">
@@ -93,44 +93,36 @@
 		</xs:complexType>
   </xs:element>
 	<!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->
-	<xs:complexType name="HorizontalOutputPanel.type">
+	<xs:complexType name="HorizontalAgtCtrlOutputPanel.type">
 	<!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->
 		<xs:sequence>
-			<xs:element ref="aors:OutputFieldGroup"/>
+			<xs:element name="OutputFieldGroup" type="aors:AgtCtrlOutputFieldGroup.type"/>
 		</xs:sequence>
 	</xs:complexType>
 	<!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->
-	<xs:complexType name="VerticalOutputPanel.type">
+	<xs:complexType name="VerticalAgtCtrlOutputPanel.type">
 	<!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->
 		<xs:choice>
 			<xs:element name="EventList" type="aors:EventList.type"/>
 			<xs:sequence>
-				<xs:element ref="aors:OutputFieldGroup" maxOccurs="7"/>
+				<xs:element name="OutputFieldGroup" type="aors:AgtCtrlOutputFieldGroup.type" maxOccurs="7"/>
 			</xs:sequence>
 		</xs:choice>
 		<xs:attribute name="width" type="aors:PositiveInteger-OR-Pixel-OR-Percent.type" use="optional"/>
 	</xs:complexType>
 	<!-- =================================================================== -->
-	<xs:element name="OutputFieldGroup">
+	<xs:complexType name="AgtCtrlOutputFieldGroup.type">
 	<!-- =================================================================== -->
-		<xs:complexType>
-			<xs:sequence>
-				<xs:element ref="aors:Label" minOccurs="0"/>
-				<xs:element name="OutputField" type="aors:OutputField.type" maxOccurs="7">
-					<xs:annotation><xs:documentation>
-						Output fields allow to display information about the agent itself, about other objects or about statistics.
-					</xs:documentation></xs:annotation>
-				</xs:element>
-			</xs:sequence>
-			<xs:attribute name="label" type="xs:string" use="optional"/>
-			<xs:attribute name="image" type="xs:anyURI" use="optional">
-				<xs:annotation><xs:documentation xml:lang="en">An image file from the media folder. </xs:documentation></xs:annotation>
-			</xs:attribute>
-			<xs:attribute name="backgroundImage" type="xs:anyURI" use="optional">
-				<xs:annotation><xs:documentation xml:lang="en">An image file from the media folder to be used as a background. </xs:documentation></xs:annotation>
-			</xs:attribute>
-		</xs:complexType>
-	</xs:element>
+		<xs:sequence>
+			<xs:element ref="aors:Label" minOccurs="0"/>
+			<xs:element name="OutputField" type="aors:AgtCtrlOutputField.type" maxOccurs="7">
+				<xs:annotation><xs:documentation>
+					Output fields allow to display information about the agent itself, about other objects or about statistics.
+				</xs:documentation></xs:annotation>
+			</xs:element>
+		</xs:sequence>
+		<xs:attributeGroup ref="aors:OutputFieldGroup.attributes"/>
+	</xs:complexType>
 	<!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->	
 	<xs:complexType name="EventList.type">
 	<!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->
@@ -216,39 +208,15 @@
 		</xs:attribute>
 	</xs:attributeGroup>
 	<!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->
-	<xs:complexType name="OutputField.type">
+	<xs:complexType name="AgtCtrlOutputField.type">
 	<!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->
-		<xs:sequence>
-			<xs:group ref="aors:Field.CommonElem"/>
-			<xs:element name="Source" minOccurs="0">
-				<xs:complexType>
-					<xs:choice>
-						<xs:element name="GlobalVariable">
-							<xs:complexType>
-								<xs:attribute name="name" type="aors:CanonicalName" use="required"/>
-							</xs:complexType>
-						</xs:element>	
-						<xs:element name="StatisticsVariable">
-							<xs:complexType>
-								<xs:attribute name="name" type="aors:CanonicalName" use="required"/>
-							</xs:complexType>
-						</xs:element>	
-						<xs:element name="ObjectAttribute">
-							<xs:annotation><xs:documentation xml:lang="en">An attribute of another object/agent. </xs:documentation></xs:annotation>
-							<xs:complexType>
-								<xs:attribute name="objectType" type="aors:CanonicalName" use="required"/>
-								<xs:attribute name="objectIdRef" type="xs:long" use="required"/>
-								<xs:attribute name="attribute" type="aors:CanonicalName" use="required"/>
-							</xs:complexType>
-						</xs:element>
-					</xs:choice>
-				</xs:complexType>
-			</xs:element>
-		</xs:sequence>
-		<xs:attribute name="label" type="xs:string" use="required"/>
-		<xs:attribute name="agentAttribute" type="aors:CanonicalName" use="optional">
-			<xs:annotation><xs:documentation xml:lang="en">An attribute of the controlled agent as the source of the output field. In the case of a PI agent this is an attribute of the agent object, otherwise of the agent subject. </xs:documentation></xs:annotation>			
-		</xs:attribute>
+		<xs:complexContent>
+			<xs:extension base="aors:OutputField.type">
+				<xs:attribute name="agentAttribute" type="aors:CanonicalName" use="optional">
+					<xs:annotation><xs:documentation xml:lang="en">An attribute of the controlled agent as the source of the output field. In the case of a PI agent this is an attribute of the agent object, otherwise of the agent subject. </xs:documentation></xs:annotation>			
+				</xs:attribute>				
+			</xs:extension>
+		</xs:complexContent>
 	</xs:complexType>
 	<!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->
 	<xs:complexType name="UserActionForm.type">
