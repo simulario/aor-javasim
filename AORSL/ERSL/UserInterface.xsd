@@ -290,7 +290,19 @@
 	  	</xs:element>	    
 	  	<xs:element name="HelpText" type="ers:HtmlText-Sequence.type" minOccurs="0">
 	  		<xs:annotation><xs:documentation>A help text that will be displayed on demand on top of the animation tab. </xs:documentation></xs:annotation>	  		
-	  	</xs:element>	    
+	  	</xs:element>
+	  	<xs:element name="TopOutputPanel" type="ers:HorizontalOutputPanel.type" minOccurs="0" maxOccurs="1">
+	  		<xs:annotation><xs:documentation>For rendering a group of up to seven output fields in a horizontal bar on the top of the canvas. </xs:documentation></xs:annotation>
+	  	</xs:element>
+	  	<xs:element name="BottomOutputPanel" type="ers:HorizontalOutputPanel.type" minOccurs="0" maxOccurs="1">
+	  		<xs:annotation><xs:documentation>For rendering a group of up to seven utput fields in a horizontal bar on the bottom of the canvas. </xs:documentation></xs:annotation>
+	  	</xs:element>
+	  	<xs:element name="LeftOutputPanel" type="ers:VerticalOutputPanel.type" minOccurs="0" maxOccurs="1">
+	  		<xs:annotation><xs:documentation>For rendering up to seven output field groups in a vertical bar on the left of the canvas. </xs:documentation></xs:annotation>
+	  	</xs:element>
+	  	<xs:element name="RightOutputPanel" type="ers:VerticalOutputPanel.type" minOccurs="0" maxOccurs="1">
+	  		<xs:annotation><xs:documentation>For rendering up to seven output field groups in a vertical bar on the right of the canvas. </xs:documentation></xs:annotation>
+	  	</xs:element>
 	  	<xs:element name="Views">
 	      <xs:complexType>
 	        <xs:sequence>
@@ -309,5 +321,76 @@
 	    <xs:annotation><xs:documentation>The sound file can be mp3 or midi, as identified by its extension (.mp3 or .mid). The file is searched first in the project folder under "media/sounds". If the file is not found in this folder, then it is searched in the global media/sounds folder. If still not found, then no sound is played. Note that the path is relative to the media/sounds folder. </xs:documentation></xs:annotation>
 	  </xs:attribute>
 	</xs:complexType>
-  
+	<!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->
+	<xs:complexType name="HorizontalOutputPanel.type">
+	<!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->
+		<xs:sequence>
+			<xs:element name="OutputFieldGroup" type="ers:OutputFieldGroup.type"/>
+		</xs:sequence>
+	</xs:complexType>
+	<!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->
+	<xs:complexType name="VerticalOutputPanel.type">
+	<!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->
+		<xs:sequence>
+			<xs:element name="OutputFieldGroup" type="ers:OutputFieldGroup.type" maxOccurs="7"/>
+		</xs:sequence>
+		<xs:attribute name="width" type="ers:PositiveInteger-OR-Pixel-OR-Percent.type" use="optional"/>
+	</xs:complexType>
+	<!-- =================================================================== -->
+	<xs:complexType name="OutputFieldGroup.type">
+	<!-- =================================================================== -->
+		<xs:sequence>
+			<xs:element ref="ers:Label" minOccurs="0"/>
+			<xs:element name="OutputField" type="ers:OutputField.type" maxOccurs="7">
+				<xs:annotation><xs:documentation>
+					Output fields allow to display information about the agent itself, about other objects or about statistics.
+				</xs:documentation></xs:annotation>
+			</xs:element>
+		</xs:sequence>
+		<xs:attributeGroup ref="ers:OutputFieldGroup.attributes"/>
+	</xs:complexType>
+	<!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->
+	<xs:attributeGroup name="OutputFieldGroup.attributes">		
+	<!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->
+		<xs:attribute name="label" type="xs:string" use="optional"/>
+		<xs:attribute name="image" type="xs:anyURI" use="optional">
+			<xs:annotation><xs:documentation xml:lang="en">An image file from the media folder. </xs:documentation></xs:annotation>
+		</xs:attribute>
+		<xs:attribute name="backgroundImage" type="xs:anyURI" use="optional">
+			<xs:annotation><xs:documentation xml:lang="en">An image file from the media folder to be used as a background. </xs:documentation></xs:annotation>
+		</xs:attribute>		
+	</xs:attributeGroup>
+	<!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->
+	<xs:complexType name="OutputField.type">
+	<!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->
+		<xs:sequence>
+			<xs:group ref="ers:Field.CommonElem"/>
+			<xs:element name="Source" minOccurs="0">
+				<xs:complexType>
+					<xs:choice>
+						<xs:element name="GlobalVariable">
+							<xs:complexType>
+								<xs:attribute name="name" type="ers:CanonicalName" use="required"/>
+							</xs:complexType>
+						</xs:element>	
+						<xs:element name="StatisticsVariable">
+							<xs:complexType>
+								<xs:attribute name="name" type="ers:CanonicalName" use="required"/>
+							</xs:complexType>
+						</xs:element>	
+						<xs:element name="ObjectAttribute">
+							<xs:annotation><xs:documentation xml:lang="en">An attribute of another object/agent. </xs:documentation></xs:annotation>
+							<xs:complexType>
+								<xs:attribute name="objectType" type="ers:CanonicalName" use="required"/>
+								<xs:attribute name="objectIdRef" type="xs:long" use="required"/>
+								<xs:attribute name="attribute" type="ers:CanonicalName" use="required"/>
+							</xs:complexType>
+						</xs:element>
+					</xs:choice>
+				</xs:complexType>
+			</xs:element>
+		</xs:sequence>
+		<xs:attribute name="label" type="xs:string" use="required"/>
+	</xs:complexType>
+	
 </xs:schema>
