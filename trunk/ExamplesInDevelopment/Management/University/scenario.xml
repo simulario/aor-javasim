@@ -1,0 +1,183 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<?xml-stylesheet type="text/xsl" href="prettyprint.xsl"?>
+
+<SimulationScenario version="0.9" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+    xsi:schemaLocation="http://aor-simulation.org ../../../AORSL/AORSL_0-9.xsd"
+    xmlns="http://aor-simulation.org" xmlns:aors="http://aor-simulation.org"
+    xmlns:dc="http://purl.org/dc/elements/1.1/" scenarioName="University_OrganizationVersion"
+    scenarioTitle="An example of how the Universty works"
+    simulationManagerDirectory="../../..">
+    
+    <SimulationParameters simulationSteps="100" timeUnit="h" />
+    <SimulationModel modelName="University_OrganizationVersion" modelTitle="An example of how the Universty works">
+        <!-- 
+        <Statistics>
+            <Variable name="CourseAttending" dataType="Integer">
+                <Source computeOnlyAtEnd="true" aggregationFunction="avg">
+                    <ObjectProperty property="atTheCourse" objectType="Student"/>
+                </Source>
+            </Variable>
+        </Statistics>
+        -->
+      <EntityTypes>
+          <!-- =================================================== -->
+          <ExogenousEventType name="FacultyStart"/>
+          <!-- =================================================== -->
+          <CausedEventType name="CourseStart" />
+          <!-- =================================================== -->
+          <CausedEventType name="CourseEnd"/>
+          <!-- =================================================== -->
+          <ObjectType name="Course">
+              <Attribute type="Integer" name="id"/>
+              <Attribute type="String" name="courseName"/>
+              <Attribute type="Integer" name="participants"/>
+          </ObjectType>
+          <!-- =================================================== -->
+          <AgentType name="Person">
+              <Attribute type="String" name="firstName"/>
+              <Attribute type="String" name="lastName"/>
+          </AgentType>
+          <!-- =================================================== -->
+          <AgentType name="Student" superType="Person">
+              <Attribute type="Integer" name="matrikelNr"/>
+              <Attribute type="Boolean" name="atTheCourse"/>
+              <!-- =================================================== -->
+              <!-- Function created to simulate the mood of the student concerning the course -->
+              <Function name="courseChance" resultType="Boolean">
+                   <Body language="Java">
+                       <![CDATA[
+int r = Random.uniformInt(0,1);
+	if (r==0)  return (false);            // with probability  0.50
+	             return (true);            // with probability  0.50
+	
+		     ]]>
+                   </Body>
+              </Function>
+              
+              <ReactionRule name="AttendCourse_Rule">
+                  <WHEN eventType="CourseStart"/>
+                  <DO>
+                      <UPDATE-AGT>
+                          <Slot property="atTheCourse" >
+                              <ValueExpr language="Java">
+                                  <![CDATA[
+getCourseChance()
+								]]></ValueExpr>
+                          </Slot>
+                      </UPDATE-AGT>
+                  </DO>
+              </ReactionRule>
+          </AgentType>
+          <!-- =================================================== -->
+          <AgentType name="Professor" superType="Person">
+              <Attribute type="String" name="chair"/>
+              <Attribute type="Boolean" name="atTheCourse"/>
+              <!-- 
+              <ReferenceProperty name="courses" type="Course"  upperMultiplicity="unbounded">
+                  <description>Every professor have courses where he teach</description>
+              </ReferenceProperty>
+              -->
+              <!-- =================================================== -->
+              <ReactionRule name="TeachCourse_Rule">
+                  <WHEN eventType="CourseStart"/>
+                  <DO>
+                      <UPDATE-AGT>
+                          <Slot property="atTheCourse" value="true"/>
+                      </UPDATE-AGT>
+                  </DO>
+              </ReactionRule>
+              <ReactionRule name="CourseEnd">
+                  <WHEN eventType="CourseEnd"/>
+                  <DO>
+                      <UPDATE-AGT>
+                          <Slot property="atTheCourse" value="false"/>
+                      </UPDATE-AGT>
+                  </DO>
+              </ReactionRule>
+             
+          </AgentType>
+      </EntityTypes>
+      <EnvironmentRules>
+          <!-- =================================================== -->
+          <EnvironmentRule name="FacultyStart_Rule">
+              <WHEN eventType="FacultyStart"/>
+              <DO>
+                  <SCHEDULE-EVT>
+                      <CausedEventExpr eventType="CourseStart">
+                          <Delay>
+                              <ValueExpr language="Java">2</ValueExpr>
+                          </Delay>
+                      </CausedEventExpr>
+                  </SCHEDULE-EVT>
+              </DO>
+          </EnvironmentRule>
+          <!-- =================================================== -->
+          <EnvironmentRule name="CourseStart_Rule">
+              <WHEN eventType="CourseStart"/>
+              <DO>
+                  <SCHEDULE-EVT>
+                      <CausedEventExpr eventType="CourseStart">
+                          <Delay>
+                              <ValueExpr language="Java">3</ValueExpr>
+                          </Delay>
+                      </CausedEventExpr>
+                      <CausedEventExpr eventType="CourseEnd">
+                          <Delay>
+                              <ValueExpr language="Java">2</ValueExpr>
+                          </Delay>
+                      </CausedEventExpr>
+                  </SCHEDULE-EVT>
+               </DO>
+          </EnvironmentRule>
+      </EnvironmentRules>
+    </SimulationModel>
+    <InitialState>
+        <ExogenousEvent type="FacultyStart" occurrenceTime="1"/>
+        <!-- =================================================== -->
+        <Agent type="Professor" name="Professor1" id="1">
+            <Slot property="firstName" value="Wagner"/>
+            <Slot property="lastName" value="Gerd"/>
+            <Slot property="chair" value="InternetTechnology"/>
+            <Slot property="atTheCourse" value="false"/>
+        </Agent>
+        <!-- =================================================== -->
+        <Agent type="Student" name="Student1" id="2">
+            <Slot property="firstName" value="Duca"/>
+            <Slot property="lastName" value="Bogdan"/>
+            <Slot property="matrikelNr" value="3053643"/>
+            <Slot property="atTheCourse" value="false"/>
+        </Agent>
+        <!-- =================================================== -->
+        <Agent type="Student" name="Student2" id="3">
+            <Slot property="firstName" value="Bobo"/>
+            <Slot property="lastName" value="Greg"/>
+            <Slot property="matrikelNr" value="3053622"/>
+            <Slot property="atTheCourse" value="false"/>
+        </Agent>
+        <!-- =================================================== -->
+        <Agent type="Student" name="Student3" id="4">
+            <Slot property="firstName" value="Smith"/>
+            <Slot property="lastName" value="Jens"/>
+            <Slot property="matrikelNr" value="3053612"/>
+            <Slot property="atTheCourse" value="false"/>
+        </Agent>
+    </InitialState>
+    <!-- 
+    <UserInterface supportedLanguages="en">
+       
+        <StatisticsUI>
+       
+            <StatisticsVariableUI variable="CourseAttending">
+                <Label>
+                    <Text xml:lang="en">Number of participants</Text>
+                    <Text xml:lang="ro">Number of participants</Text>
+                </Label>
+                <Hint>
+                    <Text xml:lang="en">How many participants are at the course?</Text>
+                    <Text xml:lang="ro">Cati participanti sunt la curs?</Text>
+                </Hint>
+            </StatisticsVariableUI>
+        </StatisticsUI>
+        </UserInterface>
+    -->
+</SimulationScenario>
