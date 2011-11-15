@@ -1,0 +1,1801 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<?xml-stylesheet type="text/xsl" href="prettyprint.xsl"?>
+<SimulationScenario xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+ xsi:schemaLocation="http://aor-simulation.org file:/D:/work/programming/eclipsePrj/AOR-Complete/trunk/AORSL/AORSL_0-9.xsd"
+ xmlns="http://aor-simulation.org"
+ xmlns:dc="http://purl.org/dc/elements/1.1/"
+ xmlns:aors="http://aor-simulation.org"
+ scenarioName="Arkanoid"
+ scenarioTitle="Arkanoid"
+ version="0.9">
+
+  <documentation>
+    <dc:title>Arkanoid</dc:title>
+    <dc:subject>Arcade Game</dc:subject>
+    <dc:subject xml:lang="de">Geschicklichkeitsspiel</dc:subject>
+    <dc:creator>Steffen Laarz</dc:creator>
+    <dc:creator>Falko Matthies</dc:creator>
+    <dc:created>2011-09-30</dc:created>
+    <dc:source>Arkanoid is an arcade game developed 
+      by Taito in 1986 (see http://en.wikipedia.org/wiki/Arkanoid).
+    </dc:source>
+    <dc:source xml:lang="de">Arkanoid ist ein Spieleklassiker, 
+      welches 1986 von der Firma Taito entwickelt wurde (http://de.wikipedia.org/wiki/Arkanoid).
+    </dc:source>
+    <aors:shortDescription xml:lang="en" xmlns="http://www.w3.org/1999/xhtml">
+      A reconstruction of the classical <a href="http://en.wikipedia.org/wiki/Arkanoid">Arkanoid</a> game 
+      originally published in 1986 by Taito. The player controls a slider which prevents the ball 
+      from leaving the playground. The aim of the game is to destroy all bricks in the playground.
+    </aors:shortDescription>
+    <aors:shortDescription xml:lang="de" xmlns="http://www.w3.org/1999/xhtml">
+      Eine Nachbildung des klassischen <a href="http://de.wikipedia.org/wiki/Arkanoid" >Arkanoid</a> Spiel, 
+      welches 1986 von Taito veröffentlicht wurde. Der Spieler kontrolliert einen Slider, mit dem er verhindern muss,
+      dass der Ball das Spielfeld verlässt. Das Ziel des Spiels ist es alle Blöcke zu zerstören.
+    </aors:shortDescription>    
+    <dc:description>BTU-ARKANOID - An ARKANOID clone</dc:description>
+    <aors:description xml:lang="en" xmlns="http://www.w3.org/1999/xhtml">
+      <p>
+        The player's task is to keep the ball as long as in the playgorund until all blocks
+        are destroyed. If all blocks have been destroyed, a new round begins. On each level the difficulty will be increased.
+		If the player destroys a block with the ball,
+        several "features" can fall down. These powerups influence the properties of the slider or
+        balls positive or negative. Features can increase or slow down the speed of the slider and ball,
+        change the size of the slider, to give an extra life or more balls allow the playing field. 
+        If the player hit a block, he gets points. Once the ball leaves the playground, 
+        a life is subtracted. If all lives are consumed, the player has lost and the game is over.
+      </p>
+    </aors:description>
+    <aors:description xml:lang="de" xmlns="http://www.w3.org/1999/xhtml">
+      <p>
+      Die Aufgabe des Spielers ist es den Ball solange im Spielfeld zu halten, bis alle Blöcke
+      zerstört sind. Wenn alle Blöcke zerstört wurden, beginnt ein neues Level. Jedes Level was man 
+      erreicht, steigert sich in seiner Schwierigkeit. Wenn der Spieler mit den Ball ein Block zerstört,
+      können verschiedene "Features" herunterfallen. Diese beeinflussen die Eigenschaften des Sliders oder
+      des Balls positiv oder negativ. Features können die Geschwindigkeit des Sliders bzw. Balls erhöhen
+      oder verlangsamen, die Größe des Sliders verändern, ein extra Leben schenken oder das mehrere Bälle
+      im Spielfeld erlauben. Wenn der Spieler einen Block zerstört hat, werden Ihn Punkte gutgeschrieben.
+      Sobald der Ball das Spielfeld verlassen hat, wird ein Leben abgezogen. Sind alle 
+      Leben verbraucht, hat der Spieler verloren und das Spiel ist zu Ende.
+      </p>
+    </aors:description>
+    <dc:license>Creative Commons Attribution-NonCommercial-ShareAlike 3.0,
+      see http://creativecommons.org/licenses/by-nc-sa/3.0/</dc:license>
+  </documentation>
+  
+  
+  <SimulationParameters simulationSteps="100000" />
+  <SimulationModel modelName="BTU_ARKANOID" modelTitle="BTU-ARKANOID - An ARKANOID clone">
+    <SpaceModel geometry="Euclidean" spatialDistanceUnit="m">
+      <TwoDimensional xMax="576" yMax="552"/>
+    </SpaceModel>
+	
+	<!-- enumerations -->
+    <DataTypes>
+      <Enumeration name="SliderSpeed">
+        <EnumerationLiteral>SLOW</EnumerationLiteral>
+        <EnumerationLiteral>NORMAL</EnumerationLiteral>
+        <EnumerationLiteral>FAST</EnumerationLiteral>
+      </Enumeration>
+      <Enumeration name="SliderSize">
+        <EnumerationLiteral>S</EnumerationLiteral>
+        <EnumerationLiteral>M</EnumerationLiteral>
+        <EnumerationLiteral>L</EnumerationLiteral>
+        <EnumerationLiteral>XL</EnumerationLiteral>
+      </Enumeration>
+      <Enumeration name="Feature">
+        <EnumerationLiteral>NONE</EnumerationLiteral>
+        <EnumerationLiteral>SLIDER_EXTEND</EnumerationLiteral>
+        <EnumerationLiteral>SLIDER_DIMINSH</EnumerationLiteral>
+        <EnumerationLiteral>SLIDER_ACCELERATE</EnumerationLiteral>
+        <EnumerationLiteral>SLIDER_BREAK</EnumerationLiteral>
+        <EnumerationLiteral>SLIDER_ATTACHBALL</EnumerationLiteral>
+        <EnumerationLiteral>BALL_ACCELERATE</EnumerationLiteral>
+        <EnumerationLiteral>BALL_BREAK</EnumerationLiteral>
+        <EnumerationLiteral>BALL_BOMB</EnumerationLiteral>
+        <EnumerationLiteral>DOUBLE_BALL</EnumerationLiteral>
+        <EnumerationLiteral>EXTRA_LIFE</EnumerationLiteral>
+      </Enumeration>
+    </DataTypes>
+
+    <Globals>
+      <GlobalVariable name="level"           dataType="Integer" minValue="1" maxValue="100" initialValue="1"/>
+      <GlobalVariable name="lives"           dataType="Integer" minValue="0" maxValue="6"   initialValue="3"/>
+      <GlobalVariable name="blocks"          dataType="Integer"/>
+      <GlobalVariable name="balls"           dataType="Integer" initialValue="1"/>
+      <GlobalVariable name="remainingblocks" dataType="Integer"/>
+      <GlobalVariable name="featureBlocks"   dataType="Integer" initialValue="0"/>
+      <GlobalVariable name="score"           dataType="Integer" initialValue="0"/>
+      
+      <!-- ###############################################################
+           #### levels                                                 ###
+           ############################################################### -->
+         
+      <GlobalFunction name="getLevelBlockGrid" resultType="Array">
+		  <documentation>
+			  <description>
+				  Returns a mask grid map for positioning the blocks in the playground:
+				  -1 = undestroyable block
+				   0 = no block
+				   1 = block with thickness 1
+				   2 = block with thickness 2
+				   3 = block with thickness 3
+			  </description>
+		  </documentation>
+        <Parameter name="level" type="Integer"/>
+        <Body language="JavaScript">
+          <![CDATA[
+            var blocks = [
+              // level 1
+              [ 
+                [0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0],
+                [0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0],
+                [1,  1,  1,  0,  1,  1,  1,  0,  1,  0,  1],
+                [1,  0,  1,  0,  0,  1,  0,  0,  1,  0,  1],
+                [1,  1,  0,  0,  0,  1,  0,  0,  1,  0,  1],
+                [1,  0,  1,  0,  0,  1,  0,  0,  1,  0,  1],
+                [1,  0,  1,  0,  0,  1,  0,  0,  1,  0,  1],
+                [1,  1,  1,  0,  0,  1,  0,  0,  1,  1,  1]
+
+              ],
+              // level 2
+              [
+                [0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0],
+                [0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0],
+                [0,  0,  0,  0, -1, -1, -1,  0,  0,  0,  0],
+                [0,  0,  0,  1,  1,  1,  1,  1,  0,  0,  0],
+                [0,  0,  1,  1,  2,  2,  2,  1,  1,  0,  0],
+                [0,  0,  1,  2,  1,  1,  1,  2,  1,  0,  0],
+                [0,  0,  1,  2,  1,  1,  1,  2,  1,  0,  0],
+                [0,  0,  0,  1,  2,  2,  2,  1,  0,  0,  0]
+              ],
+              // level 3
+              [
+                [0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0],
+                [0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0],
+                [0,  0,  0,  0, -1, -1, -1,  0,  0,  0,  0],
+                [0,  0,  0,  1,  1,  1,  1,  1,  0,  0,  0],
+                [0,  0,  1,  1,  2,  2,  2,  1,  1,  0,  0],
+                [0,  0,  1,  2,  3,  3,  3,  2,  1,  0,  0],
+                [0,  0,  1,  2,  3,  3,  3,  2,  1,  0,  0],
+                [0,  0,  0,  1,  2,  2,  2,  1,  0,  0,  0]
+              ],
+              // level 4
+              [
+                [ 0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0],
+                [ 0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0],
+                [ 1,  1,  1,  0,  0,  0,  0,  0,  1,  1,  1],
+                [ 1,  3,  1,  0,  2,  2,  2,  0,  1,  3,  1],
+                [ 1,  3,  1,  0,  2,  3,  2,  0,  1,  3,  1],
+                [ 1,  1,  1,  0,  2,  2,  2,  0,  1,  1,  1],
+                [ 0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0],
+                [-1, -1,  1,  1,  1,  1,  1,  1,  1, -1, -1]
+              ]
+            ];
+
+            return blocks[level - 1];
+          ]]>
+        </Body>
+      </GlobalFunction>
+      
+
+      <GlobalFunction name="noNextLevel" resultType="Integer">
+		  <documentation>
+			  <description>
+				  Returns TRUE if a next level exists, else FALSE.
+			  </description>
+		  </documentation>
+        <Body language="JavaScript">
+                    <![CDATA[
+            alert(__Global.getLevelBlockGrid(__Global.level) == undefined);
+            return __Global.getLevelBlockGrid(__Global.level) == undefined;
+                    ]]>
+        </Body>
+      </GlobalFunction>
+      
+    
+      <!-- ###############################################################
+           #### block functions                                        ###
+           ############################################################### -->
+         
+      <GlobalFunction name="countAllBlocks" resultType="Integer">
+		  <documentation>
+			  <description>
+				  Returns the amount of all blocks in the grid map.
+			  </description>
+		  </documentation>
+        <Body language="JavaScript">
+                    <![CDATA[
+            var grid = __Global.getLevelBlockGrid(__Global.level);
+            var amount = 0;
+
+            for(var row = 0; row < grid.length; ++row) {
+              for(var col = 0; col < grid[row].length; ++col) {
+              if(grid[row][col] !== 0) amount++;
+              }
+            }
+            
+                        return amount;
+                    ]]>
+        </Body>
+      </GlobalFunction>
+      
+      <GlobalFunction name="countDestroyableBlocks" resultType="Integer">
+		  <documentation>
+			  <description>
+				  Returns the amount of all destroyable blocks in the grid map.
+			  </description>
+		  </documentation>
+        <Body language="JavaScript">
+                    <![CDATA[
+            var grid = __Global.getLevelBlockGrid(__Global.level);
+            var amount = 0;
+
+            for(var row = 0; row < grid.length; ++row) {
+              for(var col = 0; col < grid[row].length; ++col) {
+              if(grid[row][col] > 0) amount++;
+              }
+            }
+            
+                        return amount;
+                    ]]>
+        </Body>
+      </GlobalFunction>
+      
+      <GlobalFunction name="countUndestroyableBlocks" resultType="Integer">
+		  <documentation>
+			  <description>
+				  Returns the amount of all undestroyable blocks in the grid map.
+			  </description>
+		  </documentation>
+        <Body language="JavaScript">
+                    <![CDATA[
+            var grid = __Global.getLevelBlockGrid(__Global.level);
+            var amount = 0;
+
+            for(var row = 0; row < grid.length; ++row) {
+              for(var col = 0; col < grid[row].length; ++col) {
+              if(grid[row][col] == -1) amount++;
+              }
+            }
+            
+                        return amount;
+                    ]]>
+        </Body>
+      </GlobalFunction>
+      
+      <GlobalFunction name="getLevelBlockPosX" resultType="Integer">
+		  <documentation>
+			  <description>
+				  Returns the center position of the block.
+			  </description>
+		  </documentation>
+        <Parameter name="destroyable" type="Boolean"/>
+        <Parameter name="id"          type="Integer"/>
+        <Body language="JavaScript">
+          <![CDATA[
+            var grid = __Global.getLevelBlockGrid(__Global.level);
+            var pos  = 0;
+            var row  = 0;
+            var col  = 0;
+            
+            for(row = 0; row < grid.length; ++row) {
+              for(col = 0; col < grid[row].length; ++col) {
+                if(destroyable) {
+                  if(grid[row][col] > 0) ++pos;
+                } else {
+                  if(grid[row][col] === -1) ++pos;
+                }
+                if(id == pos) return (col + 1) * 48;
+              }
+            }
+            return (col + 1) * 48;
+          ]]>
+        </Body>
+      </GlobalFunction>
+
+      <GlobalFunction name="getLevelBlockPosY" resultType="Integer">
+		  <documentation>
+			  <description>
+				  Returns the center position of the block.
+			  </description>
+		  </documentation>
+        <Parameter name="destroyable" type="Boolean"/>
+        <Parameter name="id"        type="Integer"/>
+        <Body language="JavaScript">
+                    <![CDATA[
+            var grid = __Global.getLevelBlockGrid(__Global.level);
+            var pos  = 0;
+            var row  = 0;
+            var col  = 0;
+            
+            for(row = 0; row < grid.length; ++row) {
+              for(col = 0; col < grid[row].length; ++col) {
+                if(destroyable) {
+                  if(grid[row][col] > 0) ++pos;
+                } else {
+                  if(grid[row][col] === -1) ++pos;
+                }
+              if(id == pos) return 516 - (row * 24);
+              }
+            }
+                        return 516 - (row * 24);
+                    ]]>
+        </Body>
+      </GlobalFunction>
+      
+      <GlobalFunction name="getLevelBlockThickness" resultType="Integer">
+		  <documentation>
+			  <description>
+				  Returns the the thickness of an destroyable block.
+			  </description>
+		  </documentation>
+        <Parameter name="id" type="Integer"/>
+        <Body language="JavaScript">
+                    <![CDATA[
+            var grid = __Global.getLevelBlockGrid(__Global.level);
+            var pos  = 0;
+            var row  = 0;
+            var col  = 0;
+            
+            for(row = 0; row < grid.length; ++row) {
+              for(col = 0; col < grid[row].length; ++col) {
+              if(grid[row][col] > 0) ++pos;
+              
+              if(id == pos) return grid[row][col];
+              }
+            }
+            
+                        return grid[row][col];
+                    ]]>
+        </Body>
+      </GlobalFunction>
+      
+      
+      <GlobalFunction name="createRandomFeature" resultType="Feature">
+		  <documentation>
+			  <description>
+				  Generates a feature/powerup randomly to hide the feature
+				  in a block.
+			  </description>
+		  </documentation>
+        <Body language="JavaScript">
+          <![CDATA[
+            
+            
+            var random = Math.random();
+
+            if(random > .91) {
+
+              random = Math.random();
+
+              if(random < .91) {
+                switch(parseInt(Math.random() * 9)) {
+                  case 0: return __Feature.SLIDER_EXTEND;     break;
+                  case 1: return __Feature.SLIDER_DIMINSH;    break;
+                  case 2: return __Feature.SLIDER_ACCELERATE; break;
+                  case 3: return __Feature.SLIDER_BREAK;      break;
+                  case 6: return __Feature.BALL_ACCELERATE;   break;
+                  case 7: return __Feature.BALL_BREAK;        break;
+                  case 8: return __Feature.DOUBLE_BALL;       break;
+                }
+              } else {
+                return __Feature.EXTRA_LIFE;
+              }
+
+            }
+
+            return __Feature.NONE;
+          ]]>
+        </Body>
+      </GlobalFunction>
+      
+      <GlobalFunction name="getBouncingBallVx" resultType="Float">
+		  <documentation>
+			  <description>
+				  This function corrects the bouncing angle, if a ball
+				  collides with the slider. Only use with getBouncingBallVy()!
+			  </description>
+		  </documentation>
+        <Parameter name="slider" type="Slider"/>
+        <Parameter name="ball"   type="Ball"/>
+        <Body language="JavaScript">    
+          <![CDATA[
+            var max_distance = (slider.getWidth() + ball.getWidth()) / 2;
+            var distance = ball.get_x() - slider.get_x();
+            var percentage = distance / max_distance;
+            return (percentage * 3) + ((1 - percentage) * ball.getVx());
+          ]]>
+        </Body>
+      </GlobalFunction>
+      
+      <GlobalFunction name="getBouncingBallVy" resultType="Float">
+		  <documentation>
+			  <description>
+				  This function corrects the bouncing angle, if a ball
+				  collides with the slider. Only use with getBouncingBallVx()!
+			  </description>
+		  </documentation>
+        <Parameter name="slider" type="Slider"/>
+        <Parameter name="ball"   type="Ball"/>
+        <Body language="JavaScript">    
+          <![CDATA[
+            var max_distance = (slider.getWidth() + ball.getWidth()) / 2;
+            var distance = Math.abs(ball.get_x() - slider.get_x());
+            var percentage = distance / max_distance;
+            return percentage + ((1 - percentage) * ball.getVy());
+          ]]>
+        </Body>
+      </GlobalFunction>
+
+      <GlobalFunction name="getFeatureBlockId" resultType="Integer">
+		  <documentation>
+			  <description>
+				  Returns the id of a generated featureblock.
+			  </description>
+		  </documentation>
+        <Body language="JavaScript">    
+          <![CDATA[
+            __Global.setFeatureBlocks(__Global.getFeatureBlocks() + 1);
+            return 800 + __Global.getFeatureBlocks() - 1;
+          ]]>
+        </Body>
+      </GlobalFunction>
+      
+    </Globals>
+
+
+<!-- °°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°
+     °°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°
+   °°°°                                                                    °°°
+   °°°° types                                                              °°°
+   °°°°                                                                    °°°
+   °°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°
+     °°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°° -->   
+         
+    <EntityTypes>
+    
+      <ActionEventType name="StartGame" />
+      <ActionEventType name="WinGame" />
+      <ActionEventType name="LostGame" />
+      <ActionEventType name="MoveSliderLeft"/>
+      <ActionEventType name="MoveSliderRight"/>
+      <ActionEventType name="MoveBallLeft"/>
+      <ActionEventType name="MoveBallRight"/>
+      <ActionEventType name="DestroyLevel"/>
+      <ActionEventType name="CreateLevel"/>
+      <ActionEventType name="SoundCollision"/>
+      <ActionEventType name="SoundCatchFeature"/>
+      <ActionEventType name="SoundWinGame"/>
+      <ActionEventType name="SoundStartGame"/>
+      <ActionEventType name="SoundWinLevel"/>
+      
+
+      <!-- ###############################################################
+           #### slider                                                 ###
+           ############################################################### -->
+
+      <PhysicalAgentType name="Slider" physicsType="INFINITE_MASS" autoPerception="true" idPerceivable="true">
+		  <documentation>
+			  <description>
+				  Note: The attribute "featureAttachBall" is only because of a bug. Two enumerationproperties
+				  cannot appear beneath each other on object initialization (Jascript-Generation bug).
+			  </description>
+		  </documentation>	
+        <EnumerationProperty name="speed"              type="SliderSpeed"/>
+        <Attribute           name="featureAttachBall"  type="Boolean"/>
+        <EnumerationProperty name="size"               type="SliderSize"/>
+        
+        <Function name="getMoveDistance" resultType="Integer">
+		  <documentation>
+			  <description>
+				  Returns the graphical x-value to reposition the slider depneding on the
+				  slider's speed.
+			  </description>
+		  </documentation>
+          <Body language="JavaScript">
+            <![CDATA[
+              switch(this.getSpeed()) {
+                case __SliderSpeed.SLOW:   return  4;
+                case __SliderSpeed.NORMAL: return  8;
+                case __SliderSpeed.FAST:   return 12;
+              }
+            ]]>
+          </Body>
+        </Function>
+        
+        <Function name="getSliderWidth" resultType="Integer">
+		  <documentation>
+			  <description>
+				  Returns the graphical width-value to resize the slider depending on the
+				  slider's size property.
+			  </description>
+		  </documentation>
+          <Parameter name="size" type="SliderSize"/>
+          <Body language="JavaScript">
+            <![CDATA[
+              switch(size) {
+                case __SliderSize.S:  return 30;
+                case __SliderSize.M:  return 60;
+                case __SliderSize.L:  return 90;
+                case __SliderSize.XL: return 120;
+              }
+            ]]>
+          </Body>
+        </Function>
+
+        <Function  name="appendFeature" resultType="Boolean">
+		  <documentation>
+			  <description>
+				  Adds a feature to the slider by changing the slider's
+				  properties.
+			  </description>
+		  </documentation>
+          <Parameter name="feature" type="Feature"/>
+                    <Body language="JavaScript">
+                        <![CDATA[
+              
+              switch(feature) {
+              
+                case __Feature.SLIDER_EXTEND:
+
+                  var old_size  = this.size;
+                  
+                  if(this.size === __SliderSize.S) {
+                    this.size = __SliderSize.M;
+                  } else if(this.size === __SliderSize.M) {
+                    this.size = __SliderSize.L;
+                  } else if(this.size === __SliderSize.L) {
+                    this.size = __SliderSize.XL;
+                  }
+
+                  break;
+                  
+                case __Feature.SLIDER_DIMINSH:
+                
+                  var old_size  = this.size;
+                
+                  if(this.size === __SliderSize.M) {
+                    this.size = __SliderSize.S;
+                  } else if(this.size === __SliderSize.L) {
+                    this.size = __SliderSize.M;
+                  } else if(this.size === __SliderSize.XL) {
+                    this.size = __SliderSize.L;
+                  }
+
+                  break;
+                  
+                case __Feature.SLIDER_ACCELERATE:
+
+                  if(this.speed === __SliderSpeed.SLOW) {
+                    this.speed = __SliderSpeed.NORMAL;
+                  } else if(this.size === __SliderSpeed.NORMAL) {
+                    this.speed = __SliderSpeed.FAST;
+                  }
+        
+                  break;
+                  
+                case __Feature.SLIDER_BREAK:
+                
+                  if(this.speed === __SliderSpeed.NORMAL) {
+                    this.speed = __SliderSpeed.SLOW;
+                  } else if(this.size === __SliderSpeed.FAST) {
+                    this.speed = __SliderSpeed.NORMAL;
+                  }
+                  
+                  break;
+
+              }
+              
+              this.setWidth(this.getSliderWidth(this.size));
+              
+              return true;
+              
+                        ]]>
+                    </Body>
+                </Function>
+        
+        <ActionRule agentVariable="slider" name="ActionRuleMoveLeft">
+		  <documentation>
+			  <description>
+				  Moves the slider to the left. This action rule calls an enviroment rule,
+				  because sometimes a ball is attached to the slider and must
+				  also be moved.
+			  </description>
+		  </documentation>
+          <DO>
+            <SCHEDULE-EVT>
+              <ActionEventExpr actionEventType="MoveSliderLeft"></ActionEventExpr>
+            </SCHEDULE-EVT>
+          </DO>
+        </ActionRule>
+		
+        <ActionRule agentVariable="slider" name="ActionRuleMoveRight">
+		  <documentation>
+			  <description>
+				  Moves the slider to the right. This action rule calls an enviroment rule,
+				  because sometimes a ball is attached to the slider and must
+				  also be moved.
+			  </description>
+		  </documentation>
+          <DO>
+            <SCHEDULE-EVT>
+              <ActionEventExpr actionEventType="MoveSliderRight"></ActionEventExpr>
+            </SCHEDULE-EVT>
+          </DO>
+        </ActionRule>
+
+        <ActionRule agentVariable="slider" name="ActionRuleStartBall">
+		  <documentation>
+			  <description>
+				  Gives an attached ball an impulse to start a game.
+			  </description>
+		  </documentation>			
+          <DO>
+            <SCHEDULE-EVT>
+              <ActionEventExpr actionEventType="StartGame"></ActionEventExpr>
+            </SCHEDULE-EVT>
+          </DO>
+        </ActionRule>
+        
+      </PhysicalAgentType>
+
+
+
+    <!-- ###############################################################
+       #### ball                                                   ###
+       ############################################################### -->
+       
+      <PhysicalObjectType name="Ball" physicsType="NORMAL">
+        <Attribute name="speed"       type="Integer"/>
+        <Attribute name="attached"    type="Boolean"/>
+		
+        <Function  name="synchonizeSpeed" resultType="Boolean">
+		  <documentation>
+			  <description>
+				  This functioin is called after each collision to keep the ball's speed
+				  constant. If this function is not calles, the ball looses speed
+				  very fast.
+			  </description>
+		  </documentation>	
+                    <Body language="JavaScript">
+                        <![CDATA[
+              var dummy_vx = this.getVx();
+              var ball_speed = Math.sqrt(Math.pow(this.getVx(),2)+Math.pow(this.getVy(),2));
+              if(ball_speed != 0) {
+                this.setVx((30 + (20 * this.speed)) / ball_speed * this.getVx());
+                this.setVy(this.getVx() / dummy_vx * this.getVy());
+              }
+              return true;
+                        ]]>
+                    </Body>
+                </Function>
+				
+        <Function  name="appendFeature" resultType="Boolean">
+					  <documentation>
+			  <description>
+				  Like the slider's appendFeature method, this function changes the ball's
+				  properties depending on the given feature.
+			  </description>
+		  </documentation>	
+          <Parameter name="feature" type="Feature"/>
+          <Body language="JavaScript">
+            <![CDATA[
+              
+              switch(feature) {
+                case __Feature.BALL_ACCELERATE:
+                    this.speed = Math.min(9,this.speed + 1);
+                    this.synchonizeSpeed();
+                    break;
+                case __Feature.BALL_BREAK:
+                    this.speed = Math.max(0,this.speed - 1);
+                    this.synchonizeSpeed();
+                    break;
+             }
+              
+                  
+                        ]]>
+          </Body>
+        </Function>
+      </PhysicalObjectType>
+            
+      
+    <!-- ###############################################################
+       #### blocks                                                 ###
+       ############################################################### -->
+         
+      <PhysicalObjectType name="BlockUndestroyable" physicsType="INFINITE_MASS"/>
+      
+      <PhysicalObjectType name="Block" physicsType="INFINITE_MASS">
+        <EnumerationProperty name="feature"   type="Feature"/>
+        <Attribute           name="thickness" type="Integer"/>
+      </PhysicalObjectType>
+      
+      
+      
+    <!-- ###############################################################
+       #### features                                               ###
+       ############################################################### -->
+
+      <PhysicalObjectType name="FeatureBlock" physicsType="NORMAL">
+        <EnumerationProperty name="feature" type="Feature"/>
+      </PhysicalObjectType>
+
+      <!-- ###############################################################
+           #### border                                                 ###
+           ############################################################### -->
+         
+      <PhysicalObjectType name="Border"  physicsType="INFINITE_MASS">
+        <EnumerationProperty name="position" type="BorderPosition"/>
+      </PhysicalObjectType>
+            
+    </EntityTypes>
+        
+    
+    
+    
+    
+<!-- °°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°
+     °°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°
+   °°°°                                                                    °°°
+   °°°° rules                                                              °°°
+   °°°°                                                                    °°°
+   °°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°
+     °°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°° -->  
+        
+    <EnvironmentRules>
+      
+           
+       
+       
+    <!-- ###############################################################
+         #### global rules: start game, end game,...                 ###
+         ############################################################### -->
+      
+      <EnvironmentRule name="RuleStartGame">
+			<documentation>
+			  <description>
+				  This rule is executed if the player pushes the spacebar.
+				  An attached ball on the slider gets an impulse and the game/round starts.
+			  </description>
+		  </documentation>	
+        <WHEN eventType="StartGame" eventVariable="ev"/>
+        <FOR-ObjectVariable variable="ball" objectType="Ball" objectIdRef="30"/>
+        <IF language="JavaScript"><![CDATA[ this.ball.attached ]]></IF>
+        <THEN>
+          <UPDATE-ENV>
+            <UpdateObject objectVariable="ball">
+              <Slot property="vx" value="100"/>
+              <Slot property="vy" value="100"/>
+              <Slot property="attached" value="false"/>
+            </UpdateObject>
+            <Call procedure="synchonizeSpeed" contextObjectVariable="ball"/>
+          </UPDATE-ENV>
+          
+        </THEN>
+      </EnvironmentRule>
+
+      <EnvironmentRule name="RuleWinGame">
+					  <documentation>
+			  <description>
+				  If all blocks in a level are destroyed and no next level exists, the player has won the game.
+			  </description>
+		  </documentation>	
+        <WHEN eventType="CollisionEvent" eventVariable="evt"/>
+        <IF language="JavaScript"><![CDATA[ __Global.getRemainingblocks() === 0 && __Global.noNextLevel() ]]></IF>
+        <THEN>
+          <SCHEDULE-EVT>
+            <CausedEventExpr eventType="SoundWinGame" />
+            <CausedEventExpr eventType="StopSimulation" />
+          </SCHEDULE-EVT>
+        </THEN>
+      </EnvironmentRule>
+     
+
+      <EnvironmentRule name="RuleWinLevel">
+		  					  <documentation>
+			  <description>
+				  If all blocks in a level are destroyed but a next level exists, the player has not won the game,
+				  but he reaches a next level.
+			  </description>
+		  </documentation>	
+        <WHEN eventType="CollisionEvent" eventVariable="evt"/>
+        <FOR-ObjectVariable variable="slider" objectType="Slider" objectIdRef="10"/>
+        <IF language="JavaScript"><![CDATA[ __Global.getRemainingblocks() === 0 ]]></IF>
+        <THEN>
+          <UPDATE-ENV>
+            <UpdateGlobalVariable name="remainingblocks" value="1"/>
+            <UpdateGlobalVariable name="level">
+            <ValueExpr language="JavaScript"><![CDATA[ __Global.getLevel() + 1 ]]></ValueExpr>
+              </UpdateGlobalVariable>
+            <UpdateObject objectVariable="slider">
+              <Slot property="x"                 value="288"/>
+              <Slot property="speed"             value="__SliderSpeed.NORMAL"/>
+              <Slot property="featureAttachBall" value="true"/>
+              <Slot property="size"              value="__SliderSize.M"/>
+            </UpdateObject>
+            <Call procedure="appendFeature" contextObjectVariable="slider">
+              <Argument parameter="feature">
+                <ValueExpr language="JavaScript"><![CDATA[ __Feature.NONE ]]></ValueExpr>
+              </Argument>
+            </Call>
+          </UPDATE-ENV>
+          <SCHEDULE-EVT>
+            <CausedEventExpr eventType="SoundWinLevel"></CausedEventExpr>
+            <CausedEventExpr eventType="DestroyLevel"/>
+            <CausedEventExpr eventType="CreateLevel"/>
+          </SCHEDULE-EVT>
+        </THEN>
+      </EnvironmentRule>
+      
+      <EnvironmentRule name="DestroyLevel">
+		  					  <documentation>
+			  <description>
+				  This rule removes all balls, featureblocks and
+				  undestroyable blocks of a level to redraw the next level by an
+				  other rule.
+			  </description>
+		  </documentation>	
+        <WHEN eventType="DestroyLevel" eventVariable="ev"/>
+        <FOR-ObjectVariable variable="ball" objectType="Ball"/>
+        <DO>
+          <UPDATE-ENV>
+            <UpdateGlobalVariable name="featureBlocks" value="0"/>
+            <DestroyObject objectVariable="ball"/>
+            <DestroyObjects objectType="BlockUndestroyable" rangeStartID="200" rangeEndID="499" />
+            <DestroyObjects objectType="FeatureBlock" rangeStartID="800" rangeEndID="1099"/>
+          </UPDATE-ENV>
+        </DO>
+      </EnvironmentRule>
+      
+      <EnvironmentRule name="CreateLevel">
+		  					  <documentation>
+			  <description>
+				  A new level is created by restore the slider and a ball an
+				  position the blocks of the new level.
+			  </description>
+		  </documentation>	
+        <WHEN eventType="CreateLevel" eventVariable="ev"/>
+    <FOR-ObjectVariable variable="slider" objectType="Slider" objectIdRef="10"/>
+        <DO>
+          <UPDATE-ENV>
+            <Create>
+              <PhysicalObject id="30" m="1" name="ball" type="Ball" width="20" y="34" shape3D="sphere">
+                <Slot property="speed"    value="5"/>
+                <Slot property="attached" value="true"/>
+                <Slot property="x">
+                  <ValueExpr language="JavaScript"><![CDATA[ this.slider.get_x() ]]></ValueExpr>
+                </Slot>
+              </PhysicalObject>
+              <PhysicalObjects rangeStartID="200" creationLoopVar="i" type="BlockUndestroyable" width="46" height="22" shape3D="box">
+                <RangeEndID language="JavaScript"><![CDATA[ 199 + __Global.countUndestroyableBlocks() ]]></RangeEndID>
+                <Slot property="x">
+                  <ValueExpr language="JavaScript"><![CDATA[ __Global.getLevelBlockPosX(false, i - 199) ]]></ValueExpr>
+                </Slot>
+                <Slot property="y">
+                  <ValueExpr language="JavaScript"><![CDATA[ __Global.getLevelBlockPosY(false, i - 199) ]]></ValueExpr>
+                </Slot>
+              </PhysicalObjects>
+              <PhysicalObjects rangeStartID="500" creationLoopVar="i" type="Block" width="46" height="22" shape3D="box">
+                <RangeEndID language="JavaScript"><![CDATA[ 499 + __Global.countDestroyableBlocks() ]]></RangeEndID>
+                <Slot property="thickness">
+                  <ValueExpr language="JavaScript"><![CDATA[ __Global.getLevelBlockThickness(i - 499) ]]></ValueExpr>
+                </Slot>
+                <Slot property="x">
+                  <ValueExpr language="JavaScript"><![CDATA[ __Global.getLevelBlockPosX(true, i - 499) ]]></ValueExpr>
+                </Slot>
+                <Slot property="y">
+                  <ValueExpr language="JavaScript"><![CDATA[ __Global.getLevelBlockPosY(true, i - 499) ]]></ValueExpr>
+                </Slot>
+                <Slot property="feature">
+                  <ValueExpr language="JavaScript"><![CDATA[ __Global.createRandomFeature() ]]></ValueExpr>
+                </Slot>
+              </PhysicalObjects>
+            </Create>
+        <UpdateGlobalVariable name="blocks">
+          <ValueExpr language="JavaScript"><![CDATA[ __Global.countAllBlocks() ]]>
+          </ValueExpr>
+        </UpdateGlobalVariable>
+        <UpdateGlobalVariable name="remainingblocks">
+          <ValueExpr language="JavaScript"><![CDATA[ __Global.countDestroyableBlocks() ]]>
+          </ValueExpr>
+        </UpdateGlobalVariable>
+          </UPDATE-ENV>
+        </DO>
+      </EnvironmentRule>
+
+      <EnvironmentRule name="RuleLostGame">
+		  					  <documentation>
+			  <description>
+				  If the player lost a life, the slider and the ball is redrawn 
+				  in the initial state.
+				  Note: This function is buggy! Even if the properties of the slider are
+				  reset, the graphical values are not set correctly (width and speed test failed).
+			  </description>
+		  </documentation>	
+        <WHEN eventType="CollisionEvent" eventVariable="evt"/>
+        <IF language="JavaScript"><![CDATA[ __Global.getLives() === 0 ]]></IF>
+        <THEN>
+          <SCHEDULE-EVT>
+            <CausedEventExpr eventType="SoundWinGame" />
+            <CausedEventExpr eventType="StopSimulation" />
+          </SCHEDULE-EVT>
+        </THEN>
+      </EnvironmentRule>
+      
+    <!-- ###############################################################
+       #### rules for movving the slider                           ###
+       ############################################################### -->
+
+      <EnvironmentRule name="RuleMoveSliderLeft">
+		  <documentation>
+			  <description>
+				  Moves the slider to the left by changing the position. THe slider is a physical
+				  object but is still not moved by an impulse. The MoveSlider function is implemented
+				  as an enviroment rule because a ball could be attached -  and must be positioned too.
+			  </description>
+		  </documentation>
+        <WHEN eventType="MoveSliderLeft" eventVariable="ev"/>
+        <FOR-ObjectVariable variable="slider" objectType="Slider" objectIdRef="10"/>
+        <FOR-ObjectVariable variable="ball"   objectType="Ball"   objectIdRef="30"/>
+        <IF language="JavaScript"><![CDATA[ this.ball.attached ]]></IF>
+        <THEN>
+          <UPDATE-ENV>
+            <UpdateObject objectVariable="slider">
+              <Slot property="x">
+                <ValueExpr language="JavaScript"><![CDATA[Math.max(24 + (this.slider.getWidth()/2),this.slider.get_x() - this.slider.getMoveDistance())]]>
+                </ValueExpr>
+              </Slot>
+            </UpdateObject>
+          </UPDATE-ENV>
+          <SCHEDULE-EVT>
+            <CausedEventExpr eventType="MoveBallLeft"/>
+          </SCHEDULE-EVT>
+        </THEN>
+        <ELSE>
+          <UPDATE-ENV>
+            <UpdateObject objectVariable="slider">
+              <Slot property="x">
+                <ValueExpr language="JavaScript"><![CDATA[Math.max(24 + (this.slider.getWidth()/2),this.slider.get_x() - this.slider.getMoveDistance())]]>
+                </ValueExpr>
+              </Slot>
+            </UpdateObject>
+          </UPDATE-ENV>
+        </ELSE>
+      </EnvironmentRule>
+
+      <EnvironmentRule name="RuleMoveBallLeft">
+		  <documentation>
+			  <description>
+				  Moves the attached ball, if the slider is moved. This rule is only used, if the slider was
+				  moved to the left.
+			  </description>
+		  </documentation>
+        <WHEN eventType="MoveBallLeft"/>
+        <FOR-ObjectVariable variable="slider" objectType="Slider" objectIdRef="10"/>
+        <FOR-ObjectVariable variable="ball"   objectType="Ball"   objectIdRef="30"/>
+        <IF language="JavaScript"><![CDATA[ this.slider.get_x() > 24 + (this.slider.getWidth()/2) ]]></IF>
+        <THEN>
+          <UPDATE-ENV>
+            <UpdateObject objectVariable="ball">
+              <Slot property="x">
+                <ValueExpr language="JavaScript"><![CDATA[ this.ball.get_x() - this.slider.getMoveDistance() ]]></ValueExpr>
+              </Slot>
+            </UpdateObject>
+          </UPDATE-ENV>
+        </THEN>
+      </EnvironmentRule>
+
+      <EnvironmentRule name="RuleMoveSliderRight">
+		  <documentation>
+			  <description>
+				  Moves the slider to the right by changing the position. THe slider is a physical
+				  object but is still not moved by an impulse. The MoveSlider function is implemented
+				  as an enviroment rule because a ball could be attached -  and must be positioned too.
+			  </description>
+		  </documentation>
+        <WHEN eventType="MoveSliderRight" eventVariable="ev"/>
+        <FOR-ObjectVariable variable="slider" objectType="Slider" objectIdRef="10"/>
+        <FOR-ObjectVariable variable="ball"   objectType="Ball"   objectIdRef="30"/>
+        <IF language="JavaScript"><![CDATA[ this.ball.attached ]]></IF>
+        <THEN>
+          <UPDATE-ENV>
+            <UpdateObject objectVariable="slider">
+              <Slot property="x">
+                <ValueExpr language="JavaScript"><![CDATA[Math.min(552 - (this.slider.getWidth()/2),this.slider.get_x() + this.slider.getMoveDistance())]]></ValueExpr>
+              </Slot>
+            </UpdateObject>
+          </UPDATE-ENV>
+          <SCHEDULE-EVT>
+            <CausedEventExpr eventType="MoveBallRight"/>
+          </SCHEDULE-EVT>
+        </THEN>
+        <ELSE>
+          <UPDATE-ENV>
+            <UpdateObject objectVariable="slider">
+              <Slot property="x">
+                <ValueExpr language="JavaScript"><![CDATA[Math.min(552 - (this.slider.getWidth()/2),this.slider.get_x() + this.slider.getMoveDistance())]]>
+                </ValueExpr>
+              </Slot>
+            </UpdateObject>
+          </UPDATE-ENV>
+        </ELSE>
+      </EnvironmentRule>
+
+      <EnvironmentRule name="RuleMoveBallRight">
+		  <documentation>
+			  <description>
+				  Moves the attached ball, if the slider is moved. This rule is only used, if the slider was
+				  moved to the right.
+			  </description>
+		  </documentation>
+        <WHEN eventType="MoveBallRight"/>
+        <FOR-ObjectVariable variable="slider" objectType="Slider" objectIdRef="10"/>
+        <FOR-ObjectVariable variable="ball"   objectType="Ball"   objectIdRef="30"/>
+        <IF language="JavaScript"><![CDATA[ this.slider.get_x() < 552 - (this.slider.getWidth()/2) ]]></IF>
+        <THEN>
+          <UPDATE-ENV>
+            <UpdateObject objectVariable="ball">
+              <Slot property="x">
+                <ValueExpr language="JavaScript"><![CDATA[ this.ball.get_x() + this.slider.getMoveDistance() ]]></ValueExpr>
+              </Slot>
+            </UpdateObject>
+          </UPDATE-ENV>
+        </THEN>
+      </EnvironmentRule>
+
+   <!-- ###############################################################
+        #### ball collisions                                        ###
+        ############################################################### -->
+
+      <EnvironmentRule name="RuleBallHitsSomething">
+		  <documentation>
+			  <description>
+				  Play a sound evertime the ball hits something.
+			  </description>
+		  </documentation>
+        <WHEN eventType="CollisionEvent" eventVariable="evt"/>
+        <IF language="JavaScript">
+          <![CDATA[
+               this.evt.getPhysicalObject1().__typeName == "Ball"
+            || this.evt.getPhysicalObject2().__typeName == "Ball"
+          ]]>
+        </IF>
+        <THEN>        
+          <SCHEDULE-EVT>
+            <CausedEventExpr eventType="SoundCollision"/>
+          </SCHEDULE-EVT>
+        </THEN>
+      </EnvironmentRule>
+
+      <EnvironmentRule name="RuleBallHitsSlider">
+		  <documentation>
+			  <description>
+				  Correct the balls direction, if a ball hits a slider.
+			  </description>
+		  </documentation>
+        <WHEN eventType="CollisionEvent" eventVariable="evt"/>
+        <FOR-ObjectVariable variable="slider" objectType="Slider" objectIdRef="10"/>
+        <FOR-ObjectVariable variable="ball" objectType="Ball">
+          <ObjectIdRef language="JavaScript"><![CDATA[this.evt.getPhysicalObject1().getId()]]></ObjectIdRef>
+        </FOR-ObjectVariable>
+        <IF language="JavaScript">
+          <![CDATA[
+               this.evt.getPhysicalObject2().__typeName == "Slider"
+            && this.evt.getPhysicalObject1().__typeName == "Ball"
+            && !this.ball.attached
+          ]]>
+        </IF>
+        <THEN>
+          <UPDATE-ENV>
+            <UpdateObject objectVariable="ball">
+              <Slot property="vx">
+                <ValueExpr language="JavaScript"><![CDATA[ __Global.getBouncingBallVx(this.slider, this.ball) ]]></ValueExpr>
+              </Slot>
+              <Slot property="vy">
+                <ValueExpr language="JavaScript"><![CDATA[ __Global.getBouncingBallVy(this.slider, this.ball) ]]></ValueExpr>
+              </Slot>
+            </UpdateObject>
+          </UPDATE-ENV>
+        </THEN>
+      </EnvironmentRule>
+
+
+      <EnvironmentRule name="RuleDestroyBlockWithoutFeature">
+		  <documentation>
+			  <description>
+				  Just destroys a block and decreases the amount of destroyable blocks.
+			  </description>
+		  </documentation>
+        <WHEN eventType="CollisionEvent" eventVariable="evt"/>
+        <FOR-ObjectVariable variable="ball" objectType="Ball">
+          <ObjectIdRef language="JavaScript"><![CDATA[this.evt.getPhysicalObject1().getId()]]></ObjectIdRef>
+        </FOR-ObjectVariable>
+        <FOR-ObjectVariable variable="block" objectType="Block">
+          <ObjectIdRef language="JavaScript"><![CDATA[this.evt.getPhysicalObject2().getId()]]></ObjectIdRef>
+        </FOR-ObjectVariable>
+        <IF language="JavaScript">
+          <![CDATA[
+               this.evt.getPhysicalObject1().__typeName == "Ball"
+            && this.evt.getPhysicalObject2().__typeName == "Block"
+            && this.block.getThickness() == 1
+            && this.block.getFeature()   == __Feature.NONE
+          ]]>
+        </IF>
+        <THEN>
+          <UPDATE-ENV>
+            <DestroyObject objectVariable="block"/>
+            <UpdateGlobalVariable name="remainingblocks">
+              <ValueExpr language="JavaScript"><![CDATA[ __Global.getRemainingblocks() - 1 ]]>
+              </ValueExpr>
+            </UpdateGlobalVariable>
+            <UpdateGlobalVariable name="score">
+              <ValueExpr language="JavaScript"><![CDATA[ __Global.getScore() + 100 ]]></ValueExpr>
+            </UpdateGlobalVariable>
+          </UPDATE-ENV>
+        </THEN>
+      </EnvironmentRule>
+  
+      <EnvironmentRule name="RuleDestroyBlockWithFeature">
+		  <documentation>
+			  <description>
+				  Destroys a block and creates a powerup falling down. Also decreases the
+				  amount of remaining blocks.
+			  </description>
+		  </documentation>
+        <WHEN eventType="CollisionEvent" eventVariable="evt"/>
+        <FOR-ObjectVariable variable="ball" objectType="Ball">
+          <ObjectIdRef language="JavaScript"><![CDATA[this.evt.getPhysicalObject1().getId()]]>
+          </ObjectIdRef>
+        </FOR-ObjectVariable>
+        <FOR-ObjectVariable variable="block" objectType="Block">
+          <ObjectIdRef language="JavaScript"><![CDATA[this.evt.getPhysicalObject2().getId()]]>
+          </ObjectIdRef>
+        </FOR-ObjectVariable>
+        <IF language="JavaScript">
+          <![CDATA[
+               this.evt.getPhysicalObject1().__typeName == "Ball"
+            && this.evt.getPhysicalObject2().__typeName == "Block"
+            && this.block.getThickness() == 1
+            && this.block.getFeature()   != __Feature.NONE
+          ]]>
+        </IF>
+        <THEN>
+          <UPDATE-ENV>
+            <Create>
+              <PhysicalObjects m="9999.17" type="FeatureBlock" width="46" height="22" depth="22" shape3D="box">
+                <RangeStartID language="JavaScript"><![CDATA[ __Global.getFeatureBlockId() ]]></RangeStartID>
+                <RangeEndID language="JavaScript"><![CDATA[ 800 + __Global.getFeatureBlocks() - 1 ]]></RangeEndID>
+                <Slot property="x">
+                  <ValueExpr language="JavaScript"><![CDATA[ this.block.get_x() ]]></ValueExpr>
+                </Slot>
+                <Slot property="y">
+                  <ValueExpr language="JavaScript"><![CDATA[ this.block.get_y() ]]></ValueExpr>
+                </Slot>
+                <Slot property="z" value="50"/>
+                <Slot property="vy" value="-150"/>
+                <Slot property="feature">
+                  <ValueExpr language="JavaScript"><![CDATA[ this.block.getFeature() ]]></ValueExpr>
+                </Slot>
+              </PhysicalObjects>
+            </Create>
+            <DestroyObject objectVariable="block"/>
+            <UpdateGlobalVariable name="remainingblocks">
+              <ValueExpr language="JavaScript"><![CDATA[ __Global.getRemainingblocks() - 1 ]]></ValueExpr>
+            </UpdateGlobalVariable>
+            <UpdateGlobalVariable name="score">
+              <ValueExpr language="JavaScript"><![CDATA[ __Global.getScore() + 100 ]]></ValueExpr>
+            </UpdateGlobalVariable>
+          </UPDATE-ENV>
+        </THEN>
+      </EnvironmentRule>
+
+      <EnvironmentRule name="RuleHitBlock">
+		  <documentation>
+			  <description>
+				  If a block has a higher thickness the block is not destroyed than
+				  the thickness will be decreased.
+			  </description>
+		  </documentation>
+        <WHEN eventType="CollisionEvent" eventVariable="evt"/>
+        <FOR-ObjectVariable variable="ball" objectType="Ball">
+          <ObjectIdRef language="JavaScript"><![CDATA[this.evt.getPhysicalObject1().getId()]]>
+          </ObjectIdRef>
+        </FOR-ObjectVariable>
+        <FOR-ObjectVariable variable="block" objectType="Block">
+          <ObjectIdRef language="JavaScript"><![CDATA[this.evt.getPhysicalObject2().getId()]]>
+          </ObjectIdRef>
+        </FOR-ObjectVariable>
+        <IF language="JavaScript">
+          <![CDATA[
+               this.evt.getPhysicalObject1().__typeName == "Ball"
+            && this.evt.getPhysicalObject2().__typeName == "Block"
+            && this.block.getThickness() > 1
+          ]]>
+        </IF>
+        <THEN>
+          <UPDATE-ENV>
+            <UpdateObject objectVariable="block">
+              <Slot property="thickness">
+                <ValueExpr language="JavaScript"><![CDATA[ this.block.getThickness() - 1 ]]></ValueExpr>
+              </Slot>
+            </UpdateObject>
+            <UpdateGlobalVariable name="score">
+              <ValueExpr language="JavaScript"><![CDATA[ __Global.getScore() + 100 ]]></ValueExpr>
+            </UpdateGlobalVariable>
+          </UPDATE-ENV>
+        </THEN>
+      </EnvironmentRule>
+
+
+      <EnvironmentRule name="RuleTheOnlyBallLeavesPlayground">
+		  <documentation>
+			  <description>
+				  If the ball collides with the invisible border on the bottom
+				  the ball is outside the playround. This rule will be executed
+				  if the last ball leaves the playground.
+			  </description>
+		  </documentation>
+        <WHEN eventType="CollisionEvent" eventVariable="evt"/>
+        <FOR-ObjectVariable variable="border" objectType="Border" objectIdRef="24"/>
+        <FOR-ObjectVariable variable="slider" objectType="Slider" objectIdRef="10"/>
+        <FOR-ObjectVariable variable="ball" objectType="Ball">
+          <ObjectIdRef language="JavaScript"><![CDATA[ this.evt.getPhysicalObject1().getId() ]]></ObjectIdRef>
+        </FOR-ObjectVariable>
+        <IF language="JavaScript">
+          <![CDATA[
+               this.evt.getPhysicalObject2().getId() == 24
+            && this.evt.getPhysicalObject1().__typeName == "Ball"
+            && __Global.getBalls() == 1
+          ]]>
+        </IF>
+        <THEN>
+          <UPDATE-ENV>
+            <DestroyObject objectVariable="ball"/>
+            <UpdateObject objectVariable="slider">
+              <Slot property="x"     value="288"/>
+              <Slot property="speed" value="__SliderSpeed.NORMAL"/>
+              <Slot property="size"  value="__SliderSize.M"/>
+            </UpdateObject>
+            <Create>
+              <PhysicalObject id="30" m="1" name="ball" type="Ball" width="20" y="34" shape3D="sphere">
+                <Slot property="speed"    value="5"/>
+                <Slot property="attached" value="true"/>
+                <Slot property="x">
+                  <ValueExpr language="JavaScript"><![CDATA[ this.slider.get_x() ]]></ValueExpr>
+                </Slot>
+              </PhysicalObject>
+            </Create>
+            <UpdateGlobalVariable name="lives">
+              <ValueExpr language="JavaScript"><![CDATA[ __Global.getLives() - 1 ]]></ValueExpr>
+            </UpdateGlobalVariable>
+            <UpdateGlobalVariable name="featureBlocks" value="0"/>
+            <DestroyObjects objectType="FeatureBlock" rangeStartID="800" rangeEndID="1099"/>
+          </UPDATE-ENV>
+          <SCHEDULE-EVT>
+            <CausedEventExpr eventType="SoundStartGame"/>
+          </SCHEDULE-EVT>
+        </THEN>
+      </EnvironmentRule>
+
+      <EnvironmentRule name="RuleSomeBallLeavesPlayground">
+			<documentation>
+			  <description>
+				  If more balls exists and a bal leaves the playorund just destroy
+				  the ball.
+			  </description>
+		  </documentation>	
+        <WHEN eventType="CollisionEvent" eventVariable="evt"/>
+        <FOR-ObjectVariable variable="ball" objectType="Ball">
+          <ObjectIdRef language="JavaScript"><![CDATA[this.evt.getPhysicalObject1().getId()]]></ObjectIdRef>
+        </FOR-ObjectVariable>
+        <FOR-ObjectVariable variable="border" objectType="Border" objectIdRef="24"/>
+        <IF language="JavaScript">
+          <![CDATA[
+               this.evt.getPhysicalObject2().getId() == 24
+            && this.evt.getPhysicalObject1().__typeName == "Ball"
+            && __Global.getBalls() > 1
+          ]]>
+        </IF>
+        <THEN>
+          <UPDATE-ENV>
+            <DestroyObject objectVariable="ball"/>
+            <UpdateGlobalVariable name="balls">
+              <ValueExpr language="JavaScript"><![CDATA[ __Global.getBalls() - 1 ]]></ValueExpr>
+            </UpdateGlobalVariable>
+          </UPDATE-ENV>
+          <SCHEDULE-EVT>
+            <CausedEventExpr eventType="SoundStartGame"/>
+          </SCHEDULE-EVT>
+        </THEN>
+      </EnvironmentRule>
+      
+      <EnvironmentRule name="RuleKeepBallSpeed">
+			<documentation>
+			  <description>
+				  The physical  engine reats like in reality and brakes the ball after
+				  each collision. This hack keeps the balls speed after any collision. 
+			  </description>
+		  </documentation>	
+        <WHEN eventType="CollisionEvent" eventVariable="evt"/>
+        <FOR objectType="Ball" objectVariable="ball" />
+        <DO>
+          <UPDATE-ENV>
+            <Call procedure="synchonizeSpeed" contextObjectVariable="ball"/>
+          </UPDATE-ENV>
+        </DO>
+      </EnvironmentRule>
+	
+  <!-- ###############################################################
+     #### collision feature block with slider                    ###
+     ############################################################### -->
+        
+      <EnvironmentRule name="RuleSliderCatchesSliderFeature">
+			<documentation>
+			  <description>
+				  The slider catches a rule changing the sliders attributes.
+			  </description>
+		  </documentation>	 
+        <WHEN eventType="CollisionEvent" eventVariable="evt"/>
+        <FOR-ObjectVariable variable="slider" objectType="Slider" objectIdRef="10"/>
+        <FOR-ObjectVariable variable="featureBlock" objectType="FeatureBlock">
+          <ObjectIdRef language="JavaScript"><![CDATA[ this.evt.getPhysicalObject2().getId() ]]></ObjectIdRef>
+        </FOR-ObjectVariable>   
+        <IF language="JavaScript">
+          <![CDATA[
+               this.evt.getPhysicalObject2().__typeName == "FeatureBlock"
+            &&   this.evt.getPhysicalObject1().__typeName == "Slider"
+            && (    this.featureBlock.getFeature() == __Feature.SLIDER_EXTEND
+                 || this.featureBlock.getFeature() == __Feature.SLIDER_DIMINSH
+                 || this.featureBlock.getFeature() == __Feature.SLIDER_ACCELERATE
+                 || this.featureBlock.getFeature() == __Feature.SLIDER_BREAK )
+          ]]>
+        </IF>
+        <THEN>
+          <UPDATE-ENV>
+            <Call procedure="appendFeature" contextObjectVariable="slider">
+              <Argument parameter="feature">
+                <ValueExpr language="JavaScript"><![CDATA[ this.featureBlock.getFeature() ]]></ValueExpr>
+              </Argument>
+            </Call>
+            <DestroyObject objectVariable="featureBlock"/>
+          </UPDATE-ENV>
+          <SCHEDULE-EVT>
+            <CausedEventExpr eventType="SoundCatchFeature"/>
+          </SCHEDULE-EVT>
+        </THEN>
+      </EnvironmentRule>
+
+      <EnvironmentRule name="RuleSliderCatchesBallFeature">
+			<documentation>
+			  <description>
+				  The slider catches a rule changing the balls attributes.
+			  </description>
+		  </documentation>	 
+        <WHEN eventType="CollisionEvent" eventVariable="evt"/>
+        <FOR-ObjectVariable variable="ball" objectType="Ball"/>
+        <FOR-ObjectVariable variable="slider" objectType="Slider" objectIdRef="10"/>
+        <FOR-ObjectVariable variable="featureBlock" objectType="FeatureBlock">
+          <ObjectIdRef language="JavaScript"><![CDATA[ this.evt.getPhysicalObject2().getId() ]]></ObjectIdRef>
+        </FOR-ObjectVariable>   
+        <IF language="JavaScript">
+          <![CDATA[
+               this.evt.getPhysicalObject2().__typeName == "FeatureBlock"
+            &&   this.evt.getPhysicalObject1().__typeName == "Slider"
+            && (    this.featureBlock.getFeature() == __Feature.BALL_ACCELERATE
+                 || this.featureBlock.getFeature() == __Feature.BALL_BREAK        )
+          ]]>
+        </IF>
+        <THEN>
+          <UPDATE-ENV>
+            <DestroyObject objectVariable="featureBlock"/>
+            <Call procedure="appendFeature" contextObjectVariable="ball">
+              <Argument parameter="feature">
+                <ValueExpr language="JavaScript"><![CDATA[ this.featureBlock.getFeature() ]]></ValueExpr>
+              </Argument>
+            </Call>
+          </UPDATE-ENV>
+          <SCHEDULE-EVT>
+            <CausedEventExpr eventType="SoundCatchFeature"/>
+          </SCHEDULE-EVT>
+        </THEN>
+      </EnvironmentRule>
+
+      <EnvironmentRule name="RuleSliderCatchesFeatureExtraLife">
+			<documentation>
+			  <description>
+				  The slider catches a rule changing adding an extra life.
+			  </description>
+		  </documentation>	 
+        <WHEN eventType="CollisionEvent" eventVariable="evt"/>
+        <FOR-ObjectVariable variable="slider" objectType="Slider" objectIdRef="10"/>
+        <FOR-ObjectVariable variable="featureBlock" objectType="FeatureBlock">
+          <ObjectIdRef language="JavaScript"><![CDATA[ this.evt.getPhysicalObject2().getId() ]]></ObjectIdRef>
+        </FOR-ObjectVariable>   
+        <IF language="JavaScript">
+          <![CDATA[
+               this.evt.getPhysicalObject2().__typeName == "FeatureBlock"
+            &&   this.evt.getPhysicalObject1().__typeName == "Slider"
+            && this.featureBlock.getFeature() == __Feature.EXTRA_LIFE
+          ]]>
+        </IF>
+        <THEN>
+          <UPDATE-ENV>
+            <DestroyObject objectVariable="featureBlock"/>
+            <UpdateGlobalVariable name="lives">
+              <ValueExpr language="Java JavaScript"><![CDATA[ __Global.getLives() + 1 ]]></ValueExpr>
+            </UpdateGlobalVariable>
+          </UPDATE-ENV>
+          <SCHEDULE-EVT>
+            <CausedEventExpr eventType="SoundCatchFeature"/>
+          </SCHEDULE-EVT>
+        </THEN>
+      </EnvironmentRule>
+
+     <EnvironmentRule name="RuleSliderCatchesDoubleBall">
+			<documentation>
+			  <description>
+				  The slider catches a rule creating an extra ball.
+			  </description>
+		  </documentation>	 
+        <WHEN eventType="CollisionEvent" eventVariable="evt"/>
+        <FOR-ObjectVariable variable="slider" objectType="Slider" objectIdRef="10"/>
+        <FOR-ObjectVariable variable="featureBlock" objectType="FeatureBlock">
+          <ObjectIdRef language="JavaScript"><![CDATA[ this.evt.getPhysicalObject2().getId() ]]></ObjectIdRef>
+        </FOR-ObjectVariable>   
+        <IF language="JavaScript">
+          <![CDATA[
+                 this.evt.getPhysicalObject2().__typeName == "FeatureBlock"
+            &&   this.evt.getPhysicalObject1().__typeName == "Slider"
+            &&   this.featureBlock.getFeature() == __Feature.DOUBLE_BALL
+            
+          ]]>
+        </IF>
+        <THEN>
+          <UPDATE-ENV>
+            <DestroyObject objectVariable="featureBlock"/>
+            <Create>
+              <PhysicalObject type="Ball" name="ball" m="0.001" width="20" shape3D="sphere">
+                <Slot property="x">
+                  <ValueExpr language="JavaScript">
+                    <![CDATA[this.featureBlock.get_x()
+                    
+                              ]]>
+                  </ValueExpr>
+                </Slot>
+                <Slot property="y">
+                  <ValueExpr language="JavaScript">
+                    <![CDATA[this.featureBlock.get_y() + 34
+                    
+                              ]]>
+                  </ValueExpr>
+                </Slot>
+                <Slot property="vx" value="100"/>
+                <Slot property="vy" value="100"/> 
+              </PhysicalObject>
+            </Create>
+            <UpdateGlobalVariable name="balls">
+              <ValueExpr language="JavaScript">
+                <![CDATA[__Global.getBalls() + 1
+                ]]>
+              </ValueExpr>
+            </UpdateGlobalVariable>
+          </UPDATE-ENV>
+          <SCHEDULE-EVT>
+            <CausedEventExpr eventType="SoundCatchFeature"/>
+          </SCHEDULE-EVT>
+        </THEN>
+      </EnvironmentRule>
+
+      <EnvironmentRule name="RuleDestroyFeatureBlock">
+			<documentation>
+			  <description>
+				  If the slider does not collide with the feature, the featur leaves the
+				  playground and will be destroyed after collision with the invisible
+				  border at the bottom.
+			  </description>
+		  </documentation>	 
+        <WHEN eventType="CollisionEvent" eventVariable="evt"/>
+        <FOR-ObjectVariable variable="featureBlock" objectType="FeatureBlock">
+          <ObjectIdRef language="JavaScript"><![CDATA[ this.evt.getPhysicalObject2().getId() ]]></ObjectIdRef>
+        </FOR-ObjectVariable>
+        <FOR-ObjectVariable variable="border" objectType="Border" objectIdRef="24"/>
+        <IF language="JavaScript">
+          <![CDATA[
+               this.evt.getPhysicalObject1().getId() == 24
+            && this.evt.getPhysicalObject2().__typeName == "FeatureBlock"
+          ]]>
+        </IF>
+        <THEN>
+          <UPDATE-ENV>
+            <DestroyObject objectVariable="featureBlock"/>
+          </UPDATE-ENV>
+        </THEN>
+      </EnvironmentRule>
+    </EnvironmentRules>
+
+  </SimulationModel>
+    
+  <InitialState>
+    
+    <GlobalVariable name="blocks">
+      <ValueExpr language="JavaScript"><![CDATA[ __Global.countAllBlocks() ]]>
+      </ValueExpr>
+    </GlobalVariable>
+    <GlobalVariable name="remainingblocks">
+      <ValueExpr language="JavaScript"><![CDATA[ __Global.countDestroyableBlocks() ]]>
+      </ValueExpr>
+    </GlobalVariable>
+    
+                                  
+                  
+<!-- ###############################################################
+     #### slider (id 10)                                         ###
+     ############################################################### -->
+       
+    <PhysicalAgent id="10" name="slider" type="Slider" width="48" height="24" depth="200" x="288" y="12" z="100" shape3D="box">
+      <Slot property="speed"             value="__SliderSpeed.NORMAL"/>
+      <Slot property="featureAttachBall" value="true"/>
+      <Slot property="size"              value="__SliderSize.M"/>
+    </PhysicalAgent>
+        
+    
+    
+<!-- ###############################################################
+     #### borders (id 20..29)                                    ###
+     ############################################################### -->
+
+    <PhysicalObject id="20" name="border_left"   type="Border" x="12"  y="260" width="24"  height="528" shape3D="box"/>
+    <PhysicalObject id="21" name="border_right"  type="Border" x="564" y="260" width="24"  height="528" shape3D="box"/>
+    <PhysicalObject id="23" name="border_top"    type="Border" x="288" y="540" width="576" height="24"  shape3D="box"/>
+    <PhysicalObject id="24" name="border_bottom" type="Border" x="288" y="-13" width="576" height="24"  shape3D="box" depth="200" z="100" />
+
+    
+<!-- ###############################################################
+     #### balls                                                  ###
+     ############################################################### -->
+        
+    <PhysicalObject id="30" m="1" name="ball" type="Ball" width="20" x="288" y="34" shape3D="sphere">
+      <Slot property="speed"    value="5"/>
+      <Slot property="attached" value="true"/>
+    </PhysicalObject>
+
+
+<!-- ###############################################################
+   #### undestroyable blocks (id 200..499)                     ###
+   ############################################################### -->
+
+    <PhysicalObjects rangeStartID="200" creationLoopVar="i" type="BlockUndestroyable" width="46" height="22" shape3D="box">
+      <RangeEndID language="JavaScript"><![CDATA[ 199 + __Global.countUndestroyableBlocks() ]]></RangeEndID>
+      <Slot property="x">
+        <ValueExpr language="JavaScript"><![CDATA[ __Global.getLevelBlockPosX(false, i - 199) ]]></ValueExpr>
+      </Slot>
+      <Slot property="y">
+        <ValueExpr language="JavaScript"><![CDATA[ __Global.getLevelBlockPosY(false, i - 199) ]]></ValueExpr>
+      </Slot>
+    </PhysicalObjects>
+    
+<!-- ###############################################################
+     #### destroyable blocks (id 500..799)                       ###
+     ############################################################### -->
+       
+    <PhysicalObjects rangeStartID="500" creationLoopVar="i" type="Block" width="46" height="22" shape3D="box">
+      <RangeEndID language="JavaScript"><![CDATA[ 499 + __Global.countDestroyableBlocks() ]]></RangeEndID>
+      <Slot property="thickness">
+        <ValueExpr language="JavaScript"><![CDATA[ __Global.getLevelBlockThickness(i - 499) ]]></ValueExpr>
+      </Slot>
+      <Slot property="x">
+        <ValueExpr language="JavaScript"><![CDATA[ __Global.getLevelBlockPosX(true, i - 499) ]]></ValueExpr>
+      </Slot>
+      <Slot property="y">
+        <ValueExpr language="JavaScript"><![CDATA[ __Global.getLevelBlockPosY(true, i - 499) ]]></ValueExpr>
+      </Slot>
+      <Slot property="feature">
+        <ValueExpr language="JavaScript"><![CDATA[ __Global.createRandomFeature() ]]></ValueExpr>
+      </Slot>
+    </PhysicalObjects>
+  
+  </InitialState>
+  <UserInterface supportedLanguages="en">
+    <AnimationUI showZoomControlPanel="false">
+      <aors:StartPageText xmlns="http://www.w3.org/1999/xhtml">
+        <aors:HtmlText>
+          <div style="float:left; width: 40%; padding: 7% 50px; text-align: center;">
+            <img src="media/description.png" style="width: 90%; border: 1px solid black;" />
+          </div>
+          <div style="float:left; width: 40%; padding: 7% 0px">
+            <h4>BTU - AKANOID</h4>
+            <p>A classic AKANOID clone</p>
+            <p>The Goal of the game is to destroy all blocks.</p>
+            <p>Move the <b>Slider</b> to pretend all balls leaving the playground:</p>
+            <ul>
+              <li>left: '&#8592;' or '<i>A</i>' keys</li>
+              <li>right: '&#8594;' or '<i>D</i>' keys</li>
+            </ul>
+            <p>Collect a <i>Feature</i> to changes properties of the slider or ball. Possible properties are:</p>
+            <ul>
+              <li>extend slider size (E)</li>
+              <li>diminsh slider size (D)</li>
+              <li>accelerate slider (A)</li>
+              <li>break slider (B)</li>
+              <li>accelerate balls (A)</li>
+              <li>break balls (B)</li>
+              <li>double balls (D)</li>
+              <li>extra life (E)</li>
+            </ul>
+            <p>Destroy a <i>Block</i> to collect points. But be careful:</p>
+            <ul>
+              <li>Blocks can have a different thickness.</li>
+              <li>Sometimes undestroyable blocks appear.</li>
+            </ul>
+            <p>If all blocks destroyed, the next level begins.</p>
+            <p>If the ball leaves the playground, you lost a life</p>
+            <p>If you lost all your lives, the game finished</p>
+          </div>
+        </aors:HtmlText>
+      </aors:StartPageText>
+      <aors:HelpText xmlns="http://www.w3.org/1999/xhtml">
+        <aors:HtmlText>
+          <p>The Goal of the game is to destroy all blocks.</p>
+          <p>Move the <b>Slider</b> to pretend all balls leaving the playground:</p>
+          <ul>
+            <li>left: '&#8592;' or '<i>A</i>' keys</li>
+            <li>right: '&#8594;' or '<i>D</i>' keys</li>
+          </ul>
+          <p>Collect a <i>Feature</i> to changes properties of the slider or ball. Possible properties are:</p>
+          <ul>
+            <li>extend slider size (E)</li>
+            <li>diminsh slider size (D)</li>
+            <li>accelerate slider (A)</li>
+            <li>break slider (B)</li>
+            <li>accelerate balls (A)</li>
+            <li>break balls (B)</li>
+            <li>double balls (D)</li>
+            <li>extra life (E)</li>
+          </ul>
+          <p>Destroy a <i>Block</i> to collect points. But be careful:</p>
+          <ul>
+            <li>Blocks can have a different thickness.</li>
+            <li>Sometimes undestroyable blocks appear.</li>
+          </ul>
+          <p>If all blocks destroyed, the next level begins.</p>
+          <p>If the ball leaves the playground, you lost a life</p>
+          <p>If you lost all your lives, the game finished</p>
+        </aors:HtmlText>
+      </aors:HelpText>
+      <Views>
+        <SpaceView canvasColor="grey">
+          <TwoDimensionalSpaceView2D backgroundImage="media/playground.png"/>
+        </SpaceView>
+        <PhysicalObjectView physicalObjectType="Ball">
+          <PhysicalShape2D>
+            <Circle fill="blue" stroke="white" strokeWidth="1" texture="media/ball.png"/>
+          </PhysicalShape2D>
+        </PhysicalObjectView>
+        <PhysicalObjectView physicalObjectIdRef="10">
+          <PhysicalShape2D>
+            <Rectangle>
+              <ShapePropertyVisualizationMap mapType="enumerationMap" property="size" shapeProperty="texture"
+                a0="S"  v0="media/slider_30.png"
+                a1="M"  v1="media/slider_60.png"
+                a2="L"  v2="media/slider_90.png"
+                a3="XL" v3="media/slider_120.png"
+              />
+            </Rectangle>
+          </PhysicalShape2D>
+        </PhysicalObjectView>
+        <PhysicalObjectView physicalObjectType="Block">
+          <PhysicalShape2D>
+            <Rectangle stroke="white" strokeWidth="1">
+              <ShapePropertyVisualizationMap mapType="equalityCaseWise" property="thickness" shapeProperty="texture"
+                a0="1" v0="media/block_thickniss_1.png"
+                a1="2" v1="media/block_thickniss_2.png"
+                a2="3" v2="media/block_thickniss_3.png"
+              />  
+            </Rectangle>
+          </PhysicalShape2D>
+        </PhysicalObjectView>
+        <PhysicalObjectView physicalObjectType="BlockUndestroyable">
+          <PhysicalShape2D>
+            <Rectangle texture="media/block_undestroy.png"/>
+          </PhysicalShape2D>
+        </PhysicalObjectView>
+        <PhysicalObjectView physicalObjectType="FeatureBlock">
+          <PhysicalShape2D>
+            <Rectangle>
+              <ShapePropertyVisualizationMap mapType="enumerationMap" property="feature" shapeProperty="texture"
+                a0="SLIDER_EXTEND"     v0="media/feature_slider_extend.png"
+                a1="SLIDER_DIMINSH"    v1="media/feature_slider_diminish.png"
+                a2="SLIDER_ACCELERATE" v2="media/feature_accelerate.png"
+                a3="SLIDER_BREAK"      v3="media/feature_break.png"
+              />
+              <ShapePropertyVisualizationMap mapType="enumerationMap" property="feature" shapeProperty="texture"
+                a0="BALL_ACCELERATE"   v0="media/feature_accelerate.png"
+                a1="BALL_BREAK"        v1="media/feature_break.png"
+              />
+              <ShapePropertyVisualizationMap mapType="enumerationMap" property="feature" shapeProperty="texture"
+                a1="DOUBLE_BALL"       v1="media/feature_double_balls.png"
+                a2="EXTRA_LIFE"        v2="media/feature_extra_life.png"
+              />
+            </Rectangle>
+          </PhysicalShape2D>
+        </PhysicalObjectView>
+        <EventAppearance eventType="SoundStartGame">
+          <Sound soundFile="startgame.wav"/>
+        </EventAppearance>
+        <EventAppearance eventType="SoundWinGame">
+          <Sound soundFile="wingame.wav"/>
+        </EventAppearance>
+        <EventAppearance eventType="SoundWinLevel">
+          <Sound soundFile="winlevel.wav"/>
+        </EventAppearance>
+        <EventAppearance eventType="SoundCollision">
+          <Sound soundFile="beep.wav"/>
+        </EventAppearance>
+        <EventAppearance eventType="SoundCatchFeature">
+          <Sound soundFile="catch_feature.wav"/>
+        </EventAppearance>
+      </Views>
+      <AgentControlUI initiallyPlayedAgent="Slider">
+        <AgentControlByAgentType type="Slider">
+          <TopOutputPanel>
+            <OutputFieldGroup>
+              <OutputField label="Remaining Blocks">
+                <Hint>
+                  <Text>The number of remaining food pieces on the map.</Text>
+                </Hint>
+                <Source>
+                  <GlobalVariable name="remainingblocks"/>
+                </Source>
+              </OutputField>
+              <OutputField label="Score">
+                <Hint>
+                  <Text>The number of remaining food pieces on the map.</Text>
+                </Hint>
+                <Source>
+                  <GlobalVariable name="score"/>
+                </Source>
+              </OutputField>
+              <OutputField label="Lives">
+                <Hint>
+                  <Text>The number of remaining food pieces on the map.</Text>
+                </Hint>
+                <Source>
+                  <GlobalVariable name="lives"/>
+                </Source>
+              </OutputField>
+              <OutputField label="Level">
+                <Hint>
+                  <Text>The number of remaining food pieces on the map.</Text>
+                </Hint>
+                <Source>
+                  <GlobalVariable name="level"/>
+                </Source>
+              </OutputField>
+            </OutputFieldGroup>
+          </TopOutputPanel>
+          <UserActionEventListener>
+            <WHEN>
+              <KeyboardEventExpr keyIdentifier="Right" />
+              <KeyboardEventExpr keyIdentifier="D" />
+            </WHEN>
+            <EXECUTE actionRule="ActionRuleMoveRight" />
+          </UserActionEventListener>
+          <UserActionEventListener>
+            <WHEN>
+              <KeyboardEventExpr keyIdentifier="Left" />
+              <KeyboardEventExpr keyIdentifier="A" />
+            </WHEN>
+            <EXECUTE actionRule="ActionRuleMoveLeft" />
+          </UserActionEventListener>
+          <UserActionEventListener>
+            <WHEN>
+              <KeyboardEventExpr keyIdentifier="Spacebar" />
+              <KeyboardEventExpr keyIdentifier="S" />
+            </WHEN>
+            <EXECUTE actionRule="ActionRuleStartBall" />
+          </UserActionEventListener>
+        </AgentControlByAgentType>
+      </AgentControlUI>
+    </AnimationUI>
+  </UserInterface>
+</SimulationScenario>
