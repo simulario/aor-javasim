@@ -32,8 +32,19 @@
               <Attribute type="Integer" name="courseId" />
               <Attribute type="String" name="courseName" />
               <Attribute type="Integer" name="maxNrOfStudents" />
+              <Attribute type="String" name="moduleType"/>
+              <Attribute type="String" name="period"/>
+              <Attribute type="String" name="language"/>
           </ObjectType>
           <!-- =================================================== -->
+          <ObjectType name="OrganzationChart">
+              <Attribute type="String" name="founded"/>
+              <Attribute type="String" name="termsOfOperation"/>
+          </ObjectType>
+          <!-- =================================================== 
+              Here we introduce the people with different roles.
+              =================================================== -->
+       
           <AgentType name="Person">
               <!-- =================================================== -->
               <Attribute type="String" name="firstName" />
@@ -44,6 +55,10 @@
               <!-- =================================================== -->
               <Attribute type="Integer" name="matrikelNr" />
               <Attribute type="Boolean" name="atTheCourse" />
+              <Attribute type="String" name="degree"/>
+              <Attribute type="String" name="field"/>
+              <Attribute type="String" name="semestetOfStudy"/>
+              <ReferenceProperty name="courseList" type="Course" upperMultiplicity="unbounded"/>
               <!-- =================================================== -->
               <!-- Function created to simulate the mood of the student concerning the course -->
               <Function name="courseChance" resultType="Boolean">
@@ -69,8 +84,11 @@ getCourseChance()
           </AgentType>
           <!-- =================================================== -->
           <AgentType name="Professor" superType="Person">
+              <Attribute type="String" name="type"/>
+              <Attribute type="Integer" name="startYear"/>
               <Attribute type="String" name="chair"/>
               <Attribute type="Boolean" name="atTheCourse"/>
+              <ReferenceProperty name="modulesList" type="Course" upperMultiplicity="unbounded"/>
               <!-- 
               <ReferenceProperty name="courses" type="Course"  upperMultiplicity="unbounded">
                   <description>Every professor have courses where he teach</description>
@@ -94,6 +112,41 @@ getCourseChance()
                   </DO>
               </ReactionRule>
              
+          </AgentType>
+          <!-- =================================================== -->
+          <AgentType name="Employee" superType="Person"/>
+          <!-- =================================================== -->
+          <AgentType name="Secretary" superType="Person"/>
+          
+          <!-- =================================================== 
+              Defining the organization University and the corresponding
+              sub organizations units.
+              =================================================== -->
+          
+          <AgentType name="Organization">
+              <ReferenceProperty name="organizationChart" type="OrganizationChart" lowerMultiplicity="1" upperMultiplicity="1"/>
+          </AgentType>
+          <!-- =================================================== -->
+          <AgentType name="Faculty" superType="Organization">
+              <ReferenceProperty name="studentsList" type="Student" upperMultiplicity="1" lowerMultiplicity="unbounded"/>
+          </AgentType>
+          <!-- =================================================== -->
+          <AgentType name="Chair" superType="Faculty">
+              <ReferenceProperty name="chairHolder" type="Professor" lowerMultiplicity="1" upperMultiplicity="1"/> 
+              <ReferenceProperty name="employeesList" type="Employee" lowerMultiplicity="1" upperMultiplicity="unbounded"/>
+          </AgentType>
+          <!-- =================================================== -->
+          <AgentType name="TechnicalStaff" superType="Chair">
+              <ReferenceProperty name="members" type="Person" upperMultiplicity="1" lowerMultiplicity="unbounded"/>
+          </AgentType>
+          <!-- =================================================== -->
+          <AgentType name="Secretariat" superType="Chair">
+              <ReferenceProperty name="secretary" type="Secretary" lowerMultiplicity="1" upperMultiplicity="unbounded"/>
+          </AgentType>
+          <!-- =================================================== -->
+          <AgentType name="TeachingStaff" superType="Chair">
+              <ReferenceProperty name="chairHolder" type="Professor" upperMultiplicity="1" lowerMultiplicity="1"/>
+              <ReferenceProperty name="teachingStaff" type="Person" lowerMultiplicity="1"/>          
           </AgentType>
       </EntityTypes>
       <EnvironmentRules>
