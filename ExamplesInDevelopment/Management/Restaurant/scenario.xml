@@ -52,17 +52,17 @@ SimStatistics.cumulativeResponseTime.getValue() / SimStatistics.nrOfDepartures.g
 			
 			<Variable name="bankMenuBoard" dataType="Integer">
 				<Source computeOnlyAtEnd="true">
-					<ObjectProperty property="bank" objectType="MenuBoard" />					
+					<ObjectProperty property="bank" objectType="OrderTaker" />					
 				</Source>
 			</Variable>
-			<Variable name="bankPickUpWindow" dataType="Integer">
+			<Variable name="bankWaitress" dataType="Integer">
 				<Source computeOnlyAtEnd="true">
-					<ObjectProperty property="bank" objectType="PickupWindow" />					
+					<ObjectProperty property="bank" objectType="Waitress" />					
 				</Source>
 			</Variable>
 			<Variable name="bankKitchen" dataType="Integer">
 				<Source computeOnlyAtEnd="true">
-					<ObjectProperty property="bank" objectType="Kitchen" />					
+					<ObjectProperty property="bank" objectType="CooK" />					
 				</Source>
 			</Variable>
 			<Variable name="bankManager" dataType="Integer">
@@ -149,21 +149,21 @@ int r2 = Random.uniformInt(1,6);
 			<!-- =================================================== 
 				New introduced ObjectType.
 				=================================================== -->
-			
+			<!-- 
 			<ObjectType name="OrganzationChart">
 				<Attribute type="String" name="founded"/>
 				<Attribute type="String" name="termsOfOperation"/>
 			</ObjectType>
-			
+			-->
 			<!-- =================================================== 
 				New introduced AgentTypes.
 				=================================================== -->
-          	<AgentType name="Organization">
+			<!-- 	<AgentType name="Organization">	-->
             <!-- =================================================== -->
-          		<ReferenceProperty name="organizationChart" type="OrganzationChart" lowerMultiplicity="1" upperMultiplicity="1"/>
+			<!-- 		<ReferenceProperty name="organizationChart" type="OrganzationChart" lowerMultiplicity="1" upperMultiplicity="1"/>
           		<ReferenceProperty name="managers" type="Manager" lowerMultiplicity="1" />
           		<ReferenceProperty name="employees" type="Employee" lowerMultiplicity="1"/>
-          	</AgentType>
+          		</AgentType>-->
 			<!-- =================================================== -->
 			<AgentType name="Person">
 			 <!-- ======================================================= -->
@@ -209,16 +209,20 @@ int r2 = Random.uniformInt(1,6);
 				</ReactionRule>
 			</AgentType>
 			<!-- =================================================== -->
+			<!-- =================================================== -->
+			<!-- =================================================== -->
+			<!-- =================================================== -->
+			<!-- 
 			<AgentType name="CooK" superType="Employee" />
-			<!-- =================================================== -->
+			
 			<AgentType name="OrderTaker" superType="Employee" />
-			<!-- =================================================== -->
+		
 			<AgentType name="Waitress" superType="Employee" />
-			<!-- =================================================== -->
-			<AgentType name="Client" superType="Person" />
+		
+		<AgentType name="Client" superType="Person" /> -->
 <!-- ============================================================================================================== -->
 			<!-- =================================================== -->
-			<AgentType name="MenuBoard" superType="Employee">
+			<AgentType name="OrderTaker" superType="Employee">
 				<!-- =================================================== -->
 				<Attribute name="maxMenuBoardQL" type="Integer"/>
 				<Attribute name="menuBoardBusy" type="Boolean"/>
@@ -304,7 +308,7 @@ Integer.parseInt(getMessagePart(evt.getReminderMsg(),2))
 				</ReactionRule>
 			</AgentType>
 			<!-- =================================================== -->
-			<AgentType name="Kitchen" superType="Employee">
+			<AgentType name="CooK" superType="Employee">
 				<!-- =================================================== -->
 				<!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->
 				<Function name="getMessagePart" resultType="String">
@@ -383,7 +387,7 @@ Integer.parseInt(getMessagePart(evt.getReminderMsg(),3))
 				</ReactionRule>
 			</AgentType>
 			<!-- ========================================= -->
-			<AgentType name="PickupWindow" superType="Employee">
+			<AgentType name="Waitress" superType="Employee">
 				<!-- ========================================= -->
 				<Attribute name="maxPickupQL" type="Integer"/>
 				<Attribute name="pickupWindowBusy" type="Boolean"/>
@@ -560,7 +564,7 @@ cust.getOrderNo()
 					<description>When a car arrives at the Fast Food Restaurant, and the Menu Board queue is full, the customer leaves and he is considered a dissatisfied customer. If Menu Board queue is not full then the car gets in the waiting line as a new customer. Furthermore, If the Menu Board service is not busy, a StartMenuBoardService is created. </description>
 				</documentation>
 				<WHEN eventType="CustomerArrival" eventVariable="evt"/>
-				<FOR objectVariable="mb" objectType="MenuBoard" objectIdRef="1"/>
+				<FOR objectVariable="mb" objectType="OrderTaker" objectIdRef="1"/>
 				<FOR objectVariable="q1" objectType="Queue" objectIdRef="6"/>
 				<IF language="Java"><![CDATA[
 mb.getMenuBoardQueue().size() >= mb.getMaxMenuBoardQL()
@@ -621,7 +625,7 @@ SimStatistics.numberOfCustomers.getValue() + 1
 					<description> When the MenuBoard Service starts, the menuBoardBusy variable is set to true. The customer is asked with the help of an InMessage eventType to place the order. </description>
 				</documentation>
 				<WHEN eventType="StartMenuBoardService"/>
-				<FOR objectVariable="mb" objectType="MenuBoard" objectIdRef="1"/>
+				<FOR objectVariable="mb" objectType="OrderTaker" objectIdRef="1"/>
 				<FOR objectVariable="cust" objectType="Customer">
 					<ObjectRef language="Java">mb.getMenuBoardQueue().get(0)</ObjectRef>
 				</FOR>
@@ -646,7 +650,7 @@ SimStatistics.numberOfCustomers.getValue() + 1
 					<description> When a menu board service ends, but the PickupWindowQueue is full, the customer cannot move forward. We just update the customer attribute, so we know that he is waiting for a free place in the Pickup Window waiting line.</description>
 				</documentation>
 				<WHEN eventType="OutMessageEvent" messageType="ConfirmOrder" messageVariable="mes"/>
-				<FOR objectVariable="mb" objectType="MenuBoard" objectIdRef="1"/>
+				<FOR objectVariable="mb" objectType="OrderTaker" objectIdRef="1"/>
 				<FOR objectVariable="pw" objectType="PickupWindow" objectIdRef="2"/>
 				<FOR objectVariable="q1" objectType="Queue" objectIdRef="6"/>
 				<FOR objectVariable="q2" objectType="Queue" objectIdRef="7"/>
@@ -726,7 +730,7 @@ mb.getMenuBoardQueue().size() > 0
 					<description> On StartPickupWindowService, the pickupWindowBusy variable is set to true, and, when the customer's order has already arrived, an HereIsYourPizza message is created with appropriate delay. </description>
 				</documentation>
 				<WHEN eventType="StartPickupWindowService"/>
-				<FOR objectVariable="pw" objectType="PickupWindow" objectIdRef="2"/>
+				<FOR objectVariable="pw" objectType="Waitress" objectIdRef="2"/>
 				<FOR objectVariable="cust1" objectType="Customer">
 					<ObjectRef language="Java">pw.getPickupWindowQueue().get(0)</ObjectRef>
 				</FOR>			
@@ -754,8 +758,8 @@ pw.getPickupWindowQueue().size()>0 && cust1.isWaitingForOrderToArrive()
 					<description> When a customer is waiting for PW Queue to be free, it should be moved from MB Queue to PW Queue as soon as it is a free place in the PW Queue. Also we need to shedule a new StartMenuBoardService event.</description>
 				</documentation>
 				<WHEN eventType="StartPickupWindowService"/>
-				<FOR objectVariable="mb" objectType="MenuBoard" objectIdRef="1" />
-				<FOR objectVariable="pw" objectType="PickupWindow" objectIdRef="2" />
+				<FOR objectVariable="mb" objectType="OrderTaker" objectIdRef="1" />
+				<FOR objectVariable="pw" objectType="Waitress" objectIdRef="2" />
 				<FOR objectVariable="q1" objectType="Queue" objectIdRef="6" />
 				<FOR objectVariable="q2" objectType="Queue" objectIdRef="7" />
 				<FOR objectVariable="cust" objectType="Customer">
@@ -806,8 +810,8 @@ mb.getMenuBoardQueue().size() > 0
 					<description> On EndPickupWindowService, when the queue is not full, the current customer object is removed from the queue and destroyed. Furthermore, if the queue is empty, the pickup window is no longer busy. Otherwise, a new StartPickupWindowService is created. </description>
 				</documentation>
 				<WHEN eventType="OutMessageEvent" messageType="HereIsYourPizza" eventVariable="evt"/>
-				<FOR objectVariable="mb" objectType="MenuBoard" objectIdRef="1"/>
-				<FOR objectVariable="pw" objectType="PickupWindow" objectIdRef="2"/>
+				<FOR objectVariable="mb" objectType="OrderTaker" objectIdRef="1"/>
+				<FOR objectVariable="pw" objectType="Waitress" objectIdRef="2"/>
 				<FOR objectVariable="q2" objectType="Queue" objectIdRef="7"/>
 				<FOR objectVariable="cust" objectType="Customer">
 					<ObjectRef language="Java">pw.getPickupWindowQueue().get(0)</ObjectRef>
@@ -905,7 +909,7 @@ SimStatistics.cumulativeResponseTime.getValue() + evt.getOccurrenceTime() - cust
 					<description> When an order is prepared, the Kitchen Service send it to the PW Service. The PW Service asks the client which is at the desk what is his orderNo (only if the client is waiting for his order to arrive).</description>
 				</documentation>
 				<WHEN eventType="OutMessageEvent" messageType="OrderPrepared" messageVariable="mes"/>
-				<FOR objectVariable="pw" objectType="PickupWindow" objectIdRef="2"/>
+				<FOR objectVariable="pw" objectType="Waitress" objectIdRef="2"/>
 				<FOR dataVariable="custID" dataType="Integer">
 					<ValueExpr language="Java"><![CDATA[
 mes.getCustID()
@@ -966,7 +970,7 @@ mes.getCustID()
 			<PeriodicTimeEvent type="EndOfMonth" occurrenceTime="30"/>
 		</Agent>	
 		<!-- =================================================== -->
-		<Agent type="MenuBoard" name="MB" id="1">
+		<Agent type="OrderTaker" name="MB" id="1">
 			<!-- =================================================== -->
 			<Slot property="bank" value="0"/>		
 			<Slot property="menuBoardBusy" value="false"/>
@@ -977,13 +981,13 @@ mes.getCustID()
 			<PeriodicTimeEvent type="EndOfMonth" occurrenceTime="30"/>
 		</Agent>
 		<!-- =================================================== -->
-		<Agent type="Kitchen" name="K" id="5">
+		<Agent type="CooK" name="K" id="5">
 			<!-- =================================================== -->
 			<Slot property="bank" value="1"/>
 			<PeriodicTimeEvent type="EndOfMonth" occurrenceTime="30"/>
 		</Agent>
 		<!-- =================================================== -->
-		<Agent type="PickupWindow" name="PW" id="2">
+		<Agent type="Waitress" name="PW" id="2">
 			<!-- =================================================== -->
 			<Slot property="bank" value="2"/>
 			<Slot property="pickupWindowBusy" value="false"/>
@@ -994,15 +998,17 @@ mes.getCustID()
 			<PeriodicTimeEvent type="EndOfMonth" occurrenceTime="30" />
 		</Agent>
 		<!-- =================================================== -->
-		<Object type="OrganzationChart" name="McMikesOrganizationChart">
+		<!--
+			<Object type="OrganzationChart" name="McMikesOrganizationChart">-->
 			<!-- =================================================== -->
-			<Slot property="founded" value="2011"/>
+		<!-- <Slot property="founded" value="2011"/>
 			<Slot property="termsOfOperation" value="....."/>
-		</Object>
+		</Object> -->
+		
 		<!-- =================================================== -->
-		<Agent type="Organization" name="McMikes" id="11">
+		<!--	<Agent type="Organization" name="McMikes" id="11">  -->
 			<!-- =================================================== -->
-			<Slot property="organizationChart">
+		<!--		<Slot property="organizationChart">
 				<ValueExpr language="Java"></ValueExpr>
 			</Slot>
 			<Slot property="employees">
@@ -1014,7 +1020,7 @@ mes.getCustID()
 				<ValueExpr language="Java"><![CDATA[ new
 					ArrayList<Manager>(this.getEnvironmentSimulator.getObjectById(10))]]></ValueExpr>
 			</Slot>
-		</Agent>
+			</Agent> -->
 		<!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->
 		<Object type="Queue" id="6" name="MBQueue">
 		<!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->
@@ -1154,7 +1160,7 @@ mes.getCustID()
 					<Text xml:lang="ro">Cat are in banca bucatarul?</Text>
 				</Hint>
 			</StatisticsVariableUI>
-			<StatisticsVariableUI variable="bankPickUpWindow">
+			<StatisticsVariableUI variable="bankWaitress">
 				<Label>
 					<Text xml:lang="en">The bank of the waitress at the end of the simulation</Text>
 					<Text xml:lang="ro">Cat a castigat la finalul simularii chelnerita</Text>
@@ -1184,7 +1190,7 @@ mes.getCustID()
 					<TwoDimensionalSpaceView2D backgroundColor="darkgrey"/>
 				</SpaceView>
 				<!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->
-				<ObjectView objectType="MenuBoard">
+				<ObjectView objectType="OrderTaker">
 				<!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->
 					<Shape2D x="600px" y="250px">
 						<Rectangle fill="green" height="50" width="50" stroke="black" strokeWidth="10">
@@ -1194,7 +1200,7 @@ mes.getCustID()
 					<DisplayInfo content="Menu Board" />
 				</ObjectView>
 				<!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->
-				<ObjectView objectType="PickupWindow">
+				<ObjectView objectType="Waitress">
 				<!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->
 					<Shape2D x="250px" y="250px">
 						<Rectangle fill="green" width="50" height="50" stroke="black" strokeWidth="10">
