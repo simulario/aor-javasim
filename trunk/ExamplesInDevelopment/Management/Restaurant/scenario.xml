@@ -32,7 +32,7 @@
 				<Source computeOnlyAtEnd="true">
 					<ValueExpr language="Java"><![CDATA[
 SimStatistics.cumulativeResponseTime.getValue() / SimStatistics.nrOfDepartures.getValue()						
-						]]></ValueExpr>
+					]]></ValueExpr>
 				</Source>
 			</Variable>
 			<Variable name="maxLengthOfMBQ" dataType="Integer">
@@ -46,8 +46,9 @@ SimStatistics.cumulativeResponseTime.getValue() / SimStatistics.nrOfDepartures.g
 				</Source>
 			</Variable>
 			
-			<!-- =================================================== -->
-			
+			<!-- =================================================== 
+				       New introduced Statistics variable.
+				 =================================================== -->
 			
 			<Variable name="bankMenuBoard" dataType="Integer">
 				<Source computeOnlyAtEnd="true">
@@ -69,9 +70,7 @@ SimStatistics.cumulativeResponseTime.getValue() / SimStatistics.nrOfDepartures.g
 					<ObjectProperty property="bank" objectType="Manager" />					
 				</Source>
 			</Variable>
-		</Statistics>
-		
-
+		</Statistics>	
 		<Globals>
 			<GlobalFunction name="twoDice" resultType="Integer">
 				<Parameter name="factor" type="Integer"/>
@@ -91,7 +90,6 @@ int r2 = Random.uniformInt(1,6);
                     return (12*factor);           // with probability  0.028
 		     ]]></Body>
 			</GlobalFunction>
-			
 		</Globals>
 		<EntityTypes>
 			<!-- =================================================== -->
@@ -124,50 +122,44 @@ int r2 = Random.uniformInt(1,6);
 			<MessageType name="AskOrderNo"/>
 			<!-- =================================================== -->
 			<MessageType name="ReplyOrderNo">
-				<!-- =================================================== -->
-				<Attribute type="Integer" name="orderNo"/>
+			<!-- =================================================== -->
+				<Attribute type="Integer" name="orderNo" />
 			</MessageType>
 			<!-- =================================================== -->
-			<MessageType name="OrderArrived"/>
+			<MessageType name="OrderArrived" />
 			<!-- =================================================== -->
-			<MessageType name="HereIsYourPizza"/>
-			<!-- =================================================== -->
-
+			<MessageType name="HereIsYourPizza" />
 			<!-- =================================================== -->
 			<ExogenousEventType name="CustomerArrival">
-				<!-- =================================================== -->
+			<!-- =================================================== -->
 				<Periodicity>
 					<ValueExpr language="Java">Global.twoDice(10)</ValueExpr>
 				</Periodicity>
-			</ExogenousEventType>
+			</ExogenousEventType>	
 			<!-- =================================================== -->
-			
+			<CausedEventType name="StartMenuBoardService" />
 			<!-- =================================================== -->
-			<CausedEventType name="StartMenuBoardService"/>
-			<!-- =================================================== -->
-			<CausedEventType name="StartPickupWindowService"/>
-			<!-- =================================================== -->
-
+			<CausedEventType name="StartPickupWindowService" />
 			<!-- =================================================== -->
 			<ObjectType name="Queue">
 				<!-- =================================================== -->
-				<Attribute name="lengthOfQueue" type="Integer"/>
+				<Attribute name="lengthOfQueue" type="Integer" />
 			</ObjectType>
-			
-<!-- ============================================================================================================== -->
+            <!-- ======================================================= -->
 			<AgentType name="Person">
-				<Attribute type="String" name="firstName"/>
-				<Attribute type="String" name="lastName"/>
+				<!-- ======================================================= -->
+				<Attribute type="String" name="firstName" />
+				<Attribute type="String" name="lastName" />
 			</AgentType>
 			<!-- =================================================== -->
 			<AgentType name="Employee" superType="Person">
-				
-				<Attribute type="Integer" name="bank"/>
-				<PeriodicTimeEventType name="EndOfMonth" periodicity="30"/>
+				<!-- ======================================================= -->
+				<Attribute type="Integer" name="bank" />
+				<PeriodicTimeEventType name="EndOfMonth" periodicity="30" />
 				<ReactionRule name="EndOfMonthRule" agentVariable="emp">
-					<documentation>
-					<dc:description>At every 30 days by simulating a real employee, he ask for the paycheck</dc:description>  
-					</documentation>
+				<documentation>
+				  <dc:description>At every 30 days by simulating a real employee, he ask for the paycheck</dc:description>  
+				</documentation>
 					<WHEN eventType="EndOfMonth"/>
 					<DO>
 						<UPDATE-AGT>
@@ -180,13 +172,14 @@ int r2 = Random.uniformInt(1,6);
 			</AgentType>
 			<!-- =================================================== -->
 			<AgentType name="Manager" superType="Person">
-				<Attribute type="Integer" name="bank"/>
+				<!-- ======================================================= -->
+				<Attribute type="Integer" name="bank" />
 				<PeriodicTimeEventType name="EndOfMonth" periodicity="30"/>
 				<ReactionRule name="AskForMoneyRule" agentVariable="man">
-					<documentation>
-					<dc:description>/dc>dc>description>At every 30 days by simulating a real manager his bank increases or decreases</dc:description>  
-					</documentation>
-					<WHEN eventType="EndOfMonth"/>
+				<documentation>
+				  <dc:description>At every 30 days by simulating a real manager his bank increases or decreases</dc:description>  
+				</documentation>
+					<WHEN eventType="EndOfMonth" />
 					<DO>
 						<UPDATE-AGT>
 							<Slot property="bank">
@@ -197,10 +190,13 @@ int r2 = Random.uniformInt(1,6);
 				</ReactionRule>
 			</AgentType>
 			<!-- =================================================== -->
-			<AgentType name="CooK" superType="Employee"/>
-			<AgentType name="OrderTaker" superType="Employee"/>
-			<AgentType name="Waitress" superType="Employee"/>
-			<AgentType name="Client" superType="Person"/>
+			<AgentType name="CooK" superType="Employee" />
+			<!-- =================================================== -->
+			<AgentType name="OrderTaker" superType="Employee" />
+			<!-- =================================================== -->
+			<AgentType name="Waitress" superType="Employee" />
+			<!-- =================================================== -->
+			<AgentType name="Client" superType="Person" />
 <!-- ============================================================================================================== -->
 			<!-- =================================================== -->
 			<AgentType name="MenuBoard" superType="Employee">
@@ -367,9 +363,9 @@ Integer.parseInt(getMessagePart(evt.getReminderMsg(),3))
 					</DO>
 				</ReactionRule>
 			</AgentType>
-			<!-- ============================= -->
+			<!-- ========================================= -->
 			<AgentType name="PickupWindow" superType="Employee">
-				<!-- =========================== -->
+				<!-- ========================================= -->
 				<Attribute name="maxPickupQL" type="Integer"/>
 				<Attribute name="pickupWindowBusy" type="Boolean"/>
 				<ReferenceProperty name="pickupWindowQueue" type="Customer" upperMultiplicity="unbounded">
@@ -449,9 +445,9 @@ Integer.parseInt(evt.getReminderMsg())
 					</DO>
 				</ReactionRule>
 			</AgentType>
-			<!-- =================================================== -->
+			<!-- ================================================= -->
 			<AgentType name="Customer" superType="Person">
-				<!-- =================================================== -->
+				<!-- ================================================ -->
 				<Attribute name="arrivalTime" type="Integer"/>
 				<Attribute name="waitingForPWFree" type="Boolean"/>
 				<Attribute name="orderNo" type="Integer"/>
@@ -947,16 +943,13 @@ mes.getCustID()
 		<Agent type="Manager" name="BillGates" id="10">
 			<Slot property="bank" value="0"/>
 			<PeriodicTimeEvent type="EndOfMonth" occurrenceTime="30"/>
-		</Agent>
-		
+		</Agent>	
 		<Agent type="MenuBoard" name="MB" id="1">
-		<!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->
 			<Slot property="bank" value="0"/>		
 			<Slot property="menuBoardBusy" value="false"/>
 			<Slot property="maxMenuBoardQL" value="5"/>
 			<Slot property="menuBoardQueue">
 				<ValueExpr language="Java"><![CDATA[ new ArrayList<Customer>()]]></ValueExpr>
-				<ValueExpr language="JavaScript">new js.util.ArrayList()</ValueExpr>
 			</Slot>
 			<PeriodicTimeEvent type="EndOfMonth" occurrenceTime="30"/>
 		</Agent>
@@ -973,24 +966,21 @@ mes.getCustID()
 			<Slot property="maxPickupQL" value="5"/>
 			<Slot property="pickupWindowQueue">
 				<ValueExpr language="Java"><![CDATA[ new ArrayList<Customer>()]]></ValueExpr>
-				<ValueExpr language="JavaScript">new js.util.ArrayList()</ValueExpr>
 			</Slot>
-			<PeriodicTimeEvent type="EndOfMonth" occurrenceTime="30"/>
+			<PeriodicTimeEvent type="EndOfMonth" occurrenceTime="30" />
 		</Agent>
 		<!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->
 		<Object type="Queue" id="6" name="MBQueue">
 		<!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->
-			<Slot property="lengthOfQueue" value="0"/>
+			<Slot property="lengthOfQueue" value="0" />
 		</Object>
 		<!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->
 		<Object type="Queue" id="7" name="PWQueue">
 		<!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->
-			<Slot property="lengthOfQueue" value="0"/>
+			<Slot property="lengthOfQueue" value="0" />
 		</Object>
 		<!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->
-		<ExogenousEvent type="CustomerArrival" occurrenceTime="1"/>
-		<!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->
-		<ExogenousEvent type="EndOfMonth" occurrenceTime="1"/>
+		<ExogenousEvent type="CustomerArrival" occurrenceTime="1" />
 		<!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->
 	</InitialState>
 	<!-- =================================================== -->
@@ -1098,8 +1088,6 @@ mes.getCustID()
 					<Text xml:lang="ro">Care este dimensiunea maxima a listei de asteptare pentru serviciul de distributie comenzi?</Text>
 				</Hint>
 			</StatisticsVariableUI>
-			<!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->
-			
 			<StatisticsVariableUI variable="bankMenuBoard">
 				<Label>
 					<Text xml:lang="en">The bank of the OrderTaker at the end of the simulation</Text>
