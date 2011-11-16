@@ -145,7 +145,24 @@ int r2 = Random.uniformInt(1,6);
 				<!-- =================================================== -->
 				<Attribute name="lengthOfQueue" type="Integer" />
 			</ObjectType>
-            <!-- ======================================================= -->
+			
+			<!-- =================================================== 
+				New introduced ObjectType.
+				=================================================== -->
+			
+			<ObjectType name="OrganzationChart">
+				<Attribute type="String" name="founded"/>
+				<Attribute type="String" name="termsOfOperation"/>
+			</ObjectType>
+			
+			<!-- =================================================== 
+				New introduced AgentTypes.
+				=================================================== -->
+          	<AgentType name="Organization">
+          		<ReferenceProperty name="properties" type="OrganzationChart" lowerMultiplicity="1" upperMultiplicity="1"/>
+          		<ReferenceProperty name="manager" type="Manager"/>
+          		<ReferenceProperty name="numberOfEmployees" type="Employee" lowerMultiplicity="1"/>
+          	</AgentType>
 			<AgentType name="Person">
 				<!-- ======================================================= -->
 				<Attribute type="String" name="firstName" />
@@ -940,6 +957,18 @@ mes.getCustID()
 	<!-- =================================================== -->
 	<InitialState>
 	<!-- =================================================== -->
+		<Agent type="Organization" name="McMikes" id="11">
+			<Slot property="properties">
+				<ValueExpr language="Java"><![CDATA[ new ArrayList<OrganizationChart>()]]></ValueExpr>
+			</Slot>
+			<Slot property="numberOfEmployees">
+				<ValueExpr language="Java"><![CDATA[ new ArrayList<Emplyee>()]]></ValueExpr>
+			</Slot>
+			<Slot property="manager">
+				<ValueExpr language="Java"><![CDATA[ new ArrayList<Manager>()]]></ValueExpr>
+			</Slot>
+		</Agent>
+		<!-- =================================================== -->
 		<Agent type="Manager" name="BillGates" id="10">
 			<Slot property="bank" value="0"/>
 			<PeriodicTimeEvent type="EndOfMonth" occurrenceTime="30"/>
@@ -969,6 +998,11 @@ mes.getCustID()
 			</Slot>
 			<PeriodicTimeEvent type="EndOfMonth" occurrenceTime="30" />
 		</Agent>
+		<!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->
+		<Object type="OrganzationChart" name="McMikesOrganizationChart">
+			<Slot property="founded" value="In the year 2011"/>
+			<Slot property="termsOfOperation" value="....."/>
+		</Object>
 		<!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->
 		<Object type="Queue" id="6" name="MBQueue">
 		<!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->
