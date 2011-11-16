@@ -1,0 +1,1672 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- <?xml-stylesheet type="text/xsl" href="prettyprint.xsl"?> -->
+<SimulationScenario xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+ xsi:schemaLocation="http://aor-simulation.org file:/D:/work/programming/eclipsePrj/AOR-Complete/trunk/AORSL/AORSL_0-9.xsd"
+ xmlns="http://aor-simulation.org"
+ xmlns:dc="http://purl.org/dc/elements/1.1/"
+ xmlns:aors="http://aor-simulation.org"
+ scenarioName="Tetris"
+ scenarioTitle="Tetris"
+ version="0.9">
+    <documentation>
+        <dc:description>Tetris - Classic Arcade Game</dc:description>
+        <dc:creator>Franz Häfner</dc:creator>
+        <dc:created>13 September 2011</dc:created>
+        <dc:license>CC by-nc-sa</dc:license>
+        <dc:title>Tetris</dc:title>
+    </documentation>
+    <SimulationParameters simulationSteps="1000000" stepTimeDelay="50" /> <!-- 13.888888889h -->
+    <SimulationModel modelName="Tetris" modelTitle="Tetris">
+        <documentation>
+            <dc:description>
+                The space model provides a grid in which the blocks of the tetris game are placed.
+                Initially it is empty.
+                
+                The globals defines some global variables which are used for the game mechanics and scoring.
+                
+                The entity types are some message types which are used to display the up coming bricks in the interface of the game.
+                It is necessary to use for each brick type a new message because the view does not allow to switch images on attributes of the message.
+                There are also some action types.
+                Some are only trigger when a key is pressed e.g. MoveFallingBrickLeft_ActionEvent, RotateFallingBrick_ActionEvent
+                The others are triggered on cause by environment rules.
+                
+                The only agent in the game is a nonphysical one.
+                It represents the person playing this game.
+            </dc:description>
+            <shortDescription>
+                Classic Tetris Arcade Game, where the main purpose is to create complete rows of bricks in order to clear new levels.
+            </shortDescription>
+            <dc:title>Tetris</dc:title>
+        </documentation>
+        <SpaceModel geometry="Euclidean">
+            <TwoDimensionalGrid xMax="10" yMax="20" startCountingWithZero="false">
+                <GridCellProperty name="cellFill" type="Integer" initialValue="0" />
+            </TwoDimensionalGrid>
+        </SpaceModel>
+
+        <Globals>
+            <GlobalVariable dataType="Boolean" name="movingStopped" initialValue="true" >
+                <documentation>
+                    <dc:description>
+                        This variable indicates if the movement of the falling brick is stopped.
+                        This also includes the movement when a line is cleared.
+                    </dc:description>
+                </documentation>
+            </GlobalVariable>
+            <GlobalVariable dataType="Boolean" name="moreLineToClear" initialValue="false" >
+                <documentation>
+                    <dc:description>
+                        When a line is cleared this variable indicates if it is necessary to check of more line can be cleared.
+                    </dc:description>
+                </documentation>
+            </GlobalVariable>
+            <GlobalVariable dataType="Boolean" name="gameLost" initialValue="false" >
+                <documentation>
+                    <dc:description>
+                        When a game is lost (no new brick can be placed inside the game field) this variable will become true to stop the simulation
+                    </dc:description>
+                </documentation>
+            </GlobalVariable>
+            <GlobalVariable dataType="Integer" name="numLinesDeleted" initialValue="0" >
+                <documentation>
+                    <dc:description>
+                        Used for the scoring and contains the number of lines which are cleared at once.
+                    </dc:description>
+                </documentation>
+            </GlobalVariable>
+            <GlobalVariable dataType="Integer" name="overallNumLinesDeleted" initialValue="0" >
+                <documentation>
+                    <dc:description>
+                        A statistic variable containing the number of cleared lines in the game.
+                        The level system needs this.
+                    </dc:description>
+                </documentation>
+            </GlobalVariable>
+            <GlobalVariable dataType="Integer" name="level" initialValue="1" minValue="1" maxValue="20" >
+                <documentation>
+                    <dc:description>
+                        The level of the game.
+                        Used to speed up the falling of the bricks.
+                        Before the start of the simulation it can be modified by using the initial state interface.
+                    </dc:description>
+                </documentation>
+            </GlobalVariable>
+            <GlobalVariable dataType="Integer" name="passedTime" initialValue="0" >
+                <documentation>
+                    <dc:description>
+                        It is only shown in the user interface and has no influence in the game mechanics.
+                    </dc:description>
+                </documentation>
+            </GlobalVariable>
+            <GlobalVariable dataType="Integer" name="score" initialValue="0" >
+                <documentation>
+                    <dc:description>
+                        It is only shown in the user interface and has no influence in the game mechanics.
+                    </dc:description>
+                </documentation>
+            </GlobalVariable>
+            <GlobalVariable dataType="Integer" name="newBrickToCome" initialValue="0">
+                <documentation>
+                    <dc:description>
+                        This variable contains the information which type of brick will come next.
+                        It is used to show it to the player in the user interface.
+                    </dc:description>
+                </documentation>
+            </GlobalVariable>
+            <GlobalVariable dataType="Integer" name="actualFallingBrick" >
+                <documentation>
+                    <dc:description>
+                        Contains the information which brick is falling at the moment.
+                        It mostly used for the handling of the rotation of the brick.
+                    </dc:description>
+                </documentation>
+            </GlobalVariable>
+            <GlobalVariable dataType="Integer" name="actualFallingBrickRotation" >
+                <documentation>
+                    <dc:description>
+                        Contains the information in which direction the falling brick facing.
+                        It used for the handling of the rotation of the brick.
+                    </dc:description>
+                </documentation>
+            </GlobalVariable>
+        </Globals>
+        
+        <EntityTypes>
+            <MessageType name="NextBrickMsgI"/>
+            <MessageType name="NextBrickMsgO"/>
+            <MessageType name="NextBrickMsgT"/>
+            <MessageType name="NextBrickMsgS"/>
+            <MessageType name="NextBrickMsgZ"/>
+            <MessageType name="NextBrickMsgJ"/>
+            <MessageType name="NextBrickMsgL"/>
+            
+            <ActionEventType name="FallingBrick_ActionEvent" >
+                <documentation>
+                    <dc:description>
+                        Triggered on cause by the agent and the LevelSpeed_EnvRule.
+                        It is used to trigger the FallingBrick_EnvRule.
+                    </dc:description>
+                </documentation>
+            </ActionEventType>
+            
+            <ActionEventType name="MoveFallingBrickLeft_ActionEvent" >
+                <documentation>
+                    <dc:description>
+                        Triggered on cause by the agent.
+                        It is used to trigger the MoveFallingBrickLeft_EnvRule.
+                    </dc:description>
+                </documentation>
+            </ActionEventType>
+            
+            <ActionEventType name="MoveFallingBrickRight_ActionEvent" >
+                <documentation>
+                    <dc:description>
+                        Triggered on cause by the agent.
+                        It is used to trigger the MoveFallingBrickRight_EnvRule.
+                    </dc:description>
+                </documentation>
+            </ActionEventType>
+            
+            <ActionEventType name="RotateFallingBrick_ActionEvent" >
+                <documentation>
+                    <dc:description>
+                        Triggered on cause by the agent.
+                        It is used to trigger the RotateFallingBrick_EnvRule.
+                    </dc:description>
+                </documentation>
+            </ActionEventType>
+            
+            <ActionEventType name="RemoveCompletedLines_ActionEvent" >
+                <documentation>
+                    <dc:description>
+                        Triggered on cause by the LevelSpeed_EnvRule.
+                        It is used to trigger the RemoveCompletedLines_EnvRule.
+                    </dc:description>
+                </documentation>
+            </ActionEventType>
+            
+            <ActionEventType name="CalculateScore_ActionEvent" >
+                <documentation>
+                    <dc:description>
+                        Triggered on cause by the RemoveCompletedLines_EnvRule.
+                        It is used to trigger the CalculateScore_EnvRule.
+                    </dc:description>
+                </documentation>
+            </ActionEventType>
+            
+            <ActionEventType name="NewLevel_ActionEvent" >
+                <documentation>
+                    <dc:description>
+                        Triggered on cause by the RemoveCompletedLines_EnvRule.
+                        It is used to trigger the NewLevel_EnvRule.
+                    </dc:description>
+                </documentation>
+            </ActionEventType>
+            
+            <ActionEventType name="NewBrick_ActionEvent" >
+                <documentation>
+                    <dc:description>
+                        Triggered on cause by the RemoveCompletedLines_EnvRule.
+                        It is used to trigger the NewBrick_EnvRule.
+                    </dc:description>
+                </documentation>
+            </ActionEventType>
+            
+            <ActionEventType name="LostGame_ActionEvent" >
+                <documentation>
+                    <dc:description>
+                        Triggered on cause by the NewBrick_EnvRule.
+                        It is used to trigger the LostGame_EnvRule.
+                    </dc:description>
+                </documentation>
+            </ActionEventType>
+            
+            <AgentType name="Player">
+                <documentation>
+                    <dc:description>
+                        Represents the person playing the game.
+                        Only used to define action rules which are executed when a key is pressed.
+                    </dc:description>
+                </documentation>
+                <ActionRule name="FallingBrick_ActionRule">
+                    <documentation>
+                        <dc:description>
+                            Triggered by key press DOWN or S.
+                        </dc:description>
+                    </documentation>
+                    <DO>
+                        <SCHEDULE-EVT>
+                            <ActionEventExpr actionEventType="FallingBrick_ActionEvent" />
+                        </SCHEDULE-EVT>
+                    </DO>
+                </ActionRule>
+                
+                <ActionRule name="MoveFallingBrickLeft_ActionRule">
+                    <documentation>
+                        <dc:description>
+                            Triggered by key press LEFT or A.
+                        </dc:description>
+                    </documentation>
+                    <DO>
+                        <SCHEDULE-EVT>
+                            <ActionEventExpr actionEventType="MoveFallingBrickLeft_ActionEvent" />
+                        </SCHEDULE-EVT>
+                    </DO>
+                </ActionRule>
+                
+                <ActionRule name="MoveFallingBrickRight_ActionRule">
+                    <documentation>
+                        <dc:description>
+                            Triggered by key press RIGHT or D.
+                        </dc:description>
+                    </documentation>
+                    <DO>
+                        <SCHEDULE-EVT>
+                            <ActionEventExpr actionEventType="MoveFallingBrickRight_ActionEvent" />
+                        </SCHEDULE-EVT>
+                    </DO>
+                </ActionRule>
+                
+                <ActionRule name="RotateFallingBrick_ActionRule">
+                    <documentation>
+                        <dc:description>
+                            Triggered by key press UP, SPACE or W.
+                        </dc:description>
+                    </documentation>
+                    <DO>
+                        <SCHEDULE-EVT>
+                            <ActionEventExpr actionEventType="RotateFallingBrick_ActionEvent" />
+                        </SCHEDULE-EVT>
+                    </DO>
+                </ActionRule>
+            </AgentType>
+            
+        </EntityTypes>
+
+        <EnvironmentRules>
+            <EnvironmentRule name="TimeTick_EnvRule">
+                <documentation>
+                    <dc:description>
+                        This rule is used to update the global variable "passedTime".
+                        It calculates the passed seconds from the current simulation step and the step time delay.
+                    </dc:description>
+                </documentation>
+                <ON-EACH-SIMULATION-STEP />
+                <IF language="JavaScript">
+                    <![CDATA[
+                        (__Simulator.getCurrentSimulationStep() / 20) - Math.floor(__Simulator.getCurrentSimulationStep() / 20) == 0
+                    ]]>
+                </IF>
+                <THEN>
+                    <UPDATE-ENV>
+                        <UpdateGlobalVariable name="passedTime">
+                            <ValueExpr language="JavaScript">
+                                <![CDATA[
+                                    Math.floor(__Simulator.getCurrentSimulationStep() / 20)
+                                ]]>
+                            </ValueExpr>
+                        </UpdateGlobalVariable>
+                    </UPDATE-ENV>
+                </THEN>
+            </EnvironmentRule>
+            
+            <EnvironmentRule name="LostGame_EnvRule">
+                <documentation>
+                    <dc:description>
+                        This rule checks if the game is lost.
+                        If it is lost the rule stops the simulation.
+                    </dc:description>
+                </documentation>
+                <WHEN eventType="LostGame_ActionEvent"/>
+                <IF language="JavaScript">
+                    <![CDATA[
+                        __Global.isGameLost()
+                    ]]>
+                </IF>
+                <THEN>
+                    <SCHEDULE-EVT>
+                        <CausedEventExpr eventType="StopSimulation" />
+                    </SCHEDULE-EVT>
+                </THEN>
+            </EnvironmentRule>
+            
+            <EnvironmentRule name="LevelSpeed_EnvRule">
+                <documentation>
+                    <dc:description>
+                        This rule is the begin of a chain of caused events.
+                        It triggers not on every step, but with increasing level the trigger rate rises.
+                    </dc:description>
+                </documentation>
+                <ON-EACH-SIMULATION-STEP/>
+                <IF language="JavaScript">
+                    <![CDATA[
+                        (__Simulator.getCurrentSimulationStep() / (21 - __Global.getLevel())) - Math.floor(__Simulator.getCurrentSimulationStep() / (21 - __Global.getLevel())) == 0
+                    ]]>
+                </IF>
+                <THEN>
+                    <SCHEDULE-EVT>
+                        <CausedEventExpr eventType="FallingBrick_ActionEvent" />
+                        <CausedEventExpr eventType="RemoveCompletedLines_ActionEvent" />
+                    </SCHEDULE-EVT>
+                </THEN>
+            </EnvironmentRule>
+            
+            <EnvironmentRule name="FallingBrick_EnvRule">
+                <documentation>
+                    <dc:description>
+                        In this rule the falling brick is moved down a row if possible.
+                    </dc:description>
+                </documentation>
+                <WHEN eventType="FallingBrick_ActionEvent"/>
+                <DO>
+                    <UPDATE-ENV>
+                        <ForEachGridCell gridCellVariable="cell">
+                            <Selection copyToList="cellList">
+                                <Condition language="JavaScript">
+                                    <![CDATA[
+                                        /*
+                                         * just select one cell
+                                         * the rest is done in the <code>-block
+                                         */
+                                        ((cell.getPosX() == 1) && (cell.getPosY() == 1))
+                                    ]]>
+                                </Condition>
+                            </Selection>
+                            <Code language="JavaScript">
+                                <![CDATA[
+                                    var isMovePossible = true;
+                                    var isNoMovingStone = true;
+                                    
+                                    // test if moving is possible
+                                    cellIteration:
+                                    for(var cellX=1; cellX<=10; ++cellX) {
+                                        for(var cellY=1; cellY<=20; ++cellY) {
+                                            if(__Simulator.spaceModel.getGridCell(cellX, cellY).getCellFill() < 0) {
+                                                isNoMovingStone = false;
+                                                if(cellY == 1) {
+                                                    isMovePossible = false;
+                                                    break cellIteration;
+                                                } else if(__Simulator.spaceModel.getGridCell(cellX, cellY-1).getCellFill() > 0) {
+                                                    isMovePossible = false;
+                                                    break cellIteration;
+                                                }
+                                            }
+                                        }
+                                    }
+                                    
+                                    if(!isMovePossible) {
+                                        for(var cellX=1; cellX<=10; ++cellX) {
+                                            for(var cellY=1; cellY<=20; ++cellY) {
+                                                if(__Simulator.spaceModel.getGridCell(cellX, cellY).getCellFill() < 0) {
+                                                    __Simulator.spaceModel.getGridCell(cellX, cellY).setCellFill(__Simulator.spaceModel.getGridCell(cellX, cellY).getCellFill() * -1);
+                                                }
+                                            }
+                                        }
+                                        console.log("cells inverted");
+                                    
+                                        __Global.setMovingStopped(true);
+                                        return;
+                                    } else {     
+                                        if(isNoMovingStone) {
+                                            __Global.setMovingStopped(true);
+                                            return;
+                                        }
+                                        __Global.setMovingStopped(false);
+                                    
+                                        // move is possible, so move now
+                                        for(var cellX=1; cellX<=10; ++cellX) {
+                                            for(var cellY=1; cellY<=20; ++cellY) {
+                                                if(__Simulator.spaceModel.getGridCell(cellX, cellY).getCellFill() < 0) {
+                                                    __Simulator.spaceModel.getGridCell(cellX,cellY-1).setCellFill(__Simulator.spaceModel.getGridCell(cellX,cellY).getCellFill());
+                                                    __Simulator.spaceModel.getGridCell(cellX,cellY).setCellFill(0);
+                                                }
+                                            }
+                                        }
+                                        console.log("cells moved");
+                                        
+                                        /*
+                                        for(var cellX=1; cellX<=10; ++cellX) {
+                                            __Simulator.spaceModel.getGridCell(cellX, 20).setCellFill(0);
+                                        }
+                                        */
+                                        
+                                        
+                                        return;
+                                    }
+                                ]]>
+                            </Code>
+                        </ForEachGridCell>
+                    </UPDATE-ENV>
+                </DO>
+            </EnvironmentRule>
+            
+            <EnvironmentRule name="MoveFallingBrickLeft_EnvRule">
+                <documentation>
+                    <dc:description>
+                        In this rule the falling brick is moved left a column if possible.
+                    </dc:description>
+                </documentation>
+                <WHEN eventType="MoveFallingBrickLeft_ActionEvent" />
+                <DO>
+                    <UPDATE-ENV>
+                        <ForEachGridCell gridCellVariable="cell">
+                            <Selection copyToList="cellList">
+                                <Condition language="JavaScript">
+                                    <![CDATA[
+                                        /*
+                                         * just select one cell
+                                         * the rest is done in the <code>-block
+                                         */
+                                        ((cell.getPosX() == 1) && (cell.getPosY() == 1))
+                                    ]]>
+                                </Condition>
+                            </Selection>
+                            <Code language="JavaScript">
+                                <![CDATA[
+                                    var isMovePossible = true;
+                                
+                                    // test if moving is possible
+                                    cellIteration:
+                                    for(var cellX=1; cellX<=10; ++cellX) {
+                                        for(var cellY=1; cellY<=20; ++cellY) {
+                                            if(__Simulator.spaceModel.getGridCell(cellX, cellY).getCellFill() < 0) {
+                                                if(cellX == 1) {
+                                                    isMovePossible = false;
+                                                    break cellIteration;
+                                                } else if(__Simulator.spaceModel.getGridCell(cellX-1, cellY).getCellFill() > 0) {
+                                                    isMovePossible = false;
+                                                    break cellIteration;
+                                                }
+                                            }
+                                        }
+                                    }
+
+                                    if(isMovePossible) {
+                                        for(var cellX=1; cellX<=10; ++cellX) {
+                                            for(var cellY=1; cellY<=20; ++cellY) {
+                                                if(__Simulator.spaceModel.getGridCell(cellX, cellY).getCellFill() < 0) {
+                                                    __Simulator.spaceModel.getGridCell(cellX-1,cellY).setCellFill(__Simulator.spaceModel.getGridCell(cellX,cellY).getCellFill());
+                                                    __Simulator.spaceModel.getGridCell(cellX,cellY).setCellFill(0);
+                                                }
+                                            }
+                                        }
+                                        console.log("cells moved left");
+                                    }
+                                ]]>
+                            </Code>
+                        </ForEachGridCell>
+                    </UPDATE-ENV>
+                </DO>
+            </EnvironmentRule>
+            
+            <EnvironmentRule name="MoveFallingBrickRight_EnvRule">
+                <documentation>
+                    <dc:description>
+                        In this rule the falling brick is moved right a column if possible. 
+                    </dc:description>
+                </documentation>
+                <WHEN eventType="MoveFallingBrickRight_ActionEvent" />
+                <DO>
+                    <UPDATE-ENV>
+                        <ForEachGridCell gridCellVariable="cell">
+                            <Selection copyToList="cellList">
+                                <Condition language="JavaScript">
+                                    <![CDATA[
+                                        /*
+                                         * just select one cell
+                                         * the rest is done in the <code>-block
+                                         */
+                                        ((cell.getPosX() == 1) && (cell.getPosY() == 1))
+                                    ]]>
+                                </Condition>
+                            </Selection>
+                            <Code language="JavaScript">
+                                <![CDATA[
+                                    var isMovePossible = true;
+                                
+                                    // test if moving is possible
+                                    
+                                    cellIteration:
+                                    for(var cellX=1; cellX<=10; ++cellX) {
+                                        for(var cellY=1; cellY<=20; ++cellY) {
+                                            if(__Simulator.spaceModel.getGridCell(cellX, cellY).getCellFill() < 0) {
+                                                if(cellX == 10) {
+                                                    isMovePossible = false;
+                                                    break cellIteration;
+                                                } else if(__Simulator.spaceModel.getGridCell(cellX+1, cellY).getCellFill() > 0) {
+                                                    isMovePossible = false;
+                                                    break cellIteration;
+                                                }
+                                            }
+                                        }
+                                    }
+                                    
+                                    if(isMovePossible) {
+                                    
+                                        for(var cellX=10; cellX>=1; --cellX) {
+                                            for(var cellY=1; cellY<=20; ++cellY) {
+                                                if(__Simulator.spaceModel.getGridCell(cellX, cellY).getCellFill() < 0) {
+                                                    __Simulator.spaceModel.getGridCell(cellX+1,cellY).setCellFill(__Simulator.spaceModel.getGridCell(cellX,cellY).getCellFill());
+                                                    __Simulator.spaceModel.getGridCell(cellX,cellY).setCellFill(0);
+                                                }
+                                            }
+                                        }
+                                        console.log("cells moved right");
+                                    }
+                                ]]>
+                            </Code>
+                        </ForEachGridCell>
+                    </UPDATE-ENV>
+                </DO>
+            </EnvironmentRule>
+            
+            <EnvironmentRule name="RotateFallingBrick_EnvRule">
+                <documentation>
+                    <dc:description>
+                        In this rule the falling brick is rotated if possible.
+                        For each brick type and direction it is facing it executes some individual code.
+                    </dc:description>
+                </documentation>
+                <WHEN eventType="RotateFallingBrick_ActionEvent" />
+                <DO>
+                    <UPDATE-ENV>
+                        <ForEachGridCell gridCellVariable="cell">
+                            <Selection copyToList="cellList">
+                                <Condition language="JavaScript">
+                                    <![CDATA[
+                                        /*
+                                         * just select one cell
+                                         * the rest is done in the <code>-block
+                                         */
+                                        ((cell.getPosX() == 1) && (cell.getPosY() == 1))
+                                    ]]>
+                                </Condition>
+                            </Selection>
+                            <Code language="JavaScript">
+                                <![CDATA[
+                                    var isMovePossible = true;
+                                    
+                                    var color = 0;
+                                    
+                                    var maxX = 0;
+                                    var minX = 11;
+                                    var maxY = 0;
+                                    var minY = 21;
+                                    
+                                    var brick = __Global.getActualFallingBrick();
+                                    var brickRotation = __Global.getActualFallingBrickRotation();
+                                    
+                                    cellIteration:
+                                    for(var cellX=1; cellX<=10; ++cellX) {
+                                        for(var cellY=1; cellY<=20; ++cellY) {
+                                            if(__Simulator.spaceModel.getGridCell(cellX, cellY).getCellFill() < 0) {
+                                                color = __Simulator.spaceModel.getGridCell(cellX, cellY).getCellFill();
+                                            
+                                                maxX = (maxX < cellX) ? cellX : maxX;
+                                                minX = (minX > cellX) ? cellX : minX;
+                                                maxY = (maxY < cellY) ? cellY : maxY;
+                                                minY = (minY > cellY) ? cellY : minY;
+                                            }
+                                        }
+                                    }
+                                    
+                                    var diffX = Math.abs(maxX - minX);
+                                    var diffY = Math.abs(maxY - minY);
+                                    
+                                    brickSwitch:
+                                    switch(brick) {
+                                        case 0: // I
+                                            switch(brickRotation % 2) {
+                                                case 0: // lying I
+                                                    var midX = Math.ceil((maxX + minX) / 2);
+                                                    var midY = maxY;
+                                                    
+                                                    minY = minY - 1;
+                                                    maxY = maxY + 2;
+                                                    
+                                                    // is move possible?
+                                                    if(minY < 1 || maxY > 20) {
+                                                        isMovePossible = false;
+                                                        return;
+                                                    }
+                                                    
+                                                    for(var itY=minY; itY<=maxY; ++itY) {
+                                                        if(__Simulator.spaceModel.getGridCell(midX, itY).getCellFill() > 0) {
+                                                            isMovePossible = false;
+                                                            return;
+                                                        }
+                                                    }
+                                                    
+                                                    // delete old
+                                                    for(var itX=minX; itX<=maxX; ++itX) {
+                                                        if(__Simulator.spaceModel.getGridCell(itX, midY).getCellFill() < 0) {
+                                                            __Simulator.spaceModel.getGridCell(itX, midY).setCellFill(0);    
+                                                        }
+                                                    }
+                                                    
+                                                    // draw new
+                                                    for(var itY=minY; itY<=maxY; ++itY) {
+                                                        if(__Simulator.spaceModel.getGridCell(midX, itY).getCellFill() == 0) {
+                                                            __Simulator.spaceModel.getGridCell(midX, itY).setCellFill(color);
+                                                        }
+                                                    }
+                                                    
+                                                    break brickSwitch;
+                                                case 1: //standing I
+                                                    var midX = maxX;
+                                                    var midY = Math.floor((maxY + minY) / 2);
+                                                    
+                                                    minX = minX - 2;
+                                                    maxX = maxX + 1;
+                                                    
+                                                    
+                                                    // is move possible?
+                                                    if(minX < 1 || maxX > 10) {
+                                                        isMovePossible = false;
+                                                        return;
+                                                    }
+                                                    
+                                                    for(var itX=minX; itX<=maxX; ++itX) {
+                                                        if(__Simulator.spaceModel.getGridCell(itX, midY).getCellFill() > 0) {
+                                                            isMovePossible = false;
+                                                            return;
+                                                        }
+                                                    }
+                                                    
+                                                    // delete old
+                                                    for(var itY=minY; itY<=maxY; ++itY) {
+                                                        if(__Simulator.spaceModel.getGridCell(midX, itY).getCellFill() < 0) {
+                                                            __Simulator.spaceModel.getGridCell(midX, itY).setCellFill(0);    
+                                                        }
+                                                    }
+                                                    
+                                                    // draw new
+                                                    for(var itX=minX; itX<=maxX; ++itX) {
+                                                        if(__Simulator.spaceModel.getGridCell(itX, midY).getCellFill() == 0) {
+                                                            __Simulator.spaceModel.getGridCell(itX, midY).setCellFill(color);
+                                                        }
+                                                    }
+
+                                                    break brickSwitch;
+                                            }
+                                        case 1: // O
+                                            return;
+                                        case 2: // T
+                                            switch(brickRotation) {
+                                                case 0: // "+" without bottom block
+                                                    var midX = (maxX + minX) / 2;
+                                                    
+                                                    // is move possible?
+                                                    if(minY-1 < 1) {
+                                                        isMovePossible = false;
+                                                        return;
+                                                    }
+                                                    
+                                                    if(__Simulator.spaceModel.getGridCell(midX, minY-1).getCellFill() > 0) {
+                                                        isMovePossible = false;
+                                                        return;
+                                                    }
+                                                    
+                                                    // delete old (only necessery parts)
+                                                    __Simulator.spaceModel.getGridCell(minX, minY).setCellFill(0);
+                                                    
+                                                    // draw new (only necessery parts)
+                                                    __Simulator.spaceModel.getGridCell(midX, minY-1).setCellFill(color);
+                                                
+                                                    break brickSwitch;
+                                                case 1: // "+" without left block
+                                                    var midY = (maxY + minY) / 2;
+                                                    
+                                                    // is move possible?
+                                                    if(minX-1 < 1) {
+                                                        isMovePossible = false;
+                                                        return;
+                                                    }
+                                                    
+                                                    if(__Simulator.spaceModel.getGridCell(minX-1, midY).getCellFill() > 0) {
+                                                        isMovePossible = false;
+                                                        return;
+                                                    }
+                                                    
+                                                    // delete old (only necessery parts)
+                                                    __Simulator.spaceModel.getGridCell(minX, maxY).setCellFill(0);
+                                                    
+                                                    // draw new (only necessery parts)
+                                                    __Simulator.spaceModel.getGridCell(minX-1, midY).setCellFill(color);
+                                                    break brickSwitch;
+                                                case 2: // "+" without top block
+                                                    var midX = (maxX + minX) / 2;
+                                                    
+                                                    // is move possible?
+                                                    if(maxY+1 > 20) {
+                                                        isMovePossible = false;
+                                                        return;
+                                                    }
+                                                    
+                                                    if(__Simulator.spaceModel.getGridCell(midX, maxY+1).getCellFill() > 0) {
+                                                        isMovePossible = false;
+                                                        return;
+                                                    }
+                                                    
+                                                    // delete old (only necessery parts)
+                                                    __Simulator.spaceModel.getGridCell(maxX, maxY).setCellFill(0);
+                                                    
+                                                    // draw new (only necessery parts)
+                                                    __Simulator.spaceModel.getGridCell(midX, maxY+1).setCellFill(color);
+                                                    break brickSwitch;
+                                                case 3: // "+" without right block
+                                                    var midY = (maxY + minY) / 2;
+                                                    
+                                                    // is move possible?
+                                                    if(maxX+1 > 10) {
+                                                        isMovePossible = false;
+                                                        return;
+                                                    }
+                                                    
+                                                    if(__Simulator.spaceModel.getGridCell(maxX+1, midY).getCellFill() > 0) {
+                                                        isMovePossible = false;
+                                                        return;
+                                                    }
+                                                    
+                                                    // delete old (only necessery parts)
+                                                    __Simulator.spaceModel.getGridCell(maxX, minY).setCellFill(0);
+                                                    
+                                                    // draw new (only necessery parts)
+                                                    __Simulator.spaceModel.getGridCell(maxX+1, midY).setCellFill(color);
+                                                    break brickSwitch;
+                                            }
+                                        case 3: // S
+                                            switch(brickRotation % 2) {
+                                                case 0: // normal S
+                                                    var midX = (maxX + minX) / 2;
+                                                    
+                                                    // is move possible?
+                                                    if(maxY+1 > 20) {
+                                                        isMovePossible = false;
+                                                        return;
+                                                    }
+                                                    
+                                                    if(__Simulator.spaceModel.getGridCell(midX, maxY+1).getCellFill() > 0 ||
+                                                        __Simulator.spaceModel.getGridCell(maxX, minY).getCellFill() > 0) {
+                                                        isMovePossible = false;
+                                                        return;
+                                                    }
+                                                    
+                                                    // delete old (only necessery parts)
+                                                    __Simulator.spaceModel.getGridCell(minX, minY).setCellFill(0);
+                                                    __Simulator.spaceModel.getGridCell(midX, minY).setCellFill(0);
+                                                    
+                                                    // draw new (only necessery parts)
+                                                    __Simulator.spaceModel.getGridCell(midX, maxY+1).setCellFill(color);
+                                                    __Simulator.spaceModel.getGridCell(maxX, minY).setCellFill(color);
+                                                
+                                                    break brickSwitch;
+                                                case 1: // rotated S
+                                                    // is move possible?
+                                                    if(minX-1 < 1) {
+                                                        isMovePossible = false;
+                                                        return;
+                                                    }
+                                                    
+                                                    if(__Simulator.spaceModel.getGridCell(minX, minY).getCellFill() > 0 ||
+                                                        __Simulator.spaceModel.getGridCell(minX-1, minY).getCellFill() > 0) {
+                                                        isMovePossible = false;
+                                                        return;
+                                                    }
+                                                    
+                                                    // delete old (only necessery parts)
+                                                    __Simulator.spaceModel.getGridCell(minX, maxY).setCellFill(0);
+                                                    __Simulator.spaceModel.getGridCell(maxX, minY).setCellFill(0);
+                                                    
+                                                    // draw new (only necessery parts)
+                                                    __Simulator.spaceModel.getGridCell(minX, minY).setCellFill(color);
+                                                    __Simulator.spaceModel.getGridCell(minX-1, minY).setCellFill(color);
+                                                    
+                                                    break brickSwitch;
+                                            }
+                                        case 4: // Z
+                                            switch(brickRotation % 2) {
+                                                case 0: // normal Z
+                                                    var midX = (maxX + minX) / 2;
+                                                    
+                                                    // is move possible?
+                                                    if(maxY+1 > 20) {
+                                                        isMovePossible = false;
+                                                        return;
+                                                    }
+                                                    
+                                                    if(__Simulator.spaceModel.getGridCell(midX, maxY+1).getCellFill() > 0 ||
+                                                        __Simulator.spaceModel.getGridCell(minX, minY).getCellFill() > 0) {
+                                                        isMovePossible = false;
+                                                        return;
+                                                    }
+                                                    
+                                                    // delete old (only necessery parts)
+                                                    __Simulator.spaceModel.getGridCell(maxX, minY).setCellFill(0);
+                                                    __Simulator.spaceModel.getGridCell(midX, minY).setCellFill(0);
+                                                    
+                                                    // draw new (only necessery parts)
+                                                    __Simulator.spaceModel.getGridCell(midX, maxY+1).setCellFill(color);
+                                                    __Simulator.spaceModel.getGridCell(minX, minY).setCellFill(color);
+                                                
+                                                    break brickSwitch;
+                                                case 1: // rotated Z
+                                                    // is move possible?
+                                                    if(maxX+1 > 10) {
+                                                        isMovePossible = false;
+                                                        return;
+                                                    }
+                                                    
+                                                    if(__Simulator.spaceModel.getGridCell(maxX, minY).getCellFill() > 0 ||
+                                                        __Simulator.spaceModel.getGridCell(maxX+1, minY).getCellFill() > 0) {
+                                                        isMovePossible = false;
+                                                        return;
+                                                    }
+                                                    
+                                                    // delete old (only necessery parts)
+                                                    __Simulator.spaceModel.getGridCell(maxX, maxY).setCellFill(0);
+                                                    __Simulator.spaceModel.getGridCell(minX, minY).setCellFill(0);
+                                                    
+                                                    // draw new (only necessery parts)
+                                                    __Simulator.spaceModel.getGridCell(maxX, minY).setCellFill(color);
+                                                    __Simulator.spaceModel.getGridCell(maxX+1, minY).setCellFill(color);
+                                                    
+                                                    break brickSwitch;
+                                            }
+                                        case 5: // J
+                                            switch(brickRotation) {
+                                                case 0:
+                                                    var midX = (maxX + minX) / 2;
+                                                    
+                                                    // is move possible?
+                                                    if(maxY+1 > 20) {
+                                                        isMovePossible = false;
+                                                        return;
+                                                    }
+                                                    
+                                                    if(__Simulator.spaceModel.getGridCell(midX, maxY+1).getCellFill() > 0 ||
+                                                        __Simulator.spaceModel.getGridCell(midX, minY).getCellFill() > 0 ||
+                                                        __Simulator.spaceModel.getGridCell(minX, minY).getCellFill() > 0) {
+                                                        isMovePossible = false;
+                                                        return;
+                                                     }
+                                                    
+                                                    // delete old (only necessery parts)
+                                                    __Simulator.spaceModel.getGridCell(minX, maxY).setCellFill(0);
+                                                    __Simulator.spaceModel.getGridCell(maxX, maxY).setCellFill(0);
+                                                    __Simulator.spaceModel.getGridCell(maxX, minY).setCellFill(0);
+                                                    
+                                                    // draw new (only necessery parts)
+                                                    __Simulator.spaceModel.getGridCell(midX, maxY+1).setCellFill(color);
+                                                    __Simulator.spaceModel.getGridCell(midX, minY).setCellFill(color);
+                                                    __Simulator.spaceModel.getGridCell(minX, minY).setCellFill(color);
+                                                
+                                                    break brickSwitch;
+                                                case 1:
+                                                    var midY = (maxY + minY) / 2;
+                                                
+                                                    // is move possible?
+                                                    if(maxX+1 > 10) {
+                                                        isMovePossible = false;
+                                                        return;
+                                                    }
+                                                    
+                                                    if(__Simulator.spaceModel.getGridCell(minX, maxY).getCellFill() > 0 ||
+                                                        __Simulator.spaceModel.getGridCell(minX, midY).getCellFill() > 0 ||
+                                                        __Simulator.spaceModel.getGridCell(maxX+1, midY).getCellFill() > 0) {
+                                                        isMovePossible = false;
+                                                        return;
+                                                     }
+                                                    
+                                                    // delete old (only necessery parts)
+                                                    __Simulator.spaceModel.getGridCell(maxX, maxY).setCellFill(0);
+                                                    __Simulator.spaceModel.getGridCell(maxX, minY).setCellFill(0);
+                                                    __Simulator.spaceModel.getGridCell(minX, minY).setCellFill(0);
+                                                    
+                                                    // draw new (only necessery parts)
+                                                    __Simulator.spaceModel.getGridCell(minX, maxY).setCellFill(color);
+                                                    __Simulator.spaceModel.getGridCell(minX, midY).setCellFill(color);
+                                                    __Simulator.spaceModel.getGridCell(maxX+1, midY).setCellFill(color);
+                                                    
+                                                    break brickSwitch;
+                                                case 2:
+                                                    var midX = (maxX + minX) / 2;
+                                                    
+                                                    // is move possible?
+                                                    if(minY-1 < 1) {
+                                                        isMovePossible = false;
+                                                        return;
+                                                    }
+                                                    
+                                                    if(__Simulator.spaceModel.getGridCell(midX, maxY).getCellFill() > 0 ||
+                                                        __Simulator.spaceModel.getGridCell(maxX, maxY).getCellFill() > 0 ||
+                                                        __Simulator.spaceModel.getGridCell(midX, minY-1).getCellFill() > 0) {
+                                                        isMovePossible = false;
+                                                        return;
+                                                     }
+                                                    
+                                                    // delete old (only necessery parts)
+                                                    __Simulator.spaceModel.getGridCell(minX, maxY).setCellFill(0);
+                                                    __Simulator.spaceModel.getGridCell(minX, minY).setCellFill(0);
+                                                    __Simulator.spaceModel.getGridCell(maxX, minY).setCellFill(0);
+                                                    
+                                                    // draw new (only necessery parts)
+                                                    __Simulator.spaceModel.getGridCell(midX, maxY).setCellFill(color);
+                                                    __Simulator.spaceModel.getGridCell(maxX, maxY).setCellFill(color);
+                                                    __Simulator.spaceModel.getGridCell(midX, minY-1).setCellFill(color);
+                                                
+                                                    break brickSwitch;
+                                                case 3:
+                                                    var midY = (maxY + minY) / 2;
+                                                
+                                                    // is move possible?
+                                                    if(minX-1 < 1) {
+                                                        isMovePossible = false;
+                                                        return;
+                                                    }
+                                                    
+                                                    if(__Simulator.spaceModel.getGridCell(maxX, minY).getCellFill() > 0 ||
+                                                        __Simulator.spaceModel.getGridCell(maxX, midY).getCellFill() > 0 ||
+                                                        __Simulator.spaceModel.getGridCell(minX-1, midY).getCellFill() > 0) {
+                                                        isMovePossible = false;
+                                                        return;
+                                                     }
+                                                    
+                                                    // delete old (only necessery parts)
+                                                    __Simulator.spaceModel.getGridCell(maxX, maxY).setCellFill(0);
+                                                    __Simulator.spaceModel.getGridCell(minX, maxY).setCellFill(0);
+                                                    __Simulator.spaceModel.getGridCell(minX, minY).setCellFill(0);
+                                                    
+                                                    // draw new (only necessery parts)
+                                                    __Simulator.spaceModel.getGridCell(maxX, minY).setCellFill(color);
+                                                    __Simulator.spaceModel.getGridCell(maxX, midY).setCellFill(color);
+                                                    __Simulator.spaceModel.getGridCell(minX-1, midY).setCellFill(color);
+                                                    
+                                                    break brickSwitch;
+                                            }
+                                        case 6: // L
+                                            switch(brickRotation) {
+                                                case 0:
+                                                    var midX = (maxX + minX) / 2;
+                                                    
+                                                    // is move possible?
+                                                    if(maxY+1 > 20) {
+                                                        isMovePossible = false;
+                                                        return;
+                                                    }
+                                                    
+                                                    if(__Simulator.spaceModel.getGridCell(midX, maxY+1).getCellFill() > 0 ||
+                                                        __Simulator.spaceModel.getGridCell(midX, minY).getCellFill() > 0 ||
+                                                        __Simulator.spaceModel.getGridCell(minX, maxY+1).getCellFill() > 0) {
+                                                        isMovePossible = false;
+                                                        return;
+                                                     }
+                                                    
+                                                    // delete old (only necessery parts)
+                                                    __Simulator.spaceModel.getGridCell(minX, maxY).setCellFill(0);
+                                                    __Simulator.spaceModel.getGridCell(minX, minY).setCellFill(0);
+                                                    __Simulator.spaceModel.getGridCell(maxX, maxY).setCellFill(0);
+                                                    
+                                                    // draw new (only necessery parts)
+                                                    __Simulator.spaceModel.getGridCell(midX, maxY+1).setCellFill(color);
+                                                    __Simulator.spaceModel.getGridCell(midX, minY).setCellFill(color);
+                                                    __Simulator.spaceModel.getGridCell(minX, maxY+1).setCellFill(color);
+                                                
+                                                    break brickSwitch;
+                                                case 1:
+                                                    var midY = (maxY + minY) / 2;
+                                                
+                                                    // is move possible?
+                                                    if(maxX+1 > 10) {
+                                                        isMovePossible = false;
+                                                        return;
+                                                    }
+                                                    
+                                                    if(__Simulator.spaceModel.getGridCell(maxX+1, maxY).getCellFill() > 0 ||
+                                                        __Simulator.spaceModel.getGridCell(minX, midY).getCellFill() > 0 ||
+                                                        __Simulator.spaceModel.getGridCell(maxX+1, midY).getCellFill() > 0) {
+                                                        isMovePossible = false;
+                                                        return;
+                                                     }
+                                                    
+                                                    // delete old (only necessery parts)
+                                                    __Simulator.spaceModel.getGridCell(maxX, maxY).setCellFill(0);
+                                                    __Simulator.spaceModel.getGridCell(maxX, minY).setCellFill(0);
+                                                    __Simulator.spaceModel.getGridCell(minX, maxY).setCellFill(0);
+                                                    
+                                                    // draw new (only necessery parts)
+                                                    __Simulator.spaceModel.getGridCell(maxX+1, maxY).setCellFill(color);
+                                                    __Simulator.spaceModel.getGridCell(minX, midY).setCellFill(color);
+                                                    __Simulator.spaceModel.getGridCell(maxX+1, midY).setCellFill(color);
+                                                    
+                                                    break brickSwitch;
+                                                case 2:
+                                                    var midX = (maxX + minX) / 2;
+                                                    
+                                                    // is move possible?
+                                                    if(minY-1 < 1) {
+                                                        isMovePossible = false;
+                                                        return;
+                                                    }
+                                                    
+                                                    if(__Simulator.spaceModel.getGridCell(midX, maxY).getCellFill() > 0 ||
+                                                        __Simulator.spaceModel.getGridCell(maxX, minY-1).getCellFill() > 0 ||
+                                                        __Simulator.spaceModel.getGridCell(midX, minY-1).getCellFill() > 0) {
+                                                        isMovePossible = false;
+                                                        return;
+                                                     }
+                                                    
+                                                    // delete old (only necessery parts)
+                                                    __Simulator.spaceModel.getGridCell(maxX, maxY).setCellFill(0);
+                                                    __Simulator.spaceModel.getGridCell(minX, minY).setCellFill(0);
+                                                    __Simulator.spaceModel.getGridCell(maxX, minY).setCellFill(0);
+                                                    
+                                                    // draw new (only necessery parts)
+                                                    __Simulator.spaceModel.getGridCell(midX, maxY).setCellFill(color);
+                                                    __Simulator.spaceModel.getGridCell(maxX, minY-1).setCellFill(color);
+                                                    __Simulator.spaceModel.getGridCell(midX, minY-1).setCellFill(color);
+                                                
+                                                    break brickSwitch;
+                                                case 3:
+                                                    var midY = (maxY + minY) / 2;
+                                                
+                                                    // is move possible?
+                                                    if(minX-1 < 1) {
+                                                        isMovePossible = false;
+                                                        return;
+                                                    }
+                                                    
+                                                    if(__Simulator.spaceModel.getGridCell(minX-1, minY).getCellFill() > 0 ||
+                                                        __Simulator.spaceModel.getGridCell(maxX, midY).getCellFill() > 0 ||
+                                                        __Simulator.spaceModel.getGridCell(minX-1, midY).getCellFill() > 0) {
+                                                        isMovePossible = false;
+                                                        return;
+                                                     }
+                                                    
+                                                    // delete old (only necessery parts)
+                                                    __Simulator.spaceModel.getGridCell(maxX, minY).setCellFill(0);
+                                                    __Simulator.spaceModel.getGridCell(minX, maxY).setCellFill(0);
+                                                    __Simulator.spaceModel.getGridCell(minX, minY).setCellFill(0);
+                                                    
+                                                    // draw new (only necessery parts)
+                                                    __Simulator.spaceModel.getGridCell(minX-1, minY).setCellFill(color);
+                                                    __Simulator.spaceModel.getGridCell(maxX, midY).setCellFill(color);
+                                                    __Simulator.spaceModel.getGridCell(minX-1, midY).setCellFill(color);
+                                                    
+                                                    break brickSwitch;
+                                            }
+                                    }
+                                    
+                                    __Global.setActualFallingBrickRotation((__Global.getActualFallingBrickRotation() + 1) % 4);
+
+                                ]]>
+                            </Code>
+                        </ForEachGridCell>
+                    </UPDATE-ENV>
+                </DO>
+            </EnvironmentRule>
+            
+            <EnvironmentRule name="RemoveCompletedLines_EnvRule">
+                <documentation>
+                    <dc:description>
+                        Checks if there is a line which can be cleared.
+                        If there is such a line, it deletes it and moves the bricks on top down.
+                    </dc:description>
+                </documentation>
+                <WHEN eventType="RemoveCompletedLines_ActionEvent" />
+                <DO>
+                    <UPDATE-ENV>
+                        <ForEachGridCell gridCellVariable="cell">
+                            <Selection copyToList="cellList">
+                                <Condition language="JavaScript">
+                                    <![CDATA[
+                                        /*
+                                         * just select one cell
+                                         * the rest is done in the <code>-block
+                                         */
+                                        ((cell.getPosX() == 1) && (cell.getPosY() == 1))
+                                    ]]>
+                                </Condition>
+                            </Selection>
+                            <Code language="JavaScript">
+                                <![CDATA[
+                                    if(!__Global.isMovingStopped) {
+                                        return;
+                                    }
+                                
+                                    __Global.setMoreLineToClear(false);
+                                    var isLineCompleted = true;
+                                
+                                    cellIteration:
+                                    for(var cellY=1; cellY<=20; ++cellY) {
+                                        isLineCompleted = true;
+                                        for(var cellX=1; cellX<=10; ++cellX) {
+                                            if(__Simulator.spaceModel.getGridCell(cellX, cellY).getCellFill() <= 0) {
+                                                isLineCompleted = false;
+                                                continue cellIteration;
+                                            }
+                                        }
+                                        
+                                        if(isLineCompleted) {
+                                            console.log("deleting line " + cellY);
+                                            
+                                            // now move each Line above one Line down
+                                            for(var cellX2=1; cellX2<=10; ++cellX2) {
+                                                for(var cellY2=cellY+1; cellY2<=20; ++cellY2) {
+                                                    __Simulator.spaceModel.getGridCell(cellX2, cellY2-1).setCellFill(__Simulator.spaceModel.getGridCell(cellX2, cellY2).getCellFill())
+                                                    __Simulator.spaceModel.getGridCell(cellX2, cellY2).setCellFill(0);
+                                                }
+                                            }
+                                            for(var cellX2=1; cellX2<=10; ++cellX2) {
+                                                __Simulator.spaceModel.getGridCell(cellX2, 20).setCellFill(0);
+                                            }
+                                            
+                                            __Global.setNumLinesDeleted(__Global.getNumLinesDeleted() + 1);
+                                            __Global.setOverallNumLinesDeleted(__Global.getOverallNumLinesDeleted() + 1);
+                                            
+                                            __Global.setMoreLineToClear(true);
+                                            break cellIteration;
+                                        }
+                                    }
+                                ]]>
+                            </Code>
+                        </ForEachGridCell>
+                    </UPDATE-ENV>
+                    <SCHEDULE-EVT>
+                        <CausedEventExpr eventType="CalculateScore_ActionEvent" />
+                        <CausedEventExpr eventType="NewLevel_ActionEvent" />
+                        <CausedEventExpr eventType="NewBrick_ActionEvent" />
+                    </SCHEDULE-EVT>
+                </DO>
+            </EnvironmentRule>
+            
+            <EnvironmentRule name="CalculateScore_EnvRule">
+                <documentation>
+                    <dc:description>
+                        Updates the score global variable according to the number of line deleted at once.
+                    </dc:description>
+                </documentation>
+                <WHEN eventType="CalculateScore_ActionEvent"/>
+                <DO>
+                    <UPDATE-ENV>
+                        <UpdateGlobalVariable name="score">
+                            <ValueExpr language="JavaScript">
+                                <![CDATA[
+                                    __Global.getScore() + ( 
+                                        (!__Global.isMoreLineToClear()) ? (
+                                        
+                                            __Global.getNumLinesDeleted() == 1 ? (
+                                                40 * __Global.getLevel() 
+                                            ) : (
+                                                __Global.getNumLinesDeleted() == 2 ? (
+                                                    100 * __Global.getLevel()
+                                                ) : (
+                                                    __Global.getNumLinesDeleted() == 3 ? (
+                                                        300 * __Global.getLevel()
+                                                    ) : (
+                                                        __Global.getNumLinesDeleted() == 4 ? (
+                                                            1200 * __Global.getLevel()
+                                                        ) : ( 0 )
+                                                    )
+                                                )
+                                            )
+                                        ) : ( 0 )
+                                    )
+                                ]]>
+                            </ValueExpr>
+                        </UpdateGlobalVariable>
+                        <UpdateGlobalVariable name="numLinesDeleted">
+                            <ValueExpr language="JavaScript">
+                                <![CDATA[
+                                    (!__Global.isMoreLineToClear()) ? (
+                                        0
+                                    ) : (
+                                        __Global.getNumLinesDeleted()
+                                    )
+                                ]]>
+                            </ValueExpr>
+                        </UpdateGlobalVariable>
+                        <UpdateGlobalVariable name="moreLineToClear">
+                            <ValueExpr language="JavaScript">
+                                <![CDATA[
+                                    (!__Global.isMoreLineToClear()) ? (
+                                        false
+                                    ) : (
+                                        __Global.isMoreLineToClear()
+                                    )
+                                ]]>
+                            </ValueExpr>
+                        </UpdateGlobalVariable>
+                    </UPDATE-ENV>
+                </DO>
+            </EnvironmentRule>
+            
+            <EnvironmentRule name="NewLevel_EnvRule">
+                <documentation>
+                    <dc:description>
+                        Updated the level global variable.
+                        This is done the first time after 20 cleared lines and from then every 10 cleared lines.
+                    </dc:description>
+                </documentation>
+                <WHEN eventType="NewLevel_ActionEvent" />
+                <IF language="JavaScript">
+                    <![CDATA[
+                        (Math.floor((__Global.getOverallNumLinesDeleted() - 10) / 10) == __Global.getLevel()) &&
+                        (__Global.getLevel() < 20)
+                    ]]>
+                </IF>
+                <THEN>
+                    <UPDATE-ENV>
+                        <IncrementGlobalVariable name="level" value="1" />
+                    </UPDATE-ENV>
+                </THEN>
+            </EnvironmentRule>
+            
+            <EnvironmentRule name="NewBrick_EnvRule">
+                <documentation>
+                    <dc:description>
+                        Places the next brick on the field if no brick is moving any more.
+                        Defines the next brick to come and saves this in a global variable.
+                        Also triggers the message events to display the next brick to the user.
+                    </dc:description>
+                </documentation>
+                <WHEN eventType="NewBrick_ActionEvent" />
+                <FOR-DataVariable variable="newBrick" dataType="Boolean">
+                    <ValueExpr language="JavaScript">
+                        false
+                    </ValueExpr>
+                </FOR-DataVariable>
+                <DO>
+                    <UPDATE-ENV>
+                        <ForEachGridCell gridCellVariable="cell">
+                            <Selection copyToList="cellList">
+                                <Condition language="JavaScript">
+                                    <![CDATA[
+                                        /*
+                                         * just select one cell
+                                         * the rest is done in the <code>-block
+                                         */
+                                        ((cell.getPosX() == 1) && (cell.getPosY() == 1))
+                                    ]]>
+                                </Condition>
+                            </Selection>
+                            <Code language="JavaScript">
+                                <![CDATA[
+                                    if(__Global.isMoreLineToClear() ||
+                                        (!__Global.isMovingStopped()) ||
+                                        (__Global.getNewBrickToCome() < 0 || __Global.getNewBrickToCome() > 6)) {
+                                        return;
+                                    }
+
+                                    console.log("new brick: " + __Global.isMoreLineToClear() + " : " +
+                                        (!__Global.isMovingStopped()) + " : " + __Global.getNewBrickToCome());
+                                    
+                                    // do check if placement is possible - if not the game is lost
+                                    
+                                    switch(__Global.getNewBrickToCome()) {
+                                        case 0: // I
+                                            if(__Simulator.spaceModel.getGridCell(4, 20).getCellFill() > 0 ||
+                                                __Simulator.spaceModel.getGridCell(5, 20).setCellFill() > 0 ||
+                                                __Simulator.spaceModel.getGridCell(6, 20).setCellFill() > 0 ||
+                                                __Simulator.spaceModel.getGridCell(7, 20).setCellFill() > 0) {
+                                                // game is lost
+                                                __Global.setGameLost(true);
+                                                return;
+                                            }
+                                        
+                                            __Simulator.spaceModel.getGridCell(4, 20).setCellFill(-1 * (__Global.getNewBrickToCome() + 1));
+                                            __Simulator.spaceModel.getGridCell(5, 20).setCellFill(-1 * (__Global.getNewBrickToCome() + 1));
+                                            __Simulator.spaceModel.getGridCell(6, 20).setCellFill(-1 * (__Global.getNewBrickToCome() + 1));
+                                            __Simulator.spaceModel.getGridCell(7, 20).setCellFill(-1 * (__Global.getNewBrickToCome() + 1));
+                                            break;
+                                        case 1: // O
+                                            if(__Simulator.spaceModel.getGridCell(5, 20).getCellFill() > 0 ||
+                                                __Simulator.spaceModel.getGridCell(5, 19).setCellFill() > 0 ||
+                                                __Simulator.spaceModel.getGridCell(5, 18).setCellFill() > 0 ||
+                                                __Simulator.spaceModel.getGridCell(5, 17).setCellFill() > 0) {
+                                                // game is lost
+                                                __Global.setGameLost(true);
+                                                return;
+                                            }
+                                        
+                                            __Simulator.spaceModel.getGridCell(5, 20).setCellFill(-1 * (__Global.getNewBrickToCome() + 1));
+                                            __Simulator.spaceModel.getGridCell(5, 19).setCellFill(-1 * (__Global.getNewBrickToCome() + 1));
+                                            __Simulator.spaceModel.getGridCell(6, 20).setCellFill(-1 * (__Global.getNewBrickToCome() + 1));
+                                            __Simulator.spaceModel.getGridCell(6, 19).setCellFill(-1 * (__Global.getNewBrickToCome() + 1));
+                                            break;
+                                        case 2: // T
+                                            if(__Simulator.spaceModel.getGridCell(5, 20).getCellFill() > 0 ||
+                                                __Simulator.spaceModel.getGridCell(5, 19).setCellFill() > 0 ||
+                                                __Simulator.spaceModel.getGridCell(5, 18).setCellFill() > 0 ||
+                                                __Simulator.spaceModel.getGridCell(5, 17).setCellFill() > 0) {
+                                                // game is lost
+                                                __Global.setGameLost(true);
+                                                return;
+                                            }
+                                            
+                                            __Simulator.spaceModel.getGridCell(5, 20).setCellFill(-1 * (__Global.getNewBrickToCome() + 1));
+                                            __Simulator.spaceModel.getGridCell(4, 19).setCellFill(-1 * (__Global.getNewBrickToCome() + 1));
+                                            __Simulator.spaceModel.getGridCell(5, 19).setCellFill(-1 * (__Global.getNewBrickToCome() + 1));
+                                            __Simulator.spaceModel.getGridCell(6, 19).setCellFill(-1 * (__Global.getNewBrickToCome() + 1));
+                                            break;
+                                        case 3: // S
+                                            if(__Simulator.spaceModel.getGridCell(5, 20).getCellFill() > 0 ||
+                                                __Simulator.spaceModel.getGridCell(5, 19).setCellFill() > 0 ||
+                                                __Simulator.spaceModel.getGridCell(5, 18).setCellFill() > 0 ||
+                                                __Simulator.spaceModel.getGridCell(5, 17).setCellFill() > 0) {
+                                                // game is lost
+                                                __Global.setGameLost(true);
+                                                return;
+                                            }
+                                            
+                                            __Simulator.spaceModel.getGridCell(5, 20).setCellFill(-1 * (__Global.getNewBrickToCome() + 1));
+                                            __Simulator.spaceModel.getGridCell(6, 20).setCellFill(-1 * (__Global.getNewBrickToCome() + 1));
+                                            __Simulator.spaceModel.getGridCell(4, 19).setCellFill(-1 * (__Global.getNewBrickToCome() + 1));
+                                            __Simulator.spaceModel.getGridCell(5, 19).setCellFill(-1 * (__Global.getNewBrickToCome() + 1));
+                                            break;
+                                        case 4: // Z
+                                            if(__Simulator.spaceModel.getGridCell(5, 20).getCellFill() > 0 ||
+                                                __Simulator.spaceModel.getGridCell(5, 19).setCellFill() > 0 ||
+                                                __Simulator.spaceModel.getGridCell(5, 18).setCellFill() > 0 ||
+                                                __Simulator.spaceModel.getGridCell(5, 17).setCellFill() > 0) {
+                                                // game is lost
+                                                __Global.setGameLost(true);
+                                                return;
+                                            }
+                                            
+                                            __Simulator.spaceModel.getGridCell(5, 20).setCellFill(-1 * (__Global.getNewBrickToCome() + 1));
+                                            __Simulator.spaceModel.getGridCell(6, 20).setCellFill(-1 * (__Global.getNewBrickToCome() + 1));
+                                            __Simulator.spaceModel.getGridCell(6, 19).setCellFill(-1 * (__Global.getNewBrickToCome() + 1));
+                                            __Simulator.spaceModel.getGridCell(7, 19).setCellFill(-1 * (__Global.getNewBrickToCome() + 1));
+                                            break;
+                                        case 5: // J
+                                            if(__Simulator.spaceModel.getGridCell(5, 20).getCellFill() > 0 ||
+                                                __Simulator.spaceModel.getGridCell(5, 19).setCellFill() > 0 ||
+                                                __Simulator.spaceModel.getGridCell(5, 18).setCellFill() > 0 ||
+                                                __Simulator.spaceModel.getGridCell(5, 17).setCellFill() > 0) {
+                                                // game is lost
+                                                __Global.setGameLost(true);
+                                                return;
+                                            }
+                                            
+                                            __Simulator.spaceModel.getGridCell(4, 20).setCellFill(-1 * (__Global.getNewBrickToCome() + 1));
+                                            __Simulator.spaceModel.getGridCell(5, 20).setCellFill(-1 * (__Global.getNewBrickToCome() + 1));
+                                            __Simulator.spaceModel.getGridCell(6, 20).setCellFill(-1 * (__Global.getNewBrickToCome() + 1));
+                                            __Simulator.spaceModel.getGridCell(6, 19).setCellFill(-1 * (__Global.getNewBrickToCome() + 1));
+                                            break;
+                                        case 6: // L
+                                            if(__Simulator.spaceModel.getGridCell(5, 20).getCellFill() > 0 ||
+                                                __Simulator.spaceModel.getGridCell(5, 19).setCellFill() > 0 ||
+                                                __Simulator.spaceModel.getGridCell(5, 18).setCellFill() > 0 ||
+                                                __Simulator.spaceModel.getGridCell(5, 17).setCellFill() > 0) {
+                                                // game is lost
+                                                __Global.setGameLost(true);
+                                                return;
+                                            }
+                                            
+                                            __Simulator.spaceModel.getGridCell(4, 20).setCellFill(-1 * (__Global.getNewBrickToCome() + 1));
+                                            __Simulator.spaceModel.getGridCell(5, 20).setCellFill(-1 * (__Global.getNewBrickToCome() + 1));
+                                            __Simulator.spaceModel.getGridCell(6, 20).setCellFill(-1 * (__Global.getNewBrickToCome() + 1));
+                                            __Simulator.spaceModel.getGridCell(4, 19).setCellFill(-1 * (__Global.getNewBrickToCome() + 1));
+                                            break;
+                                    }
+                                    
+                                    __Global.setActualFallingBrick(__Global.getNewBrickToCome());
+                                    this.newBrick = true;
+                                    
+                                    __Global.setActualFallingBrickRotation(0);
+                                    
+                                    __Global.setMovingStopped(false);
+                                    
+                                    do {
+                                        __Global.setNewBrickToCome(js.util.Random.uniformInt(0, 6));
+                                    } while(__Global.getNewBrickToCome() < 0 || __Global.getNewBrickToCome() > 6);
+                                ]]>
+                            </Code>
+                        </ForEachGridCell>
+                    </UPDATE-ENV>
+                    <SCHEDULE-EVT>
+                        <CausedEventExpr eventType="LostGame_ActionEvent" />
+                        <InMessageEventExpr messageType="NextBrickMsgI" receiverIdRefs="1" senderIdRef="1">
+                            <Condition language="JavaScript">
+                                <![CDATA[
+                                    this.newBrick && __Global.getNewBrickToCome() == 0
+                                ]]>
+                            </Condition>
+                        </InMessageEventExpr>
+                        <InMessageEventExpr messageType="NextBrickMsgO" receiverIdRefs="1" senderIdRef="1">
+                            <Condition language="JavaScript">
+                                <![CDATA[
+                                    this.newBrick && __Global.getNewBrickToCome() == 1
+                                ]]>
+                            </Condition>
+                        </InMessageEventExpr>
+                        <InMessageEventExpr messageType="NextBrickMsgT" receiverIdRefs="1" senderIdRef="1">
+                            <Condition language="JavaScript">
+                                <![CDATA[
+                                    this.newBrick && __Global.getNewBrickToCome() == 2
+                                ]]>
+                            </Condition>
+                        </InMessageEventExpr>
+                        <InMessageEventExpr messageType="NextBrickMsgS" receiverIdRefs="1" senderIdRef="1">
+                            <Condition language="JavaScript">
+                                <![CDATA[
+                                    this.newBrick && __Global.getNewBrickToCome() == 3
+                                ]]>
+                            </Condition>
+                        </InMessageEventExpr>
+                        <InMessageEventExpr messageType="NextBrickMsgZ" receiverIdRefs="1" senderIdRef="1">
+                            <Condition language="JavaScript">
+                                <![CDATA[
+                                    this.newBrick && __Global.getNewBrickToCome() == 4
+                                ]]>
+                            </Condition>
+                        </InMessageEventExpr>
+                        <InMessageEventExpr messageType="NextBrickMsgJ" receiverIdRefs="1" senderIdRef="1">
+                            <Condition language="JavaScript">
+                                <![CDATA[
+                                    this.newBrick && __Global.getNewBrickToCome() == 5
+                                ]]>
+                            </Condition>
+                        </InMessageEventExpr>
+                        <InMessageEventExpr messageType="NextBrickMsgL" receiverIdRefs="1" senderIdRef="1">
+                            <Condition language="JavaScript">
+                                <![CDATA[
+                                    this.newBrick && __Global.getNewBrickToCome() == 6
+                                ]]>
+                            </Condition>
+                        </InMessageEventExpr>
+                    </SCHEDULE-EVT>
+                </DO>
+            </EnvironmentRule>
+        </EnvironmentRules>
+    </SimulationModel>
+
+    <InitialState>
+        <Agent type="Player" id="1" name="Player" />
+        
+        <GlobalVariable name="newBrickToCome">
+            <ValueExpr language="JavaScript">
+                <![CDATA[
+                    js.util.Random.uniformInt(0, 6)
+                ]]>
+            </ValueExpr>
+        </GlobalVariable>
+    </InitialState>
+
+    <UserInterface supportedLanguages="en">
+        <InitialStateUI>
+            <GlobalVariableUI label="Difficulty level" sliderStepSize="1" variable="level" widget="Slider">
+                <Hint>
+                    <Text>The level of difficulty: controls the stones falling speed.</Text>
+                </Hint>
+            </GlobalVariableUI>
+        </InitialStateUI>
+        
+        <AnimationUI>
+            <aors:StartPageText xmlns="http://www.w3.org/1999/xhtml">
+                <aors:HtmlText>
+                    <center>
+                       <div style="float:left; width: 75%; padding: 7% 0px">
+                           <p>You move the blocks.</p>
+                           <p>Try to completely fill a row, to let it disappear and get points.</p>
+                           <p>You gain points with each disappearing row.</p>
+                           <p>The higher the level, the faster the bricks will fall.</p>
+                       </div>
+                    </center>
+                </aors:HtmlText>
+            </aors:StartPageText>
+            <aors:HelpText xmlns="http://www.w3.org/1999/xhtml">
+                <aors:HtmlText>
+                    <center>
+                        <div style="float:left; width: 75%; padding: 7% 0px">
+                            <p>You move the blocks with LEFT, RIGHT, DOWN.</p>
+                            <p>You rotate the blocks with UP or SPACE.</p>
+                            <p>Try to completely fill a row, to let it disappear and get points.</p>
+                            <p>You gain points with each disappearing row.</p>
+                            <p>The higher the level, the faster the bricks will fall.</p>
+                        </div>
+                    </center>
+                </aors:HtmlText>
+            </aors:HelpText>
+            
+            
+            <Views>
+                <SpaceView canvasColor="grey">
+                    <TwoDimensionalGridSpaceView2D backgroundColor="black" stroke="white" strokeWidth="1px">
+                        <GridCellPropertyVisualizationMap a0="0" a1="1" a2="2" a3="3" cellViewProperty="texture"
+                            mapType="equalityCaseWise" property="cellFill" v0="empty.png" v1="i.png" v2="o.png" v3="t.png" />
+                        <GridCellPropertyVisualizationMap a0="4" a1="5" a2="6" a3="7" cellViewProperty="texture"
+                            mapType="equalityCaseWise" property="cellFill" v0="s.png" v1="z.png" v2="j.png" v3="l.png" />
+                        <GridCellPropertyVisualizationMap a0="0" a1="-1" a2="-2" a3="-3" cellViewProperty="texture"
+                            mapType="equalityCaseWise" property="cellFill" v0="empty.png" v1="i.png" v2="o.png" v3="t.png" />
+                        <GridCellPropertyVisualizationMap a0="-4" a1="-5" a2="-6" a3="-7" cellViewProperty="texture"
+                            mapType="equalityCaseWise" property="cellFill" v0="s.png" v1="z.png" v2="j.png" v3="l.png" />
+                    </TwoDimensionalGridSpaceView2D>
+                </SpaceView>
+            </Views>
+
+            <AgentControlUI initiallyPlayedAgent="Player">
+                <AgentControlByAgentType type="Player">
+                    <LeftOutputPanel>
+                        <OutputFieldGroup label="Current State">
+                            <OutputField label="Elapsed time">
+                                <Hint>
+                                    <Text>The time passed from start of the game.</Text>
+                                </Hint>
+                                <Format decimalPlaces="0">
+                                    <Time>s</Time>
+                                </Format>
+                                <Source>
+                                    <GlobalVariable name="passedTime" />
+                                </Source>
+                            </OutputField>
+                            <OutputField label="Level">
+                                <Hint>
+                                    <Text>The level you have reached.</Text>
+                                </Hint>
+                                <Format decimalPlaces="0" />
+                                <Source>
+                                    <GlobalVariable name="level" />
+                                </Source>
+                            </OutputField>
+                            <OutputField label="Lines Cleared">
+                                <Hint>
+                                    <Text>The lines you have managed to clear.</Text>
+                                </Hint>
+                                <Format decimalPlaces="0" />
+                                <Source>
+                                    <GlobalVariable name="overallNumLinesDeleted" />
+                                </Source>
+                            </OutputField>
+                            <OutputField label="Score">
+                                <Hint>
+                                    <Text>Your current score.</Text>
+                                </Hint>
+                                <Source>
+                                    <GlobalVariable name="score" />
+                                </Source>
+                            </OutputField>
+                        </OutputFieldGroup>
+                    </LeftOutputPanel>
+                    
+                    <RightOutputPanel width="300">
+                        <EventList>
+                            <InMessageEventView messageType="NextBrickMsgI" label="NextBrick" keepInListTime="350" icon="tetrominoes/i.png">
+                                <Label>
+                                    <Text xml:lang="en">Next Brick</Text>
+                                </Label>
+                            </InMessageEventView>
+                            <InMessageEventView messageType="NextBrickMsgO" label="NextBrick" keepInListTime="350" icon="tetrominoes/o.png">
+                                <Label>
+                                    <Text xml:lang="en">Next Brick</Text>
+                                </Label>
+                            </InMessageEventView>
+                            <InMessageEventView messageType="NextBrickMsgT" label="NextBrick" keepInListTime="450" icon="tetrominoes/t.png">
+                                <Label>
+                                    <Text xml:lang="en">Next Brick</Text>
+                                </Label>
+                            </InMessageEventView>
+                            <InMessageEventView messageType="NextBrickMsgS" label="NextBrick" keepInListTime="350" icon="tetrominoes/s.png">
+                                <Label>
+                                    <Text xml:lang="en">Next Brick</Text>
+                                </Label>
+                            </InMessageEventView>
+                            <InMessageEventView messageType="NextBrickMsgZ" label="NextBrick" keepInListTime="350" icon="tetrominoes/z.png">
+                                <Label>
+                                    <Text xml:lang="en">Next Brick</Text>
+                                </Label>
+                            </InMessageEventView>
+                            <InMessageEventView messageType="NextBrickMsgJ" label="NextBrick" keepInListTime="350" icon="tetrominoes/j.png">
+                                <Label>
+                                    <Text xml:lang="en">Next Brick</Text>
+                                </Label>
+                            </InMessageEventView>
+                            <InMessageEventView messageType="NextBrickMsgL" label="NextBrick" keepInListTime="350" icon="tetrominoes/l.png">
+                                <Label>
+                                    <Text xml:lang="en">Next Brick</Text>
+                                </Label>
+                            </InMessageEventView>
+                        </EventList>
+                    </RightOutputPanel>
+                    
+                    <UserActionEventListener>
+                        <WHEN>
+                            <KeyboardEventExpr keyIdentifier="Down" />
+                            <KeyboardEventExpr keyIdentifier="S" />
+                        </WHEN>
+                        <EXECUTE actionRule="FallingBrick_ActionRule" />
+                    </UserActionEventListener>
+                    
+                    <UserActionEventListener>
+                        <WHEN>
+                            <KeyboardEventExpr keyIdentifier="Left" />
+                            <KeyboardEventExpr keyIdentifier="A" />
+                        </WHEN>
+                        <EXECUTE actionRule="MoveFallingBrickLeft_ActionRule" />
+                    </UserActionEventListener>
+                    
+                    <UserActionEventListener>
+                        <WHEN>
+                            <KeyboardEventExpr keyIdentifier="Right" />
+                            <KeyboardEventExpr keyIdentifier="D" />
+                        </WHEN>
+                        <EXECUTE actionRule="MoveFallingBrickRight_ActionRule" />
+                    </UserActionEventListener>
+                    
+                    <UserActionEventListener>
+                        <WHEN>
+                            <KeyboardEventExpr keyIdentifier="Up" />
+                            <KeyboardEventExpr keyIdentifier="W" />
+                            <KeyboardEventExpr keyIdentifier="Spacebar" />
+                        </WHEN>
+                        <EXECUTE actionRule="RotateFallingBrick_ActionRule" />
+                    </UserActionEventListener>
+
+                </AgentControlByAgentType>
+            </AgentControlUI>
+
+        </AnimationUI>
+    </UserInterface>
+</SimulationScenario>
+
