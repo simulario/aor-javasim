@@ -159,12 +159,14 @@ int r2 = Random.uniformInt(1,6);
 				New introduced AgentTypes.
 				=================================================== -->
           	<AgentType name="Organization">
-          		<ReferenceProperty name="properties" type="OrganzationChart" lowerMultiplicity="1" upperMultiplicity="1"/>
-          		<ReferenceProperty name="manager" type="Manager"/>
-          		<ReferenceProperty name="numberOfEmployees" type="Employee" lowerMultiplicity="1"/>
+            <!-- =================================================== -->
+          		<ReferenceProperty name="organizationChart" type="OrganzationChart" lowerMultiplicity="1" upperMultiplicity="1"/>
+          		<ReferenceProperty name="managers" type="Manager" lowerMultiplicity="1" />
+          		<ReferenceProperty name="employees" type="Employee" lowerMultiplicity="1"/>
           	</AgentType>
+			<!-- =================================================== -->
 			<AgentType name="Person">
-				<!-- ======================================================= -->
+			 <!-- ======================================================= -->
 				<Attribute type="String" name="firstName" />
 				<Attribute type="String" name="lastName" />
 			</AgentType>
@@ -957,23 +959,15 @@ mes.getCustID()
 	<!-- =================================================== -->
 	<InitialState>
 	<!-- =================================================== -->
-		<Agent type="Organization" name="McMikes" id="11">
-			<Slot property="properties">
-				<ValueExpr language="Java"><![CDATA[ new ArrayList<OrganizationChart>()]]></ValueExpr>
-			</Slot>
-			<Slot property="numberOfEmployees">
-				<ValueExpr language="Java"><![CDATA[ new ArrayList<Emplyee>()]]></ValueExpr>
-			</Slot>
-			<Slot property="manager">
-				<ValueExpr language="Java"><![CDATA[ new ArrayList<Manager>()]]></ValueExpr>
-			</Slot>
-		</Agent>
 		<!-- =================================================== -->
 		<Agent type="Manager" name="BillGates" id="10">
+			<!-- =================================================== -->
 			<Slot property="bank" value="0"/>
 			<PeriodicTimeEvent type="EndOfMonth" occurrenceTime="30"/>
 		</Agent>	
+		<!-- =================================================== -->
 		<Agent type="MenuBoard" name="MB" id="1">
+			<!-- =================================================== -->
 			<Slot property="bank" value="0"/>		
 			<Slot property="menuBoardBusy" value="false"/>
 			<Slot property="maxMenuBoardQL" value="5"/>
@@ -982,14 +976,15 @@ mes.getCustID()
 			</Slot>
 			<PeriodicTimeEvent type="EndOfMonth" occurrenceTime="30"/>
 		</Agent>
-		<!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->
+		<!-- =================================================== -->
 		<Agent type="Kitchen" name="K" id="5">
+			<!-- =================================================== -->
 			<Slot property="bank" value="1"/>
 			<PeriodicTimeEvent type="EndOfMonth" occurrenceTime="30"/>
 		</Agent>
-		<!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->
+		<!-- =================================================== -->
 		<Agent type="PickupWindow" name="PW" id="2">
-		<!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->
+			<!-- =================================================== -->
 			<Slot property="bank" value="2"/>
 			<Slot property="pickupWindowBusy" value="false"/>
 			<Slot property="maxPickupQL" value="5"/>
@@ -998,11 +993,28 @@ mes.getCustID()
 			</Slot>
 			<PeriodicTimeEvent type="EndOfMonth" occurrenceTime="30" />
 		</Agent>
-		<!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->
+		<!-- =================================================== -->
 		<Object type="OrganzationChart" name="McMikesOrganizationChart">
-			<Slot property="founded" value="In the year 2011"/>
+			<!-- =================================================== -->
+			<Slot property="founded" value="2011"/>
 			<Slot property="termsOfOperation" value="....."/>
 		</Object>
+		<!-- =================================================== -->
+		<Agent type="Organization" name="McMikes" id="11">
+			<!-- =================================================== -->
+			<Slot property="organizationChart">
+				<ValueExpr language="Java"></ValueExpr>
+			</Slot>
+			<Slot property="employees">
+				<ValueExpr language="Java"><![CDATA[ new
+					ArrayList<Emplyee>(this.getEnvironmentSimulator.getObjectById(1),
+					this.getEnvironmentSimulator.getObjectbyId(2), this.getEnvironmentSimulator.getObjetById(5))]]></ValueExpr>
+			</Slot>
+			<Slot property="managers">
+				<ValueExpr language="Java"><![CDATA[ new
+					ArrayList<Manager>(this.getEnvironmentSimulator.getObjectById(10))]]></ValueExpr>
+			</Slot>
+		</Agent>
 		<!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->
 		<Object type="Queue" id="6" name="MBQueue">
 		<!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->
