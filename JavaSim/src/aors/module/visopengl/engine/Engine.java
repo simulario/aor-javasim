@@ -34,7 +34,6 @@ import aors.space.Space;
 
 import com.sun.opengl.util.BufferUtil;
 import com.sun.opengl.util.gl2.GLUT;
-import com.sun.opengl.util.texture.Texture;
 
 /**
  * 2D rendering engine, containing methods to initialize rendering, handle
@@ -237,7 +236,7 @@ public class Engine implements GLEventListener {
       // Load background texture
       if (spaceView.getBackgroundImgFilename() != null
           && spaceView.getBackgroundImg() == null) {
-        spaceView.setBackgroundImg(loadTexture(spaceView
+        spaceView.setBackgroundImg(TextureLoader.loadTexture(spaceView
             .getBackgroundImgFilename()));
       }
 
@@ -252,7 +251,7 @@ public class Engine implements GLEventListener {
       // Load background texture
       if (spaceView.getBackgroundImgFilename() != null
           && spaceView.getBackgroundImg() == null) {
-        spaceView.setBackgroundImg(loadTexture(spaceView
+        spaceView.setBackgroundImg(TextureLoader.loadTexture(spaceView
             .getBackgroundImgFilename()));
       }
 
@@ -299,7 +298,7 @@ public class Engine implements GLEventListener {
         if (shape != null) {
           // Load texture
           if (shape.getTextureFilename() != null && shape.getTexture() == null) {
-            shape.setTexture(loadTexture(shape.getTextureFilename()));
+            shape.setTexture(TextureLoader.loadTexture(shape.getTextureFilename()));
             shape.setRecompile(true);
           }
         }
@@ -312,7 +311,7 @@ public class Engine implements GLEventListener {
               if (embeddedView.getShape().getTextureFilename() != null
                   && embeddedView.getShape().getTexture() == null) {
                 embeddedView.getShape().setTexture(
-                    loadTexture(embeddedView.getShape().getTextureFilename()));
+                    TextureLoader.loadTexture(embeddedView.getShape().getTextureFilename()));
                 embeddedView.getShape().setRecompile(true);
               }
             }
@@ -324,7 +323,7 @@ public class Engine implements GLEventListener {
                   if (embeddedView2.getShape().getTextureFilename() != null
                       && embeddedView2.getShape().getTexture() == null) {
                     embeddedView2.getShape().setTexture(
-                        loadTexture(embeddedView2.getShape()
+                        TextureLoader.loadTexture(embeddedView2.getShape()
                             .getTextureFilename()));
                     embeddedView2.getShape().setRecompile(true);
                   }
@@ -335,35 +334,6 @@ public class Engine implements GLEventListener {
         }
       }
     }
-  }
-
-  /**
-   * Loads and returns textures from the file system.
-   * 
-   * @param filename
-   */
-  private Texture loadTexture(String filename) {
-    // Search in the project's media directory
-    String path = projectDirectory.getPath() + File.separator + "media"
-        + File.separator + "images" + File.separator + filename;
-
-    // Check if the file is existing in the project directory
-    if (new File(path).isFile()) {
-      return TextureLoader.load(path);
-    } else {
-      // Search in the global media directory
-      path = System.getProperty("user.dir") + File.separator + "media"
-          + File.separator + "images" + File.separator + filename;
-
-      // Check if the file is existing in the global directory
-      if (new File(path).isFile()) {
-        return TextureLoader.load(path);
-      } else {
-        System.out.println("Warning: Could not find image " + filename);
-      }
-    }
-
-    return null;
   }
 
   /**
@@ -1345,6 +1315,7 @@ public class Engine implements GLEventListener {
 
   public void setProjectDirectory(File projectDirectory) {
     this.projectDirectory = projectDirectory;
+    TextureLoader.rootFolderPath = projectDirectory;
   }
 
   public Point getPickPoint() {
