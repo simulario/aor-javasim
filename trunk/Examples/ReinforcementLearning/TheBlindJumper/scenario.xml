@@ -9,20 +9,25 @@
  xmlns:h="http://www.w3.org/1999/xhtml"
  version="0.9"
  scenarioName="TheBlindJumper"
- scenarioTitle="The Blind Jumper: Emerging semantics through reinforcement learning"
  simulationManagerDirectory="../../..">
 	<SimulationParameters simulationSteps="500" stepDuration="1" timeUnit="s" stepTimeDelay="100"/>
-	<SimulationModel modelName="TheBlindJumper" modelTitle="The Blind Jumper">
+	<SimulationModel modelName="TheBlindJumper" modelTitle="The Blind Jumper: Emerging semantics through reinforcement learning">
 		<documentation>
 			<dc:created xml:lang="en">20090821</dc:created>
 			<dc:creator>Gerd Wagner</dc:creator>
-			<dc:modified>20110110</dc:modified>
+			<dc:modified>20111116</dc:modified>
 			<dc:title>The Blind Jumper</dc:title>
-			<dc:source xml:lang="de">Peter Fleissner and Gregor Fleissner: "Beyond the Chinese Room: The blind jumper - 
+			<dc:source xml:lang="de">Das Modell basiert auf Peter Fleissner und Gregor Fleissner: "Beyond the Chinese Room: The blind jumper - 
 			Self-organised semantics and pragmatics on the computer". In: W. Hofkirchner (Ed.) Information 
 			und Selbstorganisation - Annäherungen an eine vereinheitlichte Theorie der Information, 
-			Innsbruck Wien: StudienVerlag, pp. 325-340, 1998.</dc:source>
-			<shortDescription>Simulation of a learning process - a blind person is guided by sound on its movements. </shortDescription>
+			Innsbruck Wien: StudienVerlag, pp. 325-340, 1998.
+			
+			Used sound files
+			crowd yay.wav by timtube -- http://www.freesound.org/people/timtube/sounds/69338/
+			small crowd yelling 'YEAH'.wav by Tomlija -- http://www.freesound.org/people/Tomlija/sounds/99636/
+			</dc:source>
+			<shortDescription>A simulation of a reinforcement learning process, in which two agents learn from each other. </shortDescription>
+			<shortDescription xml:lang="de">Eine Simulation eines Verstärkungs-Lernprozesses, bei dem zwei Agenten voneinander lernen. </shortDescription>
 			<aors:description xmlns="http://www.w3.org/1999/xhtml">
 				<p>In this model there is an agent (the "jumper") that is not able to see 
 				the size of the barrier over which it has to jump, and there is another agent (the "speaker") 
@@ -36,7 +41,21 @@
 				by Peter Fleissner and Gregor Fleissner. There is also an 
 				<a href="http://igw.tuwien.ac.at/peterf/springer/default.htm">implementation</a> of this model 
 				by its authors.</p>
-				<p>The not yet licensed blind jumper cartoon is from http://www.iclipart.com.</p>
+			</aors:description>
+			<aors:description xml:lang="de" xmlns="http://www.w3.org/1999/xhtml">
+				<p>In diesem Modell zum Verstärkungs-Lernen gibt es einen Agenten (den "Springer"), der die Größe  
+					einer Barriere, über die er springen muss, nicht sehen kann, und es gibt einen anderen Agenten 
+					(den "Sprecher"), der die Größe	der Barriere sehen kann und versucht, diese dem Springer zu kommunizieren.
+					Beide Agenten müssen jedoch zuerst lernen, welche Symbole sie verwenden sollen, um die 
+					Größe der Barriere zu kommunizieren. Beide Agenten können nach einem erfolgten Sprung seinen Erfolg
+					oder sein Mißlingen erkennen(ein Sprung mißlingt, wenn er zu kurz oder zu lang ausfällt) und dann
+					ihre zu lernende Symbol-Interpretationsfunktion entsprechend anpassen.</p>
+				<p>Diese Problembeschreibung basiert auf dem Artikel 
+					<em><a href="http://peter.fleissner.org/petergre/documents/blinderspringer.html">Beyond the 
+						Chinese Room: The blind jumper</a> - Self-organised semantics and pragmatics on the computer</em> 
+					von Peter Fleissner und Gregor Fleissner. Es gibt auch eine  
+					<a href="http://igw.tuwien.ac.at/peterf/springer/default.htm">Implementierung</a> dieses Modells  
+					durch sein Autoren.</p>
 			</aors:description>
 		</documentation>
   
@@ -114,7 +133,6 @@
 				P[row][j] = P[row][j] / rowSum;
 			  }
 			}
-			
 			sim.model.dataTypes.ProbabilityMatrix.prototype.maxIndex = function(P, r) {
 			  var row = r-1;
 			  var j, max = 0;
@@ -125,7 +143,6 @@
 			  }
 			  return (max+1);	
 			}
-			
 			sim.model.dataTypes.ProbabilityMatrix.prototype.successUpdate = function(P, r, c) {
 			  var row = r-1;
 			  var col = c-1;
@@ -138,7 +155,6 @@
 		      }
 			  this.normalize( P, row);
 			}
-			
 			sim.model.dataTypes.ProbabilityMatrix.prototype.failureUpdate = function(P, r, c) {
 			  var row = r-1;
 			  var col = c-1;
@@ -280,12 +296,17 @@
 		<InheritedAttributeSettings attribute="x" initialValue="1" maxValue="5" minValue="1"/>
 		<InheritedAttributeSettings attribute="y" initialValue="1" maxValue="5" minValue="1"/>
 		<Attribute name="currentJumpRuleStateIndex" type="Integer"/>
-		<Attribute name="currentActionParameterValueIndex" type="Integer"/>
+		<Attribute name="currentJumpRuleActionIndex" type="Integer"/>
 		<ComplexDataProperty name="jumpSuccessProbMat" type="ProbabilityMatrix_3_4"/>
 		<!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->
 		<ReactionRule name="Jump_AgtRule" agentVariable="agt">
 		<!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->
-			<documentation><description>When the jumper receives a Tell message with one of the distance symbols "A", "B" and "C" (corresponding to a state index of 1, 2 or 3), it stores this state index in the attribute <h:code>currentJumpRuleStateIndex</h:code>. Then it looks up the maximum value in the row of the success probability matrix given by this index and stores the column number of this value in the attribute <h:code>currentActionParameterValueIndex</h:code>. Finally, it jumps with a distance corresponding to this index.</description></documentation>
+			<documentation><description>When the jumper receives a Tell message with one of the distance symbols 
+				"A", "B" and "C" (corresponding to a state index of 1, 2 or 3), it stores this state index 
+				in the attribute <h:code>currentJumpRuleStateIndex</h:code>. Then it looks up the maximum value 
+				in the corresponding row of the success probability matrix and stores the column number 
+				of this value in the attribute <h:code>currentJumpRuleActionIndex</h:code>. Finally, it jumps 
+				with a distance corresponding to this index.</description></documentation>
 			<WHEN eventType="InMessageEvent" messageType="Tell" messageVariable="m"/>
 			<DO>
 				<UPDATE-AGT>
@@ -299,7 +320,7 @@
 					( this.m.getDistanceSymbol() == "B") ? 2 : 3
 					]]></ValueExpr>
 					</Slot>
-					<Slot property="currentActionParameterValueIndex">
+					<Slot property="currentJumpRuleActionIndex">
 						<ValueExpr language="Java"><![CDATA[
 					( agt.getJumpSuccessProbMat().maxIndex( ( m.getDistanceSymbol().equals("A")) ? 1 :
 					( m.getDistanceSymbol().equals("B")) ? 2 : 3))	
@@ -314,7 +335,7 @@
 					<ActionEventExpr actionEventType="Jump" delay="5">
 						<Slot property="distance">
 							<ValueExpr language="Java JavaScript"><![CDATA[
-							this.agt.getCurrentActionParameterValueIndex()	
+							this.agt.getCurrentJumpRuleActionIndex()	
 						     ]]></ValueExpr>
 						</Slot>
 					</ActionEventExpr>
@@ -324,7 +345,10 @@
 		<!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->
 		<ReactionRule name="OnSuccessUpdateProbabilityMatrix_AgtRule" agentVariable="agt">
 		<!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->
-			<documentation><description>When the jumper receives the Success reinforcement signal, it updates its success probability matrix accordingly, i.e. the matrix value corresponding to the current state and the chosen action parameter value will be increased relativeley to the other values of the same row. </description></documentation>
+			<documentation><description>When the jumper receives the Success reinforcement signal, it updates 
+				its success probability matrix accordingly, i.e. the matrix value corresponding to the current state 
+				and the chosen action (parameter value) will be increased relativeley to the other values 
+				of the same row. </description></documentation>
 			<WHEN eventType="Success"/>
 			<DO>
 				<UPDATE-AGT>
@@ -333,7 +357,7 @@
 							<ValueExpr language="Java JavaScript">this.agt.getCurrentJumpRuleStateIndex()</ValueExpr>
 						</Argument>
 						<Argument>
-							<ValueExpr language="Java JavaScript">this.agt.getCurrentActionParameterValueIndex()</ValueExpr>
+							<ValueExpr language="Java JavaScript">this.agt.getCurrentJumpRuleActionIndex()</ValueExpr>
 						</Argument>
 					</UpdateComplexDataPropertyValue>
 				</UPDATE-AGT>
@@ -342,7 +366,10 @@
 		<!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->
 		<ReactionRule name="OnFailureUpdateProbabilityMatrix_AgtRule" agentVariable="agt">
 		<!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->
-			<documentation><description>When the jumper receives the Failure reinforcement signal, it updates its success probability matrix accordingly, i.e. the matrix value corresponding to the current state and the chosen action parameter value will be decreased relativeley to the other values of the same row. </description></documentation>
+			<documentation><description>When the jumper receives the Failure reinforcement signal, it updates 
+				its success probability matrix accordingly, i.e. the matrix value corresponding to the current state 
+				and the chosen action parameter value will be decreased relativeley to the other values of 
+				the same row. </description></documentation>
 			<WHEN eventType="Failure"/>
 			<DO>
 				<UPDATE-AGT>
@@ -351,7 +378,7 @@
 							<ValueExpr language="Java JavaScript">this.agt.getCurrentJumpRuleStateIndex()</ValueExpr>
 						</Argument>
 						<Argument>
-							<ValueExpr language="Java JavaScript">this.agt.getCurrentActionParameterValueIndex()</ValueExpr>
+							<ValueExpr language="Java JavaScript">this.agt.getCurrentJumpRuleActionIndex()</ValueExpr>
 						</Argument>
 					</UpdateComplexDataPropertyValue>
 				</UPDATE-AGT>
@@ -362,17 +389,20 @@
 	<PhysicalAgentType name="Speaker">
 	<!-- =================================================================== -->
 		<Attribute name="currentTellRuleStateIndex" type="Integer" />
-		<Attribute name="currentActionParameterValueIndex" type="Integer" />
+		<Attribute name="currentTellRuleActionIndex" type="Integer" />
 		<ComplexDataProperty name="tellSuccessProbMat" type="ProbabilityMatrix_3_3" />
 		<!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->
 		<ReactionRule name="Tell_AgtRule" agentVariable="agt">
 		<!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->
-			<documentation><description>When the speaker perceives a new barrier with size 1-3 (corresponding to a state index of 1-3), it stores the state index as well as the action parameter value index pointing to the maximum value, and then it sends a Tell message with a distance symbol corresponding to this parameter value.</description></documentation>
+			<documentation><description>When the speaker perceives a new barrier with size 1-3 (corresponding 
+				to a state index of 1-3 and a corresponding matrix row), it stores the state index as well as 
+				the action index (the matrix column	with the maximum value), and then it sends a Tell message 
+				with a distance symbol corresponding to the action index.</description></documentation>
 			<WHEN eventType="ObserveNewBarrier" eventVariable="e"/>
 			<DO>
 				<UPDATE-AGT>
 					<Slot property="currentTellRuleStateIndex"><ValueExpr language="Java JavaScript">this.e.getSize()</ValueExpr></Slot>
-					<Slot property="currentActionParameterValueIndex">
+					<Slot property="currentTellRuleActionIndex">
 						<ValueExpr language="Java JavaScript"><![CDATA[
 						( this.agt.getTellSuccessProbMat().maxIndex( this.agt.getCurrentTellRuleStateIndex()) )	
 						]]></ValueExpr>
@@ -382,8 +412,8 @@
 					<OutMessageEventExpr messageType="Tell" receiverIdRefs="2">
 						<Slot property="distanceSymbol">
 						  <ValueExpr language="Java JavaScript"><![CDATA[
-					      ( this.agt.getCurrentActionParameterValueIndex() == 1) ? "A" :
-					      ( this.agt.getCurrentActionParameterValueIndex() == 2) ? "B" : "C"
+					      ( this.agt.getCurrentTellRuleActionIndex() == 1) ? "A" :
+					      ( this.agt.getCurrentTellRuleActionIndex() == 2) ? "B" : "C"
 				          ]]></ValueExpr>
 						</Slot>
 					</OutMessageEventExpr>
@@ -402,7 +432,7 @@
 							<ValueExpr language="Java JavaScript">this.agt.getCurrentTellRuleStateIndex()</ValueExpr>
 						</Argument>
 						<Argument>
-							<ValueExpr language="Java JavaScript">this.agt.getCurrentActionParameterValueIndex()</ValueExpr>
+							<ValueExpr language="Java JavaScript">this.agt.getCurrentTellRuleActionIndex()</ValueExpr>
 						</Argument>
 					</UpdateComplexDataPropertyValue>
 				</UPDATE-AGT>
@@ -420,7 +450,7 @@
 							<ValueExpr language="Java JavaScript">this.agt.getCurrentTellRuleStateIndex()</ValueExpr>
 						</Argument>
 						<Argument>
-							<ValueExpr language="Java JavaScript">this.agt.getCurrentActionParameterValueIndex()</ValueExpr>
+							<ValueExpr language="Java JavaScript">this.agt.getCurrentTellRuleActionIndex()</ValueExpr>
 						</Argument>
 					</UpdateComplexDataPropertyValue>
 				</UPDATE-AGT>
@@ -520,20 +550,23 @@
 	<UserInterface supportedLanguages="en de">
 	<!-- =================================================================== -->
 		<AnimationUI>
-			<!--<DisplayDescription>
-				<HtmlText xml:lang="en">
+			<StartPageText>
+				<HtmlText>
 					<h:h1>The Blind Jumper</h:h1>
-					<h:p>The "blind jumper" is not able to see the size <h:br />
-					of the barrier over which it has to jump, as opposed to<h:br /> 
-					the "speaker" who tries to communicate this<h:br />
-					to the blind jumper. However, both agents first have<h:br /> 
-					to learn which symbols to use for communicating<h:br />
-                    the	size of the barrier.</h:p></HtmlText>
-			</DisplayDescription>-->
+					<h:h3>by Peter Fleissner and Gregor Fleissner</h:h3>
+					<h:p>The "blind jumper" is not able to see the size
+						of the barrier over which he has to jump, as opposed to
+						the "speaker" who tries to communicate this
+						to the blind jumper. However, both agents first have 
+						to learn which symbols to use for communicating
+						the	size of the barrier.</h:p>
+				</HtmlText>
+			</StartPageText>
 			<Views>
 				<SpaceView canvasColor="lightgrey">
 					<TwoDimensionalGridSpaceView2D backgroundColor="white">
-						<GridCellPropertyVisualizationMap cellViewProperty="fill" property="isBarrierCell" mapType="caseWise" v0="lightyellow" a0="1" v1="brown"/>
+						<GridCellPropertyVisualizationMap cellViewProperty="fill" property="isBarrierCell" 
+							mapType="caseWise" v0="lightyellow" a0="1" v1="brown"/>
 					</TwoDimensionalGridSpaceView2D>
 				</SpaceView>
 				<PhysicalObjectView physicalObjectType="Jumper" displayName="true">
@@ -541,8 +574,9 @@
 				</PhysicalObjectView>
 				<PhysicalObjectView physicalObjectType="Speaker" displayName="true">
 					<PhysicalShape2D>
-						<Rectangle>
-							<ShapePropertyVisualizationMap shapeProperty="texture" property="currentTellRuleStateIndex" mapType="equalityCaseWise" 
+						<Rectangle texture="cartoon-man-wearing-suit.png">
+							<ShapePropertyVisualizationMap mapType="equalityCaseWise" shapeProperty="texture" 
+								property="currentTellRuleActionIndex"
 								a0="0" v0="cartoon-man-wearing-suit.png" 
 								a1="1" v1="cartoon-man-wearing-suit_1.png" 
 								a2="2" v2="cartoon-man-wearing-suit_2.png"
@@ -550,18 +584,23 @@
 						</Rectangle>
 					</PhysicalShape2D>
 				</PhysicalObjectView>
-				<EventAppearance eventType="Failure">
-					<MidiSound instrumentName="REED_BaritoneSax" noteSequence="24/500/120"/>
+				<EventAppearance eventType="Failure" duration="500">
+					<Sound soundFile="69338__timtube__crowd-yay.wav"/>
 				</EventAppearance>
-				<EventAppearance eventType="Success">
-					<MidiSound instrumentName="ORGAN_Harmonica" noteSequence="48/250 55/250"/>
+				<EventAppearance eventType="Success" duration="500">
+					<Sound soundFile="99636__tomlija__small-crowd-yelling-yeah.wav"/>
 				</EventAppearance>
-				<EventAppearance eventType="OutMessageEvent" messageType="Tell" duration="500">
-					<MidiSound instrumentName="ORGAN_Harmonica">
-						<MidiSonificationMap soundProperty="note" property="distanceSymbol" mapType="equalityCaseWise" a0="A" v0="30" a1="B" v1="36" a2="C" v2="40"/>
-					</MidiSound>
+<!--				<EventAppearance eventType="OutMessageEvent" messageType="Tell" duration="500">
+					<Sound>
+						<SoundFileSonificationMap mapType="equalityCaseWise" 
+							property="currentActionParameterValueIndex"
+							a0="0" v0="cartoon-man-wearing-suit.png" 
+							a1="1" v1="cartoon-man-wearing-suit_1.png" 
+							a2="2" v2="cartoon-man-wearing-suit_2.png"
+							a3="3" v3="cartoon-man-wearing-suit_3.png" /> 
+					</Sound>
 				</EventAppearance>
-			</Views>
+-->			</Views>
 		</AnimationUI>
 	</UserInterface>
 </SimulationScenario>
