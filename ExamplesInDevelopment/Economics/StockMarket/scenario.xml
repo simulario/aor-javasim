@@ -1,0 +1,735 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<SimulationScenario xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+ xsi:schemaLocation="http://aor-simulation.org file:/D:/SchemaAORSL/AORSL_0-9.xsd"
+ xmlns:dc="http://purl.org/dc/elements/1.1/"
+ xmlns="http://aor-simulation.org"
+ xmlns:aors="http://aor-simulation.org"
+ scenarioName="StockMarketGame"
+ version="0.9">
+    <SimulationParameters simulationSteps="1680" timeUnit="h"/>
+    <SimulationModel modelName="StockMarketGame_model" modelTitle="A stock market game">
+        <documentation>
+            <dc:title>An artificial Stock Market with 3 assets: Bonds, Shares and Funds</dc:title>
+            <dc:creator>Cosmin Paun</dc:creator>
+            <dc:created>20110914</dc:created>
+        </documentation>
+        
+        <Statistics>
+            <Variable name="priceBond" dataType="Float">
+                <Source>
+                    <ObjectProperty property="lastMarketPrice" objectType="Market" objectIdRef="2"/>
+                </Source>
+            </Variable>
+            
+            <Variable name="BuyOffersBond" dataType="Float">
+                <Source>
+                    <ObjectProperty property="Demand" objectType="Market" objectIdRef="2"/>
+                </Source>
+            </Variable>
+            
+            <Variable name="SellOffersBond" dataType="Float">
+                <Source>
+                    <ObjectProperty property="Supply" objectType="Market" objectIdRef="2"/>
+                </Source>
+            </Variable>
+            
+            <Variable name="priceShare" dataType="Float">
+                <Source>
+                    <ObjectProperty property="lastMarketPrice" objectType="Market" objectIdRef="3"/>
+                </Source>
+            </Variable>
+            
+            <Variable name="BuyOffersShare" dataType="Float">
+                <Source>
+                    <ObjectProperty property="Demand" objectType="Market" objectIdRef="3"/>
+                </Source>
+            </Variable>
+            
+            <Variable name="SellOffersShare" dataType="Float">
+                <Source>
+                    <ObjectProperty property="Supply" objectType="Market" objectIdRef="3"/>
+                </Source>
+            </Variable>
+            
+            <Variable name="priceFund" dataType="Float">
+                <Source>
+                    <ObjectProperty property="lastMarketPrice" objectType="Market" objectIdRef="4"/>
+                </Source>
+            </Variable>
+            
+            <Variable name="BuyOffersFund" dataType="Float">
+                <Source>
+                    <ObjectProperty property="Demand" objectType="Market" objectIdRef="4"/>
+                </Source>
+            </Variable>
+            
+            <Variable name="SellOffersFund" dataType="Float">
+                <Source>
+                    <ObjectProperty property="Supply" objectType="Market" objectIdRef="4"/>
+                </Source>
+            </Variable>
+            
+            <Variable name="wealth" dataType="Float">
+                <Source>
+                    <ObjectProperty property="traderWealth" objectType="Trader"/>
+                </Source>
+            </Variable>
+        </Statistics>
+        
+        <DataTypes>
+            <ComplexDataType name="TradeOffer">
+                <Attribute type="String" name="product"/>
+                <Attribute type="Float" name="price"/>
+                <Attribute type="Float" name="quantity"/>
+                <Attribute type="Boolean" name="buy"/>
+                <Attribute type="Integer" name="bidderIdRef"/>
+            </ComplexDataType>
+        </DataTypes>
+        
+        <EntityTypes>
+            <MessageType name="StartOfDay_Announcement">
+                <documentation>
+                    <dc:description>A message of the market to announce the price of the last day</dc:description>
+                </documentation>
+                <Attribute type="Float" name="price"/>
+            </MessageType>
+            
+            <MessageType name="Act_msg">
+                <documentation>
+                    <dc:description></dc:description>
+                </documentation>
+            </MessageType>
+            <MessageType name="ClearMarket">
+                <documentation>
+                    <dc:description>A message which ends the trading day</dc:description>
+                </documentation>
+            </MessageType>
+            
+            <MessageType name="TraderOffer">
+                <documentation>
+                    <dc:description>A offer to the market.</dc:description>
+                </documentation>
+                <ComplexDataProperty name="offer" type="TradeOffer"/>
+            </MessageType>
+            
+            <MessageType name="BondOffer">
+                <documentation>
+                    <dc:description>A list of bond offers to the market </dc:description>
+                </documentation>
+                <ComplexDataProperty name="offers" type="TradeOffer" upperMultiplicity="unbounded" />
+            </MessageType>
+            
+            <MessageType name="ShareOffer">
+                <documentation>
+                    <dc:description>A list of share offers to the market</dc:description>
+                </documentation>
+                <ComplexDataProperty name="offers" type="TradeOffer" upperMultiplicity="unbounded"/>
+            </MessageType>
+            
+            <MessageType name="FundOffer">
+                <documentation>
+                    <dc:description>A list of fund offers to the market</dc:description>
+                </documentation>
+                <ComplexDataProperty name="offers" type="TradeOffer" upperMultiplicity="unbounded"/>
+            </MessageType>
+            
+            <MessageType name="MatchingOffer">
+                <documentation>
+                    <dc:description>A succesful trade</dc:description>
+                </documentation>
+                <ComplexDataProperty name="offer" type="TradeOffer" /> 
+            </MessageType>
+            
+            <ExogenousEventType name="Init" >
+                <documentation>
+                    <dc:description>Needed for the initialization</dc:description>
+                </documentation>
+            </ExogenousEventType>
+            
+            <ExogenousEventType name="StartOfDay" periodicity="24">
+                <documentation>
+                    <dc:description>Starts a new day. The price of the last day is announced to all Agents</dc:description>
+                </documentation>
+            </ExogenousEventType>
+            
+            <ExogenousEventType name="StartToTrade">
+                <documentation>
+                    <dc:description>The agents start with their trade</dc:description>
+                </documentation>
+            </ExogenousEventType>
+            
+            <ExogenousEventType name="CloseMarket">
+                <documentation>
+                    <dc:description>End of the day, which tells the market to ends the trading day and calculate a new market price</dc:description>
+                </documentation>
+            </ExogenousEventType>
+            
+            <AgentType name="Trader">
+                <documentation>
+                    <dc:description>Makes offers to sell or to buy assets</dc:description>
+                </documentation>
+                
+                <ComplexDataProperty name="assets" type="aors.util.economics.Quantity" upperMultiplicity="unbounded" />
+                <ComplexDataProperty name="BondBuyList" type="TradeOffer" upperMultiplicity="unbounded" />
+                <ComplexDataProperty name="BondSellList" type="TradeOffer" upperMultiplicity="unbounded" />
+                <ComplexDataProperty name="ShareBuyList" type="TradeOffer" upperMultiplicity="unbounded" />
+                <ComplexDataProperty name="ShareSellList" type="TradeOffer" upperMultiplicity="unbounded" />
+                <ComplexDataProperty name="FundBuyList" type="TradeOffer" upperMultiplicity="unbounded" />
+                <ComplexDataProperty name="FundSellList" type="TradeOffer" upperMultiplicity="unbounded" />
+                
+                <Attribute type="Float" name="bondInventory"/>
+                <Attribute type="Float" name="shareInventory"/>
+                <Attribute type="Float" name="fundInventory"/>
+                <Attribute type="Float" name="lastBondPrice"/>
+                <Attribute type="Float" name="lastSharePrice"/>
+                <Attribute type="Float" name="lastFundPrice"/>
+                
+                <Attribute type="Float" name="traderWealth"/>
+                
+                <Function name="getAssetByName" resultType="aors.util.economics.Quantity">
+                    <documentation>
+                        <dc:description>Find an assets from the AssetsList by String</dc:description>
+                    </documentation>
+                    <Parameter name="name" type="String"/>
+                    <Body language="JavaScript"><![CDATA[
+                        var i;
+                        var assets = this.getAssets();
+                        for (i=0; i < assets.size(); i++){
+							if (!assets.get(i).isDiscrete()) {
+								if (assets.get(i).getContinuousQuantityType().getName() === name) break;
+							} else {
+								if (assets.get(i).getType() === name) break;
+							}
+						}
+						return assets.get(i);
+                        ]]></Body>
+                </Function>
+                
+                <Function name="createOffer" resultType="TradeOffer">
+                    <Parameter name="product" type="String"/>
+                    <Parameter name="quantity" type="Float"/>
+                    <Parameter name="price" type="Float"/>
+                    <Parameter name="buy" type="Boolean"/>
+                    <Body language="JavaScript"><![CDATA[
+                        var offer = new sim.model.dataTypes.TradeOffer();
+                        offer.setProduct(product);
+                        offer.setQuantity(quantity);
+                        offer.setPrice(price);
+                        offer.setBuy(buy);                        
+                        return offer;
+                        ]]></Body>
+                </Function>
+                
+                <Function name="buyBond" resultType="Boolean">
+                    <Body language="JavaScript"><![CDATA[
+                        this.getBondBuyList().clear();
+                          if (this.getAssetByName("Bond").getQuantity() > 10)
+                        ]]></Body>
+                </Function>
+                
+                <ReactionRule name="StartOfDay_Bond_Rule" agentVariable="agt">
+                    <documentation>
+                        <dc:description>At the beginning of the day, bond price is updated</dc:description>
+                    </documentation>
+                    
+                    <WHEN eventType="InMessageEvent" messageType="StartOfDay_Announcement" eventVariable="msg"/>
+                    <IF language="Java JavaScript">this.getMsg() === "Bond"</IF>
+                    <THEN>
+                        <UPDATE-AGT>                            
+                            <Slot property="lastBondPrice">                                
+                                <PropertyValueExpr entityVariable="msg" property="price"/>
+                            </Slot>
+                        </UPDATE-AGT>
+                       
+                    </THEN>
+                </ReactionRule>
+                
+                <ReactionRule name="StartOfDay_Share_Rule">
+                    <documentation>
+                        <dc:description>At the beginning of the day, share price is updated</dc:description>
+                    </documentation>
+                    
+                    <WHEN eventType="InMessageEvent" messageType="StartOfDay_Announcement" eventVariable="msg"/>
+                    <IF language="Java JavaScript">this.getMsg() === "Share"</IF>
+                    <THEN>
+                        <UPDATE-AGT>
+                            <Slot property="lastSharePrice">
+                                <PropertyValueExpr entityVariable="msg" property="price"/>
+                            </Slot>
+                        </UPDATE-AGT>
+                    </THEN>
+                </ReactionRule>
+                
+                <ReactionRule name="StartOfDay_Fund_Rule">
+                    <documentation>
+                        <dc:description>At the beginning of the day, bond fund is updated</dc:description>
+                    </documentation>
+                    
+                    <WHEN eventType="InMessageEvent" messageType="StartOfDay_Announcement" eventVariable="msg"/>
+                    <IF language="Java JavaScript">this.getMsg() === "Fund"</IF>
+                    <THEN>
+                        <UPDATE-AGT>
+                            <Slot property="lastFundPrice">
+                                <PropertyValueExpr entityVariable="msg" property="price"/>
+                            </Slot>
+                        </UPDATE-AGT>
+                    </THEN>
+                </ReactionRule>
+                
+                <ReactionRule name="buyBond_Rule" agentVariable="agt">
+                    <WHEN eventType="InMessageEvent" messageType="Act_msg" messageVariable="msg"/>
+                    <FOR-ListItemVariable variable="asset" listItemType="Quantity">
+                        <ListExpr language="JavaScript">this.agt.getAssets()</ListExpr>
+                    </FOR-ListItemVariable>
+                    <IF language="JavaScript"><![CDATA[this.nsg.getOffer().isBuy() && this.asset.getType() === "Bond"]]></IF>
+                    <THEN>
+                        <SCHEDULE-EVT>
+                            <OutMessageEventExpr messageType="TradeOffer">
+                                <Slot property="offer">
+                                    <ValueExpr language="JavaScript">
+                                        <![CDATA[
+                                        var factor = 0.1;
+                                        var price = factor * this.getLastBondPrice();
+                                        this.agt.createOffer("Bond",js.util.Random.uniformInt(1,4), js.util.Random.uniform(1.0,5.0), price, true);
+                                        ]]>
+                                    </ValueExpr>
+                                </Slot>
+                            </OutMessageEventExpr>
+                        </SCHEDULE-EVT>
+                    </THEN>
+                </ReactionRule>
+            </AgentType>
+            <AgentType name="Market">
+                <documentation>
+                    <dc:description>Collects offers made by Traders</dc:description>
+                </documentation>                
+                <Attribute type="Float" name="supply"/>
+                <Attribute type="Float" name="demand"/>
+                <Attribute type="Float" name="lastMarketPrice"/>
+                <ComplexDataProperty name="buyOffers" type="TradeOffer" upperMultiplicity="unbounded" />
+                <ComplexDataProperty name="sellOffers" type="TradeOffer" upperMultiplicity="unbounded" />
+                <ComplexDataProperty name="transactions" type="TradeOffer" upperMultiplicity="unbounded" />
+                
+                <Function name="determinePrice" resultType="Float">
+                    <Body language="JavaScript"><![CDATA[
+                        this.getTransactions().clear();
+                        var buyOffers = this.getBuyOffers();
+                        var sellOffers = this.getSellOffers();
+                        
+                        var comparator = function (a,b){
+                           var p1 = a.getPrice();
+                           par p2 = b.getPrice();
+                           if (p1 < p2) return -1;
+                           if (p1 > p2) return 1;
+                           return 0;
+                        }
+                        
+                        buyOffers.sort(comparator);
+                        sellOffers.sort(comparator);
+                        
+                        if ((buyOffers.size() == 0) || (sellOffers.size() == 0) || (this.less(buyOffers.get(buyOffers.size() -1).getPrice(), sellOffers.get(0).getPrice()))){
+                        this.setDemand(buyOffers.size());
+                        this.setSupply(sellOffers.size());
+                        buyOffers.clear();
+                        sellOffers.clear();
+                        return;
+                        }
+                        
+                        var prices = new js.util.ArrayList();
+                        var s=0, b=0;
+                        
+                        while (s < sellOffers.size() && b < buyOffers.size()) {
+                          if (this.equal(sellOffers.get(s).getPrice, buyOffers.get(b).getPrice())){
+                             prices.add(sellOffers.get(s++).getPrice());
+                             b++
+                          } else if (sellOffers.get(s).getPrice() < buyOffers.get(b).getPrice()){
+                            prices.add(sellOffers.get(s++).getPrice();
+                          } else {
+                            prices.add(buyOffers.get(b++).getPrice());
+                            }
+                            
+                            while (s < sellOffers.size() && this.equal(prices.get(prices.size() - 1), sellOffers.get(s).getPrice())){
+                            s++
+                            }
+                            while (b < buyOffers.size () && this.equal(prices.get(prices.size() - 1), buyOffers.get(b).getPrice())){
+                            b++
+                            }
+                          }
+                          
+                          if (s < sellOffers.size()) {
+								while (s < sellOffers.size()) {
+								if (!this.equal(prices.get(prices.size() - 1), sellOffers.get(s).getPrice())){
+									prices.add(sellOffers.get(s).getPrice());
+								}
+								s++;
+							}
+						} else if (b < buyOffers.size()) {
+							while (b < buyOffers.size()) {
+								if (!this.equal(prices.get(prices.size() - 1), buyOffers.get(b).getPrice())){
+									prices.add(buyOffers.get(b).getPrice());
+								}
+								b++;
+							}
+						}
+						// find the price(s) at which supply and demand intersect
+						var supply = 0, demand = 0;
+						
+						// initialize demand to be the demand at lowest demand price
+						for (var o = 0; o < buyOffers.size(); o++) { 
+							var tradeOffer = buyOffers.get(o);
+							demand += tradeOffer.getQuantity();
+						}
+						
+						// walk through prices, updating supply and demand as needed.
+						var p = 0;
+						var bestVolume = Number.NEGATIVE_INFINITY;
+						var bestP = 0;
+						for (s = -1, b = 0; s + 1 < sellOffers.size() && b < buyOffers.size(); p++) {
+							// if prices.get(p) is the next supply price:
+							while (s + 1 < sellOffers.size() && this.equal(prices.get(p), sellOffers.get(s + 1).getPrice())) {
+								supply += sellOffers.get(++s).getQuantity();
+							}
+							// if the current demand price is less than prices.get(p):
+							while (b < buyOffers.size() && this.less(buyOffers.get(b).getPrice(), prices.get(p))) {
+								demand -= buyOffers.get(b++).getQuantity();
+							}
+							if (supply > demand) {
+								// volume = demand
+								if (demand > bestVolume) {
+									bestVolume = demand;
+									bestP = p;
+								}
+								break; // stop
+							} else if (supply > bestVolume) {
+								// volume = supply here
+								bestVolume = supply;
+								bestP = p;
+							}
+						}
+						/*
+						 * If the above loop broke because the final supply price was reached,
+						 * then supply at Price >= prices.get(p-1) remains constant. Thus, it is
+						 * necessary to check whether demand at higher prices will ever become
+						 * less than the current supply. If so, then that will be at the market
+						 * price.
+						 */
+						 if (s + 1 == sellOffers.size()) {
+							for (; b < buyOffers.size() && p < prices.size(); p++) {
+								while (b < buyOffers.size() && this.less(buyOffers.get(b).getPrice(), prices.get(p)))
+									demand -= buyOffers.get(b++).getQuantity();
+				
+								if (supply > demand) {
+									// volume = demand
+									if (demand > bestVolume) {
+										bestVolume = demand;
+										bestP = p;
+									}
+									break; // stop
+								} else if (supply > bestVolume) { 
+									// volume = supply here
+									bestVolume = supply;
+									bestP = p;
+								}
+							}
+						}
+						/*
+						 * If one of the loops broke because the next price was greater than the
+						 * highest demand price, then the market price is set to the highest
+						 * demand price in order to minimize shortage.
+						 */
+						if (b == buyOffers.size()) {
+							this.setLastMarketPrice(buyOffers.get(b - 1).getPrice());
+						}
+						/* If supply never crosses demand, set to highest supply price */
+						else if (p == prices.size()) {
+							this.setLastMarketPrice(buyOffers.get(p - 1).getPrice());
+						}
+						/*
+						 * Finally, if the loop broke because supply > demand, there are two
+						 * valid prices that could be the market price: prices.get(p), which is the
+						 * smallest price at which supply tops demand, or prices.get(p-1), which is
+						 * the largest price at which demand tops supply. Since either price is
+						 * valid, we select between them in an arbitrary, yet deterministic
+						 * manner. However, if choosing between a two prices, one of which would
+						 * not cause any transactions to occur, we choose the other price.
+						 */
+						else {
+							if (p == 0) {
+								this.setLastMarketPrice(prices.get(p));
+							} else if (this.less(prices.get(p - 1), sellOffers.get(0).getPrice())) {
+								this.setLastMarketPrice(prices.get(p));
+							} else if (this.less(buyOffers.get(buyOffers.size() - 1).getPrice(), prices.get(p))) {
+								this.setLastMarketPrice(prices.get(p - 1));
+							} else {
+								this.setLastMarketPrice(prices.get(bestP));
+							}
+						}
+						var seller = 0, buyer = buyOffers.size() - 1;
+						while (seller < sellOffers.size() && buyer >= 0	&& !this.less(this.getLastMarketPrice(), sellOffers.get(seller).getPrice()) && !this.less(buyOffers.get(buyer).getPrice(), this.getLastMarketPrice())) 
+						{	
+							sellOffers.get(seller).setPrice(this.getLastMarketPrice());
+							this.getTransactions().add(sellOffers.get(seller));
+							seller++;
+							buyOffers.get(buyer).setPrice(this.getLastMarketPrice());
+							this.getTransactions().add(buyOffers.get(buyer));
+							buyer--;
+						}
+						// reset offer lists and set statistic variables
+						this.setDemand(buyOffers.size());
+						this.setSupply(sellOffers.size());
+						buyOffers.clear();
+						sellOffers.clear();
+                        ]]></Body>
+                </Function>
+                
+                <Function name="equal" resultType="Boolean">
+                    <documentation>
+                        <dc:description>Check if two parameters are equal</dc:description>
+                    </documentation>
+                    <Parameter name="a" type="double"/>
+                    <Parameter name="b" type="double"/>
+                    <Body language="Java JavaScript"><![CDATA[
+                        if (a + 1e-5 < b)
+                               return false;
+                               else if (a -1e-5 > b)
+                                 return false;
+                                 else return true;
+                        ]]></Body>
+                </Function>
+                
+                <Function name="less" resultType="Boolean">
+                    <documentation>
+                        <dc:description>check if a less b</dc:description>
+                    </documentation>
+                    <Body language="Java JavaScript"><![CDATA[
+                        return (a + 1e-5 < b)
+                        ]]></Body>
+                </Function>
+                
+                <ReactionRule name="AcceptOffer" agentVariable="agt">
+                    <documentation>
+                        <dc:description>Offers are stored</dc:description>
+                    </documentation>
+                    
+                    <WHEN eventType="InMessageEvent" messageType="TraderOffer" messageVariable="msg"/>
+                    <IF language="Java JavaScript">this.msg.getOffer().isBuy()</IF>
+                    <THEN>
+                        <UPDATE-AGT>
+                            <MultiValuedSlot property="buyOffers">
+                                <AddLast>
+                                    <ItemExpr language="Java JavaScript">this.msg.getOffer()</ItemExpr>
+                                </AddLast>
+                            </MultiValuedSlot>
+                        </UPDATE-AGT>
+                    </THEN>
+                    <ELSE>
+                        <UPDATE-AGT>
+                            <MultiValuedSlot property="sellOffers">
+                                <AddLast>
+                                    <ItemExpr language="Java JavaScript">this.msg.getOffer()</ItemExpr>
+                                </AddLast>
+                            </MultiValuedSlot>
+                        </UPDATE-AGT>
+                    </ELSE>
+                </ReactionRule>
+                
+                <ReactionRule name="Clear" agentVariable="agt">
+                    <documentation>
+                        <dc:description>Ending the trading day</dc:description>
+                    </documentation>
+                    <WHEN eventType="InMessageEvent" messageType="ClearMarket"/>
+                    <DO>
+                        <UPDATE-AGT>
+                            <Call procedure="clear" contextObjectVariable="agt"></Call>
+                        </UPDATE-AGT>
+                        <SCHEDULE-EVT>
+                            <ReminderEventExpr>
+                                <ReminderMsg language="Java JavaScript">"transactions ready"</ReminderMsg>
+                            </ReminderEventExpr>
+                        </SCHEDULE-EVT>
+                    </DO>
+                </ReactionRule>
+                
+                <ReactionRule name="Return_TradeOffers" agentVariable="agt">
+                    <documentation>
+                        <dc:description>Successfully trades are returned to the traders</dc:description>
+                    </documentation>
+                    
+                    <WHEN eventType="ReminderEvent" eventVariable="evt"/>
+                    <FOR-ListItemVariable variable="o" listItemType="TradeOffer">
+                        <ListExpr language="Java JavaScript">this.agt.getTransactions()</ListExpr>
+                    </FOR-ListItemVariable>
+                    <IF language="JavaScript"><![CDATA[
+                        this.evt.getReminderMsg() === "transactions ready"
+                        ]]></IF>
+                    <THEN>
+                        <SCHEDULE-EVT>
+                            <OutMessageEventExpr messageType="MatchingOffer">
+                                <ReceiverIdRef language="Java JavaScript">this.o.getBidderIdRef()</ReceiverIdRef>
+                                <Slot property="offer">
+                                    <ObjectValueExpr objectVariable="o"/>
+                                </Slot>
+                            </OutMessageEventExpr>
+                        </SCHEDULE-EVT>
+                    </THEN>
+                </ReactionRule>
+            
+            </AgentType>
+        </EntityTypes>
+        
+        <EnvironmentRules>
+            <EnvironmentRule name="Create_InitialBuyOffers">
+                <WHEN eventType="Init"/>
+            </EnvironmentRule>
+            
+            <EnvironmentRule name="Create_InitialSellOffers">
+                <WHEN eventType="Init"/>
+            </EnvironmentRule>
+            
+            <EnvironmentRule name="StartOfDay_Rule">
+                <documentation>
+                    <dc:description>At the beginning of the day, the market price of the last day is sent to all traders</dc:description>
+                </documentation>
+                <WHEN eventType="StartOfDay"/>
+                <FOR-ObjectVariable variable="m" objectType="Market" />
+                <FOR-ObjectVariable variable="t" objectType="Trader" />
+                <DO>
+                    <SCHEDULE-EVT>
+                        <InMessageEventExpr messageType="StartOfDay_Announcement">
+                            <SenderIdRef language="Java JavaScript">this.m.getId()</SenderIdRef>
+                            <ReceiverIdRef language="Java JavaScript">this.t.getId()</ReceiverIdRef>
+                            <Slot property="price">
+                                <PropertyValueExpr entityVariable="m" property="lastMarketPrice"/>
+                            </Slot>
+                        </InMessageEventExpr>
+                    </SCHEDULE-EVT>
+                </DO>
+            </EnvironmentRule>
+            
+            <EnvironmentRule name="StartToTrade_Rule">
+                <WHEN eventType="StartToTrade"/>
+            </EnvironmentRule>
+            
+            <EnvironmentRule name="CloseMarket_Rule">
+                <documentation>
+                    <dc:description>ClearMarket is sent to the market and ends the trading day</dc:description>
+                </documentation>
+                <WHEN eventType="CloseMarket"/>
+                <FOR-ObjectVariable variable="m" objectType="Market" />
+                <DO>
+                    <SCHEDULE-EVT>
+                        <InMessageEventExpr messageType="ClearMarket" senderIdRef="0">
+                            <ReceiverIdRef language="Java JavaScript">this.m.getId()</ReceiverIdRef>
+                        </InMessageEventExpr>
+                    </SCHEDULE-EVT>
+                </DO>
+            </EnvironmentRule>
+        </EnvironmentRules>
+        
+        
+    </SimulationModel>
+    
+    <InitialState>
+        
+    </InitialState>
+    
+    <UserInterface supportedLanguages="en">
+        <StatisticsUI>
+            <StatisticsVariableUI variable="priceBond" comparisonGroup="pricevsbond"> 
+                <Label>
+                    <Text xml:lang="en">BondPrice</Text>
+                </Label>
+                <Hint>
+                    <Text>price of the bond</Text>
+                </Hint>
+            </StatisticsVariableUI>
+            
+            <StatisticsVariableUI variable="BuyOffersBond" comparisonGroup="pricevsbond">
+                <Label>
+                    <Text xml:lang="en">Bond BuyOffers</Text>
+                </Label>
+                <Hint>
+                    <Text>number of buyoffers for bond</Text>
+                </Hint>
+            </StatisticsVariableUI>
+            
+            <StatisticsVariableUI variable="SellOffersBond" comparisonGroup="pricevsbond">
+                <Label>
+                    <Text xml:lang="en">Bond SellOffers</Text>
+                </Label>
+                <Hint>
+                    <Text>number of selloffers for bond</Text>
+                </Hint>
+            </StatisticsVariableUI>
+            
+            <StatisticsVariableUI variable="priceShare" comparisonGroup="pricevsshare">
+                <Label>
+                    <Text xml:lang="en">SharePrice</Text>
+                </Label>
+                <Hint>
+                    <Text>price of the share</Text>
+                </Hint>
+            </StatisticsVariableUI>
+            
+            <StatisticsVariableUI variable="BuyOffersShare" comparisonGroup="pricevsshare">
+                <Label>
+                    <Text xml:lang="en">Share BuyOffers</Text>
+                </Label>
+                <Hint>
+                    <Text>number of buyoffers for share</Text>
+                </Hint>
+            </StatisticsVariableUI>
+            
+            <StatisticsVariableUI variable="SellOffersShare" comparisonGroup="pricevsshare">
+                <Label>
+                    <Text xml:lang="en">Share SellOffers</Text>
+                </Label>
+                <Hint>
+                    <Text>number of selloffers for share</Text>
+                </Hint>
+            </StatisticsVariableUI>
+            
+            <StatisticsVariableUI variable="priceFund" comparisonGroup="pricevsfund">
+                <Label>
+                    <Text xml:lang="en">FundPrice</Text>
+                </Label>
+                <Hint>
+                    <Text>price of a fund</Text>
+                </Hint>
+            </StatisticsVariableUI>
+            
+            <StatisticsVariableUI variable="BuyOffersFund" comparisonGroup="pricevsfund">
+                <Label>
+                    <Text xml:lang="en">Fund BuyOffers</Text>
+                </Label>
+                <Hint>
+                    <Text>number of buyoffers for fund</Text>
+                </Hint>
+            </StatisticsVariableUI>
+            
+            <StatisticsVariableUI variable="SellOffersFund" comparisonGroup="pricevsfund">
+                <Label>
+                    <Text xml:lang="en">Fund SellOffers</Text>
+                </Label>
+                <Hint>
+                    <Text>number of selloffers for fund</Text>
+                </Hint>
+            </StatisticsVariableUI>
+            
+            <StatisticsVariableUI variable="wealth">
+                <Label>
+                    <Text xml:lang="en">traderWealth</Text>
+                </Label>
+                <Hint>
+                    <Text>the wealth of the trader</Text>
+                </Hint>
+            </StatisticsVariableUI>            
+        </StatisticsUI>
+        
+        <AnimationUI>
+            <Views></Views>
+        </AnimationUI>
+        
+    </UserInterface>
+</SimulationScenario>
+    
