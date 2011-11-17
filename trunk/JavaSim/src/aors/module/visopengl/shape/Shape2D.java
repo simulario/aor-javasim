@@ -1,5 +1,6 @@
 package aors.module.visopengl.shape;
 
+import java.io.File;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.util.ArrayList;
@@ -15,6 +16,7 @@ import aors.model.envsim.Objekt;
 import aors.model.envsim.Physical;
 import aors.module.visopengl.space.view.PropertyMap;
 import aors.module.visopengl.utility.Color;
+import aors.module.visopengl.utility.TextureLoader;
 
 import com.sun.opengl.util.texture.Texture;
 import com.sun.opengl.util.texture.TextureCoords;
@@ -635,6 +637,12 @@ public abstract class Shape2D implements Cloneable {
 				}
 				recompile = true;
 			}
+			
+			else if (shapeProperty.equals(TEXTURE)) {
+        this.textureFilename = value;
+        this.texture = TextureLoader.loadTexture(value);
+        recompile = true;
+      }
 		}
 	}
 
