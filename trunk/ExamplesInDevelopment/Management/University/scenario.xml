@@ -8,17 +8,25 @@
     scenarioTitle="An example of how the Universty works"
     simulationManagerDirectory="../../..">
     
-    <SimulationParameters simulationSteps="100" timeUnit="h" />
+    <SimulationParameters simulationSteps="100" timeUnit="h" stepDuration="1"/>
     <SimulationModel modelName="University_OrganizationVersion" modelTitle="An example of how the Universty works">
-        <!-- 
+        <documentation>
+            <description>As a car enters from the street, the driver, who we will call Fred, decides whether or not to get in line. If Fred decides to leave the restaurant, he leaves as a dissatisfied customer. One of the great things about a simulation is that it is easy to track these type of customers. In most real-world systems, it is usually difficult to track lostCustomers who leave dissatisfied. If Fred decides to get in line, then he waits until the menu board (with the speaker no normal human being can understand) is available. At that time, Fred gives the order to the order taker. After the order is taken, then two things occur simultaneously: (1) Fred moves forward if there is room. If there is no room, then he has to wait at the menu board until there is room to move forward. As soon as there is room, he moves so the next customer can order. (2) The order is sent electronically back to the kitchen where it is prepared as soon as the cook is available. As soon as Fred reaches the pickup window, then he pays and picks up his food, if it is ready. If the food is not ready, then Fred has to wait until his order is prepared.</description>
+            <dc:created>20111114</dc:created>
+            <dc:creator>Duca Bogdan</dc:creator>
+            <dc:contributor>Oana Nicolae</dc:contributor>
+        </documentation>
+        
         <Statistics>
+            <!--
             <Variable name="CourseAttending" dataType="Integer">
                 <Source computeOnlyAtEnd="true" aggregationFunction="avg">
                     <ObjectProperty property="atTheCourse" objectType="Student"/>
                 </Source>
             </Variable>
+            -->
         </Statistics>
-        -->
+       
       <EntityTypes>
           <!-- =================================================== -->
           <ExogenousEventType name="StartAcademicYear" />
@@ -28,38 +36,39 @@
           <CausedEventType name="EndOfCourse" />
           <!-- =================================================== -->
           <ObjectType name="Course">
-              <!-- =================================================== -->
+          <!-- =================================================== -->
               <Attribute type="Integer" name="courseId" />
               <Attribute type="String" name="courseName" />
               <Attribute type="Integer" name="maxNrOfStudents" />
               <Attribute type="String" name="moduleType"/>
-              <Attribute type="String" name="period"/>
-              <Attribute type="String" name="language"/>
+              <Attribute type="String" name="period" />
+              <Attribute type="String" name="language" />
           </ObjectType>
           <!-- =================================================== -->
-          <ObjectType name="OrganzationChart">
-              <Attribute type="String" name="founded"/>
-              <Attribute type="String" name="termsOfOperation"/>
+          <ObjectType name="OrganizationChart">
+          <!-- =================================================== -->
+              <Attribute type="String" name="founded" />
+              <Attribute type="String" name="address" />
+              <Attribute type="String" name="termsOfOperation" />
           </ObjectType>
           <!-- =================================================== 
               Here we introduce the people with different roles.
               =================================================== -->
-       
+          <!-- =================================================== -->
           <AgentType name="Person">
-              <!-- =================================================== -->
+           <!-- =================================================== -->
               <Attribute type="String" name="firstName" />
               <Attribute type="String" name="lastName" />
           </AgentType>
           <!-- =================================================== -->
           <AgentType name="Student" superType="Person">
-              <!-- =================================================== -->
-              <Attribute type="Integer" name="matrikelNr" />
+           <!-- =================================================== -->
+              <Attribute type="Integer" name="matriculationNr" />
               <Attribute type="Boolean" name="atTheCourse" />
-              <Attribute type="String" name="degree"/>
-              <Attribute type="String" name="field"/>
-              <Attribute type="String" name="semestetOfStudy"/>
+              <Attribute type="String" name="degree" />
+              <Attribute type="String" name="fieldOfStudy" />
+              <Attribute type="String" name="semesterOfStudy" />
               <ReferenceProperty name="courseList" type="Course" upperMultiplicity="unbounded"/>
-              <!-- =================================================== -->
               <!-- Function created to simulate the mood of the student concerning the course -->
               <Function name="courseChance" resultType="Boolean">
                    <Body language="Java"><![CDATA[
@@ -83,19 +92,61 @@ getCourseChance()
               </ReactionRule>
           </AgentType>
           <!-- =================================================== -->
-          <AgentType name="Professor" superType="Person">
+          <AgentType name="Employee" superType="Person" />
+          <!-- =================================================== 
+              Defining the organization University and the corresponding
+              sub organizations units. -->
+          <!-- =================================================== -->
+          <AgentType name="University">
+              <!-- =================================================== -->
+              <Attribute name="organizationName" type="String" />
+              <ReferenceProperty name="organizationChart" type="OrganizationChart" />
+              <ReferenceProperty name="faculties" type="Faculty" upperMultiplicity="unbounded" />
+          </AgentType>
+          <!-- =================================================== -->
+          <AgentType name="Faculty">
+              <!-- =================================================== -->
+              <ReferenceProperty name="studentsList" type="Student" upperMultiplicity="unbounded" />
+              <ReferenceProperty name="chairs" type="Chair" upperMultiplicity="unbounded" />
+          </AgentType>
+          <!-- =================================================== -->
+          <AgentType name="Chair">
+              <!-- =================================================== -->
+              <ReferenceProperty name="chairHolder" type="Professor" /> 
+              <ReferenceProperty name="secretary" type="Secretary" />
+              <ReferenceProperty name="employeesList" type="Employee" upperMultiplicity="unbounded"/>
+          </AgentType>
+          <!-- =================================================== -->
+          <AgentType name="TechnicalStaff" superType="Employee">
+              <!-- =================================================== -->
+              <Attribute name="name" type="String" />
+          </AgentType>
+          <!-- =================================================== -->
+          <AgentType name="Secretary" superType="Employee">
+              <!-- =================================================== -->
+              <Attribute name="name" type="String" />
+          </AgentType>
+          <!-- =================================================== -->
+          <AgentType name="TeachingStaff" superType="Employee">
+              <!-- =================================================== -->
+              <Attribute name="name" type="String" />  
+          </AgentType>
+          <!-- =================================================== -->
+          <AgentType name="Researcher" superType="Employee">
+              <!-- =================================================== -->
+              <Attribute name="name" type="String" />  
+          </AgentType>
+          <!-- =================================================== -->
+          <AgentType name="Professor" superType="Employee">
+            <!-- =================================================== -->
               <Attribute type="String" name="type"/>
               <Attribute type="Integer" name="startYear"/>
               <Attribute type="String" name="chair"/>
               <Attribute type="Boolean" name="atTheCourse"/>
-              <ReferenceProperty name="modulesList" type="Course" upperMultiplicity="unbounded"/>
-              <!-- 
-              <ReferenceProperty name="courses" type="Course"  upperMultiplicity="unbounded">
-                  <description>Every professor have courses where he teach</description>
-              </ReferenceProperty>
-              -->
+              <ReferenceProperty name="modulesList" type="Course" upperMultiplicity="unbounded" />
               <!-- =================================================== -->
               <ReactionRule name="TeachCourse_Rule">
+                  <!-- =================================================== -->
                   <WHEN eventType="CourseStart"/>
                   <DO>
                       <UPDATE-AGT>
@@ -103,55 +154,23 @@ getCourseChance()
                       </UPDATE-AGT>
                   </DO>
               </ReactionRule>
+              <!-- =================================================== -->
               <ReactionRule name="CourseEnd">
+                  <!-- =================================================== -->
                   <WHEN eventType="CourseEnd"/>
                   <DO>
                       <UPDATE-AGT>
-                          <Slot property="atTheCourse" value="false"/>
+                          <Slot property="atTheCourse" value="false" />
                       </UPDATE-AGT>
                   </DO>
               </ReactionRule>
-             
-          </AgentType>
-          <!-- =================================================== -->
-          <AgentType name="Employee" superType="Person"/>
-          <!-- =================================================== -->
-          <AgentType name="Secretary" superType="Person"/>
-          
-          <!-- =================================================== 
-              Defining the organization University and the corresponding
-              sub organizations units.
-              =================================================== -->
-          
-          <AgentType name="Organization">
-              <ReferenceProperty name="organizationChart" type="OrganizationChart" lowerMultiplicity="1" upperMultiplicity="1"/>
-          </AgentType>
-          <!-- =================================================== -->
-          <AgentType name="Faculty" superType="Organization">
-              <ReferenceProperty name="studentsList" type="Student" upperMultiplicity="1" lowerMultiplicity="unbounded"/>
-          </AgentType>
-          <!-- =================================================== -->
-          <AgentType name="Chair" superType="Faculty">
-              <ReferenceProperty name="chairHolder" type="Professor" lowerMultiplicity="1" upperMultiplicity="1"/> 
-              <ReferenceProperty name="employeesList" type="Employee" lowerMultiplicity="1" upperMultiplicity="unbounded"/>
-          </AgentType>
-          <!-- =================================================== -->
-          <AgentType name="TechnicalStaff" superType="Chair">
-              <ReferenceProperty name="members" type="Person" upperMultiplicity="1" lowerMultiplicity="unbounded"/>
-          </AgentType>
-          <!-- =================================================== -->
-          <AgentType name="Secretariat" superType="Chair">
-              <ReferenceProperty name="secretary" type="Secretary" lowerMultiplicity="1" upperMultiplicity="unbounded"/>
-          </AgentType>
-          <!-- =================================================== -->
-          <AgentType name="TeachingStaff" superType="Chair">
-              <ReferenceProperty name="chairHolder" type="Professor" upperMultiplicity="1" lowerMultiplicity="1"/>
-              <ReferenceProperty name="teachingStaff" type="Person" lowerMultiplicity="1"/>          
           </AgentType>
       </EntityTypes>
+        
       <EnvironmentRules>
           <!-- =================================================== -->
           <EnvironmentRule name="FacultyStart_Rule">
+              <!-- =================================================== -->
               <WHEN eventType="FacultyStart"/>
               <DO>
                   <SCHEDULE-EVT>
@@ -165,6 +184,7 @@ getCourseChance()
           </EnvironmentRule>
           <!-- =================================================== -->
           <EnvironmentRule name="CourseStart_Rule">
+              <!-- =================================================== -->
               <WHEN eventType="CourseStart"/>
               <DO>
                   <SCHEDULE-EVT>
@@ -183,10 +203,13 @@ getCourseChance()
           </EnvironmentRule>
       </EnvironmentRules>
     </SimulationModel>
+    <!-- =================================================== -->
     <InitialState>
+        <!-- =================================================== -->
         <ExogenousEvent type="FacultyStart" occurrenceTime="1"/>
         <!-- =================================================== -->
         <Agent type="Professor" name="Professor1" id="1">
+            <!-- =================================================== -->
             <Slot property="firstName" value="Wagner"/>
             <Slot property="lastName" value="Gerd"/>
             <Slot property="chair" value="InternetTechnology"/>
@@ -194,6 +217,7 @@ getCourseChance()
         </Agent>
         <!-- =================================================== -->
         <Agent type="Student" name="Student1" id="2">
+            <!-- =================================================== -->
             <Slot property="firstName" value="Duca"/>
             <Slot property="lastName" value="Bogdan"/>
             <Slot property="matrikelNr" value="3053643"/>
@@ -201,6 +225,7 @@ getCourseChance()
         </Agent>
         <!-- =================================================== -->
         <Agent type="Student" name="Student2" id="3">
+            <!-- =================================================== -->
             <Slot property="firstName" value="Bobo"/>
             <Slot property="lastName" value="Greg"/>
             <Slot property="matrikelNr" value="3053622"/>
@@ -208,8 +233,9 @@ getCourseChance()
         </Agent>
         <!-- =================================================== -->
         <Agent type="Student" name="Student3" id="4">
+            <!-- =================================================== -->
             <Slot property="firstName" value="Smith"/>
-            <Slot property="lastName" value="Jens"/>
+            <Slot property="lastName" value="Tom"/>
             <Slot property="matrikelNr" value="3053612"/>
             <Slot property="atTheCourse" value="false"/>
         </Agent>
