@@ -1,8 +1,8 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <SimulationScenario xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
- xsi:schemaLocation="http://aor-simulation.org ../../../AORSL/AORSL_0-9.xsd"
- xmlns="http://aor-simulation.org"
+ xsi:schemaLocation="http://aor-simulation.org file:/D:/SchemaAORSL/AORSL_0-9.xsd"
  xmlns:dc="http://purl.org/dc/elements/1.1/"
+ xmlns="http://aor-simulation.org"
  xmlns:aors="http://aor-simulation.org"
  scenarioName="StockMarketGame"
  version="0.9">
@@ -12,60 +12,61 @@
             <dc:title>An artificial Stock Market with 3 assets: Bonds, Shares and Funds</dc:title>
             <dc:creator>Cosmin Paun</dc:creator>
             <dc:created>20110914</dc:created>
+            <informationModelDiagram>StockMarket.png</informationModelDiagram>
         </documentation>
         
         <Statistics>
             <Variable name="priceBond" dataType="Float">
                 <Source>
-                    <ObjectProperty property="lastMarketPrice" objectType="Market" objectIdRef="2"/>
+                    <ObjectProperty property="lastBondPrice" objectType="Market"/>
                 </Source>
             </Variable>
             
             <Variable name="BuyOffersBond" dataType="Float">
                 <Source>
-                    <ObjectProperty property="Demand" objectType="Market" objectIdRef="2"/>
+                    <ObjectProperty property="BondDemand" objectType="Market" />
                 </Source>
             </Variable>
             
             <Variable name="SellOffersBond" dataType="Float">
                 <Source>
-                    <ObjectProperty property="Supply" objectType="Market" objectIdRef="2"/>
+                    <ObjectProperty property="BondSupply" objectType="Market"/>
                 </Source>
             </Variable>
             
             <Variable name="priceShare" dataType="Float">
                 <Source>
-                    <ObjectProperty property="lastMarketPrice" objectType="Market" objectIdRef="3"/>
+                    <ObjectProperty property="lastSharePrice" objectType="Market" />
                 </Source>
             </Variable>
             
             <Variable name="BuyOffersShare" dataType="Float">
                 <Source>
-                    <ObjectProperty property="Demand" objectType="Market" objectIdRef="3"/>
+                    <ObjectProperty property="ShareDemand" objectType="Market" />
                 </Source>
             </Variable>
             
             <Variable name="SellOffersShare" dataType="Float">
                 <Source>
-                    <ObjectProperty property="Supply" objectType="Market" objectIdRef="3"/>
+                    <ObjectProperty property="ShareSupply" objectType="Market" />
                 </Source>
             </Variable>
             
             <Variable name="priceFund" dataType="Float">
                 <Source>
-                    <ObjectProperty property="lastMarketPrice" objectType="Market" objectIdRef="4"/>
+                    <ObjectProperty property="lastFundPrice" objectType="Market" />
                 </Source>
             </Variable>
             
             <Variable name="BuyOffersFund" dataType="Float">
                 <Source>
-                    <ObjectProperty property="Demand" objectType="Market" objectIdRef="4"/>
+                    <ObjectProperty property="FundDemand" objectType="Market" />
                 </Source>
             </Variable>
             
             <Variable name="SellOffersFund" dataType="Float">
                 <Source>
-                    <ObjectProperty property="Supply" objectType="Market" objectIdRef="4"/>
+                    <ObjectProperty property="FundSupply" objectType="Market"/>
                 </Source>
             </Variable>
             
@@ -290,7 +291,7 @@
                                         <![CDATA[
                                         var factor = 0.1;
                                         var price = factor * this.getLastBondPrice();
-                                        this.agt.createOffer("Bond",js.util.Random.uniformInt(1,4), js.util.Random.uniform(1.0,5.0), true);
+                                        this.agt.createOffer("Bond",js.util.Random.uniformInt(1,4), js.util.Random.uniform(1.0,5.0), price, true);
                                         ]]>
                                     </ValueExpr>
                                 </Slot>
@@ -630,7 +631,21 @@
     </SimulationModel>
     
     <InitialState>
-        
+        <Agent type="Market" name="TradeMarket">
+            <Slot property="buyOffers">
+                <ValueExpr language="JavaScript">
+                    <![CDATA[new js.util.ArrayList() ]]>
+                </ValueExpr>
+            </Slot>
+            
+            <Slot property="sellOffers">
+                <ValueExpr language="JavaScript"><![CDATA[ new js.util.ArrayList()]]></ValueExpr>
+            </Slot>
+            
+            <Slot property="transactions">
+                <ValueExpr language="JavaScript"><![CDATA[ new js.util.ArrayList() ]]></ValueExpr>
+            </Slot>
+        </Agent>
     </InitialState>
     
     <UserInterface supportedLanguages="en">
