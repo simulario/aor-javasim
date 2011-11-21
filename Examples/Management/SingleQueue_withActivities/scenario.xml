@@ -26,12 +26,13 @@
 		<Statistics>
 			<Variable name="serviceDeskUtilization" dataType="Float">
 				<Source>
-					<ResourceUtilization activityType="PerformService" resourceObjectType="ServiceDesk" resourceObjectIdRef="2"/>
+					<ResourceUtilization activityType="PerformService" resourceObjectType="ServiceDesk"
+						resourceObjectIdRef="2" />
 				</Source>
 			</Variable>
-			<Variable name="maxQueueLength" dataType="Integer">
+			<Variable name="maxQueueLength" dataType="Float">
 				<Source aggregationFunction="max">
-					<ObjectProperty property="queueLength" objectType="CustomerQueue" objectIdRef="1"/>
+					<ObjectProperty property="queueLength" objectType="CustomerQueue" objectIdRef="1" />
 				</Source>
 			</Variable>
 		</Statistics>	
@@ -45,11 +46,9 @@
 					</DiscreteRandomVariable>
 				</Periodicity>
 			</ExogenousEventType>			
-			<!-- ======================================================== -->
-		  <ActivityType name="PerformService" 
-		  	startEventCorrelationProperty="startServiceProp"
-		  	endEventCorrelationProperty="endServiceProp">
-				<!-- ====================================================== -->
+		<!-- ======================================================== -->
+		  <ActivityType name="PerformService">
+			<!-- ====================================================== -->
 				<FOR objectVariable="sd" objectType="ServiceDesk" objectIdRef="2"/>
 				<Duration>
 					<ValueExpr language="Java">sd.randomServiceTime()</ValueExpr>
@@ -57,22 +56,22 @@
 				<ResourceRef language="Java">sd</ResourceRef>
 				<ActivityStartEffect>
 					<UpdateActor actorType="ServiceDesk" actorVariable="sd">
-						<Slot property="serviceDeskBusy" value="true"/>
+						<Slot property="serviceDeskBusy" value="true" />
 					</UpdateActor>
 				</ActivityStartEffect>
 				<ActivityEndEffect>	
 					<UpdateActor actorType="ServiceDesk" actorVariable="sd">
-						<Slot property="serviceDeskBusy" value="false"></Slot>
+						<Slot property="serviceDeskBusy" value="false" />
 					</UpdateActor>
 				</ActivityEndEffect>
 			</ActivityType>	
 			<!-- ====================================== -->
 			<ObjectType name="CustomerQueue">
 			<!-- ==================================== -->
-				<Attribute name="queueLength" type="Integer"/>
+				<Attribute name="queueLength" type="Float" />
 			</ObjectType>	
 			<!-- ====================================== -->
-			<ObjectType name="ServiceDesk">
+			<AgentType name="ServiceDesk">
 			<!-- ==================================== -->
 				<Attribute name="serviceDeskBusy" type="Boolean"/>
 				<Function name="randomServiceTime" resultType="Integer">
@@ -87,7 +86,7 @@ int r = aors.util.Random.uniformInt(0,99);
 					]]>
 					</Body>
 				</Function>
-			</ObjectType>
+			</AgentType>
 		</EntityTypes>
 		<EnvironmentRules>
 			<!-- =================================================== -->
@@ -97,8 +96,8 @@ int r = aors.util.Random.uniformInt(0,99);
 					<description>On CustomerArrival, if the service desk is busy, the customer has to wait in a line, so the queue length is increased by 1. Otherwise, the customer is going to be serviced and hence the PerformService activity is scheduled. </description>
 				</documentation>
 				<WHEN eventType="Arrival" eventVariable="evt" />
-				<FOR objectVariable="cq" objectType="CustomerQueue" objectIdRef="1"/>
-				<FOR objectVariable="sd" objectType="ServiceDesk" objectIdRef="2"/>
+				<FOR objectVariable="cq" objectType="CustomerQueue" objectIdRef="1" />
+				<FOR objectVariable="sd" objectType="ServiceDesk" objectIdRef="2" />
 				<IF language="Java"><![CDATA[
 !sd.isServiceDeskBusy() && cq.getQueueLength() == 1
 				]]></IF>
@@ -112,7 +111,9 @@ int r = aors.util.Random.uniformInt(0,99);
 				<ELSE>
 					<UPDATE-ENV>
 						<UpdateObject objectVariable="cq">
-							<Increment property="queueLength" value="1" />
+							<Slot property="queueLength">
+								<ValueExpr language="Java">cq.getQueueLength() + 1</ValueExpr>
+							</Slot>
 						</UpdateObject>
 					</UPDATE-ENV>
 				</ELSE>
@@ -127,11 +128,13 @@ int r = aors.util.Random.uniformInt(0,99);
 				<FOR objectVariable="cq" objectType="CustomerQueue" objectIdRef="1" />
 				<IF language="Java"><![CDATA[  
 cq.getQueueLength() > 0  
-        ]]></IF>
+                 ]]></IF>
 				<THEN>
 					<UPDATE-ENV>
 						<UpdateObject objectVariable="cq">
-							<Decrement property="queueLength" value="1" />
+							<Slot property="queueLength">
+								<ValueExpr language="Java">cq.getQueueLength() - 1</ValueExpr>
+							</Slot>
 						</UpdateObject>
 					</UPDATE-ENV>
 					<SCHEDULE-EVT>
@@ -147,12 +150,12 @@ cq.getQueueLength() > 0
 	<InitialState>
 		<!-- =================================================== -->
 		<Object type="CustomerQueue" id="1">
-			<Slot property="queueLength" value="0"/>
+			<Slot property="queueLength" value="0" />
 		</Object>
-		<Object type="ServiceDesk" id="2">
-			<Slot property="serviceDeskBusy" value="false"/>
-		</Object>
-		<ExogenousEvent type="Arrival" occurrenceTime="1"/>	
+		<Agent type="ServiceDesk" id="2">
+			<Slot property="serviceDeskBusy" value="false" />
+		</Agent>
+		<ExogenousEvent type="Arrival" occurrenceTime="1" />	
 	</InitialState>
 	<!-- =================================================== -->
 	<UserInterface supportedLanguages="en">
@@ -206,7 +209,7 @@ cq.getQueueLength() > 0
 					<Text xml:lang="es">Cual es el tiempo promedio de uso del servicio?</Text>
 					<Text xml:lang="ro">Care este timpul mediu de utilizare a serviciului?</Text>
 				</Hint>
-				<Format decimalPlaces="0"><Math>%</Math></Format>
+				<Format decimalPlaces="2"><Math>%</Math></Format>
 			</StatisticsVariableUI>
 			<StatisticsVariableUI variable="maxQueueLength">
 				<Label>
@@ -223,7 +226,7 @@ cq.getQueueLength() > 0
 					<Text xml:lang="es">Cual es el maximo longitud de la cola?</Text>
 					<Text xml:lang="ro">Care este dimensiunea maxima a listei de asteptare?</Text>
 				</Hint>
-				<Format decimalPlaces="0"/>
+				<Format decimalPlaces="2"/>
 			</StatisticsVariableUI>
 		</StatisticsUI>
 		<AnimationUI>
