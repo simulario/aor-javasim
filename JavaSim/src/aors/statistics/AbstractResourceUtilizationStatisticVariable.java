@@ -46,7 +46,7 @@ public abstract class AbstractResourceUtilizationStatisticVariable extends
 
   protected String activityType;
 
-  protected long destroyedObjectResourceUtilization = 0;
+  protected double destroyedObjectResourceUtilization = 0;
 
   /*
    * ResourceUtilization with one object
