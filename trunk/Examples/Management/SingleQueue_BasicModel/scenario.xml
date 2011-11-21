@@ -3,16 +3,15 @@
 <SimulationScenario xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" 
 	xmlns="http://aor-simulation.org" 
 	xmlns:aors="http://aor-simulation.org" 
-	xmlns:dc="http://purl.org/dc/elements/1.1/" 
-	xmlns:h="http://www.w3.org/1999/xhtml" 
+	xmlns:dc="http://purl.org/dc/elements/1.1/"
 	version="0.9" xsi:schemaLocation="http://aor-simulation.org ../../../AORSL/ERSL/ERSL_0-9.xsd" 
 	scenarioName="SingleServiceQueueWithStatistics" 
-	scenarioTitle="A single service queue with service utilization and maximum queue length statistics" 
 	simulationManagerDirectory="../../..">
 
 	<SimulationParameters simulationSteps="6000" stepDuration="1" timeUnit="min"/>
 
-	<SimulationModel modelName="SingleServiceQueueWithStatistics" modelTitle="A single service queue with service utilization and maximum queue length statistics">
+	<SimulationModel modelName="SingleServiceQueueWithStatistics" 
+		modelTitle="A single service queue with service utilization and maximum queue length statistics">
 
 		<documentation>
 			<dc:creator>Gerd Wagner</dc:creator>
@@ -20,14 +19,24 @@
 			<dc:modified>20110810</dc:modified>
 			<dc:contributor>Oana Nicolae</dc:contributor>
 			<dc:title>Single Queue</dc:title>
-			<dc:description>
-				Customers arrive at random times at a service desk where they have to wait in a queue when the service desk is serviceDeskBusy. 
+			<dc:title xml:lang="de">Einfach-Warteschlange</dc:title>
+			<shortDescription>A simple model of a service queue.</shortDescription>
+			<shortDescription xml:lang="de">Ein einfaches Modell einer Service-Warteschlange.</shortDescription>
+			<description>
+				Customers arrive at random times at a service desk where they have to wait in a queue when the service desk is busy. 
 				The time between two customer arrivals is uniformly distributed between 1 and 8 minutes. 
 				The times for completing a service vary from 1 to 6 minutes, with probabilities 0.1, 0.2, 0.3, 0.25, 0.1, 0.05, respectively. 
 				Two statistics are to be collected: service utilization (total service time divided by total time) and maximum queue length. 
-			</dc:description>
-			<shortDescription>Customers queue simulation of a service desk (includes statistics).</shortDescription>
-			<processModelDiagram>../BPMN-Diagram.png</processModelDiagram>
+			</description>
+			<description xml:lang="de">
+				Kunden kommen in zufälligen Zeitabständen an einem Service-Schalter an, wo sie in einer Warteschlange warten müssen, 
+				wenn der Schalter	beschäftigt ist. Die Zeit zwischen zwei Kundenankünften ist gleichförmig verteilt zwischen 1 und 8 Minuten. 
+				Die Zeit zur Erbringung eines Dienstes variiert zwischen 1 und 6 Minuten, mit den Wahrscheinlichkeiten 0.1, 0.2, 0.3, 0.25, 
+				0.1 beziehunsgweise 0.05. Es sollen zwei Statistiken erhoben werden: der Service-Nutzungsgrad (gesamte Servicezeit geteilt 
+				durch die Gesamtzeit) und die maximale Länge der Warteschlange.
+			</description>
+			<CcLicense license="CC BY-SA"/>
+			<processModelDiagram>BPMN-Diagram.png</processModelDiagram>
 		</documentation>
 
 		<Statistics>
@@ -38,7 +47,7 @@
 						(float) SimStatistics.totalServiceTime.getValue() / SimParameter.SIMULATION_STEPS
 					</ValueExpr>
 					<ValueExpr language="JavaScript">
-						parseFloat(sim.controller.SimStatistics.totalServiceTime.getValue()) / parseFloat(sim.controller.SimParameter.SIMULATION_STEPS) 
+						parseFloat( sim.controller.SimStatistics.totalServiceTime.getValue()) / parseFloat( sim.controller.SimParameter.SIMULATION_STEPS) 
 					</ValueExpr>
 				</Source>
 			</Variable>
@@ -100,9 +109,12 @@
 		<EnvironmentRules>
 			<!-- =================================================== -->
 			<EnvironmentRule name="ArrivalRule">
-				<!-- =================================================== -->
+			<!-- =================================================== -->
 				<documentation>
-					<dc:description>When a new customer arrives, if the service desk is busy, the customer has to wait in a line, so the queue length is increased by 1. Otherwise, the customer is going to be serviced and hence the service desk gets busy, and for ending the service, a CustomerDeparture event (with a delay being set to a random service time) is created .</dc:description>
+					<dc:description>When a new customer arrives, if the service desk is busy, the customer has to wait in a line, 
+						so the queue length is increased by 1. Otherwise, the customer is going to be serviced and hence 
+						the service desk gets busy, and for ending the service, a CustomerDeparture event (with a delay being set 
+						to a random service time) is created .</dc:description>
 				</documentation>
 				<WHEN eventType="CustomerArrival"/>
 				<FOR dataVariable="srvTm" dataType="Integer">
@@ -201,14 +213,14 @@
 	
 	<!-- =================================================== -->
 	<InitialState>
-		<!-- =================================================== -->
+	<!-- =================================================== -->
 		<GlobalVariable name="serviceDeskBusy" value="false" />
 		<GlobalVariable name="queueLength" value="0" />
 		<ExogenousEvent type="CustomerArrival" occurrenceTime="1" />
 	</InitialState>
 	<!-- =================================================== -->
 	<UserInterface supportedLanguages="en de fr es ro">
-		<!-- =================================================== -->
+	<!-- =================================================== -->
 		<StatisticsUI>
 			<StatisticsVariableUI variable="serviceUtilization">
 				<Label>
@@ -227,7 +239,7 @@
 				</Hint>
 				<Format decimalPlaces="2"><Math>%</Math></Format>
 			</StatisticsVariableUI>
-			<StatisticsVariableUI variable="avgQueueLength" showChart="true">
+			<StatisticsVariableUI variable="avgQueueLength">
 				<Label>
 					<Text xml:lang="en">Average Queue Length</Text>
 					<Text xml:lang="de">Durchschnittliche Länge der Warteschlange</Text>
@@ -260,15 +272,13 @@
 					<Text xml:lang="ro">Care este dimensiunea maxima a listei de asteptare?</Text>
 				</Hint>
 			</StatisticsVariableUI>
-		</StatisticsUI>	
+		</StatisticsUI>
+<!--
 		<AnimationUI>
 			<aors:StartPageText xmlns="http://www.w3.org/1999/xhtml">
 				<aors:HtmlText xml:lang="en">
-					<div style="float:left; width: 40%; height: 80%; padding: 0px 10px 5px 5px;">
-						<img src="media/queue.jpg" />
-					</div>
-					<div style="float:left; width: 40%; padding: 10% 0px; 5%">
-						<h4>Single Queue description:</h4>
+					<div style="float:right; padding-left:1em;"><img src="media/queue.jpg" /></div>
+						<h4>Single Service Queue</h4>
 						<p>Customers arrive at random times at a service desk where they have to wait in a queue when 
 						   the service desk is serviceDeskBusy. The time between two customer arrivals is uniformly 
 						   distributed between 1 and 8 minutes. The times for completing a service vary from 1 to 6 minutes, 
@@ -284,81 +294,10 @@
 						   Otherwise, the next customer will be serviced, so a new future CustomerDeparture event 
 						   is created (with a delay given by the random service time), and the queue size is decreased by 1.
 						</p>
-					</div>	
-				</aors:HtmlText>
-				<aors:HtmlText xml:lang="de">
-					<div style="float:left; width: 40%; height: 80%; padding: 0px 10px 5px 5px;">
-						<img src="media/queue.jpg" />
-					</div>
-					<div style="float:left; width: 40%; padding: 10% 0px; 5%">
-						<h4>Single Queue description:</h4>
-						<p>Customers arrive at random times at a service desk where they have to wait in a queue when 
-							the service desk is serviceDeskBusy. The time between two customer arrivals is uniformly 
-							distributed between 1 and 8 minutes. The times for completing a service vary from 1 to 6 minutes, 
-							with probabilities 0.1, 0.2, 0.3, 0.25, 0.1, 0.05, respectively.
-						</p>
-						<p>Two statistics are to be collected: service utilization (total service time divided by total time) and maximum queue length. </p>
-						<p>When a new customer arrives, if the service desk is busy, the customer has to wait in a line, 
-							so the queue length is increased by 1. Otherwise, the customer is going to be serviced and 
-							hence the service desk gets busy, and for ending the service, a CustomerDeparture event 
-							(with a delay being set to a random service time) is created.
-						</p>
-						<p>When a customer departs, if the queue is empty, the service desk is no longer busy. 
-							Otherwise, the next customer will be serviced, so a new future CustomerDeparture event 
-							is created (with a delay given by the random service time), and the queue size is decreased by 1.
-						</p>
-					</div>	
 				</aors:HtmlText>
 			</aors:StartPageText>
-			<aors:HelpText xmlns="http://www.w3.org/1999/xhtml">
-				<aors:HtmlText xml:lang="en">
-					<div style="float:left; width: 40%; height: 80%; padding: 0px 10px 5px 5px;">
-						<img src="media/queue.jpg" />
-					</div>
-					<div style="float:left; width: 40%; padding: 10% 0px; 5%">
-						<h4>Single Queue description:</h4>
-						<p>Customers arrive at random times at a service desk where they have to wait in a queue when 
-							the service desk is serviceDeskBusy. The time between two customer arrivals is uniformly 
-							distributed between 1 and 8 minutes. The times for completing a service vary from 1 to 6 minutes, 
-							with probabilities 0.1, 0.2, 0.3, 0.25, 0.1, 0.05, respectively.
-						</p>
-						<p>Two statistics are to be collected: service utilization (total service time divided by total time) and maximum queue length. </p>
-						<p>When a new customer arrives, if the service desk is busy, the customer has to wait in a line, 
-							so the queue length is increased by 1. Otherwise, the customer is going to be serviced and 
-							hence the service desk gets busy, and for ending the service, a CustomerDeparture event 
-							(with a delay being set to a random service time) is created.
-						</p>
-						<p>When a customer departs, if the queue is empty, the service desk is no longer busy. 
-							Otherwise, the next customer will be serviced, so a new future CustomerDeparture event 
-							is created (with a delay given by the random service time), and the queue size is decreased by 1.
-						</p>
-					</div>	
-				</aors:HtmlText>	
-				<aors:HtmlText xml:lang="de">
-					<div style="float:left; width: 40%; height: 80%; padding: 0px 10px 5px 5px;">
-						<img src="media/queue.jpg" />
-					</div>
-					<div style="float:left; width: 40%; padding: 10% 0px; 5%">
-						<h4>Single Queue description:</h4>
-						<p>Customers arrive at random times at a service desk where they have to wait in a queue when 
-							the service desk is serviceDeskBusy. The time between two customer arrivals is uniformly 
-							distributed between 1 and 8 minutes. The times for completing a service vary from 1 to 6 minutes, 
-							with probabilities 0.1, 0.2, 0.3, 0.25, 0.1, 0.05, respectively.
-						</p>
-						<p>Two statistics are to be collected: service utilization (total service time divided by total time) and maximum queue length. </p>
-						<p>When a new customer arrives, if the service desk is busy, the customer has to wait in a line, 
-							so the queue length is increased by 1. Otherwise, the customer is going to be serviced and 
-							hence the service desk gets busy, and for ending the service, a CustomerDeparture event 
-							(with a delay being set to a random service time) is created.
-						</p>
-						<p>When a customer departs, if the queue is empty, the service desk is no longer busy. 
-							Otherwise, the next customer will be serviced, so a new future CustomerDeparture event 
-							is created (with a delay given by the random service time), and the queue size is decreased by 1.
-						</p>
-					</div>	
-				</aors:HtmlText>
-			</aors:HelpText>
 			<Views></Views>
 		</AnimationUI>
+-->
 	</UserInterface>
 </SimulationScenario>
