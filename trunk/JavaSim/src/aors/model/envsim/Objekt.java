@@ -93,7 +93,7 @@ public class Objekt extends Entity {
    *          - the
    * @return the total allocated time by an activity
    */
-  public long getResourceUtilizationTimeByActivity(String activityType,
+  public double getResourceUtilizationTimeByActivity(String activityType,
       long occurenceTime) {
 
     if (this.resourceUtilizationTime.containsKey(activityType)) {
