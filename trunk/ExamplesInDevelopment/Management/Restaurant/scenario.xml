@@ -14,12 +14,10 @@
 
 		<documentation>
 			<description>As a car enters from the street, the driver, who we will call Fred, decides whether or not to get in line. If Fred decides to leave the restaurant, he leaves as a dissatisfied customer. One of the great things about a simulation is that it is easy to track these type of customers. In most real-world systems, it is usually difficult to track lostCustomers who leave dissatisfied. If Fred decides to get in line, then he waits until the menu board (with the speaker no normal human being can understand) is available. At that time, Fred gives the order to the order taker. After the order is taken, then two things occur simultaneously: (1) Fred moves forward if there is room. If there is no room, then he has to wait at the menu board until there is room to move forward. As soon as there is room, he moves so the next customer can order. (2) The order is sent electronically back to the kitchen where it is prepared as soon as the cook is available. As soon as Fred reaches the pickup window, then he pays and picks up his food, if it is ready. If the food is not ready, then Fred has to wait until his order is prepared.</description>
-			<dc:created>20090331</dc:created>
-			<dc:modified>20100228</dc:modified>
-			<dc:creator>Oana Nicolae</dc:creator>
-			<dc:contributor>Gerd Wagner</dc:contributor>
-			<dc:source>"Introduction to Simulation" by R.G. Ingalls. In: Proceedings of the 2008 Winter Simulation Conference.</dc:source>
-			<processModelDiagram>DriveThruRestaurant_AgentBased.png</processModelDiagram>
+			<dc:created>20111101</dc:created>
+			<dc:creator>Bogdan Duca</dc:creator>
+			<dc:contributor>Oana Nicolae</dc:contributor>
+			<dc:source>Extending "Introduction to Simulation" by R.G. Ingalls. In: Proceedings of the 2008 Winter Simulation Conference.</dc:source>
 		</documentation>
 
 		<Statistics>
@@ -160,9 +158,9 @@ int r2 = Random.uniformInt(1,6);
 				=================================================== -->
 			 	<AgentType name="Organization">	
             <!-- =================================================== -->
-				<ReferenceProperty name="organizationChart" type="OrganizationChart" />
-          		<ReferenceProperty name="managers" type="Manager" upperMultiplicity="unbounded" />
-          		<ReferenceProperty name="employees" type="Employee" upperMultiplicity="unbounded"/>
+				<!-- <ReferenceProperty name="organizationChart" type="OrganizationChart" /> 
+					we'll work on it later -->
+          		<ReferenceProperty name="employees" type="Employee" upperMultiplicity="unbounded" />
           		</AgentType>
 			<!-- =================================================== -->
 			<AgentType name="Person">
@@ -190,9 +188,8 @@ int r2 = Random.uniformInt(1,6);
 				</ReactionRule>
 			</AgentType>
 			<!-- =================================================== -->
-			<AgentType name="Manager" superType="Person">
+			<AgentType name="Manager" superType="Employee">
 				<!-- ======================================================= -->
-				<Attribute type="Integer" name="bank" />
 				<PeriodicTimeEventType name="EndOfMonth" periodicity="30"/>
 				<ReactionRule name="AskForMoneyRule" agentVariable="man">
 				<documentation>
@@ -986,34 +983,26 @@ mes.getCustID()
 			</Slot>
 			<PeriodicTimeEvent type="EndOfMonth" occurrenceTime="30" />
 		</Agent>
-		<!-- =================================================== -->
+		<!-- ================================================================= -->
 		<Object type="OrganizationChart" name="McMikesOrganizationChart" id="12">
-			<!-- =================================================== -->
+			<!-- ================================================================== -->
 		    <Slot property="founded" value="2011"/>
 			<Slot property="termsOfOperation" value="termsOfOperation"/>
 		</Object> 	
 		<!-- =================================================== -->
 			<Agent type="Organization" name="McMikes" id="11">  
 			<!-- =================================================== -->
-				<Slot property="organizationChart">
+				<!-- <Slot property="organizationChart">
 					<ValueExpr language="Java"><![CDATA[ 
-					 (OrganizationChart)this.getEnvironmentSimulator().getObjectById(12)
+				        (OrganizationChart)this.getEnvironmentSimulator().getObjectById(12)
 					]]></ValueExpr>
-			   </Slot>
+			   </Slot> -->
 			 <Slot property="employees">
 				<ValueExpr language="Java"><![CDATA[ 
-					new ArrayList<Employee>(){{ 
-					add((Employee)this.getEnvironmentSimulator().getObjectById(1));
-					add((Employee)this.getEnvironmentSimulator().getObjectById(2));
-					add((Employee)this.getEnvironmentSimulator().getObjectById(5));
-					}}
-					]]></ValueExpr>
-			</Slot>
-			<Slot property="managers">
-				<ValueExpr language="Java"><![CDATA[ 
-					new ArrayList<Manager>(){{
-					add((Manager)this.getEnvironmentSimulator().getObjectById(10));
-					}}
+				    java.util.Arrays.asList((Employee)this.getEnvironmentSimulator().getObjectById(1),
+					(Employee)this.getEnvironmentSimulator().getObjectById(2),
+					(Employee)this.getEnvironmentSimulator().getObjectById(5),
+					(Manager)this.getEnvironmentSimulator().getObjectById(10))
 					]]></ValueExpr>
 			</Slot>
 			</Agent>
@@ -1183,7 +1172,7 @@ mes.getCustID()
 		<!-- ================================================== -->
 			<Views>
 				<SpaceView>
-					<TwoDimensionalSpaceView2D backgroundColor="darkgrey"/>
+					<TwoDimensionalSpaceView2D backgroundColor="darkgrey" />
 				</SpaceView>
 				<!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->
 				<ObjectView objectType="OrderTaker">
@@ -1200,7 +1189,8 @@ mes.getCustID()
 				<!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->
 					<Shape2D x="250px" y="250px">
 						<Rectangle fill="green" width="50" height="50" stroke="black" strokeWidth="10">
-							<ShapePropertyVisualizationMap shapeProperty="fill" property="pickupWindowBusy" mapType="equalityCaseWise" v0="green" a0="false" a1="true" v1="red"/>
+							<ShapePropertyVisualizationMap shapeProperty="fill" property="pickupWindowBusy"
+								mapType="equalityCaseWise" v0="green" a0="false" a1="true" v1="red" />
 						</Rectangle>
 					</Shape2D>
 					<DisplayInfo content="Pickup Window" />
@@ -1210,17 +1200,19 @@ mes.getCustID()
 				<!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->
 					<Shape2D x="225px" y="300px">
 						<Rectangle positioning="LeftCenter" fill="yellow" height="10" width="1" stroke="black" strokeWidth="2">
-							<ShapePropertyVisualizationMap shapeProperty="width" property="lengthOfQueue" mapType="polynomial" a0="0" a1="50"/>
+							<ShapePropertyVisualizationMap shapeProperty="width" property="lengthOfQueue"
+								mapType="polynomial" a0="0" a1="50" />
 						</Rectangle>
 					</Shape2D>
-					<DisplayInfo content="customers"  property="lengthOfQueue"/>
+					<DisplayInfo content="customers"  property="lengthOfQueue" />
 				</ObjectView>
 				<!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->
 				<ObjectView objectType="Queue" objectIdRef="6">
 				<!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->
 					<Shape2D x="575px" y="300px">
 						<Rectangle positioning="LeftCenter" fill="yellow" height="10" width="1" stroke="black" strokeWidth="2">
-							<ShapePropertyVisualizationMap shapeProperty="width" property="lengthOfQueue" mapType="polynomial" a0="0" a1="50"/>
+							<ShapePropertyVisualizationMap shapeProperty="width" property="lengthOfQueue"
+								mapType="polynomial" a0="0" a1="50" />
 						</Rectangle>
 					</Shape2D>
 					<DisplayInfo content="customers" property="lengthOfQueue" />
