@@ -37,9 +37,7 @@
 		<Statistics>
 			<Variable name="numberOfCustomers" dataType="Integer" />
 			<Variable name="numberOfLostCustomers" dataType="Integer" />
-			<!--
 			<Variable name="revenue" dataType="Float" />
-			-->
 			<Variable name="cumulativeResponseTime" dataType="Float" />
 			<Variable name="nrOfDepartures" dataType="Float" />
 			<Variable name="meanResponseTime" dataType="Float">
@@ -247,7 +245,7 @@ this.mb.getMenuBoardQueue().size() >= this.mb.getMaxMenuBoardLineSize()
 						</UpdateObject>
 						<UpdateObject objectVariable="q1">
 							<Slot property="lengthOfQueue">
-								<ValueExpr language="Java JavaScript">this.mb.getMenuBoardQueue().size()</ValueExpr>
+								<ValueExpr language="Java JavaScript">this.q1.getLengthOfQueue() + 1</ValueExpr>
 							</Slot>
 						</UpdateObject>
 						<UpdateStatisticsVariable variable="numberOfCustomers">
@@ -368,7 +366,7 @@ __SimStatistics.numberOfCustomers.getValue() + 1
 						</UpdateObject>
 						<UpdateObject objectVariable="q1">
 							<Slot property="lengthOfQueue">
-								<ValueExpr language="Java JavaScript">this.mb.getMenuBoardQueue().size()</ValueExpr>
+								<ValueExpr language="Java JavaScript">this.q1.getLengthOfQueue() - 1</ValueExpr>
 							</Slot>
 						</UpdateObject>
 						<UpdateObject objectVariable="q2">
@@ -497,12 +495,12 @@ this.pw.getPickupWindowQueue().size() > 0 && this.pw.getPickupWindowQueue().get(
 					<description> On EndPickupWindowService, when the queue is not full, the current customer object is removed from the queue and destroyed. Furthermore, if the queue is empty, the pickup window is no longer busy. Otherwise, a new StartPickupWindowService is created. </description>
 				</documentation>
 				<WHEN eventType="EndPickupWindowService" eventVariable="evt" />
-				<FOR-ObjectVariable variable="mb" objectType="MenuBoard" objectIdRef="1" />
-				<FOR-ObjectVariable variable="pw" objectType="PickupWindow" objectIdRef="2" />
-				<FOR-ObjectVariable variable="q2" objectType="Queue" objectIdRef="7"/>
-				<FOR-ObjectVariable variable="cust" objectType="Customer">
+				<FOR objectVariable="mb" objectType="MenuBoard" objectIdRef="1" />
+				<FOR objectVariable="pw" objectType="PickupWindow" objectIdRef="2" />
+				<FOR objectVariable="q2" objectType="Queue" objectIdRef="7"/>
+				<FOR objectVariable="cust" objectType="Customer">
 					<ObjectRef language="Java JavaScript">this.pw.getPickupWindowQueue().get(0)</ObjectRef>
-				</FOR-ObjectVariable>
+				</FOR>
 				<IF language="Java JavaScript"><![CDATA[
 this.pw.getPickupWindowQueue().size() < this.pw.getMaxPickupWindowLineSize() 
                ]]></IF>
@@ -544,6 +542,7 @@ __SimStatistics.revenue.getValue() + this.pw.pizzaPrice( this.pw.getPickupWindow
 							<RemoveFirst  itemVariable="cust"/>
 						</MultiValuedSlot>
 					</UpdateObject>
+					<DestroyObject objectVariable="cust" />
 				</UPDATE-ENV>
 				<SCHEDULE-EVT>
 					<CausedEventExpr eventType="StartPickupWindowService">
@@ -585,6 +584,7 @@ __SimStatistics.revenue.getValue() + this.pw.pizzaPrice( this.cust.getOrder().ge
 							<RemoveFirst itemVariable="cust" />
 						</MultiValuedSlot>
 					</UpdateObject>
+					<DestroyObject objectVariable="cust" />
 				</UPDATE-ENV>
 				<SCHEDULE-EVT>
 					<CausedEventExpr eventType="EndMenuBoardService">
