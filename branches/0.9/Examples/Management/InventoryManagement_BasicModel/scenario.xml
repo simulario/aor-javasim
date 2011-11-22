@@ -7,9 +7,10 @@
 	scenarioName="BasicInventoryManagement" 
 	simulationManagerDirectory="../../..">
 
-	<SimulationParameters simulationSteps="5000" stepDuration="1" timeUnit="D"/>
+	<SimulationParameters simulationSteps="365" stepDuration="1" timeUnit="D"/>
 
-	<SimulationModel modelName="BasicInventoryManagement" modelTitle="A simple inventory management system with lost sales statistics">
+	<SimulationModel modelName="BasicInventoryManagement" modelTitle="A simple inventory management system 
+		with lost sales statistics">
 
 		<documentation>
 			<dc:creator>Uwe Herrmann</dc:creator>
@@ -17,13 +18,31 @@
 			<dc:contributor>Gerd Wagner</dc:contributor>
 			<dc:contributor>Oana Nicolae</dc:contributor>
 			<dc:modified>20110810</dc:modified>
-			<dc:description>The daily demand (say, for TVs in an electronics shop) is normally distributed, 
-				with a mean of 5 units and a standard deviation of 1.8 units. Hint: round off demands to 
-				the closest integer during simulation. A replenishment order is placed when the quantity in stock 
-				falls below the reorder level. The quantity of a replenishment order is computed as the reorder-up-to-level 
-				minus the quantity in stock. Lead time is distributed uniformly between 1 and 3 days. 
-				If a demand occurs on a day when the productQuantityInStock level is zero, the sale is lost. 
-				The number of lost sales is to be collected and displayed as a percentage.</dc:description>
+			<dc:title>Inventory Management</dc:title>
+			<dc:title xml:lang="de">Lagerverwaltung</dc:title>
+			<shortDescription>
+				Simulation of a simple inventory management system with a replenishment policy based on a reorder level.
+			</shortDescription>
+			<shortDescription xml:lang="de">
+				Simulation eines einfachen Lagerverwaltungssystems mit einer Wiederbeschaffungsvorgehensweise,
+				die auf einem Sicherheitsbestand (reorder level) basiert.
+			</shortDescription>
+			<description>The daily demand (say, for TVs in an electronics shop) is normally distributed, 
+				with a mean of 5 units and a standard deviation of 1.8 units. A replenishment order is placed 
+				when the quantity in stock falls below the reorder level. The order quantity of a replenishment order 
+				is computed as the reorder-up-to-level minus the quantity in stock. Lead time is distributed 
+				uniformly between 1 and 3 days.	If a demand is greater than the product quantity in stock, 
+				the sale is lost.	The number of lost sales is to be computed and displayed as a percentage.
+			</description>
+			<description xml:lang="de">Die Tagesnachfrage (z.B. für Fernsehgeräte in einem Elektronik-Fachgeschäft) ist 
+				normalverteilt mit einem Mittelwert von 5 und einer Standardabweichung von 1,8. Ein Wiederbeschaffungsauftrag
+				wird erteilt, wenn der Lagerbestand unter den Sicherheitsbestand fällt. Die Bestellmenge eines
+				Wiederbeschaffungsauftrags wird als Differenz aus dem Sollbestand (reorder-up-to-level) und dem
+				Sicherheitsbestand errechnet. Die Vorlaufzeit für Lieferungen ist uniform verteilt zwischen 1 und 3 Tagen. 
+				Wenn eine Nachfrage den Lagerbestand übersteigt, ist der Auftrag verloren. Die Anzahl der verlorenen  
+				Aufträge ist zu ermitteln und als Prozentsatz anzuzeigen.
+			</description>
+			<CcLicense license="CC BY-SA"/>
 		</documentation>
 
 		<Statistics>
@@ -44,36 +63,6 @@
 			<GlobalVariable name="productQuantityInStock" dataType="Integer" />
 			<GlobalVariable name="REORDER_LEVEL" dataType="Integer" initialValue="20" />
 			<GlobalVariable name="REORDER_UP_TO_LEVEL" dataType="Integer" initialValue="30" />
-			<!-- ======================================================== -->
-			<GlobalFunction name="randomDailyDemand" resultType="Integer">
-				<!-- ======================================================== -->
-				<Body language="Java"><![CDATA[
-		          int r = Random.uniformInt(0,99);
-		          if (r < 1) return 10; 			
-		          else if (r < 2) return 1;
-		          else if (r < 6) return 2;
-		          else if (r < 14) return 3;
-		          else if (r < 30) return 4;
-		          else if (r < 51) return 5;
-		          else if (r < 72) return 6;
-		          else if (r < 88) return 7;
-		          else if (r < 96) return 8;
-		          else return 9;
-		       ]]></Body>
-		       <Body language="JavaScript"><![CDATA[
-		          var r = js.util.Random.uniformInt(0,99);
-		          if (r < 1) return 10; 			
-		          else if (r < 2) return 1;
-		          else if (r < 6) return 2;
-		          else if (r < 14) return 3;
-		          else if (r < 30) return 4;
-		          else if (r < 51) return 5;
-		          else if (r < 72) return 6;
-		          else if (r < 88) return 7;
-		          else if (r < 96) return 8;
-		          else return 9;
-		   ]]></Body>
-			</GlobalFunction>
 		</Globals>
 
 		<EntityTypes>
@@ -81,15 +70,20 @@
 			<ExogenousEventType name="DailyDemand" periodicity="1" />
 			<!-- ================================================== -->
 			<CausedEventType name="Delivery">
-				<!-- ============================================== -->
+			<!-- ============================================== -->
 				<Attribute name="quantity" type="Integer"/>
 			</CausedEventType>
+			<!-- ================================================== -->
+			<ObjectType name="Queue">
+				<!-- ================================================== -->
+				<Attribute name="queueLength" type="Integer"/>
+			</ObjectType>
 		</EntityTypes>
 
 		<EnvironmentRules>
 			<!-- =========================================== -->
 			<EnvironmentRule name="DailyDemand_Rule">
-				<!-- =========================================== -->
+			<!-- =========================================== -->
 				<documentation>
 					<dc:description>On DailyDemand, if the productQuantityInStock is greater than or equal to the demand, 
 						the demand is subtracted from the productQuantityInStock. Else if the productQuantityInStock 
@@ -104,13 +98,14 @@
 					<ValueExpr language="Java"> Random.normalInt( 5, 1.8) </ValueExpr>
 					<ValueExpr language="JavaScript"> js.util.Random.normalInt( 5, 1.8) </ValueExpr>
 				</FOR>
+				<FOR objectVariable="q" objectType="Queue" objectIdRef="1" />
 				<IF language="Java"><![CDATA[ Global.productQuantityInStock >= demand ]]></IF>
 				<IF language="JavaScript"><![CDATA[ __Global.productQuantityInStock >= this.demand ]]></IF>
 				<THEN>
 					<UPDATE-ENV>
 						<UpdateGlobalVariable name="productQuantityInStock">
-							<ValueExpr language="Java"> Global.productQuantityInStock - demand </ValueExpr>
-							<ValueExpr language="JavaScript"> __Global.productQuantityInStock - this.demand </ValueExpr>
+							<ValueExpr language="Java"><![CDATA[ Global.productQuantityInStock - demand ]]></ValueExpr>
+							<ValueExpr language="JavaScript"><![CDATA[ __Global.productQuantityInStock - this.demand ]]></ValueExpr>
 						</UpdateGlobalVariable>
 					</UPDATE-ENV>
 					<SCHEDULE-EVT>
@@ -123,8 +118,8 @@
 								</DiscreteRandomVariable>
 							</Delay>
 							<Slot property="quantity">
-								<ValueExpr language="Java"> Global.REORDER_UP_TO_LEVEL - Global.productQuantityInStock </ValueExpr>
-								<ValueExpr language="JavaScript"> __Global.REORDER_UP_TO_LEVEL - __Global.productQuantityInStock </ValueExpr>
+								<ValueExpr language="Java"><![CDATA[ Global.REORDER_UP_TO_LEVEL - Global.productQuantityInStock ]]></ValueExpr>
+								<ValueExpr language="JavaScript"><![CDATA[ __Global.REORDER_UP_TO_LEVEL - __Global.productQuantityInStock ]]></ValueExpr>
 							</Slot>
 						</CausedEventExpr>
 					</SCHEDULE-EVT>
@@ -139,6 +134,12 @@
 								__SimStatistics.totalNumberOfLostSales.getValue() + this.demand - __Global.productQuantityInStock
 							</ValueExpr>
 						</UpdateStatisticsVariable>
+						<UpdateObject objectVariable="q">
+							<Slot property="queueLength">
+								<ValueExpr language="Java">SimStatistics.totalNumberOfLostSales.getValue()</ValueExpr>
+								<ValueExpr language="JavaScript">__SimStatistics.totalNumberOfLostSales.getValue()</ValueExpr>
+							</Slot>
+						</UpdateObject>
 						<UpdateGlobalVariable name="productQuantityInStock" value="0" />
 					</UPDATE-ENV>
 					<SCHEDULE-EVT>
@@ -178,10 +179,13 @@
 		<!-- =========================================== -->
 		<GlobalVariable name="productQuantityInStock" value="20" />
 		<ExogenousEvent type="DailyDemand" occurrenceTime="1" />
+		<Object type="Queue" id="1" name="queue">
+			<Slot property="queueLength" value="0" />
+		</Object>
 	</InitialState>
 	<!-- =========================================== -->
-	<UserInterface supportedLanguages="en">
-		<!-- =========================================== -->
+	<UserInterface supportedLanguages="en de">
+	<!-- =========================================== -->
 		<StatisticsUI>
 			<StatisticsVariableUI variable="percentageOfLostSales">
 				<Label>
@@ -197,78 +201,44 @@
 		</StatisticsUI>	
 		<AnimationUI>
 				<aors:StartPageText xmlns="http://www.w3.org/1999/xhtml">
-					<aors:HtmlText xml:lang="en">
-						<div style="float:left; width: 40%; height: 80%; padding: 0px 10px 5px 5px;">
-							<img src="media/InventoryManagement.jpg" />
-						</div>
-						<div style="float:left; width: 40%; padding: 10% 0px; 5%">
-							<h4>Inventory Management description:</h4>
-							<p>The daily demand (say, for TVs in an electronics shop) is normally distributed, 
-							   with a mean of 5 units and a standard deviation of 1.8 units. Hint: round off demands to 
-							   the closest integer during simulation.</p>
-							<p>A replenishment order is placed when the quantity in stock 
-							   falls below the reorder level. The quantity of a replenishment order is computed as the reorder-up-to-level 
-							   minus the quantity in stock.</p>
-							 <p>Lead time is distributed uniformly between 1 and 3 days. 
-							    If a demand occurs on a day when the productQuantityInStock level is zero, the sale is lost. 
-							    The number of lost sales is to be collected and displayed as a percentage.</p>
-						</div>	
+					<aors:HtmlText>
+						<img style="float:right; padding-left:1em;" src="media/InventoryManagement.jpg" />
+						<h4>Inventory Management</h4>
+						<p>The daily demand for TVs in an electronics shop is normally distributed with a mean of 5 units 
+					   and a standard deviation of 1.8 units. A replenishment order is placed when the quantity in stock 
+					   falls below the reorder level. The quantity of a replenishment order is computed as the reorder-up-to-level 
+					   minus the quantity in stock.	The lead time of a delivery is distributed uniformly between 1 and 3 days. 
+					    If a demand occurs on a day when the productQuantityInStock level is zero, the sale is lost. 
+					    The number of lost sales is to be collected and displayed as a percentage.</p>
 					</aors:HtmlText>
 					<aors:HtmlText xml:lang="de">
-						<div style="float:left; width: 40%; height: 80%; padding: 0px 10px 5px 5px;">
-							<img src="media/InventoryManagement.jpg" />
-						</div>
-						<div style="float:left; width: 40%; padding: 10% 0px; 5%">
-							<h4>Inventory Management description:</h4>
-							<p>The daily demand (say, for TVs in an electronics shop) is normally distributed, 
-								with a mean of 5 units and a standard deviation of 1.8 units. Hint: round off demands to 
-								the closest integer during simulation.</p>
-							<p>A replenishment order is placed when the quantity in stock 
-								falls below the reorder level. The quantity of a replenishment order is computed as the reorder-up-to-level 
-								minus the quantity in stock.</p>
-							<p>Lead time is distributed uniformly between 1 and 3 days. 
-								If a demand occurs on a day when the productQuantityInStock level is zero, the sale is lost. 
-								The number of lost sales is to be collected and displayed as a percentage.</p>
-						</div>	
+						<img style="float:right; padding-left:1em;" src="media/InventoryManagement.jpg" />
+						<h4>Inventory Management</h4>
+						<p>In einem Elektronikshop ist die Tagesnachfrage nach Fernsehgeräten normalverteilt 
+							mit einem Mittelwert von 5 und einer Standardabweichung von 1,8. Ein Wiederbeschaffungsauftrag
+							wird erteilt, wenn der Lagerbestand unter den Sicherheitsbestand fällt. Die Bestellmenge eines
+							Wiederbeschaffungsauftrags wird als Differenz aus dem Sollbestand (reorder-up-to-level) und dem
+							Sicherheitsbestand errechnet. Die Vorlaufzeit für Lieferungen ist uniform verteilt zwischen 1 und 3 Tagen. 
+							Wenn eine Nachfrage den Lagerbestand übersteigt, ist der Auftrag verloren. Die Anzahl der verlorenen  
+							Aufträge ist zu ermitteln und als Prozentsatz anzuzeigen.</p>
 					</aors:HtmlText>
 				</aors:StartPageText>
-				<aors:HelpText xmlns="http://www.w3.org/1999/xhtml">
-					<aors:HtmlText xml:lang="en">
-						<div style="float:left; width: 40%; height: 80%; padding: 0px 10px 5px 5px;">
-							<img src="media/InventoryManagement.jpg" />
-						</div>
-						<div style="float:left; width: 40%; padding: 10% 0px; 5%">
-							<h4>Inventory Management description:</h4>
-							<p>The daily demand (say, for TVs in an electronics shop) is normally distributed, 
-								with a mean of 5 units and a standard deviation of 1.8 units. Hint: round off demands to 
-								the closest integer during simulation.</p>
-							<p>A replenishment order is placed when the quantity in stock 
-								falls below the reorder level. The quantity of a replenishment order is computed as the reorder-up-to-level 
-								minus the quantity in stock.</p>
-							<p>Lead time is distributed uniformly between 1 and 3 days. 
-								If a demand occurs on a day when the productQuantityInStock level is zero, the sale is lost. 
-								The number of lost sales is to be collected and displayed as a percentage.</p>
-						</div>	
-					</aors:HtmlText>	
-					<aors:HtmlText xml:lang="de">
-						<div style="float:left; width: 40%; height: 80%; padding: 0px 10px 5px 5px;">
-							<img src="media/InventoryManagement.jpg" />
-						</div>
-						<div style="float:left; width: 40%; padding: 10% 0px; 5%">
-							<h4>Inventory Management description:</h4>
-							<p>The daily demand (say, for TVs in an electronics shop) is normally distributed, 
-								with a mean of 5 units and a standard deviation of 1.8 units. Hint: round off demands to 
-								the closest integer during simulation.</p>
-							<p>A replenishment order is placed when the quantity in stock 
-								falls below the reorder level. The quantity of a replenishment order is computed as the reorder-up-to-level 
-								minus the quantity in stock.</p>
-							<p>Lead time is distributed uniformly between 1 and 3 days. 
-								If a demand occurs on a day when the productQuantityInStock level is zero, the sale is lost. 
-								The number of lost sales is to be collected and displayed as a percentage.</p>
-						</div>	
-					</aors:HtmlText>
-				</aors:HelpText>
-				<Views></Views>
+				<Views>
+					<SpaceView>
+						<TwoDimensionalSpaceView2D backgroundColor="darkgrey" />
+					</SpaceView>
+					<!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->
+					<ObjectView objectType="Queue" objectIdRef="1">
+						<!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->
+						<Shape2D x="20px" y="300px">
+							<Rectangle positioning="LeftCenter" fill="yellow" height="10" width="1" stroke="black" strokeWidth="2">
+								<ShapePropertyVisualizationMap shapeProperty="width" property="queueLength"
+									mapType="polynomial" a0="0" a1="10"/>
+							</Rectangle>
+						</Shape2D>
+						<DisplayInfo content="Lost Sales"  property="queueLength"/>
+					</ObjectView>
+				</Views>
 		</AnimationUI>
 	</UserInterface>
 </SimulationScenario>
