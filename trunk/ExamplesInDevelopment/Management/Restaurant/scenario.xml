@@ -135,6 +135,8 @@ int r2 = Random.uniformInt(1,6);
 				</Periodicity>
 			</ExogenousEventType>	
 			<!-- =================================================== -->
+			<ExogenousEventType name="OpenRestaurant" />
+			<!-- =================================================== -->
 			<CausedEventType name="StartMenuBoardService" />
 			<!-- =================================================== -->
 			<CausedEventType name="StartPickupWindowService" />
@@ -188,24 +190,7 @@ int r2 = Random.uniformInt(1,6);
 				</ReactionRule>
 			</AgentType>
 			<!-- =================================================== -->
-			<AgentType name="Manager" superType="Employee">
-				<!-- ======================================================= -->
-				<PeriodicTimeEventType name="EndOfMonth" periodicity="30"/>
-				<ReactionRule name="AskForMoneyRule" agentVariable="man">
-				<documentation>
-				  <dc:description>At every 30 days by simulating a real manager his bank increases or decreases</dc:description>  
-				</documentation>
-					<WHEN eventType="EndOfMonth" />
-					<DO>
-						<UPDATE-AGT>
-							<Slot property="bank">
-								<ValueExpr language="Java">man.getBank()+1000</ValueExpr>
-							</Slot>
-						</UPDATE-AGT>
-					</DO>
-				</ReactionRule>
-			</AgentType>
-			
+			<AgentType name="Manager" superType="Employee"/>
 			<!-- =================================================== -->
 			<AgentType name="OrderTaker" superType="Employee">
 				<!-- =================================================== -->
@@ -543,6 +528,31 @@ cust.getOrderNo()
 			</AgentType>
 		</EntityTypes>
 		<EnvironmentRules>
+			<!-- ======================================================= -->
+			<EnvironmentRule name="OpenRestaurant_Rule">
+				<!-- ======================================================= -->
+				<documentation>
+					<dc:description>Is a preparatory rule to simulate the opening of the restaurant.In this rule will be added to the restaurant employees</dc:description>
+				</documentation>
+				<WHEN eventType="OpenRestaurant"/>
+				<FOR objectVariable="org" objectType="Organization" objectIdRef="11"/>
+				<FOR objectVariable="man" objectType="Manager" objectIdRef="10"/>
+				<FOR objectVariable="mb" objectType="OrderTaker" objectIdRef="1"/>
+				<FOR objectVariable="k" objectType="CooK" objectIdRef="5"/>
+				<FOR objectVariable="pw" objectType="Waitress" objectIdRef="2"/>
+				<DO>
+					<UPDATE-ENV>
+						<UpdateObject objectVariable="org">
+							<MultiValuedSlot property="employees">
+							<AddLast itemVariable="man"/>
+								<AddLast itemVariable="mb"/>
+								<AddLast itemVariable="k"/>
+								<AddLast itemVariable="pw"/>
+							</MultiValuedSlot>
+						</UpdateObject>
+					</UPDATE-ENV>
+				</DO>
+			</EnvironmentRule>
 			<!-- ======================================================= -->
 			<EnvironmentRule name="CustomerArrival_Rule">
 				<!-- ======================================================== -->
@@ -998,12 +1008,7 @@ mes.getCustID()
 					]]></ValueExpr>
 			   </Slot> -->
 			 <Slot property="employees">
-				<ValueExpr language="Java"><![CDATA[ 
-				    java.util.Arrays.asList((Employee)this.getEnvironmentSimulator().getObjectById(1),
-					(Employee)this.getEnvironmentSimulator().getObjectById(2),
-					(Employee)this.getEnvironmentSimulator().getObjectById(5),
-					(Manager)this.getEnvironmentSimulator().getObjectById(10))
-					]]></ValueExpr>
+			 	<ValueExpr language="Java"><![CDATA[ new ArrayList<Employee>()]]></ValueExpr>
 			</Slot>
 			</Agent>
 		<!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->
@@ -1017,8 +1022,11 @@ mes.getCustID()
 			<Slot property="lengthOfQueue" value="0" />
 		</Object>
 		<!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->
+		<ExogenousEvent type="OpenRestaurant" occurrenceTime="1" />
+		<!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->
 		<ExogenousEvent type="CustomerArrival" occurrenceTime="1" />
 		<!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->
+	
 	</InitialState>
 	<!-- =================================================== -->
 	<UserInterface supportedLanguages="en">
