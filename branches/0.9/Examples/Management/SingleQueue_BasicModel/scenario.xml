@@ -8,16 +8,16 @@
 	scenarioName="SingleServiceQueueWithStatistics" 
 	simulationManagerDirectory="../../..">
 
-	<SimulationParameters simulationSteps="6000" stepDuration="1" timeUnit="min"/>
+	<SimulationParameters simulationSteps="1000" stepDuration="1" timeUnit="min"/>
 
 	<SimulationModel modelName="SingleServiceQueueWithStatistics" 
 		modelTitle="A single service queue with service utilization and maximum queue length statistics">
 
 		<documentation>
 			<dc:creator>Gerd Wagner</dc:creator>
-			<dc:created>20081001</dc:created>
-			<dc:modified>20110810</dc:modified>
 			<dc:contributor>Oana Nicolae</dc:contributor>
+			<dc:created>20081001</dc:created>
+			<dc:modified>20111125</dc:modified>
 			<dc:title>Single Queue</dc:title>
 			<dc:title xml:lang="de">Einfach-Warteschlange</dc:title>
 			<shortDescription>A simple model of a service queue.</shortDescription>
@@ -30,7 +30,7 @@
 			</description>
 			<description xml:lang="de">
 				Kunden kommen in zufälligen Zeitabständen an einem Service-Schalter an, wo sie in einer Warteschlange warten müssen, 
-				wenn der Schalter	beschäftigt ist. Die Zeit zwischen zwei Kundenankünften ist gleichförmig verteilt zwischen 1 und 8 Minuten. 
+				wenn der Schalter beschäftigt ist. Die Zeit zwischen zwei Kundenankünften ist gleichförmig verteilt zwischen 1 und 8 Minuten. 
 				Die Zeit zur Erbringung eines Dienstes variiert zwischen 1 und 6 Minuten, mit den Wahrscheinlichkeiten 0.1, 0.2, 0.3, 0.25, 
 				0.1 beziehunsgweise 0.05. Es sollen zwei Statistiken erhoben werden: der Service-Nutzungsgrad (gesamte Servicezeit geteilt 
 				durch die Gesamtzeit) und die maximale Länge der Warteschlange.
@@ -44,28 +44,33 @@
 			<Variable name="serviceUtilization" dataType="Float">
 				<Source computeOnlyAtEnd="true">
 					<ValueExpr language="Java">
-						(float) SimStatistics.totalServiceTime.getValue() / SimParameter.SIMULATION_STEPS
+						(float) SimStatistics.totalServiceTime.getValue() 
+						/ SimParameter.SIMULATION_STEPS
 					</ValueExpr>
 					<ValueExpr language="JavaScript">
-						parseFloat( sim.controller.SimStatistics.totalServiceTime.getValue()) / parseFloat( sim.controller.SimParameter.SIMULATION_STEPS) 
+						parseFloat( sim.controller.SimStatistics.totalServiceTime.getValue()) 
+						/ parseFloat( sim.controller.SimParameter.SIMULATION_STEPS) 
 					</ValueExpr>
 				</Source>
 			</Variable>
-			<Variable name="maxQueueLength" dataType="Integer">
+			<Variable name="queueLength" dataType="Integer">
 				<Source>
-					<GlobalVariable name="maxQueueLength"/>
+					<GlobalVariable name="queueLength"/>
 				</Source>
-			</Variable>	
+			</Variable>			
+			<Variable name="maxQueueLength" dataType="Integer">
+				<Source aggregationFunction="max">
+					<GlobalVariable name="queueLength"/>
+				</Source>
+			</Variable>
 			<Variable name="avgQueueLength" dataType="Float">
 				<Source aggregationFunction="avg">
 					<GlobalVariable name="queueLength"/>
 				</Source>
 			</Variable>
-			
 		</Statistics>
 		<Globals>
-			<GlobalVariable name="queueLength" dataType="Float" />
-			<GlobalVariable name="maxQueueLength" dataType="Integer" />
+			<GlobalVariable name="queueLength" dataType="Integer" />
 			<GlobalVariable name="serviceDeskBusy" dataType="Boolean" />
 			<GlobalFunction name="randomServiceTime" resultType="Integer">
 				<Body language="Java"><![CDATA[
@@ -126,15 +131,6 @@
 				<THEN>
 					<UPDATE-ENV>
 						<IncrementGlobalVariable name="queueLength" value="1" />
-						<UpdateGlobalVariable name="maxQueueLength">
-							<ValueExpr language="Java"><![CDATA[
-				( Global.maxQueueLength >= Global.queueLength)? Global.maxQueueLength : Global.queueLength				
-							]]></ValueExpr>
-							<ValueExpr language="JavaScript"><![CDATA[
-			    ( sim.controller.Global.maxQueueLength >= sim.controller.Global.queueLength) ?
-			      sim.controller.Global.maxQueueLength : sim.controller.Global.queueLength		
-							]]></ValueExpr>
-						</UpdateGlobalVariable>
 					</UPDATE-ENV>
 				</THEN>
 				<ELSE>
@@ -155,7 +151,7 @@
 			</EnvironmentRule>		
 			<!-- =================================================== -->
 			<EnvironmentRule name="DepartureRule">
-				<!-- =================================================== -->
+			<!-- =================================================== -->
 				<documentation>
 					<dc:description>When a customer departs, if the queue is empty, the service desk is no longer busy. Otherwise, the next customer will be serviced, so a new future CustomerDeparture event is created (with a delay given by the random service time), and the queue size is decreased by 1.</dc:description>
 				</documentation>
@@ -177,7 +173,7 @@
 					</UPDATE-ENV>
 				</DO>
 				<IF language="Java">Global.queueLength == 0 </IF>
-				<IF language="JavaScript">sim.controller.Global.queueLength == 0</IF>
+				<IF language="JavaScript">sim.controller.Global.queueLength === 0</IF>
 				<THEN>
 					<UPDATE-ENV>
 						<UpdateGlobalVariable name="serviceDeskBusy" value="false"/>
@@ -186,15 +182,6 @@
 				<ELSE>
 					<UPDATE-ENV>
 						<IncrementGlobalVariable name="queueLength" value="-1"/>
-						<UpdateGlobalVariable name="maxQueueLength">
-							<ValueExpr language="Java"><![CDATA[
-				( Global.maxQueueLength >= Global.queueLength)? Global.maxQueueLength : Global.queueLength				
-							]]></ValueExpr>
-							<ValueExpr language="JavaScript"><![CDATA[
-			    ( sim.controller.Global.maxQueueLength >= sim.controller.Global.queueLength) ?
-			    sim.controller.Global.maxQueueLength : sim.controller.Global.queueLength		
-							]]></ValueExpr>
-						</UpdateGlobalVariable>
 					</UPDATE-ENV>
 					<SCHEDULE-EVT>
 						<CausedEventExpr eventType="CustomerDeparture">
@@ -222,6 +209,22 @@
 	<UserInterface supportedLanguages="en de fr es ro">
 	<!-- =================================================== -->
 		<StatisticsUI>
+			<StatisticsVariableUI variable="queueLength" showChart="true">
+				<Label>
+					<Text xml:lang="en">Queue Length</Text>
+					<Text xml:lang="de">Länge der Warteschlange</Text>
+					<Text xml:lang="fr">Dimension de la queue</Text>
+					<Text xml:lang="es">El tamaño de la cola</Text>
+					<Text xml:lang="ro">Dimensiunea a listei de asteptare</Text>
+				</Label>
+				<Hint>
+					<Text xml:lang="en">What is the length of the service queue?</Text>
+					<Text xml:lang="de">Was ist die Länge der Warteschlange?</Text>
+					<Text xml:lang="fr">Quelle est la dimension de la queue?</Text>
+					<Text xml:lang="es">Cual es el tamaño de la cola?</Text>
+					<Text xml:lang="ro">Care este dimensiunea a listei de asteptare?</Text>
+				</Hint>
+			</StatisticsVariableUI>
 			<StatisticsVariableUI variable="serviceUtilization">
 				<Label>
 					<Text xml:lang="en">Service Utilization</Text>
@@ -251,7 +254,7 @@
 					<Text xml:lang="en">What is the average length of the service queue?</Text>
 					<Text xml:lang="de">Was ist die durchschnittliche Länge der Warteschlange?</Text>
 					<Text xml:lang="fr">Quelle est la dimension moyenne de la queue?</Text>
-					<Text xml:lang="es">Cual es el tamaño maximo de la cola?</Text>
+					<Text xml:lang="es">Cual es el tamaño medio de la cola?</Text>
 					<Text xml:lang="ro">Care este dimensiunea medie a listei de asteptare?</Text>
 				</Hint>
 				<Format decimalPlaces="2"><Length>m</Length></Format>
@@ -273,31 +276,5 @@
 				</Hint>
 			</StatisticsVariableUI>
 		</StatisticsUI>
-<!--
-		<AnimationUI>
-			<aors:StartPageText xmlns="http://www.w3.org/1999/xhtml">
-				<aors:HtmlText xml:lang="en">
-					<div style="float:right; padding-left:1em;"><img src="media/queue.jpg" /></div>
-						<h4>Single Service Queue</h4>
-						<p>Customers arrive at random times at a service desk where they have to wait in a queue when 
-						   the service desk is serviceDeskBusy. The time between two customer arrivals is uniformly 
-						   distributed between 1 and 8 minutes. The times for completing a service vary from 1 to 6 minutes, 
-						   with probabilities 0.1, 0.2, 0.3, 0.25, 0.1, 0.05, respectively.
-						</p>
-						<p>Two statistics are to be collected: service utilization (total service time divided by total time) and maximum queue length. </p>
-						<p>When a new customer arrives, if the service desk is busy, the customer has to wait in a line, 
-						   so the queue length is increased by 1. Otherwise, the customer is going to be serviced and 
-						   hence the service desk gets busy, and for ending the service, a CustomerDeparture event 
-						   (with a delay being set to a random service time) is created.
-						</p>
-						<p>When a customer departs, if the queue is empty, the service desk is no longer busy. 
-						   Otherwise, the next customer will be serviced, so a new future CustomerDeparture event 
-						   is created (with a delay given by the random service time), and the queue size is decreased by 1.
-						</p>
-				</aors:HtmlText>
-			</aors:StartPageText>
-			<Views></Views>
-		</AnimationUI>
--->
 	</UserInterface>
 </SimulationScenario>
