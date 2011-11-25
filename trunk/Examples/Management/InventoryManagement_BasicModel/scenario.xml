@@ -9,9 +9,8 @@
 
 	<SimulationParameters simulationSteps="365" stepDuration="1" timeUnit="D"/>
 
-	<SimulationModel modelName="BasicInventoryManagement" modelTitle="A simple inventory management system 
-		with lost sales statistics">
-
+	<SimulationModel modelName="BasicInventoryManagement" 
+			modelTitle="A simple inventory management system with lost sales statistics">
 		<documentation>
 			<dc:creator>Uwe Herrmann</dc:creator>
 			<dc:created>20101107</dc:created>
@@ -21,10 +20,10 @@
 			<dc:title>Inventory Management</dc:title>
 			<dc:title xml:lang="de">Lagerverwaltung</dc:title>
 			<shortDescription>
-				Simulation of a simple inventory management system with a replenishment policy based on a reorder level.
+				A simple inventory management system with a replenishment policy based on a reorder level.
 			</shortDescription>
 			<shortDescription xml:lang="de">
-				Simulation eines einfachen Lagerverwaltungssystems mit einer Wiederbeschaffungsvorgehensweise,
+				Ein einfaches Lagerverwaltungssystem mit einer Wiederbeschaffungsvorgehensweise,
 				die auf einem Sicherheitsbestand (reorder level) basiert.
 			</shortDescription>
 			<description>The daily demand (say, for TVs in an electronics shop) is normally distributed, 
@@ -43,6 +42,7 @@
 				Aufträge ist zu ermitteln und als Prozentsatz anzuzeigen.
 			</description>
 			<CcLicense license="CC BY-SA"/>
+			<dc:subject>management, inventory management</dc:subject>
 		</documentation>
 
 		<Statistics>
@@ -50,10 +50,12 @@
 			<Variable name="percentageOfLostSales" dataType="Float">
 				<Source computeOnlyAtEnd="true">
 					<ValueExpr language="Java">
-						(float) SimStatistics.totalNumberOfLostSales.getValue() / SimParameter.SIMULATION_STEPS
+						(float) SimStatistics.totalNumberOfLostSales.getValue() 
+						/ SimParameter.SIMULATION_STEPS
 					</ValueExpr>
 					<ValueExpr language="JavaScript">
-						__SimStatistics.totalNumberOfLostSales.getValue() / __SimParameter.SIMULATION_STEPS
+						__SimStatistics.totalNumberOfLostSales.getValue() 
+						/ __SimParameter.SIMULATION_STEPS
 					</ValueExpr>
 				</Source>
 			</Variable>
@@ -72,7 +74,7 @@
 			
 			<!-- ================================================== -->
 			<ObjectType name="Inventory">
-				<!-- ================================================== -->
+			<!-- ================================================== -->
 				<Attribute name="productQuantityInStock" type="Integer" />
 				<Attribute name="reorderLevel" type="Integer" />
 				<Attribute name="reorderUpToLevel" type="Integer" />
@@ -87,53 +89,53 @@
 					<dc:description>On DailyDemand, if the productQuantityInStock is greater than or equal to the demand, 
 						the demand is subtracted from the productQuantityInStock. Else if the productQuantityInStock 
 						is less than the demand, the productQuantityInStock drops to 0 and we have an increase of lost sales, 
-						calculated as demand minus productQuantityInStock. This also works in the case where the productQuantityInStock 
+						calculated as demand minus productQuantityInStock. This is also the case when the productQuantityInStock 
 						is already zero at the beginning of the day. If the productQuantityInStock is less than the reorder level, 
-						a Delivery event is scheduled with a quantity of reorder-up-to-level minus productQuantityInStock items
+						a Delivery event is scheduled with a quantity of reorderUpToLevel minus productQuantityInStock items
 						and with a uniformly distributated random delay of 1, 2 or 3 days.
 					</dc:description>
 				</documentation>
 				<WHEN eventType="DailyDemand" />
-				<FOR objectVariable="s" objectType="Inventory" objectIdRef="1" />
+				<FOR objectVariable="inv" objectType="Inventory" objectIdRef="1" />
 				<FOR dataVariable="demand" dataType="Integer">
 					<ValueExpr language="Java"> Random.normalInt( 5, 1.8) </ValueExpr>
-					<ValueExpr language="JavaScript"> js.util.Random.normalInt( 5, 1.8) </ValueExpr>
+					<ValueExpr language="JavaScript"> jinv.util.Random.normalInt( 5, 1.8) </ValueExpr>
 				</FOR>
 				<IF language="Java"><![CDATA[ 
-					s.getProductQuantityInStock() >= demand 
+					inv.getProductQuantityInStock() >= demand 
 					]]></IF>
 				<IF language="JavaScript"><![CDATA[ 
-					this.s.getProductQuantityInStock() >= this.demand 
+					this.inv.getProductQuantityInStock() >= this.demand 
 					]]></IF>
 				<THEN>
 					<UPDATE-ENV>
 						<UpdateObject objectVariable="s">
 							<Slot property="productQuantityInStock">
 								<ValueExpr language="Java"><![CDATA[ 
-									s.getProductQuantityInStock() - demand 
+									inv.getProductQuantityInStock() - demand 
 									]]></ValueExpr>
 								<ValueExpr language="JavaScript"><![CDATA[ 
-									this.s.getProductQuantityInStock() - this.demand 
+									this.inv.getProductQuantityInStock() - this.demand 
 									]]></ValueExpr>
 							</Slot>
 						</UpdateObject>
 						<UpdateStatisticsVariable variable="productInStock">
 							<ValueExpr language="Java"><![CDATA[ 
-								 s.getProductQuantityInStock()
+								 inv.getProductQuantityInStock()
 							]]></ValueExpr>
 							<ValueExpr language="JavaScript"><![CDATA[ 
-								this.s.getProductQuantityInStock()
+								this.inv.getProductQuantityInStock()
 							]]></ValueExpr>
 						</UpdateStatisticsVariable>
 					</UPDATE-ENV>
 					<SCHEDULE-EVT>
 						<CausedEventExpr eventType="Delivery">
 							<Condition language="Java"><![CDATA[ 
-								s.getProductQuantityInStock() < s.getReorderLevel()	
-								]]></Condition>
+								inv.getProductQuantityInStock() < inv.getReorderLevel()	
+							]]></Condition>
 							<Condition language="JavaScript"><![CDATA[ 
-								this.s.getProductQuantityInStock() < this.s.getReorderLevel()	
-								]]></Condition>
+								this.inv.getProductQuantityInStock() < this.inv.getReorderLevel()	
+							]]></Condition>
 							<Delay>
 								<DiscreteRandomVariable>
 									<UniformInt lowerBound="2" upperBound="4" />
@@ -141,11 +143,11 @@
 							</Delay>
 							<Slot property="quantity">
 								<ValueExpr language="Java"><![CDATA[ 
-									s.getReorderUpToLevel() - s.getProductQuantityInStock() 
-									]]></ValueExpr>
+									inv.getReorderUpToLevel() - inv.getProductQuantityInStock() 
+								]]></ValueExpr>
 								<ValueExpr language="JavaScript"><![CDATA[ 
-									this.s.getReorderUpToLevel() - this.s.getProductQuantityInStock() 
-									]]></ValueExpr>
+									this.inv.getReorderUpToLevel() - this.inv.getProductQuantityInStock() 
+								]]></ValueExpr>
 							</Slot>
 						</CausedEventExpr>
 					</SCHEDULE-EVT>
@@ -154,11 +156,11 @@
 					<UPDATE-ENV>
 						<UpdateStatisticsVariable variable="totalNumberOfLostSales">
 							<ValueExpr language="Java"><![CDATA[ 
-								SimStatistics.totalNumberOfLostSales.getValue() + demand - s.getProductQuantityInStock()
+								SimStatistics.totalNumberOfLostSales.getValue() + demand - inv.getProductQuantityInStock()
 							]]></ValueExpr>
 							<ValueExpr language="JavaScript"><![CDATA[ 
 								__SimStatistics.totalNumberOfLostSales.getValue() + this.demand -
-								this.s.getProductQuantityInStock()
+								this.inv.getProductQuantityInStock()
 							]]></ValueExpr>
 						</UpdateStatisticsVariable>
 						<UpdateStatisticsVariable variable="dailyDemand">
@@ -166,18 +168,18 @@
 							<ValueExpr language="JavaScript">this.demand</ValueExpr>
 						</UpdateStatisticsVariable>
 						<UpdateStatisticsVariable variable="productInStock">
-							<ValueExpr language="Java">s.getProductQuantityInStock()</ValueExpr>
-							<ValueExpr language="JavaScript">this.s.getProductQuantityInStock()</ValueExpr>
+							<ValueExpr language="Java">inv.getProductQuantityInStock()</ValueExpr>
+							<ValueExpr language="JavaScript">this.inv.getProductQuantityInStock()</ValueExpr>
 						</UpdateStatisticsVariable>
 						<UpdateObject objectVariable="s">
 							<Slot property="productQuantityInStock" value="0" />
 						</UpdateObject>
 						<UpdateStatisticsVariable variable="productInStock">
 							<ValueExpr language="Java"><![CDATA[ 
-								 s.getProductQuantityInStock()
+								 inv.getProductQuantityInStock()
 							]]></ValueExpr>
 							<ValueExpr language="JavaScript"><![CDATA[ 
-								this.s.getProductQuantityInStock()
+								this.inv.getProductQuantityInStock()
 							]]></ValueExpr>
 						</UpdateStatisticsVariable>
 					</UPDATE-ENV>
@@ -189,8 +191,8 @@
 								</DiscreteRandomVariable>
 							</Delay>
 							<Slot property="quantity">
-								<ValueExpr language="Java">s.getReorderUpToLevel()</ValueExpr>
-								<ValueExpr language="JavaScript">this.s.getReorderUpToLevel()</ValueExpr>
+								<ValueExpr language="Java">inv.getReorderUpToLevel()</ValueExpr>
+								<ValueExpr language="JavaScript">this.inv.getReorderUpToLevel()</ValueExpr>
 							</Slot>
 						</CausedEventExpr>
 					</SCHEDULE-EVT>
@@ -198,7 +200,7 @@
 			</EnvironmentRule>
 			<!-- =========================================== -->
 			<EnvironmentRule name="Delivery_Rule">
-				<!-- =========================================== -->
+			<!-- =========================================== -->
 				<documentation>
 					<dc:description>On Delivery, the number of ordered items gets added to the productQuantityInStock.</dc:description>
 				</documentation>
@@ -230,7 +232,7 @@
 		<ExogenousEvent type="DailyDemand" occurrenceTime="1" />
 		<!-- =========================================== -->
 		<Object type="Inventory" id="1" name="inventory">
-			<!-- =========================================== -->
+		<!-- =========================================== -->
 			<Slot property="productQuantityInStock" value="20" />
 			<Slot property="reorderLevel" value="20" />
 			<Slot property="reorderUpToLevel" value="30" />
@@ -241,8 +243,16 @@
 	<!-- =========================================== -->
 		<InitialStateUI>
 			<ObjectUI objectType="Inventory">
-				<PropertyUI property="reorderLevel" inputFieldLength="1" label="REORDER_LEVEL: " />
-				<PropertyUI property="reorderUpToLevel" inputFieldLength="1" label="REORDER_UP_TO_LEVEL: "/>
+				<PropertyUI property="reorderLevel" inputFieldLength="1" label="Reorder level">
+					<Label>
+						<Text xml:lang="de">Sicherheitsbestand</Text>
+					</Label>
+				</PropertyUI>
+				<PropertyUI property="reorderUpToLevel" inputFieldLength="1" label="Reorder up to level">
+					<Label>
+						<Text xml:lang="de">Sollbestand</Text>
+					</Label>					
+				</PropertyUI>
 			</ObjectUI>
 		</InitialStateUI>
 		<StatisticsUI>
