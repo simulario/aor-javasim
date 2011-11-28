@@ -101,39 +101,27 @@
 					<ValueExpr language="Java"> Random.normalInt( 5, 1.8) </ValueExpr>
 					<ValueExpr language="JavaScript"> jinv.util.Random.normalInt( 5, 1.8) </ValueExpr>
 				</FOR>
-				<IF language="Java"><![CDATA[ 
-					inv.getProductQuantityInStock() >= demand 
-					]]></IF>
-				<IF language="JavaScript"><![CDATA[ 
+				<IF language="Java JavaScript"><![CDATA[ 
 					this.inv.getProductQuantityInStock() >= this.demand 
 					]]></IF>
 				<THEN>
 					<UPDATE-ENV>
 						<UpdateObject objectVariable="s">
 							<Slot property="productQuantityInStock">
-								<ValueExpr language="Java"><![CDATA[ 
-									inv.getProductQuantityInStock() - demand 
-									]]></ValueExpr>
-								<ValueExpr language="JavaScript"><![CDATA[ 
+								<ValueExpr language="Java JavaScript"><![CDATA[ 
 									this.inv.getProductQuantityInStock() - this.demand 
 									]]></ValueExpr>
 							</Slot>
 						</UpdateObject>
 						<UpdateStatisticsVariable variable="productInStock">
-							<ValueExpr language="Java"><![CDATA[ 
-								 inv.getProductQuantityInStock()
-							]]></ValueExpr>
-							<ValueExpr language="JavaScript"><![CDATA[ 
-								this.inv.getProductQuantityInStock()
+							<ValueExpr language="Java JavaScript"><![CDATA[ 
+								 this.inv.getProductQuantityInStock()
 							]]></ValueExpr>
 						</UpdateStatisticsVariable>
 					</UPDATE-ENV>
 					<SCHEDULE-EVT>
 						<CausedEventExpr eventType="Delivery">
-							<Condition language="Java"><![CDATA[ 
-								inv.getProductQuantityInStock() < inv.getReorderLevel()	
-							]]></Condition>
-							<Condition language="JavaScript"><![CDATA[ 
+							<Condition language="Java JavaScript"><![CDATA[ 
 								this.inv.getProductQuantityInStock() < this.inv.getReorderLevel()	
 							]]></Condition>
 							<Delay>
@@ -142,10 +130,7 @@
 								</DiscreteRandomVariable>
 							</Delay>
 							<Slot property="quantity">
-								<ValueExpr language="Java"><![CDATA[ 
-									inv.getReorderUpToLevel() - inv.getProductQuantityInStock() 
-								]]></ValueExpr>
-								<ValueExpr language="JavaScript"><![CDATA[ 
+								<ValueExpr language="Java JavaScript"><![CDATA[ 
 									this.inv.getReorderUpToLevel() - this.inv.getProductQuantityInStock() 
 								]]></ValueExpr>
 							</Slot>
@@ -164,22 +149,17 @@
 							]]></ValueExpr>
 						</UpdateStatisticsVariable>
 						<UpdateStatisticsVariable variable="dailyDemand">
-							<ValueExpr language="Java">demand</ValueExpr>
-							<ValueExpr language="JavaScript">this.demand</ValueExpr>
+							<ValueExpr language="Java JavaScript">this.demand</ValueExpr>
 						</UpdateStatisticsVariable>
 						<UpdateStatisticsVariable variable="productInStock">
-							<ValueExpr language="Java">inv.getProductQuantityInStock()</ValueExpr>
-							<ValueExpr language="JavaScript">this.inv.getProductQuantityInStock()</ValueExpr>
+							<ValueExpr language="Java JavaScript">this.inv.getProductQuantityInStock()</ValueExpr>
 						</UpdateStatisticsVariable>
 						<UpdateObject objectVariable="s">
 							<Slot property="productQuantityInStock" value="0" />
 						</UpdateObject>
 						<UpdateStatisticsVariable variable="productInStock">
-							<ValueExpr language="Java"><![CDATA[ 
-								 inv.getProductQuantityInStock()
-							]]></ValueExpr>
-							<ValueExpr language="JavaScript"><![CDATA[ 
-								this.inv.getProductQuantityInStock()
+							<ValueExpr language="Java JavaScript"><![CDATA[ 
+								 this.inv.getProductQuantityInStock()
 							]]></ValueExpr>
 						</UpdateStatisticsVariable>
 					</UPDATE-ENV>
@@ -191,8 +171,7 @@
 								</DiscreteRandomVariable>
 							</Delay>
 							<Slot property="quantity">
-								<ValueExpr language="Java">inv.getReorderUpToLevel()</ValueExpr>
-								<ValueExpr language="JavaScript">this.inv.getReorderUpToLevel()</ValueExpr>
+								<ValueExpr language="Java JavaScript">this.inv.getReorderUpToLevel()</ValueExpr>
 							</Slot>
 						</CausedEventExpr>
 					</SCHEDULE-EVT>
@@ -205,20 +184,17 @@
 					<dc:description>On Delivery, the number of ordered items gets added to the productQuantityInStock.</dc:description>
 				</documentation>
 				<WHEN eventType="Delivery" eventVariable="d" />
-				<FOR objectVariable="s" objectType="Inventory" objectIdRef="1" /> 
+				<FOR objectVariable="inv" objectType="Inventory" objectIdRef="1" /> 
 				<DO>
 					<UPDATE-ENV>
-						<UpdateObject objectVariable="s">
+						<UpdateObject objectVariable="inv">
 							<Slot property="productQuantityInStock">
-								<ValueExpr language="Java JavaScript">this.s.getProductQuantityInStock() + this.d.getQuantity()</ValueExpr>
+								<ValueExpr language="Java JavaScript">this.inv.getProductQuantityInStock() + this.d.getQuantity()</ValueExpr>
 							</Slot>
 						</UpdateObject>
 						<UpdateStatisticsVariable variable="productInStock">
-							<ValueExpr language="Java"><![CDATA[ 
-							     s.getProductQuantityInStock()
-							]]></ValueExpr>
-							<ValueExpr language="JavaScript"><![CDATA[ 
-								this.s.getProductQuantityInStock()
+							<ValueExpr language="Java JavaScript"><![CDATA[ 
+							     this.inv.getProductQuantityInStock()
 							]]></ValueExpr>
 						</UpdateStatisticsVariable>
 					</UPDATE-ENV>
