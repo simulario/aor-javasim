@@ -6,31 +6,43 @@
 	xmlns="http://aor-simulation.org" xmlns:ers="http://aor-simulation.org"
 	xmlns:dc="http://purl.org/dc/elements/1.1/" scenarioName="DriveThruRestaurant"
 	scenarioTitle="A drive-through restaurant with a menu board, a kitchen and a pickup window"
-	simulationManagerDirectory="../../.."
-	xmlns:aors="http://aor-simulation.org">
+	simulationManagerDirectory="../../..">
 	<SimulationParameters simulationSteps="10000" stepDuration="1" timeUnit="s"/>
-	<SimulationModel modelName="DriveThruRestaurant" modelTitle="A drive-through restaurant with a menu
-		board, a kitchen and a pickup window">
+	<SimulationModel modelName="DriveThruRestaurant" 
+		modelTitle="A drive-through restaurant with a menu board, a kitchen and a pickup window">
 		<documentation>
-			<dc:created>20090331</dc:created>
 			<dc:creator>Oana Nicolae</dc:creator>
 			<dc:contributor>Gerd Wagner</dc:contributor>
+			<dc:created>20090331</dc:created>
 			<dc:modified>20110810</dc:modified>
 			<dc:title>Drive Thru Restaurant</dc:title>
-			<dc:source>"Introduction to Simulation" by R.G. Ingalls. In: Proceedings of the 2008 Winter Simulation Conference. URL: http://www.informs-sim.org/wsc08papers/005.pdf.</dc:source>
-			<shortDescription>Simulation of a Drive Thru Restaurant scenario with customer related statistics.</shortDescription>
-			<aors:description xmlns="http://www.w3.org/1999/xhtml">
-				As a car enters from the street, the driver, who we will call Fred, decides whether or not to get in line. 
-				If Fred decides to leave the restaurant, he leaves as a dissatisfied customer. 
-				If Fred decides to get in line, then he waits until the menu board is available. 
-				At that time, Fred gives the order to the order taker. After the order is taken, then two things occur simultaneously: 
+			<dc:title xml:lang="de">Auto-Restaurant</dc:title>
+			<shortDescription>A Drive Thru restaurant as a system with three queues: order window, kitchen 
+				the pickup window.</shortDescription>
+			<shortDescription xml:lang="de">Ein Auto-Restaurant als System mit drei Warteschlangen: Bestellannahme,
+				 Küche und Abholtresen.</shortDescription>
+			<ers:description xmlns="http://www.w3.org/1999/xhtml">
+				<img src="media/DriveThruRestaurant.png" style="float:right; left-padding:1em;"/>
+				<p>As a car enters from the street, the driver decides whether or not to get in line. 
+				If he decides to leave the restaurant, he leaves as a dissatisfied customer. If he decides 
+				to get in line, he waits until the menu board is available.	At that time, he gives the order 
+				to the order taker. After the order is taken, two things occur simultaneously:</p>
 				<ol>
-					<li>Fred moves forward if there is room, otherwise he has to wait at the menu board until there is room to move forward.</li>
-					<li>The order is sent electronically back to the kitchen where it is prepared as soon as the cook is available.</li>
+					<li>the driver moves forward if there is room, otherwise he has to wait at the menu board 
+						until there is room to move forward.</li>
+					<li>The order is sent back to the kitchen where it is prepared as soon as the cook is available.</li>
 				</ol> 
-				As soon as Fred reaches the pickup window, then he pays and picks up his food, if it is ready. 
-				If the food is not ready, then Fred has to wait until his order is prepared.
-			</aors:description>
+				<p>As soon as the driver reaches the pickup window, he pays and picks up his food, if it is ready. 
+				If the food is not yet ready, he has to wait until his order is prepared.</p>
+			</ers:description>
+			<ers:source xmlns="http://www.w3.org/1999/xhtml">
+				<a href="http://www.informs-sim.org/wsc08papers/005.pdf">Introduction to Simulation</a> by R.G. Ingalls, 
+				in Proceedings of the 2008 Winter Simulation Conference.
+			</ers:source>
+			<ers:source xmlns="http://www.w3.org/1999/xhtml" xml:lang="de">
+				<a href="http://www.informs-sim.org/wsc08papers/005.pdf">Introduction to Simulation</a> von R.G. Ingalls, 
+				in Proceedings of the 2008 Winter Simulation Conference.
+			</ers:source>
 			<processModelDiagram>../DriveThruRestaurant.png</processModelDiagram>
 		</documentation>
 
@@ -136,7 +148,7 @@ var r2 = js.util.Random.uniformInt(1,6);
 			<!-- =================================================== -->
 			<ObjectType name="MenuBoard">
 			<!-- =================================================== -->
-				<Attribute name="maxMenuBoardLineSize" type="Integer" />
+				<Attribute name="maxMenuBoardLineSize" type="Integer" minValue="3" maxValue="10"/>
 				<Attribute name="menuBoardBusy" type="Boolean" />
                 <Attribute name="utilization" type="Float" />
 				<ReferenceProperty name="menuBoardQueue" type="Customer" upperMultiplicity="unbounded">
@@ -158,13 +170,13 @@ return js.util.Random.uniformInt(0,5);
 			</ObjectType>	
 			<!-- =================================================== -->
 			<ObjectType name="Kitchen">
-				<!-- =================================================== -->
+			<!-- =================================================== -->
 				<Attribute name="utilization" type="Float" />
 			</ObjectType>		
 			<!-- =================================================== -->
 			<ObjectType name="PickupWindow">
-				<!-- =================================================== -->
-				<Attribute name="maxPickupWindowLineSize" type="Integer" />
+			<!-- =================================================== -->
+				<Attribute name="maxPickupWindowLineSize" type="Integer" minValue="3" maxValue="10"/>
 				<Attribute name="pickupWindowBusy" type="Boolean" />
 				<Attribute name="utilization" type="Float" />
 				<ReferenceProperty name="pickupWindowQueue" type="Customer" upperMultiplicity="unbounded">
@@ -648,9 +660,9 @@ __SimStatistics.revenue.getValue() + this.pw.pizzaPrice( this.cust.getOrder().ge
 		<InitialStateUI>
 		<!-- ========================================================= -->
 			<ObjectUI objectType="PickupWindow" maxNmrOfInstances="1">
-				<PropertyUI property="maxPickupWindowLineSize">
+				<PropertyUI property="maxPickupWindowLineSize" label="Maximum size of the pickup window line"	widget="Slider">
 					<Label>
-						<Text xml:lang="en">Maximum size of the pickup window line</Text>
+						<Text xml:lang="de">Maximale Länge der Abhol-Warteschlange</Text>
 					</Label>
 					<Hint>
 						<Text xml:lang="en">What is the maximum size of the pickup window line?</Text>
@@ -658,9 +670,9 @@ __SimStatistics.revenue.getValue() + this.pw.pizzaPrice( this.cust.getOrder().ge
 				</PropertyUI>
 			</ObjectUI>
 			<ObjectUI objectType="MenuBoard" maxNmrOfInstances="1">
-				<PropertyUI property="maxMenuBoardLineSize" widget="Slider">
+				<PropertyUI property="maxMenuBoardLineSize" label="Maximum size of the menu board line" widget="Slider">
 					<Label>
-						<Text xml:lang="en">Maximum size of the menu board line</Text>
+						<Text xml:lang="de">Maximale Länge der Bestell-Warteschlange</Text>
 					</Label>
 					<Hint>
 						<Text xml:lang="en">What is the maximum size of the menu board line?</Text>
@@ -827,8 +839,31 @@ __SimStatistics.revenue.getValue() + this.pw.pizzaPrice( this.cust.getOrder().ge
 		</StatisticsUI>
 		<!-- ================================================== -->
 		<AnimationUI>
-			<aors:StartPageText xmlns="http://www.w3.org/1999/xhtml">
-				<aors:HtmlText xml:lang="en">
+			<ers:StartPageText xmlns="http://www.w3.org/1999/xhtml">
+				<ers:HtmlText xml:lang="en">
+					<div style="float:right; left-padding:1em;">
+						<img src="media/DriveThruRestaurant.png" />
+					</div>
+					<div style="float:left; width: 40%; padding: 10% 0px; 5%">
+						<h4>DriveThruRestaurant description:</h4>
+						<p>As a car enters from the street, the driver, who we will call Fred, decides 
+							whether or not to get in line. If Fred decides to leave the restaurant, he 
+							leaves as a dissatisfied customer. If Fred decides to get in line, then he 
+							waits until the menu board is available. At that time, Fred gives the order 
+							to the order taker. After the order is taken, then two things occur simultaneously: </p>
+						<ul>
+							<li>Fred moves forward if there is room, otherwise he has to wait at the menu board until
+								there is room to move forward
+							</li>
+							<li>The order is sent electronically back to the kitchen where it is prepared as soon as
+								the cook is available
+							</li>
+						</ul>
+						<p>As soon as Fred reaches the pickup window, then he pays and picks up his food, if it is ready. 
+							If the food is not ready, then Fred has to wait until his order is prepared.</p>
+					</div>
+				</ers:HtmlText>
+				<ers:HtmlText xml:lang="de">
 					<div style="float:left; width: 40%; height: 80%; padding: 0px 10px 5px 5px;">
 						<img src="media/DriveThruRestaurant.png" />
 					</div>
@@ -850,33 +885,10 @@ __SimStatistics.revenue.getValue() + this.pw.pizzaPrice( this.cust.getOrder().ge
 						<p>As soon as Fred reaches the pickup window, then he pays and picks up his food, if it is ready. 
 							If the food is not ready, then Fred has to wait until his order is prepared.</p>
 					</div>
-				</aors:HtmlText>
-				<aors:HtmlText xml:lang="de">
-					<div style="float:left; width: 40%; height: 80%; padding: 0px 10px 5px 5px;">
-						<img src="media/DriveThruRestaurant.png" />
-					</div>
-					<div style="float:left; width: 40%; padding: 10% 0px; 5%">
-						<h4>DriveThruRestaurant description:</h4>
-						<p>As a car enters from the street, the driver, who we will call Fred, decides 
-							whether or not to get in line. If Fred decides to leave the restaurant, he 
-							leaves as a dissatisfied customer. If Fred decides to get in line, then he 
-							waits until the menu board is available. At that time, Fred gives the order 
-							to the order taker. After the order is taken, then two things occur simultaneously: </p>
-						<ul>
-							<li>Fred moves forward if there is room, otherwise he has to wait at the menu board until
-								there is room to move forward
-							</li>
-							<li>The order is sent electronically back to the kitchen where it is prepared as soon as
-								the cook is available
-							</li>
-						</ul>
-						<p>As soon as Fred reaches the pickup window, then he pays and picks up his food, if it is ready. 
-							If the food is not ready, then Fred has to wait until his order is prepared.</p>
-					</div>
-				</aors:HtmlText>
-			</aors:StartPageText>
-			<aors:HelpText xmlns="http://www.w3.org/1999/xhtml">
-			   <aors:HtmlText xml:lang="en">
+				</ers:HtmlText>
+			</ers:StartPageText>
+			<ers:HelpText xmlns="http://www.w3.org/1999/xhtml">
+			   <ers:HtmlText xml:lang="en">
 			   	<div style="float:left; width: 40%; height: 80%; padding: 0px 10px 5px 5px;">
 			   		<img src="media/DriveThruRestaurant.png" />
 			   	</div>
@@ -898,8 +910,8 @@ __SimStatistics.revenue.getValue() + this.pw.pizzaPrice( this.cust.getOrder().ge
 			   		<p>As soon as Fred reaches the pickup window, then he pays and picks up his food, if it is ready. 
 			   		   If the food is not ready, then Fred has to wait until his order is prepared.</p>
 			   	</div>
-			   </aors:HtmlText>	
-				<aors:HtmlText xml:lang="de">
+			   </ers:HtmlText>	
+				<ers:HtmlText xml:lang="de">
 					<div style="float:left; width: 40%; height: 80%; padding: 0px 10px 5px 5px;">
 						<img src="media/DriveThruRestaurant.png" />
 					</div>
@@ -921,8 +933,8 @@ __SimStatistics.revenue.getValue() + this.pw.pizzaPrice( this.cust.getOrder().ge
 						<p>As soon as Fred reaches the pickup window, then he pays and picks up his food, if it is ready. 
 							If the food is not ready, then Fred has to wait until his order is prepared.</p>
 					</div>
-				</aors:HtmlText>
-			</aors:HelpText>
+				</ers:HtmlText>
+			</ers:HelpText>
 			<!-- ================================================== -->
 			<Views>
 				<SpaceView>
