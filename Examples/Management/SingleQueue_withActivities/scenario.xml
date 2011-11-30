@@ -23,8 +23,9 @@
 				modelliert sind und der Service als Aktivität	mit einem Start- und einem End-Ereignis modelliert ist.</shortDescription>
 			<dc:creator>Gerd Wagner</dc:creator>
 			<dc:contributor>Jens Werner</dc:contributor>
+			<dc:contributor>Oana Nicolae</dc:contributor>
 			<dc:created>20081001</dc:created>
-			<dc:modified>20100104</dc:modified>
+			<dc:modified>20111201</dc:modified>
 			<description>
 				<h:p>Customers arrive at random times at a service desk where they have to wait in a queue when the service desk 
 				is busy. The time between two customer arrivals is uniformly distributed between 1 and 8 minutes. The times 
@@ -50,65 +51,91 @@
 			</mediaFiles>
 		</documentation>
 		<Statistics>
+			<!--
 			<Variable name="serviceDeskUtilization" dataType="Float">
 				<Source>
 					<ResourceUtilization activityType="PerformService" resourceObjectType="ServiceDesk"
 						resourceObjectIdRef="2" />
 				</Source>
 			</Variable>
+			-->
 			<Variable name="maxQueueLength" dataType="Float">
 				<Source aggregationFunction="max">
-					<ObjectProperty property="queueLength" objectType="CustomerQueue" objectIdRef="1" />
+					<ObjectProperty property="queueLength" objectType="CustomerQueue" objectIdRef="2" />
 				</Source>
 			</Variable>
+			
+			<Variable name="nmrOfDepartures" dataType="Integer"/>
+			<Variable name="cumulativeResponseTime" dataType="Integer"/>
+			<Variable name="meanResponseTime" dataType="Float">
+				<Source computeOnlyAtEnd="true">
+					<ValueExpr language="Java"> (double) SimStatistics.cumulativeResponseTime.getValue()
+						/ SimStatistics.nmrOfDepartures.getValue() </ValueExpr>
+				</Source>
+			</Variable> 
 		</Statistics>	
 		<EntityTypes>
 			<!-- ================================= -->
 			<ExogenousEventType name="Arrival">
-			<!-- =============================== -->
+				<!-- =============================== -->
 				<Periodicity>
 					<DiscreteRandomVariable>
 						<UniformInt lowerBound="1" upperBound="8" />
 					</DiscreteRandomVariable>
 				</Periodicity>
 			</ExogenousEventType>			
-			<!-- ================================= -->
-			<ActivityType name="PerformService">
-			<!-- ================================= -->
-				<FOR objectVariable="sd" objectType="ServiceDesk" objectIdRef="2"/>
+		<!-- ======================================================== -->
+		  <ActivityType name="PerformService">
+			<!-- ====================================================== -->
+				<FOR objectVariable="sd" objectType="ServiceDesk" objectIdRef="1" />
+		     	<FOR objectVariable="cq" objectType="CustomerQueue" objectIdRef="2" />
 				<Duration>
 					<ValueExpr language="Java">sd.randomServiceTime()</ValueExpr>
 				</Duration>
 				<ResourceRef language="Java">sd</ResourceRef>
 				<ActivityStartEffect>
-					<UpdateActor actorType="ServiceDesk" actorVariable="sd">
+					<UpdateObject objectVariable="sd">
 						<Slot property="serviceDeskBusy" value="true" />
-					</UpdateActor>
+					</UpdateObject>
 				</ActivityStartEffect>
 				<ActivityEndEffect>	
-					<UpdateActor actorType="ServiceDesk" actorVariable="sd">
+					<UpdateObject objectVariable="sd">
 						<Slot property="serviceDeskBusy" value="false" />
-					</UpdateActor>
+					</UpdateObject>
+					<UpdateObject objectVariable="cq">
+						<Decrement property="queueLength" value="1"/>
+					</UpdateObject>
 				</ActivityEndEffect>
 			</ActivityType>	
-			<!-- ==================================== -->
+			<!-- =================================================== -->
+			<ObjectType name="Customer">
+				<!-- =================================================== -->
+				<Attribute name="arrivalTime" type="Integer" />
+			</ObjectType>
+			<!-- ====================================== -->
 			<ObjectType name="CustomerQueue">
-			<!-- ==================================== -->
+				<!-- ==================================== -->
+				<documentation>
+					<dc:description>Used just for animation reasons.</dc:description>
+				</documentation>
 				<Attribute name="queueLength" type="Float" />
 			</ObjectType>	
-			<!-- ==================================== -->
+			<!-- ====================================== -->
 			<AgentType name="ServiceDesk">
 			<!-- ==================================== -->
 				<Attribute name="serviceDeskBusy" type="Boolean"/>
+				<ReferenceProperty name="waitingCustomers" type="Customer" upperMultiplicity="unbounded">
+					<description>This property represents a first-in-first-out queue. </description>
+				</ReferenceProperty>
 				<Function name="randomServiceTime" resultType="Integer">
 					<Body language="Java"><![CDATA[
 int r = aors.util.Random.uniformInt(0,99);
-if (r<10) return 1; 	      // with probability 0.10
-else if (r<30) return 2;		// with probability 0.20
-else if (r<60) return 3;		// with probability 0.30
-else if (r<85) return 4;		// with probability 0.25
-else if (r<95) return 5;		// with probability 0.10
-else return 6;		          // with probability 0.05
+      if (r<10) return 1; 	    // with probability 0.10
+ else if (r<30) return 2;		// with probability 0.20
+ else if (r<60) return 3;		// with probability 0.30
+ else if (r<85) return 4;		// with probability 0.25
+ else if (r<95) return 5;		// with probability 0.10
+		   else return 6;		// with probability 0.05
 					]]>
 					</Body>
 				</Function>
@@ -119,53 +146,97 @@ else return 6;		          // with probability 0.05
 			<EnvironmentRule name="Arrival_Rule">
 				<!-- =================================================== -->
 				<documentation>
-					<description>On CustomerArrival, if the service desk is busy, the customer has to wait in a line, 
-						so the queue length is increased by 1. Otherwise, the customer is going to be serviced and hence 
-						the PerformService activity is scheduled. </description>
+					<description>On CustomerArrival, if the service desk is busy, the customer has to wait in a line, so the queue length is increased by 1. Otherwise, the customer is going to be serviced and hence the PerformService activity is scheduled. </description>
 				</documentation>
-				<WHEN eventType="Arrival" eventVariable="evt" />
-				<FOR objectVariable="cq" objectType="CustomerQueue" objectIdRef="1" />
-				<FOR objectVariable="sd" objectType="ServiceDesk" objectIdRef="2" />
+				<WHEN eventType="Arrival" eventVariable="e" />
+				<FOR objectVariable="sd" objectType="ServiceDesk" objectIdRef="1" />
+				<FOR objectVariable="cq" objectType="CustomerQueue" objectIdRef="2" />
+				<DO>
+					<UPDATE-ENV>
+						<Create>
+							<Object type="Customer" objectVariable="c">
+								<Slot property="arrivalTime">
+									<PropertyValueExpr entityVariable="e" property="occurrenceTime" />
+								</Slot>
+							</Object>
+						</Create>
+						<UpdateObject objectVariable="sd">
+							<MultiValuedSlot property="waitingCustomers">
+								<AddLast itemVariable="c"/>
+							</MultiValuedSlot>
+						</UpdateObject>
+					</UPDATE-ENV>
+				</DO>
 				<IF language="Java"><![CDATA[
-!sd.isServiceDeskBusy() && cq.getQueueLength() == 1
-				]]></IF>
+              !sd.isServiceDeskBusy() 
+                 ]]></IF>
 				<THEN>
+					<UPDATE-ENV>
+						<UpdateObject objectVariable="cq">
+							<Slot property="queueLength">
+								<ValueExpr language="Java">cq.getQueueLength() + 1</ValueExpr>
+							</Slot>
+						</UpdateObject>
+					</UPDATE-ENV>
 					<SCHEDULE-EVT>
 						<ActivityStartEventExpr activityType="PerformService" >
-							<CorrelationValue language="Java">evt.getId()</CorrelationValue>
+							<CorrelationValue language="Java">e.getId()</CorrelationValue>
 						</ActivityStartEventExpr>
 					</SCHEDULE-EVT>
 				</THEN>
 				<ELSE>
 					<UPDATE-ENV>
 						<UpdateObject objectVariable="cq">
-							<Increment property="queueLength" value="1"/>
+							<Slot property="queueLength">
+								<ValueExpr language="Java">cq.getQueueLength() + 1</ValueExpr>
+							</Slot>
 						</UpdateObject>
 					</UPDATE-ENV>
 				</ELSE>
 			</EnvironmentRule>		
 			<!-- =================================================== -->
 			<EnvironmentRule name="Departure_Rule">
-			<!-- =================================================== -->
+				<!-- =================================================== -->
 				<documentation>
-					<description>On CustomerDeparture, when the queue is empty, the service desk is no longer busy. Otherwise, 
-						the next customer will be serviced, so a new future Departure event is created (with a delay given by 
-						the random service time), and the queue size is decreased by 1.</description>
+					<description>On CustomerDeparture, when the queue is empty, the service desk is no longer busy. Otherwise, the next customer will be serviced, so a new future Departure event is created (with a delay given by the random service time), and the queue size is decreased by 1.</description>
 				</documentation>
-				<WHEN eventType="ActivityEndEvent" eventVariable="evt" activityType="PerformService" />
-				<FOR objectVariable="cq" objectType="CustomerQueue" objectIdRef="1" />
+				<WHEN eventType="ActivityEndEvent" eventVariable="e" activityType="PerformService" />
+				<FOR objectVariable="sd" objectType="ServiceDesk" objectIdRef="1" />
+				<FOR objectVariable="cq" objectType="CustomerQueue" objectIdRef="2" />
+				<FOR objectVariable="cust" objectType="Customer">
+					<ObjectRef language="Java">null</ObjectRef>
+				</FOR>
 				<IF language="Java"><![CDATA[  
-cq.getQueueLength() > 0  
+sd.getWaitingCustomers().size() > 0  
                  ]]></IF>
 				<THEN>
 					<UPDATE-ENV>
+						<UpdateObject objectVariable="sd">
+							<MultiValuedSlot property="waitingCustomers">
+								<RemoveFirst itemVariable="cust"/>
+							</MultiValuedSlot>
+						</UpdateObject>
+						<UpdateStatisticsVariable variable="nmrOfDepartures">
+							<ValueExpr language="Java">
+								SimStatistics.nmrOfDepartures.getValue() + 1
+							</ValueExpr>
+						</UpdateStatisticsVariable>
+						<UpdateStatisticsVariable variable="cumulativeResponseTime">
+							<ValueExpr language="Java">
+								SimStatistics.cumulativeResponseTime.getValue() + e.getOccurrenceTime() - cust.getArrivalTime()              	
+							</ValueExpr>
+						</UpdateStatisticsVariable>
+						<DestroyObject objectVariable="cust" />
 						<UpdateObject objectVariable="cq">
-							<Decrement property="queueLength" value="1"/>
+							<Slot property="queueLength">
+								<ValueExpr language="Java">cq.getQueueLength() - 1</ValueExpr>
+							</Slot>
 						</UpdateObject>
 					</UPDATE-ENV>
 					<SCHEDULE-EVT>
 						<ActivityStartEventExpr activityType="PerformService">
-							<CorrelationValue language="Java">evt.getId()</CorrelationValue>
+							<Condition language="Java">sd.getWaitingCustomers().size() > 0 </Condition>
+							<CorrelationValue language="Java">e.getId()</CorrelationValue>
 						</ActivityStartEventExpr>
 					</SCHEDULE-EVT>
 				</THEN>
@@ -175,19 +246,22 @@ cq.getQueueLength() > 0
 	<!-- =================================================== -->
 	<InitialState>
 		<!-- =================================================== -->
-		<Object type="CustomerQueue" id="1">
+		<Agent type="ServiceDesk" id="1">
+			<Slot property="serviceDeskBusy" value="false" />
+			<Slot property="waitingCustomers">
+				<ValueExpr language="Java"><![CDATA[ new ArrayList<Customer>() ]]></ValueExpr>
+			</Slot>
+		</Agent>
+		<Object type="CustomerQueue" id="2">
 			<Slot property="queueLength" value="0" />
 		</Object>
-		<Agent type="ServiceDesk" id="2">
-			<Slot property="serviceDeskBusy" value="false" />
-		</Agent>
 		<ExogenousEvent type="Arrival" occurrenceTime="1" />	
 	</InitialState>
 	<!-- =================================================== -->
 	<UserInterface supportedLanguages="en">
 		<!-- =================================================== -->
 		<InitialStateUI>
-		<!-- =================================================== -->
+			<!-- =================================================== -->
 			<EventUI eventType="Arrival" minNmrOfInstances="1">
 				<PropertyUI property="occurrenceTime">
 					<Label>
@@ -254,21 +328,30 @@ cq.getQueueLength() > 0
 				</Hint>
 				<Format decimalPlaces="2"/>
 			</StatisticsVariableUI>
+			<StatisticsVariableUI variable="meanResponseTime">
+				<Label>
+					<Text xml:lang="en">Mean response time</Text>
+				</Label>
+				<Hint>
+					<Text xml:lang="en">What is the average lenght of time the customer spends in the system?</Text>
+				</Hint>
+				<Format decimalPlaces="1"><Time>min</Time></Format>
+			</StatisticsVariableUI>
 		</StatisticsUI>
 		<AnimationUI>
 			<Views>
 				<SpaceView>
-					<TwoDimensionalSpaceView2D backgroundColor="darkgrey"/>
+					<TwoDimensionalSpaceView2D backgroundColor="darkgrey" />
 				</SpaceView>
-				<ObjectView objectType="ServiceDesk">
+				<ObjectView objectType="ServiceDesk" objectIdRef="1">
 					<Shape2D x="250px" y="250px">
 						<Square fill="green" width="50" stroke="black" strokeWidth="10">
-							<ShapePropertyVisualizationMap shapeProperty="fill" property="serviceDeskBusy" mapType="equalityCaseWise" v0="green" a0="false" a1="true" v1="red"/>
+							<ShapePropertyVisualizationMap shapeProperty="fill" property="serviceDeskBusy"
+								mapType="equalityCaseWise" v0="green" a0="false" a1="true" v1="red"/>
 						</Square>
 					</Shape2D>
-					<DisplayInfo property="serviceDeskBusy" />
-				</ObjectView>
-				<ObjectView objectType="CustomerQueue">
+				</ObjectView>	
+				<ObjectView objectType="CustomerQueue" objectIdRef="2">
 					<Shape2D x="225px" y="300px">
 						<Rectangle positioning="LeftCenter" fill="yellow" width="1" height="10" stroke="black" strokeWidth="2">
 							<ShapePropertyVisualizationMap shapeProperty="width" property="queueLength" mapType="polynomial" a0="0" a1="50"/>
