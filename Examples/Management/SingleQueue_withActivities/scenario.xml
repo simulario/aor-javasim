@@ -15,13 +15,39 @@
 	<SimulationParameters simulationSteps="600" stepDuration="1" timeUnit="min"/>
 	<SimulationModel modelName="SingleServiceQueue_withActivity" modelTitle="A single service queue with service utilization and maximum queue length statistics and with an activity.">	
 		<documentation>
+			<dc:title>Single Queue with a Service Activity</dc:title>
+			<dc:title xml:lang="de">Einfach-Warteschlange mit einer Service-Aktivität</dc:title>
+			<shortDescription>A model of a service queue where the customers are modeled as objects and the service 
+				is modeled as an activity with a start and an end event.</shortDescription>
+			<shortDescription xml:lang="de">Ein Modell einer Service-Warteschlange, bei dem die Kunden als Objekte
+				modelliert sind und der Service als Aktivität	mit einem Start- und einem End-Ereignis modelliert ist.</shortDescription>
 			<dc:creator>Gerd Wagner</dc:creator>
-			<dc:created>20081001</dc:created>
-			<dc:source>SingleServiceQueue</dc:source>
 			<dc:contributor>Jens Werner</dc:contributor>
+			<dc:created>20081001</dc:created>
 			<dc:modified>20100104</dc:modified>
-			<dc:description>Customers arrive at random times at a service desk where they have to wait in a queue when the service desk is busy. The time between two customer arrivals is uniformly distributed between 1 and 8 minutes. The times for completing a service vary from 1 to 6 minutes, with probabilities 0.1, 0.2, 0.3, 0.25, 0.1, 0.05, respectively. Two statistics are to be collected: mean response time (length of time a customer spends in the system) and mean proportion of customers who spend 5 or more minutes in the system (the latter is not yet implemented). An arriving customer is represented by a newly generated object, which is destryoed again, when this customer leaves the system. The customer in service is represented by the first/topmost item in the First-In-First-Out queue, while the remaining items of the queue represent the waiting line.</dc:description>
-			<processModelDiagram>BPMN-diagram.png</processModelDiagram>
+			<description>
+				<h:p>Customers arrive at random times at a service desk where they have to wait in a queue when the service desk 
+				is busy. The time between two customer arrivals is uniformly distributed between 1 and 8 minutes. The times 
+				for completing a service vary from 1 to 6 minutes, with probabilities 0.1, 0.2, 0.3, 0.25, 0.1, 0.05, respectively. 
+				Two statistics are to be collected: mean response time (length of time a customer spends in the system) 
+				and mean proportion of customers who spend 5 or more minutes in the system.</h:p> 
+				<h:p>An arriving customer is represented by a newly generated object, which is destroyed again, when this customer 
+				leaves the system. The customer in service is represented by the first/topmost item in the First-In-First-Out queue, 
+				while the other items of the queue represent the waiting line.</h:p>
+			</description>
+			<description xml:lang="de">
+				Kunden kommen in zufälligen Zeitabständen an einem Service-Schalter an, wo sie in einer Warteschlange warten müssen, 
+				wenn der Schalter beschäftigt ist. Die Zeit zwischen zwei Kundenankünften ist gleichförmig verteilt zwischen 1 und 8 Minuten. 
+				Die Zeit zur Erbringung eines Dienstes variiert zwischen 1 und 6 Minuten, mit den Wahrscheinlichkeiten 0.1, 0.2, 0.3, 0.25, 
+				0.1 beziehunsgweise 0.05. Es sollen zwei Statistiken erhoben werden: der Service-Nutzungsgrad (gesamte Servicezeit geteilt 
+				durch die Gesamtzeit) und die maximale Länge der Warteschlange.
+			</description>
+			<CcLicense license="CC BY-SA"/>
+			<mediaFiles>
+				<processModelDiagram file="BPMN-diagram.png" author="Oana Nicolae, Gerd Wagner" 
+					title="A process model for the single service queue system" license="CC BY-SA" 
+					licenseURL="http://creativecommons.org/licenses/by-sa/3.0"/>
+			</mediaFiles>
 		</documentation>
 		<Statistics>
 			<Variable name="serviceDeskUtilization" dataType="Float">
@@ -39,16 +65,16 @@
 		<EntityTypes>
 			<!-- ================================= -->
 			<ExogenousEventType name="Arrival">
-				<!-- =============================== -->
+			<!-- =============================== -->
 				<Periodicity>
 					<DiscreteRandomVariable>
 						<UniformInt lowerBound="1" upperBound="8" />
 					</DiscreteRandomVariable>
 				</Periodicity>
 			</ExogenousEventType>			
-		<!-- ======================================================== -->
-		  <ActivityType name="PerformService">
-			<!-- ====================================================== -->
+			<!-- ================================= -->
+			<ActivityType name="PerformService">
+			<!-- ================================= -->
 				<FOR objectVariable="sd" objectType="ServiceDesk" objectIdRef="2"/>
 				<Duration>
 					<ValueExpr language="Java">sd.randomServiceTime()</ValueExpr>
@@ -65,24 +91,24 @@
 					</UpdateActor>
 				</ActivityEndEffect>
 			</ActivityType>	
-			<!-- ====================================== -->
+			<!-- ==================================== -->
 			<ObjectType name="CustomerQueue">
 			<!-- ==================================== -->
 				<Attribute name="queueLength" type="Float" />
 			</ObjectType>	
-			<!-- ====================================== -->
+			<!-- ==================================== -->
 			<AgentType name="ServiceDesk">
 			<!-- ==================================== -->
 				<Attribute name="serviceDeskBusy" type="Boolean"/>
 				<Function name="randomServiceTime" resultType="Integer">
 					<Body language="Java"><![CDATA[
 int r = aors.util.Random.uniformInt(0,99);
-      if (r<10) return 1; 	    // with probability 0.10
- else if (r<30) return 2;		// with probability 0.20
- else if (r<60) return 3;		// with probability 0.30
- else if (r<85) return 4;		// with probability 0.25
- else if (r<95) return 5;		// with probability 0.10
-		   else return 6;		// with probability 0.05
+if (r<10) return 1; 	      // with probability 0.10
+else if (r<30) return 2;		// with probability 0.20
+else if (r<60) return 3;		// with probability 0.30
+else if (r<85) return 4;		// with probability 0.25
+else if (r<95) return 5;		// with probability 0.10
+else return 6;		          // with probability 0.05
 					]]>
 					</Body>
 				</Function>
@@ -93,7 +119,9 @@ int r = aors.util.Random.uniformInt(0,99);
 			<EnvironmentRule name="Arrival_Rule">
 				<!-- =================================================== -->
 				<documentation>
-					<description>On CustomerArrival, if the service desk is busy, the customer has to wait in a line, so the queue length is increased by 1. Otherwise, the customer is going to be serviced and hence the PerformService activity is scheduled. </description>
+					<description>On CustomerArrival, if the service desk is busy, the customer has to wait in a line, 
+						so the queue length is increased by 1. Otherwise, the customer is going to be serviced and hence 
+						the PerformService activity is scheduled. </description>
 				</documentation>
 				<WHEN eventType="Arrival" eventVariable="evt" />
 				<FOR objectVariable="cq" objectType="CustomerQueue" objectIdRef="1" />
@@ -111,18 +139,18 @@ int r = aors.util.Random.uniformInt(0,99);
 				<ELSE>
 					<UPDATE-ENV>
 						<UpdateObject objectVariable="cq">
-							<Slot property="queueLength">
-								<ValueExpr language="Java">cq.getQueueLength() + 1</ValueExpr>
-							</Slot>
+							<Increment property="queueLength" value="1"/>
 						</UpdateObject>
 					</UPDATE-ENV>
 				</ELSE>
 			</EnvironmentRule>		
 			<!-- =================================================== -->
 			<EnvironmentRule name="Departure_Rule">
-				<!-- =================================================== -->
+			<!-- =================================================== -->
 				<documentation>
-					<description>On CustomerDeparture, when the queue is empty, the service desk is no longer busy. Otherwise, the next customer will be serviced, so a new future Departure event is created (with a delay given by the random service time), and the queue size is decreased by 1.</description>
+					<description>On CustomerDeparture, when the queue is empty, the service desk is no longer busy. Otherwise, 
+						the next customer will be serviced, so a new future Departure event is created (with a delay given by 
+						the random service time), and the queue size is decreased by 1.</description>
 				</documentation>
 				<WHEN eventType="ActivityEndEvent" eventVariable="evt" activityType="PerformService" />
 				<FOR objectVariable="cq" objectType="CustomerQueue" objectIdRef="1" />
@@ -132,9 +160,7 @@ cq.getQueueLength() > 0
 				<THEN>
 					<UPDATE-ENV>
 						<UpdateObject objectVariable="cq">
-							<Slot property="queueLength">
-								<ValueExpr language="Java">cq.getQueueLength() - 1</ValueExpr>
-							</Slot>
+							<Decrement property="queueLength" value="1"/>
 						</UpdateObject>
 					</UPDATE-ENV>
 					<SCHEDULE-EVT>
@@ -161,7 +187,7 @@ cq.getQueueLength() > 0
 	<UserInterface supportedLanguages="en">
 		<!-- =================================================== -->
 		<InitialStateUI>
-			<!-- =================================================== -->
+		<!-- =================================================== -->
 			<EventUI eventType="Arrival" minNmrOfInstances="1">
 				<PropertyUI property="occurrenceTime">
 					<Label>
