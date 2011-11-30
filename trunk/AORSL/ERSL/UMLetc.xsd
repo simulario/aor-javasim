@@ -72,44 +72,59 @@
 				<xs:element ref="dc:source" minOccurs="0" maxOccurs="unbounded"/>
 				<xs:element name="mediaFiles" minOccurs="0">
 					<xs:annotation>
-						<xs:documentation>Lists all media files and credits their authors.</xs:documentation>
+						<xs:documentation>Lists all media files with metadata.</xs:documentation>
 					</xs:annotation>
 					<xs:complexType>
 						<xs:sequence>
 							<xs:element name="image" minOccurs="0" maxOccurs="unbounded">
 								<xs:complexType>
+									<xs:attribute name="file" type="xs:anyURI" use="required"/>
 									<xs:attributeGroup ref="ers:mediaFile.attributes"/>
 								</xs:complexType>
 							</xs:element>
 							<xs:element name="sound" minOccurs="0" maxOccurs="unbounded">
 								<xs:complexType>
+									<xs:attribute name="file" type="ers:FileNameWithoutExtension" use="required"/>
 									<xs:attributeGroup ref="ers:mediaFile.attributes"/>
 								</xs:complexType>
 							</xs:element>
 							<xs:element name="video" minOccurs="0" maxOccurs="unbounded">
 								<xs:complexType>
-									<xs:attributeGroup ref="ers:mediaFile.attributes"/>
-								</xs:complexType>
-							</xs:element>
-							<xs:element name="informationModelDiagram" minOccurs="0">
-								<xs:annotation>
-									<xs:documentation>A diagram showing an information model for the simulated system,
-										typically in the formm of a UML class diagram.</xs:documentation>
-								</xs:annotation>
-								<xs:complexType>
-									<xs:attributeGroup ref="ers:mediaFile.attributes"/>
-								</xs:complexType>
-							</xs:element>
-							<xs:element name="processModelDiagram" minOccurs="0">
-								<xs:annotation>
-									<xs:documentation>A diagram showing a process model for the simulated system,
-										typically in the formm of a BPMN diagram.</xs:documentation>
-								</xs:annotation>
-								<xs:complexType>
+									<xs:attribute name="file" type="ers:FileNameWithoutExtension" use="required"/>
 									<xs:attributeGroup ref="ers:mediaFile.attributes"/>
 								</xs:complexType>
 							</xs:element>
 						</xs:sequence>
+					</xs:complexType>
+				</xs:element>
+				<xs:choice>
+					<xs:element name="titleImage" minOccurs="0">
+						<xs:complexType>
+							<xs:attribute name="file" type="xs:anyURI" use="required"/>
+						</xs:complexType>
+					</xs:element>
+					<xs:element name="titleVideo" minOccurs="0">
+						<xs:complexType>
+							<xs:attribute name="file" type="ers:FileNameWithoutExtension" use="required"/>
+						</xs:complexType>
+					</xs:element>					
+				</xs:choice>
+				<xs:element name="processModelDiagram" minOccurs="0">
+					<xs:annotation>
+						<xs:documentation>A diagram showing a process model for the simulated system,
+							typically in the formm of a BPMN diagram.</xs:documentation>
+					</xs:annotation>
+					<xs:complexType>
+						<xs:attribute name="file" type="xs:anyURI" use="required"/>
+					</xs:complexType>
+				</xs:element>
+				<xs:element name="informationModelDiagram" minOccurs="0">
+					<xs:annotation>
+						<xs:documentation>A diagram showing an information model for the simulated system,
+							typically in the formm of a UML class diagram.</xs:documentation>
+					</xs:annotation>
+					<xs:complexType>
+						<xs:attribute name="file" type="xs:anyURI" use="required"/>
 					</xs:complexType>
 				</xs:element>
 			</xs:choice>
@@ -117,7 +132,6 @@
 	</xs:element>
 	<xs:element name="description" type="ers:AnyXHTML.type"/>
 	<xs:attributeGroup name="mediaFile.attributes">
-		<xs:attribute name="file" type="xs:anyURI" use="required"/>
 		<xs:attribute name="title" type="xs:string" use="optional"/>
 		<xs:attribute name="license" type="xs:string" use="required"/>
 		<xs:attribute name="licenseURL" type="xs:anyURI" use="optional"/>
@@ -948,6 +962,12 @@
 	<xs:simpleType name="JavaTypeName">
 		<xs:restriction base="xs:string">
 			<xs:pattern value="([A-Z]|[a-z]|_)([A-Z]|[a-z]|_|[0-9]|.)*"/>
+		</xs:restriction>
+	</xs:simpleType>
+	<xs:simpleType name="FileNameWithoutExtension">
+		<xs:annotation><xs:documentation>A file name without extension such as "123_name1" or "name1/name2".</xs:documentation></xs:annotation>
+		<xs:restriction base="xs:string">
+			<xs:pattern value="([A-Z]|[a-z]|_|[0-9]|/|-)*"/>
 		</xs:restriction>
 	</xs:simpleType>
 	<xs:simpleType name="ListOfCanonicalName">
