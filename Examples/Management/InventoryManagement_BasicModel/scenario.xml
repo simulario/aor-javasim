@@ -26,20 +26,29 @@
 				Ein einfaches Lagerverwaltungssystem mit einem Wiederbeschaffungsverfahren,
 				das auf einem Sicherheitsbestand (engl. "reorder level") basiert.
 			</shortDescription>
-			<description>The daily demand (say, for TVs in an electronics shop) is normally distributed, 
+			<description><h:p>The daily demand (say, for TVs in an electronics shop) is normally distributed, 
 				with a mean of 5 units and a standard deviation of 1.8 units. A replenishment order is placed 
 				when the quantity in stock falls below the reorder level. The order quantity of a replenishment order 
 				is computed as the reorder-up-to-level minus the quantity in stock. Lead time is distributed 
-				uniformly between 1 and 3 days.	If a demand is greater than the productQuantityInStock, 
-				the sale is lost.	The number of lost sales is to be computed and displayed as a percentage.
+				uniformly between 1 and 3 days.	If a demand is greater than the current stock level, 
+				the sale is lost.	The number of lost sales is to be computed and displayed as a percentage.</h:p>
+				<h:p>The inventory is modeled as an object with three attributes: <h:code>productQuantityInStock</h:code>, 
+				<h:code>reorderLevel</h:code> and <h:code>reorderUpToLevel</h:code>. For simplicity, the model
+				does not create replenishment orders, but instead it only schedules corresponding future 
+				<h:code>Delivery</h:code> events.</h:p>				
 			</description>
-			<description xml:lang="de">Die Tagesnachfrage (z.B. für Fernsehgeräte in einem Geschäft) ist 
+			<description xml:lang="de"><h:p>Die Tagesnachfrage (z.B. für Fernsehgeräte in einem Geschäft) ist 
 				normalverteilt mit einem Mittelwert von 5 und einer Standardabweichung von 1,8. Ein Wiederbeschaffungsauftrag
-				wird erteilt, wenn der Lagerbestand unter den Sicherheitsbestand fällt. Die Bestellmenge eines
-				Wiederbeschaffungsauftrags wird als Differenz aus dem Sollbestand (reorder-up-to-level) und dem
-				Sicherheitsbestand errechnet. Die Vorlaufzeit für Lieferungen ist uniform verteilt zwischen 1 und 3 Tagen. 
-				Wenn eine Nachfrage den Lagerbestand übersteigt, ist der Auftrag verloren. Die Anzahl der verlorenen  
-				Aufträge ist zu ermitteln und als Prozentsatz anzuzeigen.
+				wird erteilt, wenn der Lagerbestand unter den Sicherheitsbestand (<h:code>reorderLevel</h:code>) fällt. 
+				Die Bestellmenge eines Wiederbeschaffungsauftrags wird als Differenz aus dem Sollbestand 
+				(<h:code>reorderUpToLevel</h:code>) und dem	Sicherheitsbestand errechnet. Die Vorlaufzeit für Lieferungen 
+				ist uniform verteilt zwischen 1 und 3 Tagen. Wenn eine Nachfrage den Lagerbestand übersteigt, 
+				ist der Auftrag verloren. Die Anzahl der verlorenen	Aufträge ist zu ermitteln und als Prozentsatz 
+				anzuzeigen.</h:p>
+				<h:p>Das Lager wird als Objekt mit drei Attributen modelliert: <h:code>productQuantityInStock</h:code>, 
+				<h:code>reorderLevel</h:code> und <h:code>reorderUpToLevel</h:code>. Zur Vereinfachung werden im
+				Simulationsmodell keine Wiederbeschaffungsaufträge erzeugt, sondern nur entsprechende zukünftige
+				<h:code>Delivery</h:code>-Ereignisse.</h:p>
 			</description>
 			<CcLicense license="CC BY-SA"/>
 			<dc:subject>inventory management</dc:subject>
@@ -63,7 +72,7 @@
 					</ValueExpr>
 				</Source>
 			</Variable>
-			<Variable name="productInStock" dataType="Integer" />
+			<Variable name="stockLevel" dataType="Integer" />
 			<Variable name="dailyDemand" dataType="Integer" />
 		</Statistics>
 
@@ -82,6 +91,7 @@
 				<Attribute name="productQuantityInStock" type="Integer" />
 				<Attribute name="reorderLevel" type="Integer" />
 				<Attribute name="reorderUpToLevel" type="Integer" />
+				<Attribute name="waitingForDelivery" type="Boolean"/>
 			</ObjectType>
 		</EntityTypes>
 
@@ -95,16 +105,19 @@
 						is less than the demand, the productQuantityInStock drops to 0 and we have an increase of lost sales, 
 						calculated as demand minus productQuantityInStock. This is also the case when the productQuantityInStock 
 						is already zero at the beginning of the day. If the productQuantityInStock is less than the reorder level, 
-						a Delivery event is scheduled with a quantity of reorderUpToLevel minus productQuantityInStock items
-						and with a uniformly distributated random delay of 1, 2 or 3 days.
+						and the inventory is not WaitingForDelivery, a new Delivery event is scheduled with a quantity of reorderUpToLevel 
+						minus productQuantityInStock items and with a uniformly distributated random delay of 1, 2 or 3 days.
 					</dc:description>
 				</documentation>
 				<WHEN eventType="DailyDemand" />
 				<FOR objectVariable="inv" objectType="Inventory" objectIdRef="1" />
 				<FOR dataVariable="demand" dataType="Integer">
 					<ValueExpr language="Java"> Random.normalInt( 5, 1.8) </ValueExpr>
-					<ValueExpr language="JavaScript"> java.util.Random.normalInt( 5, 1.8) </ValueExpr>
+					<ValueExpr language="JavaScript"> js.util.Random.normalInt( 5, 1.8) </ValueExpr>
 				</FOR>
+				<FOR-DataVariable variable="waiting">
+					<ValueExpr language="Java JavaScript">this.inv.isWaitingForDelivery()</ValueExpr>
+				</FOR-DataVariable>
 				<IF language="Java JavaScript"><![CDATA[ 
 					this.inv.getProductQuantityInStock() >= this.demand 
 					]]></IF>
@@ -117,10 +130,8 @@
 									]]></ValueExpr>
 							</Slot>
 						</UpdateObject>
-						<UpdateStatisticsVariable variable="productInStock">
-							<ValueExpr language="Java JavaScript"><![CDATA[ 
-								 this.inv.getProductQuantityInStock()
-							]]></ValueExpr>
+						<UpdateStatisticsVariable variable="stockLevel">
+							<ValueExpr language="Java JavaScript"> this.inv.getProductQuantityInStock()	</ValueExpr>
 						</UpdateStatisticsVariable>
 					</UPDATE-ENV>
 					<SCHEDULE-EVT>
@@ -155,18 +166,17 @@
 						<UpdateStatisticsVariable variable="dailyDemand">
 							<ValueExpr language="Java JavaScript">this.demand</ValueExpr>
 						</UpdateStatisticsVariable>
-						<UpdateStatisticsVariable variable="productInStock">
+						<UpdateStatisticsVariable variable="stockLevel">
 							<ValueExpr language="Java JavaScript">this.inv.getProductQuantityInStock()</ValueExpr>
 						</UpdateStatisticsVariable>
 						<UpdateObject objectVariable="inv">
 							<Slot property="productQuantityInStock" value="0" />
+							<Slot property="waitingForDelivery" value="true"></Slot>
 						</UpdateObject>
-						<UpdateStatisticsVariable variable="productInStock">
-							<ValueExpr language="Java JavaScript"><![CDATA[ this.inv.getProductQuantityInStock() ]]></ValueExpr>
-						</UpdateStatisticsVariable>
 					</UPDATE-ENV>
 					<SCHEDULE-EVT>
 						<CausedEventExpr eventType="Delivery">
+							<Condition language="Java JavaScript"> !this.waiting </Condition>
 							<Delay>
 								<DiscreteRandomVariable>
 									<UniformInt lowerBound="2" upperBound="4" />
@@ -194,7 +204,7 @@
 								<ValueExpr language="Java JavaScript">this.inv.getProductQuantityInStock() + this.d.getQuantity()</ValueExpr>
 							</Slot>
 						</UpdateObject>
-						<UpdateStatisticsVariable variable="productInStock">
+						<UpdateStatisticsVariable variable="stockLevel">
 							<ValueExpr language="Java JavaScript"><![CDATA[ 
 							     this.inv.getProductQuantityInStock()
 							]]></ValueExpr>
@@ -245,24 +255,24 @@
 				</Hint>
 				<Format decimalPlaces="2"><Math>%</Math></Format>
 			</StatisticsVariableUI>
-			<StatisticsVariableUI variable="productInStock" comparisonGroup="PD" showChart="true">
+			<StatisticsVariableUI variable="stockLevel" comparisonGroup="Demand_StockLevel" showChart="true">
 				<Label>
-					<Text xml:lang="en">Product Items in Stock</Text>
-					<Text xml:lang="de">Product Items in Stock</Text>
+					<Text xml:lang="en">Stock level</Text>
+					<Text xml:lang="de">Lagerbetsnd</Text>
 				</Label>
 				<Hint>
-					<Text xml:lang="en">What is number of product items in the stock ?</Text>
-					<Text xml:lang="de">What is number of product items in the stock ?</Text>
+					<Text xml:lang="en">How many product items are there in the stock?</Text>
+					<Text xml:lang="de">Wieveiele Produkteinheiten sind auf Lager?</Text>
 				</Hint>
 			</StatisticsVariableUI>
-			<StatisticsVariableUI variable="dailyDemand" comparisonGroup="PD" showChart="true">
+			<StatisticsVariableUI variable="dailyDemand" comparisonGroup="Demand_StockLevel" showChart="true">
 				<Label>
-					<Text xml:lang="en">Daily Demand</Text>
-					<Text xml:lang="de">Daily Demand</Text>
+					<Text xml:lang="en">Daily demand</Text>
+					<Text xml:lang="de">Tagesnachfrage</Text>
 				</Label>
 				<Hint>
-					<Text xml:lang="en">What is the value of the daily demand ?</Text>
-					<Text xml:lang="de">What is the value of the daily demand ?</Text>
+					<Text xml:lang="en">How big is the daily demand?</Text>
+					<Text xml:lang="de">Wie groß ist die Tagesnachfrage?</Text>
 				</Hint>
 			</StatisticsVariableUI>
 		</StatisticsUI>	
@@ -273,15 +283,15 @@
 					</SpaceView>
 					<!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->
 					<ObjectView objectType="Inventory" objectIdRef="1">
-						<!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->
-						<Shape2D x="750px" y="50px">
-							<Rectangle positioning="CenterBottom" fill="yellow" height="20" width="50" stroke="black"
+					<!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->
+						<Shape2D x="700px" y="50px">
+							<Rectangle positioning="CenterBottom" fill="grey" width="100" stroke="black"
 								strokeWidth="4" >
 								<ShapePropertyVisualizationMap shapeProperty="height" property="productQuantityInStock"
 									mapType="polynomial" a0="0" a1="2" />
 							</Rectangle>
 						</Shape2D>
-						<DisplayInfo content="Product Item(s) in Stock"  property="productQuantityInStock" />
+						<DisplayInfo property="productQuantityInStock" content="items in stock"/>
 					</ObjectView>
 				</Views>
 		</AnimationUI>
