@@ -18,7 +18,7 @@
 			<dc:modified>20100305</dc:modified>
 			<dc:creator>Oana Nicolae</dc:creator>
 			<dc:contributor>Gerd Wagner</dc:contributor>
-			<dc:modified>20090913</dc:modified>
+			<dc:modified>20111201</dc:modified>
 			<dc:source>"Introduction to Simulation" by R.G. Ingalls. In: Proceedings of the 2008 Winter Simulation Conference.</dc:source>
 			<processModelDiagram>DriveThruRestaurant_withAgentsAndActivities.png</processModelDiagram>
 		</documentation>
@@ -48,7 +48,7 @@
 		<Globals>
 			<!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->
 			<GlobalFunction name="twoDice" resultType="Integer">
-				<!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->
+			<!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->
 				<Parameter name="factor" type="Integer" />
 				<Body language="Java"><![CDATA[
 int r1 = Random.uniformInt(1,6);
@@ -110,10 +110,9 @@ int r2 = Random.uniformInt(1,6);
 			<ExogenousEventType name="CustomerArrival">
 				<!-- =================================================== -->
 				<Periodicity>
-					<ValueExpr language="Java">Global.twoDice(10)</ValueExpr>
+					<ValueExpr language="Java">sim.controller.Global.twoDice(10)</ValueExpr>
 				</Periodicity>
 			</ExogenousEventType>
-			
 			<!-- =================================================== -->
 			<CausedEventType name="StartMenuBoardService">
 				<!-- =================================================== -->
@@ -134,14 +133,13 @@ int r2 = Random.uniformInt(1,6);
 				<!-- =================================================== -->
 				<Attribute type="Integer" name="endPickupWindowProp" />
 			</CausedEventType>		
-			<!-- ==================================================================== -->
+			<!-- ========================================================================== -->
 			<ActivityType name="PerformMenuBoardService" startEventType="StartMenuBoardService"
 				startEventVariable="evt_s" startEventCorrelationProperty="startMenuBoardProp"
 				endEventVariable="evt_e" endEventType="EndMenuBoardService"
 				endEventCorrelationProperty="endMenuBoardProp" 
 				actorIdRef="1" actorVariable="mb" actorType="MenuBoard">
-				<!-- ================================================================== -->
-				<FOR objectVariable="mbq" objectType="Collection" objectIdRef="3" />
+			<!-- =========================================================================== -->
 				<ActivityStartEffect>
 					<UpdateActor actorType="MenuBoard" actorVariable="mb">
 						<Slot property="menuBoardBusy" value="true" />
@@ -150,14 +148,14 @@ int r2 = Random.uniformInt(1,6);
 				<ActivityEndEffect>
 					<UpdateActor actorType="MenuBoard" actorVariable="mb">
 						<Slot property="menuBoardBusy">
-							<ValueExpr language="Java">mbq.size() == 0 ? false : true</ValueExpr>
+							<ValueExpr language="Java">mb.getMenuBoardQueue().size() == 0 ? false : true</ValueExpr>
 						</Slot>
 					</UpdateActor>
 				</ActivityEndEffect>
-			</ActivityType>	
+				</ActivityType>	
 			<!-- ============================================================ -->
 			<ActivityType name="PerformKitchenService" actorIdRef="5">
-				<!-- ========================================================== -->
+			 <!-- ========================================================== -->
 				<Duration>
 					<ValueExpr language="Java">Global.twoDice(8)</ValueExpr>
 				</Duration>
@@ -169,17 +167,16 @@ int r2 = Random.uniformInt(1,6);
 				endEventType="EndPickupWindowService"
 				endEventCorrelationProperty="endPickupWindowProp" actorIdRef="2"
 				actorType="PickupWindow" actorVariable="pw">
-				<!-- ======================================================================== -->
-				<FOR objectVariable="pwq" objectIdRef="4" objectType="Collection" objectName="PickupWindowQueue" />
+			<!-- ======================================================================== -->
 				<ActivityStartEffect>
 					<UpdateActor actorType="PickupWindow" actorVariable="pw">
-						<Slot property="pickupWindowBusy" value="true"/>
+						<Slot property="pickupWindowBusy" value="true" />
 					</UpdateActor>
 				</ActivityStartEffect>
 				<ActivityEndEffect>
 					<UpdateActor actorType="PickupWindow" actorVariable="pw">
 						<Slot property="pickupWindowBusy">
-							<ValueExpr language="Java">pwq.size() == 0 ? false : true</ValueExpr>
+							<ValueExpr language="Java">pw.getPickupWindowQueue().size() == 0 ? false : true</ValueExpr>
 						</Slot>
 					</UpdateActor>
 				</ActivityEndEffect>
@@ -253,7 +250,7 @@ evt.getSenderIdRef()
 evt.getSenderIdRef() + "and" + evt.getOccurrenceTime()
 								]]></ReminderMsg>
 							<Delay>
-								<ValueExpr language="Java">Global.twoDice(10)</ValueExpr>
+								<ValueExpr language="Java">sim.controller.Global.twoDice(10)</ValueExpr>
 							</Delay>
 						</ReminderEventExpr>
 					</SCHEDULE-EVT>
@@ -325,7 +322,7 @@ int j= substr.indexOf("and");
 (mes.getOrderNo()+"and"+mes.getPizzaType()+"and"+mes.getCustID())
 								]]></ReminderMsg>
 								<Delay>
-									<ValueExpr language="Java">Global.twoDice(8)</ValueExpr>
+									<ValueExpr language="Java">sim.controller.Global.twoDice(8)</ValueExpr>
 								</Delay>
 							</ReminderEventExpr>
 						</SCHEDULE-EVT>
@@ -344,12 +341,12 @@ int j= substr.indexOf("and");
 								<Slot property="orderNo">
 									<ValueExpr language="Java"><![CDATA[
 Integer.parseInt(getMessagePart(evt.getReminderMsg(),1))
-                  ]]></ValueExpr>
+                                ]]></ValueExpr>
 								</Slot>
 								<Slot property="pizzaType">
 									<ValueExpr language="Java"><![CDATA[
 Integer.parseInt(getMessagePart(evt.getReminderMsg(),2))
-                  ]]></ValueExpr>
+                               ]]></ValueExpr>
 								</Slot>
 								<Slot property="custID">
 									<ValueExpr language="Java"><![CDATA[
@@ -413,7 +410,7 @@ mes.getOrderNo()
 					<FOR beliefEntityVariable="order" beliefEntityType="Order" />
 					<IF language="Java"><![CDATA[
 mes.getOrderNo() == (( Order)order).getOrderNo()                         
-           ]]></IF>
+                   ]]></IF>
 					<THEN>
 						<SCHEDULE-EVT>
 							<OutMessageEventExpr messageType="OrderArrived">
@@ -428,7 +425,7 @@ evt.getSenderIdRef()
 								</ReminderMsg>
 								<Delay>
 									<ValueExpr language="Java"><![CDATA[
-(int)Global.twoDice(10)
+(int)sim.controller.Global.twoDice(10)
 										]]></ValueExpr>
 								</Delay>
 							</ReminderEventExpr>
@@ -567,7 +564,7 @@ SimStatistics.numberOfCustomers.getValue() + 1
 						<CausedEventExpr eventType="StartMenuBoardService">
 							<Condition language="Java"><![CDATA[
 !mb.isMenuBoardBusy()
-		          ]]>
+		                    ]]>
 							</Condition>
 							<Slot property="startMenuBoardProp">
 								<ValueExpr language="Java">cust.getId()</ValueExpr>
@@ -655,7 +652,7 @@ mes.getOrderNo()
 						<Slot property="endMenuBoardProp">
 							<ValueExpr language="Java"><![CDATA[
 cust.getId()								
-								]]></ValueExpr>
+							]]></ValueExpr>
 						</Slot>
 					</CausedEventExpr>
 				</SCHEDULE-EVT>
@@ -666,7 +663,7 @@ cust.getId()
 						<Slot property="orderNo">
 							<ValueExpr language="Java"><![CDATA[
 mes.getOrderNo()								
-									]]></ValueExpr>
+						 ]]></ValueExpr>
 						</Slot>
 						<Slot property="waitingForOrderToArrive" value="true" />
 					</UpdateObject>
@@ -696,7 +693,7 @@ mes.getOrderNo()
 						<Slot property="endMenuBoardProp">
 							<ValueExpr language="Java"><![CDATA[
 cust.getId()									
-									]]></ValueExpr>
+						]]></ValueExpr>
 						</Slot>
 					</CausedEventExpr>
 					<CausedEventExpr eventType="StartMenuBoardService">
@@ -706,17 +703,17 @@ mb.getMenuBoardQueue().size() > 0
 						<Slot property="startMenuBoardProp">
 							<ValueExpr language="Java"><![CDATA[
 (( Customer)mb.getMenuBoardQueue().get(0)).getId()									
-									]]></ValueExpr>
+						    ]]></ValueExpr>
 						</Slot>
 					</CausedEventExpr>
 					<CausedEventExpr eventType="StartPickupWindowService">
 						<Condition language="Java"><![CDATA[
 !pw.isPickupWindowBusy() 
-               ]]></Condition>
+                       ]]></Condition>
 						<Slot property="startPickupWindowProp">
 							<ValueExpr language="Java"><![CDATA[
 cust.getId()									
-									]]></ValueExpr>
+						  ]]></ValueExpr>
 						</Slot>
 					</CausedEventExpr>
 				</SCHEDULE-EVT>
@@ -738,7 +735,7 @@ cust.getId()
 						<InMessageEventExpr messageType="AskOrderNo">
 							<Condition language="Java"><![CDATA[
 pw.getPickupWindowQueue().size() > 0 && cust.isWaitingForOrderToArrive()
-              ]]></Condition>
+                            ]]></Condition>
 							<SenderIdRef language="Java">pw.getId()</SenderIdRef>
 							<ReceiverIdRef language="Java">cust.getId()</ReceiverIdRef>
 						</InMessageEventExpr>
@@ -761,7 +758,7 @@ pw.getPickupWindowQueue().size() > 0 && cust.isWaitingForOrderToArrive()
 				</FOR>
 				<IF language="Java"><![CDATA[
 cust.isWaitingForPWFree()
-         ]]></IF>
+                ]]></IF>
 			<THEN>
 				<UPDATE-ENV>
 					<UpdateObject objectVariable="mb">
@@ -793,7 +790,7 @@ mb.getMenuBoardQueue().size() > 0
 						<Slot property="startMenuBoardProp">
 							<ValueExpr language="Java"><![CDATA[
 (( Customer)mb.getMenuBoardQueue().get(0)).getId()								
-								]]></ValueExpr>
+						]]></ValueExpr>
 						</Slot>
 					</CausedEventExpr>
 				</SCHEDULE-EVT>
