@@ -16,7 +16,7 @@
 			<dc:created>20101107</dc:created>
 			<dc:contributor>Gerd Wagner</dc:contributor>
 			<dc:contributor>Oana Nicolae</dc:contributor>
-			<dc:modified>20111122</dc:modified>
+			<dc:modified>20111206</dc:modified>
 			<dc:title>Inventory Management</dc:title>
 			<dc:title xml:lang="de">Lagerverwaltung</dc:title>
 			<shortDescription>
@@ -55,22 +55,21 @@
 			<mediaFiles>
 				<image file="Inventory_Acik-Fotolia_4302799.jpg" license="© Acik Fotolia.com" author="Acik" />
 			</mediaFiles>
-			<!--
 			<titleImage file="Inventory_Acik-Fotolia_4302799.jpg"/>
-			-->
 		</documentation>
 
 		<Statistics>
 			<Variable name="totalNumberOfLostSales" dataType="Integer" />
+			<Variable name="totalNumberOfSales" dataType="Integer" />
 			<Variable name="percentageOfLostSales" dataType="Float">
 				<Source computeOnlyAtEnd="true">
 					<ValueExpr language="Java">
 						(float) SimStatistics.totalNumberOfLostSales.getValue() 
-						/ SimParameter.SIMULATION_STEPS
+						/ SimStatistics.totalNumberOfSales.getValue() 
 					</ValueExpr>
 					<ValueExpr language="JavaScript">
 						__SimStatistics.totalNumberOfLostSales.getValue() 
-						/ __SimParameter.SIMULATION_STEPS
+						/ __SimStatistics.totalNumberOfSales.getValue() 
 					</ValueExpr>
 				</Source>
 			</Variable>
@@ -98,17 +97,15 @@
 		</EntityTypes>
 
 		<EnvironmentRules>
-			<!-- =========================================== -->
-			<EnvironmentRule name="DailyDemand_Rule1">
-			<!-- =========================================== -->
+			<!-- ======================================================== -->
+			<EnvironmentRule name="DailyDemand_Reorder_Rule">
+				<!-- ======================================================== -->
 				<documentation>
-					<description>On DailyDemand, if the productQuantityInStock is greater than or equal to the demand, 
-						the demand is subtracted from the productQuantityInStock. Else if the productQuantityInStock 
-						is less than the demand, the productQuantityInStock drops to 0 and we have an increase of lost sales, 
-						calculated as demand minus productQuantityInStock. This is also the case when the productQuantityInStock 
-						is already zero at the beginning of the day. If the productQuantityInStock is less than the reorder level, 
-						and the inventory is not WaitingForDelivery, a new Delivery event is scheduled with a quantity of reorderUpToLevel 
-						minus productQuantityInStock items and with a uniformly distributated random delay of 1, 2 or 3 days.
+					<description>On DailyDemand, if the demand is less than or equal to the stock level 
+						and the stock level minus the demand is below the reorder level 
+						and the inventory is not waiting for a delivery, 
+						a new Delivery event is scheduled with a quantity of reorderUpToLevel minus productQuantityInStock 
+						and with a uniformly distributated random delay	of 1, 2 or 3 days.
 					</description>
 				</documentation>
 				<WHEN eventType="DailyDemand" />
@@ -121,92 +118,18 @@
 					<ValueExpr language="Java JavaScript">this.inv.isWaitingForDelivery()</ValueExpr>
 				</FOR>
 				<IF language="Java JavaScript"><![CDATA[ 
-					this.inv.getProductQuantityInStock() < this.demand 
-					]]></IF>
-				<THEN>
-					<UPDATE-ENV>
-						<UpdateStatisticsVariable variable="totalNumberOfLostSales">
-							<ValueExpr language="Java"><![CDATA[ 
-								SimStatistics.totalNumberOfLostSales.getValue() + demand - 
-								inv.getProductQuantityInStock()
-							]]></ValueExpr>
-							<ValueExpr language="JavaScript"><![CDATA[ 
-								__SimStatistics.totalNumberOfLostSales.getValue() + this.demand -
-								this.inv.getProductQuantityInStock()
-							]]></ValueExpr>
-						</UpdateStatisticsVariable>
-						<UpdateStatisticsVariable variable="dailyDemand">
-							<ValueExpr language="Java JavaScript">this.demand</ValueExpr>
-						</UpdateStatisticsVariable>
-						<UpdateStatisticsVariable variable="stockLevel">
-							<ValueExpr language="Java JavaScript">this.inv.getProductQuantityInStock()</ValueExpr>
-						</UpdateStatisticsVariable>
-						<UpdateObject objectVariable="inv">
-							<Slot property="productQuantityInStock" value="0" />
-							<Slot property="waitingForDelivery" value="true" />
-						</UpdateObject>
-					</UPDATE-ENV>
-					<SCHEDULE-EVT>
-						<CausedEventExpr eventType="Delivery">
-							<Condition language="Java JavaScript"> this.waiting == false </Condition>
-							<Delay>
-								<DiscreteRandomVariable>
-									<UniformInt lowerBound="2" upperBound="4" />
-								</DiscreteRandomVariable>
-							</Delay>
-							<Slot property="quantity">
-								<ValueExpr language="Java JavaScript">this.inv.getReorderUpToLevel()</ValueExpr>
-							</Slot>
-						</CausedEventExpr>
-					</SCHEDULE-EVT>
-				</THEN>
-			</EnvironmentRule>
-			
-			<!-- =========================================== -->
-			<EnvironmentRule name="DailyDemand_Rule2">
-				<!-- =========================================== -->
-				<documentation>
-					<description>On DailyDemand, if the productQuantityInStock is greater than or equal to the demand, 
-						the demand is subtracted from the productQuantityInStock. Else if the productQuantityInStock 
-						is less than the demand, the productQuantityInStock drops to 0 and we have an increase of lost sales, 
-						calculated as demand minus productQuantityInStock. This is also the case when the productQuantityInStock 
-						is already zero at the beginning of the day. If the productQuantityInStock is less than the reorder level, 
-						and the inventory is not WaitingForDelivery, a new Delivery event is scheduled with a quantity of reorderUpToLevel 
-						minus productQuantityInStock items and with a uniformly distributated random delay of 1, 2 or 3 days.
-					</description>
-				</documentation>
-				<WHEN eventType="DailyDemand" />
-				<FOR objectVariable="inv" objectType="Inventory" objectIdRef="1" />
-				<FOR dataVariable="demand" dataType="Integer">
-					<ValueExpr language="Java"> Random.normalInt( 5, 1.8) </ValueExpr>
-					<ValueExpr language="JavaScript"> js.util.Random.normalInt( 5, 1.8) </ValueExpr>
-				</FOR>
-				<FOR dataVariable="waiting" dataType="Boolean">
-					<ValueExpr language="Java JavaScript">this.inv.isWaitingForDelivery()</ValueExpr>
-				</FOR>
-				<IF language="Java JavaScript"><![CDATA[ 
-		     (this.inv.getProductQuantityInStock() - this.demand) >= 0 &&
+		     (this.demand <= this.inv.getProductQuantityInStock()) &&
 			 (this.inv.getProductQuantityInStock() - this.demand) < this.inv.getReorderLevel()
-			   ]]></IF>
+			    ]]></IF>
 				<THEN>
 					<UPDATE-ENV>
 						<UpdateObject objectVariable="inv">
-							<Slot property="productQuantityInStock">
-								<ValueExpr language="Java JavaScript"><![CDATA[ 
-			this.inv.getProductQuantityInStock() - this.demand 
-							]]></ValueExpr>
-							</Slot>
 							<Slot property="waitingForDelivery" value="true" />
 						</UpdateObject>
-						<UpdateStatisticsVariable variable="stockLevel">
-							<ValueExpr language="Java JavaScript"> this.inv.getProductQuantityInStock()	</ValueExpr>
-						</UpdateStatisticsVariable>
-						<UpdateStatisticsVariable variable="dailyDemand">
-							<ValueExpr language="Java JavaScript">this.demand</ValueExpr>
-						</UpdateStatisticsVariable>
 					</UPDATE-ENV>
 					<SCHEDULE-EVT>
 						<CausedEventExpr eventType="Delivery">
+							<!-- Schedule next delivery (= place order) only if not waiting for a delivery -->
 							<Condition language="Java JavaScript"> this.waiting == false </Condition>
 							<Delay>
 								<DiscreteRandomVariable>
@@ -221,6 +144,104 @@
 						</CausedEventExpr>
 					</SCHEDULE-EVT>
 				</THEN>
+			</EnvironmentRule>
+			<!-- =========================================================== -->
+			<EnvironmentRule name="DailyDemand_LostSaleAndUpdateInventory_Rule">
+			<!-- =========================================================== -->
+				<documentation>
+					On DailyDemand, case1: if the demand is greater than the stock level, the stock level is set 
+					to 0 and the lost sales statistics is increased by demand minus stock level (this is also the case 
+					when the productQuantityInStock is already zero at the beginning of the day);	if the inventory is 
+					not waiting for a delivery, a new	Delivery event is scheduled with a quantity	of reorderUpToLevel	
+					minus productQuantityInStock items and with a uniformly distributated random delay of 1, 2 or 3 days. 
+					Case 2: Otherwise (if the demand is less than or equal to the stock level), decrement the stock level 
+					by demand and update the statistics accordingly (while leaving the decision to schedule a delivery 
+					to the DailyDemand_Reorder_Rule).
+				</documentation>
+				<WHEN eventType="DailyDemand" />
+				<FOR objectVariable="inv" objectType="Inventory" objectIdRef="1" />
+				<FOR dataVariable="demand" dataType="Integer">
+					<ValueExpr language="Java"> Random.normalInt( 5, 1.8) </ValueExpr>
+					<ValueExpr language="JavaScript"> js.util.Random.normalInt( 5, 1.8) </ValueExpr>
+				</FOR>
+				<FOR dataVariable="waiting" dataType="Boolean">
+					<ValueExpr language="Java JavaScript">this.inv.isWaitingForDelivery()</ValueExpr>
+				</FOR>
+				<DO>
+					<UPDATE-ENV>
+						<UpdateStatisticsVariable variable="dailyDemand">
+							<ValueExpr language="Java JavaScript">this.demand</ValueExpr>
+						</UpdateStatisticsVariable>					
+					</UPDATE-ENV>
+				</DO>
+				<IF language="Java JavaScript"><![CDATA[ 
+					this.demand > this.inv.getProductQuantityInStock() 
+					]]></IF>
+				<THEN>
+					<UPDATE-ENV>
+						<UpdateStatisticsVariable variable="totalNumberOfSales">
+							<ValueExpr language="Java"><![CDATA[ 
+								SimStatistics.totalNumberOfSales.getValue() +  
+								inv.getProductQuantityInStock()
+							]]></ValueExpr>
+							<ValueExpr language="JavaScript"><![CDATA[ 
+								__SimStatistics.totalNumberOfSales.getValue() + 
+								this.inv.getProductQuantityInStock()
+							]]></ValueExpr>
+						</UpdateStatisticsVariable>
+						<UpdateStatisticsVariable variable="totalNumberOfLostSales">
+							<ValueExpr language="Java"><![CDATA[ 
+								SimStatistics.totalNumberOfLostSales.getValue() 
+								+ demand - inv.getProductQuantityInStock()
+							]]></ValueExpr>
+							<ValueExpr language="JavaScript"><![CDATA[ 
+								__SimStatistics.totalNumberOfLostSales.getValue() 
+								+ this.demand -	this.inv.getProductQuantityInStock()
+							]]></ValueExpr>
+						</UpdateStatisticsVariable>
+						<UpdateStatisticsVariable variable="stockLevel">
+							<ValueExpr language="Java JavaScript"> 0 </ValueExpr>
+						</UpdateStatisticsVariable>
+						<UpdateObject objectVariable="inv">
+							<Slot property="productQuantityInStock" value="0" />
+							<Slot property="waitingForDelivery" value="true" />
+						</UpdateObject>
+					</UPDATE-ENV>
+					<SCHEDULE-EVT>
+						<CausedEventExpr eventType="Delivery">
+							<!-- Schedule next delivery (= place order) only if not waiting for a delivery -->
+							<Condition language="Java JavaScript"> this.waiting == false </Condition>
+							<Delay>
+								<DiscreteRandomVariable>
+									<UniformInt lowerBound="2" upperBound="4" />
+								</DiscreteRandomVariable>
+							</Delay>
+							<Slot property="quantity">
+								<ValueExpr language="Java JavaScript">this.inv.getReorderUpToLevel()</ValueExpr>
+							</Slot>
+						</CausedEventExpr>
+					</SCHEDULE-EVT>
+				</THEN>
+				<ELSE>
+					<UPDATE-ENV>
+						<UpdateObject objectVariable="inv">
+							<Slot property="productQuantityInStock">
+								<ValueExpr language="Java JavaScript"> this.inv.getProductQuantityInStock() - this.demand	</ValueExpr>
+							</Slot>
+						</UpdateObject>
+						<UpdateStatisticsVariable variable="stockLevel">
+							<ValueExpr language="Java JavaScript"> this.inv.getProductQuantityInStock()	</ValueExpr>
+						</UpdateStatisticsVariable>
+						<UpdateStatisticsVariable variable="totalNumberOfSales">
+							<ValueExpr language="Java"><![CDATA[ 
+								SimStatistics.totalNumberOfSales.getValue() + demand 
+							  ]]></ValueExpr>
+							<ValueExpr language="JavaScript"><![CDATA[ 
+								__SimStatistics.totalNumberOfSales.getValue() + this.demand 
+							]]></ValueExpr>
+						</UpdateStatisticsVariable>
+					</UPDATE-ENV>
+				</ELSE>
 			</EnvironmentRule>
 			<!-- =========================================== -->
 			<EnvironmentRule name="Delivery_Rule">
