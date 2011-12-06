@@ -31,6 +31,9 @@
 				for completing a service vary from 1 to 6 minutes, with probabilities 0.1, 0.2, 0.3, 0.25, 0.1, 0.05, 
 				respectively.	Two statistics are to be collected: service utilization (total service time divided by total time) 
 				and maximum queue length.</p>
+				<p>The information about the service desk is modeled with the help of two (global) variables: <code>queueLength</code> 
+					and <code>serviceDeskBusy</code>. The model includes two event types: <code>CustomerArrival</code> 
+					and <code>CustomerDeparture</code>.</p>
 			</ers:description>
 			<ers:description xmlns="http://www.w3.org/1999/xhtml" xml:lang="de">
 				<p>Kunden kommen in zufälligen Zeitabständen an einem Service-Schalter an, wo sie in einer Warteschlange warten müssen, 
@@ -38,8 +41,15 @@
 				Die Zeit zur Erbringung eines Dienstes variiert zwischen 1 und 6 Minuten, mit den Wahrscheinlichkeiten 0.1, 0.2, 0.3, 0.25, 
 				0.1 beziehunsgweise 0.05. Es sollen zwei Statistiken erhoben werden: der Service-Nutzungsgrad (gesamte Servicezeit geteilt 
 				durch die Gesamtzeit) und die maximale Länge der Warteschlange.</p>
+				<p>Die Informationen über den Service-Schalter werden mit Hilfe von zwei (globalen) Variablen modelliert: <code>queueLength</code> 
+					und <code>serviceDeskBusy</code>. Das Modell beinhaltet zwei Ereignistypen: <code>CustomerArrival</code> 
+					und <code>CustomerDeparture</code>.</p>
 			</ers:description>
 			<CcLicense license="CC BY-SA"/>
+			<mediaFiles>
+				<image file="Queue_Cmon-Fotolia_18687012_XS.jpg" license="© Cmon Fotolia.com" author="Cmon" />
+			</mediaFiles>
+			<titleImage file="Queue_Cmon-Fotolia_18687012_XS.jpg"/>
 			<processModelDiagram file="BPMN-Diagram.png"/>
 		</documentation>
 
@@ -120,10 +130,10 @@
 			<EnvironmentRule name="ArrivalRule">
 			<!-- =================================================== -->
 				<documentation>
-					<dc:description>When a new customer arrives, if the service desk is busy, the customer has to wait in a line, 
-						so the queue length is increased by 1. Otherwise, the customer is going to be serviced and hence 
-						the service desk gets busy, and for ending the service, a CustomerDeparture event (with a delay being set 
-						to a random service time) is created .</dc:description>
+					When a new customer arrives, if the service desk is busy, the customer has to wait in a line, 
+					so the queue length is increased by 1. Otherwise, the customer is going to be serviced and hence 
+					the service desk gets busy, and for ending the service, a CustomerDeparture event (with a delay being set 
+					to a random service time) is created .
 				</documentation>
 				<WHEN eventType="CustomerArrival"/>
 				<FOR dataVariable="srvTm" dataType="Integer">
@@ -157,9 +167,9 @@
 			<EnvironmentRule name="DepartureRule">
 			<!-- =================================================== -->
 				<documentation>
-					<dc:description>When a customer departs, if the queue is empty, the service desk is no longer busy. 
-						Otherwise, the next customer will be serviced, so a new future CustomerDeparture event is created 
-						(with a delay given by the random service time), and the queue size is decreased by 1.</dc:description>
+					When a customer departs, if the queue is empty, the service desk is no longer busy. 
+					Otherwise, the next customer will be serviced, so a new future CustomerDeparture event is created 
+					(with a delay given by the random service time), and the queue size is decreased by 1.
 				</documentation>
 				<WHEN eventType="CustomerDeparture" eventVariable="dep"/>
 				<FOR dataVariable="srvTm" dataType="Integer">

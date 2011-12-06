@@ -31,7 +31,7 @@
 				when the quantity in stock falls below the reorder level. The order quantity of a replenishment order 
 				is computed as the reorder-up-to-level minus the quantity in stock. Lead time is distributed 
 				uniformly between 1 and 3 days.	If a demand is greater than the current stock level, 
-				the sale is lost.	The number of lost sales is to be computed and displayed as a percentage.</h:p>
+				the sale is lost.	The number of lost sales is computed and displayed as a percentage.</h:p>
 				<h:p>The inventory is modeled as an object with three attributes: <h:code>productQuantityInStock</h:code>, 
 				<h:code>reorderLevel</h:code> and <h:code>reorderUpToLevel</h:code>. For simplicity, the model
 				does not create replenishment orders, but instead it only schedules corresponding future 
@@ -43,8 +43,7 @@
 				Die Bestellmenge eines Wiederbeschaffungsauftrags wird als Differenz aus dem Sollbestand 
 				(<h:code>reorderUpToLevel</h:code>) und dem	Sicherheitsbestand errechnet. Die Vorlaufzeit für Lieferungen 
 				ist uniform verteilt zwischen 1 und 3 Tagen. Wenn eine Nachfrage den Lagerbestand übersteigt, 
-				ist der Auftrag verloren. Die Anzahl der verlorenen	Aufträge ist zu ermitteln und als Prozentsatz 
-				anzuzeigen.</h:p>
+				ist der Auftrag verloren. Die Anzahl der verlorenen	Aufträge wird als Prozentsatz	angezeigt.</h:p>
 				<h:p>Das Lager wird als Objekt mit drei Attributen modelliert: <h:code>productQuantityInStock</h:code>, 
 				<h:code>reorderLevel</h:code> und <h:code>reorderUpToLevel</h:code>. Zur Vereinfachung werden im
 				Simulationsmodell keine Wiederbeschaffungsaufträge erzeugt, sondern nur entsprechende zukünftige
@@ -64,12 +63,12 @@
 			<Variable name="percentageOfLostSales" dataType="Float">
 				<Source computeOnlyAtEnd="true">
 					<ValueExpr language="Java">
-						(float) SimStatistics.totalNumberOfLostSales.getValue() 
-						/ SimStatistics.totalNumberOfSales.getValue() 
+						(double) SimStatistics.totalNumberOfLostSales.getValue() 
+						/ SimStatistics.totalNumberOfSales.getValue() * 100
 					</ValueExpr>
 					<ValueExpr language="JavaScript">
 						__SimStatistics.totalNumberOfLostSales.getValue() 
-						/ __SimStatistics.totalNumberOfSales.getValue() 
+						/ __SimStatistics.totalNumberOfSales.getValue() * 100
 					</ValueExpr>
 				</Source>
 			</Variable>
@@ -276,9 +275,9 @@
 		<!-- =========================================== -->
 		<Object type="Inventory" id="1" name="inventory">
 		<!-- =========================================== -->
-			<Slot property="productQuantityInStock" value="20" />
-			<Slot property="reorderLevel" value="20" />
-			<Slot property="reorderUpToLevel" value="30" />
+			<Slot property="productQuantityInStock" value="50" />
+			<Slot property="reorderLevel" value="30" />
+			<Slot property="reorderUpToLevel" value="50" />
 			<Slot property="waitingForDelivery" value="false" />
 		</Object>
 	
@@ -298,7 +297,7 @@
 						<Text xml:lang="de">Sicherheitsbestand</Text>
 					</Label>
 				</PropertyUI>
-				<PropertyUI property="reorderUpToLevel" inputFieldLength="1" label="Reorder up to level">
+				<PropertyUI property="reorderUpToLevel" inputFieldLength="1" label="Reorder-up-to level">
 					<Label>
 						<Text xml:lang="de">Sollbestand</Text>
 					</Label>					
@@ -347,7 +346,7 @@
 					<ObjectView objectType="Inventory" objectIdRef="1">
 					<!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->
 						<Shape2D x="700px" y="50px">
-							<Rectangle positioning="CenterBottom" fill="grey" width="100" stroke="black"
+							<Rectangle positioning="CenterBottom" fill="grey" width="200" stroke="black"
 								strokeWidth="4" >
 								<ShapePropertyVisualizationMap shapeProperty="height" property="productQuantityInStock"
 									mapType="polynomial" a0="0" a1="2" />
