@@ -132,76 +132,74 @@
 		<EntityTypes>
 			<!--====================================-->
 			<MessageType name="StartOfDay_Notification">
-				<!--<documentation><dc:description>A message of the market to announce the trading price of the last day </dc:description></documentation>-->
+				<!--<documentation><description>A message of the market to announce the trading price of the last day </description></documentation>-->
 				<Attribute name="price" type="Float"/>
 				<Attribute name="marketType" type="String" />
 			</MessageType>
 			<!--====================================-->
 			<MessageType name="Act_msg">
-				<!--<documentation><dc:description>A message to an EconomicAgent, which signals them to being with their work.</dc:description></documentation>-->
+				<!--<documentation><description>A message to an EconomicAgent, which signals them to being with their work.</description></documentation>-->
 			</MessageType>
 			<!--====================================-->
 			<MessageType name="ClearMarket">
-				<!--<documentation><dc:description>A message to a Market, which ends the trading day.</dc:description></documentation>-->
+				<!--<documentation><description>A message to a Market, which ends the trading day.</description></documentation>-->
 			</MessageType>
 			<!-- =================================== -->
 			<MessageType name="BS4Offer">
-				<!--<documentation><dc:description>A list of offers to the market, made by a BS4Agent.</dc:description></documentation>-->
+				<!--<documentation><description>A list of offers to the market, made by a BS4Agent.</description></documentation>-->
 				<ComplexDataProperty name="offers" type="TradeOffer" upperMultiplicity="unbounded"/>
 			</MessageType>
 			<!-- =================================== -->
 			<MessageType name="BS6Offer">
-				<!--<documentation><dc:description>A offer to the market, made by a BS6Agent.</dc:description></documentation>-->
+				<!--<documentation><description>A offer to the market, made by a BS6Agent.</description></documentation>-->
 				<ComplexDataProperty name="offer" type="TradeOffer" />
 			</MessageType>
 			<!--====================================-->
 			<MessageType name="MatchingOffer" >
-				<!--<documentation><dc:description>A succesful trade returned from the market</dc:description></documentation>-->
+				<!--<documentation><description>A succesful trade returned from the market</description></documentation>-->
 				<ComplexDataProperty name="offer" type="TradeOffer"/>
 			</MessageType>
 			<!-- =================================== -->
 			<ExogenousEventType name="Init" >
 				<documentation>
-					<dc:description>Triggers certain EnvironmentRule, needed for the initialization</dc:description>
+					<description>Triggers certain EnvironmentRule, needed for the initialization</description>
 				</documentation>
 			</ExogenousEventType>
 			<!--=======================================================-->
 			<ExogenousEventType name="StartOfDay" periodicity="9">
 				<documentation>
-					<dc:description>
+					<description>
 						Starts a new day. EnvironmentRules are triggered, which check if a persons has enough food, a firm is bankrupt
 						and send the marketprices of the last day is announced to all EconomicAgents.
-					</dc:description>
+					</description>
 				</documentation>
 			</ExogenousEventType>
 			<!--=======================================================-->
 			<ExogenousEventType name="StartWork" periodicity="9">
 				<documentation>
-					<dc:description>
+					<description>
 						Triggers the StartWork_ER-EnvironmentRule, which tells the EconomicAgents to start with their work.
-					</dc:description>
+					</description>
 				</documentation>
 			</ExogenousEventType>
 			<!--=======================================================-->
 			<ExogenousEventType name="CloseMarket" periodicity="9">
 				<documentation>
-					<dc:description>
+					<description>
 						Ends the day, by triggering the CloseMarket_ER-EnvironmentRule.
 						Which tells the Markets to end the trading day and calculate a new market price.
-					</dc:description>
+					</description>
 				</documentation>
 			</ExogenousEventType>
 			<!--=======================================================-->
 			<AgentType name="EconomicAgent">
 			<!-- ============================================ -->
 				<documentation>
-					<dc:description>
 						Superclass of Person and Firm, which has the basic functionality for communicating with the market(price updates and succesfull transactions).
 						Further it adds help functions to find a specific asset or to create an offer.
 						
 						LABOR_ALLOWANCE: The amount of labor, a laborer offers every day.
 						lastFoodPrice, lastLaborPrice, lastUtilityPrice: The trading price of the last day.
-					</dc:description>
 				</documentation>
 				<ComplexDataProperty name="assets" type="aors.util.economics.Quantity" upperMultiplicity="unbounded"/>
 				<Attribute name="LABOR_ALLOWANCE" type="Float" initialValue="1.0"/>
@@ -212,9 +210,9 @@
 				<!--====================================-->
 				<Function name="getAssetByName" resultType="aors.util.economics.Quantity">
 					<documentation>
-						<dc:description>
+						<description>
 							Finds an asset from the AssetsList by String.
-						</dc:description>
+						</description>
 					</documentation>
 					<Parameter name="name" type="String"/>
 					<Body language="Java"><![CDATA[
@@ -245,9 +243,9 @@
 				<!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~-->
 				<Function name="createOffer" resultType="BS6Offer">
 					<documentation>
-						<dc:description>
+						<description>
 							Needed to create an BS6Offer in JavaScript.
-						</dc:description>
+						</description>
 					</documentation>
 					<Parameter name="product" type="String"/>
 					<Parameter name="quantity" type="Float"/>
@@ -267,9 +265,9 @@
 				<ReactionRule name="StartOfDay_Food_Rule">
 					<!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~-->
 					<documentation>
-						<dc:description>
+						<description>
 							The price of the food market is updated.
-						</dc:description>
+						</description>
 					</documentation>
 					<WHEN eventType="InMessageEvent" messageType="StartOfDay_Notification" messageVariable="msg"/>
 					<IF language="Java">this.msg.getMarketType().equals("Food")</IF> 
@@ -286,9 +284,9 @@
 				<ReactionRule name="StartOfDay_Labor_Rule">
 					<!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~-->
 					<documentation>
-						<dc:description>
+						<description>
 							The price of the labor market is updated.
-						</dc:description>
+						</description>
 					</documentation>
 					<WHEN eventType="InMessageEvent" messageType="StartOfDay_Notification" messageVariable="msg"/>
 					<IF language="Java">this.msg.getMarketType().equals("Labor")</IF>
@@ -305,9 +303,9 @@
 				<ReactionRule name="StartOfDay_Utility_Rule">
 					<!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~-->
 					<documentation>
-						<dc:description>
+						<description>
 							The price of the utility market is updated.
-						</dc:description>
+						</description>
 					</documentation>
 					<WHEN eventType="InMessageEvent" messageType="StartOfDay_Notification" messageVariable="msg"/>
 					<IF language="Java">this.msg.getMarketType().equals("Utility")</IF>
@@ -323,9 +321,9 @@
 				<!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->
 				<ReactionRule name="Deposit_Money_Rule" agentVariable="agt">
 					<documentation>
-						<dc:description>
+						<description>
 							When a sell transaction was succesful, the money amount is increased by the quantity times the price of the offer.
-						</dc:description>
+						</description>
 					</documentation>
 					<WHEN eventType="InMessageEvent" messageType="MatchingOffer" messageVariable="msg" />
 					<FOR-ListItemVariable variable="asset" listItemType="Quantity">
@@ -346,9 +344,9 @@
 				<!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->
 				<ReactionRule name="Withdraw_Money_Rule" agentVariable="agt">
 					<documentation>
-						<dc:description>
+						<description>
 							When a buy transaction was succesful, the money amount is decreased by the quantity times the price of the offer.
-						</dc:description>
+						</description>
 					</documentation>
 					<WHEN eventType="InMessageEvent" messageType="MatchingOffer" messageVariable="msg" />
 					<FOR-ListItemVariable variable="asset" listItemType="Quantity">
@@ -369,9 +367,7 @@
 				<!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->
 				<ReactionRule name="Deposit_Food_Rule" agentVariable="agt">
 					<documentation>
-						<dc:description>
 							When a buyfood transaction was succesful, the food amount is increased by the quantity of the offer.
-						</dc:description>
 					</documentation>
 					<WHEN eventType="InMessageEvent" messageType="MatchingOffer" messageVariable="msg" />
 					<FOR-ListItemVariable variable="asset" listItemType="Quantity">
@@ -392,9 +388,9 @@
 				<!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->
 				<ReactionRule name="Withdraw_Food_Rule" agentVariable="agt">
 					<documentation>
-						<dc:description>
+						<description>
 							When a sellfood transaction was succesful, the food amount is decreased by the quantity of the offer.
-						</dc:description>
+						</description>
 					</documentation>
 					<WHEN eventType="InMessageEvent" messageType="MatchingOffer" messageVariable="msg" />
 					<FOR-ListItemVariable variable="asset" listItemType="Quantity">
@@ -415,9 +411,9 @@
 				<!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->
 				<ReactionRule name="Deposit_Labor_Rule" agentVariable="agt">
 					<documentation>
-						<dc:description>
+						<description>
 							When a buylabor transaction was succesful, the labor amount is increased by the quantity of the offer.
-						</dc:description>
+						</description>
 					</documentation>
 					<WHEN eventType="InMessageEvent" messageType="MatchingOffer" messageVariable="msg" />
 					<FOR-ListItemVariable variable="asset" listItemType="Quantity">
@@ -438,9 +434,9 @@
 				<!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->
 				<ReactionRule name="Withdraw_Labor_Rule" agentVariable="agt">
 					<documentation>
-						<dc:description>
+						<description>
 							When a selllabor transaction was succesful, the labor amount is decreased by the quantity of the offer.
-						</dc:description>
+						</description>
 					</documentation>
 					<WHEN eventType="InMessageEvent" messageType="MatchingOffer" messageVariable="msg" />
 					<FOR-ListItemVariable variable="asset" listItemType="Quantity">
@@ -461,9 +457,9 @@
 				<!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->
 				<ReactionRule name="Deposit_Utility_Rule" agentVariable="agt">
 					<documentation>
-						<dc:description>
+						<description>
 							When a buyutility transaction was succesful, the utility amount is increased by the quantity of the offer.
-						</dc:description>
+						</description>
 					</documentation>
 					<WHEN eventType="InMessageEvent" messageType="MatchingOffer" messageVariable="msg" />
 					<FOR-ListItemVariable variable="asset" listItemType="Quantity">
@@ -484,9 +480,9 @@
 				<!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->
 				<ReactionRule name="Withdraw_Utility_Rule" agentVariable="agt">
 					<documentation>
-						<dc:description>
+						<description>
 							When a sellutility transaction was succesful, the utility amount is decreased by the quantity of the offer.
-						</dc:description>
+						</description>
 					</documentation>
 					<WHEN eventType="InMessageEvent" messageType="MatchingOffer" messageVariable="msg" />
 					<FOR-ListItemVariable variable="asset" listItemType="Quantity">
@@ -508,13 +504,13 @@
 			<!-- ============================================ -->
 			<AgentType name="Person" superType="EconomicAgent">
 				<documentation>
-					<dc:description>
+					<description>
 						Superclass to represent a BS4- or BS6Person. 
 						
 						EAT_AMOUNT: The amount of food a person eats every day.
 						TARGET_FOOD_STOCK: The aimed food amount. 
 						income: Amount of money a person can spend during a day.
-					</dc:description>
+					</description>
 				</documentation>
 				<Attribute name="EAT_AMOUNT" type="Float" />
 				<Attribute name="TARGET_FOOD_STOCK" type="Float" />
@@ -523,9 +519,9 @@
 			<!-- ============================================ -->
 			<AgentType name="Firm" superType="EconomicAgent" >
 				<documentation>
-					<dc:description>
+					<description>
 						Superclass to represent a BS4- or BS6Firm.
-					</dc:description>
+					</description>
 				</documentation>
 			</AgentType>
 			<!-- =====================BS4======================= -->
@@ -552,7 +548,7 @@
 				<Function name="buyFood" resultType="Boolean">
 					<!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~-->
 					<documentation>
-						<dc:description>abstract function, specified in BS4Laborer and BS4Owner</dc:description>
+						<description>abstract function, specified in BS4Laborer and BS4Owner</description>
 					</documentation>
 					<Parameter name="bidder" type="long"/>
 					<Body language="Java JavaScript">return false;</Body>
@@ -561,11 +557,11 @@
 				<Function name="sellFood" resultType="Boolean">
 					<!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~-->
 					<documentation>
-						<dc:description>
+						<description>
 							If a person has more than 1.5 * TARGET_FOOD_STOCK units of food, he tries to sell his spare food.
 							A new offer is made for every unit of food. The further this unit is over the target, the lower is the price.
 							All buy offers are added to the FoodSellList.
-						</dc:description>
+						</description>
 					</documentation>
 					<Parameter name="bidderIdRef" type="long"/>
 					<Body language="Java"><![CDATA[
@@ -620,10 +616,10 @@
 				<Function name="buyUtility" resultType="Boolean">
 					<!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~-->
 					<documentation>
-						<dc:description>
+						<description>
 							If a person has more food than his TARGET_FOOD_STOCK and more money than his TARGET_MONEY_STOCK, he tries to buy utility.
 							All buy offers are added to the UtilityBuyList. 
-						</dc:description>
+						</description>
 					</documentation>
 					<Parameter name="bidderIdRef" type="long"/>
 					<Body language="Java"><![CDATA[
@@ -725,24 +721,24 @@
 			<!-- ============================================ -->
 			<AgentType name="BS4Laborer" superType="BS4Person">
 				<documentation>
-					<dc:description>
+					<description>
 						A Laborer is a Person, who tries to sell his labor.
 						
 						laborSellList: Collects all sell offers for labor.
-					</dc:description>
+					</description>
 				</documentation>
 				<ComplexDataProperty name="laborSellList" type="TradeOffer" upperMultiplicity="unbounded"/>
 				<!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~-->
 				<Function name="buyFood" resultType="Boolean">
 					<!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~-->
 					<documentation>
-						<dc:description>
+						<description>
 							Creates buy offers for food until the limit of 1.5 times TARGET_FOOD_STOCK is reached.  
 							A new offer is made for every unit of food and the income is reduced by the price. 
 							The further this unit is under the TARGET_FOOD_STOCK, the higher is the price.
 							Accordingly the further this unit is over the TARGET_FOOD_STOCK, the lower is the price.
 							All buy offers are added to the FoodBuyList.
-						</dc:description>
+						</description>
 					</documentation>
 					<Parameter name="bidder" type="long"/>
 					<Body language="Java"><![CDATA[
@@ -805,12 +801,12 @@
 				<Function name="sellLabor" resultType="Boolean">
 					<!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~-->
 					<documentation>
-						<dc:description>
+						<description>
 							If a person has less food than his TARGET_FOOD_STOCK and the LastLaborPrice is high than the FoodLaborPrice,
 							he needs the food and is willing to work for less than the LastLaborPrice,
 							otherwise the LastLaborPrice is the LastLaborPrice times a random factor.
 							All buy offers are added to the LaborSellList.
-						</dc:description>
+						</description>
 					</documentation>
 					<Parameter name="bidderIdRef" type="long"/>
 					<Body language="Java"><![CDATA[
@@ -879,12 +875,12 @@
 			<!-- ============================================ -->
 			<AgentType name="BS4Owner" superType="BS4Person">
 				<documentation>
-					<dc:description>
+					<description>
 						A Owner is a Person, who lives from the income of his firm.
 						
 						TARGET_FIRM_MONEY_STOCK: aimed money amount of his firm.
 						firm: the firm owned by the owner, allocated in the Initialize_Ownership_ER EnvironmentRule.
-					</dc:description>
+					</description>
 				</documentation>
 				<Attribute name="TARGET_FIRM_MONEY_STOCK" type="Float" />
 				<ReferenceProperty name="firm" type="BS4Firm"/>
@@ -892,10 +888,10 @@
 				<Function name="buyFood" resultType="Boolean">
 					<!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~-->
 					<documentation>
-						<dc:description>
+						<description>
 							Like the buyFood function of the laborer, except that in the beginning the owner takes spare money from his firm.  
 							All buy offers are added to the FoodBuyList.
-						</dc:description>
+						</description>
 					</documentation>
 					<Parameter name="bidder" type="long"/>
 					<Body language="Java"><![CDATA[
@@ -972,7 +968,7 @@
 			<!-- ============================================ -->
 			<AgentType name="BS4Firm" superType="Firm">
 				<documentation>
-					<dc:description>
+					<description>
 						A BS4Firm is either a farm or a factory.
 						A Firm buys labor from the market , converts this labor into a product and sells the product on the market.
 						
@@ -980,7 +976,7 @@
 						owner: The owner of this firm.
 						buyList: Collects all buy offers for labor.
 						sellList: Collects all sell offers for this firms product.
-					</dc:description>
+					</description>
 				</documentation>
 				<Attribute name="amountProduced" type="Float"/>
 				<ReferenceProperty name="owner" type="Person"/>
@@ -990,7 +986,7 @@
 				<Function name="buyLabor" resultType="Boolean">
 					<!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~-->
 					<documentation>
-						<dc:description>abstract function, specified in BS4Farm and BS4Factory</dc:description>
+						<description>abstract function, specified in BS4Farm and BS4Factory</description>
 					</documentation>
 					<Parameter name="bidder" type="long"/>
 					<Body language="Java JavaScript">return false;</Body>
@@ -1017,12 +1013,12 @@
 			<!-- ============================================ -->
 			<AgentType name="BS4Farm" superType="BS4Firm">
 				<documentation>
-					<dc:description>
+					<description>
 						A farm is a firm which produces food.
 						
 						TARGET_FOOD_STOCK: The aimed food amount of this farm.
 						TARGET_OWNER_FOOD_STOCK: The aimed food amount of the owner.
-					</dc:description>
+					</description>
 				</documentation>
 				<Attribute name="TARGET_FOOD_STOCK" type="Float" />
 				<Attribute name="TARGET_OWNER_FOOD_STOCK" type="Float" />
@@ -1030,11 +1026,11 @@
 				<Function name="sellFood" resultType="Boolean">
 					<!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~-->
 					<documentation>
-						<dc:description>
+						<description>
 							When a farm has produced food at this day, it tries to sell all of it.
 							The price is the last market price times a random factor.
 							All sell offers are added to the SellList.	
-						t</dc:description>
+						t</description>
 					</documentation>
 					<Parameter name="bidderIdRef" type="long"/>
 					<Body language="Java"><![CDATA[
@@ -1093,7 +1089,7 @@
 				<Function name="buyLabor" resultType="Boolean">
 					<!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~-->
 					<documentation>
-						<dc:description>
+						<description>
 							A Farm has two diffrent bidding functions for labor. 
 							The first is only used when the food amount of the owner is less than 0.75 times the TARGET_OWNER_FOOD_STOCK 
 							and the farm is under its traget. The prices of the first bidding function is always over the market price 
@@ -1101,7 +1097,7 @@
 							While the second is every day. It creates offers, where the prices decrease the closer the expected food amount is to the TARGET_FOOD_STOCK.
 							When the TARGET_FOOD_STOCK is reached or the bidding prices is half of the LastLaborPrice, the farm stops bidding.
 							All buy offers are added to the BuyList.
-						</dc:description>
+						</description>
 					</documentation>
 					<Parameter name="bidderIdRef" type="long"/>
 					<Body language="Java"><![CDATA[
@@ -1207,7 +1203,7 @@
 				<Function name="convertToFood" resultType="Float">
 					<!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~-->
 					<documentation>
-						<dc:description>Calculates how much food could be produced with a specific amount of labor</dc:description>
+						<description>Calculates how much food could be produced with a specific amount of labor</description>
 					</documentation>
 					<Parameter name="laborQuantity" type="double"/>
 					<Body language="Java JavaScript"><![CDATA[return (-0.0652 * laborQuantity * laborQuantity) + 4.0652 * laborQuantity;]]></Body>
@@ -1216,7 +1212,7 @@
 				<Function name="produceFood" resultType="Float">
 					<!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~-->
 					<documentation>
-						<dc:description>Converts all labor to food</dc:description>
+						<description>Converts all labor to food</description>
 					</documentation>
 					<Parameter name="ID" type="long"/>
 					<Body language="Java"><![CDATA[
@@ -1238,7 +1234,7 @@
 				<ReactionRule name="ProduceFood_Rule" agentVariable="agt">
 					<!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->
 					<documentation>
-						<dc:description>Converts all labor to food</dc:description>
+						<description>Converts all labor to food</description>
 					</documentation>
 					<WHEN eventType="InMessageEvent" messageType="Act_msg"/>
 					<IF language="Java JavaScript"><![CDATA[ this.agt.getAssetByName("Labor").getQuantity() > 0 ]]></IF>
@@ -1272,22 +1268,22 @@
 			<!-- ============================================ -->
 			<AgentType name="BS4Factory" superType="BS4Firm">
 				<documentation>
-					<dc:description>
+					<description>
 						A factory is a firm which produces utility.
 						
 						TARGET_UTILITY_STOCK: The aimed utility amount of this farm.
-					</dc:description>
+					</description>
 				</documentation>
 				<Attribute name="TARGET_UTILITY_STOCK" type="Float" initialValue="60.0"/>
 				<!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~-->
 				<Function name="sellUtility" resultType="Boolean">
 					<!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~-->
 					<documentation>
-						<dc:description>
+						<description>
 							When a factory has produced utility at this day, it tries to sell all of it.
 							The price is the last market price times a random factor.
 							All sell offers are added to the SellList.	
-						</dc:description>
+						</description>
 					</documentation>
 					<Parameter name="bidderIdRef" type="long"/>
 					<Body language="Java"><![CDATA[
@@ -1340,11 +1336,11 @@
 				<Function name="buyLabor" resultType="Boolean">
 					<!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~-->
 					<documentation>
-						<dc:description>
+						<description>
 							Creates offers, where the prices decrease the closer the expected utility amount is to the TARGET_UTILITY_STOCK.
 							When the TARGET_UTILITY_STOCK is reached or the bidding prices is half of the LastLaborPrice, the factory stops bidding.
 							All buy offers are added to the BuyList
-						</dc:description>
+						</description>
 					</documentation>
 					<Parameter name="bidderIdRef" type="long"/>
 					<Body language="Java"><![CDATA[
@@ -1403,7 +1399,7 @@
 				<Function name="convertToUtility" resultType="Integer">
 					<!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~-->
 					<documentation>
-						<dc:description>Calculates how much utility could be produced with a specific amount of labor</dc:description>
+						<description>Calculates how much utility could be produced with a specific amount of labor</description>
 					</documentation>
 					<Parameter name="laborQuantity" type="double"/>
 					<Body language="Java"><![CDATA[
@@ -1422,7 +1418,7 @@
 				<Function name="produceUtility" resultType="Integer">
 					<!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~-->
 					<documentation>
-						<dc:description>converts all labor to utility</dc:description>
+						<description>converts all labor to utility</description>
 					</documentation>
 					<Body language="Java"><![CDATA[	
 						long utility = convertToUtility(getAssetByName("Labor").getQuantity());
@@ -1443,7 +1439,7 @@
 				<ReactionRule name="ProduceUtility_Rule" agentVariable="agt">
 					<!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->
 					<documentation>
-						<dc:description>Converts all labor to utility</dc:description>
+						<description>Converts all labor to utility</description>
 					</documentation>
 					<WHEN eventType="InMessageEvent" messageType="Act_msg"/>
 					<IF language="Java">this.agt.getAssetByName("Labor").getQuantity() > 0</IF>
@@ -1503,7 +1499,7 @@
 				<!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~-->
 				<ReactionRule name="wage_Rule">
 					<documentation>
-						<dc:description>Calculates the daily income</dc:description>
+						<description>Calculates the daily income</description>
 					</documentation>
 					<WHEN eventType="InMessageEvent" messageType="MatchingOffer" messageVariable="msg" />
 					<IF language="Java JavaScript"><![CDATA[ !this.msg.getOffer().isBuy() && this.msg.getOffer().getProduct().equals("Labor") ]]></IF>
@@ -1516,11 +1512,11 @@
 				<!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~-->
 				<ReactionRule name="consumption_Rule" agentVariable="agt">
 					<documentation>
-						<dc:description>
+						<description>
 							At the first day, he spends his whole income. 
 							Every other day he deceides how much he wants to save, the rest is his new targetConsumption.
 							The new consumption is calculated by the consumption of the last day and the new targetConsumption. 
-						</dc:description>
+						</description>
 					</documentation>
 					<WHEN eventType="InMessageEvent" messageType="Act_msg"/>
 					<DO>
@@ -1555,9 +1551,9 @@
 				<!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~-->
 				<ReactionRule name="buyFood_Rule" agentVariable="agt">
 					<documentation>
-						<dc:description>
+						<description>
 							Deceides how much of his consumption he spends for food.
-						</dc:description>
+						</description>
 					</documentation>
 					<WHEN eventType="InMessageEvent" messageType="Act_msg"/>
 					<DO>
@@ -1596,9 +1592,9 @@
 				<!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~-->
 				<ReactionRule name="buyUtility_Rule" agentVariable="agt">
 					<documentation>
-						<dc:description>
+						<description>
 							The part of his consumption he did not spend on food, he spends on utility.
-						</dc:description>
+						</description>
 					</documentation>
 					<WHEN eventType="InMessageEvent" messageType="Act_msg"/>
 					<DO>
@@ -1629,9 +1625,9 @@
 				<!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~-->
 				<ReactionRule name="sellLabor_Rule" agentVariable="agt">
 					<documentation>
-						<dc:description>
+						<description>
 							Offers his labor to the market.
-						</dc:description>
+						</description>
 					</documentation>
 					<WHEN eventType="InMessageEvent" messageType="Act_msg"/>
 					<DO>
@@ -1658,10 +1654,10 @@
 			<!-- ============================================ -->
 			<AgentType name="BS6Firm" superType="Firm">
 				<documentation>
-					<dc:description>
+					<description>
 						A BS6Firm is either a farm or a factory.
 						A Firm buys labor from the market , converts this labor into a product and sells the product on the market.
-					</dc:description>
+					</description>
 				</documentation>
 				<Attribute type="String" name="product"/>
 				<Attribute type="Float" name="capacity"/>
@@ -1687,9 +1683,9 @@
 				<!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->
 				<ReactionRule name="buyLabor_Rule" agentVariable="agt">
 					<documentation>
-						<dc:description>
+						<description>
 							Tries to buy labor from the market
-						</dc:description>
+						</description>
 					</documentation>
 					<WHEN eventType="InMessageEvent" messageType="Act_msg"/>
 					<DO>
@@ -1716,16 +1712,16 @@
 			<!-- ============================================ -->
 			<AgentType name="BS6Farm" superType="BS6Firm">
 				<documentation>
-					<dc:description>
+					<description>
 						A farm is a firm which produces food.
-					</dc:description>
+					</description>
 				</documentation>
 				<!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->
 				<Function name="updateProduct" resultType="void">
 					<documentation>
-						<dc:description>
+						<description>
 							Deposits the produced food and withdraw the uses labor
-						</dc:description>
+						</description>
 					</documentation>
 					<Body language="Java JavaScript">
 						if(this.getOutput() > 0){
@@ -1737,7 +1733,7 @@
 				<!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->
 				<ReactionRule name="revenue_Rule">
 					<documentation>
-						<dc:description>calculates the revenue of this day</dc:description>
+						<description>calculates the revenue of this day</description>
 					</documentation>
 					<WHEN eventType="InMessageEvent" messageType="MatchingOffer" messageVariable="msg" />
 					<IF language="Java"><![CDATA[ !this.msg.getOffer().isBuy() && this.msg.getOffer().getProduct().equals("Food") ]]></IF>
@@ -1751,9 +1747,9 @@
 				<!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->
 				<ReactionRule name="produceFood_Rule" agentVariable="agt">
 					<documentation>
-						<dc:description>
+						<description>
 							ToDo
-						</dc:description>
+						</description>
 					</documentation>
 					<WHEN eventType="InMessageEvent" messageType="Act_msg"/>
 					<DO>
@@ -1823,9 +1819,9 @@
 				<!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->
 				<ReactionRule name="sellFood_Rule" agentVariable="agt">
 					<documentation>
-						<dc:description>
+						<description>
 							Tries to sell food to the market.
-						</dc:description>
+						</description>
 					</documentation>
 					<WHEN eventType="InMessageEvent" messageType="Act_msg"/>
 					<IF language="Java JavaScript">getAssetByName("Food").getQuantity() > 0</IF>
@@ -1853,16 +1849,16 @@
 			<!-- ============================================ -->
 			<AgentType name="BS6Factory" superType="BS6Firm">
 				<documentation>
-					<dc:description>
+					<description>
 						A factory is a firm which produces utility.
-					</dc:description>
+					</description>
 				</documentation>
 				<!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->
 				<Function name="updateProduct" resultType="void">
 					<documentation>
-						<dc:description>
+						<description>
 							Deposits the produced utility and withdraw the uses labor
-						</dc:description>
+						</description>
 					</documentation>
 					<Body language="Java JavaScript">
 						if(this.getOutput() > 0){
@@ -1874,7 +1870,7 @@
 				<!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->
 				<ReactionRule name="revenue_Rule">
 					<documentation>
-						<dc:description>calculates the revenue of this day</dc:description>
+						<description>calculates the revenue of this day</description>
 					</documentation>
 					<WHEN eventType="InMessageEvent" messageType="MatchingOffer" messageVariable="msg" />
 					<IF language="Java"><![CDATA[ !this.msg.getOffer().isBuy() && this.msg.getOffer().getProduct().equals("Utility") ]]></IF>
@@ -1888,9 +1884,9 @@
 				<!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->
 				<ReactionRule name="produceUtility_Rule" agentVariable="agt">
 					<documentation>
-						<dc:description>
+						<description>
 							ToDo
-						</dc:description>
+						</description>
 					</documentation>
 					<WHEN eventType="InMessageEvent" messageType="Act_msg"/>
 					<DO>
@@ -1960,9 +1956,9 @@
 				<!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->
 				<ReactionRule name="sellUtility_Rule" agentVariable="agt">
 					<documentation>
-						<dc:description>
+						<description>
 							Tries to sell utility to the market.
-						</dc:description>
+						</description>
 					</documentation>
 					<WHEN eventType="InMessageEvent" messageType="Act_msg"/>
 					<IF language="Java JavaScript">getAssetByName("Utility").getQuantity() > 0</IF>
@@ -1990,9 +1986,9 @@
 			<!-- ============================================ -->
 			<AgentType name="Market">
 				<documentation>
-					<dc:description>
+					<description>
 						Collects offers made by Firms and Persons and tries to match buy and sell offers.
-					</dc:description>
+					</description>
 				</documentation>
 				<Attribute type="String" name="commodity"/>
 				<Attribute name="currency" type="String" />
@@ -2005,7 +2001,7 @@
 				<!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->
 				<Function name="clear" resultType="void">
 					<documentation>
-						<dc:description>abstract function</dc:description>
+						<description>abstract function</description>
 					</documentation>
 					<Body language="Java JavaScript"></Body>
 				</Function>
@@ -2013,7 +2009,7 @@
 				<ReactionRule name="Accept_BS6Offer" agentVariable="m">
 					<!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->
 					<documentation>
-						<dc:description>Offers are stored</dc:description>
+						<description>Offers are stored</description>
 					</documentation>
 					<WHEN eventType="InMessageEvent" messageType="BS6Offer" messageVariable="msg"/>
 					<IF language="Java JavaScript">this.msg.getOffer().isBuy()</IF>
@@ -2039,7 +2035,7 @@
 				<!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->
 				<ReactionRule name="Accept_BS4Offer" agentVariable="m">
 					<documentation>
-						<dc:description></dc:description>
+						<description></description>
 					</documentation>
 					<WHEN eventType="InMessageEvent" messageType="BS4Offer" messageVariable="msg"/>
 					<IF language="Java JavaScript">this.msg.getOffers().get(0).isBuy()</IF>
@@ -2065,7 +2061,7 @@
 				<!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->
 				<ReactionRule name="Clear" agentVariable="m">
 					<documentation>
-						<dc:description>The market gets cleared</dc:description>
+						<description>The market gets cleared</description>
 					</documentation>
 					<WHEN eventType="InMessageEvent" messageType="ClearMarket"/>
 					<DO>
@@ -2084,7 +2080,7 @@
 				<ReactionRule name="Return_TradeOffers" agentVariable="m">
 					<!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->
 					<documentation>
-						<dc:description>Done trades are returned to the persons</dc:description>
+						<description>Done trades are returned to the persons</description>
 					</documentation>
 					<WHEN eventType="ReminderEvent" eventVariable="evt" />
 					<FOR-ListItemVariable variable="o" listItemType="TradeOffer">
@@ -2108,7 +2104,7 @@
 			<AgentType name="BS4Market" superType="Market">
 				<Function name="clear" resultType="void">
 					<documentation>
-						<dc:description>Calculates the market price and adds the corresponding buy- and selloffers to the transactionlist</dc:description>
+						<description>Calculates the market price and adds the corresponding buy- and selloffers to the transactionlist</description>
 					</documentation>
 					<Body language="Java"><![CDATA[
 						System.out.println("Com: " + getCommodity());
@@ -2466,7 +2462,7 @@
 				<Function name="equal" resultType="Boolean">
 					<!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~-->
 					<documentation>
-						<dc:description>Check if the two Inputparameters are equal</dc:description>
+						<description>Check if the two Inputparameters are equal</description>
 					</documentation>
 					<Parameter name="a" type="double"/>
 					<Parameter name="b" type="double"/>
@@ -2483,7 +2479,7 @@
 				<Function name="less" resultType="Boolean">
 					<!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~-->
 					<documentation>
-						<dc:description>checks if a less b </dc:description>
+						<description>checks if a less b </description>
 					</documentation>
 					<Parameter name="a" type="double"/>
 					<Parameter name="b" type="double"/>
@@ -2507,7 +2503,7 @@
 				<!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->
 				<Function name="clear" resultType="void">
 					<documentation>
-						<dc:description>Calculates the market price and adds the corresponding buy- and selloffers to the transactionlist</dc:description>
+						<description>Calculates the market price and adds the corresponding buy- and selloffers to the transactionlist</description>
 					</documentation>
 					<Body language="Java"><![CDATA[
 						getTransactions().clear();
@@ -2637,7 +2633,7 @@
 			<!-- ============================================ -->
 			<AgentType name="BS6LaborMarket" superType="BS6Market">
 				<documentation>
-					<dc:description>Calculates the market price and adds the corresponding buy- and selloffers to the transactionlist</dc:description>
+					<description>Calculates the market price and adds the corresponding buy- and selloffers to the transactionlist</description>
 				</documentation>
 				<Attribute type="Float" name="totalBudget"/>
 				<!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->
@@ -2722,7 +2718,7 @@
 				<ReactionRule name="TotalBudget_Rule" agentVariable="agt">
 					<!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->
 					<documentation>
-						<dc:description>Offers are stored</dc:description>
+						<description>Offers are stored</description>
 					</documentation>
 					<WHEN eventType="InMessageEvent" messageType="BS6Offer" messageVariable="msg"/>
 					<IF language="Java JavaScript">this.msg.getOffer().isBuy()</IF>
@@ -2822,7 +2818,7 @@
 		<!-- BS4 Init -->
 		<EnvironmentRule name="Initialize_Ownership_ER">
 			<documentation>
-				<dc:description>Finds an owner for all firms(BS4 only)</dc:description>
+				<description>Finds an owner for all firms(BS4 only)</description>
 			</documentation>
 			<WHEN eventType="Init"/>
 			<FOR-ObjectVariable variable="f" objectType="BS4Firm" />
@@ -2843,7 +2839,7 @@
 		<EnvironmentRule name="AtStartOfDayEat_ER">
 			<!-- ============================= -->
 			<documentation>
-				<dc:description>Every person tries to eat, if he can't then he dies</dc:description>
+				<description>Every person tries to eat, if he can't then he dies</description>
 			</documentation>
 			<WHEN eventType="StartOfDay" eventVariable="evt" />
 			<FOR-ObjectVariable variable="p" objectType="Person" />
@@ -2857,7 +2853,7 @@
 		<!-- ============================= -->
 		<EnvironmentRule name="CheckBankrupt_ER"><!--<BS4 only>-->
 			<documentation>
-				<dc:description>If a farm has no more money, food and labor or a factory has no more money, utility and labor , it is shut down(BS4 only)</dc:description>
+				<description>If a farm has no more money, food and labor or a factory has no more money, utility and labor , it is shut down(BS4 only)</description>
 			</documentation>
 			<WHEN eventType="StartOfDay" eventVariable="evt" />
 			<FOR-ObjectVariable variable="f" objectType="Firm" />
@@ -2875,9 +2871,9 @@
 		<EnvironmentRule name="StartOfDay_Rule_ER">
 			<!-- ====================================== -->
 			<documentation>
-				<dc:description>
+				<description>
 				 For all markets that exist, the market price of the last day is send to every person and firm
-				</dc:description>
+				</description>
 			</documentation>
 			<WHEN eventType="StartOfDay"/>
 			<FOR-ObjectVariable variable="m" objectType="Market" />
@@ -2901,7 +2897,7 @@
 		<EnvironmentRule name="StartWork_ER">
 			<!-- ============================= -->
 			<documentation>
-				<dc:description>Act_msg is sent to every person and firm, which signals them to being with their work.</dc:description>
+				<description>Act_msg is sent to every person and firm, which signals them to being with their work.</description>
 			</documentation>
 			<WHEN eventType="StartWork"/>
 			<FOR-ObjectVariable variable="e" objectType="EconomicAgent"></FOR-ObjectVariable>
@@ -2918,7 +2914,7 @@
 		<EnvironmentRule name="CloseMarket_ER">
 		<!-- ===================================== -->
 			<documentation>
-				<dc:description>ClearMarket is send to every market, which ends the trading day.</dc:description>
+				<description>ClearMarket is send to every market, which ends the trading day.</description>
 			</documentation>
 			<WHEN eventType="CloseMarket"/>
 			<FOR-ObjectVariable variable="m" objectType="Market" />

@@ -17,14 +17,13 @@
 			<dc:modified>20110810</dc:modified>
 			<dc:title>Drive Thru Restaurant</dc:title>
 			<dc:title xml:lang="de">Auto-Restaurant</dc:title>
-			<shortDescription>A Drive Thru restaurant as a system with three queues: order window, kitchen 
-				the pickup window.</shortDescription>
-			<shortDescription xml:lang="de">Ein Auto-Restaurant als System mit drei Warteschlangen: Bestellannahme,
-				 Küche und Abholtresen.</shortDescription>
+			<shortDescription>A model of a Drive Thru restaurant as a system with three queues: one for the order window, 
+				one for the kitchen and one for the pickup window.</shortDescription>
+			<shortDescription xml:lang="de">Ein Modell eines Auto-Restaurants als System mit drei Warteschlangen: 
+				eine für die Bestellannahme, eine für die Küche und eine für den Abholtresen.</shortDescription>
 			<ers:description xmlns="http://www.w3.org/1999/xhtml">
-				<img src="media/DriveThruRestaurant.png" style="float:right; left-padding:1em;"/>
 				<p>As a car enters from the street, the driver decides whether or not to get in line. 
-				If he decides to leave the restaurant, he leaves as a dissatisfied customer. If he decides 
+				If he decides to leave the restaurant, he counts as a lost customer. If he decides 
 				to get in line, he waits until the menu board is available.	At that time, he gives the order 
 				to the order taker. After the order is taken, two things occur simultaneously:</p>
 				<ol>
@@ -35,27 +34,47 @@
 				<p>As soon as the driver reaches the pickup window, he pays and picks up his food, if it is ready. 
 				If the food is not yet ready, he has to wait until his order is prepared.</p>
 			</ers:description>
+			<ers:description xmlns="http://www.w3.org/1999/xhtml" xml:lang="de">
+				<p>Wenn ein Autofahrer von der Straße auf den Vorplatz des Autorestaurants einbiegt und die
+					Länge der Warteschlange am Bestellannahmefenster sieht,	entscheidet sich der Fahrer, ob er sich
+					in die Schlange einreiht oder ob er wieder wegfährt. Wenn er sich entscheidet, wieder wegzufahren,
+					geht er in die Statistik der verlorenen Kunden mit ein. Wenn er sich dafür entscheidet, sich
+					in die Schlange einzureihen, wartet er bis er bei der Bestellannahme dran kommt. Dann gibt
+					er seine Bestellung ab. Daraufhin passieren zwei Dinge gleichzeitig:</p>
+				<ol>
+					<li>der Fahrer fährt weiter, sofern vor ihm Platz ist, andernfalls muss er am Bestellannahmefenster
+						solange warten, bis vor ihm Platz entsteht, um weiterzufahren.</li>
+					<li>Der Auftrag wird an die Küche weitergeleitet, wo er berarbeitet wird, sobald ein Koch verfügbar ist.</li>
+				</ol> 
+				<p>Sobald der Fahrer das Abholfenster erreicht, zahlt er und nimmt sein Essen entgegen, wenn es fertig ist. 
+					Wenn das Essen noch nicht fertig ist, muss er warten bis es zubereitet und zum Abholfenster gebracht wird.</p>
+			</ers:description>
 			<ers:source xmlns="http://www.w3.org/1999/xhtml">
-				<a href="http://www.informs-sim.org/wsc08papers/005.pdf">Introduction to Simulation</a> by R.G. Ingalls, 
-				in Proceedings of the 2008 Winter Simulation Conference.
+				<p><a href="http://www.informs-sim.org/wsc08papers/005.pdf">Introduction to Simulation</a> by R.G. Ingalls, 
+					in <em>Proceedings of the 2008 Winter Simulation Conference</em>.</p>
 			</ers:source>
 			<ers:source xmlns="http://www.w3.org/1999/xhtml" xml:lang="de">
-				<a href="http://www.informs-sim.org/wsc08papers/005.pdf">Introduction to Simulation</a> von R.G. Ingalls, 
-				in Proceedings of the 2008 Winter Simulation Conference.
+			<p><a href="http://www.informs-sim.org/wsc08papers/005.pdf">Introduction to Simulation</a> von R.G. Ingalls, 
+				in <em>Proceedings of the 2008 Winter Simulation Conference</em>.</p>
 			</ers:source>
-			<processModelDiagram>../DriveThruRestaurant.png</processModelDiagram>
+			<CcLicense license="CC BY-SA"/>
+			<titleImage file="DriveThruRestaurant.png"/>
+			<processModelDiagram file="DriveThruRestaurant_ProcessModel.png"/>
+			<mediaFiles>
+				<image file="DriveThruRestaurant.png" license="© R.G. Ingalls"/>
+				<image file="DriveThruRestaurant_ProcessModel.png" author="Oana Nicolae" license="CC BY-SA"/>
+			</mediaFiles>
 		</documentation>
-
 		<Statistics>
 			<Variable name="numberOfCustomers" dataType="Integer" />
 			<Variable name="numberOfLostCustomers" dataType="Integer" />
 			<Variable name="revenue" dataType="Float" />
 			<Variable name="cumulativeResponseTime" dataType="Float" />
-			<Variable name="nrOfDepartures" dataType="Float" />
+			<Variable name="numberOfDepartures" dataType="Float" />
 			<Variable name="meanResponseTime" dataType="Float">
 				<Source computeOnlyAtEnd="true">
-					<ValueExpr language="Java">SimStatistics.cumulativeResponseTime.getValue() / SimStatistics.nrOfDepartures.getValue()</ValueExpr>
-					<ValueExpr language="JavaScript">__SimStatistics.cumulativeResponseTime.getValue() / __SimStatistics.nrOfDepartures.getValue()</ValueExpr>
+					<ValueExpr language="Java">SimStatistics.cumulativeResponseTime.getValue() / SimStatistics.numberOfDepartures.getValue()</ValueExpr>
+					<ValueExpr language="JavaScript">__SimStatistics.cumulativeResponseTime.getValue() / __SimStatistics.numberOfDepartures.getValue()</ValueExpr>
 				</Source>
 			</Variable>		
 			<!--
@@ -150,15 +169,17 @@ var r2 = js.util.Random.uniformInt(1,6);
 			<!-- =================================================== -->
 				<Attribute name="maxMenuBoardLineSize" type="Integer" minValue="3" maxValue="10"/>
 				<Attribute name="menuBoardBusy" type="Boolean" />
-                <Attribute name="utilization" type="Float" />
+        <Attribute name="utilization" type="Float" />
 				<ReferenceProperty name="menuBoardQueue" type="Customer" upperMultiplicity="unbounded">
-					<description>This property represents a first-in-first-out queue.</description>
+					<documentation>This property represents a first-in-first-out queue.</documentation>
 				</ReferenceProperty>
 				<!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->
 				<Function name="randomPizzaType" resultType="Integer">
 					<!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->
 					<documentation>
-						<description> The type of the pizza with index from 0 to 5: 0- Pizza Quattro Formaggi 1- Pizza Quattro Stagioni 2- Pizza Capricciosa 3- Pizza Napoletana 4- Pizza Marinara 5- Pizza Margherita </description>
+						The type of the pizza as a number between 0 and 5: 0 = Pizza Quattro Formaggi, 
+						1 = Pizza Quattro Stagioni, 2 = Pizza Capricciosa, 3 = Pizza Napoletana, 
+						4 = Pizza Marinara, 5 = Pizza Margherita. 
 					</documentation>
 					<Body language="Java"><![CDATA[
 return Random.uniformInt(0,5);
@@ -180,7 +201,7 @@ return js.util.Random.uniformInt(0,5);
 				<Attribute name="pickupWindowBusy" type="Boolean" />
 				<Attribute name="utilization" type="Float" />
 				<ReferenceProperty name="pickupWindowQueue" type="Customer" upperMultiplicity="unbounded">
-					<description>This property represents a first-in-first-out queue. </description>
+					<documentation>This property represents a first-in-first-out queue. </documentation>
 				</ReferenceProperty>
 				<!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->
 				<Function name="pizzaPrice" resultType="Float">
@@ -188,17 +209,17 @@ return js.util.Random.uniformInt(0,5);
 					<Parameter name="pizzaType" type="Integer" />
 					<Body language="Java"><![CDATA[
 double[] price = {8.90, 9.80, 8.50, 7.20, 7.80, 5.20};
-	return price[(int)pizzaType];
+return price[(int)pizzaType];
 	               ]]></Body>
 					<Body language="JavaScript"><![CDATA[
 var price = new js.util.ArrayList(8.90, 9.80, 8.50, 7.20, 7.80, 5.20);
-	return price[pizzaType];
+return price[pizzaType];
 				   ]]></Body>
 				</Function>
 			</ObjectType>		
 			<!-- =================================================== -->
 			<ObjectType name="Customer">
-				<!-- =================================================== -->
+			<!-- =================================================== -->
 				<Attribute name="arrivalTime" type="Integer" />
 				<ReferenceProperty name="order" type="Order" />
 				<Attribute name="waitingForPWFree" type="Boolean" />
@@ -220,7 +241,10 @@ var price = new js.util.ArrayList(8.90, 9.80, 8.50, 7.20, 7.80, 5.20);
 			<EnvironmentRule name="CustomerArrival_Rule">
 				<!-- ======================================================== -->
 				<documentation>
-					<description>When a car arrives at the Fast Food Restaurant, and the menu board queue is full, the customer leaves and he is considered a dissatisfied customer. Else, if the menu board queue is not full then the car gets in the waiting line as a new customer. Furthermore, if the menu board service is not busy, a StartMenuBoardService is created. </description>
+					<description>When a car arrives at the Fast Food Restaurant, and the menu board queue is full, 
+						the customer leaves and he is considered a dissatisfied customer. Else, if the menu board queue 
+						is not full then the car gets in the waiting line as a new customer. Furthermore, 
+						if the menu board service is not busy, a StartMenuBoardService is created. </description>
 				</documentation>
 				<WHEN eventType="CustomerArrival" eventVariable="evt" />
 				<FOR-ObjectVariable variable="mb" objectType="MenuBoard" objectIdRef="1" />
@@ -405,7 +429,8 @@ this.mb.getMenuBoardQueue().size() > 0
 			<EnvironmentRule name="EndMenuBoardServiceWhenIsFull_Rule">
 				<!-- ============================================================================ -->
 				<documentation>
-					<description>When a menu board service ends, but the PickupWindowQueue is full, the customer cannot move forward. We just update the customer attribute. </description>
+					When a menu board service ends, but the PickupWindowQueue is full, the customer cannot move forward. 
+					We just update the customer attribute. 
 				</documentation>
 				<WHEN eventType="EndMenuBoardService" eventVariable="evt" />
 				<FOR-ObjectVariable variable="mb" objectType="MenuBoard" objectIdRef="1" />
@@ -432,9 +457,11 @@ this.mb.getMenuBoardQueue().size() > 0
 			</EnvironmentRule>	
 			<!-- ========================================================================== -->
 			<EnvironmentRule name="StartPickupWindowService_Rule">
-				<!-- ======================================================================-->
+			<!-- ======================================================================-->
 				<documentation>
-					<description>On StartPickupWindowService, the pickupWindowBusy variable is set to true, and, when the customer's oder has laready arrived, an EndPickupWindowService event is created with appropriate delay. </description>
+					On StartPickupWindowService, the pickupWindowBusy variable is set to true, and 
+					when the customer's oder has already arrived, an EndPickupWindowService event 
+					is created with an appropriate delay. 
 				</documentation>
 				<WHEN eventType="StartPickupWindowService" />
 				<FOR-ObjectVariable variable="pw" objectType="PickupWindow" objectIdRef="2" />
@@ -528,9 +555,9 @@ this.pw.getPickupWindowQueue().size() < this.pw.getMaxPickupWindowLineSize()
 							<ValueExpr language="Java JavaScript">this.pw.getPickupWindowQueue().size()</ValueExpr>
 						</Slot>
 					</UpdateObject>
-					<UpdateStatisticsVariable variable="nrOfDepartures">
-						<ValueExpr language="Java">SimStatistics.nrOfDepartures.getValue() + 1</ValueExpr>
-						<ValueExpr language="JavaScript">__SimStatistics.nrOfDepartures.getValue() + 1</ValueExpr>
+					<UpdateStatisticsVariable variable="numberOfDepartures">
+						<ValueExpr language="Java">SimStatistics.numberOfDepartures.getValue() + 1</ValueExpr>
+						<ValueExpr language="JavaScript">__SimStatistics.numberOfDepartures.getValue() + 1</ValueExpr>
 					</UpdateStatisticsVariable>
 					<UpdateStatisticsVariable variable="cumulativeResponseTime">
 						<ValueExpr language="Java"><![CDATA[
@@ -564,9 +591,9 @@ __SimStatistics.revenue.getValue() + this.pw.pizzaPrice( this.pw.getPickupWindow
 			</THEN>
 			<ELSE>
 				<UPDATE-ENV>		
-					<UpdateStatisticsVariable variable="nrOfDepartures">
-						<ValueExpr language="Java">SimStatistics.nrOfDepartures.getValue() + 1</ValueExpr>
-						<ValueExpr language="JavaScript">__SimStatistics.nrOfDepartures.getValue() + 1</ValueExpr>
+					<UpdateStatisticsVariable variable="numberOfDepartures">
+						<ValueExpr language="Java">SimStatistics.numberOfDepartures.getValue() + 1</ValueExpr>
+						<ValueExpr language="JavaScript">__SimStatistics.numberOfDepartures.getValue() + 1</ValueExpr>
 					</UpdateStatisticsVariable>
 					<UpdateStatisticsVariable variable="cumulativeResponseTime">
 						<ValueExpr language="Java"><![CDATA[
@@ -579,12 +606,7 @@ __SimStatistics.cumulativeResponseTime.getValue() + this.evt.getOccurrenceTime()
 					<UpdateStatisticsVariable variable="revenue">
 						<ValueExpr language="Java"><![CDATA[
 SimStatistics.revenue.getValue() + pw.pizzaPrice(( int) cust.getOrder().getPizzaType())
-]]></ValueExpr>
-						<!--
-						<ValueExpr language="Java"><![CDATA[
-__SimStatistics.revenue.getValue() + this.pw.pizzaPrice( this.cust.getOrder().getPizzaType())
-                           ]]></ValueExpr>
-                           -->
+						]]></ValueExpr>
 					</UpdateStatisticsVariable>
 					<UpdateObject objectVariable="q2">
 						<Slot property="lengthOfQueue">

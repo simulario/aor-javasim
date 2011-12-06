@@ -64,7 +64,7 @@
 						</xs:attribute>
 					</xs:complexType>
 				</xs:element>
-				<xs:element name="source" type="ers:AnyXHTML.type" minOccurs="0" maxOccurs="unbounded">
+				<xs:element name="source" type="ers:HtmlText.type" minOccurs="0" maxOccurs="unbounded">
 					<xs:annotation>
 						<xs:documentation>A related resource from which the described resource is derived.</xs:documentation>
 					</xs:annotation>
@@ -130,7 +130,7 @@
 			</xs:choice>
 		</xs:complexType>
 	</xs:element>
-	<xs:element name="description" type="ers:AnyXHTML.type"/>
+	<xs:element name="description" type="ers:HtmlText.type"/>
 	<xs:attributeGroup name="mediaFile.attributes">
 		<xs:attribute name="title" type="xs:string" use="optional"/>
 		<xs:attribute name="license" type="xs:string" use="required"/>
@@ -138,6 +138,17 @@
 		<xs:attribute name="author" type="xs:string" use="optional"/>
 		<xs:attribute name="authorURL" type="xs:anyURI" use="optional"/>
 	</xs:attributeGroup>
+	<!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->
+	<xs:complexType name="BasicDocumentation.type" mixed="true">
+	<!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->
+		<xs:choice minOccurs="0" maxOccurs="unbounded">
+			<xs:element ref="dc:creator" minOccurs="0" maxOccurs="unbounded"/>
+			<xs:element ref="dc:contributor" minOccurs="0" maxOccurs="unbounded"/>
+			<xs:element ref="dc:created" minOccurs="0"/>
+			<xs:element ref="dc:modified" minOccurs="0"/>
+			<xs:element name="description" type="ers:AnyXHTML.type" minOccurs="0"/>
+		</xs:choice>
+	</xs:complexType>
 	<!-- =================================================================== -->
 	<xs:group name="include">
 	<!-- =================================================================== -->
@@ -206,7 +217,7 @@
 	<xs:element name="Property" type="ers:Property.type" abstract="true"/>
 	<xs:complexType name="Property.type">
 		<xs:sequence>
-			<xs:element ref="ers:description" minOccurs="0"/>
+			<xs:element name="documentation" type="ers:BasicDocumentation.type" minOccurs="0"/>
 		</xs:sequence>
 		<xs:attribute name="name" type="ers:CanonicalName" use="required"/>
 		<xs:attribute name="type" type="ers:PathName" use="required"/>
@@ -461,19 +472,19 @@
 	<!-- =================================================================== -->
 	<xs:element name="Code" type="ers:OpaqueExpression"/>
 	<!-- =================================================================== -->
-	<xs:element name="Text">
+	<xs:element name="Text" type="ers:Text.type"/>
 	<!-- =================================================================== -->
-		<xs:complexType>
-			<xs:simpleContent>
-				<xs:extension base="xs:string">
-					<xs:attribute ref="xml:lang" use="optional" default="en"/>
-					<xs:attribute name="lastUpdate" type="xs:date" use="optional"/>
-				</xs:extension>
-			</xs:simpleContent>
-		</xs:complexType>		
-	</xs:element>
+	<xs:complexType name="Text.type">
+		<!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->
+		<xs:simpleContent>
+			<xs:extension base="xs:string">
+				<xs:attribute ref="xml:lang" use="optional"/>
+				<xs:attribute name="lastUpdate" type="xs:date" use="optional"/>
+			</xs:extension>
+		</xs:simpleContent>
+	</xs:complexType>		
 	<!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->
-	<xs:complexType name="LabelText">
+	<xs:complexType name="LabelText.type">
 	<!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->
 		<xs:simpleContent>
 			<xs:extension base="xs:string">
@@ -482,27 +493,16 @@
 			</xs:extension>
 		</xs:simpleContent>
 	</xs:complexType>		
-	<!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->
-	<xs:complexType name="Text">
-	<!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->
-		<xs:simpleContent>
-			<xs:extension base="xs:string">
-				<xs:attribute ref="xml:lang" use="optional"/>
-				<xs:attribute name="lastUpdate" type="xs:date" use="optional"/>
-			</xs:extension>
-		</xs:simpleContent>
+	<!-- =================================================================== -->
+	<xs:element name="HtmlText" type="ers:HtmlText.type"/>
+	<!-- =================================================================== -->
+	<xs:complexType name="HtmlText.type">
+		<xs:sequence>
+			<xs:any namespace="http://www.w3.org/1999/xhtml" processContents="skip" minOccurs="0" maxOccurs="unbounded"/>
+		</xs:sequence>
+		<xs:attribute ref="xml:lang" use="optional" default="en"/>
+		<xs:attribute name="lastUpdate" type="xs:date" use="optional"/>
 	</xs:complexType>		
-	<!-- =================================================================== -->
-	<xs:element name="HtmlText">
-	<!-- =================================================================== -->
-		<xs:complexType>
-			<xs:sequence>
-				<xs:any namespace="http://www.w3.org/1999/xhtml" processContents="skip" minOccurs="0" maxOccurs="unbounded"/>
-			</xs:sequence>
-			<xs:attribute ref="xml:lang" use="optional" default="en"/>
-			<xs:attribute name="lastUpdate" type="xs:date" use="optional"/>
-		</xs:complexType>		
-	</xs:element>
 	<!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->
 	<xs:complexType name="HtmlText-Sequence.type">
 	<!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->
@@ -598,7 +598,7 @@
 	<!-- =================================================================== -->
 	<xs:complexType name="Function.type">
 		<xs:sequence>
-			<xs:element ref="ers:documentation" minOccurs="0"/>
+			<xs:element name="documentation" type="ers:BasicDocumentation.type" minOccurs="0"/>
 			<xs:element ref="ers:Parameter" minOccurs="0" maxOccurs="unbounded"/>
 			<xs:element name="Body" type="ers:OpaqueExpression" maxOccurs="unbounded"/>
 		</xs:sequence>
