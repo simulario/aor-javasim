@@ -62,15 +62,16 @@
 
 		<Statistics>
 			<Variable name="totalNumberOfLostSales" dataType="Integer" />
+			<Variable name="totalNumberOfSales" dataType="Integer" />
 			<Variable name="percentageOfLostSales" dataType="Float">
 				<Source computeOnlyAtEnd="true">
 					<ValueExpr language="Java">
 						(float) SimStatistics.totalNumberOfLostSales.getValue() 
-						/ SimParameter.SIMULATION_STEPS
+						/ SimStatistics.totalNumberOfSales.getValue() 
 					</ValueExpr>
 					<ValueExpr language="JavaScript">
 						__SimStatistics.totalNumberOfLostSales.getValue() 
-						/ __SimParameter.SIMULATION_STEPS
+						/ __SimStatistics.totalNumberOfSales.getValue() 
 					</ValueExpr>
 				</Source>
 			</Variable>
@@ -141,6 +142,16 @@
 						<UpdateStatisticsVariable variable="stockLevel">
 							<ValueExpr language="Java JavaScript">this.inv.getProductQuantityInStock()</ValueExpr>
 						</UpdateStatisticsVariable>
+						<UpdateStatisticsVariable variable="totalNumberOfSales">
+							<ValueExpr language="Java"><![CDATA[ 
+								SimStatistics.totalNumberOfSales.getValue() +  
+								inv.getProductQuantityInStock()
+							]]></ValueExpr>
+							<ValueExpr language="JavaScript"><![CDATA[ 
+								__SimStatistics.totalNumberOfSales.getValue() + 
+								this.inv.getProductQuantityInStock()
+							]]></ValueExpr>
+						</UpdateStatisticsVariable>
 						<UpdateObject objectVariable="inv">
 							<Slot property="productQuantityInStock" value="0" />
 							<Slot property="waitingForDelivery" value="true" />
@@ -187,7 +198,7 @@
 				<IF language="Java JavaScript"><![CDATA[ 
 		     (this.inv.getProductQuantityInStock() - this.demand) >= 0 &&
 			 (this.inv.getProductQuantityInStock() - this.demand) < this.inv.getReorderLevel()
-			   ]]></IF>
+			    ]]></IF>
 				<THEN>
 					<UPDATE-ENV>
 						<UpdateObject objectVariable="inv">
@@ -203,6 +214,14 @@
 						</UpdateStatisticsVariable>
 						<UpdateStatisticsVariable variable="dailyDemand">
 							<ValueExpr language="Java JavaScript">this.demand</ValueExpr>
+						</UpdateStatisticsVariable>
+						<UpdateStatisticsVariable variable="totalNumberOfSales">
+							<ValueExpr language="Java"><![CDATA[ 
+								SimStatistics.totalNumberOfSales.getValue() + demand 
+							  ]]></ValueExpr>
+							<ValueExpr language="JavaScript"><![CDATA[ 
+								__SimStatistics.totalNumberOfSales.getValue() + this.demand 
+							]]></ValueExpr>
 						</UpdateStatisticsVariable>
 					</UPDATE-ENV>
 					<SCHEDULE-EVT>
