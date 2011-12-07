@@ -71,6 +71,8 @@
 			<Variable name="revenue" dataType="Float" />
 			<Variable name="cumulativeResponseTime" dataType="Float" />
 			<Variable name="numberOfDepartures" dataType="Integer" />
+			<Variable name="menuBoardQueueLength" dataType="Integer" />
+			<Variable name="pickupWindowQueueLength" dataType="Integer" />
 			<Variable name="meanResponseTime" dataType="Float">
 				<Source computeOnlyAtEnd="true">
 					<ValueExpr language="Java">SimStatistics.cumulativeResponseTime.getValue() / SimStatistics.numberOfDepartures.getValue()</ValueExpr>
@@ -169,17 +171,23 @@ var r2 = js.util.Random.uniformInt(1,6);
 			<!-- =================================================== -->
 				<Attribute name="maxMenuBoardLineSize" type="Integer" minValue="3" maxValue="10"/>
 				<Attribute name="menuBoardBusy" type="Boolean" />
-        <Attribute name="utilization" type="Float" />
+                <Attribute name="utilization" type="Float" />
 				<ReferenceProperty name="menuBoardQueue" type="Customer" upperMultiplicity="unbounded">
-					<documentation>This property represents a first-in-first-out queue.</documentation>
+					<documentation>
+						<description>
+							This property represents a first-in-first-out queue.
+						</description>
+					</documentation>
 				</ReferenceProperty>
 				<!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->
 				<Function name="randomPizzaType" resultType="Integer">
 					<!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->
 					<documentation>
-						The type of the pizza as a number between 0 and 5: 0 = Pizza Quattro Formaggi, 
-						1 = Pizza Quattro Stagioni, 2 = Pizza Capricciosa, 3 = Pizza Napoletana, 
-						4 = Pizza Marinara, 5 = Pizza Margherita. 
+						<description>
+							The type of the pizza as a number between 0 and 5: 0 = Pizza Quattro Formaggi, 
+							1 = Pizza Quattro Stagioni, 2 = Pizza Capricciosa, 3 = Pizza Napoletana, 
+							4 = Pizza Marinara, 5 = Pizza Margherita. 
+						</description>
 					</documentation>
 					<Body language="Java"><![CDATA[
 return Random.uniformInt(0,5);
@@ -201,7 +209,11 @@ return js.util.Random.uniformInt(0,5);
 				<Attribute name="pickupWindowBusy" type="Boolean" />
 				<Attribute name="utilization" type="Float" />
 				<ReferenceProperty name="pickupWindowQueue" type="Customer" upperMultiplicity="unbounded">
-					<documentation>This property represents a first-in-first-out queue. </documentation>
+					<documentation>
+						<description>
+							This property represents a first-in-first-out queue. 
+						</description>
+					</documentation>
 				</ReferenceProperty>
 				<!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->
 				<Function name="pizzaPrice" resultType="Float">
@@ -263,6 +275,9 @@ this.mb.getMenuBoardQueue().size() >= this.mb.getMaxMenuBoardLineSize()
 							<ValueExpr language="Java JavaScript">this.mb.getMenuBoardQueue().size()</ValueExpr>
 						</Slot>
 					</UpdateObject>
+					<UpdateStatisticsVariable variable="menuBoardQueueLength">
+						<ValueExpr language="Java JavaScript">this.mb.getMenuBoardQueue().size()</ValueExpr>
+					</UpdateStatisticsVariable>
 				</UPDATE-ENV>
 			</THEN>
 				<ELSE>
@@ -284,6 +299,9 @@ this.mb.getMenuBoardQueue().size() >= this.mb.getMaxMenuBoardLineSize()
 								<ValueExpr language="Java JavaScript">this.q1.getLengthOfQueue() + 1</ValueExpr>
 							</Slot>
 						</UpdateObject>
+						<UpdateStatisticsVariable variable="menuBoardQueueLength">
+							<ValueExpr language="Java JavaScript">this.q1.getLengthOfQueue() + 1</ValueExpr>
+						</UpdateStatisticsVariable>
 						<UpdateStatisticsVariable variable="numberOfCustomers">
 							<ValueExpr language="Java"><![CDATA[
 SimStatistics.numberOfCustomers.getValue() + 1								
@@ -410,6 +428,12 @@ __SimStatistics.numberOfCustomers.getValue() + 1
 								<ValueExpr language="Java JavaScript">this.pw.getPickupWindowQueue().size()</ValueExpr>
 							</Slot>
 						</UpdateObject>
+						<UpdateStatisticsVariable variable="menuBoardQueueLength">
+							<ValueExpr language="Java JavaScript">this.q1.getLengthOfQueue() - 1</ValueExpr>
+						</UpdateStatisticsVariable>
+						<UpdateStatisticsVariable variable="pickupWindowQueueLength">
+							<ValueExpr language="Java JavaScript">this.pw.getPickupWindowQueue().size()</ValueExpr>
+						</UpdateStatisticsVariable>
 					</UPDATE-ENV>
 					<SCHEDULE-EVT>
 						<CausedEventExpr eventType="StartMenuBoardService">
@@ -429,8 +453,10 @@ this.mb.getMenuBoardQueue().size() > 0
 			<EnvironmentRule name="EndMenuBoardServiceWhenIsFull_Rule">
 				<!-- ============================================================================ -->
 				<documentation>
-					When a menu board service ends, but the PickupWindowQueue is full, the customer cannot move forward. 
-					We just update the customer attribute. 
+					<description>
+						When a menu board service ends, but the PickupWindowQueue is full, the customer cannot move forward. 
+						We just update the customer attribute.
+					</description> 
 				</documentation>
 				<WHEN eventType="EndMenuBoardService" eventVariable="evt" />
 				<FOR-ObjectVariable variable="mb" objectType="MenuBoard" objectIdRef="1" />
@@ -441,7 +467,7 @@ this.mb.getMenuBoardQueue().size() > 0
 				</FOR-ObjectVariable>
 				<IF language="Java JavaScript"><![CDATA[
 ( this.pw.getPickupWindowQueue().size() >= this.pw.getMaxPickupWindowLineSize() && this.cust.getOrder() != null) 
-               ]]></IF>	
+                ]]></IF>	
 				<THEN>
 					<UPDATE-ENV>
 						<UpdateObject objectVariable="cust">
@@ -452,17 +478,22 @@ this.mb.getMenuBoardQueue().size() > 0
 								<ValueExpr language="Java JavaScript">this.pw.getPickupWindowQueue().size()</ValueExpr>
 							</Slot>
 						</UpdateObject>
+						<UpdateStatisticsVariable variable="pickupWindowQueueLength">
+							<ValueExpr language="Java JavaScript">this.pw.getPickupWindowQueue().size()</ValueExpr>
+						</UpdateStatisticsVariable>
 					</UPDATE-ENV>
 				</THEN>
 			</EnvironmentRule>	
 			<!-- ========================================================================== -->
 			<EnvironmentRule name="StartPickupWindowService_Rule">
-			<!-- ======================================================================-->
 				<documentation>
-					On StartPickupWindowService, the pickupWindowBusy variable is set to true, and 
-					when the customer's oder has already arrived, an EndPickupWindowService event 
-					is created with an appropriate delay. 
+					<description>
+						On StartPickupWindowService, the pickupWindowBusy variable is set to true, and 
+						when the customer's oder has already arrived, an EndPickupWindowService event 
+						is created with an appropriate delay. 
+					</description>
 				</documentation>
+			<!-- ======================================================================-->
 				<WHEN eventType="StartPickupWindowService" />
 				<FOR-ObjectVariable variable="pw" objectType="PickupWindow" objectIdRef="2" />
 				<FOR-DataVariable variable="serviceTimePW" dataType="Integer">
@@ -555,6 +586,9 @@ this.pw.getPickupWindowQueue().size() < this.pw.getMaxPickupWindowLineSize()
 							<ValueExpr language="Java JavaScript">this.pw.getPickupWindowQueue().size()</ValueExpr>
 						</Slot>
 					</UpdateObject>
+					<UpdateStatisticsVariable variable="pickupWindowQueueLength">
+						<ValueExpr language="Java JavaScript">this.pw.getPickupWindowQueue().size()</ValueExpr>
+					</UpdateStatisticsVariable>
 					<UpdateStatisticsVariable variable="numberOfDepartures">
 						<ValueExpr language="Java">SimStatistics.numberOfDepartures.getValue() + 1</ValueExpr>
 						<ValueExpr language="JavaScript">__SimStatistics.numberOfDepartures.getValue() + 1</ValueExpr>
@@ -613,6 +647,9 @@ SimStatistics.revenue.getValue() + pw.pizzaPrice(( int) cust.getOrder().getPizza
 							<ValueExpr language="Java JavaScript">this.pw.getPickupWindowQueue().size()</ValueExpr>
 						</Slot>
 					</UpdateObject>
+					<UpdateStatisticsVariable variable="pickupWindowQueueLength">
+						<ValueExpr language="Java JavaScript">this.pw.getPickupWindowQueue().size()</ValueExpr>
+					</UpdateStatisticsVariable>
 					<UpdateObject objectVariable="pw">
 						<MultiValuedSlot property="pickupWindowQueue">
 							<RemoveFirst itemVariable="cust" />
@@ -858,6 +895,38 @@ SimStatistics.revenue.getValue() + pw.pizzaPrice(( int) cust.getOrder().getPizza
 					<Text xml:lang="ro">Care este dimensiunea maxima a listei de asteptare pentru serviciul de distributie comenzi?</Text>
 				</Hint>
 			</StatisticsVariableUI>
+			<StatisticsVariableUI variable="menuBoardQueueLength" comparisonGroup="MenuBoard_PickupWindow">
+				<Label>
+					<Text xml:lang="en">Length of menu board queue</Text>
+					<Text xml:lang="de">Länge der Auftragsannahme-Warteschlange</Text>
+					<Text xml:lang="fr">Dimension de la queue pour la demande de nourriture</Text>
+					<Text xml:lang="es">Longitud de cola para recepcion de pedidos comidas</Text>
+					<Text xml:lang="ro">Dimensiunea listei de asteptare pentru serviciul de preluare comenzi</Text>
+				</Label>
+				<Hint>
+					<Text xml:lang="en">What is the length of the menu board queue?</Text>
+					<Text xml:lang="de">Was ist die Länge der Auftragsannahme-Warteschlange?</Text>
+					<Text xml:lang="fr">Quelle est la dimension de la queue pour la demande de nourriture?</Text>
+					<Text xml:lang="es">Cual es el tamaño de la cola para entrega de comidas?</Text>
+					<Text xml:lang="ro">Care este dimensiunea listei de asteptare pentru serviciul de preluare comenzi?</Text>
+				</Hint>
+			</StatisticsVariableUI>
+			<StatisticsVariableUI variable="pickupWindowQueueLength" comparisonGroup="MenuBoard_PickupWindow">
+				<Label>
+					<Text xml:lang="en">Length of pickup window queue</Text>
+					<Text xml:lang="de">Länge der Ausgabefenster-Warteschlange</Text>
+					<Text xml:lang="fr">Dimension de la queue pour la distribution de nourriture</Text>
+					<Text xml:lang="es">Longitud de cola para entrega de comidas</Text>
+					<Text xml:lang="ro">Dimensiunea listei de asteptare pentru serviciul de distributie comenzi</Text>
+				</Label>
+				<Hint>
+					<Text xml:lang="en">What is the length of the pickup window queue?</Text>
+					<Text xml:lang="de">Was ist die Länge der Ausgabefenster-Warteschlange?</Text>
+					<Text xml:lang="fr">Quelle est la dimension de la queue pour la distribution de nourriture?</Text>
+					<Text xml:lang="es">Cual es el tamaño de la cola para entrega de comidas?</Text>
+					<Text xml:lang="ro">Care este dimensiunea listei de asteptare pentru serviciul de distributie comenzi?</Text>
+				</Hint>
+			</StatisticsVariableUI>
 		</StatisticsUI>
 		<!-- ================================================== -->
 		<AnimationUI>
@@ -960,7 +1029,7 @@ SimStatistics.revenue.getValue() + pw.pizzaPrice(( int) cust.getOrder().getPizza
 			<!-- ================================================== -->
 			<Views>
 				<SpaceView>
-					<TwoDimensionalSpaceView2D backgroundColor="lightgrey"/>
+					<TwoDimensionalSpaceView2D backgroundColor="lightgrey" />
 				</SpaceView>
 				<!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->
 				<ObjectView objectType="MenuBoard" displayName="true">
