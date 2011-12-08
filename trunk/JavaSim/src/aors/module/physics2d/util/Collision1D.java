@@ -13,7 +13,6 @@ import aors.model.envsim.Physical;
  * they occur.
  * 
  * @author Holger Wuerke
- * @since 20.12.2009
  * 
  */
 public class Collision1D implements Comparable<Collision1D> {

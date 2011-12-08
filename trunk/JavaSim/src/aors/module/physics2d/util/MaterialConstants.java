@@ -27,19 +27,24 @@ public class MaterialConstants {
 
     switch (materialType) {
     case Aluminium:
-      return 0.65;
+//      return 0.65;
+      return 0.35;
 
     case Iron:
-      return 0.60;
-
-    case Rubber:
-      return 0.83;
-
-    case Stone:
+//      return 0.60;
       return 0.3;
 
+    case Rubber:
+//      return 0.83;
+      return 0.63;
+
+    case Stone:
+//      return 0.3;
+      return 0.15;
+
     case Wood:
-      return 0.60;
+//      return 0.60;
+      return 0.3;
     }
 
     return 0.5;
@@ -64,7 +69,8 @@ public class MaterialConstants {
       return 0.8;
 
     case Rubber:
-      return 5;
+//      return 5;
+      return 7;
 
     case Stone:
       return 0.2;

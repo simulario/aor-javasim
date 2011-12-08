@@ -30,21 +30,16 @@ import aors.module.physics2d.util.Collision1D;
 import aors.module.physics2d.util.IntervalList;
 import aors.module.physics2d.util.MaterialConstants;
 import aors.module.physics2d.util.Perception;
+import aors.module.physics2d.util.Perception1D;
 import aors.module.physics2d.util.UnitConverter;
 
 /**
  * A physics simulator for 1D simulation.
  * 
  * @author Holger Wuerke
- * @since 12.12.2009
  * 
  */
 public class Simulator1D extends PhysicsSimulator {
-
-  /**
-   * A unit converter.
-   */
-  private UnitConverter unitConverter;
 
   /**
    * Used for collision detection.
@@ -53,8 +48,8 @@ public class Simulator1D extends PhysicsSimulator {
 
   /**
    * This map stores the calculated new positions of all objects. This is needed
-   * because positions might be changed multiple times due to collision that may
-   * occur.
+   * because positions might be changed multiple times within a step due to
+   * collisions that may occur.
    */
   private Map<Physical, Double> newPositions;
 
@@ -91,10 +86,6 @@ public class Simulator1D extends PhysicsSimulator {
 
     super(simParams, spaceModel, autoKinematics, autoCollisionDetection,
         autoCollisionHandling, gravitation, databus, objects, agents);
-
-    unitConverter = new UnitConverter(simParams.getTimeUnit(), spaceModel
-        .getSpatialDistanceUnit());
-    stepDuration = unitConverter.timeToSeconds(simParams.getStepDuration());
 
     newPositions = new HashMap<Physical, Double>();
     intervalList = new IntervalList(getPhysicals(), spaceModel);
@@ -141,7 +132,7 @@ public class Simulator1D extends PhysicsSimulator {
     }
 
     // collision detection and handling
-    Set<Perception> perceptions = new HashSet<Perception>();
+    Set<Perception1D> perceptions = new HashSet<Perception1D>();
     Set<Physical> borderReached = new HashSet<Physical>();
 
     int i = 1;
@@ -227,9 +218,10 @@ public class Simulator1D extends PhysicsSimulator {
       }
 
       entry.getKey().setX(newPos);
-      // System.out.println(entry.getKey().getId() + ") " +
-      // entry.getKey().getX()
-      // + " " + entry.getKey().getVx());
+      
+//       System.out.println(entry.getKey().getId() + ") " +
+//       entry.getKey().getX()
+//       + " " + entry.getKey().getVx());
     }
   }
 
@@ -281,13 +273,13 @@ public class Simulator1D extends PhysicsSimulator {
     for (Collision1D collision : collisions) {
       Physical object1 = collision.getObject1();
       Physical object2 = collision.getObject2();
-      
+
       // skip objects on different lanes
       if (object1.getY() != object2.getY()) {
         continue;
       }
 
-//      System.out.println(stepNumber + ": " + collision);
+      // System.out.println(stepNumber + ": " + collision);
 
       if (autoCollisionDetection) {
         // create event
@@ -303,9 +295,9 @@ public class Simulator1D extends PhysicsSimulator {
         double v1 = object1.getVx();
         double v2 = object2.getVx();
 
-        double restitution = Math.min(MaterialConstants.restitution(object1
-            .getMaterialType()), MaterialConstants.restitution(object2
-            .getMaterialType()));
+        double restitution = Math.min(
+            MaterialConstants.restitution(object1.getMaterialType()),
+            MaterialConstants.restitution(object2.getMaterialType()));
 
         // calculate new velocities and new positions
         double newV1 = (m1 * v1 + m2 * v2 - m2 * (v1 - v2) * restitution)
@@ -420,11 +412,11 @@ public class Simulator1D extends PhysicsSimulator {
    * @param perceptions
    *          set of perceptions to process
    */
-  private void processPerceptions(Set<Perception> perceptions) {
-    for (Perception perception : perceptions) {
-      double distance = perception.getDistance1D();
-      double angle = perception.getAngle1D();
-      
+  private void processPerceptions(Set<Perception1D> perceptions) {
+    for (Perception1D perception : perceptions) {
+      double distance = perception.getDistance();
+      double angle = perception.getAngle();
+
       PhysicalObjectPerceptionEvent event = new PhysicalObjectPerceptionEvent(
           stepNumber, perception.getPerceiver().getId(), perception
               .getPerceived().getClass().getSimpleName(), distance);

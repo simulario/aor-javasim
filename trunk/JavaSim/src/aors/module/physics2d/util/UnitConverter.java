@@ -9,19 +9,18 @@ import aors.GeneralSpaceModel.SpatialDistanceUnit;
  * A class for unit conversion.
  * 
  * @author Holger Wuerke
- * @since 12.04.2010
  */
 public class UnitConverter {
 
   /**
-   * The factor for time conversion.
+   * The ratio for time conversion.
    */
-  private double timeFactor = 1;
+  private double timeRatio = 1;
 
   /**
-   * The factor for distance conversion.
+   * The ratio for distance conversion.
    */
-  private double distanceFactor = 1;
+  private double distanceRatio = 1;
 
   /**
    * Create a new unit converter.
@@ -31,52 +30,52 @@ public class UnitConverter {
    */
   public UnitConverter(String timeUnit, SpatialDistanceUnit distanceUnit) {
     if (timeUnit.equals("ms")) {
-      timeFactor = (double) 1 / 1000;
+      timeRatio = (double) 1 / 1000;
     }
 
     if (timeUnit.equals("s")) {
-      timeFactor = 1;
+      timeRatio = 1;
     }
 
     if (timeUnit.equals("min")) {
-      timeFactor = 60;
+      timeRatio = 60;
     }
 
     if (timeUnit.equals("h")) {
-      timeFactor = 3600;
+      timeRatio = 3600;
     }
 
     if (timeUnit.equals("D")) {
-      timeFactor = 3600 * 24;
+      timeRatio = 3600 * 24;
     }
 
     if (timeUnit.equals("W")) {
-      timeFactor = 3600 * 24 * 7;
+      timeRatio = 3600 * 24 * 7;
     }
 
     if (timeUnit.equals("M")) {
-      timeFactor = 3600 * 24 * 30;
+      timeRatio = 3600 * 24 * 30;
     }
 
     if (timeUnit.equals("Y")) {
-      timeFactor = 3600 * 24 * 365;
+      timeRatio = 3600 * 24 * 365;
     }
 
     switch (distanceUnit) {
     case mm:
-      distanceFactor = (double) 1 / 1000;
+      distanceRatio = (double) 1 / 1000;
       break;
     case cm:
-      distanceFactor = (double) 1 / 100;
+      distanceRatio = (double) 1 / 100;
       break;
     case m:
-      distanceFactor = 1;
+      distanceRatio = 1;
       break;
     case km:
-      distanceFactor = 1000;
+      distanceRatio = 1000;
       break;
     default:
-      distanceFactor = 1;
+      distanceRatio = 1;
     }
 
     // System.out.println("time: " + timeFactor + " distance: " +
@@ -90,7 +89,7 @@ public class UnitConverter {
    * @return the converted value
    */
   public double timeToUser(double value) {
-    return value / timeFactor;
+    return value / timeRatio;
   }
 
   /**
@@ -100,7 +99,7 @@ public class UnitConverter {
    * @return the converted value
    */
   public double timeToSeconds(double value) {
-    return value * timeFactor;
+    return value * timeRatio;
   }
 
   /**
@@ -110,7 +109,7 @@ public class UnitConverter {
    * @return the converted value
    */
   public double distanceToUser(double value) {
-    return value / distanceFactor;
+    return value / distanceRatio;
   }
 
   /**
@@ -120,7 +119,7 @@ public class UnitConverter {
    * @return the converted value
    */
   public double distanceToMeters(double value) {
-    return value * distanceFactor;
+    return value * distanceRatio;
   }
 
   /**
@@ -130,7 +129,7 @@ public class UnitConverter {
    * @return the converted value
    */
   public double velocityToUser(double value) {
-    return value * timeFactor / distanceFactor;
+    return value * timeRatio / distanceRatio;
   }
 
   /**
@@ -140,7 +139,7 @@ public class UnitConverter {
    * @return the converted value
    */
   public double velocityToMetersPerSeconds(double value) {
-    return value * distanceFactor / timeFactor;
+    return value * distanceRatio / timeRatio;
   }
 
   /**
@@ -151,7 +150,7 @@ public class UnitConverter {
    * @return the converted value
    */
   public double accelerationToUser(double value) {
-    return value * timeFactor * timeFactor / distanceFactor;
+    return value * timeRatio * timeRatio / distanceRatio;
   }
 
   /**
@@ -162,7 +161,7 @@ public class UnitConverter {
    * @return the converted value
    */
   public double accelerationToMetersPerSecondsSquared(double value) {
-    return value * distanceFactor / (timeFactor * timeFactor);
+    return value * distanceRatio / (timeRatio * timeRatio);
   }
 
   /**
@@ -173,7 +172,7 @@ public class UnitConverter {
    * @return the converted value
    */
   public double angularVelocityToUser(double value) {
-    return value * timeFactor;
+    return value * timeRatio;
   }
 
   /**
@@ -184,7 +183,7 @@ public class UnitConverter {
    * @return the converted value
    */
   public double angularVelocityToRadiansPerSeconds(double value) {
-    return value / timeFactor;
+    return value / timeRatio;
   }
 
   /**
@@ -195,7 +194,7 @@ public class UnitConverter {
    * @return the converted value
    */
   public double angularAccelerationToUser(double value) {
-    return value * timeFactor * timeFactor;
+    return value * timeRatio * timeRatio;
   }
 
   /**
@@ -206,7 +205,7 @@ public class UnitConverter {
    * @return the converted value
    */
   public double angularAccelerationToRadiansPerSecondsSquared(double value) {
-    return value / (timeFactor * timeFactor);
+    return value / (timeRatio * timeRatio);
   }
 
 }

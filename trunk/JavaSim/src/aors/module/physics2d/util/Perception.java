@@ -4,43 +4,42 @@
 package aors.module.physics2d.util;
 
 import aors.GeneralSpaceModel;
-import aors.GeneralSpaceModel.SpaceType;
 import aors.model.envsim.Physical;
 import aors.model.envsim.PhysicalAgentObject;
 
 /**
- * Represents a perception.
+ * Represents a general perception.
  * 
  * @author Holger Wuerke
- * @since 04.03.2010
  */
-public class Perception {
+public abstract class Perception {
 
   /**
    * The perceiver.
    */
-  private PhysicalAgentObject perceiver;
+  protected PhysicalAgentObject perceiver;
 
   /**
    * The perceived object.
    */
-  private Physical perceived;
+  protected Physical perceived;
 
   /**
    * The spaceModel.
    */
-  private GeneralSpaceModel spaceModel;
+  protected GeneralSpaceModel spaceModel;
+  
+  /**
+   * The perception distance.
+   */
+  protected Double distance;
 
   /**
-   * The distance in x direction.
+   * The perception angle.
    */
-  private Double distanceX;
+  protected Double angle;
 
-  /**
-   * The distance in y direction
-   */
-  private Double distanceY;
-
+  
   /**
    * Create a new perception.
    * 
@@ -52,97 +51,6 @@ public class Perception {
     this.perceiver = perceiver;
     this.perceived = perceived;
     this.spaceModel = spaceModel;
-  }
-
-  /**
-   * Calculates the perception distance for the 1D space.
-   * 
-   * @return the distance
-   */
-  public double getDistance1D() {
-    double distance = perceived.getX() - perceiver.getX();
-    distance += (distance > 0) ? -perceived.getWidth() / 2 : perceived
-        .getWidth() / 2;
-
-    // special cases if perception radius goes beyond space border (for toroidal
-    // space)
-    if (distance > perceiver.getPerceptionRadius()) {
-      distance = perceived.getX() - spaceModel.getXMax() - perceiver.getX();
-      distance += (distance > 0) ? -perceived.getWidth() / 2 : perceived
-          .getWidth() / 2;
-    }
-
-    if (distance < -perceiver.getPerceptionRadius()) {
-      distance = perceived.getX() + spaceModel.getXMax() - perceiver.getX();
-      distance += (distance > 0) ? -perceived.getWidth() / 2 : perceived
-          .getWidth() / 2;
-    }
-
-    return Math.abs(distance);
-  }
-
-  /**
-   * Calculates the perception distance for the 2D grid space. We use the
-   * Chebyshev distance (chessboard distance) in grid space.
-   * 
-   * @return the distance
-   */
-  public double getDistance2DGrid() {
-    if (distanceX == null || distanceY == null) {
-      calculateDistance();
-    }
-
-    return Math.max(Math.abs(distanceX), Math.abs(distanceY));
-  }
-
-  /**
-   * Calculates the perception angle for the 1D space. The result will be 0 if
-   * the object is in front and Pi if the object is in back of the perceiver. If
-   * both objects are on different lanes, a value of Pi/2 resp. 3/2*Pi is returned.
-   * is returned.
-   * 
-   * @return the angle
-   */
-  public double getAngle1D() {
-    // different lanes
-    if (perceiver.getY() > perceived.getY()) {
-      return Math.PI / 2;
-    }
-
-    if (perceiver.getY() < perceived.getY()) {
-      return 3 * Math.PI / 2;
-    }
-
-    // same lane
-    double distance = perceived.getX() - perceiver.getX();
-    distance += (distance > 0) ? -perceived.getWidth() / 2 : perceived
-        .getWidth() / 2;
-
-    if (distance > 0) {
-      return (distance <= perceiver.getPerceptionRadius()) ? 0 : Math.PI;
-    } else {
-      return (-distance <= perceiver.getPerceptionRadius()) ? Math.PI : 0;
-    }
-  }
-
-  /**
-   * Calculates the perception angle for the 2D space.
-   * 
-   * @return the angle
-   */
-  public double getAngle2D() {
-    if (distanceX == null || distanceY == null) {
-      calculateDistance();
-    }
-
-    double orientation = perceiver.getRotZ();
-
-    double angle = Math.atan2(distanceY, distanceX);
-    angle = (angle < 0) ? angle + 2 * Math.PI : angle;
-    angle = (angle < orientation) ? (2 * Math.PI - (orientation - angle))
-        : angle - orientation;
-
-    return angle;
   }
 
   /**
@@ -159,29 +67,53 @@ public class Perception {
     return perceived;
   }
 
-  private void calculateDistance() {
-    distanceX = perceived.getX() - perceiver.getX();
-    distanceY = perceived.getY() - perceiver.getY();
 
-    // special cases if perception radius goes beyond space border (for toroidal
-    // space)
-    if (distanceX > perceiver.getPerceptionRadius()) {
-      distanceX = perceived.getX() - spaceModel.getXMax() - perceiver.getX();
+  /**
+   * @return the distance
+   */
+  public Double getDistance() {
+    if (distance == null) {
+      calculateDistance();
     }
-
-    if (distanceX < -perceiver.getPerceptionRadius()) {
-      distanceX = perceived.getX() + spaceModel.getXMax() - perceiver.getX();
-    }
-
-    if (distanceY > perceiver.getPerceptionRadius()) {
-      distanceY = perceived.getY() - spaceModel.getYMax() - perceiver.getY();
-    }
-
-    if (distanceY < -perceiver.getPerceptionRadius()) {
-      distanceY = perceived.getY() + spaceModel.getYMax() - perceiver.getY();
-    }
+    
+    return distance;
   }
 
+  /**
+   * @param distance the distance to set
+   */
+  public void setDistance(Double distance) {
+    this.distance = distance;
+  }
+
+  /**
+   * @return the angle
+   */
+  public Double getAngle() {
+    if (angle == null) {
+      calculateAngle();
+    }
+    
+    return angle;
+  }
+
+  /**
+   * @param angle the angle to set
+   */
+  public void setAngle(Double angle) {
+    this.angle = angle;
+  }
+
+  /**
+   * Calculates the perception distance.
+   */
+  protected abstract void calculateDistance();
+
+  /**
+   * Calculates the perception angle.
+   */
+  protected abstract void calculateAngle();
+  
   /*
    * (non-Javadoc)
    * 
@@ -224,14 +156,8 @@ public class Perception {
   }
 
   public String toString() {
-    if (spaceModel.getSpaceType().equals(SpaceType.OneD)) {
-      return "Perception: " + perceiver + " -> " + perceived + "\nDist: "
-          + getDistance1D() + " Angle: " + (getAngle1D() * 180 / Math.PI)
-          + "°";
-    }
-
-    return "Perception: " + perceiver + " -> " + perceived + "\nDist: "
-        + getDistance2DGrid() + " Angle2D: " + (getAngle2D() * 180 / Math.PI)
+    return "Perception: " + perceiver + " -> " + perceived + "\n\tDistance: "
+        + String.format("%.2f", getDistance()) + " Angle: " + String.format("%.2f", getAngle() * 180 / Math.PI)
         + "°";
   }
 }

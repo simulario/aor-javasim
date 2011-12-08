@@ -17,6 +17,7 @@ import aors.model.envsim.EnvironmentRule;
 import aors.model.envsim.Physical;
 import aors.model.envsim.PhysicalAgentObject;
 import aors.model.envsim.PhysicalObject;
+import aors.module.physics2d.util.UnitConverter;
 import aors.physim.PhySimEnvironmentEvent;
 import aors.physim.PhySimKinematicsRule;
 
@@ -25,7 +26,6 @@ import aors.physim.PhySimKinematicsRule;
  * every specific simulator.
  * 
  * @author Holger Wuerke
- * @since 01.12.2009
  * 
  */
 public abstract class PhysicsSimulator {
@@ -51,6 +51,11 @@ public abstract class PhysicsSimulator {
   protected List<PhysicalAgentObject> physicalAgentObjects;
 
   /**
+   * A unit converter.
+   */
+  protected UnitConverter unitConverter;
+
+  /**
    * The databus, used to send events.
    */
   protected DataBus databus;
@@ -61,7 +66,7 @@ public abstract class PhysicsSimulator {
   protected long stepNumber;
 
   /**
-   * The gravitation (only used in 2D LateralView).
+   * The gravitation.
    */
   protected double gravitation;
 
@@ -87,13 +92,13 @@ public abstract class PhysicsSimulator {
   protected List<EnvironmentEvent> events = new ArrayList<EnvironmentEvent>();
 
   /**
-   * The duration of a simulation step (in seconds).
+   * The duration of a simulation step.
    */
   protected double stepDuration;
 
   /**
    * Creates a new simulator. Should be called by every constructor of
-   * subclasses to for initialization purposes.
+   * subclasses for initialization purposes.
    * 
    * @param simParams
    * @param spaceModel
@@ -124,7 +129,12 @@ public abstract class PhysicsSimulator {
 
     this.physicalObjects = objects;
     this.physicalAgentObjects = agents;
-  }
+
+    this.unitConverter = new UnitConverter(simParams.getTimeUnit(), spaceModel
+        .getSpatialDistanceUnit());
+    this.stepDuration = unitConverter.timeToSeconds(simParams.getStepDuration());
+    this.unitConverter = new UnitConverter("s", spaceModel.getSpatialDistanceUnit());
+}
 
   /**
    * Returns a list with all objects and agents.

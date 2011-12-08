@@ -9,18 +9,22 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 
-import org.jbox2d.collision.AABB;
-import org.jbox2d.collision.shapes.CircleDef;
-import org.jbox2d.collision.MassData;
-import org.jbox2d.collision.shapes.PolygonDef;
-import org.jbox2d.collision.shapes.Shape;
+import org.jbox2d.collision.Manifold;
+import org.jbox2d.collision.WorldManifold;
+import org.jbox2d.collision.shapes.CircleShape;
+import org.jbox2d.collision.shapes.PolygonShape;
+import org.jbox2d.collision.shapes.ShapeType;
 import org.jbox2d.common.Vec2;
 import org.jbox2d.dynamics.Body;
 import org.jbox2d.dynamics.BodyDef;
-import org.jbox2d.dynamics.ContactListener;
+import org.jbox2d.dynamics.BodyType;
+import org.jbox2d.dynamics.Fixture;
+import org.jbox2d.callbacks.ContactImpulse;
+import org.jbox2d.callbacks.ContactListener;
+import org.jbox2d.dynamics.FixtureDef;
 import org.jbox2d.dynamics.World;
-import org.jbox2d.dynamics.contacts.ContactPoint;
-import org.jbox2d.dynamics.contacts.ContactResult;
+import org.jbox2d.dynamics.contacts.Contact;
+
 
 import aors.GeneralSpaceModel;
 import aors.GeneralSpaceModel.Geometry;
@@ -38,28 +42,22 @@ import aors.model.envsim.PhysicalObject;
 import aors.model.envsim.Shape2D;
 import aors.module.physics2d.util.CollisionObjectType;
 import aors.module.physics2d.util.MaterialConstants;
-import aors.module.physics2d.util.UnitConverter;
+import aors.module.physics2d.util.Perception2D;
+
 
 /**
  * A physics simulator for 2D simulation using the Box2D physics engine.
  * 
  * @author Holger Wuerke
- * @since 01.12.2009
  * 
  */
 public class Box2DSimulator extends PhysicsSimulator {
 
   /**
-   * A unit converter.
-   */
-  private UnitConverter unitConverter;
-
-  /**
    * The ratio between the provided step duration value and the value used in
-   * Box2D. The step duration value for Box2D should be somewhere between 0.01
-   * and 0.1
+   * Box2D. The step duration value for Box2D should be 1/60.
    */
-  private int stepDurationFactor;
+  private double timeRatio;
 
   /**
    * The Box2D world, where everything is simulated.
@@ -72,6 +70,20 @@ public class Box2DSimulator extends PhysicsSimulator {
    */
   private Set<Body> borderReached = new HashSet<Body>();
 
+  /**
+   * A set that contains all perceptions of the current step. We need this 
+   * because the collision listener might signal one perception several times 
+   * in one step.
+   */
+  private Set<Perception2D> perceptions = new HashSet<Perception2D>();
+  
+  /**
+   * A set that contains all collision events of the current step. We need this 
+   * because the collision listener might signal one collision several times 
+   * in one step.
+   */
+  private Set<CollisionEvent> collisionEvents = new HashSet<CollisionEvent>();
+  
   /**
    * Creates a Box2DSimulator. This will set up a world and all neccessary
    * objects (bodies) in Box2D.
@@ -91,64 +103,52 @@ public class Box2DSimulator extends PhysicsSimulator {
     super(simParams, spaceModel, autoKinematics, autoCollisionDetection,
         autoCollisionHandling, gravitation, databus, objects, agents);
 
-    unitConverter = new UnitConverter(simParams.getTimeUnit(),
-        spaceModel.getSpatialDistanceUnit());
+    // compute time ratio, so we can use a step duration value of 1/60 in Box2D
+    timeRatio = stepDuration * 60;
+    stepDuration = 1f / 60f;
 
-    // compute step duration, the value for Box2D should be between 0.01 and 0.1
-    stepDuration = (simParams.getStepDuration() != null ? simParams
-        .getStepDuration() : 1);
-
-    int x = (int) Math.log10(stepDuration);
-    stepDurationFactor = (int) Math.pow(10, x + 2);
-    stepDuration /= stepDurationFactor;
-
-    // System.out.println(stepDuration);
-
-    AABB aabb = new AABB(new Vec2(-100, -100), new Vec2(
-        (float) spaceModel.getXMax() + 100, spaceModel.getYMax() + 100));
-
-    // Vec2 gravity = new Vec2(0f, (float) gravitation);
-    Vec2 gravity = new Vec2(0f,
-        (float) unitConverter.accelerationToUser(gravitation)
-            * stepDurationFactor * stepDurationFactor);
-    world = new World(aabb, gravity, true);
-    // System.out.println(gravity);
+    Vec2 g = new Vec2(0f, (float) (unitConverter.accelerationToUser(gravitation) * timeRatio * timeRatio));
+    world = new World(g, true);
 
     CollisionListener cl = new CollisionListener();
     world.setContactListener(cl);
 
-    // add world borders
-    // bottom
-    BodyDef borderDef = new BodyDef();
-    borderDef.position.set((float) (spaceModel.getXMax() / 2), -0.5f);
-
-    PolygonDef borderShape = new PolygonDef();
-    borderShape.friction = 0.5f;
-    borderShape.restitution = 1;
-    borderShape.isSensor = true;
-    borderShape.userData = CollisionObjectType.BORDER;
-    borderShape.setAsBox((float) (spaceModel.getXMax() / 2), 0.5f);
-
-    Body border = world.createBody(borderDef);
-    border.createShape(borderShape);
-
-    // top
-    borderDef.position.set((float) spaceModel.getXMax() / 2,
-        (float) (spaceModel.getYMax() + 0.5));
-    border = world.createBody(borderDef);
-    border.createShape(borderShape);
-
-    // left
-    borderDef.position.set(-0.5f, (float) (spaceModel.getYMax() / 2));
-    borderShape.setAsBox(0.5f, (float) (spaceModel.getXMax() / 2));
-    border = world.createBody(borderDef);
-    border.createShape(borderShape);
-
-    // right
-    borderDef.position.set((float) spaceModel.getXMax() + 0.5f,
-        (float) (spaceModel.getYMax() / 2));
-    border = world.createBody(borderDef);
-    border.createShape(borderShape);
+    // add static objects that act as the world borders for euclidean space
+    if (spaceModel.getGeometry().equals(Geometry.Euclidean)) {
+      // bottom
+      BodyDef borderDef = new BodyDef();
+      borderDef.type = BodyType.STATIC;
+      borderDef.position.set((float) (spaceModel.getXMax() / 2), -0.5f);
+      Body border = world.createBody(borderDef);
+  
+      PolygonShape borderShape = new PolygonShape();
+      borderShape.setAsBox((float) (spaceModel.getXMax() / 2), 0.5f);
+      FixtureDef borderFixture = new FixtureDef();
+      borderFixture.shape = borderShape;
+  //    borderFixture.isSensor = true;
+      borderFixture.userData = CollisionObjectType.BORDER;
+  
+      border.createFixture(borderFixture);
+  
+      // top
+      borderDef.position.set((float) spaceModel.getXMax() / 2,
+          (float) (spaceModel.getYMax() + 0.5));
+      border = world.createBody(borderDef);
+      border.createFixture(borderFixture);
+  
+      // left
+      borderDef.position.set(-0.5f, (float) (spaceModel.getYMax() / 2));
+      border = world.createBody(borderDef);
+      borderShape.setAsBox(0.5f, (float) (spaceModel.getXMax() / 2));
+      borderFixture.shape = borderShape;
+      border.createFixture(borderFixture);
+  
+      // right
+      borderDef.position.set((float) spaceModel.getXMax() + 0.5f,
+          (float) (spaceModel.getYMax() / 2));
+      border = world.createBody(borderDef);
+      border.createFixture(borderFixture);
+    }
 
     // add a body for every object
     for (Physical object : getPhysicals()) {
@@ -165,11 +165,7 @@ public class Box2DSimulator extends PhysicsSimulator {
   public void simulationStarted() {
   }
 
-  /*
-   * (non-Javadoc)
-   * 
-   * @see aors.module.physics2d.PhysicsSimulator#simulationStepEnd()
-   */
+
   @Override
   public void simulationStepEnd(SimulationStepEvent simulationStepEvent) {
   }
@@ -192,11 +188,8 @@ public class Box2DSimulator extends PhysicsSimulator {
     // System.out.println("updateEngineObjects: " + (end-start));
 
     // perform one simulation step in the engine
-    // TODO: if stepDuration is too big, perform multiple small steps in the
-    // engine
-
     // start = System.nanoTime();
-    world.step((float) stepDuration, 10);
+    world.step((float) stepDuration, 10, 10);
     // end = System.nanoTime();
 
     // System.out.println("step: " + (end-start));
@@ -213,7 +206,39 @@ public class Box2DSimulator extends PhysicsSimulator {
 
     // System.out.println("updateAorObjects: " + (end-start));
 
+    events.addAll(collisionEvents);
+    processPerceptions();
     sendEvents(stepNumber);
+  }
+
+  /**
+   * Creates perception events for all perceptions of the current step.
+   */
+  private void processPerceptions() {
+    for (Perception2D perception : perceptions) {
+      String type = perception.getPerceived().getClass().getSimpleName();
+      
+      PhysicalObjectPerceptionEvent event = new PhysicalObjectPerceptionEvent(
+          stepNumber, perception.getPerceiver().getId(), type, perception.getDistance());
+      event.setPerceivedPhysicalObject(perception.getPerceived());
+      event.setPerceptionAngle(perception.getAngle());
+
+      try {
+        Field idPerceivableField = perception.getPerceived()
+            .getClass().getDeclaredField("ID_PERCEIVABLE");
+
+        if (idPerceivableField.getBoolean(perception.getPerceived())) {
+          event.setPerceivedPhysicalObjectIdRef(perception.getPerceived().getId());
+        }
+      } catch (Exception e) {
+      }
+
+      events.add(event);
+      
+      //System.out.println(stepNumber + ": " + perception);
+    }
+    
+    perceptions.clear();
   }
 
   @Override
@@ -231,142 +256,112 @@ public class Box2DSimulator extends PhysicsSimulator {
   }
 
   /**
-   * Adds a Box2D Body to the world which represents the given object.
+   * Adds a Box2D Body to the world which represents the specified object.
    * 
    * @param object
    */
   private void addBody(Physical object) {
+    // if phantom, no body is needed
+    if (object.getPhysicsType().equals(PhysicsType.PHANTOM)) {
+      return;
+    }
+    
     BodyDef def = new BodyDef();
     def.position.set((float) object.getPos().getX(), (float) object.getPos()
         .getY());
-    def.angle = (float) (object.getRot().getLength() * Math.PI / 180);
+    def.angle = (float) (object.getRotZ() * Math.PI / 180);
     def.userData = object;
 
     Body body = world.createBody(def);
 
     Shape2D shapeType = object.getShape2D();
+    FixtureDef fixture = new FixtureDef();
 
-    if (shapeType != null) {
-      switch (shapeType) {
-      case circle:
-        CircleDef circleShape = new CircleDef();
-        circleShape.isSensor = !(autoCollisionDetection && autoCollisionHandling)
-            || object.getPhysicsType().equals(PhysicsType.IMMATERIAL);
-        circleShape.userData = CollisionObjectType.OBJECT;
-        circleShape.radius = (float) (object.getWidth() / 2);
-        circleShape.restitution = (float) MaterialConstants.restitution(object
-            .getMaterialType());
-        circleShape.friction = (float) MaterialConstants.friction(object
-            .getMaterialType());
+    switch (shapeType) {
 
-        if (object.getPhysicsType().equals(PhysicsType.INFINITE_MASS)) {
-          circleShape.density = 0;
-        } else {
-          circleShape.density = (float) (object.getM() / (Math.PI * Math.pow(
-              object.getWidth() / 2, 2)));
-          if (circleShape.density == 0) {
-            circleShape.density = 1;
-          }
-        }
-
-        body.createShape(circleShape);
-        break;
-
-      case rectangle:
-        PolygonDef rectangleShape = new PolygonDef();
-        rectangleShape.isSensor = !(autoCollisionDetection && autoCollisionHandling)
-            || object.getPhysicsType().equals(PhysicsType.IMMATERIAL);
-        rectangleShape.userData = CollisionObjectType.OBJECT;
-        rectangleShape.setAsBox((float) object.getWidth() / 2,
-            (float) object.getHeight() / 2);
-        rectangleShape.restitution = (float) MaterialConstants
-            .restitution(object.getMaterialType());
-        rectangleShape.friction = (float) MaterialConstants.friction(object
-            .getMaterialType());
-
-        if (object.getPhysicsType().equals(PhysicsType.INFINITE_MASS)) {
-          rectangleShape.density = 0;
-        } else {
-          rectangleShape.density = (float) (object.getM() / (object.getWidth() * object
-              .getHeight()));
-          if (rectangleShape.density == 0) {
-            rectangleShape.density = 1;
-          }
-        }
-
-        body.createShape(rectangleShape);
-        break;
-
-      default:
-        // polygon
-        PolygonDef shape = new PolygonDef();
-        shape.isSensor = !(autoCollisionDetection && autoCollisionHandling)
-            || object.getPhysicsType().equals(PhysicsType.IMMATERIAL);
-        shape.userData = CollisionObjectType.OBJECT;
-
-        List<Double> points = getPointsList(object.getPoints());
-        int max = points.size();
-        double area = 0;
-        for (int i = 0; i < max; i += 2) {
-          shape.addVertex(new Vec2(points.get(i).floatValue(), points
-              .get(i + 1).floatValue()));
-          area += (points.get(i) + points.get((i + 2) % max))
-              * (points.get((i + 3) % max) - points.get(i + 1));
-        }
-
-        shape.restitution = (float) MaterialConstants.restitution(object
-            .getMaterialType());
-        shape.friction = (float) MaterialConstants.friction(object
-            .getMaterialType());
-
-        if (object.getPhysicsType().equals(PhysicsType.INFINITE_MASS)) {
-          shape.density = 0;
-        } else {
-          shape.density = (float) (object.getM() / Math.abs(area / 2));
-          if (shape.density == 0) {
-            shape.density = 1;
-          }
-        }
-
-        body.createShape(shape);
-        break;
-      }
-    } else {
-      // if no shape specified use rectangle
-      PolygonDef rectangleShape = new PolygonDef();
-      rectangleShape.isSensor = !(autoCollisionDetection && autoCollisionHandling)
-          || object.getPhysicsType().equals(PhysicsType.IMMATERIAL);
-      rectangleShape.userData = CollisionObjectType.OBJECT;
+    case rectangle:
+      PolygonShape rectangleShape = new PolygonShape();
       rectangleShape.setAsBox((float) object.getWidth() / 2,
           (float) object.getHeight() / 2);
-      rectangleShape.restitution = (float) MaterialConstants.restitution(object
+
+      fixture.shape = rectangleShape;
+      fixture.userData = CollisionObjectType.OBJECT;
+      fixture.restitution = (float) MaterialConstants.restitution(object
           .getMaterialType());
-      rectangleShape.friction = (float) MaterialConstants.friction(object
+      fixture.friction = (float) MaterialConstants.friction(object
           .getMaterialType());
 
       if (object.getPhysicsType().equals(PhysicsType.INFINITE_MASS)) {
-        rectangleShape.density = 0;
+        body.setType(BodyType.STATIC);
+        fixture.density = 0;
       } else {
-        rectangleShape.density = (float) (object.getM() / (object.getWidth() * object
+        body.setType(BodyType.DYNAMIC);
+        fixture.density = (float) (object.getM() / (object.getWidth() * object
             .getHeight()));
-        if (rectangleShape.density == 0) {
-          rectangleShape.density = 1;
-        }
       }
 
-      body.createShape(rectangleShape);
+      break;
+
+    case polygon:
+      // polygon
+      PolygonShape polygonShape = new PolygonShape();
+      Vec2[] points = pointsStringToList(object.getPoints());
+      polygonShape.set(points, points.length);
+      
+            
+      fixture.shape = polygonShape;
+      fixture.userData = CollisionObjectType.OBJECT;
+
+      fixture.restitution = (float) MaterialConstants.restitution(object
+          .getMaterialType());
+      fixture.friction = (float) MaterialConstants.friction(object
+          .getMaterialType());
+
+      if (object.getPhysicsType().equals(PhysicsType.INFINITE_MASS)) {
+        body.setType(BodyType.STATIC);
+        fixture.density = 0;
+      } else {
+        body.setType(BodyType.DYNAMIC);
+        fixture.density = (float) (object.getM() / getPolygonArea(points));
+      }
+
+      break;
+
+    // default shape is circle
+    default:
+      CircleShape circleShape = new CircleShape();
+      circleShape.m_radius = (float) (object.getWidth() / 2);
+
+      fixture.shape = circleShape;
+      fixture.userData = CollisionObjectType.OBJECT;
+      fixture.restitution = (float) MaterialConstants.restitution(object
+          .getMaterialType());
+      fixture.friction = (float) MaterialConstants.friction(object
+          .getMaterialType());
+
+      if (object.getPhysicsType().equals(PhysicsType.INFINITE_MASS)) {
+        body.setType(BodyType.STATIC);
+        fixture.density = 0;
+      } else {
+        body.setType(BodyType.DYNAMIC);
+        fixture.density = (float) (object.getM() / (Math.PI * Math.pow(
+            object.getWidth() / 2, 2)));
+      }
+
     }
 
+    body.createFixture(fixture);
+
+
     if (autoKinematics) {
-      // Vec2 v = new Vec2((float) (object.getV().getX()), (float)
-      // (object.getV()
-      // .getY()));
-      Vec2 v = new Vec2((float) unitConverter.velocityToUser(object.getV()
-          .getX()) * stepDurationFactor,
-          (float) unitConverter.velocityToUser(object.getV().getY())
-              * stepDurationFactor);
-      body.setLinearVelocity(v);
-      body.setAngularVelocity((float) object.getOmega().getLength());
+      double vx = unitConverter.velocityToUser(object.getV().getX())
+        * timeRatio;
+      double vy = unitConverter.velocityToUser(object.getV().getY())
+        * timeRatio;
+
+      body.setLinearVelocity(new Vec2((float) vx, (float) vy));
+      body.setAngularVelocity((float) (unitConverter
+          .angularVelocityToUser(object.getOmegaZ() * Math.PI / 180) * timeRatio));
     }
 
     // if agent with autoPerception, add another shape for perception
@@ -379,19 +374,53 @@ public class Box2DSimulator extends PhysicsSimulator {
 
         if (autoPerceptionField.getBoolean(object)) {
 
-          CircleDef shape = new CircleDef();
-          shape.userData = CollisionObjectType.PERCEPTION;
-          shape.density = 1;
-          shape.radius = (float) ((PhysicalAgentObject) object)
-              .getPerceptionRadius();
-          shape.isSensor = true;
-          body.createShape(shape);
+          CircleShape shape = new CircleShape();
+          shape.m_radius = (float) ((PhysicalAgentObject) object)
+          .getPerceptionRadius();
+          
+          fixture.shape = shape;
+          fixture.userData = CollisionObjectType.PERCEPTION;
+          fixture.density = 0;
+
+          body.createFixture(fixture);
         }
       } catch (Exception e) {
       }
     }
 
-    body.setMassFromShapes();
+  }
+
+  /**
+   * Converts the list with world points into a list of local points relative to the specified center.
+   * 
+   * @param center
+   * @param points
+   * @return list with local points
+   */
+  private Vec2[] pointsToLocalPoints(Vec2 center, Vec2[] points) {
+    Vec2[] list = new Vec2[points.length];
+    for (int i = 0; i < points.length; i++) {
+      list[i] = new Vec2(points[i].x - center.x, points[i].y - center.y);
+    }
+    
+    return list;
+  }
+
+  /**
+   * Returns the center of a polygon. 
+   * 
+   * @param points
+   * @return the center
+   */
+  private Vec2 getPolygonCenter(Vec2[] points) {
+    float x = 0;
+    float y = 0;
+    for (Vec2 v : points) {
+      x += v.x;
+      y += v.y;
+    }
+    
+    return new Vec2(x / (float) points.length, y / (float) points.length);
   }
 
   /**
@@ -409,6 +438,8 @@ public class Box2DSimulator extends PhysicsSimulator {
           return;
         }
       }
+      
+      body = body.getNext();
     }
   }
 
@@ -425,27 +456,27 @@ public class Box2DSimulator extends PhysicsSimulator {
         // in toroidal space: update position if body is out of bounds
         if (spaceModel.getGeometry().equals(Geometry.Toroidal)) {
           if (body.getPosition().x < 0) {
-            Vec2 position = body.getXForm().position;
+            Vec2 position = body.getTransform().position;
             position.x += spaceModel.getXMax();
-            body.setXForm(position, body.getAngle());
+            body.setTransform(position, body.getAngle());
           }
 
           if (body.getPosition().x >= spaceModel.getXMax()) {
-            Vec2 position = body.getXForm().position;
+            Vec2 position = body.getTransform().position;
             position.x %= spaceModel.getXMax();
-            body.setXForm(position, body.getAngle());
+            body.setTransform(position, body.getAngle());
           }
 
           if (body.getPosition().y < 0) {
-            Vec2 position = body.getXForm().position;
+            Vec2 position = body.getTransform().position;
             position.y += spaceModel.getYMax();
-            body.setXForm(position, body.getAngle());
+            body.setTransform(position, body.getAngle());
           }
 
           if (body.getPosition().y >= spaceModel.getYMax()) {
-            Vec2 position = body.getXForm().position;
+            Vec2 position = body.getTransform().position;
             position.y %= spaceModel.getYMax();
-            body.setXForm(position, body.getAngle());
+            body.setTransform(position, body.getAngle());
           }
         }
 
@@ -453,27 +484,33 @@ public class Box2DSimulator extends PhysicsSimulator {
         Physical object = (Physical) body.getUserData();
 
         // position
-        if (spaceModel.getGeometry().equals(Geometry.Toroidal)) {
-          object.setX(body.getPosition().x % spaceModel.getXMax());
-          object.setY(body.getPosition().y % spaceModel.getYMax());
-        } else {
-          object.setX(body.getPosition().x);
-          object.setY(body.getPosition().y);
+        object.setX(body.getPosition().x);
+        object.setY(body.getPosition().y);
+
+        if (object.getShape2D().equals(Shape2D.polygon)) {
+          Fixture f = body.getFixtureList();
+          while (f != null) {
+            if (f.getShape().m_type.equals(ShapeType.POLYGON)) {
+              PolygonShape shape = (PolygonShape) f.getShape();
+              object.setPoints(pointsListToString(shape.getVertices(), shape.getVertexCount()));
+              break;
+            }
+            
+            f = f.getNext();
+          }
         }
 
         // orientation
         object.setRotZ(body.getAngle() * 180 / Math.PI);
 
         // velocity
-        // object.setVx(body.getLinearVelocity().x);
-        // object.setVy(body.getLinearVelocity().y);
         object.setVx(unitConverter.velocityToMetersPerSeconds(body
-            .getLinearVelocity().x) / stepDurationFactor);
+            .getLinearVelocity().x) / timeRatio);
         object.setVy(unitConverter.velocityToMetersPerSeconds(body
-            .getLinearVelocity().y) / stepDurationFactor);
+            .getLinearVelocity().y) / timeRatio);
 
         object.setOmegaZ(unitConverter.angularVelocityToRadiansPerSeconds(body
-            .getAngularVelocity()) / stepDurationFactor);
+            .getAngularVelocity() * 180 / Math.PI) / timeRatio);
 
         // debug output
         // System.out.print(object.getId() + ") ");
@@ -485,13 +522,13 @@ public class Box2DSimulator extends PhysicsSimulator {
         // System.out.print("Alpha:" + object.getAlpha() + " ");
         // System.out.println();
 
-        // System.out.print(object.getId() + ") ");
-        // System.out.print("x:" + body.getPosition().x + " y:"
-        // + body.getPosition().y + " ");
-        // System.out.print("vx:" + body.getLinearVelocity().x + " vy:"
-        // + body.getLinearVelocity().y + " ");
-        // System.out.print("omega:" + body.getAngularVelocity());
-        // System.out.println();
+//         System.out.print(object.getId() + ") ");
+//         System.out.print("x:" + body.getPosition().x + " y:"
+//         + body.getPosition().y + " ");
+//         System.out.print("vx:" + body.getLinearVelocity().x + " vy:"
+//         + body.getLinearVelocity().y + " ");
+//         System.out.print("omega:" + body.getAngularVelocity());
+//         System.out.println();
       }
 
       body = body.getNext();
@@ -508,28 +545,42 @@ public class Box2DSimulator extends PhysicsSimulator {
       if (body.getUserData() instanceof Physical) {
         Physical object = (Physical) body.getUserData();
 
-        // update object properties
-        body.setXForm(new Vec2((float) object.getX(), (float) object.getY()),
+        // position, orientation
+        body.setTransform(new Vec2((float) object.getX(), (float) object.getY()),
             (float) (object.getRotZ() * Math.PI / 180));
+        
+        // polygon vertices
+        if (object.getShape2D().equals(Shape2D.polygon)) {
+          Vec2[] points = pointsStringToList(object.getPoints());
+          
+          Fixture f = body.getFixtureList();
+          while (f != null) {
+            if (f.getShape().m_type.equals(ShapeType.POLYGON)) {
+              ((PolygonShape)f.getShape()).set(points, points.length);
+              break;
+            }
+            
+            f = f.getNext();
+          }
+        }
 
-        // Vec2 v = new Vec2((float) object.getV().getX(), (float) object.getV()
-        // .getY());
+        // velocity
         double vx = unitConverter.velocityToUser(object.getV().getX())
-            * stepDurationFactor;
+            * timeRatio;
         double vy = unitConverter.velocityToUser(object.getV().getY())
-            * stepDurationFactor;
+            * timeRatio;
 
         body.setLinearVelocity(new Vec2((float) vx, (float) vy));
-        body.setAngularVelocity((float) unitConverter
-            .angularVelocityToUser(object.getOmegaZ()) * stepDurationFactor);
+        body.setAngularVelocity((float) (unitConverter
+            .angularVelocityToUser(object.getOmegaZ() * Math.PI / 180) * timeRatio));
 
         // acceleration
         if (object.getAx() != 0 || object.getAy() != 0) {
           // F = m * a
           double fx = unitConverter.accelerationToUser(object.getAx())
-              * stepDurationFactor * stepDurationFactor * object.getM();
+              * timeRatio * timeRatio * object.getM();
           double fy = unitConverter.accelerationToUser(object.getAy())
-              * stepDurationFactor * stepDurationFactor * object.getM();
+              * timeRatio * timeRatio * object.getM();
           Vec2 force = new Vec2((float) fx, (float) fy);
           body.applyForce(force, body.getWorldCenter());
         }
@@ -537,13 +588,43 @@ public class Box2DSimulator extends PhysicsSimulator {
         if (object.getAlphaZ() != 0) {
           // torque = inertia * alpha
           double alpha = unitConverter.angularAccelerationToUser(object
-              .getAlphaZ()) * stepDurationFactor * stepDurationFactor;
+              .getAlphaZ() * Math.PI / 180) * timeRatio * timeRatio;
           body.applyTorque((float) (body.getInertia() * alpha));
         }
       }
 
       body = body.getNext();
     }
+  }
+  
+  /**
+   * Checks if the perception angle lies inside the agents perception scope.
+   * 
+   * @param agent
+   * @param angle
+   * @return true if angle inside scope, otherwise false
+   */
+  private boolean checkPerceptionAngle(PhysicalAgentObject agent, double angle) {
+    if (agent.getPerceptionAngle() == 360) {
+      return true;
+    }
+    
+    double orientation = agent.getRotZ() * Math.PI / 180;
+    double perceptionDirection = (Math.atan2(agent.getPerceptionDirection().getY(), agent.getPerceptionDirection().getX()) + orientation) % (2 * Math.PI);
+    double pHalfAngle = agent.getPerceptionAngle() * (Math.PI / 180) / 2;
+    double pStart = perceptionDirection - pHalfAngle;
+    double pEnd = (perceptionDirection + pHalfAngle) % (2 * Math.PI);
+    
+    if (pStart < 0) {
+      pStart += 2 * Math.PI;
+    }
+    
+    // special case if perception scope lies around 0
+    if (pStart > pEnd) {
+      return  (pStart <= angle || angle <= pEnd);
+    }
+    
+    return (pStart <= angle && angle <= pEnd);
   }
 
   /**
@@ -552,33 +633,82 @@ public class Box2DSimulator extends PhysicsSimulator {
    */
   private void handleBorderContact() {
     for (Body body : borderReached) {
-      body.setMass(new MassData());
+      body.setLinearVelocity(new Vec2(0, 0));
+      body.setAngularVelocity(0);
+      body.setType(BodyType.STATIC);
+      
+      Physical object = (Physical) body.getUserData();
+      object.setVx(0);
+      object.setVy(0);
+      object.setAx(0);
+      object.setAy(0);
+      object.setOmegaZ(0);
+      object.setAlphaZ(0);
     }
 
     borderReached.clear();
   }
 
   /**
-   * Converts the points attribute string from the Physical interface into a
-   * list of doubles. x- and y-values are saved in alternate order.
+   * Converts the points attribute string from the Physical interface into an
+   * array of Vec2. 
    * 
    * @param points
-   * @return
+   * @return an array with all points as Vec2
    */
-  private List<Double> getPointsList(String points) {
-    List<Double> list = new ArrayList<Double>();
-
-    String[] tmp = points.split("[, ]");
-    for (int i = 0; i < tmp.length; i++) {
-      if (tmp[i].equals("")) {
+  private Vec2[] pointsStringToList(String points) {
+    ArrayList<Vec2> list = new ArrayList<Vec2>();
+    String[] pointsStr = points.split(" ");
+    
+    for (int i = 0; i < pointsStr.length; i++) {
+      if (pointsStr[i].equals("")) {
         continue;
       }
-
-      list.add(Double.valueOf(tmp[i]));
+      
+      String[] tmp = pointsStr[i].split(",");
+      list.add(new Vec2(Float.valueOf(tmp[0]), Float.valueOf(tmp[1])));
     }
 
-    return list;
+    return list.toArray(new Vec2[list.size()]);
   }
+  
+  /**
+   * Converts a Vec2 array into a points string.
+   * 
+   * @param list
+   * @param count number of points
+   * @return the points string
+   */
+  private String pointsListToString(Vec2[] list, int count) {
+    String points = new String();
+    for (int i = 0; i < count; i++) {
+      Vec2 v = list[i];
+      points = points.concat(String.valueOf(v.x) + "," + String.valueOf(v.y));
+      
+      if (i < (count-1)) {
+        points = points.concat(" ");
+      }
+    }
+    
+    return points;
+  }
+  
+  /**
+   * Calculates the area of a polygon. The vertices are specified in the points array.
+   * 
+   * @param points
+   * @return area
+   */
+  private double getPolygonArea(Vec2[] points) {
+    double area = 0;
+    int size = points.length;
+    for (int i = 0; i < points.length; i++) {
+      area += (points[i].x + points[(i+1) % size].x) * (points[(i+1) % size].y - points[i].y);
+    }
+    
+    return Math.abs(area) / 2;
+  }
+ 
 
   /**
    * The collision listener for Box2D. Used to create collision and perception
@@ -593,228 +723,129 @@ public class Box2DSimulator extends PhysicsSimulator {
     }
 
     @Override
-    public void add(ContactPoint arg0) {
-      // System.out.println(stepNumber + ": ADD " +
-      // arg0.shape1.getBody().getUserData() + " " +
-      // arg0.shape2.getBody().getUserData() + " " + arg0.position);
+    public void beginContact(Contact contact) {            
+    }
 
-      // perception
-      if ((arg0.shape1.getUserData().equals(CollisionObjectType.PERCEPTION) && arg0.shape2
-          .getUserData().equals(CollisionObjectType.OBJECT))
-          || (arg0.shape1.getUserData().equals(CollisionObjectType.OBJECT) && arg0.shape2
-              .getUserData().equals(CollisionObjectType.PERCEPTION))) {
+    /**
+     * Creates a perception event.
+     * 
+     * @param perceiver
+     * @param perceived
+     * @param point
+     */
+    private void processPerception(Body perceiver, Body perceived, Vec2 point) {
+      // update agent orientation
+      PhysicalAgentObject agent = (PhysicalAgentObject) perceiver.getUserData();
+      agent.setRotZ(perceiver.getAngle() * 180 / Math.PI);
 
-        Shape perceiverShape, perceivedShape;
-        if (arg0.shape1.getUserData().equals(CollisionObjectType.PERCEPTION)) {
-          perceiverShape = arg0.shape1;
-          perceivedShape = arg0.shape2;
-        } else {
-          perceiverShape = arg0.shape2;
-          perceivedShape = arg0.shape1;
-        }
+      double distance = Math.sqrt(Math.pow((point.x - perceiver.getPosition().x), 2)
+          + Math.pow((point.y - perceiver.getPosition().y), 2));
 
-        PhysicalAgentObject perceiver = (PhysicalAgentObject) perceiverShape
-            .getBody().getUserData();
-        Physical perceived = (Physical) perceivedShape.getBody().getUserData();
-
-        String type = perceived.getClass().getSimpleName();
-
-        // TODO: calculate distance for toroidal space
-        double distance = Math.sqrt(Math.pow((arg0.position.x - perceiverShape
-            .getBody().getPosition().x), 2)
-            + Math.pow((arg0.position.y - perceiverShape.getBody()
-                .getPosition().y), 2));
-
-        // perception angle
-        double orientation = perceiverShape.getBody().getAngle();
-        double angle = Math.atan2(arg0.position.x, arg0.position.y)
-            % (2 * Math.PI);
-        angle = (angle < orientation) ? (2 * Math.PI - (orientation - angle))
-            : angle - orientation;
-
-        PhysicalObjectPerceptionEvent event = new PhysicalObjectPerceptionEvent(
-            stepNumber, perceiver.getId(), type, distance);
-        event.setPerceivedPhysicalObject((Physical) perceivedShape.getBody()
-            .getUserData());
-        event.setPerceptionAngle(angle);
-
-        try {
-          Field idPerceivableField = perceiverShape.getBody().getUserData()
-              .getClass().getDeclaredField("ID_PERCEIVABLE");
-
-          if (idPerceivableField.getBoolean(perceiverShape.getBody()
-              .getUserData())) {
-            event.setPerceivedPhysicalObjectIdRef(perceived.getId());
-          }
-        } catch (Exception e) {
-        }
-
-        events.add(event);
-
-        // System.out.println(stepNumber + ") Perception: " + perceiver + " "
-        // + perceived);
-        // System.out.println("Dist: " + distance + " Angle: " + angle * 180
-        // / Math.PI);
+      double globalAngle = Math.atan2(point.y - perceiver.getPosition().y, point.x - perceiver.getPosition().x);
+      
+      if (globalAngle < 0) {
+        globalAngle += 2 * Math.PI;
+      }
+      
+      if (!checkPerceptionAngle(agent, globalAngle)) {
+        return;
       }
 
+      double orientation = agent.getRotZ() * Math.PI / 180;
+      double perceptionDirection = (Math.atan2(agent.getPerceptionDirection().getY(), agent.getPerceptionDirection().getX()) + orientation) % (2 * Math.PI);
+      double angle = globalAngle - perceptionDirection;
+      
+      if (angle > (agent.getPerceptionAngle() / 2)) {
+        angle -= 2 * Math.PI;
+      }
+      
+      if (angle < -(agent.getPerceptionAngle() / 2)) {
+        angle += 2 * Math.PI;
+      }
+      
+      Perception2D perception = new Perception2D((PhysicalAgentObject) perceiver.getUserData(), (Physical) perceived.getUserData(), spaceModel);
+      perception.setDistance(distance);
+      perception.setAngle(angle);
+      perceptions.add(perception);
+    }
+
+    @Override
+    public void endContact(Contact contact) {
+    }
+
+    @Override
+    public void postSolve(Contact contact, ContactImpulse impulse) {
+    }
+
+    @Override
+    public void preSolve(Contact contact, Manifold manifold) {
+      CollisionObjectType cot1 = (CollisionObjectType) contact.getFixtureA().getUserData();
+      CollisionObjectType cot2 = (CollisionObjectType) contact.getFixtureB().getUserData();
+
+      // filter out collisions between two perception radiuses and between a perception radius and a space borders
+      if ((cot1.equals(CollisionObjectType.PERCEPTION) && cot2.equals(CollisionObjectType.PERCEPTION)) ||
+          (cot1.equals(CollisionObjectType.PERCEPTION) && cot2.equals(CollisionObjectType.BORDER)) ||
+          (cot1.equals(CollisionObjectType.BORDER) && cot2.equals(CollisionObjectType.PERCEPTION))) {
+        contact.setEnabled(false);
+        return;
+      }
+      
       // collision
-      if (autoCollisionDetection
-          && arg0.shape1.getUserData().equals(CollisionObjectType.OBJECT)
-          && arg0.shape2.getUserData().equals(CollisionObjectType.OBJECT)) {
+      if (cot1.equals(CollisionObjectType.OBJECT) && cot2.equals(CollisionObjectType.OBJECT)) {
+        Physical o1 = (Physical) contact.getFixtureA().getBody().getUserData();
+        Physical o2 = (Physical) contact.getFixtureB().getBody().getUserData();
+        
+        // immaterial objects do not collide
+        if (o1.getPhysicsType().equals(PhysicsType.IMMATERIAL) || o2.getPhysicsType().equals(PhysicsType.IMMATERIAL)) {
+          contact.setEnabled(false);
+          return;
+        }
+        
+        // add collision event
+        if (autoCollisionDetection) {
+          CollisionEvent event = new CollisionEvent(stepNumber);
+          event.setPhysicalObject1(o1);
+          event.setPhysicalObject2(o2);
+          
+          collisionEvents.add(event);
+        }
+        
+        // disable if collision handling turned off
+        if (!autoCollisionHandling) {
+          contact.setEnabled(false);
+        }
+      }
+     
+      // perception
+      if (cot1.equals(CollisionObjectType.PERCEPTION) && cot2.equals(CollisionObjectType.OBJECT)) {
+        WorldManifold wm = new WorldManifold();
+        contact.getWorldManifold(wm);
+        processPerception(contact.getFixtureA().getBody(), contact.getFixtureB().getBody(), wm.points[0]);
+        contact.setEnabled(false);
+        return;        
+      }
 
-        CollisionEvent event = new CollisionEvent(stepNumber);
-        event
-            .setPhysicalObject1((Physical) arg0.shape1.getBody().getUserData());
-        event
-            .setPhysicalObject2((Physical) arg0.shape2.getBody().getUserData());
-
-        events.add(event);
+      if (cot1.equals(CollisionObjectType.OBJECT) && cot2.equals(CollisionObjectType.PERCEPTION)) {
+        WorldManifold wm = new WorldManifold();
+        contact.getWorldManifold(wm);
+        processPerception(contact.getFixtureB().getBody(), contact.getFixtureA().getBody(), wm.points[0]);
+        contact.setEnabled(false);
+        return;
       }
 
       // space border reached
-      if ((arg0.shape1.getUserData().equals(CollisionObjectType.BORDER) && arg0.shape2
-          .getUserData().equals(CollisionObjectType.OBJECT))
-          || (arg0.shape1.getUserData().equals(CollisionObjectType.OBJECT) && arg0.shape2
-              .getUserData().equals(CollisionObjectType.BORDER))) {
-
-        if (spaceModel.getGeometry().equals(Geometry.Toroidal)) {
-
-          // // Toroidal: add another shape on the opposite side of the space
-          // Shape objectShape;
-          // Shape borderShape;
-          //
-          // if (arg0.shape1.getUserData().equals(ObjectType.OBJECT)) {
-          // objectShape = arg0.shape1;
-          // borderShape = arg0.shape2;
-          // } else {
-          // objectShape = arg0.shape2;
-          // borderShape = arg0.shape1;
-          // }
-          //
-          // shapesToAdd.add(new Pair<Shape, BorderType>(objectShape,
-          // (BorderType) borderShape.getBody().getUserData()));
-
-        } else {
-          // Euclidean: set v and a to 0
-
-          Body objBody = (arg0.shape1.getUserData()
-              .equals(CollisionObjectType.OBJECT)) ? arg0.shape1.getBody()
-              : arg0.shape2.getBody();
-
-          Physical object = (Physical) objBody.getUserData();
-          objBody.setLinearVelocity(new Vec2(0, 0));
-          objBody.setAngularVelocity(0);
-          borderReached.add(objBody);
-
-          object.setVx(0);
-          object.setVy(0);
-          object.setAx(0);
-          object.setAy(0);
-        }
+      if (cot1.equals(CollisionObjectType.OBJECT) && (cot2.equals(CollisionObjectType.BORDER))) {
+        borderReached.add(contact.getFixtureA().getBody());
+        contact.setEnabled(false);
+        return;
       }
-    }
 
-    @Override
-    public void persist(ContactPoint arg0) {
-      // System.out.println(stepNumber + ": PER "
-      // + arg0.shape1.getBody().getUserData() + " "
-      // + arg0.shape2.getBody().getUserData() + " " + arg0.position);
-
-      // perception
-      if ((arg0.shape1.getUserData().equals(CollisionObjectType.PERCEPTION) && arg0.shape2
-          .getUserData().equals(CollisionObjectType.OBJECT))
-          || (arg0.shape1.getUserData().equals(CollisionObjectType.OBJECT) && arg0.shape2
-              .getUserData().equals(CollisionObjectType.PERCEPTION))) {
-
-        Shape perceiverShape, perceivedShape;
-        if (arg0.shape1.getUserData().equals(CollisionObjectType.PERCEPTION)) {
-          perceiverShape = arg0.shape1;
-          perceivedShape = arg0.shape2;
-        } else {
-          perceiverShape = arg0.shape2;
-          perceivedShape = arg0.shape1;
-        }
-
-        PhysicalAgentObject perceiver = (PhysicalAgentObject) perceiverShape
-            .getBody().getUserData();
-        Physical perceived = (Physical) perceivedShape.getBody().getUserData();
-
-        String type = perceived.getClass().getSimpleName();
-
-        // TODO: calculate distance for toroidal space
-        double distance = Math.sqrt(Math.pow((arg0.position.x - perceiverShape
-            .getBody().getPosition().x), 2)
-            + Math.pow((arg0.position.y - perceiverShape.getBody()
-                .getPosition().y), 2));
-
-        // perception angle
-        double orientation = perceiverShape.getBody().getAngle();
-        double angle = Math.atan2(arg0.position.x, arg0.position.y)
-            % (2 * Math.PI);
-        angle = (angle < orientation) ? (2 * Math.PI - (orientation - angle))
-            : angle - orientation;
-
-        PhysicalObjectPerceptionEvent event = new PhysicalObjectPerceptionEvent(
-            stepNumber, perceiver.getId(), type, distance);
-        event.setPerceivedPhysicalObject((Physical) perceivedShape.getBody()
-            .getUserData());
-        event.setPerceptionAngle(angle);
-
-        try {
-          Field idPerceivableField = perceiverShape.getBody().getUserData()
-              .getClass().getDeclaredField("ID_PERCEIVABLE");
-
-          if (idPerceivableField.getBoolean(perceiverShape.getBody()
-              .getUserData())) {
-            event.setPerceivedPhysicalObjectIdRef(perceived.getId());
-          }
-        } catch (Exception e) {
-        }
-
-        events.add(event);
-
-        // System.out.println(stepNumber + ") Perception: " + perceiver + " "
-        // + perceived);
-        // System.out.println("Dist: " + distance + " Angle: " + angle * 180
-        // / Math.PI);
+      if (cot1.equals(CollisionObjectType.BORDER) && cot2.equals(CollisionObjectType.OBJECT)) {
+        borderReached.add(contact.getFixtureB().getBody());
+        contact.setEnabled(false);
+        return;
       }
-    }
-
-    @Override
-    public void remove(ContactPoint arg0) {
-      // System.out.println(stepNumber + ": REM "
-      // + arg0.shape1.getBody().getUserData() + " "
-      // + arg0.shape2.getBody().getUserData() + " " + arg0.position);
-
-      // if (spaceModel.getGeometry().equals(Geometry.Toroidal)) {
-      // // Toroidal: remove all shapes from the body that are not inside the
-      // // space borders
-      //
-      // if ((arg0.shape1.getUserData().equals(ObjectType.BORDER) && arg0.shape2
-      // .getUserData().equals(ObjectType.OBJECT))
-      // || (arg0.shape1.getUserData().equals(ObjectType.OBJECT) && arg0.shape2
-      // .getUserData().equals(ObjectType.BORDER))) {
-      //
-      // Shape objectShape;
-      // Shape borderShape;
-      //
-      // if (arg0.shape1.getUserData().equals(ObjectType.OBJECT)) {
-      // objectShape = arg0.shape1;
-      // borderShape = arg0.shape2;
-      // } else {
-      // objectShape = arg0.shape2;
-      // borderShape = arg0.shape1;
-      // }
-      //
-      // shapesToRemove.add(new Pair<Shape, BorderType>(objectShape,
-      // (BorderType) borderShape.getBody().getUserData()));
-      // }
-      // }
-
-    }
-
-    @Override
-    public void result(ContactResult arg0) {
+      
     }
 
   }

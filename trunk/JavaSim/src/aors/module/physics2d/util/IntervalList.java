@@ -15,162 +15,20 @@ import aors.GeneralSpaceModel;
 import aors.GeneralSpaceModel.Geometry;
 import aors.model.envsim.Physical;
 import aors.model.envsim.PhysicalAgentObject;
-import aors.space.Space;
+import aors.module.physics2d.util.IntervalBound.BoundType;
+
 
 /**
- * A list of interval endpoints used for 1D collision detection. An interval
- * represents the space a physical object covers. The beginning and the end of
+ * A list of interval bounds used for 1D collision detection. An interval
+ * represents the space a physical object covers. The start and end point of
  * each interval are kept in the list.
  * 
  * @author Holger Wuerke
- * @since 17.12.2009
  * 
  */
 public class IntervalList {
 
-  /**
-   * An IntervalEndpoint represents a point that is either the start or the end
-   * of an interval.
-   * 
-   * @author Holger Wuerke
-   * @since 17.12.2009
-   * 
-   */
-  private class IntervalEndpoint implements Comparable<IntervalEndpoint> {
-
-    /**
-     * Defines if it is the start or end point of the interval.
-     */
-    private EndpointType type;
-
-    /**
-     * The point coordinate.
-     */
-    private Double point;
-
-    /**
-     * The object which belongs to the point (null if collisionObjectType is
-     * BORDER).
-     */
-    private Physical object;
-
-    /**
-     * The type of the collision object.
-     */
-    private CollisionObjectType collisionObjectType;
-
-    /**
-     * The corresponding endpoint (for a start point -> the corresponding end
-     * point and vice versa).
-     */
-    private IntervalEndpoint other;
-
-    /**
-     * @return the type
-     */
-    public EndpointType getType() {
-      return type;
-    }
-
-    /**
-     * @param type
-     *          the type to set
-     */
-    public void setType(EndpointType type) {
-      this.type = type;
-    }
-
-    /**
-     * @return the point
-     */
-    public double getPoint() {
-      return point;
-    }
-
-    /**
-     * @param point
-     *          the point to set
-     */
-    public void setPoint(double point) {
-      this.point = point;
-    }
-
-    /**
-     * @param object
-     *          the object to set
-     */
-    public void setObject(Physical object) {
-      this.object = object;
-    }
-
-    /**
-     * @return the object
-     */
-    public Physical getObject() {
-      return object;
-    }
-
-    /**
-     * @param collisionObjectType
-     *          the collisionObjectType to set
-     */
-    public void setCollisionObjectType(CollisionObjectType collisionObjectType) {
-      this.collisionObjectType = collisionObjectType;
-    }
-
-    /**
-     * @return the collisionObjectType
-     */
-    public CollisionObjectType getCollisionObjectType() {
-      return collisionObjectType;
-    }
-
-    /**
-     * @param other
-     *          the other to set
-     */
-    public void setOther(IntervalEndpoint other) {
-      this.other = other;
-    }
-
-    /**
-     * @return the other
-     */
-    public IntervalEndpoint getOther() {
-      return other;
-    }
-
-    @Override
-    public int compareTo(IntervalEndpoint ie) {
-      return point.compareTo(ie.getPoint());
-    }
-
-    @Override
-    public String toString() {
-      String str = (type.equals(EndpointType.START)) ? "S: " + point : "E: "
-          + point;
-
-      if (collisionObjectType.equals(CollisionObjectType.BORDER)) {
-        str += "B";
-      }
-
-      if (collisionObjectType.equals(CollisionObjectType.PERCEPTION)) {
-        str += "P";
-      }
-
-      return str;
-    }
-  }
-
-  private enum EndpointType {
-    START, END
-  };
-
-  public enum Axis {
-    X, Y, Z
-  }
-
-  private List<IntervalEndpoint> list = new ArrayList<IntervalEndpoint>();
+  private List<IntervalBound> list = new ArrayList<IntervalBound>();
 
   private GeneralSpaceModel spaceModel;
 
@@ -191,14 +49,14 @@ public class IntervalList {
 
     // add borders for euclidean space
     if (spaceModel.getGeometry().equals(Geometry.Euclidean)) {
-      IntervalEndpoint startpoint = new IntervalEndpoint();
-      startpoint.setType(EndpointType.START);
+      IntervalBound startpoint = new IntervalBound();
+      startpoint.setType(BoundType.START);
       startpoint.setPoint(-1);
       startpoint.setObject(null);
       startpoint.setCollisionObjectType(CollisionObjectType.BORDER);
 
-      IntervalEndpoint endpoint = new IntervalEndpoint();
-      endpoint.setType(EndpointType.END);
+      IntervalBound endpoint = new IntervalBound();
+      endpoint.setType(BoundType.END);
       endpoint.setPoint(0);
       endpoint.setObject(null);
       endpoint.setCollisionObjectType(CollisionObjectType.BORDER);
@@ -209,14 +67,14 @@ public class IntervalList {
       list.add(startpoint);
       list.add(endpoint);
 
-      startpoint = new IntervalEndpoint();
-      startpoint.setType(EndpointType.START);
+      startpoint = new IntervalBound();
+      startpoint.setType(BoundType.START);
       startpoint.setPoint(spaceModel.getXMax());
       startpoint.setObject(null);
       startpoint.setCollisionObjectType(CollisionObjectType.BORDER);
 
-      endpoint = new IntervalEndpoint();
-      endpoint.setType(EndpointType.END);
+      endpoint = new IntervalBound();
+      endpoint.setType(BoundType.END);
       endpoint.setPoint(spaceModel.getXMax() + 1);
       endpoint.setObject(null);
       endpoint.setCollisionObjectType(CollisionObjectType.BORDER);
@@ -247,17 +105,17 @@ public class IntervalList {
    *          saved
    */
   public void detectCollisions(List<Collision1D> collisionList,
-      Set<Perception> perceptions, Set<Physical> borderReached) {
+      Set<Perception1D> perceptions, Set<Physical> borderReached) {
     // If a start point is found, save it in the activeList. Every other object
     // belonging to a point on the activeList is colliding with the object
     // belonging to the start point. If an end point is found, the corresponding
     // object is removed from the activeList.
 
-    List<IntervalEndpoint> activeList = new ArrayList<IntervalEndpoint>();
+    List<IntervalBound> activeList = new ArrayList<IntervalBound>();
 
-    for (IntervalEndpoint ie : list) {
-      if (ie.getType().equals(EndpointType.START)) {
-        for (IntervalEndpoint activeIE : activeList) {
+    for (IntervalBound ie : list) {
+      if (ie.getType().equals(BoundType.START)) {
+        for (IntervalBound activeIE : activeList) {
           // filter out collisions between:
           // - an object and its own perception radius
           // - two perception radiuses
@@ -284,7 +142,7 @@ public class IntervalList {
           // perception
           if (activeIE.getCollisionObjectType().equals(
               CollisionObjectType.PERCEPTION)) {
-            Perception perception = new Perception(
+            Perception1D perception = new Perception1D(
                 (PhysicalAgentObject) activeIE.getObject(), ie.getObject(),
                 spaceModel);
             perceptions.add(perception);
@@ -293,7 +151,7 @@ public class IntervalList {
 
           if (ie.getCollisionObjectType()
               .equals(CollisionObjectType.PERCEPTION)) {
-            Perception perception = new Perception((PhysicalAgentObject) ie
+            Perception1D perception = new Perception1D((PhysicalAgentObject) ie
                 .getObject(), activeIE.getObject(), spaceModel);
             perceptions.add(perception);
             continue;
@@ -343,12 +201,12 @@ public class IntervalList {
     // an end point is found, the point is saved in the oldList and removed from
     // both lists once a start point with a different value is found.
 
-    List<IntervalEndpoint> activeList = new ArrayList<IntervalEndpoint>();
-    List<IntervalEndpoint> oldList = new ArrayList<IntervalEndpoint>();
+    List<IntervalBound> activeList = new ArrayList<IntervalBound>();
+    List<IntervalBound> oldList = new ArrayList<IntervalBound>();
 
     Double old = null; // value of points in old list
 
-    for (IntervalEndpoint ie : list) {
+    for (IntervalBound ie : list) {
       // if the points coordinates differ from the ones in the oldList,
       // remove all objects in the oldList from the activeList
       if (old != null && old != ie.getPoint()) {
@@ -357,9 +215,9 @@ public class IntervalList {
         old = null;
       }
 
-      if (ie.getType().equals(EndpointType.START)) {
+      if (ie.getType().equals(BoundType.START)) {
 
-        for (IntervalEndpoint activeIE : activeList) {
+        for (IntervalBound activeIE : activeList) {
           // leave out collisions between:
           // - two perception radiuses
           // - an object and its own perception radius
@@ -374,7 +232,7 @@ public class IntervalList {
           // perception
           if (activeIE.getCollisionObjectType().equals(
               CollisionObjectType.PERCEPTION)) {
-            Perception perception = new Perception(
+            Perception perception = new Perception1D(
                 (PhysicalAgentObject) activeIE.getObject(), ie.getObject(),
                 spaceModel);
             perceptionList.add(perception);
@@ -383,7 +241,7 @@ public class IntervalList {
 
           if (ie.getCollisionObjectType()
               .equals(CollisionObjectType.PERCEPTION)) {
-            Perception perception = new Perception((PhysicalAgentObject) ie
+            Perception perception = new Perception1D((PhysicalAgentObject) ie
                 .getObject(), activeIE.getObject(), spaceModel);
             perceptionList.add(perception);
             continue;
@@ -416,7 +274,7 @@ public class IntervalList {
       return;
     }
 
-    List<IntervalEndpoint> newList = new ArrayList<IntervalEndpoint>();
+    List<IntervalBound> newList = new ArrayList<IntervalBound>();
 
     newList.add(list.get(0));
     double highest = list.get(0).getPoint();
@@ -481,14 +339,14 @@ public class IntervalList {
       }
     }
 
-    IntervalEndpoint startpoint = new IntervalEndpoint();
-    startpoint.setType(EndpointType.START);
+    IntervalBound startpoint = new IntervalBound();
+    startpoint.setType(BoundType.START);
     startpoint.setPoint(start);
     startpoint.setObject(object);
     startpoint.setCollisionObjectType(CollisionObjectType.OBJECT);
 
-    IntervalEndpoint endpoint = new IntervalEndpoint();
-    endpoint.setType(EndpointType.END);
+    IntervalBound endpoint = new IntervalBound();
+    endpoint.setType(BoundType.END);
     endpoint.setPoint(end);
     endpoint.setObject(object);
     endpoint.setCollisionObjectType(CollisionObjectType.OBJECT);
@@ -531,14 +389,14 @@ public class IntervalList {
             }
           }
 
-          startpoint = new IntervalEndpoint();
-          startpoint.setType(EndpointType.START);
+          startpoint = new IntervalBound();
+          startpoint.setType(BoundType.START);
           startpoint.setPoint(start);
           startpoint.setObject(object);
           startpoint.setCollisionObjectType(CollisionObjectType.PERCEPTION);
 
-          endpoint = new IntervalEndpoint();
-          endpoint.setType(EndpointType.END);
+          endpoint = new IntervalBound();
+          endpoint.setType(BoundType.END);
           endpoint.setPoint(end);
           endpoint.setObject(object);
           endpoint.setCollisionObjectType(CollisionObjectType.PERCEPTION);
@@ -561,8 +419,8 @@ public class IntervalList {
    * @param object
    */
   public void remove(Physical object) {
-    for (Iterator<IntervalEndpoint> it = list.iterator(); it.hasNext();) {
-      IntervalEndpoint ie = it.next();
+    for (Iterator<IntervalBound> it = list.iterator(); it.hasNext();) {
+      IntervalBound ie = it.next();
       if (ie.getObject().equals(object)) {
         it.remove();
       }
@@ -575,7 +433,7 @@ public class IntervalList {
    * @param newPositions
    */
   public void update(Map<Physical, Double> newPositions) {
-    for (IntervalEndpoint ie : list) {
+    for (IntervalBound ie : list) {
       Physical object = ie.getObject();
 
       if (object == null) {
@@ -584,7 +442,7 @@ public class IntervalList {
 
       double width = object.getWidth();
 
-      if (ie.getType().equals(EndpointType.START)) {
+      if (ie.getType().equals(BoundType.START)) {
         // start point
         double start = (ie.getCollisionObjectType()
             .equals(CollisionObjectType.PERCEPTION)) ? newPositions.get(object)

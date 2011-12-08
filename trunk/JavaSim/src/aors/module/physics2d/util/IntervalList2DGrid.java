@@ -14,159 +14,21 @@ import aors.GeneralSpaceModel;
 import aors.GeneralSpaceModel.Geometry;
 import aors.model.envsim.Physical;
 import aors.model.envsim.PhysicalAgentObject;
+import aors.module.physics2d.util.IntervalBound.BoundType;
 import aors.space.Space;
 
 /**
  * An IntervalList used for 2D collision detection.
  * 
  * @author Holger Wuerke
- * @since 07.03.2010
  */
 public class IntervalList2DGrid {
 
-  /**
-   * An IntervalEndpoint represents a point that is either the start or the end
-   * of an interval.
-   * 
-   * @author Holger Wuerke
-   * @since 17.12.2009
-   * 
-   */
-  private class IntervalEndpoint implements Comparable<IntervalEndpoint> {
-
-    /**
-     * Defines if it is the start or end point of the interval.
-     */
-    private EndpointType type;
-
-    /**
-     * The point coordinate.
-     */
-    private Double point;
-
-    /**
-     * The object which belongs to the point (null if collisionObjectType is
-     * BORDER).
-     */
-    private Physical object;
-
-    /**
-     * The type of the collision object.
-     */
-    private CollisionObjectType collisionObjectType;
-
-    /**
-     * The corresponding endpoint (for a start point -> the corresponding end
-     * point and vice versa).
-     */
-    private IntervalEndpoint other;
-
-    /**
-     * @return the type
-     */
-    public EndpointType getType() {
-      return type;
-    }
-
-    /**
-     * @param type
-     *          the type to set
-     */
-    public void setType(EndpointType type) {
-      this.type = type;
-    }
-
-    /**
-     * @return the point
-     */
-    public double getPoint() {
-      return point;
-    }
-
-    /**
-     * @param point
-     *          the point to set
-     */
-    public void setPoint(double point) {
-      this.point = point;
-    }
-
-    /**
-     * @param object
-     *          the object to set
-     */
-    public void setObject(Physical object) {
-      this.object = object;
-    }
-
-    /**
-     * @return the object
-     */
-    public Physical getObject() {
-      return object;
-    }
-
-    /**
-     * @param collisionObjectType
-     *          the collisionObjectType to set
-     */
-    public void setCollisionObjectType(CollisionObjectType collisionObjectType) {
-      this.collisionObjectType = collisionObjectType;
-    }
-
-    /**
-     * @return the collisionObjectType
-     */
-    public CollisionObjectType getCollisionObjectType() {
-      return collisionObjectType;
-    }
-
-    /**
-     * @param other
-     *          the other to set
-     */
-    public void setOther(IntervalEndpoint other) {
-      this.other = other;
-    }
-
-    /**
-     * @return the other
-     */
-    public IntervalEndpoint getOther() {
-      return other;
-    }
-
-    @Override
-    public int compareTo(IntervalEndpoint ie) {
-      return point.compareTo(ie.getPoint());
-    }
-
-    @Override
-    public String toString() {
-      String str = (type.equals(EndpointType.START)) ? "S: " + point : "E: "
-          + point;
-
-      if (collisionObjectType.equals(CollisionObjectType.BORDER)) {
-        str += "B";
-      }
-
-      if (collisionObjectType.equals(CollisionObjectType.PERCEPTION)) {
-        str += "P";
-      }
-
-      return str;
-    }
-  }
-
-  private enum EndpointType {
-    START, END
-  };
-
   GeneralSpaceModel spaceModel;
 
-  private List<IntervalEndpoint> xList = new ArrayList<IntervalEndpoint>();
+  private List<IntervalBound> xList = new ArrayList<IntervalBound>();
 
-  private List<IntervalEndpoint> yList = new ArrayList<IntervalEndpoint>();
+  private List<IntervalBound> yList = new ArrayList<IntervalBound>();
 
   /**
    * Creates a new IntervalList for 2D grid space.
@@ -200,14 +62,14 @@ public class IntervalList2DGrid {
     double xMax = spaceModel.getXMax();
     double yMax = spaceModel.getYMax();
 
-    IntervalEndpoint startpoint = new IntervalEndpoint();
-    startpoint.setType(EndpointType.START);
+    IntervalBound startpoint = new IntervalBound();
+    startpoint.setType(BoundType.START);
     startpoint.setPoint(x);
     startpoint.setObject(object);
     startpoint.setCollisionObjectType(CollisionObjectType.OBJECT);
 
-    IntervalEndpoint endpoint = new IntervalEndpoint();
-    endpoint.setType(EndpointType.END);
+    IntervalBound endpoint = new IntervalBound();
+    endpoint.setType(BoundType.END);
     endpoint.setPoint(x);
     endpoint.setObject(object);
     endpoint.setCollisionObjectType(CollisionObjectType.OBJECT);
@@ -218,14 +80,14 @@ public class IntervalList2DGrid {
     xList.add(startpoint);
     xList.add(endpoint);
 
-    startpoint = new IntervalEndpoint();
-    startpoint.setType(EndpointType.START);
+    startpoint = new IntervalBound();
+    startpoint.setType(BoundType.START);
     startpoint.setPoint(y);
     startpoint.setObject(object);
     startpoint.setCollisionObjectType(CollisionObjectType.OBJECT);
 
-    endpoint = new IntervalEndpoint();
-    endpoint.setType(EndpointType.END);
+    endpoint = new IntervalBound();
+    endpoint.setType(BoundType.END);
     endpoint.setPoint(y);
     endpoint.setObject(object);
     endpoint.setCollisionObjectType(CollisionObjectType.OBJECT);
@@ -286,14 +148,14 @@ public class IntervalList2DGrid {
             }
           }
 
-          startpoint = new IntervalEndpoint();
-          startpoint.setType(EndpointType.START);
+          startpoint = new IntervalBound();
+          startpoint.setType(BoundType.START);
           startpoint.setPoint(xStart);
           startpoint.setObject(object);
           startpoint.setCollisionObjectType(CollisionObjectType.PERCEPTION);
 
-          endpoint = new IntervalEndpoint();
-          endpoint.setType(EndpointType.END);
+          endpoint = new IntervalBound();
+          endpoint.setType(BoundType.END);
           endpoint.setPoint(xEnd);
           endpoint.setObject(object);
           endpoint.setCollisionObjectType(CollisionObjectType.PERCEPTION);
@@ -304,14 +166,14 @@ public class IntervalList2DGrid {
           xList.add(startpoint);
           xList.add(endpoint);
 
-          startpoint = new IntervalEndpoint();
-          startpoint.setType(EndpointType.START);
+          startpoint = new IntervalBound();
+          startpoint.setType(BoundType.START);
           startpoint.setPoint(yStart);
           startpoint.setObject(object);
           startpoint.setCollisionObjectType(CollisionObjectType.PERCEPTION);
 
-          endpoint = new IntervalEndpoint();
-          endpoint.setType(EndpointType.END);
+          endpoint = new IntervalBound();
+          endpoint.setType(BoundType.END);
           endpoint.setPoint(yEnd);
           endpoint.setObject(object);
           endpoint.setCollisionObjectType(CollisionObjectType.PERCEPTION);
@@ -334,7 +196,7 @@ public class IntervalList2DGrid {
    */
   public void update() {
     // x-list
-    for (IntervalEndpoint ie : xList) {
+    for (IntervalBound ie : xList) {
       Physical object = ie.getObject();
 
       if (object == null) {
@@ -344,7 +206,7 @@ public class IntervalList2DGrid {
       double point = object.getX();
       double max = spaceModel.getXMax();
 
-      if (ie.getType().equals(EndpointType.START)) {
+      if (ie.getType().equals(BoundType.START)) {
         // start point
 
         if (ie.getCollisionObjectType().equals(CollisionObjectType.PERCEPTION)) {
@@ -385,7 +247,7 @@ public class IntervalList2DGrid {
     }
 
     // y-list
-    for (IntervalEndpoint ie : yList) {
+    for (IntervalBound ie : yList) {
       Physical object = ie.getObject();
 
       if (object == null) {
@@ -395,7 +257,7 @@ public class IntervalList2DGrid {
       double point = object.getY();
       double max = spaceModel.getYMax();
 
-      if (ie.getType().equals(EndpointType.START)) {
+      if (ie.getType().equals(BoundType.START)) {
         // start point
 
         if (ie.getCollisionObjectType().equals(CollisionObjectType.PERCEPTION)) {
@@ -450,7 +312,7 @@ public class IntervalList2DGrid {
 
     if (xList.size() > 2) {
 
-      List<IntervalEndpoint> newList = new ArrayList<IntervalEndpoint>();
+      List<IntervalBound> newList = new ArrayList<IntervalBound>();
 
       newList.add(xList.get(0));
       double highest = xList.get(0).getPoint();
@@ -488,7 +350,7 @@ public class IntervalList2DGrid {
 
     if (yList.size() > 2) {
 
-      List<IntervalEndpoint> newList = new ArrayList<IntervalEndpoint>();
+      List<IntervalBound> newList = new ArrayList<IntervalBound>();
 
       newList.add(yList.get(0));
       double highest = yList.get(0).getPoint();
@@ -531,15 +393,15 @@ public class IntervalList2DGrid {
    * @param object
    */
   public void remove(Physical object) {
-    for (Iterator<IntervalEndpoint> it = xList.iterator(); it.hasNext();) {
-      IntervalEndpoint ie = it.next();
+    for (Iterator<IntervalBound> it = xList.iterator(); it.hasNext();) {
+      IntervalBound ie = it.next();
       if (ie.getObject().equals(object)) {
         it.remove();
       }
     }
 
-    for (Iterator<IntervalEndpoint> it = yList.iterator(); it.hasNext();) {
-      IntervalEndpoint ie = it.next();
+    for (Iterator<IntervalBound> it = yList.iterator(); it.hasNext();) {
+      IntervalBound ie = it.next();
       if (ie.getObject().equals(object)) {
         it.remove();
       }
@@ -553,9 +415,9 @@ public class IntervalList2DGrid {
    * @param perceptionList
    *          - list where all detected perceptions are saved
    */
-  public void detectPerceptions(List<Perception> perceptionList) {
+  public void detectPerceptions(List<Perception2DGrid> perceptionList) {
     // start with x-list
-    HashMap<Perception, Integer> xPerceptions = new HashMap<Perception, Integer>();
+    HashMap<Perception2DGrid, Integer> xPerceptions = new HashMap<Perception2DGrid, Integer>();
     
     // If a start point is found, save the corresponding object together with
     // the perception flag in the activeList. Every other object on the
@@ -563,12 +425,12 @@ public class IntervalList2DGrid {
     // an end point is found, the point is saved in the oldList and removed from
     // both lists once a start point with a different value is found.
 
-    List<IntervalEndpoint> activeList = new ArrayList<IntervalEndpoint>();
-    List<IntervalEndpoint> oldList = new ArrayList<IntervalEndpoint>();
+    List<IntervalBound> activeList = new ArrayList<IntervalBound>();
+    List<IntervalBound> oldList = new ArrayList<IntervalBound>();
 
     Double old = null; // value of points in old list
 
-    for (IntervalEndpoint ie : xList) {
+    for (IntervalBound ie : xList) {
       // if the points coordinates differ from the ones in the oldList,
       // remove all objects in the oldList from the activeList
       if (old != null && old != ie.getPoint()) {
@@ -577,9 +439,9 @@ public class IntervalList2DGrid {
         old = null;
       }
 
-      if (ie.getType().equals(EndpointType.START)) {
+      if (ie.getType().equals(BoundType.START)) {
 
-        for (IntervalEndpoint activeIE : activeList) {
+        for (IntervalBound activeIE : activeList) {
           // leave out collisions between:
           // - two objects (no collision detection)
           // - two perception radiuses
@@ -593,7 +455,7 @@ public class IntervalList2DGrid {
           // perception
           if (activeIE.getCollisionObjectType().equals(
               CollisionObjectType.PERCEPTION)) {
-            Perception perception = new Perception(
+            Perception2DGrid perception = new Perception2DGrid(
                 (PhysicalAgentObject) activeIE.getObject(), ie.getObject(),
                 spaceModel);
             xPerceptions.put(perception, 1);
@@ -602,7 +464,7 @@ public class IntervalList2DGrid {
 
           if (ie.getCollisionObjectType()
               .equals(CollisionObjectType.PERCEPTION)) {
-            Perception perception = new Perception((PhysicalAgentObject) ie
+            Perception2DGrid perception = new Perception2DGrid((PhysicalAgentObject) ie
                 .getObject(), activeIE.getObject(), spaceModel);
             xPerceptions.put(perception, 1);
             continue;
@@ -623,12 +485,12 @@ public class IntervalList2DGrid {
     // an end point is found, the point is saved in the oldList and removed from
     // both lists once a start point with a different value is found.
 
-    activeList = new ArrayList<IntervalEndpoint>();
-    oldList = new ArrayList<IntervalEndpoint>();
+    activeList = new ArrayList<IntervalBound>();
+    oldList = new ArrayList<IntervalBound>();
 
     old = null; // value of points in old list
 
-    for (IntervalEndpoint ie : yList) {
+    for (IntervalBound ie : yList) {
       // if the points coordinates differ from the ones in the oldList,
       // remove all objects in the oldList from the activeList
       if (old != null && old != ie.getPoint()) {
@@ -637,9 +499,9 @@ public class IntervalList2DGrid {
         old = null;
       }
 
-      if (ie.getType().equals(EndpointType.START)) {
+      if (ie.getType().equals(BoundType.START)) {
 
-        for (IntervalEndpoint activeIE : activeList) {
+        for (IntervalBound activeIE : activeList) {
           // leave out collisions between:
           // - two objects (no collision detection)
           // - two perception radiuses
@@ -653,7 +515,7 @@ public class IntervalList2DGrid {
           // perception
           if (activeIE.getCollisionObjectType().equals(
               CollisionObjectType.PERCEPTION)) {
-            Perception perception = new Perception(
+            Perception2DGrid perception = new Perception2DGrid(
                 (PhysicalAgentObject) activeIE.getObject(), ie.getObject(),
                 spaceModel);
 
@@ -666,7 +528,7 @@ public class IntervalList2DGrid {
 
           if (ie.getCollisionObjectType()
               .equals(CollisionObjectType.PERCEPTION)) {
-            Perception perception = new Perception((PhysicalAgentObject) ie
+            Perception2DGrid perception = new Perception2DGrid((PhysicalAgentObject) ie
                 .getObject(), activeIE.getObject(), spaceModel);
 
             if (xPerceptions.containsKey(perception)) {
