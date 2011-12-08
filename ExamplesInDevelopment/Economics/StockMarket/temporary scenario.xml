@@ -2,6 +2,7 @@
 
 <SimulationScenario xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
  xsi:schemaLocation="http://aor-simulation.org ../../../AORSL/AORSL_0-9.xsd"
+ xmlns:dc="http://purl.org/dc/elements/1.1/"
  xmlns="http://aor-simulation.org"
  xmlns:aors="http://aor-simulation.org"
  version="0.9"
@@ -10,7 +11,7 @@
  <SimulationParameters simulationSteps="476" stepDuration="1" stepTimeDelay="0" timeUnit="h" />
     <SimulationModel modelName="StockMarket" modelTitle="StockMarketGame">
         <Statistics>
-            <Variable name="priceOpelShare" dataType="Float">
+            <Variable name="priceOpel" dataType="Float">
                 <Source>
                     <ObjectProperty property="lastOpelPrice" objectType="Market"/>
                 </Source>
@@ -30,12 +31,74 @@
         <EntityTypes>
             <MessageType name="StartOfDay_Announcement">
                 <documentation>
-                    
+                    <description>A message to the market to announce the price of the last day</description>                  
+                </documentation>
+                <Attribute type="Float" name="price"/>
+            </MessageType>
+            
+            <MessageType name="ClearMarket">
+                <documentation>
+                   <description>A message which ends the trading day</description>
                 </documentation>
             </MessageType>
+            
+           <MessageType name="TraderOffer">
+               <documentation>
+                   <description>An offer to the market</description>
+               </documentation>
+               <ComplexDataProperty name="offer" type="TradeOffer" />
+           </MessageType> 
+            
+           <MessageType name="MatchingOffer">
+               <documentation>
+                   <description>A successful trade</description>
+               </documentation>               
+               <ComplexDataProperty name="offer" type="TradeOfer" />
+           </MessageType>
+           
+           <ExogenousEventType name="StartOfDay" periodicity="24">
+               <documentation>
+                   <description>Starts a new day. The price of the lasd day is announced to all Agents</description>
+               </documentation>
+           </ExogenousEventType>
+           
+           <ExogenousEventType name="StartToTrade">
+               <documentation>
+                   <description>The agents start with their trade</description>
+               </documentation>
+           </ExogenousEventType> 
+            
+           <ExogenousEventType name="CloseMarket">
+               <documentation>
+                   <description>End of the day, which tells the market to ends the trading day and calculate a new market price</description>
+               </documentation>
+           </ExogenousEventType>
+           
+           <AgentType name="Trader">
+               <documentation>
+                   <description>Makes offers to sell or to buy</description>
+               </documentation>
+               
+               <ComplexDataProperty name="shares" type="aors.util.economics.Quantity" upperMultiplicity="unbounded" />
+               <ComplexDataProperty name="OpelSellList" type="TradeOffer" upperMultiplicity="unbounded" />
+               <ComplexDataProperty name="OpelBuyList" type="TradeOffer" upperMultiplicity="unbounded" />
+               
+               <Attribute type="Float" name="OpelShareInventory"/>
+               <Attribute type="Float" name="lastOpelPrice"/>
+               
+               <Attribute type="Float" name="traderWealth"/>
+           </AgentType>
+           
+           <AgentType name="Market">
+               
+           </AgentType>
         </EntityTypes>
     </SimulationModel>
     <InitialState>
         
     </InitialState>
+    
+    <UserInterface supportedLanguages="en">
+        
+    </UserInterface>
 </SimulationScenario>
