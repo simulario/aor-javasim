@@ -8,7 +8,6 @@ package aors.module.physics2d.util;
  * radius, space border).
  * 
  * @author Holger Wuerke
- * @since 03.03.2010
  * 
  */
 public enum CollisionObjectType {

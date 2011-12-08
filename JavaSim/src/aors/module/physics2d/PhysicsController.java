@@ -33,10 +33,10 @@ import aors.util.jar.JarUtil;
 
 /**
  * The PhysicsController creates a specific simulator (depending on the space
- * model) that is used for physics simulation.
+ * model) that is used for physics simulation. This is the main class of the 
+ * physics module.
  * 
  * @author Holger Wuerke
- * @since 01.12.2009
  * 
  */
 public class PhysicsController implements Module {
@@ -105,7 +105,9 @@ public class PhysicsController implements Module {
   @Override
   public void simulationStepStart(long stepNumber) {
     if (simulator != null) {
+      //long start = System.nanoTime();
       simulator.simulationStepStart(stepNumber);
+      //System.err.println(System.nanoTime() - start);
     }
   }
 
@@ -191,6 +193,12 @@ public class PhysicsController implements Module {
     SpaceType spaceType = spaceModel.getSpaceType();
 
     // create specific simulator depending on SpaceType
+    if (spaceType.equals(SpaceType.ThreeD)) {
+      simulator = new BulletSimulator(simParams, spaceModel, autoKinematics,
+          autoCollisionDetection, autoCollisionHandling, gravitation,
+          initialState.getDatabus(), objects, agents);
+    }
+
     if (spaceType.equals(SpaceType.TwoDLateralView)) {
       simulator = new Box2DSimulator(simParams, spaceModel, autoKinematics,
           autoCollisionDetection, autoCollisionHandling, gravitation,
@@ -206,7 +214,7 @@ public class PhysicsController implements Module {
     // 2D grid space uses only perceptions and kinematics (no collision or
     // gravitation is suitable for this space type)
     if (spaceType.equals(SpaceType.TwoDGrid)) {
-      simulator = new Simulator2DGridOld(simParams, spaceModel, autoKinematics,
+      simulator = new Simulator2DGrid(simParams, spaceModel, autoKinematics,
           false, false, 0, initialState.getDatabus(), objects, agents);
     }
 
@@ -316,10 +324,18 @@ public class PhysicsController implements Module {
     String jarPath = System.getProperty("user.dir") + File.separator
         + "modules" + File.separator + "physicsModule.jar";
 
-    // extract the jar files for sound module
+    // extract the jar files for physics module
     try {
       JarUtil.extractFileFromJar(jarPath, localTmpPath, "lib",
-          "jbox2d-2.0.1-library-only.jar");
+          "jbox2d-library-2.1.2.jar");
+      JarUtil.extractFileFromJar(jarPath, localTmpPath, "lib",
+      "j3dcore.jar");
+      JarUtil.extractFileFromJar(jarPath, localTmpPath, "lib",
+      "j3dutils.jar");
+      JarUtil.extractFileFromJar(jarPath, localTmpPath, "lib",
+      "vecmath.jar");
+      JarUtil.extractFileFromJar(jarPath, localTmpPath, "lib",
+      "jbullet.jar");
     } catch (IOException ex) {
       ex.printStackTrace();
     }
@@ -328,7 +344,11 @@ public class PhysicsController implements Module {
     JarUtil.setLibraryPath(localTmpPath);
 
     // load jars from that temporarily directory (physics required jars)
-    JarUtil.loadJar(localTmpPath, "jbox2d-2.0.1-library-only.jar");
+    JarUtil.loadJar(localTmpPath, "jbox2d-library-2.1.2.jar");
+    JarUtil.loadJar(localTmpPath, "j3dcore.jar");
+    JarUtil.loadJar(localTmpPath, "j3dutils.jar");
+    JarUtil.loadJar(localTmpPath, "vecmath.jar");
+    JarUtil.loadJar(localTmpPath, "jbullet.jar");
   }
 
   @Override
