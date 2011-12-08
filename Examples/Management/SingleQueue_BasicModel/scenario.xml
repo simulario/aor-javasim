@@ -13,7 +13,6 @@
 
 	<SimulationModel modelName="SingleServiceQueueWithStatistics" 
 		modelTitle="A single service queue with service utilization and maximum queue length statistics">
-
 		<documentation>
 			<dc:creator>Gerd Wagner</dc:creator>
 			<dc:contributor>Oana Nicolae</dc:contributor>
@@ -31,6 +30,9 @@
 				for completing a service vary from 1 to 6 minutes, with probabilities 0.1, 0.2, 0.3, 0.25, 0.1, 0.05, 
 				respectively.	Two statistics are to be collected: service utilization (total service time divided by total time) 
 				and maximum queue length.</p>
+				<p>The information about the service desk is modeled with the help of two (global) variables: <code>queueLength</code> 
+					and <code>serviceDeskBusy</code>. The model includes two event types: <code>CustomerArrival</code> 
+					and <code>CustomerDeparture</code>.</p>
 			</ers:description>
 			<ers:description xmlns="http://www.w3.org/1999/xhtml" xml:lang="de">
 				<p>Kunden kommen in zufälligen Zeitabständen an einem Service-Schalter an, wo sie in einer Warteschlange warten müssen, 
@@ -38,12 +40,15 @@
 				Die Zeit zur Erbringung eines Dienstes variiert zwischen 1 und 6 Minuten, mit den Wahrscheinlichkeiten 0.1, 0.2, 0.3, 0.25, 
 				0.1 beziehunsgweise 0.05. Es sollen zwei Statistiken erhoben werden: der Service-Nutzungsgrad (gesamte Servicezeit geteilt 
 				durch die Gesamtzeit) und die maximale Länge der Warteschlange.</p>
+				<p>Die Informationen über den Service-Schalter werden mit Hilfe von zwei (globalen) Variablen modelliert: <code>queueLength</code> 
+					und <code>serviceDeskBusy</code>. Das Modell beinhaltet zwei Ereignistypen: <code>CustomerArrival</code> 
+					und <code>CustomerDeparture</code>.</p>
 			</ers:description>
 			<CcLicense license="CC BY-SA"/>
 			<mediaFiles>
-				<image file="Queue_Cmon-Fotolia_18687012_XS.jpg" license="© Cmon Fotolia.com" author="Cmon" />
+				<image file="Queue_Cmon-Fotolia.jpg" license="© Cmon Fotolia.com" author="Cmon" />
 			</mediaFiles>
-			<titleImage file="Queue_Cmon-Fotolia_18687012_XS.jpg"/>
+			<titleImage file="Queue_Cmon-Fotolia.jpg"/>
 			<processModelDiagram file="BPMN-Diagram.png"/>
 		</documentation>
 
@@ -52,12 +57,12 @@
 			<Variable name="serviceUtilization" dataType="Float">
 				<Source computeOnlyAtEnd="true">
 					<ValueExpr language="Java">
-						(float) SimStatistics.totalServiceTime.getValue() 
-						/ SimParameter.SIMULATION_STEPS
+						(double) SimStatistics.totalServiceTime.getValue() 
+						/ SimParameter.SIMULATION_STEPS * 100
 					</ValueExpr>
 					<ValueExpr language="JavaScript">
-						parseFloat( sim.controller.SimStatistics.totalServiceTime.getValue()) 
-						/ parseFloat( sim.controller.SimParameter.SIMULATION_STEPS) 
+						__SimStatistics.totalServiceTime.getValue()
+						/ __SimParameter.SIMULATION_STEPS * 100 
 					</ValueExpr>
 				</Source>
 			</Variable>
@@ -91,7 +96,7 @@
 		else return 6;					// with probability 0.05
 		]]></Body>
 				<Body language="JavaScript"><![CDATA[
-		var r = js.util.Random.uniformInt(0,99);
+		var r = __Random.uniformInt(0,99);
 		if (r<10) return 1; 			// with probability 0.10
 		else if (r<30) return 2;		// with probability 0.20
 		else if (r<60) return 3;		// with probability 0.30
@@ -105,7 +110,7 @@
 		<EntityTypes>
 			<!-- =================================================== -->
 			<ExogenousEventType name="CustomerArrival">
-				<!-- =================================================== -->
+			<!-- =================================================== -->
 				<Periodicity>
 					<DiscreteRandomVariable>
 						<UniformInt lowerBound="1" upperBound="8"/>
@@ -132,10 +137,10 @@
 				<WHEN eventType="CustomerArrival"/>
 				<FOR dataVariable="srvTm" dataType="Integer">
 					<ValueExpr language="Java">Global.randomServiceTime()</ValueExpr>
-					<ValueExpr language="JavaScript">sim.controller.Global.randomServiceTime()</ValueExpr>
+					<ValueExpr language="JavaScript">__Global.randomServiceTime()</ValueExpr>
 				</FOR>
 				<IF language="Java">Global.serviceDeskBusy </IF>
-				<IF language="JavaScript">sim.controller.Global.serviceDeskBusy</IF>
+				<IF language="JavaScript">__Global.serviceDeskBusy</IF>
 				<THEN>
 					<UPDATE-ENV>
 						<IncrementGlobalVariable name="queueLength" value="1" />
@@ -168,7 +173,7 @@
 				<WHEN eventType="CustomerDeparture" eventVariable="dep"/>
 				<FOR dataVariable="srvTm" dataType="Integer">
 					<ValueExpr language="Java">Global.randomServiceTime()</ValueExpr>
-					<ValueExpr language="JavaScript">sim.controller.Global.randomServiceTime()</ValueExpr>
+					<ValueExpr language="JavaScript">__Global.randomServiceTime()</ValueExpr>
 				</FOR>
 				<DO>
 					<UPDATE-ENV>
@@ -177,13 +182,13 @@
 								SimStatistics.totalServiceTime.getValue() + dep.getServiceTime()
 							</ValueExpr>
 							<ValueExpr language="JavaScript">
-								sim.controller.SimStatistics.totalServiceTime.getValue() + this.dep.getServiceTime()
+								__SimStatistics.totalServiceTime.getValue() + this.dep.getServiceTime()
 							</ValueExpr>
 						</UpdateStatisticsVariable>
 					</UPDATE-ENV>
 				</DO>
-				<IF language="Java">Global.queueLength == 0 </IF>
-				<IF language="JavaScript">sim.controller.Global.queueLength === 0</IF>
+				<IF language="Java"> Global.queueLength == 0 </IF>
+				<IF language="JavaScript"> __Global.queueLength === 0 </IF>
 				<THEN>
 					<UPDATE-ENV>
 						<UpdateGlobalVariable name="serviceDeskBusy" value="false"/>
@@ -267,7 +272,7 @@
 					<Text xml:lang="es">Cual es el tamaño medio de la cola?</Text>
 					<Text xml:lang="ro">Care este dimensiunea medie a listei de asteptare?</Text>
 				</Hint>
-				<Format decimalPlaces="2"><Length>m</Length></Format>
+				<Format decimalPlaces="2"/>
 			</StatisticsVariableUI>
 			<StatisticsVariableUI variable="maxQueueLength">
 				<Label>
