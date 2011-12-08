@@ -98,12 +98,12 @@
 			-->
 			<Variable name="maxLengthOfMBQ" dataType="Integer">
 				<Source aggregationFunction="max">
-					<ObjectProperty property="lengthOfQueue" objectType="Queue" objectIdRef="6" />
+					<ObjectProperty property="queueLength" objectType="MenuBoard" objectIdRef="1" />
 				</Source>
 			</Variable>
 			<Variable name="maxLengthOfPWQ" dataType="Integer">
 				<Source aggregationFunction="max">
-					<ObjectProperty property="lengthOfQueue" objectType="Queue" objectIdRef="7" />
+					<ObjectProperty property="queueLength" objectType="PickupWindow" objectIdRef="2" />
 				</Source>
 			</Variable>
 		</Statistics>
@@ -171,6 +171,7 @@ var r2 = js.util.Random.uniformInt(1,6);
 			<!-- =================================================== -->
 				<Attribute name="maxMenuBoardLineSize" type="Integer" minValue="3" maxValue="10"/>
 				<Attribute name="menuBoardBusy" type="Boolean" />
+				<Attribute name="queueLength" type="Integer" />
                 <Attribute name="utilization" type="Float" />
 				<ReferenceProperty name="menuBoardQueue" type="Customer" upperMultiplicity="unbounded">
 					<documentation>
@@ -207,6 +208,7 @@ return js.util.Random.uniformInt(0,5);
 			<!-- =================================================== -->
 				<Attribute name="maxPickupWindowLineSize" type="Integer" minValue="3" maxValue="10"/>
 				<Attribute name="pickupWindowBusy" type="Boolean" />
+				<Attribute name="queueLength" type="Integer" />
 				<Attribute name="utilization" type="Float" />
 				<ReferenceProperty name="pickupWindowQueue" type="Customer" upperMultiplicity="unbounded">
 					<documentation>
@@ -242,11 +244,7 @@ return price[pizzaType];
 				<Attribute name="pizzaType" type="Integer" />
 				<Attribute name="arrived" type="Boolean" />
 			</ObjectType>
-			<!-- =================================================== -->
-			<ObjectType name="Queue">
-				<!-- =================================================== -->
-				<Attribute name="lengthOfQueue" type="Integer"/>
-			</ObjectType>
+		
 		</EntityTypes>
 		<EnvironmentRules>
 			<!-- ======================================================= -->
@@ -260,7 +258,6 @@ return price[pizzaType];
 				</documentation>
 				<WHEN eventType="CustomerArrival" eventVariable="evt" />
 				<FOR-ObjectVariable variable="mb" objectType="MenuBoard" objectIdRef="1" />
-				<FOR-ObjectVariable variable="q1" objectType="Queue" objectIdRef="6" />
 				<IF language="Java JavaScript"><![CDATA[
 this.mb.getMenuBoardQueue().size() >= this.mb.getMaxMenuBoardLineSize()
                 ]]></IF>
@@ -270,8 +267,8 @@ this.mb.getMenuBoardQueue().size() >= this.mb.getMaxMenuBoardLineSize()
 						<ValueExpr language="Java">SimStatistics.numberOfLostCustomers.getValue() + 1</ValueExpr>
 						<ValueExpr language="JavaScript">__SimStatistics.numberOfLostCustomers.getValue() + 1</ValueExpr>
 					</UpdateStatisticsVariable>
-					<UpdateObject objectVariable="q1">
-						<Slot property="lengthOfQueue">
+					<UpdateObject objectVariable="mb">
+						<Slot property="queueLength">
 							<ValueExpr language="Java JavaScript">this.mb.getMenuBoardQueue().size()</ValueExpr>
 						</Slot>
 					</UpdateObject>
@@ -293,14 +290,12 @@ this.mb.getMenuBoardQueue().size() >= this.mb.getMaxMenuBoardLineSize()
 							<MultiValuedSlot property="menuBoardQueue">
 								<AddLast itemVariable="customer" />
 							</MultiValuedSlot>
-						</UpdateObject>
-						<UpdateObject objectVariable="q1">
-							<Slot property="lengthOfQueue">
-								<ValueExpr language="Java JavaScript">this.q1.getLengthOfQueue() + 1</ValueExpr>
+							<Slot property="queueLength">
+								<ValueExpr language="Java JavaScript">this.mb.getQueueLength() + 1</ValueExpr>
 							</Slot>
 						</UpdateObject>
 						<UpdateStatisticsVariable variable="menuBoardQueueLength">
-							<ValueExpr language="Java JavaScript">this.q1.getLengthOfQueue() + 1</ValueExpr>
+							<ValueExpr language="Java JavaScript">this.mb.getQueueLength() + 1</ValueExpr>
 						</UpdateStatisticsVariable>
 						<UpdateStatisticsVariable variable="numberOfCustomers">
 							<ValueExpr language="Java"><![CDATA[
@@ -393,8 +388,6 @@ __SimStatistics.numberOfCustomers.getValue() + 1
 				<WHEN eventType="EndMenuBoardService" eventVariable="evt" />
 				<FOR-ObjectVariable variable="mb" objectType="MenuBoard" objectIdRef="1" />
 				<FOR-ObjectVariable variable="pw" objectType="PickupWindow" objectIdRef="2" />
-				<FOR-ObjectVariable variable="q1" objectType="Queue" objectIdRef="6" />
-				<FOR-ObjectVariable variable="q2" objectType="Queue" objectIdRef="7" />
 				<FOR-ObjectVariable variable="cust" objectType="Customer">
 					<ObjectRef language="Java JavaScript">this.mb.getMenuBoardQueue().get(0)</ObjectRef>
 				</FOR-ObjectVariable>
@@ -417,19 +410,17 @@ __SimStatistics.numberOfCustomers.getValue() + 1
 							<Slot property="menuBoardBusy">
 								<ValueExpr language="Java JavaScript">( this.mb.getMenuBoardQueue().size() == 0) ? false : true</ValueExpr>
 							</Slot>
-						</UpdateObject>
-						<UpdateObject objectVariable="q1">
-							<Slot property="lengthOfQueue">
-								<ValueExpr language="Java JavaScript">this.q1.getLengthOfQueue() - 1</ValueExpr>
+							<Slot property="queueLength">
+								<ValueExpr language="Java JavaScript">this.mb.getQueueLength() - 1</ValueExpr>
 							</Slot>
 						</UpdateObject>
-						<UpdateObject objectVariable="q2">
-							<Slot property="lengthOfQueue">
+						<UpdateObject objectVariable="pw">
+							<Slot property="queueLength">
 								<ValueExpr language="Java JavaScript">this.pw.getPickupWindowQueue().size()</ValueExpr>
 							</Slot>
 						</UpdateObject>
 						<UpdateStatisticsVariable variable="menuBoardQueueLength">
-							<ValueExpr language="Java JavaScript">this.q1.getLengthOfQueue() - 1</ValueExpr>
+							<ValueExpr language="Java JavaScript">this.mb.getQueueLength() - 1</ValueExpr>
 						</UpdateStatisticsVariable>
 						<UpdateStatisticsVariable variable="pickupWindowQueueLength">
 							<ValueExpr language="Java JavaScript">this.pw.getPickupWindowQueue().size()</ValueExpr>
@@ -461,7 +452,6 @@ this.mb.getMenuBoardQueue().size() > 0
 				<WHEN eventType="EndMenuBoardService" eventVariable="evt" />
 				<FOR-ObjectVariable variable="mb" objectType="MenuBoard" objectIdRef="1" />
 				<FOR-ObjectVariable variable="pw" objectType="PickupWindow" objectIdRef="2" />
-				<FOR-ObjectVariable variable="q2" objectType="Queue" objectIdRef="7" />
 				<FOR-ObjectVariable variable="cust" objectType="Customer">
 					<ObjectRef language="Java JavaScript">this.mb.getMenuBoardQueue().get(0)</ObjectRef>
 				</FOR-ObjectVariable>
@@ -473,8 +463,8 @@ this.mb.getMenuBoardQueue().size() > 0
 						<UpdateObject objectVariable="cust">
 							<Slot property="waitingForPWFree" value="true" />
 						</UpdateObject>
-						<UpdateObject objectVariable="q2">
-							<Slot property="lengthOfQueue">
+						<UpdateObject objectVariable="pw">
+							<Slot property="queueLength">
 								<ValueExpr language="Java JavaScript">this.pw.getPickupWindowQueue().size()</ValueExpr>
 							</Slot>
 						</UpdateObject>
@@ -567,9 +557,8 @@ this.pw.getPickupWindowQueue().size() > 0 && this.pw.getPickupWindowQueue().get(
 				<WHEN eventType="EndPickupWindowService" eventVariable="evt" />
 				<FOR objectVariable="mb" objectType="MenuBoard" objectIdRef="1" />
 				<FOR objectVariable="pw" objectType="PickupWindow" objectIdRef="2" />
-				<FOR objectVariable="q2" objectType="Queue" objectIdRef="7"/>
 				<FOR objectVariable="cust" objectType="Customer">
-					<ObjectRef language="Java JavaScript">this.pw.getPickupWindowQueue().get(0)</ObjectRef>
+					<ObjectRef language="Java JavaScript">null</ObjectRef>
 				</FOR>
 				<IF language="Java JavaScript"><![CDATA[
 this.pw.getPickupWindowQueue().size() < this.pw.getMaxPickupWindowLineSize() 
@@ -580,9 +569,7 @@ this.pw.getPickupWindowQueue().size() < this.pw.getMaxPickupWindowLineSize()
 						<Slot property="pickupWindowBusy" logPeriodicity="1">
 							<ValueExpr language="Java JavaScript">( this.pw.getPickupWindowQueue().size() == 1) ? false : true</ValueExpr>
 						</Slot>
-					</UpdateObject>
-					<UpdateObject objectVariable="q2">
-						<Slot property="lengthOfQueue">
+						<Slot property="queueLength">
 							<ValueExpr language="Java JavaScript">this.pw.getPickupWindowQueue().size()</ValueExpr>
 						</Slot>
 					</UpdateObject>
@@ -642,15 +629,13 @@ __SimStatistics.cumulativeResponseTime.getValue() + this.evt.getOccurrenceTime()
 SimStatistics.revenue.getValue() + pw.pizzaPrice(( int) cust.getOrder().getPizzaType())
 						]]></ValueExpr>
 					</UpdateStatisticsVariable>
-					<UpdateObject objectVariable="q2">
-						<Slot property="lengthOfQueue">
-							<ValueExpr language="Java JavaScript">this.pw.getPickupWindowQueue().size()</ValueExpr>
-						</Slot>
-					</UpdateObject>
 					<UpdateStatisticsVariable variable="pickupWindowQueueLength">
 						<ValueExpr language="Java JavaScript">this.pw.getPickupWindowQueue().size()</ValueExpr>
 					</UpdateStatisticsVariable>
 					<UpdateObject objectVariable="pw">
+						<Slot property="queueLength">
+							<ValueExpr language="Java JavaScript">this.pw.getPickupWindowQueue().size()</ValueExpr>
+						</Slot>
 						<MultiValuedSlot property="pickupWindowQueue">
 							<RemoveFirst itemVariable="cust" />
 						</MultiValuedSlot>
@@ -680,6 +665,7 @@ SimStatistics.revenue.getValue() + pw.pizzaPrice(( int) cust.getOrder().getPizza
 			<Slot property="menuBoardBusy" value="false" />
 			<Slot property="maxMenuBoardLineSize" value="5" />
 			<Slot property="menuBoardUtilization" value="0" />
+			<Slot property="queueLength" value="0" />
 			<Slot property="menuBoardQueue">
 				<ValueExpr language="Java"><![CDATA[ new ArrayList<Customer>() ]]></ValueExpr>
 				<ValueExpr language="JavaScript">new js.util.ArrayList()</ValueExpr>
@@ -691,6 +677,7 @@ SimStatistics.revenue.getValue() + pw.pizzaPrice(( int) cust.getOrder().getPizza
 			<Slot property="pickupWindowBusy" value="false" />
 			<Slot property="maxPickupWindowLineSize" value="5" />
 			<Slot property="pickupWindowUtilization" value="0" />
+			<Slot property="queueLength" value="0" />
 			<Slot property="pickupWindowQueue">
 				<ValueExpr language="Java"><![CDATA[ new ArrayList<Customer>() ]]></ValueExpr>
 				<ValueExpr language="JavaScript">new js.util.ArrayList()</ValueExpr>
@@ -701,16 +688,6 @@ SimStatistics.revenue.getValue() + pw.pizzaPrice(( int) cust.getOrder().getPizza
 			<!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->
 			<Slot property="kitchenUtilization" value="0" />
 		</Object>		
-		<!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->
-		<Object type="Queue" id="6" name="MBQueue">
-			<!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->
-			<Slot property="lengthOfQueue" value="0"/>
-		</Object>
-		<!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->
-		<Object type="Queue" id="7" name="PWQueue">
-		<!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->
-			<Slot property="lengthOfQueue" value="0"/>
-		</Object>
 		<ExogenousEvent type="CustomerArrival" occurrenceTime="1" />	
 	</InitialState>
 
@@ -1039,6 +1016,12 @@ SimStatistics.revenue.getValue() + pw.pizzaPrice(( int) cust.getOrder().getPizza
 							<ShapePropertyVisualizationMap shapeProperty="fill" property="menuBoardBusy" mapType="equalityCaseWise" v0="green" a0="false" a1="true" v1="red"/>
 						</Rectangle>
 					</Shape2D>
+					<Shape2D x="575px" y="300px">
+						<Rectangle positioning="LeftCenter" fill="yellow" height="10" width="1" stroke="black" strokeWidth="2">
+							<ShapePropertyVisualizationMap shapeProperty="width" property="queueLength" mapType="polynomial" a0="0" a1="50"/>
+						</Rectangle>
+					</Shape2D>
+					<DisplayInfo content="customers" property="queueLength" />
 				</ObjectView>
 				<!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->
 				<ObjectView objectType="PickupWindow" displayName="true">
@@ -1048,27 +1031,13 @@ SimStatistics.revenue.getValue() + pw.pizzaPrice(( int) cust.getOrder().getPizza
 							<ShapePropertyVisualizationMap shapeProperty="fill" property="pickupWindowBusy" mapType="equalityCaseWise" v0="green" a0="false" a1="true" v1="red"/>
 						</Rectangle>
 					</Shape2D>
-				</ObjectView>			
-				<!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->
-				 <ObjectView objectType="Queue" objectIdRef="7">
-					<!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->
 					<Shape2D x="225px" y="300px">
 						<Rectangle positioning="LeftCenter" fill="yellow" height="10" width="1" stroke="black" strokeWidth="2">
-							<ShapePropertyVisualizationMap shapeProperty="width" property="lengthOfQueue" mapType="polynomial" a0="0" a1="50"/>
+							<ShapePropertyVisualizationMap shapeProperty="width" property="queueLength" mapType="polynomial" a0="0" a1="50"/>
 						</Rectangle>
 					</Shape2D>
-					<DisplayInfo content="customers"  property="lengthOfQueue"/>
-				</ObjectView>
-				<!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->
-				<ObjectView objectType="Queue" objectIdRef="6">
-					<!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->
-					<Shape2D x="575px" y="300px">
-						<Rectangle positioning="LeftCenter" fill="yellow" height="10" width="1" stroke="black" strokeWidth="2">
-							<ShapePropertyVisualizationMap shapeProperty="width" property="lengthOfQueue" mapType="polynomial" a0="0" a1="50"/>
-						</Rectangle>
-					</Shape2D>
-					<DisplayInfo content="customers" property="lengthOfQueue" />
-				</ObjectView> 
+					<DisplayInfo content="customers"  property="queueLength" />
+				</ObjectView>			
 			</Views>
 		</AnimationUI>
 	</UserInterface>
