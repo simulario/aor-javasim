@@ -68,34 +68,35 @@
 		<Statistics>
 			<Variable name="numberOfCustomers" dataType="Integer" />
 			<Variable name="numberOfLostCustomers" dataType="Integer" />
-			<Variable name="revenue" dataType="Float" />
-			<Variable name="cumulativeResponseTime" dataType="Float" />
 			<Variable name="numberOfDepartures" dataType="Integer" />
 			<Variable name="menuBoardQueueLength" dataType="Integer" />
 			<Variable name="pickupWindowQueueLength" dataType="Integer" />
+			<Variable name="revenue" dataType="Float" />
+			
+			<Variable name="cumulativeResponseTime" dataType="Integer" />
 			<Variable name="meanResponseTime" dataType="Float">
 				<Source computeOnlyAtEnd="true">
-					<ValueExpr language="Java">SimStatistics.cumulativeResponseTime.getValue() / SimStatistics.numberOfDepartures.getValue()</ValueExpr>
-					<ValueExpr language="JavaScript">__SimStatistics.cumulativeResponseTime.getValue() / __SimStatistics.numberOfDepartures.getValue()</ValueExpr>
+					<ValueExpr language="Java"> 
+						SimStatistics.cumulativeResponseTime.getValue() 
+						/ SimStatistics.numberOfDepartures.getValue()
+					</ValueExpr>
+					<ValueExpr language="JavaScript">
+						__SimStatistics.cumulativeResponseTime.getValue() 
+						/ __SimStatistics.numberOfDepartures.getValue()
+					</ValueExpr>
 				</Source>
-			</Variable>		
-			<!--
+			</Variable>
+			
+			<Variable name="cumulativeMenuBoardServiceTime" dataType="Integer" />
 			<Variable name="menuBoardUtilization" dataType="Float">
-				<Source aggregationFunction="avg">
-                   <ObjectProperty property="utilization" objectType="MenuBoard" />
+				<Source computeOnlyAtEnd="true">
+					<ValueExpr language="Java"> SimStatistics.cumulativeMenuBoardServiceTime.getValue() 
+						/ SimParameter.SIMULATION_STEPS * 100 </ValueExpr>
+					<ValueExpr language="JavaScript">__SimStatistics.cumulativeMenuBoardServiceTime.getValue() 
+						/ __SimParameter.SIMULATION_STEPS * 100 </ValueExpr>
 				</Source>
-			</Variable>		
-			<Variable name="kitchenUtilization" dataType="Float">
-				<Source aggregationFunction="avg">
-					<ObjectProperty property="utilization" objectType="Kitchen" />
-				</Source>
-			</Variable>	
-			<Variable name="pickupWindowUtilization" dataType="Float">
-				<Source aggregationFunction="avg">
-				  <ObjectProperty property="utilization" objectType="PickupWindow" />
-				</Source>
-			</Variable>	
-			-->
+			</Variable>
+
 			<Variable name="maxLengthOfMBQ" dataType="Integer">
 				<Source aggregationFunction="max">
 					<ObjectProperty property="queueLength" objectType="MenuBoard" objectIdRef="1" />
@@ -172,49 +173,36 @@ var r2 = js.util.Random.uniformInt(1,6);
 				<Attribute name="maxMenuBoardLineSize" type="Integer" minValue="3" maxValue="10"/>
 				<Attribute name="menuBoardBusy" type="Boolean" />
 				<Attribute name="queueLength" type="Integer" />
-                <Attribute name="utilization" type="Float" />
 				<ReferenceProperty name="menuBoardQueue" type="Customer" upperMultiplicity="unbounded">
 					<documentation>
-						<description>
 							This property represents a first-in-first-out queue.
-						</description>
 					</documentation>
 				</ReferenceProperty>
 				<!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->
 				<Function name="randomPizzaType" resultType="Integer">
 					<!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->
 					<documentation>
-						<description>
 							The type of the pizza as a number between 0 and 5: 0 = Pizza Quattro Formaggi, 
 							1 = Pizza Quattro Stagioni, 2 = Pizza Capricciosa, 3 = Pizza Napoletana, 
 							4 = Pizza Marinara, 5 = Pizza Margherita. 
-						</description>
 					</documentation>
 					<Body language="Java"><![CDATA[
 return Random.uniformInt(0,5);
                     ]]></Body>
 					<Body language="JavaScript"><![CDATA[
-return js.util.Random.uniformInt(0,5);						
+return __Random.uniformInt(0,5);						
 				     ]]></Body>
 				</Function>
 			</ObjectType>	
-			<!-- =================================================== -->
-			<ObjectType name="Kitchen">
-			<!-- =================================================== -->
-				<Attribute name="utilization" type="Float" />
-			</ObjectType>		
 			<!-- =================================================== -->
 			<ObjectType name="PickupWindow">
 			<!-- =================================================== -->
 				<Attribute name="maxPickupWindowLineSize" type="Integer" minValue="3" maxValue="10"/>
 				<Attribute name="pickupWindowBusy" type="Boolean" />
 				<Attribute name="queueLength" type="Integer" />
-				<Attribute name="utilization" type="Float" />
 				<ReferenceProperty name="pickupWindowQueue" type="Customer" upperMultiplicity="unbounded">
 					<documentation>
-						<description>
 							This property represents a first-in-first-out queue. 
-						</description>
 					</documentation>
 				</ReferenceProperty>
 				<!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->
@@ -291,11 +279,11 @@ this.mb.getMenuBoardQueue().size() >= this.mb.getMaxMenuBoardLineSize()
 								<AddLast itemVariable="customer" />
 							</MultiValuedSlot>
 							<Slot property="queueLength">
-								<ValueExpr language="Java JavaScript">this.mb.getQueueLength() + 1</ValueExpr>
+								<ValueExpr language="Java JavaScript">this.mb.getMenuBoardQueue().size()</ValueExpr>
 							</Slot>
 						</UpdateObject>
 						<UpdateStatisticsVariable variable="menuBoardQueueLength">
-							<ValueExpr language="Java JavaScript">this.mb.getQueueLength() + 1</ValueExpr>
+							<ValueExpr language="Java JavaScript">this.mb.getQueueLength()</ValueExpr>
 						</UpdateStatisticsVariable>
 						<UpdateStatisticsVariable variable="numberOfCustomers">
 							<ValueExpr language="Java"><![CDATA[
@@ -308,9 +296,7 @@ __SimStatistics.numberOfCustomers.getValue() + 1
 					</UPDATE-ENV>
 					<SCHEDULE-EVT>
 						<CausedEventExpr eventType="StartMenuBoardService">
-							<Condition language="Java JavaScript"><![CDATA[
-! this.mb.isMenuBoardBusy()
-						   ]]></Condition>
+							<Condition language="Java JavaScript"> !this.mb.isMenuBoardBusy() </Condition>
 						</CausedEventExpr>
 					</SCHEDULE-EVT>
 				</ELSE>				
@@ -319,11 +305,13 @@ __SimStatistics.numberOfCustomers.getValue() + 1
 			<EnvironmentRule name="StartMenuBoardService_Rule">
 				<!-- ================================================================ -->
 				<documentation>
-					<description>When the MenuBoard Service starts, the menuBoardBusy variable is set to true, an order object with a random pizza type is created and assigned to the customer being served.We then schedule the EndMenuBoardService event with appropriate delay and also the EndKitchenService event with appropriate delay for this order. </description>
+					<description>When the MenuBoard Service starts, the menuBoardBusy variable is set to true, 
+						an order object with a random pizza type is created and assigned to the customer being served.
+						We then schedule the EndMenuBoardService event with appropriate delay and also the 
+						EndKitchenService event	with appropriate delay for this order. </description>
 				</documentation>
 				<WHEN eventType="StartMenuBoardService"/>
 				<FOR-ObjectVariable variable="mb" objectType="MenuBoard" objectIdRef="1" />
-				<FOR-ObjectVariable variable="k" objectType="Kitchen" />
 				<FOR-ObjectVariable variable="cust" objectType="Customer">
 					<ObjectRef language="Java JavaScript">this.mb.getMenuBoardQueue().get(0)</ObjectRef>
 				</FOR-ObjectVariable>
@@ -340,7 +328,7 @@ __SimStatistics.numberOfCustomers.getValue() + 1
 						<Create>
 							<Object type="Order" objectVariable="ord">
 								<Slot property="pizzaType">
-									<ValueExpr language="Java JavaScript">this.mb.randomPizzaType()</ValueExpr>
+									<ValueExpr language="Java JavaScript"> this.mb.randomPizzaType() </ValueExpr>
 								</Slot>
 								<Slot property="arrived" value="false"/>
 							</Object>
@@ -352,15 +340,15 @@ __SimStatistics.numberOfCustomers.getValue() + 1
 						</UpdateObject>
 						<UpdateObject objectVariable="mb">
 							<Slot property="menuBoardBusy" value="true"/>
-							<Slot property="utilization">
-								<ValueExpr language="Java JavaScript">this.serviceTimeMB</ValueExpr>
-							</Slot>
 						</UpdateObject>
-			      <UpdateObject objectVariable="k">
-			      	<Slot property="utilization">
-			      		<ValueExpr language="Java JavaScript">this.serviceTimeK</ValueExpr>
-			      	</Slot>
-			      </UpdateObject>
+						<UpdateStatisticsVariable variable="cumulativeMenuBoardServiceTime">
+							<ValueExpr language="Java">
+								SimStatistics.cumulativeMenuBoardServiceTime.getValue() + this.serviceTimeMB
+							</ValueExpr>
+							<ValueExpr language="JavaScript">
+								__SimStatistics.cumulativeMenuBoardServiceTime.getValue() + this.serviceTimeMB
+							</ValueExpr>
+						</UpdateStatisticsVariable>
 					</UPDATE-ENV>
 					<SCHEDULE-EVT>
 						<CausedEventExpr eventType="EndMenuBoardService">
@@ -383,7 +371,10 @@ __SimStatistics.numberOfCustomers.getValue() + 1
 			<EnvironmentRule name="EndMenuBoardServiceWhenIsNotFull_Rule">
 				<!-- ============================================================================ -->
 				<documentation>
-					<description>When a menu board service ends and the pickup window service queue is not full, then the current customer moves forward. Furthermore, if there are no more customers in the menu board queue, then the menu board is no longer busy. Otherwise, a new StartMenuBoardService event is created for serving the next customer. </description>
+					<description>When a menu board service ends and the pickup window service queue is not full, 
+						then the current customer moves forward. Furthermore, if there are no more customers in the 
+						menu board queue, then the menu board is no longer busy. Otherwise, a new StartMenuBoardService event 
+						is created for serving the next customer. </description>
 				</documentation>
 				<WHEN eventType="EndMenuBoardService" eventVariable="evt" />
 				<FOR-ObjectVariable variable="mb" objectType="MenuBoard" objectIdRef="1" />
@@ -400,30 +391,26 @@ __SimStatistics.numberOfCustomers.getValue() + 1
 							<MultiValuedSlot property="menuBoardQueue">
 								<RemoveFirst itemVariable="cust"/>
 							</MultiValuedSlot>
-						</UpdateObject>
-					    <UpdateObject objectVariable="pw">
-					    	<MultiValuedSlot property="pickupWindowQueue">
-					    		<AddLast itemVariable="cust"/>
-					    	</MultiValuedSlot>
-					    </UpdateObject>
-						<UpdateObject objectVariable="mb">
 							<Slot property="menuBoardBusy">
-								<ValueExpr language="Java JavaScript">( this.mb.getMenuBoardQueue().size() == 0) ? false : true</ValueExpr>
+								<ValueExpr language="Java JavaScript"> ( this.mb.getMenuBoardQueue().size() == 0) ? false : true </ValueExpr>
 							</Slot>
 							<Slot property="queueLength">
-								<ValueExpr language="Java JavaScript">this.mb.getQueueLength() - 1</ValueExpr>
+								<ValueExpr language="Java JavaScript"> this.mb.getMenuBoardQueue().size() </ValueExpr>
 							</Slot>
 						</UpdateObject>
 						<UpdateObject objectVariable="pw">
+							<MultiValuedSlot property="pickupWindowQueue">
+								<AddLast itemVariable="cust"/>
+							</MultiValuedSlot>
 							<Slot property="queueLength">
-								<ValueExpr language="Java JavaScript">this.pw.getPickupWindowQueue().size()</ValueExpr>
+								<ValueExpr language="Java JavaScript"> this.pw.getPickupWindowQueue().size() </ValueExpr>
 							</Slot>
 						</UpdateObject>
 						<UpdateStatisticsVariable variable="menuBoardQueueLength">
-							<ValueExpr language="Java JavaScript">this.mb.getQueueLength() - 1</ValueExpr>
+							<ValueExpr language="Java JavaScript"> this.mb.getQueueLength() </ValueExpr>
 						</UpdateStatisticsVariable>
 						<UpdateStatisticsVariable variable="pickupWindowQueueLength">
-							<ValueExpr language="Java JavaScript">this.pw.getPickupWindowQueue().size()</ValueExpr>
+							<ValueExpr language="Java JavaScript"> this.pw.getQueueLength() </ValueExpr>
 						</UpdateStatisticsVariable>
 					</UPDATE-ENV>
 					<SCHEDULE-EVT>
@@ -439,15 +426,13 @@ this.mb.getMenuBoardQueue().size() > 0
 						</CausedEventExpr>
 					</SCHEDULE-EVT>
 				</THEN>
-		     </EnvironmentRule>
+			</EnvironmentRule>
 			<!-- ============================================================================ -->
 			<EnvironmentRule name="EndMenuBoardServiceWhenIsFull_Rule">
 				<!-- ============================================================================ -->
 				<documentation>
-					<description>
 						When a menu board service ends, but the PickupWindowQueue is full, the customer cannot move forward. 
 						We just update the customer attribute.
-					</description> 
 				</documentation>
 				<WHEN eventType="EndMenuBoardService" eventVariable="evt" />
 				<FOR-ObjectVariable variable="mb" objectType="MenuBoard" objectIdRef="1" />
@@ -457,31 +442,21 @@ this.mb.getMenuBoardQueue().size() > 0
 				</FOR-ObjectVariable>
 				<IF language="Java JavaScript"><![CDATA[
 ( this.pw.getPickupWindowQueue().size() >= this.pw.getMaxPickupWindowLineSize() && this.cust.getOrder() != null) 
-                ]]></IF>	
+        ]]></IF>	
 				<THEN>
 					<UPDATE-ENV>
 						<UpdateObject objectVariable="cust">
 							<Slot property="waitingForPWFree" value="true" />
 						</UpdateObject>
-						<UpdateObject objectVariable="pw">
-							<Slot property="queueLength">
-								<ValueExpr language="Java JavaScript">this.pw.getPickupWindowQueue().size()</ValueExpr>
-							</Slot>
-						</UpdateObject>
-						<UpdateStatisticsVariable variable="pickupWindowQueueLength">
-							<ValueExpr language="Java JavaScript">this.pw.getPickupWindowQueue().size()</ValueExpr>
-						</UpdateStatisticsVariable>
 					</UPDATE-ENV>
 				</THEN>
 			</EnvironmentRule>	
 			<!-- ========================================================================== -->
 			<EnvironmentRule name="StartPickupWindowService_Rule">
 				<documentation>
-					<description>
 						On StartPickupWindowService, the pickupWindowBusy variable is set to true, and 
 						when the customer's oder has already arrived, an EndPickupWindowService event 
 						is created with an appropriate delay. 
-					</description>
 				</documentation>
 			<!-- ======================================================================-->
 				<WHEN eventType="StartPickupWindowService" />
@@ -494,11 +469,6 @@ this.mb.getMenuBoardQueue().size() > 0
 				<UPDATE-ENV>
 					<UpdateObject objectVariable="pw">
 						<Slot property="pickupWindowBusy" value="true" />
-						<Slot property="utilization">
-							<ValueExpr language="Java JavaScript"><![CDATA[
-this.serviceTimePW
-							]]></ValueExpr>
-						</Slot>
 					</UpdateObject>
 				</UPDATE-ENV>
 				<SCHEDULE-EVT>
@@ -506,7 +476,7 @@ this.serviceTimePW
 						<Condition language="Java JavaScript"><![CDATA[
 this.pw.getPickupWindowQueue().size() > 0 && this.pw.getPickupWindowQueue().get(0)!= null &&
 this.pw.getPickupWindowQueue().get(0).getOrder()!= null && this.pw.getPickupWindowQueue().get(0).getOrder().isArrived()
-                       ]]></Condition>
+           ]]></Condition>
 						<Delay>
 							<ValueExpr language="Java">this.serviceTimePW</ValueExpr>
 						</Delay>
@@ -516,9 +486,10 @@ this.pw.getPickupWindowQueue().get(0).getOrder()!= null && this.pw.getPickupWind
 			</EnvironmentRule>
 			<!-- ============================================= -->
 			<EnvironmentRule name="EndKitchenService_Rule">
-				<!-- =========================================== -->
+			<!-- =========================================== -->
 				<documentation>
-					<description>On EndKitchenService, the order's arrived flag is set to true. Furthermore, if the arrived order is the order of the customer at the pickup window, then an EndPickupWindowService event is scheduled. </description>
+					On EndKitchenService, the order's arrived flag is set to true. Furthermore, if the arrived order 
+					is the order of the customer at the pickup window, then an EndPickupWindowService event is scheduled.
 				</documentation>
 				<WHEN eventType="EndKitchenService" eventVariable="evt" />
 				<FOR-ObjectVariable variable="mb" objectType="MenuBoard" objectIdRef="1" />
@@ -540,7 +511,7 @@ this.pw.getPickupWindowQueue().get(0).getOrder()!= null && this.pw.getPickupWind
 						<CausedEventExpr eventType="EndPickupWindowService">
 							<Condition language="Java JavaScript"><![CDATA[ 
 this.pw.getPickupWindowQueue().size() > 0 && this.pw.getPickupWindowQueue().get(0).getOrder().getId() == this.ord.getId()
-                           ]]></Condition>
+              ]]></Condition>
 							<Delay>
 								<ValueExpr language="Java">this.serviceTimePW</ValueExpr>
 							</Delay>
@@ -550,110 +521,79 @@ this.pw.getPickupWindowQueue().size() > 0 && this.pw.getPickupWindowQueue().get(
 			</EnvironmentRule>			
 			<!-- ================================================================ -->
 			<EnvironmentRule name="EndPickupWindowService_Rule">
-				<!-- ============================================================== -->
+			<!-- ============================================================== -->
 				<documentation>
-					<description> On EndPickupWindowService, when the queue is not full, the current customer object is removed from the queue and destroyed. Furthermore, if the queue is empty, the pickup window is no longer busy. Otherwise, a new StartPickupWindowService is created. </description>
+						On EndPickupWindowService, the current customer object is removed	from the queue and destroyed. 
+						If the queue is empty, the pickup window is no longer busy. Otherwise, a new StartPickupWindowService is created.
+						If the queue was full, then schedule an EndMenuBoardService event.
 				</documentation>
 				<WHEN eventType="EndPickupWindowService" eventVariable="evt" />
 				<FOR objectVariable="mb" objectType="MenuBoard" objectIdRef="1" />
 				<FOR objectVariable="pw" objectType="PickupWindow" objectIdRef="2" />
 				<FOR objectVariable="cust" objectType="Customer">
-					<ObjectRef language="Java JavaScript">null</ObjectRef>
+					<ObjectRef language="Java JavaScript">this.pw.getPickupWindowQueue().get(0)</ObjectRef>
 				</FOR>
-				<IF language="Java JavaScript"><![CDATA[
-this.pw.getPickupWindowQueue().size() < this.pw.getMaxPickupWindowLineSize() 
-               ]]></IF>
-			<THEN>
-				<UPDATE-ENV>
-					<UpdateObject objectVariable="pw">
-						<Slot property="pickupWindowBusy" logPeriodicity="1">
-							<ValueExpr language="Java JavaScript">( this.pw.getPickupWindowQueue().size() == 1) ? false : true</ValueExpr>
-						</Slot>
-						<Slot property="queueLength">
-							<ValueExpr language="Java JavaScript">this.pw.getPickupWindowQueue().size()</ValueExpr>
-						</Slot>
-					</UpdateObject>
-					<UpdateStatisticsVariable variable="pickupWindowQueueLength">
-						<ValueExpr language="Java JavaScript">this.pw.getPickupWindowQueue().size()</ValueExpr>
-					</UpdateStatisticsVariable>
-					<UpdateStatisticsVariable variable="numberOfDepartures">
-						<ValueExpr language="Java">SimStatistics.numberOfDepartures.getValue() + 1</ValueExpr>
-						<ValueExpr language="JavaScript">__SimStatistics.numberOfDepartures.getValue() + 1</ValueExpr>
-					</UpdateStatisticsVariable>
-					<UpdateStatisticsVariable variable="cumulativeResponseTime">
-						<ValueExpr language="Java"><![CDATA[
+				<DO>
+					<UPDATE-ENV>
+						<UpdateStatisticsVariable variable="numberOfDepartures">
+							<ValueExpr language="Java">SimStatistics.numberOfDepartures.getValue() + 1</ValueExpr>
+							<ValueExpr language="JavaScript">__SimStatistics.numberOfDepartures.getValue() + 1</ValueExpr>
+						</UpdateStatisticsVariable>
+						<UpdateStatisticsVariable variable="cumulativeResponseTime">
+							<ValueExpr language="Java"><![CDATA[
 SimStatistics.cumulativeResponseTime.getValue() + evt.getOccurrenceTime() - cust.getArrivalTime()							
                         ]]></ValueExpr>
-						<ValueExpr language="JavaScript"><![CDATA[
+							<ValueExpr language="JavaScript"><![CDATA[
 __SimStatistics.cumulativeResponseTime.getValue() + this.evt.getOccurrenceTime() - this.cust.getArrivalTime()							
 						]]></ValueExpr>
-					</UpdateStatisticsVariable>
-					<UpdateStatisticsVariable variable="revenue">
-						<ValueExpr language="Java"><![CDATA[
+						</UpdateStatisticsVariable>
+						<UpdateStatisticsVariable variable="revenue">
+							<ValueExpr language="Java"><![CDATA[
 SimStatistics.revenue.getValue() + pw.pizzaPrice(( int) pw.getPickupWindowQueue().get(0).getOrder().getPizzaType())
 ]]></ValueExpr>         <!--
-						<ValueExpr language="JavaScript"><![CDATA[
-__SimStatistics.revenue.getValue() + this.pw.pizzaPrice( this.pw.getPickupWindowQueue().get(0).getOrder().getPizzaType())
-                       ]]></ValueExpr>
-                       -->
-					</UpdateStatisticsVariable>
-					<UpdateObject objectVariable="pw">
-						<MultiValuedSlot property="pickupWindowQueue">
-							<RemoveFirst  itemVariable="cust"/>
-						</MultiValuedSlot>
-					</UpdateObject>
-					<DestroyObject objectVariable="cust" />
-				</UPDATE-ENV>
-				<SCHEDULE-EVT>
-					<CausedEventExpr eventType="StartPickupWindowService">
-						<Condition language="Java JavaScript">this.pw.getPickupWindowQueue().size() > 0</Condition>
-					</CausedEventExpr>
-				</SCHEDULE-EVT>
-			</THEN>
-			<ELSE>
-				<UPDATE-ENV>		
-					<UpdateStatisticsVariable variable="numberOfDepartures">
-						<ValueExpr language="Java">SimStatistics.numberOfDepartures.getValue() + 1</ValueExpr>
-						<ValueExpr language="JavaScript">__SimStatistics.numberOfDepartures.getValue() + 1</ValueExpr>
-					</UpdateStatisticsVariable>
-					<UpdateStatisticsVariable variable="cumulativeResponseTime">
-						<ValueExpr language="Java"><![CDATA[
-SimStatistics.cumulativeResponseTime.getValue() + evt.getOccurrenceTime() - cust.getArrivalTime()
-                           ]]></ValueExpr>
-						<ValueExpr language="JavaScript"><![CDATA[
-__SimStatistics.cumulativeResponseTime.getValue() + this.evt.getOccurrenceTime() - this.cust.getArrivalTime()
-                           ]]></ValueExpr>
-					</UpdateStatisticsVariable>				
-					<UpdateStatisticsVariable variable="revenue">
-						<ValueExpr language="Java"><![CDATA[
-SimStatistics.revenue.getValue() + pw.pizzaPrice(( int) cust.getOrder().getPizzaType())
-						]]></ValueExpr>
-					</UpdateStatisticsVariable>
-					<UpdateStatisticsVariable variable="pickupWindowQueueLength">
-						<ValueExpr language="Java JavaScript">this.pw.getPickupWindowQueue().size()</ValueExpr>
-					</UpdateStatisticsVariable>
-					<UpdateObject objectVariable="pw">
-						<Slot property="queueLength">
-							<ValueExpr language="Java JavaScript">this.pw.getPickupWindowQueue().size()</ValueExpr>
-						</Slot>
-						<MultiValuedSlot property="pickupWindowQueue">
-							<RemoveFirst itemVariable="cust" />
-						</MultiValuedSlot>
-					</UpdateObject>
-					<DestroyObject objectVariable="cust" />
-				</UPDATE-ENV>
-				<SCHEDULE-EVT>
-					<CausedEventExpr eventType="EndMenuBoardService">
-						<Condition language="Java JavaScript"><![CDATA[
+								<ValueExpr language="JavaScript"><![CDATA[
+								__SimStatistics.revenue.getValue() + this.pw.pizzaPrice( this.pw.getPickupWindowQueue().get(0).getOrder().getPizzaType())
+								]]></ValueExpr>
+							-->
+						</UpdateStatisticsVariable>
+						<UpdateObject objectVariable="pw">
+							<MultiValuedSlot property="pickupWindowQueue">
+								<RemoveFirst itemVariable="cust"/>
+							</MultiValuedSlot>
+							<Slot property="pickupWindowBusy">
+								<ValueExpr language="Java JavaScript">( this.pw.getPickupWindowQueue().size() == 1) ? false : true</ValueExpr>
+							</Slot>
+							<Slot property="queueLength">
+								<ValueExpr language="Java JavaScript">this.pw.getPickupWindowQueue().size()</ValueExpr>
+							</Slot>
+						</UpdateObject>
+						<DestroyObject objectVariable="cust" />
+						<UpdateStatisticsVariable variable="pickupWindowQueueLength">
+							<ValueExpr language="Java JavaScript">this.pw.getQueueLength()</ValueExpr>
+						</UpdateStatisticsVariable>
+					</UPDATE-ENV>
+					<SCHEDULE-EVT>
+						<CausedEventExpr eventType="StartPickupWindowService">
+							<Condition language="Java JavaScript">this.pw.getPickupWindowQueue().size() > 0</Condition>
+						</CausedEventExpr>
+					</SCHEDULE-EVT>					
+				</DO>
+				<IF language="Java JavaScript"><![CDATA[
+this.pw.getPickupWindowQueue().size() == this.pw.getMaxPickupWindowLineSize() - 1 
+         ]]></IF>
+				<THEN>
+					<SCHEDULE-EVT>
+						<CausedEventExpr eventType="EndMenuBoardService">
+							<Condition language="Java JavaScript"><![CDATA[
 ( this.mb.getMenuBoardQueue().size() > 0 ) && 
 ( this.mb.getMenuBoardQueue().get(0) != null ) && 
 ( this.mb.getMenuBoardQueue().get(0).getOrder() != null ) && 
 ( this.mb.getMenuBoardQueue().get(0).isWaitingForPWFree() )
-                         ]]></Condition>
-					</CausedEventExpr>
-					<CausedEventExpr eventType="StartPickupWindowService"/>
-				</SCHEDULE-EVT>
-			</ELSE>
+ 							]]></Condition>
+						</CausedEventExpr>
+						<CausedEventExpr eventType="StartPickupWindowService"/>
+					</SCHEDULE-EVT>
+				</THEN>
 			</EnvironmentRule>		
 		</EnvironmentRules>
 	</SimulationModel>
@@ -664,7 +604,6 @@ SimStatistics.revenue.getValue() + pw.pizzaPrice(( int) cust.getOrder().getPizza
 			<!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->
 			<Slot property="menuBoardBusy" value="false" />
 			<Slot property="maxMenuBoardLineSize" value="5" />
-			<Slot property="menuBoardUtilization" value="0" />
 			<Slot property="queueLength" value="0" />
 			<Slot property="menuBoardQueue">
 				<ValueExpr language="Java"><![CDATA[ new ArrayList<Customer>() ]]></ValueExpr>
@@ -676,7 +615,6 @@ SimStatistics.revenue.getValue() + pw.pizzaPrice(( int) cust.getOrder().getPizza
 			<!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->
 			<Slot property="pickupWindowBusy" value="false" />
 			<Slot property="maxPickupWindowLineSize" value="5" />
-			<Slot property="pickupWindowUtilization" value="0" />
 			<Slot property="queueLength" value="0" />
 			<Slot property="pickupWindowQueue">
 				<ValueExpr language="Java"><![CDATA[ new ArrayList<Customer>() ]]></ValueExpr>
@@ -684,10 +622,6 @@ SimStatistics.revenue.getValue() + pw.pizzaPrice(( int) cust.getOrder().getPizza
 			</Slot>
 		</Object>	
 		<!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->
-		<Object type="Kitchen" name="K" id="5">
-			<!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->
-			<Slot property="kitchenUtilization" value="0" />
-		</Object>		
 		<ExogenousEvent type="CustomerArrival" occurrenceTime="1" />	
 	</InitialState>
 
@@ -806,7 +740,8 @@ SimStatistics.revenue.getValue() + pw.pizzaPrice(( int) cust.getOrder().getPizza
 				</Hint>
 				<Format decimalPlaces="1"><Math>%</Math></Format>
 			</StatisticsVariableUI>
-			<StatisticsVariableUI variable="kitchenUtilization">
+			<!--
+				<StatisticsVariableUI variable="kitchenUtilization">
 				<Label>
 					<Text xml:lang="en">Kitchen utilization</Text>
 					<Text xml:lang="de">Küchen-Nutzung</Text>
@@ -840,7 +775,8 @@ SimStatistics.revenue.getValue() + pw.pizzaPrice(( int) cust.getOrder().getPizza
 				</Hint>
 				<Format decimalPlaces="1"><Math>%</Math></Format>
 			</StatisticsVariableUI>
-			<StatisticsVariableUI variable="maxLengthOfMBQ" showChart="true">
+-->
+			<StatisticsVariableUI variable="maxLengthOfMBQ">
 				<Label>
 					<Text xml:lang="en">Maximum length of menu board queue</Text>
 					<Text xml:lang="de">Durchschnittliche Länge der Auftragsannahme-Warteschlange</Text>
@@ -907,103 +843,7 @@ SimStatistics.revenue.getValue() + pw.pizzaPrice(( int) cust.getOrder().getPizza
 		</StatisticsUI>
 		<!-- ================================================== -->
 		<AnimationUI>
-			<ers:StartPageText xmlns="http://www.w3.org/1999/xhtml">
-				<ers:HtmlText xml:lang="en">
-					<div style="float:right; left-padding:1em;">
-						<img src="media/DriveThruRestaurant.png" />
-					</div>
-					<div style="float:left; width: 40%; padding: 10% 0px; 5%">
-						<h4>DriveThruRestaurant description:</h4>
-						<p>As a car enters from the street, the driver, who we will call Fred, decides 
-							whether or not to get in line. If Fred decides to leave the restaurant, he 
-							leaves as a dissatisfied customer. If Fred decides to get in line, then he 
-							waits until the menu board is available. At that time, Fred gives the order 
-							to the order taker. After the order is taken, then two things occur simultaneously: </p>
-						<ul>
-							<li>Fred moves forward if there is room, otherwise he has to wait at the menu board until
-								there is room to move forward
-							</li>
-							<li>The order is sent electronically back to the kitchen where it is prepared as soon as
-								the cook is available
-							</li>
-						</ul>
-						<p>As soon as Fred reaches the pickup window, then he pays and picks up his food, if it is ready. 
-							If the food is not ready, then Fred has to wait until his order is prepared.</p>
-					</div>
-				</ers:HtmlText>
-				<ers:HtmlText xml:lang="de">
-					<div style="float:left; width: 40%; height: 80%; padding: 0px 10px 5px 5px;">
-						<img src="media/DriveThruRestaurant.png" />
-					</div>
-					<div style="float:left; width: 40%; padding: 10% 0px; 5%">
-						<h4>DriveThruRestaurant description:</h4>
-						<p>As a car enters from the street, the driver, who we will call Fred, decides 
-							whether or not to get in line. If Fred decides to leave the restaurant, he 
-							leaves as a dissatisfied customer. If Fred decides to get in line, then he 
-							waits until the menu board is available. At that time, Fred gives the order 
-							to the order taker. After the order is taken, then two things occur simultaneously: </p>
-						<ul>
-							<li>Fred moves forward if there is room, otherwise he has to wait at the menu board until
-								there is room to move forward
-							</li>
-							<li>The order is sent electronically back to the kitchen where it is prepared as soon as
-								the cook is available
-							</li>
-						</ul>
-						<p>As soon as Fred reaches the pickup window, then he pays and picks up his food, if it is ready. 
-							If the food is not ready, then Fred has to wait until his order is prepared.</p>
-					</div>
-				</ers:HtmlText>
-			</ers:StartPageText>
-			<ers:HelpText xmlns="http://www.w3.org/1999/xhtml">
-			   <ers:HtmlText xml:lang="en">
-			   	<div style="float:left; width: 40%; height: 80%; padding: 0px 10px 5px 5px;">
-			   		<img src="media/DriveThruRestaurant.png" />
-			   	</div>
-			   	<div style="float:left; width: 40%; padding: 10% 0px; 5%">
-			   		<h4>DriveThruRestaurant description:</h4>
-			   		<p>As a car enters from the street, the driver, who we will call Fred, decides 
-			   			whether or not to get in line. If Fred decides to leave the restaurant, he 
-			   			leaves as a dissatisfied customer. If Fred decides to get in line, then he 
-			   			waits until the menu board is available. At that time, Fred gives the order 
-			   			to the order taker. After the order is taken, then two things occur simultaneously: </p>
-			   		<ul>
-			   			<li>Fred moves forward if there is room, otherwise he has to wait at the menu board until
-			   				there is room to move forward
-			   			</li>
-			   			<li>The order is sent electronically back to the kitchen where it is prepared as soon as
-			   				the cook is available
-			   			</li>
-			   		</ul>
-			   		<p>As soon as Fred reaches the pickup window, then he pays and picks up his food, if it is ready. 
-			   		   If the food is not ready, then Fred has to wait until his order is prepared.</p>
-			   	</div>
-			   </ers:HtmlText>	
-				<ers:HtmlText xml:lang="de">
-					<div style="float:left; width: 40%; height: 80%; padding: 0px 10px 5px 5px;">
-						<img src="media/DriveThruRestaurant.png" />
-					</div>
-					<div style="float:left; width: 40%; padding: 10% 0px; 5%">
-						<h4>DriveThruRestaurant description:</h4>
-						<p>As a car enters from the street, the driver, who we will call Fred, decides 
-							whether or not to get in line. If Fred decides to leave the restaurant, he 
-							leaves as a dissatisfied customer. If Fred decides to get in line, then he 
-							waits until the menu board is available. At that time, Fred gives the order 
-							to the order taker. After the order is taken, then two things occur simultaneously: </p>
-						<ul>
-							<li>Fred moves forward if there is room, otherwise he has to wait at the menu board until
-								there is room to move forward
-							</li>
-							<li>The order is sent electronically back to the kitchen where it is prepared as soon as
-								the cook is available
-							</li>
-						</ul>
-						<p>As soon as Fred reaches the pickup window, then he pays and picks up his food, if it is ready. 
-							If the food is not ready, then Fred has to wait until his order is prepared.</p>
-					</div>
-				</ers:HtmlText>
-			</ers:HelpText>
-			<!-- ================================================== -->
+		<!-- ================================================== -->
 			<Views>
 				<SpaceView>
 					<TwoDimensionalSpaceView2D backgroundColor="lightgrey" />
