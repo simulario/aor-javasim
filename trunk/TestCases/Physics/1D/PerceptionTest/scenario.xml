@@ -1,0 +1,114 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<?xml-stylesheet type="text/xsl" href="prettyprint.xsl"?>
+<SimulationScenario scenarioName="PerceptionTest"
+                    scenarioTitle="PerceptionTest"
+                    simulationManagerDirectory="../../.." version="0.9"
+                    xsi:schemaLocation="http://aor-simulation.org ../../../../AORSL/AORSL_0-9.xsd"
+                    xmlns="http://aor-simulation.org"
+                    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+                    xmlns:xs="http://www.w3.org/2001/XMLSchema"
+                    xmlns:xi="http://www.w3.org/2001/XInclude"
+                    xmlns:saxon="http://saxon.sf.net/"
+                    xmlns:h="http://www.w3.org/1999/xhtml"
+                    xmlns:dc="http://purl.org/dc/elements/1.1/"
+                    xmlns:aors="http://aor-simulation.org">
+  <SimulationParameters simulationSteps="100000" stepDuration="50"
+                        stepTimeDelay="1" timeUnit="ms"></SimulationParameters>
+
+  <SimulationModel modelName="PerceptionTest" modelTitle="PerceptionTest">
+    <documentation>
+      <dc:creator>Holger Wuerke</dc:creator>
+
+      <dc:created>20091210</dc:created>
+
+      <description></description>
+    </documentation>
+
+    <SpaceModel geometry="Toroidal" spatialDistanceUnit="m">
+      <OneDimensional autoCollisionDetection="true"
+                      autoCollisionHandling="true" autoKinematics="true"
+                      xMax="400" />
+    </SpaceModel>
+
+    <EntityTypes>
+      <ActionEventType name="ChangeAcceleration">
+        <Attribute name="value" type="Float" />
+      </ActionEventType>
+
+      <PhysicalObjectType name="Wall" physicsType="INFINITE_MASS"></PhysicalObjectType>
+
+      <PhysicalAgentType autoPerception="true" name="Agent">
+        <InheritedAttributeSettings attribute="vx" initialValue="0"
+                                    maxValue="40" minValue="-40" />
+
+        <ReactionRule agentVariable="agent" name="WallRule">
+          <WHEN eventType="PhysicalObjectPerceptionEvent" eventVariable="e"
+                physicalObjectType="Wall" />
+
+          <DO>
+            <SCHEDULE-EVT>
+              <ActionEventExpr actionEventType="ChangeAcceleration">
+                <Slot property="value">
+                  <ValueExpr language="Java">(e.getPerceptionAngle() == 0) ? -10 : 10</ValueExpr>
+                </Slot>
+              </ActionEventExpr>
+            </SCHEDULE-EVT>
+          </DO>
+        </ReactionRule>
+      </PhysicalAgentType>
+    </EntityTypes>
+
+    <EnvironmentRules>
+      <EnvironmentRule name="ChangeAcceleration_Rule">
+        <WHEN eventType="ChangeAcceleration" eventVariable="e" />
+
+        <DO>
+          <UPDATE-ENV>
+            <UpdateObject>
+              <ObjectRef language="Java" objectType="Agent">e.getActor()</ObjectRef>
+
+              <Slot property="ax">
+                <ValueExpr language="Java">e.getValue()</ValueExpr>
+              </Slot>
+            </UpdateObject>
+          </UPDATE-ENV>
+        </DO>
+      </EnvironmentRule>
+    </EnvironmentRules>
+  </SimulationModel>
+
+  <!-- ===================== Define the initial state ==================== -->
+
+  <InitialState>
+    <PhysicalObject id="1" m="10000" type="Wall" vx="0" width="10" x="200"></PhysicalObject>
+
+    <PhysicalAgent ax="10" id="10" m="25" perceptionRadius="100" type="Agent"
+                   width="5" x="0"></PhysicalAgent>
+  </InitialState>
+
+  <!-- ===================== Define views of the simulation ============== -->
+
+  <UserInterface supportedLanguages="de">
+    <AnimationUI>
+      <Views>
+        <SpaceView canvasColor="lightgrey">
+          <OneDimensionalSpaceView2D mode="horizontal" trackColor="black" />
+        </SpaceView>
+
+        <PhysicalObjectView physicalObjectType="Wall">
+          <PhysicalShape2D>
+            <Square fill="black"></Square>
+          </PhysicalShape2D>
+        </PhysicalObjectView>
+
+        <PhysicalObjectView physicalObjectType="Agent">
+          <PhysicalShape2D>
+            <Circle fill="blue"></Circle>
+          </PhysicalShape2D>
+
+          <DisplayInfo content="m/s" property="vx"></DisplayInfo>
+        </PhysicalObjectView>
+      </Views>
+    </AnimationUI>
+  </UserInterface>
+</SimulationScenario>

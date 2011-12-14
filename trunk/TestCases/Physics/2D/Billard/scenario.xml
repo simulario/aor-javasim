@@ -1,0 +1,294 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<?xml-stylesheet type="text/xsl" href="prettyprint.xsl"?>
+<SimulationScenario scenarioName="Billard" scenarioTitle="Billard"
+                    simulationManagerDirectory="../../.." version="0.9"
+                    xsi:schemaLocation="http://aor-simulation.org ../../../../AORSL/AORSL_0-9.xsd"
+                    xmlns="http://aor-simulation.org"
+                    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+                    xmlns:xs="http://www.w3.org/2001/XMLSchema"
+                    xmlns:xi="http://www.w3.org/2001/XInclude"
+                    xmlns:saxon="http://saxon.sf.net/"
+                    xmlns:ns="http://aor-simulation.org"
+                    xmlns:h="http://www.w3.org/1999/xhtml"
+                    xmlns:dc="http://purl.org/dc/elements/1.1/">
+  <SimulationParameters simulationSteps="10000" stepDuration="50"
+                        stepTimeDelay="10" timeUnit="ms"></SimulationParameters>
+
+  <SimulationModel modelName="Billard" modelTitle="Billard">
+    <documentation>
+      <dc:creator>Holger Wuerke</dc:creator>
+
+      <dc:description>Simulation of a break shot in an eight ball billard
+      game.</dc:description>
+    </documentation>
+
+    <SpaceModel geometry="Euclidean" spatialDistanceUnit="cm">
+      <TwoDimensional autoCollisionDetection="true"
+                      autoCollisionHandling="true" autoKinematics="true"
+                      xMax="274" yMax="147"></TwoDimensional>
+    </SpaceModel>
+
+    <EntityTypes>
+      <PhysicalObjectType name="HCushion" physicsType="INFINITE_MASS">
+        <InheritedAttributeSettings attribute="width" initialValue="274" />
+
+        <InheritedAttributeSettings attribute="height" initialValue="10" />
+
+        <InheritedAttributeSettings attribute="shape2D"
+                                    initialValue="rectangle" />
+
+        <InheritedAttributeSettings attribute="materialType"
+                                    initialValue="Rubber" />
+      </PhysicalObjectType>
+
+      <PhysicalObjectType name="VCushion" physicsType="INFINITE_MASS">
+        <InheritedAttributeSettings attribute="width" initialValue="10" />
+
+        <InheritedAttributeSettings attribute="height" initialValue="147" />
+
+        <InheritedAttributeSettings attribute="shape2D"
+                                    initialValue="rectangle" />
+
+        <InheritedAttributeSettings attribute="materialType"
+                                    initialValue="Rubber" />
+      </PhysicalObjectType>
+
+      <PhysicalObjectType name="Ball">
+        <InheritedAttributeSettings attribute="width" initialValue="5.7" />
+
+        <InheritedAttributeSettings attribute="shape2D" initialValue="circle" />
+
+        <InheritedAttributeSettings attribute="m" initialValue="0.17" />
+
+        <InheritedAttributeSettings attribute="materialType"
+                                    initialValue="Rubber" />
+      </PhysicalObjectType>
+
+      <PhysicalObjectType name="Pocket" physicsType="INFINITE_MASS">
+        <InheritedAttributeSettings attribute="width" initialValue="10" />
+
+        <InheritedAttributeSettings attribute="shape2D" initialValue="circle" />
+      </PhysicalObjectType>
+    </EntityTypes>
+
+    <EnvironmentRules>
+      <EnvironmentRule name="BallInPocket">
+        <WHEN eventType="CollisionEvent" eventVariable="e" />
+
+        <IF language="Java">(e.getPhysicalObject1().getType().equals("Ball") &amp;&amp; e.getPhysicalObject2().getType().equals("Pocket")) || (e.getPhysicalObject2().getType().equals("Ball") &amp;&amp; e.getPhysicalObject1().getType().equals("Pocket"))</IF>
+
+        <THEN>
+          <UPDATE-ENV>
+            <DestroyObject>
+              <ObjectRef language="Java">(e.getPhysicalObject1().getType().equals("Ball") ? e.getPhysicalObject1() : e.getPhysicalObject2())</ObjectRef>
+            </DestroyObject>
+          </UPDATE-ENV>
+        </THEN>
+      </EnvironmentRule>
+
+      <EnvironmentRule name="RolingResistance">
+        <ON-EACH-SIMULATION-STEP />
+
+        <FOR-ObjectVariable objectType="Ball" variable="ball"></FOR-ObjectVariable>
+
+        <DO>
+          <UPDATE-ENV>
+            <UpdateObject objectVariable="ball">
+              <Slot property="vx">
+                <ValueExpr language="Java">(Math.abs(ball.getVx()) &lt; 0.001) ? 0 : ball.getVx() - 0.002 * ball.getVx() </ValueExpr>
+              </Slot>
+
+              <Slot property="vy">
+                <ValueExpr language="Java">(Math.abs(ball.getVy()) &lt; 0.001) ? 0 : ball.getVy() - 0.002 * ball.getVy()</ValueExpr>
+              </Slot>
+            </UpdateObject>
+          </UPDATE-ENV>
+        </DO>
+      </EnvironmentRule>
+    </EnvironmentRules>
+  </SimulationModel>
+
+  <InitialState>
+    <PhysicalObject id="100" type="HCushion" x="137" y="5"></PhysicalObject>
+
+    <PhysicalObject id="101" type="HCushion" x="137" y="142"></PhysicalObject>
+
+    <PhysicalObject id="102" type="VCushion" x="5" y="73.5"></PhysicalObject>
+
+    <PhysicalObject id="103" type="VCushion" x="269" y="73.5"></PhysicalObject>
+
+    <PhysicalObject id="20" type="Ball" vx="50" vy="-0.4" x="60" y="73.5"></PhysicalObject>
+
+    <PhysicalObject id="1" type="Ball" x="200.5" y="73.5"></PhysicalObject>
+
+    <PhysicalObject id="7" type="Ball" x="205.5" y="70.5"></PhysicalObject>
+
+    <PhysicalObject id="12" type="Ball" x="205.5" y="76.5"></PhysicalObject>
+
+    <PhysicalObject id="15" type="Ball" x="210.5" y="67.5"></PhysicalObject>
+
+    <PhysicalObject id="8" type="Ball" x="210.5" y="73.5"></PhysicalObject>
+
+    <PhysicalObject id="9" type="Ball" x="210.5" y="79.5"></PhysicalObject>
+
+    <PhysicalObject id="6" type="Ball" x="215.5" y="64.5"></PhysicalObject>
+
+    <PhysicalObject id="10" type="Ball" x="215.5" y="70.5"></PhysicalObject>
+
+    <PhysicalObject id="3" type="Ball" x="215.5" y="76.5"></PhysicalObject>
+
+    <PhysicalObject id="14" type="Ball" x="215.5" y="82.5"></PhysicalObject>
+
+    <PhysicalObject id="11" type="Ball" x="220.5" y="61.5"></PhysicalObject>
+
+    <PhysicalObject id="2" type="Ball" x="220.5" y="67.5"></PhysicalObject>
+
+    <PhysicalObject id="13" type="Ball" x="220.5" y="73.5"></PhysicalObject>
+
+    <PhysicalObject id="4" type="Ball" x="220.5" y="79.5"></PhysicalObject>
+
+    <PhysicalObject id="5" type="Ball" x="220.5" y="85.5"></PhysicalObject>
+
+    <PhysicalObject id="110" type="Pocket" x="9" y="9"></PhysicalObject>
+
+    <PhysicalObject id="111" type="Pocket" x="265" y="9"></PhysicalObject>
+
+    <PhysicalObject id="112" type="Pocket" x="9" y="138"></PhysicalObject>
+
+    <PhysicalObject id="113" type="Pocket" x="265" y="138"></PhysicalObject>
+
+    <PhysicalObject id="114" type="Pocket" x="137" y="9"></PhysicalObject>
+
+    <PhysicalObject id="115" type="Pocket" x="137" y="138"></PhysicalObject>
+  </InitialState>
+
+  <UserInterface supportedLanguages="de">
+    <AnimationUI showZoomControlPanel="true">
+      <Views>
+        <SpaceView canvasColor="lightgrey">
+          <TwoDimensionalSpaceView2D backgroundColorRGB="98 166 111"></TwoDimensionalSpaceView2D>
+        </SpaceView>
+
+        <PhysicalObjectView physicalObjectIdRef="20">
+          <PhysicalShape2D>
+            <Circle fill="white"></Circle>
+          </PhysicalShape2D>
+        </PhysicalObjectView>
+
+        <PhysicalObjectView physicalObjectIdRef="1">
+          <PhysicalShape2D>
+            <Circle fill="yellow"></Circle>
+          </PhysicalShape2D>
+        </PhysicalObjectView>
+
+        <PhysicalObjectView physicalObjectIdRef="2">
+          <PhysicalShape2D>
+            <Circle fill="blue"></Circle>
+          </PhysicalShape2D>
+        </PhysicalObjectView>
+
+        <PhysicalObjectView physicalObjectIdRef="3">
+          <PhysicalShape2D>
+            <Circle fill="red"></Circle>
+          </PhysicalShape2D>
+        </PhysicalObjectView>
+
+        <PhysicalObjectView physicalObjectIdRef="4">
+          <PhysicalShape2D>
+            <Circle fill="magenta"></Circle>
+          </PhysicalShape2D>
+        </PhysicalObjectView>
+
+        <PhysicalObjectView physicalObjectIdRef="5">
+          <PhysicalShape2D>
+            <Circle fill="orange"></Circle>
+          </PhysicalShape2D>
+        </PhysicalObjectView>
+
+        <PhysicalObjectView physicalObjectIdRef="6">
+          <PhysicalShape2D>
+            <Circle fill="green"></Circle>
+          </PhysicalShape2D>
+        </PhysicalObjectView>
+
+        <PhysicalObjectView physicalObjectIdRef="7">
+          <PhysicalShape2D>
+            <Circle fill="darkred"></Circle>
+          </PhysicalShape2D>
+        </PhysicalObjectView>
+
+        <PhysicalObjectView physicalObjectIdRef="8">
+          <PhysicalShape2D>
+            <Circle fill="black"></Circle>
+          </PhysicalShape2D>
+        </PhysicalObjectView>
+
+        <PhysicalObjectView physicalObjectIdRef="9">
+          <PhysicalShape2D>
+            <Circle fill="yellow" stroke="white" strokeWidth="3"></Circle>
+          </PhysicalShape2D>
+        </PhysicalObjectView>
+
+        <PhysicalObjectView physicalObjectIdRef="10">
+          <PhysicalShape2D>
+            <Circle fill="blue" stroke="white" strokeWidth="3"></Circle>
+          </PhysicalShape2D>
+        </PhysicalObjectView>
+
+        <PhysicalObjectView physicalObjectIdRef="11">
+          <PhysicalShape2D>
+            <Circle fill="red" stroke="white" strokeWidth="3"></Circle>
+          </PhysicalShape2D>
+        </PhysicalObjectView>
+
+        <PhysicalObjectView physicalObjectIdRef="12">
+          <PhysicalShape2D>
+            <Circle fill="magenta" stroke="white" strokeWidth="3"></Circle>
+          </PhysicalShape2D>
+        </PhysicalObjectView>
+
+        <PhysicalObjectView physicalObjectIdRef="13">
+          <PhysicalShape2D>
+            <Circle fill="orange" stroke="white" strokeWidth="3"></Circle>
+          </PhysicalShape2D>
+        </PhysicalObjectView>
+
+        <PhysicalObjectView physicalObjectIdRef="14">
+          <PhysicalShape2D>
+            <Circle fill="green" stroke="white" strokeWidth="3"></Circle>
+          </PhysicalShape2D>
+        </PhysicalObjectView>
+
+        <PhysicalObjectView physicalObjectIdRef="15">
+          <PhysicalShape2D>
+            <Circle fill="darkred" stroke="white" strokeWidth="3"></Circle>
+          </PhysicalShape2D>
+        </PhysicalObjectView>
+
+        <PhysicalObjectView physicalObjectType="HCushion">
+          <PhysicalShape2D>
+            <Rectangle fillRGB="123 67 54"></Rectangle>
+          </PhysicalShape2D>
+        </PhysicalObjectView>
+
+        <PhysicalObjectView physicalObjectType="VCushion">
+          <PhysicalShape2D>
+            <Rectangle fillRGB="123 67 54"></Rectangle>
+          </PhysicalShape2D>
+        </PhysicalObjectView>
+
+        <PhysicalObjectView physicalObjectType="Pocket">
+          <PhysicalShape2D>
+            <Circle fill="black"></Circle>
+          </PhysicalShape2D>
+
+          <AttachedShape2D offsetX="0px" offsetY="0px">
+            <Shape2D>
+              <Circle fill="black" r="10"></Circle>
+            </Shape2D>
+          </AttachedShape2D>
+        </PhysicalObjectView>
+      </Views>
+    </AnimationUI>
+  </UserInterface>
+</SimulationScenario>
