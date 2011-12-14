@@ -1,0 +1,128 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<?xml-stylesheet type="text/xsl" href="prettyprint.xsl"?>
+<SimulationScenario scenarioName="PerceptionTest"
+                    scenarioTitle="PerceptionTest"
+                    simulationManagerDirectory="../../.." version="0.9"
+                    xsi:schemaLocation="http://aor-simulation.org ../../../../AORSL/AORSL_0-9.xsd"
+                    xmlns="http://aor-simulation.org"
+                    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+                    xmlns:xs="http://www.w3.org/2001/XMLSchema"
+                    xmlns:xi="http://www.w3.org/2001/XInclude"
+                    xmlns:saxon="http://saxon.sf.net/"
+                    xmlns:h="http://www.w3.org/1999/xhtml"
+                    xmlns:dc="http://purl.org/dc/elements/1.1/"
+                    xmlns:aors="http://aor-simulation.org">
+  <SimulationParameters simulationSteps="100000" stepDuration="100"
+                        stepTimeDelay="1" timeUnit="ms"></SimulationParameters>
+
+  <SimulationModel modelName="PerceptionTest" modelTitle="PerceptionTest">
+    <documentation>
+      <dc:creator>Holger Wuerke</dc:creator>
+
+      <dc:created>20091210</dc:created>
+
+      <dc:description>A Ball moves towards a wall. Once it percepts the wall,
+      the ball reduces its velocity to avoid collision.</dc:description>
+    </documentation>
+
+    <SpaceModel geometry="Toroidal" spatialDistanceUnit="m">
+      <TwoDimensional autoCollisionDetection="true"
+                      autoCollisionHandling="true" autoKinematics="true"
+                      xMax="1000" yMax="1000"></TwoDimensional>
+    </SpaceModel>
+
+    <EntityTypes>
+      <PhysicalObjectType name="Wall" physicsType="IMMATERIAL">
+        <InheritedAttributeSettings attribute="width" initialValue="10" />
+
+        <InheritedAttributeSettings attribute="shape2D" initialValue="circle" />
+      </PhysicalObjectType>
+
+      <PhysicalAgentType autoPerception="true" name="Agent">
+        <InheritedAttributeSettings attribute="m" initialValue="1" />
+
+        <InheritedAttributeSettings attribute="shape2D" initialValue="circle" />
+
+        <InheritedAttributeSettings attribute="width" initialValue="20" />
+
+        <InheritedAttributeSettings attribute="perceptionRadius"
+                                    initialValue="100" />
+
+        <ReactionRule agentVariable="agent" name="WallRule">
+          <WHEN eventType="PhysicalObjectPerceptionEvent" eventVariable="evt"
+                physicalObjectType="Wall" />
+
+          <DO>
+            <UPDATE-AGT>
+              <Slot property="vx">
+                <ValueExpr language="Java">agent.getVx() + Math.cos(evt.getPerceptionAngle()) /10</ValueExpr>
+              </Slot>
+
+              <Slot property="vy">
+                <ValueExpr language="Java">agent.getVy() + Math.sin(evt.getPerceptionAngle()) /10</ValueExpr>
+              </Slot>
+            </UPDATE-AGT>
+          </DO>
+        </ReactionRule>
+      </PhysicalAgentType>
+    </EntityTypes>
+  </SimulationModel>
+
+  <!-- ===================== Define the initial state ==================== -->
+
+  <InitialState>
+    <PhysicalAgent id="1000" type="Agent" x="50" y="500">
+      <Slot property="vx">
+        <ValueExpr language="Java">10</ValueExpr>
+      </Slot>
+
+      <Slot property="vy">
+        <ValueExpr language="Java">0</ValueExpr>
+      </Slot>
+    </PhysicalAgent>
+
+    <PhysicalObject id="1" type="Wall" x="200" y="570"></PhysicalObject>
+
+    <PhysicalObject id="2" type="Wall" x="310" y="500"></PhysicalObject>
+
+    <PhysicalObject id="3" type="Wall" x="500" y="600"></PhysicalObject>
+
+    <PhysicalObject id="4" type="Wall" x="750" y="630"></PhysicalObject>
+
+    <PhysicalObject id="5" type="Wall" x="800" y="620"></PhysicalObject>
+
+    <PhysicalObject id="6" type="Wall" x="800" y="570"></PhysicalObject>
+
+    <PhysicalObject id="7" type="Wall" x="790" y="500"></PhysicalObject>
+
+    <PhysicalObject id="8" type="Wall" x="750" y="450"></PhysicalObject>
+
+    <PhysicalObject id="9" type="Wall" x="720" y="490"></PhysicalObject>
+
+    <PhysicalObject id="10" type="Wall" x="730" y="530"></PhysicalObject>
+  </InitialState>
+
+  <!-- ===================== Define views of the simulation ============== -->
+
+  <UserInterface supportedLanguages="de">
+    <AnimationUI>
+      <Views>
+        <SpaceView canvasColor="lightgrey">
+          <TwoDimensionalSpaceView2D backgroundColor="white"></TwoDimensionalSpaceView2D>
+        </SpaceView>
+
+        <PhysicalObjectView physicalObjectType="Wall">
+          <PhysicalShape2D>
+            <Circle fill="black"></Circle>
+          </PhysicalShape2D>
+        </PhysicalObjectView>
+
+        <PhysicalObjectView physicalObjectType="Agent">
+          <PhysicalShape2D>
+            <Circle fill="blue"></Circle>
+          </PhysicalShape2D>
+        </PhysicalObjectView>
+      </Views>
+    </AnimationUI>
+  </UserInterface>
+</SimulationScenario>
