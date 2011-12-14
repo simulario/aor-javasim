@@ -1,7 +1,7 @@
 /**
  * 
  */
-package aors.module.physics2d.util;
+package aors.module.physics.util;
 
 /**
  * A simple pair of objects.

@@ -1,11 +1,12 @@
 /**
  * 
  */
-package aors.module.physics2d.util;
+package aors.module.physics.util;
 
 import javax.vecmath.Vector3f;
 
 import aors.model.envsim.Physical;
+import aors.module.physics.collision.CollisionObjectType;
 
 import com.bulletphysics.collision.shapes.CollisionShape;
 import com.bulletphysics.dynamics.RigidBody;

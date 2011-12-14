@@ -1,7 +1,7 @@
 /**
  * 
  */
-package aors.module.physics2d.util;
+package aors.module.physics.util;
 
 import aors.GeneralSpaceModel.SpatialDistanceUnit;
 
