@@ -5,8 +5,10 @@ package aors.module.physics.simulator.twoD;
 
 import java.lang.reflect.Field;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 
 import org.jbox2d.collision.Manifold;
@@ -44,6 +46,7 @@ import aors.module.physics.PhysicsSimulator;
 import aors.module.physics.collision.CollisionObjectType;
 import aors.module.physics.collision.Perception2D;
 import aors.module.physics.util.MaterialConstants;
+import aors.module.physics.util.UtilFunctions;
 
 
 /**
@@ -61,9 +64,19 @@ public class Box2DSimulator extends PhysicsSimulator {
   private double timeRatio;
 
   /**
+   * timeRatio * timeRatio 
+   */
+  private double timeRatioSquared;
+  
+  /**
    * The Box2D world, where everything is simulated.
    */
   private World world;
+  
+  /**
+   * A map that maps AOR-object IDs to Box2D bodies. 
+   */
+  private Map<Long, Body> bodyMap = new HashMap<Long, Body>();
 
   /**
    * A set that contains all Box2D bodies that have reached the space border
@@ -106,9 +119,10 @@ public class Box2DSimulator extends PhysicsSimulator {
 
     // compute time ratio, so we can use a step duration value of 1/60 in Box2D
     timeRatio = stepDuration * 60;
+    timeRatioSquared = timeRatio * timeRatio;
     stepDuration = 1f / 60f;
 
-    Vec2 g = new Vec2(0f, (float) (unitConverter.accelerationToUser(gravitation) * timeRatio * timeRatio));
+    Vec2 g = new Vec2(0f, (float) (unitConverter.accelerationToUser(gravitation) * timeRatioSquared));
     world = new World(g, true);
 
     CollisionListener cl = new CollisionListener();
@@ -180,32 +194,18 @@ public class Box2DSimulator extends PhysicsSimulator {
   public void simulationStepStart(long stepNumber) {
     this.stepNumber = stepNumber;
 
-    // long start, end;
-
-    // start = System.nanoTime();
     updateEngineObjects();
-    // end = System.nanoTime();
-
-    // System.out.println("updateEngineObjects: " + (end-start));
 
     // perform one simulation step in the engine
-    // start = System.nanoTime();
     world.step((float) stepDuration, 10, 10);
-    // end = System.nanoTime();
-
-    // System.out.println("step: " + (end-start));
 
     if (spaceModel.getGeometry().equals(Geometry.Euclidean)) {
       handleBorderContact();
     }
 
-    // start = System.nanoTime();
     if (autoKinematics) {
       updateAorObjects();
     }
-    // end = System.nanoTime();
-
-    // System.out.println("updateAorObjects: " + (end-start));
 
     events.addAll(collisionEvents);
     processPerceptions();
@@ -262,15 +262,11 @@ public class Box2DSimulator extends PhysicsSimulator {
    * @param object
    */
   private void addBody(Physical object) {
-    // if phantom, no body is needed
-    if (object.getPhysicsType().equals(PhysicsType.PHANTOM)) {
-      return;
-    }
-    
+
     BodyDef def = new BodyDef();
     def.position.set((float) object.getPos().getX(), (float) object.getPos()
         .getY());
-    def.angle = (float) (object.getRotZ() * Math.PI / 180);
+    def.angle = (float) (UtilFunctions.degree2radian(object.getRotZ()));
     def.userData = object;
 
     Body body = world.createBody(def);
@@ -362,7 +358,7 @@ public class Box2DSimulator extends PhysicsSimulator {
 
       body.setLinearVelocity(new Vec2((float) vx, (float) vy));
       body.setAngularVelocity((float) (unitConverter
-          .angularVelocityToUser(object.getOmegaZ() * Math.PI / 180) * timeRatio));
+          .angularVelocityToUser(UtilFunctions.degree2radian(object.getOmegaZ())) * timeRatio));
     }
 
     // if agent with autoPerception, add another shape for perception
@@ -389,6 +385,7 @@ public class Box2DSimulator extends PhysicsSimulator {
       }
     }
 
+    bodyMap.put(object.getId(), body);
   }
 
   /**
@@ -430,18 +427,8 @@ public class Box2DSimulator extends PhysicsSimulator {
    * @param object
    */
   private void removeBody(Physical object) {
-    Body body = world.getBodyList();
-
-    while (body != null) {
-      if (body.getUserData() instanceof Physical) {
-        if (body.getUserData().equals(object)) {
-          world.destroyBody(body);
-          return;
-        }
-      }
-      
-      body = body.getNext();
-    }
+    Body body = bodyMap.remove(object.getId());
+    world.destroyBody(body);
   }
 
   /**
@@ -502,7 +489,7 @@ public class Box2DSimulator extends PhysicsSimulator {
         }
 
         // orientation
-        object.setRotZ(body.getAngle() * 180 / Math.PI);
+        object.setRotZ(UtilFunctions.radian2degree(body.getAngle()));
 
         // velocity
         object.setVx(unitConverter.velocityToMetersPerSeconds(body
@@ -510,8 +497,8 @@ public class Box2DSimulator extends PhysicsSimulator {
         object.setVy(unitConverter.velocityToMetersPerSeconds(body
             .getLinearVelocity().y) / timeRatio);
 
-        object.setOmegaZ(unitConverter.angularVelocityToRadiansPerSeconds(body
-            .getAngularVelocity() * 180 / Math.PI) / timeRatio);
+        object.setOmegaZ(unitConverter.angularVelocityToRadiansPerSeconds(UtilFunctions.radian2degree(body
+            .getAngularVelocity())) / timeRatio);
 
         // debug output
         // System.out.print(object.getId() + ") ");
@@ -548,7 +535,7 @@ public class Box2DSimulator extends PhysicsSimulator {
 
         // position, orientation
         body.setTransform(new Vec2((float) object.getX(), (float) object.getY()),
-            (float) (object.getRotZ() * Math.PI / 180));
+            (float) (UtilFunctions.degree2radian(object.getRotZ())));
         
         // polygon vertices
         if (object.getShape2D().equals(Shape2D.polygon)) {
@@ -573,23 +560,23 @@ public class Box2DSimulator extends PhysicsSimulator {
 
         body.setLinearVelocity(new Vec2((float) vx, (float) vy));
         body.setAngularVelocity((float) (unitConverter
-            .angularVelocityToUser(object.getOmegaZ() * Math.PI / 180) * timeRatio));
+            .angularVelocityToUser(UtilFunctions.degree2radian(object.getOmegaZ())) * timeRatio));
 
         // acceleration
         if (object.getAx() != 0 || object.getAy() != 0) {
           // F = m * a
           double fx = unitConverter.accelerationToUser(object.getAx())
-              * timeRatio * timeRatio * object.getM();
+              * timeRatioSquared * object.getM();
           double fy = unitConverter.accelerationToUser(object.getAy())
-              * timeRatio * timeRatio * object.getM();
+              * timeRatioSquared * object.getM();
           Vec2 force = new Vec2((float) fx, (float) fy);
           body.applyForce(force, body.getWorldCenter());
         }
 
         if (object.getAlphaZ() != 0) {
           // torque = inertia * alpha
-          double alpha = unitConverter.angularAccelerationToUser(object
-              .getAlphaZ() * Math.PI / 180) * timeRatio * timeRatio;
+          double alpha = unitConverter.angularAccelerationToUser(UtilFunctions.degree2radian(object
+              .getAlphaZ())) * timeRatioSquared;
           body.applyTorque((float) (body.getInertia() * alpha));
         }
       }
@@ -610,9 +597,9 @@ public class Box2DSimulator extends PhysicsSimulator {
       return true;
     }
     
-    double orientation = agent.getRotZ() * Math.PI / 180;
+    double orientation = UtilFunctions.degree2radian(agent.getRotZ());
     double perceptionDirection = (Math.atan2(agent.getPerceptionDirection().getY(), agent.getPerceptionDirection().getX()) + orientation) % (2 * Math.PI);
-    double pHalfAngle = agent.getPerceptionAngle() * (Math.PI / 180) / 2;
+    double pHalfAngle = UtilFunctions.degree2radian(agent.getPerceptionAngle()) / 2;
     double pStart = perceptionDirection - pHalfAngle;
     double pEnd = (perceptionDirection + pHalfAngle) % (2 * Math.PI);
     
@@ -735,9 +722,14 @@ public class Box2DSimulator extends PhysicsSimulator {
      * @param point
      */
     private void processPerception(Body perceiver, Body perceived, Vec2 point) {
+      // if perceived object is phantom, no perception
+      if (((Physical) perceived.getUserData()).getPhysicsType().equals(PhysicsType.PHANTOM)) {
+        return;
+      }
+      
       // update agent orientation
       PhysicalAgentObject agent = (PhysicalAgentObject) perceiver.getUserData();
-      agent.setRotZ(perceiver.getAngle() * 180 / Math.PI);
+      agent.setRotZ(UtilFunctions.radian2degree(perceiver.getAngle()));
 
       double distance = Math.sqrt(Math.pow((point.x - perceiver.getPosition().x), 2)
           + Math.pow((point.y - perceiver.getPosition().y), 2));
@@ -752,7 +744,7 @@ public class Box2DSimulator extends PhysicsSimulator {
         return;
       }
 
-      double orientation = agent.getRotZ() * Math.PI / 180;
+      double orientation = UtilFunctions.degree2radian(agent.getRotZ());
       double perceptionDirection = (Math.atan2(agent.getPerceptionDirection().getY(), agent.getPerceptionDirection().getX()) + orientation) % (2 * Math.PI);
       double angle = globalAngle - perceptionDirection;
       
@@ -796,8 +788,11 @@ public class Box2DSimulator extends PhysicsSimulator {
         Physical o1 = (Physical) contact.getFixtureA().getBody().getUserData();
         Physical o2 = (Physical) contact.getFixtureB().getBody().getUserData();
         
-        // immaterial objects do not collide
-        if (o1.getPhysicsType().equals(PhysicsType.IMMATERIAL) || o2.getPhysicsType().equals(PhysicsType.IMMATERIAL)) {
+        // immaterial and phantom objects do not collide
+        if (o1.getPhysicsType().equals(PhysicsType.IMMATERIAL) || 
+            o2.getPhysicsType().equals(PhysicsType.IMMATERIAL) ||
+            o1.getPhysicsType().equals(PhysicsType.PHANTOM) ||
+            o2.getPhysicsType().equals(PhysicsType.PHANTOM)) {
           contact.setEnabled(false);
           return;
         }

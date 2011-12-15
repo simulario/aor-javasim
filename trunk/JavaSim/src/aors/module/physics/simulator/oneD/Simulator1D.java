@@ -25,11 +25,9 @@ import aors.data.evt.sim.SimulationStepEvent;
 import aors.logger.model.EnvSimInputEventType;
 import aors.logger.model.EnvironmentSimulatorStep;
 import aors.logger.model.PhysAgtType;
-import aors.logger.model.PhysicalAgents;
 import aors.logger.model.ResultingStateChangesType;
 import aors.logger.model.SimulationParameters;
 import aors.logger.model.SimulationStep;
-import aors.logger.model.SimulationStep.AgentSimResultingStateChanges;
 import aors.model.envevt.CollisionEvent;
 import aors.model.envevt.PhysicalObjectPerceptionEvent;
 import aors.model.envsim.Physical;
@@ -139,7 +137,8 @@ public class Simulator1D extends PhysicsSimulator {
                   List<PhysAgtType> list = change.getPhysicalAgents().getPhysAgt();
 
                   for (PhysAgtType a : list) {
-                    //System.out.println(a.getId());                    
+                    System.out.println(a.getAx());   
+                    
                   }
                 }
               }
