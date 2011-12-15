@@ -6,6 +6,7 @@ package aors.module.physics.collision;
 import aors.GeneralSpaceModel;
 import aors.model.envsim.Physical;
 import aors.model.envsim.PhysicalAgentObject;
+import aors.module.physics.util.UtilFunctions;
 
 /**
  * A perception in 2D space.
@@ -39,7 +40,7 @@ public class Perception2D extends Perception {
       globalAngle += 2 * Math.PI;
     }
 
-    double orientation = perceiver.getRotZ() * Math.PI / 180;
+    double orientation = UtilFunctions.degree2radian(perceiver.getRotZ());
     double perceptionDirection = (Math.atan2(perceiver.getPerceptionDirection().getY(), perceiver.getPerceptionDirection().getX()) + orientation) % (2 * Math.PI);
     angle = globalAngle - perceptionDirection;
     

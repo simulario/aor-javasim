@@ -3,6 +3,7 @@
  */
 package aors.module.physics.collision;
 
+import aors.module.physics.util.UtilFunctions;
 import aors.GeneralSpaceModel;
 import aors.model.envsim.Physical;
 import aors.model.envsim.PhysicalAgentObject;
@@ -157,7 +158,7 @@ public abstract class Perception {
 
   public String toString() {
     return "Perception: " + perceiver + " -> " + perceived + "\n\tDistance: "
-        + String.format("%.2f", getDistance()) + " Angle: " + String.format("%.2f", getAngle() * 180 / Math.PI)
+        + String.format("%.2f", getDistance()) + " Angle: " + String.format("%.2f", UtilFunctions.radian2degree(getAngle()))
         + "°";
   }
 }
