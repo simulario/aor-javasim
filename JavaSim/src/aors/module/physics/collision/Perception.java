@@ -158,7 +158,7 @@ public abstract class Perception {
 
   public String toString() {
     return "Perception: " + perceiver + " -> " + perceived + "\n\tDistance: "
-        + String.format("%.2f", getDistance()) + " Angle: " + String.format("%.2f", UtilFunctions.radian2degree(getAngle()))
+        + String.format("%.2f", getDistance()) + " Angle: " + String.format("%.2f", UtilFunctions.radianToDegree(getAngle()))
         + "°";
   }
 }

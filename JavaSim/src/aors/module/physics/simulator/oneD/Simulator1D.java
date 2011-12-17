@@ -25,6 +25,7 @@ import aors.data.evt.sim.SimulationStepEvent;
 import aors.logger.model.EnvSimInputEventType;
 import aors.logger.model.EnvironmentSimulatorStep;
 import aors.logger.model.PhysAgtType;
+import aors.logger.model.PhysicalObjType;
 import aors.logger.model.ResultingStateChangesType;
 import aors.logger.model.SimulationParameters;
 import aors.logger.model.SimulationStep;
@@ -120,7 +121,7 @@ public class Simulator1D extends PhysicsSimulator {
    * @see aors.module.physics2d.PhysicsSimulator#simulationStepEnd()
    */
   @Override
-  public void simulationStepEnd(SimulationStepEvent simulationStepEvent) {
+  public void simulationStepEnd(SimulationStepEvent simulationStepEvent) {    
     SimulationStep simStep = simulationStepEvent.getSimulationStep();
     EnvironmentSimulatorStep envStep = simStep.getEnvironmentSimulatorStep();
     if (envStep != null) {
@@ -137,7 +138,18 @@ public class Simulator1D extends PhysicsSimulator {
                   List<PhysAgtType> list = change.getPhysicalAgents().getPhysAgt();
 
                   for (PhysAgtType a : list) {
-                    System.out.println(a.getAx());   
+                    System.out.println(a.getId());   
+                    
+                  }
+                }
+              }
+
+              if (change.getPhysicalObjects() != null) {
+                if (change.getPhysicalObjects().getPhysObj() != null) {
+                  List<PhysicalObjType> list = change.getPhysicalObjects().getPhysObj();
+
+                  for (PhysicalObjType o : list) {
+                    System.out.println(o.getId());   
                     
                   }
                 }
@@ -147,7 +159,6 @@ public class Simulator1D extends PhysicsSimulator {
         }
       }
     }
-    
   }
 
   /*
