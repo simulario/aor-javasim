@@ -11,11 +11,14 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
+import javax.xml.bind.JAXBElement;
+
 import org.jbox2d.collision.Manifold;
 import org.jbox2d.collision.WorldManifold;
 import org.jbox2d.collision.shapes.CircleShape;
 import org.jbox2d.collision.shapes.PolygonShape;
 import org.jbox2d.collision.shapes.ShapeType;
+import org.jbox2d.common.Transform;
 import org.jbox2d.common.Vec2;
 import org.jbox2d.dynamics.Body;
 import org.jbox2d.dynamics.BodyDef;
@@ -34,7 +37,13 @@ import aors.data.DataBus;
 import aors.data.evt.sim.ObjektDestroyEvent;
 import aors.data.evt.sim.ObjektInitEvent;
 import aors.data.evt.sim.SimulationStepEvent;
+import aors.logger.model.EnvSimInputEventType;
+import aors.logger.model.EnvironmentSimulatorStep;
+import aors.logger.model.PhysAgtType;
+import aors.logger.model.PhysicalObjType;
+import aors.logger.model.ResultingStateChangesType;
 import aors.logger.model.SimulationParameters;
+import aors.logger.model.SimulationStep;
 import aors.model.envevt.CollisionEvent;
 import aors.model.envevt.PhysicalObjectPerceptionEvent;
 import aors.model.envsim.Physical;
@@ -183,6 +192,38 @@ public class Box2DSimulator extends PhysicsSimulator {
 
   @Override
   public void simulationStepEnd(SimulationStepEvent simulationStepEvent) {
+    List<PhysAgtType> agentList = new ArrayList<PhysAgtType>();
+    List<PhysicalObjType> objectList = new ArrayList<PhysicalObjType>();
+
+    SimulationStep simStep = simulationStepEvent.getSimulationStep();
+    EnvironmentSimulatorStep envStep = simStep.getEnvironmentSimulatorStep();
+    if (envStep != null) {
+      List<JAXBElement<? extends EnvSimInputEventType>> envSimInputEvents = envStep.getEnvSimInputEvent();
+      for (JAXBElement<? extends EnvSimInputEventType> envSimInputEventType : envSimInputEvents) {
+        if (envSimInputEventType.getValue() != null) {
+          if (envSimInputEventType.getValue().getResultingStateChanges() != null) {
+            List<ResultingStateChangesType> changeList = envSimInputEventType
+                .getValue().getResultingStateChanges();
+
+            for (ResultingStateChangesType change : changeList) {
+              if (change.getPhysicalAgents() != null) {
+                if (change.getPhysicalAgents().getPhysAgt() != null) {
+                  agentList = change.getPhysicalAgents().getPhysAgt();
+                }
+              }
+
+              if (change.getPhysicalObjects() != null) {
+                if (change.getPhysicalObjects().getPhysObj() != null) {
+                  objectList = change.getPhysicalObjects().getPhysObj();
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+    
+    updateEngineObjects(agentList, objectList);
   }
 
   /*
@@ -194,7 +235,8 @@ public class Box2DSimulator extends PhysicsSimulator {
   public void simulationStepStart(long stepNumber) {
     this.stepNumber = stepNumber;
 
-    updateEngineObjects();
+    //updateEngineObjects();
+    assignAcceleration();
 
     // perform one simulation step in the engine
     world.step((float) stepDuration, 10, 10);
@@ -266,7 +308,7 @@ public class Box2DSimulator extends PhysicsSimulator {
     BodyDef def = new BodyDef();
     def.position.set((float) object.getPos().getX(), (float) object.getPos()
         .getY());
-    def.angle = (float) (UtilFunctions.degree2radian(object.getRotZ()));
+    def.angle = (float) (UtilFunctions.degreeToRadian(object.getRotZ()));
     def.userData = object;
 
     Body body = world.createBody(def);
@@ -358,7 +400,7 @@ public class Box2DSimulator extends PhysicsSimulator {
 
       body.setLinearVelocity(new Vec2((float) vx, (float) vy));
       body.setAngularVelocity((float) (unitConverter
-          .angularVelocityToUser(UtilFunctions.degree2radian(object.getOmegaZ())) * timeRatio));
+          .angularVelocityToUser(UtilFunctions.degreeToRadian(object.getOmegaZ())) * timeRatio));
     }
 
     // if agent with autoPerception, add another shape for perception
@@ -475,21 +517,21 @@ public class Box2DSimulator extends PhysicsSimulator {
         object.setX(body.getPosition().x);
         object.setY(body.getPosition().y);
 
-        if (object.getShape2D().equals(Shape2D.polygon)) {
-          Fixture f = body.getFixtureList();
-          while (f != null) {
-            if (f.getShape().m_type.equals(ShapeType.POLYGON)) {
-              PolygonShape shape = (PolygonShape) f.getShape();
-              object.setPoints(pointsListToString(shape.getVertices(), shape.getVertexCount()));
-              break;
-            }
-            
-            f = f.getNext();
-          }
-        }
+//        if (object.getShape2D().equals(Shape2D.polygon)) {
+//          Fixture f = body.getFixtureList();
+//          while (f != null) {
+//            if (f.getShape().m_type.equals(ShapeType.POLYGON)) {
+//              PolygonShape shape = (PolygonShape) f.getShape();
+//              object.setPoints(pointsListToString(shape.getVertices(), shape.getVertexCount()));
+//              break;
+//            }
+//            
+//            f = f.getNext();
+//          }
+//        }
 
         // orientation
-        object.setRotZ(UtilFunctions.radian2degree(body.getAngle()));
+        object.setRotZ(UtilFunctions.radianToDegree(body.getAngle()));
 
         // velocity
         object.setVx(unitConverter.velocityToMetersPerSeconds(body
@@ -497,7 +539,7 @@ public class Box2DSimulator extends PhysicsSimulator {
         object.setVy(unitConverter.velocityToMetersPerSeconds(body
             .getLinearVelocity().y) / timeRatio);
 
-        object.setOmegaZ(unitConverter.angularVelocityToRadiansPerSeconds(UtilFunctions.radian2degree(body
+        object.setOmegaZ(unitConverter.angularVelocityToRadiansPerSeconds(UtilFunctions.radianToDegree(body
             .getAngularVelocity())) / timeRatio);
 
         // debug output
@@ -524,6 +566,42 @@ public class Box2DSimulator extends PhysicsSimulator {
   }
 
   /**
+   * Generates forces that result in an acceleration for those objects, that 
+   * have linear or angular acceleration set.
+   */
+  private void assignAcceleration() {
+    Body body = world.getBodyList();
+
+    while (body != null) {
+      if (body.getUserData() instanceof Physical) {
+        Physical object = (Physical) body.getUserData();
+
+        // linear
+        if (object.getAx() != 0 || object.getAy() != 0) {
+          // F = m * a
+          double fx = unitConverter.accelerationToUser(object.getAx())
+              * timeRatioSquared * object.getM();
+          double fy = unitConverter.accelerationToUser(object.getAy())
+              * timeRatioSquared * object.getM();
+          Vec2 force = new Vec2((float) fx, (float) fy);
+          body.applyForce(force, body.getWorldCenter());
+        }
+
+        // angular
+        if (object.getAlphaZ() != 0) {
+          // torque = inertia * alpha
+          double alpha = unitConverter.angularAccelerationToUser(UtilFunctions.degreeToRadian(object
+              .getAlphaZ())) * timeRatioSquared;
+          body.applyTorque((float) (body.getInertia() * alpha));
+        }
+      }
+
+      body = body.getNext();
+    }
+    
+  }
+  
+  /**
    * Update the engine objects with the data from the PhysicalAgentObjects.
    */
   private void updateEngineObjects() {
@@ -535,7 +613,7 @@ public class Box2DSimulator extends PhysicsSimulator {
 
         // position, orientation
         body.setTransform(new Vec2((float) object.getX(), (float) object.getY()),
-            (float) (UtilFunctions.degree2radian(object.getRotZ())));
+            (float) (UtilFunctions.degreeToRadian(object.getRotZ())));
         
         // polygon vertices
         if (object.getShape2D().equals(Shape2D.polygon)) {
@@ -560,7 +638,7 @@ public class Box2DSimulator extends PhysicsSimulator {
 
         body.setLinearVelocity(new Vec2((float) vx, (float) vy));
         body.setAngularVelocity((float) (unitConverter
-            .angularVelocityToUser(UtilFunctions.degree2radian(object.getOmegaZ())) * timeRatio));
+            .angularVelocityToUser(UtilFunctions.degreeToRadian(object.getOmegaZ())) * timeRatio));
 
         // acceleration
         if (object.getAx() != 0 || object.getAy() != 0) {
@@ -575,7 +653,7 @@ public class Box2DSimulator extends PhysicsSimulator {
 
         if (object.getAlphaZ() != 0) {
           // torque = inertia * alpha
-          double alpha = unitConverter.angularAccelerationToUser(UtilFunctions.degree2radian(object
+          double alpha = unitConverter.angularAccelerationToUser(UtilFunctions.degreeToRadian(object
               .getAlphaZ())) * timeRatioSquared;
           body.applyTorque((float) (body.getInertia() * alpha));
         }
@@ -584,6 +662,146 @@ public class Box2DSimulator extends PhysicsSimulator {
       body = body.getNext();
     }
   }
+  
+  /**
+   * Updates the engine objects whose corresponding AOR-Objects have changed
+   * some properties.
+   * 
+   * @param agentList
+   * @param objectList
+   */
+  private void updateEngineObjects(List<PhysAgtType> agentList,
+      List<PhysicalObjType> objectList) {
+    // update agents
+    for (PhysAgtType agent : agentList) {
+      Body body = bodyMap.get(agent.getId());
+      
+      // position, orientation
+      if (agent.getX() != null || agent.getY() != null || 
+          agent.getRotationAngleZ() != null) {
+        Transform t = body.getTransform();
+        Vec2 pos = t.position;
+        float angle = t.getAngle();
+        
+        
+        if (agent.getX() != null) {
+          pos.x = agent.getX().floatValue();
+        }
+
+        if (agent.getY() != null) {
+          pos.y = agent.getY().floatValue();
+        }
+
+        if (agent.getRotationAngleZ() != null) {
+          angle = (float) UtilFunctions.degreeToRadian(agent.getRotationAngleZ());
+        }
+        
+        body.setTransform(pos, angle);
+      }
+            
+      // polygon vertices
+//      if (agent.getPoints() != null) {
+//        Vec2[] points = pointsStringToList(agent.getPoints());
+//        
+//        Fixture f = body.getFixtureList();
+//        while (f != null) {
+//          if (f.getShape().m_type.equals(ShapeType.POLYGON)) {
+//            ((PolygonShape)f.getShape()).set(points, points.length);
+//            break;
+//          }
+//          
+//          f = f.getNext();
+//        }
+//      }
+
+      // velocity
+      if (autoKinematics) {
+        if (agent.getVx() != null) {
+          float vx = (float) (unitConverter.velocityToUser(agent.getVx())
+              * timeRatio);
+          float vy = body.getLinearVelocity().y;
+          body.setLinearVelocity(new Vec2(vx, vy));
+        }
+        
+        if (agent.getVy() != null) {
+          float vx = body.getLinearVelocity().x;
+          float vy = (float) (unitConverter.velocityToUser(agent.getVy())
+              * timeRatio);
+          body.setLinearVelocity(new Vec2(vx, vy));
+        }
+  
+        if (agent.getOmegaZ() != null) {
+          body.setAngularVelocity((float) (unitConverter
+              .angularVelocityToUser(UtilFunctions.degreeToRadian(agent.getOmegaZ())) * timeRatio));        
+        }
+      }
+    }
+  
+    // update objects
+    for (PhysicalObjType object : objectList) {
+      Body body = bodyMap.get(object.getId());
+      
+      // position, orientation
+      if (object.getX() != null || object.getY() != null || 
+          object.getRotationAngleZ() != null) {
+        Transform t = body.getTransform();
+        Vec2 pos = t.position;
+        float angle = t.getAngle();
+        
+        
+        if (object.getX() != null) {
+          pos.x = object.getX().floatValue();
+        }
+
+        if (object.getY() != null) {
+          pos.y = object.getY().floatValue();
+        }
+
+        if (object.getRotationAngleZ() != null) {
+          angle = (float) UtilFunctions.degreeToRadian(object.getRotationAngleZ());
+        }
+        
+        body.setTransform(pos, angle);
+      }
+            
+      // polygon vertices
+      if (object.getPoints() != null) {
+        Vec2[] points = pointsStringToList(object.getPoints());
+        
+        Fixture f = body.getFixtureList();
+        while (f != null) {
+          if (f.getShape().m_type.equals(ShapeType.POLYGON)) {
+            ((PolygonShape)f.getShape()).set(points, points.length);
+            break;
+          }
+          
+          f = f.getNext();
+        }
+      }
+
+      // velocity
+      if (autoKinematics) {
+        if (object.getVx() != null) {
+          float vx = (float) (unitConverter.velocityToUser(object.getVx())
+              * timeRatio);
+          float vy = body.getLinearVelocity().y;
+          body.setLinearVelocity(new Vec2(vx, vy));
+        }
+        
+        if (object.getVy() != null) {
+          float vx = body.getLinearVelocity().x;
+          float vy = (float) (unitConverter.velocityToUser(object.getVy())
+              * timeRatio);
+          body.setLinearVelocity(new Vec2(vx, vy));
+        }
+  
+        if (object.getOmegaZ() != null) {
+          body.setAngularVelocity((float) (unitConverter
+              .angularVelocityToUser(UtilFunctions.degreeToRadian(object.getOmegaZ())) * timeRatio));        
+        }
+      }
+    }
+  }  
   
   /**
    * Checks if the perception angle lies inside the agents perception scope.
@@ -597,9 +815,9 @@ public class Box2DSimulator extends PhysicsSimulator {
       return true;
     }
     
-    double orientation = UtilFunctions.degree2radian(agent.getRotZ());
+    double orientation = UtilFunctions.degreeToRadian(agent.getRotZ());
     double perceptionDirection = (Math.atan2(agent.getPerceptionDirection().getY(), agent.getPerceptionDirection().getX()) + orientation) % (2 * Math.PI);
-    double pHalfAngle = UtilFunctions.degree2radian(agent.getPerceptionAngle()) / 2;
+    double pHalfAngle = UtilFunctions.degreeToRadian(agent.getPerceptionAngle()) / 2;
     double pStart = perceptionDirection - pHalfAngle;
     double pEnd = (perceptionDirection + pHalfAngle) % (2 * Math.PI);
     
@@ -729,7 +947,7 @@ public class Box2DSimulator extends PhysicsSimulator {
       
       // update agent orientation
       PhysicalAgentObject agent = (PhysicalAgentObject) perceiver.getUserData();
-      agent.setRotZ(UtilFunctions.radian2degree(perceiver.getAngle()));
+      agent.setRotZ(UtilFunctions.radianToDegree(perceiver.getAngle()));
 
       double distance = Math.sqrt(Math.pow((point.x - perceiver.getPosition().x), 2)
           + Math.pow((point.y - perceiver.getPosition().y), 2));
@@ -744,7 +962,7 @@ public class Box2DSimulator extends PhysicsSimulator {
         return;
       }
 
-      double orientation = UtilFunctions.degree2radian(agent.getRotZ());
+      double orientation = UtilFunctions.degreeToRadian(agent.getRotZ());
       double perceptionDirection = (Math.atan2(agent.getPerceptionDirection().getY(), agent.getPerceptionDirection().getX()) + orientation) % (2 * Math.PI);
       double angle = globalAngle - perceptionDirection;
       

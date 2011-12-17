@@ -71,7 +71,7 @@ public abstract class PhysicsSimulator {
   protected double gravitation;
 
   /**
-   * If true, the movements are calculated by the simulator.
+   * If true, the movements (translation and rotation) are calculated by the simulator.
    */
   protected boolean autoKinematics;
 
@@ -130,9 +130,12 @@ public abstract class PhysicsSimulator {
     this.physicalObjects = objects;
     this.physicalAgentObjects = agents;
 
+    // convert step duration to seconds
     this.unitConverter = new UnitConverter(simParams.getTimeUnit(), spaceModel
         .getSpatialDistanceUnit());
     this.stepDuration = unitConverter.timeToSeconds(simParams.getStepDuration());
+    
+    // set up unit converter for step duration in seconds
     this.unitConverter = new UnitConverter("s", spaceModel.getSpatialDistanceUnit());
 }
 

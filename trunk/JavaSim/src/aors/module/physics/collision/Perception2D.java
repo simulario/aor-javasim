@@ -40,7 +40,7 @@ public class Perception2D extends Perception {
       globalAngle += 2 * Math.PI;
     }
 
-    double orientation = UtilFunctions.degree2radian(perceiver.getRotZ());
+    double orientation = UtilFunctions.degreeToRadian(perceiver.getRotZ());
     double perceptionDirection = (Math.atan2(perceiver.getPerceptionDirection().getY(), perceiver.getPerceptionDirection().getX()) + orientation) % (2 * Math.PI);
     angle = globalAngle - perceptionDirection;
     
