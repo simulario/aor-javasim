@@ -1,0 +1,186 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<?xml-stylesheet type="text/xsl" href="prettyprint.xsl"?>
+<SimulationScenario scenarioName="Obstacles" scenarioTitle="Obstacles"
+                    simulationManagerDirectory="../../.." version="0.9"
+                    xsi:schemaLocation="http://aor-simulation.org ../../../../AORSL/AORSL_0-9.xsd"
+                    xmlns="http://aor-simulation.org"
+                    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+                    xmlns:xs="http://www.w3.org/2001/XMLSchema"
+                    xmlns:xi="http://www.w3.org/2001/XInclude"
+                    xmlns:saxon="http://saxon.sf.net/"
+                    xmlns:h="http://www.w3.org/1999/xhtml"
+                    xmlns:dc="http://purl.org/dc/elements/1.1/"
+                    xmlns:aors="http://aor-simulation.org">
+  <SimulationParameters simulationSteps="100000" stepDuration="50"
+                        stepTimeDelay="250" timeUnit="ms"></SimulationParameters>
+
+  <SimulationModel modelName="Obstacles" modelTitle="Obstacles">
+    <documentation>
+      <description></description>
+    </documentation>
+
+    <SpaceModel geometry="Euclidean" spatialDistanceUnit="m">
+      <TwoDimensionalGrid autoKinematics="true" xMax="10" yMax="10"></TwoDimensionalGrid>
+    </SpaceModel>
+
+    <EntityTypes>
+      <ActionEventType name="ChangeVelocity">
+        <Attribute name="vx" type="Float" />
+
+        <Attribute name="vy" type="Float" />
+      </ActionEventType>
+
+      <PhysicalObjectType name="Obstacle"></PhysicalObjectType>
+
+      <PhysicalAgentType autoPerception="true" name="Car">
+        <InheritedAttributeSettings attribute="perceptionRadius"
+                                    initialValue="2" />
+
+        <ReactionRule agentVariable="car" name="ObstacleLeftOrRight_Rule">
+          <WHEN eventType="PhysicalObjectPerceptionEvent" eventVariable="e" />
+
+          <IF language="Java">((e.getPerceptionAngle() == 0.0) &amp;&amp; (car.getVx() &gt; 0)) || ((e.getPerceptionAngle() == 180.0) &amp;&amp; (car.getVx() &lt; 0))</IF>
+
+          <THEN>
+            <SCHEDULE-EVT>
+              <ActionEventExpr actionEventType="ChangeVelocity">
+                <Slot property="vx" value="0"></Slot>
+
+                <Slot property="vy">
+                  <ValueExpr language="Java">(car.getY() == 1) ? 1 : ((car.getY() == 10) ? -1 : ((Random.uniform(0, 1) &gt; 0.5) ? 1 : -1))</ValueExpr>
+                </Slot>
+              </ActionEventExpr>
+            </SCHEDULE-EVT>
+          </THEN>
+        </ReactionRule>
+
+        <ReactionRule agentVariable="car" name="ObstacleUpOrDown_Rule">
+          <WHEN eventType="PhysicalObjectPerceptionEvent" eventVariable="e" />
+
+          <IF language="Java">((e.getPerceptionAngle() == 90.0) &amp;&amp; (car.getVy() &gt; 0)) || ((e.getPerceptionAngle() == 270.0) &amp;&amp; (car.getVy() &lt; 0))</IF>
+
+          <THEN>
+            <SCHEDULE-EVT>
+              <ActionEventExpr actionEventType="ChangeVelocity">
+                <Slot property="vx">
+                  <ValueExpr language="Java">(car.getX() == 1) ? 1 : ((car.getX() == 10) ? -1 : ((Random.uniform(0, 1) &gt; 0.5) ? 1 : -1))</ValueExpr>
+                </Slot>
+
+                <Slot property="vy" value="0"></Slot>
+              </ActionEventExpr>
+            </SCHEDULE-EVT>
+          </THEN>
+        </ReactionRule>
+
+        <ReactionRule agentVariable="car" name="BorderRightOrLeft_Rule">
+          <ON-EACH-SIMULATION-STEP />
+
+          <IF language="Java">((car.getX() == 10) &amp;&amp; (car.getVx() &gt; 0)) || ((car.getX() == 1) &amp;&amp; (car.getVx() &lt; 0))</IF>
+
+          <THEN>
+            <SCHEDULE-EVT>
+              <ActionEventExpr actionEventType="ChangeVelocity">
+                <Slot property="vx">
+                  <ValueExpr language="Java">-car.getVx()</ValueExpr>
+                </Slot>
+
+                <Slot property="vy" value="0"></Slot>
+              </ActionEventExpr>
+            </SCHEDULE-EVT>
+          </THEN>
+        </ReactionRule>
+
+        <ReactionRule agentVariable="car" name="BorderUpOrDown_Rule">
+          <ON-EACH-SIMULATION-STEP />
+
+          <IF language="Java">((car.getY() == 10) &amp;&amp; (car.getVy() &gt; 0)) || ((car.getY() == 1) &amp;&amp; (car.getVy() &lt; 0))</IF>
+
+          <THEN>
+            <SCHEDULE-EVT>
+              <ActionEventExpr actionEventType="ChangeVelocity">
+                <Slot property="vx" value="0"></Slot>
+
+                <Slot property="vy">
+                  <ValueExpr language="Java">-car.getVy()</ValueExpr>
+                </Slot>
+              </ActionEventExpr>
+            </SCHEDULE-EVT>
+          </THEN>
+        </ReactionRule>
+      </PhysicalAgentType>
+    </EntityTypes>
+
+    <EnvironmentRules>
+      <EnvironmentRule name="ChangeVelocity_Rule">
+        <WHEN eventType="ChangeVelocity" eventVariable="e" />
+
+        <DO>
+          <UPDATE-ENV>
+            <UpdateObject>
+              <ObjectRef language="Java" objectType="Car">e.getActor()</ObjectRef>
+
+              <Slot property="vx">
+                <ValueExpr language="Java">e.getVx()</ValueExpr>
+              </Slot>
+
+              <Slot property="vy">
+                <ValueExpr language="Java">e.getVy()</ValueExpr>
+              </Slot>
+            </UpdateObject>
+          </UPDATE-ENV>
+        </DO>
+      </EnvironmentRule>
+    </EnvironmentRules>
+  </SimulationModel>
+
+  <!-- ===================== Define the initial state ==================== -->
+
+  <InitialState>
+    <PhysicalObject id="1" type="Obstacle" x="2" y="10"></PhysicalObject>
+
+    <PhysicalObject id="2" type="Obstacle" x="9" y="9"></PhysicalObject>
+
+    <PhysicalObject id="3" type="Obstacle" x="7" y="8"></PhysicalObject>
+
+    <PhysicalObject id="4" type="Obstacle" x="1" y="7"></PhysicalObject>
+
+    <PhysicalObject id="5" type="Obstacle" x="5" y="6"></PhysicalObject>
+
+    <PhysicalObject id="6" type="Obstacle" x="3" y="5"></PhysicalObject>
+
+    <PhysicalObject id="7" type="Obstacle" x="10" y="4"></PhysicalObject>
+
+    <PhysicalObject id="8" type="Obstacle" x="6" y="3"></PhysicalObject>
+
+    <PhysicalObject id="9" type="Obstacle" x="8" y="2"></PhysicalObject>
+
+    <PhysicalObject id="10" type="Obstacle" x="4" y="1"></PhysicalObject>
+
+    <PhysicalAgent id="100" type="Car" vx="1" x="1" y="1"></PhysicalAgent>
+  </InitialState>
+
+  <!-- ===================== Define views of the simulation ============== -->
+
+  <UserInterface supportedLanguages="de">
+    <AnimationUI>
+      <Views>
+        <SpaceView canvasColorRGB="220 220 220">
+          <TwoDimensionalGridSpaceView2D backgroundColor="white"
+                                         fill1RGB="200 200 200"></TwoDimensionalGridSpaceView2D>
+        </SpaceView>
+
+        <PhysicalObjectView physicalObjectType="Obstacle">
+          <PhysicalShape2D>
+            <Square fillRGB="50 50 50"></Square>
+          </PhysicalShape2D>
+        </PhysicalObjectView>
+
+        <PhysicalObjectView physicalObjectType="Car">
+          <PhysicalShape2D>
+            <Circle fillOpacity="0.9" fillRGB="28 84 188"></Circle>
+          </PhysicalShape2D>
+        </PhysicalObjectView>
+      </Views>
+    </AnimationUI>
+  </UserInterface>
+</SimulationScenario>

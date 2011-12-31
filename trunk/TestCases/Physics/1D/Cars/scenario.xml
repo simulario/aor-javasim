@@ -1,0 +1,325 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<?xml-stylesheet type="text/xsl" href="prettyprint.xsl"?>
+<SimulationScenario scenarioName="PerceptionTest"
+                    scenarioTitle="PerceptionTest"
+                    simulationManagerDirectory="../../.." version="0.9"
+                    xsi:schemaLocation="http://aor-simulation.org ../../../../AORSL/AORSL_0-9.xsd"
+                    xmlns="http://aor-simulation.org"
+                    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+                    xmlns:xs="http://www.w3.org/2001/XMLSchema"
+                    xmlns:xi="http://www.w3.org/2001/XInclude"
+                    xmlns:saxon="http://saxon.sf.net/"
+                    xmlns:h="http://www.w3.org/1999/xhtml"
+                    xmlns:dc="http://purl.org/dc/elements/1.1/"
+                    xmlns:aors="http://aor-simulation.org">
+  <SimulationParameters simulationSteps="100000" stepDuration="50"
+                        stepTimeDelay="1" timeUnit="ms"></SimulationParameters>
+
+  <SimulationModel modelName="PerceptionTest" modelTitle="PerceptionTest">
+    <documentation>
+      <dc:creator>Holger Wuerke</dc:creator>
+
+      <description></description>
+    </documentation>
+
+    <SpaceModel geometry="Toroidal" spatialDistanceUnit="m">
+      <OneDimensional autoCollisionDetection="true"
+                      autoCollisionHandling="true" autoKinematics="true"
+                      multiplicity="2" xMax="3000" />
+    </SpaceModel>
+
+    <EntityTypes>
+      <ActionEventType name="ChangeLane">
+        <Attribute name="lane" type="Integer" />
+      </ActionEventType>
+
+      <ActionEventType name="Accelerate"></ActionEventType>
+
+      <ActionEventType name="Brake"></ActionEventType>
+
+      <PerceptionEventType name="UpdateMyVelocity">
+        <Attribute name="v" type="Float" />
+      </PerceptionEventType>
+
+      <PhysicalObjectType name="Obstacle" physicsType="INFINITE_MASS">
+        <InheritedAttributeSettings attribute="width" initialValue="10" />
+      </PhysicalObjectType>
+
+      <PhysicalAgentType autoPerception="true" name="Car">
+        <InheritedAttributeSettings attribute="m" initialValue="1000" />
+
+        <InheritedAttributeSettings attribute="width" initialValue="10" />
+
+        <InheritedAttributeSettings attribute="height" initialValue="5" />
+
+        <InheritedAttributeSettings attribute="vx" initialValue="0"
+                                    minValue="0" />
+
+        <InheritedAttributeSettings attribute="perceptionRadius"
+                                    initialValue="100" />
+
+        <Attribute name="maxVelocity" type="Integer" />
+
+        <SelfBeliefAttribute initialValue="0" name="myVelocity" type="Float" />
+
+        <SelfBeliefAttribute initialValue="1" name="myLane" type="Integer" />
+
+        <SelfBeliefAttribute initialValue="0" name="myLaneObject"
+                             type="Integer" />
+
+        <SelfBeliefAttribute initialValue="0" name="otherLaneObject"
+                             type="Integer" />
+
+        <ReactionRule agentVariable="car"
+                      name="ObstacleInFront_OtherLaneFree_Rule">
+          <WHEN eventType="PhysicalObjectPerceptionEvent" eventVariable="e" />
+
+          <IF language="Java"> (e.getPerceptionAngle() == 0.0) &amp;&amp; (e.getDistance() &lt; car.getMyVelocity() *3.6) &amp;&amp; (e.getPerceivedPhysicalObject().getY() == car.getMyLane()) &amp;&amp; (car.getOtherLaneObject() == 0) </IF>
+
+          <THEN>
+            <UPDATE-AGT>
+              <SelfBeliefSlot property="myLane">
+                <ValueExpr language="Java">(car.getMyLane() == 1) ? 2 : 1</ValueExpr>
+              </SelfBeliefSlot>
+            </UPDATE-AGT>
+
+            <SCHEDULE-EVT>
+              <ActionEventExpr actionEventType="ChangeLane"></ActionEventExpr>
+            </SCHEDULE-EVT>
+          </THEN>
+        </ReactionRule>
+
+        <ReactionRule agentVariable="car"
+                      name="ObstacleInFront_OtherLaneNotFree_Rule">
+          <WHEN eventType="PhysicalObjectPerceptionEvent" eventVariable="e" />
+
+          <IF language="Java"> (e.getPerceptionAngle() == 0.0) &amp;&amp; (e.getDistance() &lt; car.getMyVelocity() *3.6) &amp;&amp; (e.getPerceivedPhysicalObject().getY() == car.getMyLane()) &amp;&amp; (car.getOtherLaneObject() &gt; 0) </IF>
+
+          <THEN>
+            <UPDATE-AGT>
+              <SelfBeliefSlot property="myLaneObject" value="5"></SelfBeliefSlot>
+            </UPDATE-AGT>
+
+            <SCHEDULE-EVT>
+              <ActionEventExpr actionEventType="Brake"></ActionEventExpr>
+            </SCHEDULE-EVT>
+          </THEN>
+        </ReactionRule>
+
+        <ReactionRule agentVariable="car" name="ObjectOnOtherLane_Rule">
+          <WHEN eventType="PhysicalObjectPerceptionEvent" eventVariable="e" />
+
+          <IF language="Java"> (e.getPerceptionAngle() != 0.0) &amp;&amp; (e.getPerceptionAngle() != 180.0) &amp;&amp; (e.getDistance() &lt; car.getMyVelocity() *3.6) &amp;&amp; (e.getPerceivedPhysicalObject().getY() != car.getMyLane())</IF>
+
+          <THEN>
+            <UPDATE-AGT>
+              <SelfBeliefSlot property="otherLaneObject" value="5"></SelfBeliefSlot>
+            </UPDATE-AGT>
+          </THEN>
+        </ReactionRule>
+
+        <ReactionRule agentVariable="car" name="DecreaseLaneBelief_Rule">
+          <ON-EACH-SIMULATION-STEP />
+
+          <DO>
+            <UPDATE-AGT>
+              <SelfBeliefSlot property="myLaneObject">
+                <ValueExpr language="Java">(car.getMyLaneObject() &gt; 0) ? car.getMyLaneObject()-1: 0</ValueExpr>
+              </SelfBeliefSlot>
+
+              <SelfBeliefSlot property="otherLaneObject">
+                <ValueExpr language="Java">(car.getOtherLaneObject() &gt; 0) ? car.getOtherLaneObject()-1: 0</ValueExpr>
+              </SelfBeliefSlot>
+            </UPDATE-AGT>
+          </DO>
+        </ReactionRule>
+
+        <ReactionRule name="SetMyVelocity_Rule">
+          <WHEN eventType="UpdateMyVelocity" eventVariable="e" />
+
+          <DO>
+            <UPDATE-AGT>
+              <SelfBeliefSlot property="myVelocity">
+                <ValueExpr language="Java">e.getV()</ValueExpr>
+              </SelfBeliefSlot>
+            </UPDATE-AGT>
+          </DO>
+        </ReactionRule>
+
+        <ReactionRule agentVariable="car" name="Accelerate_Rule">
+          <ON-EACH-SIMULATION-STEP />
+
+          <IF language="Java">car.getMyLaneObject() == 0</IF>
+
+          <THEN>
+            <SCHEDULE-EVT>
+              <ActionEventExpr actionEventType="Accelerate"></ActionEventExpr>
+            </SCHEDULE-EVT>
+          </THEN>
+        </ReactionRule>
+      </PhysicalAgentType>
+    </EntityTypes>
+
+    <EnvironmentRules>
+      <EnvironmentRule name="ChangeLane_Rule">
+        <WHEN eventType="ChangeLane" eventVariable="e" />
+
+        <DO>
+          <UPDATE-ENV>
+            <UpdateObject>
+              <ObjectRef language="Java" objectType="Car">e.getActor()</ObjectRef>
+
+              <Slot property="y">
+                <ValueExpr language="Java">(((aors.model.envsim.Physical) e.getActor()).getY() == 1) ? 2 : 1</ValueExpr>
+              </Slot>
+
+              <Slot property="ax" value="5"></Slot>
+            </UpdateObject>
+          </UPDATE-ENV>
+        </DO>
+      </EnvironmentRule>
+
+      <EnvironmentRule name="Accelerate_Rule">
+        <WHEN eventType="Accelerate" eventVariable="e" />
+
+        <IF language="Java">((aors.model.envsim.Physical) e.getActor()).getVx() &lt; ((sim.model.envsim.Car) e.getActor()).getMaxVelocity()</IF>
+
+        <THEN>
+          <UPDATE-ENV>
+            <UpdateObject>
+              <ObjectRef language="Java" objectType="Car">e.getActor()</ObjectRef>
+
+              <Slot property="ax" value="5"></Slot>
+            </UpdateObject>
+          </UPDATE-ENV>
+        </THEN>
+      </EnvironmentRule>
+
+      <EnvironmentRule name="Brake_Rule">
+        <WHEN eventType="Brake" eventVariable="e" />
+
+        <DO>
+          <UPDATE-ENV>
+            <UpdateObject>
+              <ObjectRef language="Java" objectType="Car">e.getActor()</ObjectRef>
+
+              <Slot property="ax" value="-15"></Slot>
+            </UpdateObject>
+          </UPDATE-ENV>
+        </DO>
+      </EnvironmentRule>
+
+      <EnvironmentRule name="CheckVelocity_Rule">
+        <ON-EACH-SIMULATION-STEP />
+
+        <FOR-ObjectVariable objectType="Car" variable="car"></FOR-ObjectVariable>
+
+        <IF language="Java">car.getVx() &gt; car.getMaxVelocity()</IF>
+
+        <THEN>
+          <UPDATE-ENV>
+            <UpdateObject>
+              <ObjectRef language="Java" objectType="Car">car</ObjectRef>
+
+              <Slot property="ax" value="0"></Slot>
+            </UpdateObject>
+          </UPDATE-ENV>
+        </THEN>
+      </EnvironmentRule>
+
+      <EnvironmentRule name="UpdateMyVelocity_Rule">
+        <ON-EACH-SIMULATION-STEP />
+
+        <FOR-ObjectVariable objectType="Car" variable="car"></FOR-ObjectVariable>
+
+        <DO>
+          <SCHEDULE-EVT>
+            <PerceptionEventExpr eventType="UpdateMyVelocity">
+              <PerceiverIdRef language="Java">car.getId()</PerceiverIdRef>
+
+              <Slot property="v">
+                <ValueExpr language="Java">car.getVx()</ValueExpr>
+              </Slot>
+            </PerceptionEventExpr>
+          </SCHEDULE-EVT>
+        </DO>
+      </EnvironmentRule>
+
+      <EnvironmentRule name="Collision_Rule">
+        <WHEN eventType="CollisionEvent" eventVariable="e" />
+
+        <DO>
+          <UPDATE-ENV>
+            <DestroyObject objectType="Car">
+              <ObjectRef language="Java">e.getPhysicalObject1()</ObjectRef>
+            </DestroyObject>
+
+            <DestroyObject objectType="Car">
+              <ObjectRef language="Java">e.getPhysicalObject2()</ObjectRef>
+            </DestroyObject>
+          </UPDATE-ENV>
+        </DO>
+      </EnvironmentRule>
+    </EnvironmentRules>
+  </SimulationModel>
+
+  <!-- ===================== Define the initial state ==================== -->
+
+  <InitialState>
+    <PhysicalObject id="1" type="Obstacle" x="0" y="1"></PhysicalObject>
+
+    <PhysicalObject id="2" type="Obstacle" x="1000" y="1"></PhysicalObject>
+
+    <PhysicalObject id="3" type="Obstacle" x="2000" y="1"></PhysicalObject>
+
+    <PhysicalObject id="6" type="Obstacle" x="500" y="2"></PhysicalObject>
+
+    <PhysicalObject id="7" type="Obstacle" x="1500" y="2"></PhysicalObject>
+
+    <PhysicalObject id="8" type="Obstacle" x="2500" y="2"></PhysicalObject>
+
+    <PhysicalAgents rangeEndID="110" rangeStartID="101" type="Car" y="1">
+      <Slot property="maxVelocity">
+        <ValueExpr language="Java">Random.uniformInt(25, 50)</ValueExpr>
+      </Slot>
+
+      <Slot property="x">
+        <ValueExpr language="Java">Random.uniform(0,3000)</ValueExpr>
+      </Slot>
+
+      <Slot property="ax" value="5"></Slot>
+    </PhysicalAgents>
+  </InitialState>
+
+  <!-- ===================== Define views of the simulation ============== -->
+
+  <UserInterface supportedLanguages="de">
+    <AnimationUI>
+      <Views>
+        <SpaceView canvasColor="lightgrey">
+          <OneDimensionalSpaceView2D mode="circular" trackColor="white"
+                                     trackWidth="20px" />
+        </SpaceView>
+
+        <PhysicalObjectView physicalObjectType="Obstacle">
+          <PhysicalShape2D>
+            <Square fill="black"></Square>
+          </PhysicalShape2D>
+        </PhysicalObjectView>
+
+        <PhysicalObjectView physicalObjectType="Car">
+          <PhysicalShape2D>
+            <Rectangle>
+              <ShapePropertyVisualizationMap a0="-0.01" a1="0.01"
+                                             mapType="caseWise" property="ax"
+                                             shapeProperty="fill" v0="red"
+                                             v1="blue" v2="green" />
+            </Rectangle>
+          </PhysicalShape2D>
+
+          <DisplayInfo content="m/s" property="vx"></DisplayInfo>
+        </PhysicalObjectView>
+      </Views>
+    </AnimationUI>
+  </UserInterface>
+</SimulationScenario>
