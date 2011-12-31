@@ -20,9 +20,6 @@
       <dc:creator>Holger Wuerke</dc:creator>
 
       <dc:created>20091210</dc:created>
-
-      <dc:description>A Ball moves towards a wall. Once it percepts the wall,
-      the ball reduces its velocity to avoid collision.</dc:description>
     </documentation>
 
     <SpaceModel geometry="Toroidal" spatialDistanceUnit="m">
@@ -32,6 +29,12 @@
     </SpaceModel>
 
     <EntityTypes>
+      <ActionEventType name="ChangeVelocity">
+        <Attribute name="vx" type="Float" />
+
+        <Attribute name="vy" type="Float" />
+      </ActionEventType>
+
       <PhysicalObjectType name="Wall" physicsType="IMMATERIAL">
         <InheritedAttributeSettings attribute="width" initialValue="10" />
 
@@ -62,10 +65,44 @@
                 <ValueExpr language="Java">agent.getVy() + Math.sin(evt.getPerceptionAngle()) /10</ValueExpr>
               </Slot>
             </UPDATE-AGT>
+
+            <SCHEDULE-EVT>
+              <ActionEventExpr actionEventType="ChangeVelocity">
+                <Slot property="vx">
+                  <ValueExpr language="Java">agent.getVx() + Math.cos(evt.getPerceptionAngle()) /10</ValueExpr>
+                </Slot>
+
+                <Slot property="vy">
+                  <ValueExpr language="Java">agent.getVy() + Math.sin(evt.getPerceptionAngle()) /10</ValueExpr>
+                </Slot>
+              </ActionEventExpr>
+            </SCHEDULE-EVT>
           </DO>
         </ReactionRule>
       </PhysicalAgentType>
     </EntityTypes>
+
+    <EnvironmentRules>
+      <EnvironmentRule name="ChangeVelocity_Rule">
+        <WHEN eventType="ChangeVelocity" eventVariable="e" />
+
+        <DO>
+          <UPDATE-ENV>
+            <UpdateObject>
+              <ObjectRef language="Java" objectType="Agent">e.getActor()</ObjectRef>
+
+              <Slot property="vx">
+                <ValueExpr language="Java">e.getVx()</ValueExpr>
+              </Slot>
+
+              <Slot property="vy">
+                <ValueExpr language="Java">e.getVy()</ValueExpr>
+              </Slot>
+            </UpdateObject>
+          </UPDATE-ENV>
+        </DO>
+      </EnvironmentRule>
+    </EnvironmentRules>
   </SimulationModel>
 
   <!-- ===================== Define the initial state ==================== -->
