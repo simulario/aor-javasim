@@ -6,8 +6,10 @@ package aors.module.physics.simulator.twoDGrid;
 import java.lang.reflect.Field;
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 import aors.GeneralSpaceModel;
 import aors.GeneralSpaceModel.Geometry;
@@ -54,11 +56,11 @@ public class Simulator2DGrid extends PhysicsSimulator {
     super(simParams, spaceModel, autoKinematics, autoCollisionDetection,
         autoCollisionHandling, gravitation, databus, objects, agents);
 
-    if (simParams.getStepDuration() != null) {
-      stepDuration = simParams.getStepDuration();
-    } else {
+//    if (simParams.getStepDuration() != null) {
+//      stepDuration = simParams.getStepDuration();
+//    } else {
       stepDuration = 1;  
-    }
+//    }
     
 
     intervalList = new IntervalList2DGrid(getPhysicals(), spaceModel);
@@ -106,7 +108,7 @@ public class Simulator2DGrid extends PhysicsSimulator {
     
     intervalList.update();
     
-    List<Perception2DGrid> perceptions = new ArrayList<Perception2DGrid>();
+    Set<Perception2DGrid> perceptions = new HashSet<Perception2DGrid>();
     
     intervalList.detectPerceptions(perceptions);
     processPerceptions(perceptions);
@@ -136,31 +138,31 @@ public class Simulator2DGrid extends PhysicsSimulator {
         if (newX < Space.ORDINATEBASE) {
           newX = Space.ORDINATEBASE;
           xPositions.put(object, new Double(Space.ORDINATEBASE));
-          object.setVx(0);
-          object.setAx(0);
+//          object.setVx(0);
+//          object.setAx(0);
         }
 
         if (newX > (spaceModel.getXMax() - 1 + Space.ORDINATEBASE)) {
           newX = spaceModel.getXMax() - 1 + Space.ORDINATEBASE;
           xPositions.put(object, new Double(spaceModel.getXMax() - 1
               + Space.ORDINATEBASE));
-          object.setVx(0);
-          object.setAx(0);
+//          object.setVx(0);
+//          object.setAx(0);
         }
 
         if (newY < Space.ORDINATEBASE) {
           newY = Space.ORDINATEBASE;
           yPositions.put(object, new Double(Space.ORDINATEBASE));
-          object.setVy(0);
-          object.setAy(0);
+//          object.setVy(0);
+//          object.setAy(0);
         }
 
         if (newY > (spaceModel.getYMax() - 1 + Space.ORDINATEBASE)) {
           newY = spaceModel.getYMax() - 1 + Space.ORDINATEBASE;
           yPositions.put(object, new Double(spaceModel.getYMax() - 1
               + Space.ORDINATEBASE));
-          object.setVy(0);
-          object.setAy(0);
+//          object.setVy(0);
+//          object.setAy(0);
         }
       } else {
         // toroidal: adjust values
@@ -187,8 +189,9 @@ public class Simulator2DGrid extends PhysicsSimulator {
 
       object.setX(newX);
       object.setY(newY);
-      // System.out.println(object.getId() + ") " + object.getX() + ","
-      // + object.getY());
+      
+//       System.out.println(object.getId() + ") " + object.getX() + ","
+//       + object.getY());
     }
   }
 
@@ -244,10 +247,10 @@ public class Simulator2DGrid extends PhysicsSimulator {
    * @param perceptions
    *          list of perceptions to process
    */
-  private void processPerceptions(List<Perception2DGrid> perceptions) {
+  private void processPerceptions(Set<Perception2DGrid> perceptions) {
     for (Perception2DGrid perception : perceptions) {
       double distance = perception.getDistance();
-      double angle = perception.getAngle();
+      double angle = perception.getAngleInDegrees();
 
       PhysicalObjectPerceptionEvent event = new PhysicalObjectPerceptionEvent(
           stepNumber, perception.getPerceiver().getId(), perception
@@ -268,21 +271,27 @@ public class Simulator2DGrid extends PhysicsSimulator {
 
       events.add(event);
 
-      // System.out.println(perception);
+//       System.out.println(perception);
     }
   }
 
   @Override
   public void objektDestroyEvent(ObjektDestroyEvent objektDestroyEvent) {
     if (objektDestroyEvent.getSource() instanceof Physical) {
-      intervalList.remove((Physical) (objektDestroyEvent.getSource()));
+      Physical object = (Physical) (objektDestroyEvent.getSource()); 
+      xPositions.remove(object);
+      yPositions.remove(object);
+      intervalList.remove(object);
     }
   }
 
   @Override
   public void objektInitEvent(ObjektInitEvent objInitEvent) {
     if (objInitEvent.getSource() instanceof Physical) {
-      intervalList.add((Physical) (objInitEvent.getSource()));
+      Physical object = (Physical) (objInitEvent.getSource()); 
+      xPositions.put(object, object.getX());
+      yPositions.put(object, object.getY());
+      intervalList.add(object);
     }
   }
 

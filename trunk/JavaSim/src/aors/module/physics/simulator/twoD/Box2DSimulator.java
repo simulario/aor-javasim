@@ -264,7 +264,7 @@ public class Box2DSimulator extends PhysicsSimulator {
       PhysicalObjectPerceptionEvent event = new PhysicalObjectPerceptionEvent(
           stepNumber, perception.getPerceiver().getId(), type, perception.getDistance());
       event.setPerceivedPhysicalObject(perception.getPerceived());
-      event.setPerceptionAngle(perception.getAngle());
+      event.setPerceptionAngle(perception.getAngleInDegrees());
 
       try {
         Field idPerceivableField = perception.getPerceived()
@@ -1020,7 +1020,7 @@ public class Box2DSimulator extends PhysicsSimulator {
           CollisionEvent event = new CollisionEvent(stepNumber);
           event.setPhysicalObject1(o1);
           event.setPhysicalObject2(o2);
-          
+          //System.out.println("COLLISION: " + o1+ " " + o2);
           collisionEvents.add(event);
         }
         

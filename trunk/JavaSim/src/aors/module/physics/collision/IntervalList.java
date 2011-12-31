@@ -94,8 +94,8 @@ public class IntervalList {
 
   /**
    * Checks if any collisions occur (this includes perceptions as well). The
-   * "sweep and prune" algorithm is used here to determine overlapping
-   * intervals. (used in continuous space)
+   * "sort-and-sweep" algorithm is used here to determine overlapping
+   * intervals.
    * 
    * @param collisionList
    *          - list where all detected collisions are saved
