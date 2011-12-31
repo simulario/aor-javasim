@@ -9,6 +9,7 @@ import java.util.Collections;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
+import java.util.Set;
 
 import aors.GeneralSpaceModel;
 import aors.GeneralSpaceModel.Geometry;
@@ -115,40 +116,6 @@ public class IntervalList2DGrid {
           double yStart = y - agent.getPerceptionRadius();
           double yEnd = y + agent.getPerceptionRadius();
 
-          if (spaceModel.getGeometry().equals(Geometry.Toroidal)) {
-            if (xStart < Space.ORDINATEBASE) {
-              xStart += xMax;
-            }
-
-            if (xStart > (xMax - 1 + Space.ORDINATEBASE)) {
-              xStart %= xMax;
-            }
-
-            if (xEnd < Space.ORDINATEBASE) {
-              xEnd += xMax;
-            }
-
-            if (xEnd > (xMax - 1 + Space.ORDINATEBASE)) {
-              xEnd %= xMax;
-            }
-
-            if (yStart < Space.ORDINATEBASE) {
-              yStart += yMax;
-            }
-
-            if (yStart > (yMax - 1 + Space.ORDINATEBASE)) {
-              yStart %= yMax;
-            }
-
-            if (yEnd < Space.ORDINATEBASE) {
-              yEnd += yMax;
-            }
-
-            if (yEnd > (yMax - 1 + Space.ORDINATEBASE)) {
-              yEnd %= yMax;
-            }
-          }
-
           startpoint = new IntervalBound();
           startpoint.setType(BoundType.START);
           startpoint.setPoint(xStart);
@@ -184,6 +151,195 @@ public class IntervalList2DGrid {
 
           yList.add(startpoint);
           yList.add(endpoint);
+          
+          // if in toroidal space, the radius exceeds a border, add another two 
+          // interval points on the other side 
+          if (spaceModel.getGeometry().equals(Geometry.Toroidal)) {
+            if (xStart < Space.ORDINATEBASE) {
+              double newStart = xStart + xMax;
+              double newEnd = newStart + 2 * agent.getPerceptionRadius();
+              
+              startpoint = new IntervalBound();
+              startpoint.setType(BoundType.START);
+              startpoint.setPoint(newStart);
+              startpoint.setObject(object);
+              startpoint.setCollisionObjectType(CollisionObjectType.PERCEPTION);
+
+              endpoint = new IntervalBound();
+              endpoint.setType(BoundType.END);
+              endpoint.setPoint(newEnd);
+              endpoint.setObject(object);
+              endpoint.setCollisionObjectType(CollisionObjectType.PERCEPTION);
+
+              startpoint.setOther(endpoint);
+              endpoint.setOther(startpoint);
+
+              xList.add(startpoint);
+              xList.add(endpoint);              
+            }
+
+            if (xStart > (xMax - 1 + Space.ORDINATEBASE)) {
+              double newStart = xStart % xMax;
+              double newEnd = newStart + 2 * agent.getPerceptionRadius();
+
+              startpoint = new IntervalBound();
+              startpoint.setType(BoundType.START);
+              startpoint.setPoint(newStart);
+              startpoint.setObject(object);
+              startpoint.setCollisionObjectType(CollisionObjectType.PERCEPTION);
+
+              endpoint = new IntervalBound();
+              endpoint.setType(BoundType.END);
+              endpoint.setPoint(newEnd);
+              endpoint.setObject(object);
+              endpoint.setCollisionObjectType(CollisionObjectType.PERCEPTION);
+
+              startpoint.setOther(endpoint);
+              endpoint.setOther(startpoint);
+
+              xList.add(startpoint);
+              xList.add(endpoint);              
+            }
+
+            if (xEnd < Space.ORDINATEBASE) {
+              double newEnd = xEnd + xMax;
+              double newStart = newEnd - 2 * agent.getPerceptionRadius();
+
+              startpoint = new IntervalBound();
+              startpoint.setType(BoundType.START);
+              startpoint.setPoint(newStart);
+              startpoint.setObject(object);
+              startpoint.setCollisionObjectType(CollisionObjectType.PERCEPTION);
+
+              endpoint = new IntervalBound();
+              endpoint.setType(BoundType.END);
+              endpoint.setPoint(newEnd);
+              endpoint.setObject(object);
+              endpoint.setCollisionObjectType(CollisionObjectType.PERCEPTION);
+
+              startpoint.setOther(endpoint);
+              endpoint.setOther(startpoint);
+
+              xList.add(startpoint);
+              xList.add(endpoint);              
+            }
+
+            if (xEnd > (xMax - 1 + Space.ORDINATEBASE)) {
+              double newEnd = xEnd % xMax;
+              double newStart = newEnd - 2 * agent.getPerceptionRadius();
+
+              startpoint = new IntervalBound();
+              startpoint.setType(BoundType.START);
+              startpoint.setPoint(newStart);
+              startpoint.setObject(object);
+              startpoint.setCollisionObjectType(CollisionObjectType.PERCEPTION);
+
+              endpoint = new IntervalBound();
+              endpoint.setType(BoundType.END);
+              endpoint.setPoint(newEnd);
+              endpoint.setObject(object);
+              endpoint.setCollisionObjectType(CollisionObjectType.PERCEPTION);
+
+              startpoint.setOther(endpoint);
+              endpoint.setOther(startpoint);
+
+              xList.add(startpoint);
+              xList.add(endpoint);              
+            }
+
+            if (yStart < Space.ORDINATEBASE) {
+              double newStart = yStart + yMax;
+              double newEnd = newStart + 2 * agent.getPerceptionRadius();
+              
+              startpoint = new IntervalBound();
+              startpoint.setType(BoundType.START);
+              startpoint.setPoint(newStart);
+              startpoint.setObject(object);
+              startpoint.setCollisionObjectType(CollisionObjectType.PERCEPTION);
+
+              endpoint = new IntervalBound();
+              endpoint.setType(BoundType.END);
+              endpoint.setPoint(newEnd);
+              endpoint.setObject(object);
+              endpoint.setCollisionObjectType(CollisionObjectType.PERCEPTION);
+
+              startpoint.setOther(endpoint);
+              endpoint.setOther(startpoint);
+
+              yList.add(startpoint);
+              yList.add(endpoint);              
+            }
+
+            if (yStart > (yMax - 1 + Space.ORDINATEBASE)) {
+              double newStart = yStart % yMax;
+              double newEnd = newStart + 2 * agent.getPerceptionRadius();
+              
+              startpoint = new IntervalBound();
+              startpoint.setType(BoundType.START);
+              startpoint.setPoint(newStart);
+              startpoint.setObject(object);
+              startpoint.setCollisionObjectType(CollisionObjectType.PERCEPTION);
+
+              endpoint = new IntervalBound();
+              endpoint.setType(BoundType.END);
+              endpoint.setPoint(newEnd);
+              endpoint.setObject(object);
+              endpoint.setCollisionObjectType(CollisionObjectType.PERCEPTION);
+
+              startpoint.setOther(endpoint);
+              endpoint.setOther(startpoint);
+
+              yList.add(startpoint);
+              yList.add(endpoint);              
+            }
+
+            if (yEnd < Space.ORDINATEBASE) {
+              double newEnd = yEnd + yMax;
+              double newStart = newEnd - 2 * agent.getPerceptionRadius();
+
+              startpoint = new IntervalBound();
+              startpoint.setType(BoundType.START);
+              startpoint.setPoint(newStart);
+              startpoint.setObject(object);
+              startpoint.setCollisionObjectType(CollisionObjectType.PERCEPTION);
+
+              endpoint = new IntervalBound();
+              endpoint.setType(BoundType.END);
+              endpoint.setPoint(newEnd);
+              endpoint.setObject(object);
+              endpoint.setCollisionObjectType(CollisionObjectType.PERCEPTION);
+
+              startpoint.setOther(endpoint);
+              endpoint.setOther(startpoint);
+
+              yList.add(startpoint);
+              yList.add(endpoint);              
+            }
+
+            if (yEnd > (yMax - 1 + Space.ORDINATEBASE)) {
+              double newEnd = yEnd % yMax;
+              double newStart = newEnd - 2 * agent.getPerceptionRadius();
+
+              startpoint = new IntervalBound();
+              startpoint.setType(BoundType.START);
+              startpoint.setPoint(newStart);
+              startpoint.setObject(object);
+              startpoint.setCollisionObjectType(CollisionObjectType.PERCEPTION);
+
+              endpoint = new IntervalBound();
+              endpoint.setType(BoundType.END);
+              endpoint.setPoint(newEnd);
+              endpoint.setObject(object);
+              endpoint.setCollisionObjectType(CollisionObjectType.PERCEPTION);
+
+              startpoint.setOther(endpoint);
+              endpoint.setOther(startpoint);
+
+              yList.add(startpoint);
+              yList.add(endpoint);              
+            }
+          }
+
         }
       } catch (Exception e) {
       }
@@ -299,7 +455,8 @@ public class IntervalList2DGrid {
     }
 
     sort();
-    // System.out.println(list);
+//    System.out.println("xList: " + xList);
+//    System.out.println("yList: " + yList);
   }
 
   /**
@@ -410,13 +567,13 @@ public class IntervalList2DGrid {
   }
 
   /**
-   * Checks if any perceptions occur. The "sweep and prune" algorithm is used
+   * Checks if any perceptions occur. The "sort-and-sweep" algorithm is used
    * here to determine overlapping intervals.
    * 
    * @param perceptionList
    *          - list where all detected perceptions are saved
    */
-  public void detectPerceptions(List<Perception2DGrid> perceptionList) {
+  public void detectPerceptions(Set<Perception2DGrid> perceptionList) {
     // start with x-list
     HashMap<Perception2DGrid, Integer> xPerceptions = new HashMap<Perception2DGrid, Integer>();
     
@@ -480,7 +637,6 @@ public class IntervalList2DGrid {
         oldList.add(ib.getOther());
       }
     }
-    
     
     // If a start point is found, save the corresponding object together with
     // the perception flag in the activeList. Every other object on the

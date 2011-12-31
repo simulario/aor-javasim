@@ -52,12 +52,14 @@ public class Perception1D extends Perception {
   @Override
   protected void calculateAngle() {
     // different lanes
-    if (perceiver.getY() > perceived.getY()) {
+    if (perceiver.getY() < perceived.getY()) {
       angle = Math.PI / 2;
+      return;
     }
 
-    if (perceiver.getY() < perceived.getY()) {
+    if (perceiver.getY() > perceived.getY()) {
       angle = 3 * Math.PI / 2;
+      return;
     }
 
     // same lane

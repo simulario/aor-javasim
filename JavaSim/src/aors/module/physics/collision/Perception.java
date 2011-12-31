@@ -3,10 +3,10 @@
  */
 package aors.module.physics.collision;
 
-import aors.module.physics.util.UtilFunctions;
 import aors.GeneralSpaceModel;
 import aors.model.envsim.Physical;
 import aors.model.envsim.PhysicalAgentObject;
+import aors.module.physics.util.UtilFunctions;
 
 /**
  * Represents a general perception.
@@ -97,6 +97,18 @@ public abstract class Perception {
     
     return angle;
   }
+  
+  /**
+   * @return the angle
+   */
+  public Double getAngleInDegrees() {
+    if (angle == null) {
+      calculateAngle();
+    }
+    
+    return UtilFunctions.radianToDegree(angle);
+  }
+  
 
   /**
    * @param angle the angle to set
@@ -157,8 +169,9 @@ public abstract class Perception {
   }
 
   public String toString() {
-    return "Perception: " + perceiver + " -> " + perceived + "\n\tDistance: "
-        + String.format("%.2f", getDistance()) + " Angle: " + String.format("%.2f", UtilFunctions.radianToDegree(getAngle()))
-        + "°";
+    return "Perception: " + perceiver.getType() + " (" + perceiver.getId() + ") -> " + 
+      perceived.getType() + " (" + perceived.getId() + ") " + 
+      "\n\tDistance: " + String.format("%.2f", getDistance()) + 
+      " Angle: " + String.format("%.2f", getAngleInDegrees()) + "°";
   }
 }

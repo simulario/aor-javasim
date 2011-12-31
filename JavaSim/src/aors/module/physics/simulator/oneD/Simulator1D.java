@@ -14,21 +14,13 @@ import java.util.Map;
 import java.util.Set;
 import java.util.Map.Entry;
 
-import javax.xml.bind.JAXBElement;
-
 import aors.GeneralSpaceModel;
 import aors.GeneralSpaceModel.Geometry;
 import aors.data.DataBus;
 import aors.data.evt.sim.ObjektDestroyEvent;
 import aors.data.evt.sim.ObjektInitEvent;
 import aors.data.evt.sim.SimulationStepEvent;
-import aors.logger.model.EnvSimInputEventType;
-import aors.logger.model.EnvironmentSimulatorStep;
-import aors.logger.model.PhysAgtType;
-import aors.logger.model.PhysicalObjType;
-import aors.logger.model.ResultingStateChangesType;
 import aors.logger.model.SimulationParameters;
-import aors.logger.model.SimulationStep;
 import aors.model.envevt.CollisionEvent;
 import aors.model.envevt.PhysicalObjectPerceptionEvent;
 import aors.model.envsim.Physical;
@@ -38,10 +30,8 @@ import aors.model.envsim.PhysicalObject;
 import aors.module.physics.PhysicsSimulator;
 import aors.module.physics.collision.Collision1D;
 import aors.module.physics.collision.IntervalList;
-import aors.module.physics.collision.Perception;
 import aors.module.physics.collision.Perception1D;
 import aors.module.physics.util.MaterialConstants;
-import aors.module.physics.util.UnitConverter;
 
 /**
  * A physics simulator for 1D simulation.
@@ -122,43 +112,6 @@ public class Simulator1D extends PhysicsSimulator {
    */
   @Override
   public void simulationStepEnd(SimulationStepEvent simulationStepEvent) {    
-    SimulationStep simStep = simulationStepEvent.getSimulationStep();
-    EnvironmentSimulatorStep envStep = simStep.getEnvironmentSimulatorStep();
-    if (envStep != null) {
-      List<JAXBElement<? extends EnvSimInputEventType>> envSimInputEvents = envStep.getEnvSimInputEvent();
-      for (JAXBElement<? extends EnvSimInputEventType> envSimInputEventType : envSimInputEvents) {
-        if (envSimInputEventType.getValue() != null) {
-          if (envSimInputEventType.getValue().getResultingStateChanges() != null) {
-            List<ResultingStateChangesType> changeList = envSimInputEventType
-                .getValue().getResultingStateChanges();
-
-            for (ResultingStateChangesType change : changeList) {
-              if (change.getPhysicalAgents() != null) {
-                if (change.getPhysicalAgents().getPhysAgt() != null) {
-                  List<PhysAgtType> list = change.getPhysicalAgents().getPhysAgt();
-
-                  for (PhysAgtType a : list) {
-                    System.out.println(a.getId());   
-                    
-                  }
-                }
-              }
-
-              if (change.getPhysicalObjects() != null) {
-                if (change.getPhysicalObjects().getPhysObj() != null) {
-                  List<PhysicalObjType> list = change.getPhysicalObjects().getPhysObj();
-
-                  for (PhysicalObjType o : list) {
-                    System.out.println(o.getId());   
-                    
-                  }
-                }
-              }
-            }
-          }
-        }
-      }
-    }
   }
 
   /*
@@ -265,10 +218,10 @@ public class Simulator1D extends PhysicsSimulator {
       }
 
       entry.getKey().setX(newPos);
-      
+  
 //       System.out.println(entry.getKey().getId() + ") " +
 //       entry.getKey().getX()
-//       + " " + entry.getKey().getVx());
+//       + " " + entry.getKey().getY());
     }
   }
 
@@ -483,7 +436,7 @@ public class Simulator1D extends PhysicsSimulator {
   private void processPerceptions(Set<Perception1D> perceptions) {
     for (Perception1D perception : perceptions) {
       double distance = perception.getDistance();
-      double angle = perception.getAngle();
+      double angle = perception.getAngleInDegrees();
 
       PhysicalObjectPerceptionEvent event = new PhysicalObjectPerceptionEvent(
           stepNumber, perception.getPerceiver().getId(), perception
