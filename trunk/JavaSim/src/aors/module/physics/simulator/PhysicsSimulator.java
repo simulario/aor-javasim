@@ -1,7 +1,7 @@
 /**
  * 
  */
-package aors.module.physics;
+package aors.module.physics.simulator;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -150,11 +150,6 @@ public abstract class PhysicsSimulator {
     list.addAll(physicalAgentObjects);
     return list;
   }
-
-  /**
-   * This method is called when the simulation has started.
-   */
-  public abstract void simulationStarted();
 
   /**
    * This method is called after every start of a simulation step.
