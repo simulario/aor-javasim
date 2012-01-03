@@ -17,7 +17,7 @@ import aors.model.envevt.PhysicalObjectPerceptionEvent;
 import aors.model.envsim.Physical;
 import aors.model.envsim.PhysicalAgentObject;
 import aors.model.envsim.PhysicalObject;
-import aors.module.physics.PhysicsSimulator;
+import aors.module.physics.simulator.PhysicsSimulator;
 import aors.space.Space;
 
 /**
@@ -57,11 +57,6 @@ public class Simulator2DGridOld extends PhysicsSimulator {
     // call super initialization
     super(simParams, spaceModel, autoKinematics, autoCollisionDetection,
         autoCollisionHandling, gravitation, databus, objects, agents);
-  }
-
-  @Override
-  public void simulationStarted() {
-    // nothing to do
   }
 
   @Override

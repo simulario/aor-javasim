@@ -51,7 +51,7 @@ import aors.model.envsim.Physical.PhysicsType;
 import aors.model.envsim.PhysicalAgentObject;
 import aors.model.envsim.PhysicalObject;
 import aors.model.envsim.Shape2D;
-import aors.module.physics.PhysicsSimulator;
+import aors.module.physics.simulator.PhysicsSimulator;
 import aors.module.physics.collision.CollisionObjectType;
 import aors.module.physics.collision.Perception2D;
 import aors.module.physics.util.MaterialConstants;
@@ -91,7 +91,7 @@ public class Box2DSimulator extends PhysicsSimulator {
    * A set that contains all Box2D bodies that have reached the space border
    * (used only in euclidean space).
    */
-  private Set<Body> borderReached = new HashSet<Body>();
+  private Set<Body> borderContact = new HashSet<Body>();
 
   /**
    * A set that contains all perceptions of the current step. We need this 
@@ -149,7 +149,6 @@ public class Box2DSimulator extends PhysicsSimulator {
       borderShape.setAsBox((float) (spaceModel.getXMax() / 2), 0.5f);
       FixtureDef borderFixture = new FixtureDef();
       borderFixture.shape = borderShape;
-  //    borderFixture.isSensor = true;
       borderFixture.userData = CollisionObjectType.BORDER;
   
       border.createFixture(borderFixture);
@@ -178,15 +177,6 @@ public class Box2DSimulator extends PhysicsSimulator {
     for (Physical object : getPhysicals()) {
       addBody(object);
     }
-  }
-
-  /*
-   * (non-Javadoc)
-   * 
-   * @see aors.module.physics2d.PhysicsSimulator#simulationStarted()
-   */
-  @Override
-  public void simulationStarted() {
   }
 
 
@@ -235,7 +225,6 @@ public class Box2DSimulator extends PhysicsSimulator {
   public void simulationStepStart(long stepNumber) {
     this.stepNumber = stepNumber;
 
-    //updateEngineObjects();
     assignAcceleration();
 
     // perform one simulation step in the engine
@@ -313,8 +302,18 @@ public class Box2DSimulator extends PhysicsSimulator {
 
     Body body = world.createBody(def);
 
-    Shape2D shapeType = object.getShape2D();
     FixtureDef fixture = new FixtureDef();
+    fixture.userData = CollisionObjectType.OBJECT;
+    fixture.restitution = (float) MaterialConstants.restitution(object
+        .getMaterialType());
+    fixture.friction = (float) MaterialConstants.friction(object
+        .getMaterialType());
+    
+    Shape2D shapeType = object.getShape2D();
+
+    if (shapeType == null) {
+      System.err.println("Please specify a shape2D for every object!");
+    }
 
     switch (shapeType) {
 
@@ -324,11 +323,6 @@ public class Box2DSimulator extends PhysicsSimulator {
           (float) object.getHeight() / 2);
 
       fixture.shape = rectangleShape;
-      fixture.userData = CollisionObjectType.OBJECT;
-      fixture.restitution = (float) MaterialConstants.restitution(object
-          .getMaterialType());
-      fixture.friction = (float) MaterialConstants.friction(object
-          .getMaterialType());
 
       if (object.getPhysicsType().equals(PhysicsType.INFINITE_MASS)) {
         body.setType(BodyType.STATIC);
@@ -347,14 +341,7 @@ public class Box2DSimulator extends PhysicsSimulator {
       Vec2[] points = pointsStringToList(object.getPoints());
       polygonShape.set(points, points.length);
       
-            
       fixture.shape = polygonShape;
-      fixture.userData = CollisionObjectType.OBJECT;
-
-      fixture.restitution = (float) MaterialConstants.restitution(object
-          .getMaterialType());
-      fixture.friction = (float) MaterialConstants.friction(object
-          .getMaterialType());
 
       if (object.getPhysicsType().equals(PhysicsType.INFINITE_MASS)) {
         body.setType(BodyType.STATIC);
@@ -372,11 +359,6 @@ public class Box2DSimulator extends PhysicsSimulator {
       circleShape.m_radius = (float) (object.getWidth() / 2);
 
       fixture.shape = circleShape;
-      fixture.userData = CollisionObjectType.OBJECT;
-      fixture.restitution = (float) MaterialConstants.restitution(object
-          .getMaterialType());
-      fixture.friction = (float) MaterialConstants.friction(object
-          .getMaterialType());
 
       if (object.getPhysicsType().equals(PhysicsType.INFINITE_MASS)) {
         body.setType(BodyType.STATIC);
@@ -428,39 +410,6 @@ public class Box2DSimulator extends PhysicsSimulator {
     }
 
     bodyMap.put(object.getId(), body);
-  }
-
-  /**
-   * Converts the list with world points into a list of local points relative to the specified center.
-   * 
-   * @param center
-   * @param points
-   * @return list with local points
-   */
-  private Vec2[] pointsToLocalPoints(Vec2 center, Vec2[] points) {
-    Vec2[] list = new Vec2[points.length];
-    for (int i = 0; i < points.length; i++) {
-      list[i] = new Vec2(points[i].x - center.x, points[i].y - center.y);
-    }
-    
-    return list;
-  }
-
-  /**
-   * Returns the center of a polygon. 
-   * 
-   * @param points
-   * @return the center
-   */
-  private Vec2 getPolygonCenter(Vec2[] points) {
-    float x = 0;
-    float y = 0;
-    for (Vec2 v : points) {
-      x += v.x;
-      y += v.y;
-    }
-    
-    return new Vec2(x / (float) points.length, y / (float) points.length);
   }
 
   /**
@@ -516,19 +465,6 @@ public class Box2DSimulator extends PhysicsSimulator {
         // position
         object.setX(body.getPosition().x);
         object.setY(body.getPosition().y);
-
-//        if (object.getShape2D().equals(Shape2D.polygon)) {
-//          Fixture f = body.getFixtureList();
-//          while (f != null) {
-//            if (f.getShape().m_type.equals(ShapeType.POLYGON)) {
-//              PolygonShape shape = (PolygonShape) f.getShape();
-//              object.setPoints(pointsListToString(shape.getVertices(), shape.getVertexCount()));
-//              break;
-//            }
-//            
-//            f = f.getNext();
-//          }
-//        }
 
         // orientation
         object.setRotZ(UtilFunctions.radianToDegree(body.getAngle()));
@@ -601,67 +537,6 @@ public class Box2DSimulator extends PhysicsSimulator {
     
   }
   
-  /**
-   * Update the engine objects with the data from the PhysicalAgentObjects.
-   */
-  private void updateEngineObjects() {
-    Body body = world.getBodyList();
-
-    while (body != null) {
-      if (body.getUserData() instanceof Physical) {
-        Physical object = (Physical) body.getUserData();
-
-        // position, orientation
-        body.setTransform(new Vec2((float) object.getX(), (float) object.getY()),
-            (float) (UtilFunctions.degreeToRadian(object.getRotZ())));
-        
-        // polygon vertices
-        if (object.getShape2D().equals(Shape2D.polygon)) {
-          Vec2[] points = pointsStringToList(object.getPoints());
-          
-          Fixture f = body.getFixtureList();
-          while (f != null) {
-            if (f.getShape().m_type.equals(ShapeType.POLYGON)) {
-              ((PolygonShape)f.getShape()).set(points, points.length);
-              break;
-            }
-            
-            f = f.getNext();
-          }
-        }
-
-        // velocity
-        double vx = unitConverter.velocityToUser(object.getV().getX())
-            * timeRatio;
-        double vy = unitConverter.velocityToUser(object.getV().getY())
-            * timeRatio;
-
-        body.setLinearVelocity(new Vec2((float) vx, (float) vy));
-        body.setAngularVelocity((float) (unitConverter
-            .angularVelocityToUser(UtilFunctions.degreeToRadian(object.getOmegaZ())) * timeRatio));
-
-        // acceleration
-        if (object.getAx() != 0 || object.getAy() != 0) {
-          // F = m * a
-          double fx = unitConverter.accelerationToUser(object.getAx())
-              * timeRatioSquared * object.getM();
-          double fy = unitConverter.accelerationToUser(object.getAy())
-              * timeRatioSquared * object.getM();
-          Vec2 force = new Vec2((float) fx, (float) fy);
-          body.applyForce(force, body.getWorldCenter());
-        }
-
-        if (object.getAlphaZ() != 0) {
-          // torque = inertia * alpha
-          double alpha = unitConverter.angularAccelerationToUser(UtilFunctions.degreeToRadian(object
-              .getAlphaZ())) * timeRatioSquared;
-          body.applyTorque((float) (body.getInertia() * alpha));
-        }
-      }
-
-      body = body.getNext();
-    }
-  }
   
   /**
    * Updates the engine objects whose corresponding AOR-Objects have changed
@@ -699,21 +574,6 @@ public class Box2DSimulator extends PhysicsSimulator {
         body.setTransform(pos, angle);
       }
             
-      // polygon vertices
-//      if (agent.getPoints() != null) {
-//        Vec2[] points = pointsStringToList(agent.getPoints());
-//        
-//        Fixture f = body.getFixtureList();
-//        while (f != null) {
-//          if (f.getShape().m_type.equals(ShapeType.POLYGON)) {
-//            ((PolygonShape)f.getShape()).set(points, points.length);
-//            break;
-//          }
-//          
-//          f = f.getNext();
-//        }
-//      }
-
       // velocity
       if (autoKinematics) {
         if (agent.getVx() != null) {
@@ -838,7 +698,7 @@ public class Box2DSimulator extends PhysicsSimulator {
    * with static bodies in Box2D (only used in euclidean space).
    */
   private void handleBorderContact() {
-    for (Body body : borderReached) {
+    for (Body body : borderContact) {
       body.setLinearVelocity(new Vec2(0, 0));
       body.setAngularVelocity(0);
       body.setType(BodyType.STATIC);
@@ -852,7 +712,7 @@ public class Box2DSimulator extends PhysicsSimulator {
       object.setAlphaZ(0);
     }
 
-    borderReached.clear();
+    borderContact.clear();
   }
 
   /**
@@ -878,26 +738,6 @@ public class Box2DSimulator extends PhysicsSimulator {
     return list.toArray(new Vec2[list.size()]);
   }
   
-  /**
-   * Converts a Vec2 array into a points string.
-   * 
-   * @param list
-   * @param count number of points
-   * @return the points string
-   */
-  private String pointsListToString(Vec2[] list, int count) {
-    String points = new String();
-    for (int i = 0; i < count; i++) {
-      Vec2 v = list[i];
-      points = points.concat(String.valueOf(v.x) + "," + String.valueOf(v.y));
-      
-      if (i < (count-1)) {
-        points = points.concat(" ");
-      }
-    }
-    
-    return points;
-  }
   
   /**
    * Calculates the area of a polygon. The vertices are specified in the points array.
@@ -1049,13 +889,13 @@ public class Box2DSimulator extends PhysicsSimulator {
 
       // space border reached
       if (cot1.equals(CollisionObjectType.OBJECT) && (cot2.equals(CollisionObjectType.BORDER))) {
-        borderReached.add(contact.getFixtureA().getBody());
+        borderContact.add(contact.getFixtureA().getBody());
         contact.setEnabled(false);
         return;
       }
 
       if (cot1.equals(CollisionObjectType.BORDER) && cot2.equals(CollisionObjectType.OBJECT)) {
-        borderReached.add(contact.getFixtureB().getBody());
+        borderContact.add(contact.getFixtureB().getBody());
         contact.setEnabled(false);
         return;
       }

@@ -4,7 +4,6 @@
 package aors.module.physics.simulator.twoDGrid;
 
 import java.lang.reflect.Field;
-import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
@@ -22,7 +21,7 @@ import aors.model.envevt.PhysicalObjectPerceptionEvent;
 import aors.model.envsim.Physical;
 import aors.model.envsim.PhysicalAgentObject;
 import aors.model.envsim.PhysicalObject;
-import aors.module.physics.PhysicsSimulator;
+import aors.module.physics.simulator.PhysicsSimulator;
 import aors.module.physics.collision.IntervalList2DGrid;
 import aors.module.physics.collision.Perception2DGrid;
 import aors.space.Space;
@@ -69,15 +68,6 @@ public class Simulator2DGrid extends PhysicsSimulator {
       xPositions.put(object, object.getX());
       yPositions.put(object, object.getY());
     }
-  }
-
-  /*
-   * (non-Javadoc)
-   * 
-   * @see aors.module.physics2d.PhysicsSimulator#simulationStarted()
-   */
-  @Override
-  public void simulationStarted() {
   }
 
   /*

@@ -27,7 +27,7 @@ import aors.model.envsim.Physical;
 import aors.model.envsim.Physical.PhysicsType;
 import aors.model.envsim.PhysicalAgentObject;
 import aors.model.envsim.PhysicalObject;
-import aors.module.physics.PhysicsSimulator;
+import aors.module.physics.simulator.PhysicsSimulator;
 import aors.module.physics.collision.Collision1D;
 import aors.module.physics.collision.IntervalList;
 import aors.module.physics.collision.Perception1D;
@@ -94,15 +94,6 @@ public class Simulator1D extends PhysicsSimulator {
     if (!autoCollisionHandling) {
       maxIterations = 1;
     }
-  }
-
-  /*
-   * (non-Javadoc)
-   * 
-   * @see aors.module.physics2d.PhysicsSimulator#simulationStarted()
-   */
-  @Override
-  public void simulationStarted() {
   }
 
   /*
