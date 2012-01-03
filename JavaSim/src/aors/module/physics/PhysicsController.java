@@ -12,7 +12,6 @@ import org.w3c.dom.NamedNodeMap;
 import org.w3c.dom.NodeList;
 
 import aors.GeneralSpaceModel;
-import aors.GeneralSpaceModel.SpaceType;
 import aors.controller.InitialState;
 import aors.controller.SimulationDescription;
 import aors.data.evt.ControllerEvent;
@@ -23,10 +22,10 @@ import aors.data.evt.sim.SimulationStepEvent;
 import aors.logger.model.SimulationParameters;
 import aors.model.envevt.EnvironmentEvent;
 import aors.model.envsim.Objekt;
-import aors.model.envsim.Physical.PhysicsType;
 import aors.model.envsim.PhysicalAgentObject;
 import aors.model.envsim.PhysicalObject;
 import aors.module.Module;
+import aors.module.physics.simulator.PhysicsSimulator;
 import aors.module.physics.simulator.oneD.Simulator1D;
 import aors.module.physics.simulator.threeD.BulletSimulator;
 import aors.module.physics.simulator.twoD.Box2DSimulator;
@@ -256,9 +255,6 @@ public class PhysicsController implements Module {
    */
   @Override
   public void simulationStarted() {
-    if (simulator != null) {
-      simulator.simulationStarted();
-    }
   }
 
   /**

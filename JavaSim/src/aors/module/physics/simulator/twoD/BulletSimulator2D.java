@@ -51,7 +51,7 @@ import aors.model.envsim.PhysicalAgentObject;
 import aors.model.envsim.PhysicalObject;
 import aors.model.envsim.Shape2D;
 import aors.model.envsim.Shape3D;
-import aors.module.physics.PhysicsSimulator;
+import aors.module.physics.simulator.PhysicsSimulator;
 import aors.module.physics.collision.CollisionObjectType;
 import aors.module.physics.util.BulletObject;
 import aors.module.physics.util.MaterialConstants;
@@ -139,15 +139,6 @@ public class BulletSimulator2D extends PhysicsSimulator {
     for (Physical object : getPhysicals()) {
       addBody(object);
     }
-  }
-
-  /*
-   * (non-Javadoc)
-   * 
-   * @see aors.module.physics2d.PhysicsSimulator#simulationStarted()
-   */
-  @Override
-  public void simulationStarted() {
   }
 
   /*

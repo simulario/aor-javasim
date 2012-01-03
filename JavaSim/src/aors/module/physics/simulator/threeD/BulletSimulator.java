@@ -3,7 +3,6 @@
  */
 package aors.module.physics.simulator.threeD;
 
-import java.lang.reflect.Field;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -22,7 +21,6 @@ import com.bulletphysics.collision.broadphase.Dispatcher;
 import com.bulletphysics.collision.dispatch.CollisionConfiguration;
 import com.bulletphysics.collision.dispatch.CollisionDispatcher;
 import com.bulletphysics.collision.dispatch.DefaultCollisionConfiguration;
-import com.bulletphysics.collision.dispatch.GhostObject;
 import com.bulletphysics.collision.narrowphase.PersistentManifold;
 import com.bulletphysics.collision.shapes.BoxShape;
 import com.bulletphysics.collision.shapes.CollisionShape;
@@ -56,7 +54,7 @@ import aors.model.envsim.Physical.PhysicsType;
 import aors.model.envsim.PhysicalAgentObject;
 import aors.model.envsim.PhysicalObject;
 import aors.model.envsim.Shape3D;
-import aors.module.physics.PhysicsSimulator;
+import aors.module.physics.simulator.PhysicsSimulator;
 import aors.module.physics.collision.CollisionObjectType;
 import aors.module.physics.util.BulletObject;
 import aors.module.physics.util.MaterialConstants;
@@ -123,7 +121,7 @@ public class BulletSimulator extends PhysicsSimulator {
    * A set that contains all Bullet bodies that have reached the space border
    * (used only in euclidean space).
    */
-  private Set<BulletObject> borderReached = new HashSet<BulletObject>();
+  private Set<BulletObject> borderContact = new HashSet<BulletObject>();
 
   /**
    * Creates a BulletSimulator. This will set up a world and all neccessary
@@ -143,11 +141,6 @@ public class BulletSimulator extends PhysicsSimulator {
 
     super(simParams, spaceModel, autoKinematics, autoCollisionDetection,
         autoCollisionHandling, gravitation, databus, objects, agents);
-    
-    Quat4f q = eulerToQuaternion(new Vector(-4.5, -1, -0.865));
-    Transform tr = new Transform();
-    tr.setRotation(q);
-    System.out.println(matrixToEuler(tr.basis));
 
     // compute time ratio, so we can use a step duration value of 1/60 in Bullet
     timeRatio = stepDuration * 60;
@@ -263,15 +256,6 @@ public class BulletSimulator extends PhysicsSimulator {
   /*
    * (non-Javadoc)
    * 
-   * @see aors.module.physics2d.PhysicsSimulator#simulationStarted()
-   */
-  @Override
-  public void simulationStarted() {
-  }
-
-  /*
-   * (non-Javadoc)
-   * 
    * @see aors.module.physics2d.PhysicsSimulator#simulationStepEnd()
    */
   @Override
@@ -351,12 +335,12 @@ public class BulletSimulator extends PhysicsSimulator {
       
       // filter out border contact
       if (object1.getCollisionObjectType().equals(CollisionObjectType.BORDER)) {
-        borderReached.add(object2);
+        borderContact.add(object2);
         return;
       }
 
       if (object2.getCollisionObjectType().equals(CollisionObjectType.BORDER)) {
-        borderReached.add(object1);
+        borderContact.add(object1);
         return;
       }
       
@@ -497,7 +481,7 @@ public class BulletSimulator extends PhysicsSimulator {
    * Update the PhysicalObjects and PhysicalAgentObjects with the data from the
    * engine.
    */
-  private void updateAorObjects() {
+  private void updateAorObjects() {System.out.print(stepNumber);
     for (BulletObject object : bulletObjects) {
       if (object.getAorObject() == null) {
         continue;
@@ -557,6 +541,9 @@ public class BulletSimulator extends PhysicsSimulator {
       aorObject.setOmegaY(unitConverter.angularVelocityToRadiansPerSeconds(UtilFunctions.radianToDegree(v.getY())) / timeRatio);
       aorObject.setOmegaZ(unitConverter.angularVelocityToRadiansPerSeconds(UtilFunctions.radianToDegree(v.getZ())) / timeRatio);
 
+      if (aorObject.getId() != 10) {
+        System.out.print("\t" + Math.round(aorObject.getY()-20));
+      }
 //      System.out.print(aorObject.getId() + ") ");
 //      System.out.print("x:" + t.origin.x + " y:"
 //      + t.origin.y + " z:" + t.origin.z + " ");
@@ -568,7 +555,7 @@ public class BulletSimulator extends PhysicsSimulator {
 //      System.out.println();
 
 //      System.out.println(object);
-    }
+    }System.out.println();
   }
 
   /**
@@ -871,28 +858,6 @@ public class BulletSimulator extends PhysicsSimulator {
   }
   
   /**
-   * Converts an ObjectArrayList with Vectors into a points string.
-   * 
-   * @param list
-   * @return the points string
-   */
-  private String pointsListToString(ObjectArrayList<Vector3f> list) {
-    String points = new String();
-    
-    int i = 0;
-    for (Vector3f v : list) {
-      points = points.concat(String.valueOf(v.x) + "," + String.valueOf(v.y) + "," + String.valueOf(v.z));
-      
-      if (i < (list.size()-1)) {
-        points = points.concat(" ");
-      }
-      i++;
-    }
-    
-    return points;    
-  }
-
-  /**
    * Converts a rotation represented as a quaternion into the same rotation
    * represented by 3 euler angles.
    * 
@@ -1015,7 +980,7 @@ public class BulletSimulator extends PhysicsSimulator {
    * with static bodies in Bullet (only used in euclidean space).
    */
   private void handleBorderContact() {
-    for (BulletObject object : borderReached) {
+    for (BulletObject object : borderContact) {
       world.removeRigidBody(object);
       object.setLinearVelocity(new Vector3f(0,0,0));
       object.setAngularVelocity(new Vector3f(0,0,0));
@@ -1037,7 +1002,7 @@ public class BulletSimulator extends PhysicsSimulator {
       aorObject.setAlphaZ(0);
     }
     
-    borderReached.clear();
+    borderContact.clear();
   }
 
 
