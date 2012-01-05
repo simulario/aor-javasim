@@ -15,7 +15,6 @@ import javax.vecmath.Quat4f;
 import javax.vecmath.Vector3f;
 import javax.xml.bind.JAXBElement;
 
-import com.bulletphysics.BulletGlobals;
 import com.bulletphysics.collision.broadphase.AxisSweep3;
 import com.bulletphysics.collision.broadphase.Dispatcher;
 import com.bulletphysics.collision.dispatch.CollisionConfiguration;
@@ -84,12 +83,12 @@ public class BulletSimulator extends PhysicsSimulator {
   /**
    * The collision masks, that define with which kind of objects one object can collide.
    */
-  private final short INFINITE_MASS_MASK = NORMAL_GROUP | PERCEPTION_GROUP; 
-  private final short NORMAL_MASK = INFINITE_MASS_GROUP | NORMAL_GROUP | BORDER_GROUP | PERCEPTION_GROUP; 
-  private final short IMMATERIAL_MASK = BORDER_GROUP | PERCEPTION_GROUP; 
-  private final short PHANTOM_MASK = BORDER_GROUP; 
-  private final short BORDER_MASK = NORMAL_GROUP | IMMATERIAL_GROUP | PHANTOM_GROUP; 
-  private final short PERCEPTION_MASK = INFINITE_MASS_GROUP | NORMAL_GROUP | IMMATERIAL_GROUP; 
+private final short INFINITE_MASS_MASK = NORMAL_GROUP | PERCEPTION_GROUP; 
+private final short NORMAL_MASK = INFINITE_MASS_GROUP | NORMAL_GROUP | BORDER_GROUP | PERCEPTION_GROUP; 
+private final short IMMATERIAL_MASK = BORDER_GROUP | PERCEPTION_GROUP; 
+private final short PHANTOM_MASK = BORDER_GROUP; 
+private final short BORDER_MASK = NORMAL_GROUP | IMMATERIAL_GROUP | PHANTOM_GROUP; 
+private final short PERCEPTION_MASK = INFINITE_MASS_GROUP | NORMAL_GROUP | IMMATERIAL_GROUP; 
 
   /**
    * The ratio between the provided step duration value and the value used in
@@ -300,27 +299,26 @@ public class BulletSimulator extends PhysicsSimulator {
    * @see aors.module.physics2d.PhysicsSimulator#simulationStepStart()
    */
   @Override
-  public void simulationStepStart(long stepNumber) {
-    this.stepNumber = stepNumber;
+public void simulationStepStart(long stepNumber) {
+  this.stepNumber = stepNumber;
 
-    updateEngineObjects();
-    assignAcceleration();
+  assignAcceleration();
 
-    // perform one simulation step in the engine
-    world.stepSimulation(1f/60f, 10);
-    
-    processCollisions();
+  // perform one simulation step in the engine
+  world.stepSimulation(1f/60f, 10);
+  
+  processCollisions();
 
-    if (spaceModel.getGeometry().equals(Geometry.Euclidean)) {
-      handleBorderContact();
-    }
-
-    if (autoKinematics) {
-      updateAorObjects();
-    }
-
-    sendEvents(stepNumber);
+  if (spaceModel.getGeometry().equals(Geometry.Euclidean)) {
+    handleBorderContact();
   }
+
+  if (autoKinematics) {
+    updateAorObjects();
+  }
+
+  sendEvents(stepNumber);
+}
 
   /**
    * Creates collision events for every collision that occurred during the current step.
@@ -481,7 +479,7 @@ public class BulletSimulator extends PhysicsSimulator {
    * Update the PhysicalObjects and PhysicalAgentObjects with the data from the
    * engine.
    */
-  private void updateAorObjects() {System.out.print(stepNumber);
+  private void updateAorObjects() {
     for (BulletObject object : bulletObjects) {
       if (object.getAorObject() == null) {
         continue;
@@ -541,9 +539,6 @@ public class BulletSimulator extends PhysicsSimulator {
       aorObject.setOmegaY(unitConverter.angularVelocityToRadiansPerSeconds(UtilFunctions.radianToDegree(v.getY())) / timeRatio);
       aorObject.setOmegaZ(unitConverter.angularVelocityToRadiansPerSeconds(UtilFunctions.radianToDegree(v.getZ())) / timeRatio);
 
-      if (aorObject.getId() != 10) {
-        System.out.print("\t" + Math.round(aorObject.getY()-20));
-      }
 //      System.out.print(aorObject.getId() + ") ");
 //      System.out.print("x:" + t.origin.x + " y:"
 //      + t.origin.y + " z:" + t.origin.z + " ");
@@ -555,7 +550,7 @@ public class BulletSimulator extends PhysicsSimulator {
 //      System.out.println();
 
 //      System.out.println(object);
-    }System.out.println();
+    }
   }
 
   /**
@@ -777,63 +772,6 @@ public class BulletSimulator extends PhysicsSimulator {
     }    
   }
   
-  /**
-   * Update the engine objects with the data from the PhysicalAgentObjects.
-   */
-  private void updateEngineObjects() {
-    for (BulletObject object : bulletObjects) {
-      if (object.getAorObject() == null) {
-        continue;
-      }
-
-      Physical aorObject = object.getAorObject();
-      
-      // position, orientation
-      Transform t = new Transform();
-      t.origin.set((float) aorObject.getX(), (float) aorObject.getY(), (float) aorObject.getZ());
-      t.setRotation(eulerToQuaternion(aorObject.getRot()));
-      object.getMotionState().setWorldTransform(t);
-      
-      // velocity
-      float vx = (float) (unitConverter.velocityToUser(aorObject.getV().getX()) * timeRatio);
-      float vy = (float) (unitConverter.velocityToUser(aorObject.getV().getY()) * timeRatio);
-      float vz = (float) (unitConverter.velocityToUser(aorObject.getV().getZ()) * timeRatio);
-      
-      object.setLinearVelocity(new Vector3f(vx, vy, vz));
-      
-      float omegaX = (float) (unitConverter.angularVelocityToUser(UtilFunctions.degreeToRadian(aorObject.getOmegaX())) * timeRatio); 
-      float omegaY = (float) (unitConverter.angularVelocityToUser(UtilFunctions.degreeToRadian(aorObject.getOmegaY())) * timeRatio); 
-      float omegaZ = (float) (unitConverter.angularVelocityToUser(UtilFunctions.degreeToRadian(aorObject.getOmegaZ())) * timeRatio); 
-
-      object.setAngularVelocity(new Vector3f(omegaX, omegaY, omegaZ));
-     
-      // acceleration
-      if (aorObject.getAx() != 0 || aorObject.getAy() != 0 || aorObject.getAz() != 0) {
-        // F = m * a
-        float fx = (float) (unitConverter.accelerationToUser(aorObject.getAx())
-            * timeRatioSquared * aorObject.getM());
-        float fy = (float) (unitConverter.accelerationToUser(aorObject.getAy())
-            * timeRatioSquared * aorObject.getM());
-        float fz = (float) (unitConverter.accelerationToUser(aorObject.getAz())
-            * timeRatioSquared * aorObject.getM());
-        
-        object.applyCentralForce(new Vector3f(fx, fy, fz));   
-      }
-      
-      if (aorObject.getAlphaX() != 0 || aorObject.getAlphaY() != 0 || aorObject.getAlphaZ() != 0) {
-        // torque = inertia * alpha
-        float alphaX = (float) (unitConverter.angularAccelerationToUser(UtilFunctions.degreeToRadian(aorObject
-            .getAlphaX())) * timeRatioSquared);
-        float alphaY = (float) (unitConverter.angularAccelerationToUser(UtilFunctions.degreeToRadian(aorObject
-            .getAlphaY())) * timeRatioSquared);
-        float alphaZ = (float) (unitConverter.angularAccelerationToUser(UtilFunctions.degreeToRadian(aorObject
-            .getAlphaZ())) * timeRatioSquared);
-        
-        object.applyTorque(new Vector3f(alphaX, alphaY, alphaZ));
-      }
-      
-    }
-  }
   
   /**
    * Converts the points String into an ObjectArrayList.
@@ -857,44 +795,6 @@ public class BulletSimulator extends PhysicsSimulator {
     return list;
   }
   
-  /**
-   * Converts a rotation represented as a quaternion into the same rotation
-   * represented by 3 euler angles.
-   * 
-   * @param q the quaternion
-   * @return a vector with the 3 euler angles
-   */
-  private Vector quaternionToEuler(Quat4f q) {
-    float m00 = 1.0f - 2.0f * (q.getY() * q.getY() + q.getZ() * q.getZ());
-    float m01 = 2.0f * (q.getX() * q.getY() + q.getZ() * q.getW());
-    float m02 = 2.0f * (q.getZ() * q.getX() - q.getY() * q.getW());
-
-    float m10 = 2.0f * (q.getX() * q.getY() - q.getZ() * q.getW());
-    float m11 = 1.0f - 2.0f * (q.getZ() * q.getZ() + q.getX() * q.getX());
-    float m12 = 2.0f * (q.getY() * q.getZ() + q.getX() * q.getW());
-
-    float m20 = 2.0f * (q.getZ() * q.getX() + q.getY() * q.getW());
-    float m21 = 2.0f * (q.getY() * q.getZ() - q.getX() * q.getW());
-    float m22 = 1.0f - 2.0f * (q.getY() * q.getY() + q.getX() * q.getX());
-    
-    Matrix3f m = new Matrix3f(m00, m01, m02, m10, m11, m12, m20, m21, m22);
-    m.transpose();
-
-    double cosY = Math.sqrt(m.m00 * m.m00 + m.m10 * m.m10);
-    
-    double x, y, z;
-    if (cosY > 16 * BulletGlobals.FLT_EPSILON) {
-      x = Math.atan2(1.0f * m.m21, m.m22);
-      y = Math.atan2(-1.0f * m.m20, cosY);
-      z = Math.atan2(1.0f * m.m10, m.m00);
-    } else {
-      x = Math.atan2(-1.0f * m.m12, m.m11);
-      y = Math.atan2(-1.0f * m.m20, cosY);
-      z = 0.0;
-    }
-    
-    return new Vector(x, y, z);
-  }
   
   /**
    * Converts a rotation specified in euler angles into the same rotation 
@@ -904,30 +804,18 @@ public class BulletSimulator extends PhysicsSimulator {
    * @return the quaternion
    */
   private Quat4f eulerToQuaternion(Vector v) {
-//    double sx = Math.sin(v.getX() * 0.5);
-//    double cx = Math.cos(v.getX() * 0.5);
-//
-//    double sy = Math.sin(v.getY() * 0.5);
-//    double cy = Math.cos(v.getY() * 0.5);
-//    
-//    double sz = Math.sin(v.getZ() * 0.5);
-//    double cz = Math.cos(v.getZ() * 0.5);
-//
-//    float w = (float) ((cx * cy * cz) + (sx * sy * sz));
-//    float x = (float) ((sx * cy * cz) - (cx * sy * sz));
-//    float y = (float) ((cx * sy * cz) + (sx * cy * sz));
-//    float z = (float) ((cx * cy * sz) - (sx * sy * cz));
-//
-//    return new Quat4f(x, y, z, w);
+    double x = UtilFunctions.degreeToRadian(v.getX());
+    double y = UtilFunctions.degreeToRadian(v.getY());
+    double z = UtilFunctions.degreeToRadian(v.getZ());
+
+    double sinx = Math.sin(x);
+    double cosx = Math.cos(x);
     
-    double sinx = Math.sin(v.getX());
-    double cosx = Math.cos(v.getX());
+    double siny = Math.sin(y);
+    double cosy = Math.cos(y);
     
-    double siny = Math.sin(v.getY());
-    double cosy = Math.cos(v.getY());
-    
-    double sinz = Math.sin(v.getZ());
-    double cosz = Math.cos(v.getZ());
+    double sinz = Math.sin(z);
+    double cosz = Math.cos(z);
     
     float m11 = (float) (cosz * cosy);
     float m12 = (float) (cosz * siny * sinx - sinz * cosx);
@@ -972,7 +860,7 @@ public class BulletSimulator extends PhysicsSimulator {
       x = -x; 
     } 
     
-    return new Vector(x, y, z);
+    return new Vector(UtilFunctions.radianToDegree(x), UtilFunctions.radianToDegree(y), UtilFunctions.radianToDegree(z));
   }
   
   /**

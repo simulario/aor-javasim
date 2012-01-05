@@ -239,6 +239,7 @@ public class Box2DSimulator extends PhysicsSimulator {
     }
 
     events.addAll(collisionEvents);
+    collisionEvents.clear();
     processPerceptions();
     sendEvents(stepNumber);
   }
