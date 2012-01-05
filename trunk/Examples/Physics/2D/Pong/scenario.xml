@@ -1,0 +1,293 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<?xml-stylesheet type="text/xsl" href="prettyprint.xsl"?>
+<SimulationScenario scenarioName="Pong" scenarioTitle="Pong"
+                    simulationManagerDirectory="../../.." version="0.9"
+                    xsi:schemaLocation="http://aor-simulation.org ../../../../AORSL/AORSL_0-9.xsd"
+                    xmlns="http://aor-simulation.org"
+                    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+                    xmlns:xs="http://www.w3.org/2001/XMLSchema"
+                    xmlns:xi="http://www.w3.org/2001/XInclude"
+                    xmlns:saxon="http://saxon.sf.net/"
+                    xmlns:ns="http://aor-simulation.org"
+                    xmlns:h="http://www.w3.org/1999/xhtml"
+                    xmlns:dc="http://purl.org/dc/elements/1.1/">
+  <SimulationParameters simulationSteps="100000" stepDuration="50"
+                        stepTimeDelay="5" timeUnit="ms"></SimulationParameters>
+
+  <SimulationModel modelName="Pong" modelTitle="Pong">
+    <documentation>
+      <dc:creator>Holger Wuerke</dc:creator>
+    </documentation>
+
+    <SpaceModel geometry="Euclidean" spatialDistanceUnit="m">
+      <TwoDimensional autoCollisionDetection="true"
+                      autoCollisionHandling="true" autoKinematics="true"
+                      xMax="20" yMax="10"></TwoDimensional>
+    </SpaceModel>
+
+    <EntityTypes>
+      <ActionEventType name="MovePaddle">
+        <Attribute name="ballY" type="Float" />
+      </ActionEventType>
+
+      <CausedEventType name="KickOff"></CausedEventType>
+
+      <ExogenousEventType name="IncreaseBallVelocity" periodicity="500"></ExogenousEventType>
+
+      <PhysicalObjectType name="HWall" physicsType="INFINITE_MASS">
+        <InheritedAttributeSettings attribute="width" initialValue="20" />
+
+        <InheritedAttributeSettings attribute="height" initialValue="0.4" />
+
+        <InheritedAttributeSettings attribute="shape2D"
+                                    initialValue="rectangle" />
+      </PhysicalObjectType>
+
+      <PhysicalObjectType name="GoalArea" physicsType="INFINITE_MASS">
+        <InheritedAttributeSettings attribute="width" initialValue="0.4" />
+
+        <InheritedAttributeSettings attribute="height" initialValue="9.2" />
+
+        <InheritedAttributeSettings attribute="shape2D"
+                                    initialValue="rectangle" />
+      </PhysicalObjectType>
+
+      <PhysicalObjectType name="Ball" physicsType="NORMAL">
+        <InheritedAttributeSettings attribute="width" initialValue="0.2" />
+
+        <InheritedAttributeSettings attribute="height" initialValue="0.2" />
+
+        <InheritedAttributeSettings attribute="shape2D" initialValue="circle" />
+
+        <InheritedAttributeSettings attribute="m" initialValue="0.1" />
+
+        <Attribute name="velocity" type="Integer" />
+      </PhysicalObjectType>
+
+      <PhysicalAgentType autoPerception="true" name="Paddle"
+                         physicsType="NORMAL">
+        <InheritedAttributeSettings attribute="y" maxValue="9" minValue="1" />
+
+        <InheritedAttributeSettings attribute="width" initialValue="0.3" />
+
+        <InheritedAttributeSettings attribute="height" initialValue="1" />
+
+        <InheritedAttributeSettings attribute="shape2D"
+                                    initialValue="rectangle" />
+
+        <InheritedAttributeSettings attribute="m" initialValue="1" />
+
+        <InheritedAttributeSettings attribute="perceptionRadius"
+                                    initialValue="10" />
+
+        <Attribute name="initX" type="Float" />
+
+        <Attribute initialValue="0.1" name="velocity" type="Float" />
+
+        <ReactionRule agentVariable="paddle" name="BallComing_Rule">
+          <WHEN eventType="PhysicalObjectPerceptionEvent" eventVariable="e"
+                physicalObjectType="Ball" />
+
+          <IF language="Java">((paddle.getX() &gt;
+ e.getPerceivedPhysicalObject().getX()) &amp;&amp;
+          (e.getPerceivedPhysicalObject().getVx() &gt; 0)) ||
+          ((paddle.getX() &lt; e.getPerceivedPhysicalObject().getX())
+          &amp;&amp; (e.getPerceivedPhysicalObject().getVx() &lt; 0))</IF>
+
+          <THEN>
+            <SCHEDULE-EVT>
+              <ActionEventExpr actionEventType="MovePaddle">
+                <Slot property="ballY">
+                  <ValueExpr language="Java">e.getPerceivedPhysicalObject().getY()</ValueExpr>
+                </Slot>
+              </ActionEventExpr>
+            </SCHEDULE-EVT>
+          </THEN>
+        </ReactionRule>
+      </PhysicalAgentType>
+    </EntityTypes>
+
+    <EnvironmentRules>
+      <EnvironmentRule name="KickOff_Rule">
+        <WHEN eventType="KickOff" eventVariable="event" />
+
+        <FOR objectIdRef="10" objectType="Ball" objectVariable="ball"></FOR>
+
+        <DO>
+          <UPDATE-ENV>
+            <UpdateObject objectVariable="ball">
+              <Slot property="x" value="10"></Slot>
+
+              <Slot property="y" value="5"></Slot>
+
+              <Slot property="velocity" value="3"></Slot>
+
+              <Slot property="vx">
+                <ValueExpr language="Java">(Random.uniform(0,1) &gt; 0.5) ?
+ Math.sqrt(Math.pow(ball.getVelocity(),2)) : -Math.sqrt(Math.pow(ball.getVelocity(),2))</ValueExpr>
+              </Slot>
+
+              <Slot property="vy">
+                <ValueExpr language="Java">(Random.uniform(0,1) &gt; 0.5) ? Math.sqrt(Math.pow(ball.getVelocity(),2)) : -Math.sqrt(Math.pow(ball.getVelocity(),2))</ValueExpr>
+              </Slot>
+            </UpdateObject>
+          </UPDATE-ENV>
+        </DO>
+      </EnvironmentRule>
+
+      <EnvironmentRule name="KeepBallVelocity_Rule">
+        <ON-EACH-SIMULATION-STEP />
+
+        <FOR-ObjectVariable objectType="Ball" variable="ball"></FOR-ObjectVariable>
+
+        <DO>
+          <UPDATE-ENV>
+            <UpdateObject>
+              <ObjectRef language="Java" objectType="Ball">ball</ObjectRef>
+
+              <Slot property="vx">
+                <ValueExpr language="Java">Math.sqrt(Math.pow(ball.getVelocity(),2) / (1 + Math.pow(ball.getVy() / ball.getVx(), 2))) * Math.signum(ball.getVx())</ValueExpr>
+              </Slot>
+
+              <Slot property="vy">
+                <ValueExpr language="Java">Math.sqrt(Math.pow(ball.getVelocity(),2) / (1 + Math.pow(ball.getVx() / ball.getVy(), 2))) * Math.signum(ball.getVy())</ValueExpr>
+              </Slot>
+            </UpdateObject>
+          </UPDATE-ENV>
+        </DO>
+      </EnvironmentRule>
+
+      <EnvironmentRule name="IncreaseBallVelocity_Rule">
+        <WHEN eventType="IncreaseBallVelocity" />
+
+        <FOR-ObjectVariable objectType="Ball" variable="ball"></FOR-ObjectVariable>
+
+        <DO>
+          <UPDATE-ENV>
+            <UpdateObject>
+              <ObjectRef language="Java" objectType="Ball">ball</ObjectRef>
+
+              <Slot property="velocity">
+                <ValueExpr language="Java">ball.getVelocity() + 1</ValueExpr>
+              </Slot>
+            </UpdateObject>
+          </UPDATE-ENV>
+        </DO>
+      </EnvironmentRule>
+
+      <EnvironmentRule name="MovePaddle_Rule">
+        <WHEN eventType="MovePaddle" eventVariable="e" />
+
+        <FOR objectType="Paddle" objectVariable="paddle">
+          <ObjectRef language="Java">e.getActor()</ObjectRef>
+        </FOR>
+
+        <DO>
+          <UPDATE-ENV>
+            <UpdateObject objectVariable="paddle">
+              <Slot property="y">
+                <ValueExpr language="Java">(Math.abs(paddle.getY() - e.getBallY()) &lt; 0.3) ? paddle.getY() : (e.getBallY() &gt; paddle.getY()) ? paddle.getY() + paddle.getVelocity() : paddle.getY() - paddle.getVelocity()</ValueExpr>
+              </Slot>
+            </UpdateObject>
+          </UPDATE-ENV>
+        </DO>
+      </EnvironmentRule>
+
+      <EnvironmentRule name="KeepOrientationAndXPosition_Rule">
+        <ON-EACH-SIMULATION-STEP />
+
+        <FOR-ObjectVariable objectType="Paddle" variable="paddle"></FOR-ObjectVariable>
+
+        <DO>
+          <UPDATE-ENV>
+            <UpdateObject>
+              <ObjectRef language="Java" objectType="Paddle">paddle</ObjectRef>
+
+              <Slot property="rotZ" value="0"></Slot>
+
+              <Slot property="x">
+                <ValueExpr language="Java">paddle.getInitX()</ValueExpr>
+              </Slot>
+            </UpdateObject>
+          </UPDATE-ENV>
+        </DO>
+      </EnvironmentRule>
+
+      <EnvironmentRule name="Goal_Rule">
+        <WHEN eventType="CollisionEvent" eventVariable="e" />
+
+        <IF language="Java">(e.getPhysicalObject1().getType().equals("Ball") &amp;&amp; e.getPhysicalObject2().getType().equals("GoalArea")) || (e.getPhysicalObject1().getType().equals("GoalArea") &amp;&amp; e.getPhysicalObject2().getType().equals("Ball"))</IF>
+
+        <THEN>
+          <SCHEDULE-EVT>
+            <CausedEventExpr eventType="KickOff"></CausedEventExpr>
+          </SCHEDULE-EVT>
+        </THEN>
+      </EnvironmentRule>
+    </EnvironmentRules>
+  </SimulationModel>
+
+  <InitialState>
+    <CausedEvent occurrenceTime="1" type="KickOff"></CausedEvent>
+
+    <ExogenousEvent occurrenceTime="500" type="IncreaseBallVelocity"></ExogenousEvent>
+
+    <PhysicalObject id="100" type="HWall" x="10" y="0.2"></PhysicalObject>
+
+    <PhysicalObject id="101" type="HWall" x="10" y="9.8"></PhysicalObject>
+
+    <PhysicalObject id="1000" type="GoalArea" x="0.2" y="5"></PhysicalObject>
+
+    <PhysicalObject id="1001" type="GoalArea" x="19.8" y="5"></PhysicalObject>
+
+    <PhysicalObject id="10" type="Ball" x="10" y="5"></PhysicalObject>
+
+    <PhysicalAgent id="1" type="Paddle" x="1.5" y="5">
+      <Slot property="initX" value="1.5"></Slot>
+    </PhysicalAgent>
+
+    <PhysicalAgent id="2" type="Paddle" x="18.5" y="5">
+      <Slot property="initX" value="18.5"></Slot>
+    </PhysicalAgent>
+  </InitialState>
+
+  <UserInterface supportedLanguages="de">
+    <AnimationUI>
+      <Views>
+        <SpaceView canvasColorRGB="50 50 50">
+          <TwoDimensionalSpaceView2D backgroundColor="black"></TwoDimensionalSpaceView2D>
+        </SpaceView>
+
+        <PhysicalObjectView physicalObjectType="Ball">
+          <PhysicalShape2D>
+            <Circle fill="white"></Circle>
+          </PhysicalShape2D>
+        </PhysicalObjectView>
+
+        <PhysicalObjectView physicalObjectType="Paddle">
+          <PhysicalShape2D>
+            <Rectangle fill="white"></Rectangle>
+          </PhysicalShape2D>
+        </PhysicalObjectView>
+
+        <PhysicalObjectView physicalObjectType="HWall">
+          <PhysicalShape2D>
+            <Rectangle fill="white"></Rectangle>
+          </PhysicalShape2D>
+        </PhysicalObjectView>
+
+        <PhysicalObjectView physicalObjectType="GoalArea">
+          <PhysicalShape2D>
+            <Rectangle fill="black"></Rectangle>
+          </PhysicalShape2D>
+        </PhysicalObjectView>
+
+        <PhysicalObjectView physicalObjectType="GoalCount">
+          <PhysicalShape2D>
+            <Rectangle fill="blue"></Rectangle>
+          </PhysicalShape2D>
+        </PhysicalObjectView>
+      </Views>
+    </AnimationUI>
+  </UserInterface>
+</SimulationScenario>
