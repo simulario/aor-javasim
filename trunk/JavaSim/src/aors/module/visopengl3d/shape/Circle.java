@@ -1,219 +1,162 @@
 package aors.module.visopengl3d.shape;
 
-import java.util.ArrayList;
 
 import javax.media.opengl.GL2;
 import javax.media.opengl.glu.GLU;
+import javax.media.opengl.glu.GLUquadric;
 
 import aors.module.visopengl3d.utility.Color;
-import aors.module.visopengl3d.utility.TessellatedPolygon;
+
 
 /**
- * The Circle class is representing a simple geometric circle with a border.
+ * The 3D Circle is represented by a Cylinder.
  * 
- * @author Sebastian Mucha
- * @since January 19th, 2010
+ * @author Susanne Schölzel
+ * @since December 22th, 2011
  * 
  */
-public class Circle extends Shape2D {
-
-  /**
-   * Creates a new rectangle instance and initializes its members.
-   */
+public class Circle extends Shape2D{
+  
   public Circle() {
     type = ShapeType.Circle;
   }
-
-  @Override
-  protected void calculateContour(ArrayList<double[]> outContour,
-      ArrayList<double[]> inContour) {
-    if (inContour == null) {
-      // Radius of the circle
-      double radius = width / 2;
-
-      // Point lying on the circles edge
-      double u, v;
-
-      // Loop over a circles angles
-      for (int i = 0; i < 360; i++) {
-        u = Math.cos(i / (180 / Math.PI)) * radius;
-        v = Math.sin(i / (180 / Math.PI)) * radius;
-
-        // Create one vertex
-        double[] vertex = new double[9];
-        vertex[0] = u;
-        vertex[1] = v;
-
-        // Add the vertex to the contour list
-        outContour.add(vertex);
-      }
-    }
-
-    // Calculate the contour of the border polygon
-    else {
-      calculateInnerContour(outContour, inContour);
-    }
-  }
-
-  /**
-   * Calculate the vertices of a smaller circle (border).
-   * 
-   * @param outContour
-   * @param inContour
-   */
-  private void calculateInnerContour(ArrayList<double[]> outContour,
-      ArrayList<double[]> inContour) {
-    // Radius of the circle
-    double radius = width / 2;
-
-    // Reduce the radius by the border width
-    double scaledRadius = radius - strokeWidth;
-
-    // Make sure the radius never drops below zero
-    if (scaledRadius < 0)
-      scaledRadius = 0;
-
-    // Scaling factor
-    double scale = scaledRadius / radius;
-
-    // Scale each vertex of the contour of the whole circle
-    for (double[] vertex : outContour) {
-      double[] borderVertex = new double[9];
-      borderVertex[0] = vertex[0] * scale;
-      borderVertex[1] = vertex[1] * scale;
-      inContour.add(borderVertex);
-    }
-  }
-
+  
   @Override
   public void generateDisplayList(GL2 gl, GLU glu) {
-    double radius = width / 2;
-
-    /*
-     * List of all vertices describing the outer contour of the circle, as well
-     * as the vertices color and texture coordinates.
-     */
-    ArrayList<double[]> outContour = new ArrayList<double[]>();
-
-    /*
-     * List of all vertices describing the inner contour of the circle, as well
-     * as the vertices color and texture coordinates.
-     */
-    ArrayList<double[]> inContour = new ArrayList<double[]>();
-
-    /*
-     * Set the alpha value of the colors. The opacity of the whole shape
-     * (strokeOpacity) always has a higher priority.
-     */
-    if (strokeOpacity < 1) {
-      fill.setAlpha(strokeOpacity);
-      stroke.setAlpha(strokeOpacity);
-    } else {
-      fill.setAlpha(fillOpacity);
-      stroke.setAlpha(1);
-    }
-
+    
+    double objectHeight = getObjectHeight();
+    
+    // Set the alpha value of the fill color to the fill opacity
+    fill.setAlpha(fillOpacity);
+    
     // Get a denominator for the display list
     displayList = gl.glGenLists(1);
 
     // Create the display list
     gl.glNewList(displayList, GL2.GL_COMPILE);
-
-    // Don't draw if the dimensions are too small
-    if (radius > 0) {
-      // Check if the circle will be rendered with a texture applied on it
+    
+    gl.glPushMatrix();
+    
+    // rotate and translate the cylinder, so that the top points in direction of the positive y-axis
+    // and one half of the cylinder is on the positive y-axis and the other half is on the negative y-axis
+    gl.glTranslated(0, -objectHeight/2, 0);
+    gl.glRotated(-90, 1, 0, 0);
+    
+    // radius of the cylinder
+    double radius = width / 2;
+    
+    // Don't draw anything if the dimensions are too small
+    if (objectHeight > 0 && radius > 0) {
+      
+      // GLUquadric objects for the side face, top face and bottom face of the cylinder
+      GLUquadric side = glu.gluNewQuadric();
+      GLUquadric top = glu.gluNewQuadric();
+      GLUquadric bottom = glu.gluNewQuadric();
+      
+      // Check if the cylinder will be rendered with a texture applied to it
       if (texture != null) {
-
-        // Calculate the circles contour
-        calculateContour(outContour, null);
-
-        // Set the circles color to white (because of texture)
-        applyColor(outContour, Color.WHITE);
-
-        // Map the texture to the circle
-        applyTexture(outContour, texture.getImageTexCoords());
-
+        
+        // Set the drawing color to white (because of texture)
+        gl.glColor4dv(Color.WHITE.getColor(), 0);
+          
+        // Set the material to a white material (because of texture)
+        //setMaterial(gl, Color.WHITE.getColorFloat());
+            
         // Enable texture support
         texture.bind();
         texture.enable();
-
-        // Draw the textured circle
-        TessellatedPolygon poly = new TessellatedPolygon();
-        poly.init(gl, glu);
-        poly.beginPolygon();
-        poly.beginContour();
-        poly.renderContour(outContour);
-        poly.endContour();
-        poly.endPolygon();
-        poly.end();
-
+          
+          
+        // draw the side face of the cylinder with texture coordinates
+        gl.glMatrixMode(GL2.GL_TEXTURE);
+        gl.glPushMatrix();
+        gl.glTranslated(0.5, 0.5, 0);
+        gl.glScaled(-1, -1, 1);
+        gl.glTranslated(-0.5, -0.5, 0);
+        
+        glu.gluQuadricTexture(side, true);
+        glu.gluQuadricNormals(side, GLU.GLU_SMOOTH);
+        glu.gluCylinder(side, radius, radius, objectHeight, 36, 6);
+        glu.gluDeleteQuadric(side);
+        
+        gl.glPopMatrix();
+        gl.glMatrixMode(GL2.GL_MODELVIEW);
+        
+        // draw the top face of the cylinder with texture coordinates
+        gl.glPushMatrix();
+        gl.glTranslated(0, 0, objectHeight);
+        
+        gl.glMatrixMode(GL2.GL_TEXTURE);
+        gl.glPushMatrix();
+        gl.glTranslated(0.5, 0.5, 0);
+        gl.glScaled(1, -1, 1);
+        gl.glTranslated(-0.5, -0.5, 0);
+        
+        glu.gluQuadricTexture(top, true);
+        glu.gluQuadricNormals(top, GLU.GLU_SMOOTH);
+        glu.gluDisk(top, 0, radius, 36, 6);
+        glu.gluDeleteQuadric(top);
+        
+        gl.glPopMatrix();
+        gl.glMatrixMode(GL2.GL_MODELVIEW);
+        
+        gl.glPopMatrix();
+        
+        // draw the bottom face of the cylinder with texture coordinates
+        
+        gl.glMatrixMode(GL2.GL_TEXTURE);
+        gl.glPushMatrix();
+        gl.glTranslated(0.5, 0.5, 0);
+        gl.glScaled(-1, 1, 1);
+        gl.glTranslated(-0.5, -0.5, 0);
+        
+        glu.gluQuadricTexture(bottom, true);
+        glu.gluQuadricOrientation(bottom, GLU.GLU_INSIDE);
+        glu.gluQuadricNormals(bottom, GLU.GLU_SMOOTH);
+        glu.gluDisk(bottom, 0, radius, 36, 6);
+        glu.gluDeleteQuadric(bottom);
+        
+        gl.glPopMatrix();
+        gl.glMatrixMode(GL2.GL_MODELVIEW);
+          
         // Disable texture support
         texture.disable();
+        
       } else {
+    
+        // Set the drawing color
+        gl.glColor4dv(fill.getColor(), 0);
+          
+        // Set the material according to the fill color
+        //setMaterial(gl, fill.getColorFloat());
+        
+        // draw the side face of the cylinder
+        glu.gluQuadricNormals(side, GLU.GLU_SMOOTH);
+        glu.gluCylinder(side, radius, radius, objectHeight, 36, 6);
+        glu.gluDeleteQuadric(side);
 
-        // Check if the circle will be rendered with a border
-        if (strokeWidth > 0) {
-          // Calculate the circles contour and the contour of the border
-          calculateContour(outContour, null);
-          calculateContour(outContour, inContour);
-
-          // Apply the border color
-          applyColor(outContour, stroke);
-          applyColor(inContour, stroke);
-
-          // Don't apply any texture
-          applyTexture(outContour, null);
-          applyTexture(inContour, null);
-
-          // Draw the border
-          TessellatedPolygon poly = new TessellatedPolygon();
-          poly.init(gl, glu);
-          poly.setWindingRule(GLU.GLU_TESS_WINDING_ODD);
-          poly.beginPolygon();
-          poly.beginContour();
-          poly.renderContour(outContour);
-          poly.endContour();
-          poly.beginContour();
-          poly.renderContour(inContour);
-          poly.endContour();
-          poly.endPolygon();
-          poly.end();
-
-          // Apply the fill color
-          applyColor(inContour, fill);
-
-          // Draw the inner circle
-          poly.init(gl, glu);
-          poly.beginPolygon();
-          poly.beginContour();
-          poly.renderContour(inContour);
-          poly.endContour();
-          poly.endPolygon();
-          poly.end();
-        } else {
-          // Calculate the contour of the circle
-          calculateContour(outContour, null);
-
-          // Apply the fill color to the circle
-          applyColor(outContour, fill);
-
-          // Don't apply any texture
-          applyTexture(outContour, null);
-
-          // Draw the circle without border
-          TessellatedPolygon poly = new TessellatedPolygon();
-          poly.init(gl, glu);
-          poly.beginPolygon();
-          poly.beginContour();
-          poly.renderContour(outContour);
-          poly.endContour();
-          poly.endPolygon();
-          poly.end();
-          poly = null;
-        }
+        // draw the top face of the cylinder
+        gl.glPushMatrix();
+        
+        gl.glTranslated(0, 0, objectHeight);
+        
+        glu.gluQuadricNormals(top, GLU.GLU_SMOOTH);
+        glu.gluDisk(top, 0, radius, 36, 6);
+        glu.gluDeleteQuadric(top);
+        
+        gl.glPopMatrix();
+        
+        // draw the bottom face of the cylinder
+        glu.gluQuadricOrientation(bottom, GLU.GLU_INSIDE);
+        glu.gluQuadricNormals(bottom, GLU.GLU_SMOOTH);
+        glu.gluDisk(bottom, 0, radius, 36, 6);
+        glu.gluDeleteQuadric(bottom);
+          
       }
     }
-
+      
+    gl.glPopMatrix();
+    
     gl.glEndList();
   }
 }

@@ -50,22 +50,27 @@ public class OneDimSpaceModel extends SpaceModel {
    */
   private void initializeLinearTracks(GL2 gl, GLU glu) {
     // Minimal distance between tracks
-    final double MIN_DISTANCE = 30;
+    //final double MIN_DISTANCE = 30;
 
     // Distance between tracks
-    double distance = MIN_DISTANCE;
+    //double distance = MIN_DISTANCE;
 
-    if (oneDimSpaceView.getAlignment().equals(Alignment.horizontal))
-      distance = drawingArea.getHeight() / multiplicity;
-    else
-      distance = drawingArea.getWidth() / multiplicity;
+    //if (oneDimSpaceView.getAlignment().equals(Alignment.horizontal))
+    //  distance = drawingArea.getHeight() / multiplicity;
+    //else
+    //  distance = drawingArea.getWidth() / multiplicity;
 
     // Make sure the distance is not smaller than the minimal distance
-    if (distance < MIN_DISTANCE)
-      distance = MIN_DISTANCE;
+    //if (distance < MIN_DISTANCE)
+    //  distance = MIN_DISTANCE;
 
+    
+    
     // Determine the track width
     double trackWidth = computeTrackWidth();
+    
+    // distance between middle lines of the tracks
+    double distance = oneDimSpaceView.getTrackDistance() + trackWidth;
 
     /*
      * Calculate the position of the first track, taking into account if the
@@ -111,12 +116,13 @@ public class OneDimSpaceModel extends SpaceModel {
       ((Track) spaceComponents.get(i)).setTrackColor(oneDimSpaceView
           .getTrackColor());
       ((Track) spaceComponents.get(i)).setTrackWidth(trackWidth);
+      ((Track) spaceComponents.get(i)).setTrackHeight(oneDimSpaceView.getTrackHeight());
       ((Track) spaceComponents.get(i)).setAlignment(oneDimSpaceView
           .getAlignment());
       ((Track) spaceComponents.get(i)).setSpaceModel(this);
       ((Track) spaceComponents.get(i)).setupTrackDimensions(xMax);
       
-      
+      ((Track) spaceComponents.get(i)).generateDisplayList(gl, glu);
     }
   }
 

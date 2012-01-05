@@ -17,11 +17,11 @@ import aors.model.envsim.Physical;
  * @since 
  * 
  */
-public class Shape3DMap {
+public class Shape2DMap {
 
   // String constants describing nodes of a shape map
-  public static final String PHYSICAL_SHAPE3D_MAP = "PhysicalShape3dVisualizationMap";
-  public static final String SHAPE3D_MAP = "Shape3dVisualizationMap";
+  public static final String PHYSICAL_SHAPE2D_MAP = "PhysicalShape2dVisualizationMap";
+  public static final String SHAPE2D_MAP = "Shape2dVisualizationMap";
   public static final String CASE = "Case";
 
   // String constants describing attributes of a shape map
@@ -33,7 +33,7 @@ public class Shape3DMap {
   private Object propertyType;
 
   // Map of property values and associated shapes
-  private HashMap<String, Shape3D> map = new HashMap<String, Shape3D>();
+  private HashMap<String, Shape2D> map = new HashMap<String, Shape2D>();
   
   /**
    * Determines the value of the property through reflection and returns the
@@ -58,7 +58,7 @@ public class Shape3DMap {
           String propertyValue = String.valueOf(Double.valueOf(String.valueOf(field.get(obj))));
           
           if (map.get(propertyValue) != null) {
-            view.setShape3D(map.get(propertyValue));
+            view.setShape2D(map.get(propertyValue));
           }
         }
 
@@ -67,7 +67,7 @@ public class Shape3DMap {
           String propertyValue = field.get(obj).toString();
           
           if (map.get(propertyValue) != null) {
-            view.setShape3D(map.get(propertyValue));
+            view.setShape2D(map.get(propertyValue));
           }
         }
         
@@ -76,7 +76,7 @@ public class Shape3DMap {
           String propertyValue = field.get(obj).toString();
           
           if (map.get(propertyType.getClass().getSimpleName() + "." + propertyValue) != null) {
-            view.setShape3D(map.get(propertyType.getClass().getSimpleName() + "." + propertyValue));
+            view.setShape2D(map.get(propertyType.getClass().getSimpleName() + "." + propertyValue));
           }
         }
         
@@ -85,7 +85,7 @@ public class Shape3DMap {
           String propertyValue = field.get(obj).toString();
           
           if (map.get(propertyValue) != null) {
-            view.setShape3D(map.get(propertyValue));
+            view.setShape2D(map.get(propertyValue));
           }
         }
       } catch (SecurityException e) {
@@ -117,25 +117,25 @@ public class Shape3DMap {
             String propertyValue = String.valueOf(Double.valueOf(slot.getValue()));
             
             if (map.get(propertyValue) != null) {
-              view.setShape3D(map.get(propertyValue));
+              view.setShape2D(map.get(propertyValue));
             }
           }
 
           if (propertyType instanceof Boolean) {
             if (map.get(slot.getValue()) != null) {
-              view.setShape3D(map.get(slot.getValue()));
+              view.setShape2D(map.get(slot.getValue()));
             }
           }
           
           if (propertyType instanceof Enum<?>) {
             if (map.get(propertyType.getClass().getSimpleName() + "." +slot.getValue()) != null) {
-              view.setShape3D(map.get(propertyType.getClass().getSimpleName() + "." +slot.getValue()));
+              view.setShape2D(map.get(propertyType.getClass().getSimpleName() + "." +slot.getValue()));
             }
           }
           
           if (propertyType instanceof String) {
             if (map.get(slot.getValue()) != null) {
-              view.setShape3D(map.get(slot.getValue()));
+              view.setShape2D(map.get(slot.getValue()));
             }
           }
         }
@@ -159,25 +159,25 @@ public class Shape3DMap {
             String propertyValue = String.valueOf(Double.valueOf(slot.getValue()));
             
             if (map.get(propertyValue) != null) {
-              view.setShape3D(map.get(propertyValue));
+              view.setShape2D(map.get(propertyValue));
             }
           }
 
           if (propertyType instanceof Boolean) {
             if (map.get(slot.getValue()) != null) {
-              view.setShape3D(map.get(slot.getValue()));
+              view.setShape2D(map.get(slot.getValue()));
             }
           }
           
           if (propertyType instanceof Enum<?>) {
             if (map.get(propertyType.getClass().getSimpleName() + "." +slot.getValue()) != null) {
-              view.setShape3D(map.get(propertyType.getClass().getSimpleName() + "." +slot.getValue()));
+              view.setShape2D(map.get(propertyType.getClass().getSimpleName() + "." +slot.getValue()));
             }
           }
           
           if (propertyType instanceof String) {
             if (map.get(slot.getValue()) != null) {
-              view.setShape3D(map.get(slot.getValue()));
+              view.setShape2D(map.get(slot.getValue()));
             }
           }
         }
@@ -201,25 +201,25 @@ public class Shape3DMap {
             String propertyValue = String.valueOf(Double.valueOf(slot.getValue()));
             
             if (map.get(propertyValue) != null) {
-              view.setShape3D(map.get(propertyValue));
+              view.setShape2D(map.get(propertyValue));
             }
           }
 
           if (propertyType instanceof Boolean) {
             if (map.get(slot.getValue()) != null) {
-              view.setShape3D(map.get(slot.getValue()));
+              view.setShape2D(map.get(slot.getValue()));
             }
           }
           
           if (propertyType instanceof Enum<?>) {
             if (map.get(propertyType.getClass().getSimpleName() + "." +slot.getValue()) != null) {
-              view.setShape3D(map.get(propertyType.getClass().getSimpleName() + "." +slot.getValue()));
+              view.setShape2D(map.get(propertyType.getClass().getSimpleName() + "." +slot.getValue()));
             }
           }
           
           if (propertyType instanceof String) {
             if (map.get(slot.getValue()) != null) {
-              view.setShape3D(map.get(slot.getValue()));
+              view.setShape2D(map.get(slot.getValue()));
             }
           }
         }
@@ -307,7 +307,7 @@ public class Shape3DMap {
       // Return the associated shape
       if (propertyValue != null) {
         if (map.get(Double.valueOf(propertyValue)) != null) {
-          view.setShape3D(map.get(Double.valueOf(propertyValue)));
+          view.setShape2D(map.get(Double.valueOf(propertyValue)));
         }
       }
     }
@@ -321,11 +321,11 @@ public class Shape3DMap {
     this.propertyName = propertyName;
   }
 
-  public HashMap<String, Shape3D> getMap() {
+  public HashMap<String, Shape2D> getMap() {
     return map;
   }
 
-  public void setMap(HashMap<String, Shape3D> map) {
+  public void setMap(HashMap<String, Shape2D> map) {
     this.map = map;
   }
 }

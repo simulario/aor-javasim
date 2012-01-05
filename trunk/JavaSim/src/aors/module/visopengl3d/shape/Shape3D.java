@@ -17,7 +17,6 @@ import aors.module.visopengl3d.space.view.PropertyMap;
 import aors.module.visopengl3d.utility.Color;
 
 import com.sun.opengl.util.texture.Texture;
-import com.sun.opengl.util.texture.TextureCoords;
 
 /**
  * The Shape3D class is the base class for all three dimensional shapes.
@@ -171,6 +170,7 @@ public abstract class Shape3D {
 	 * @param color
 	 *          Color that will be applied to each vertex.
 	 */
+	/*
 	protected void applyColor(ArrayList<double[]> contour, Color color) {
 		for (double[] vertex : contour) {
 			// Set the RGBA components
@@ -180,7 +180,8 @@ public abstract class Shape3D {
 			vertex[6] = color.getAlpha();
 		}
 	}
-
+  */
+	
 	/**
 	 * Performs a mapping from object coordinates into texture coordinates. If the
 	 * second parameter equals null texture coordinates will be set to 0.
@@ -190,12 +191,12 @@ public abstract class Shape3D {
 	 * @param tc
 	 *          tImage coordinates of the texture image.
 	 */
-	protected void applyTexture(ArrayList<double[]> contour, TextureCoords tc) {
+	//protected void applyTexture(ArrayList<double[]> contour, TextureCoords tc) {
 		/*
 		 * Initialize the texture coordinates to 0 if no image coordinates are
 		 * available.
 		 */
-		if (tc == null) {
+	/*	if (tc == null) {
 			for (double[] vertex : contour) {
 				vertex[7] = 0;
 				vertex[8] = 0;
@@ -239,7 +240,7 @@ public abstract class Shape3D {
 				vertex[8] = t;
 			}
 		}
-	}
+	}*/
 
 	/**
 	 * Applies state changes of shape properties to the shape, for the initial

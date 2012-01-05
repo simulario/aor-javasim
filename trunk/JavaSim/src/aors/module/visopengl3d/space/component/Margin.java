@@ -4,13 +4,12 @@ import javax.media.opengl.GL2;
 import javax.media.opengl.glu.GLU;
 
 import aors.module.visopengl3d.space.model.SpaceModel;
-import aors.module.visopengl3d.space.model.TwoDimLateralViewSpaceModel;
 import aors.module.visopengl3d.space.model.TwoDimSpaceModel;
 import aors.module.visopengl3d.utility.Color;
 import aors.module.visopengl3d.utility.Offset;
 
 import com.sun.opengl.util.texture.Texture;
-import com.sun.opengl.util.texture.TextureCoords;
+//import com.sun.opengl.util.texture.TextureCoords;
 
 /**
  * Margin of a two dimensional continuous space model.
