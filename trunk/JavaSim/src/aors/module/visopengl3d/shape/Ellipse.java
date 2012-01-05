@@ -7,7 +7,7 @@ import javax.media.opengl.glu.GLUquadric;
 import aors.module.visopengl3d.utility.Color;
 
 /**
- * The 3D Ellipse is represented by a elliptic Cylinder.
+ * The 3D Ellipse is represented by an elliptic Cylinder.
  * 
  * @author Susanne Schölzel
  * @since January 4th, 2012
@@ -37,8 +37,6 @@ public class Ellipse extends Shape2D {
     // radius in x and y direction of the elliptic cylinder
     double radiusX = width / 2;
     double radiusY = height / 2;
-    System.out.println("radiusX: " + radiusX);
-    System.out.println("radiusY: " + radiusY);
     
     // rotate and translate the cylinder, so that the top points in direction of the positive y-axis
     // and one half of the cylinder is on the positive y-axis and the other half is on the negative y-axis
