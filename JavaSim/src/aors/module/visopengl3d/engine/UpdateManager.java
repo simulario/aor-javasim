@@ -33,7 +33,7 @@ import aors.model.envsim.Physical;
 import aors.model.envsim.PhysicalAgentObject;
 import aors.model.envsim.PhysicalObject;
 import aors.module.visopengl3d.shape.DisplayInfo;
-import aors.module.visopengl3d.shape.Shape3D;
+import aors.module.visopengl3d.shape.Shape2D;
 import aors.module.visopengl3d.shape.View;
 import aors.module.visopengl3d.space.model.GridSpaceModel;
 import aors.module.visopengl3d.space.model.SpaceModel;
@@ -281,27 +281,27 @@ public class UpdateManager {
     View view = viewMap.get(obj.getId());
 
     if (view != null) {
-      if (view.getShape3DMap() != null) {
-        view.getShape3DMap().determineShape(obj, view);
+      if (view.getShape2DMap() != null) {
+        view.getShape2DMap().determineShape(obj, view);
 
         if (obj instanceof Physical) {
-          view.getShape3DMap().determineShape((Physical) obj, view);
+          view.getShape2DMap().determineShape((Physical) obj, view);
         }
       }
 
-      // EmbeddedViews
+      // AttachedViews
       if (view.getAttachedList() != null) {
 
-        for (View embeddedView : view.getAttachedList()) {
-          if (embeddedView.getShape3DMap() != null) {
-            embeddedView.getShape3DMap().determineShape(obj, embeddedView);
+        for (View attachedView : view.getAttachedList()) {
+          if (attachedView.getShape2DMap() != null) {
+            attachedView.getShape2DMap().determineShape(obj, attachedView);
           }
 
-          if (embeddedView.getAttachedList() != null) {
-            for (View embeddedView2 : embeddedView.getAttachedList()) {
-              if (embeddedView2.getShape3DMap() != null) {
-                embeddedView2.getShape3DMap()
-                    .determineShape(obj, embeddedView2);
+          if (attachedView.getAttachedList() != null) {
+            for (View attachedView2 : attachedView.getAttachedList()) {
+              if (attachedView2.getShape2DMap() != null) {
+                attachedView2.getShape2DMap()
+                    .determineShape(obj, attachedView2);
               }
             }
           }
@@ -315,23 +315,23 @@ public class UpdateManager {
     View view = viewMap.get(obj.getId());
 
     if (view != null) {
-      if (view.getShape3DMap() != null) {
-        view.getShape3DMap().determinePropertyValue(obj, view);
+      if (view.getShape2DMap() != null) {
+        view.getShape2DMap().determinePropertyValue(obj, view);
       }
 
-      // EmbeddedViews
+      // AttachedViews
       if (view.getAttachedList() != null) {
-        for (View embeddedView : view.getAttachedList()) {
-          if (embeddedView.getShape3DMap() != null) {
-            embeddedView.getShape3DMap().determinePropertyValue(obj,
-                embeddedView);
+        for (View attachedView : view.getAttachedList()) {
+          if (attachedView.getShape2DMap() != null) {
+            attachedView.getShape2DMap().determinePropertyValue(obj,
+                attachedView);
           }
 
-          if (embeddedView.getAttachedList() != null) {
-            for (View embeddedView2 : embeddedView.getAttachedList()) {
-              if (embeddedView2.getShape3DMap() != null) {
-                embeddedView2.getShape3DMap().determinePropertyValue(obj,
-                    embeddedView2);
+          if (attachedView.getAttachedList() != null) {
+            for (View attachedView2 : attachedView.getAttachedList()) {
+              if (attachedView2.getShape2DMap() != null) {
+                attachedView2.getShape2DMap().determinePropertyValue(obj,
+                    attachedView2);
               }
             }
           }
@@ -345,23 +345,23 @@ public class UpdateManager {
     View view = viewMap.get(obj.getId());
 
     if (view != null) {
-      if (view.getShape3DMap() != null) {
-        view.getShape3DMap().determinePropertyValue(obj, view);
+      if (view.getShape2DMap() != null) {
+        view.getShape2DMap().determinePropertyValue(obj, view);
       }
 
-      // EmbeddedViews
+      // AttachedViews
       if (view.getAttachedList() != null) {
-        for (View embeddedView : view.getAttachedList()) {
-          if (embeddedView.getShape3DMap() != null) {
-            embeddedView.getShape3DMap().determinePropertyValue(obj,
-                embeddedView);
+        for (View attachedView : view.getAttachedList()) {
+          if (attachedView.getShape2DMap() != null) {
+            attachedView.getShape2DMap().determinePropertyValue(obj,
+                attachedView);
           }
 
-          if (embeddedView.getAttachedList() != null) {
-            for (View embeddedView2 : embeddedView.getAttachedList()) {
-              if (embeddedView2.getShape3DMap() != null) {
-                embeddedView2.getShape3DMap().determinePropertyValue(obj,
-                    embeddedView2);
+          if (attachedView.getAttachedList() != null) {
+            for (View attachedView2 : attachedView.getAttachedList()) {
+              if (attachedView2.getShape2DMap() != null) {
+                attachedView2.getShape2DMap().determinePropertyValue(obj,
+                    attachedView2);
               }
             }
           }
@@ -375,23 +375,23 @@ public class UpdateManager {
     View view = viewMap.get(agt.getId());
 
     if (view != null) {
-      if (view.getShape3DMap() != null) {
-        view.getShape3DMap().determinePropertyValue(agt, view);
+      if (view.getShape2DMap() != null) {
+        view.getShape2DMap().determinePropertyValue(agt, view);
       }
 
-      // EmbeddedViews
+      // AttachedViews
       if (view.getAttachedList() != null) {
-        for (View embeddedView : view.getAttachedList()) {
-          if (embeddedView.getShape3DMap() != null) {
-            embeddedView.getShape3DMap().determinePropertyValue(agt,
-                embeddedView);
+        for (View attachedView : view.getAttachedList()) {
+          if (attachedView.getShape2DMap() != null) {
+            attachedView.getShape2DMap().determinePropertyValue(agt,
+                attachedView);
           }
 
-          if (embeddedView.getAttachedList() != null) {
-            for (View embeddedView2 : embeddedView.getAttachedList()) {
-              if (embeddedView2.getShape3DMap() != null) {
-                embeddedView2.getShape3DMap().determinePropertyValue(agt,
-                    embeddedView2);
+          if (attachedView.getAttachedList() != null) {
+            for (View attachedView2 : attachedView.getAttachedList()) {
+              if (attachedView2.getShape2DMap() != null) {
+                attachedView2.getShape2DMap().determinePropertyValue(agt,
+                    attachedView2);
               }
             }
           }
@@ -444,16 +444,16 @@ public class UpdateManager {
 
     if (view != null) {
       // Apply initial property map to all shapes
-      if (view.getShape3DMap() != null) {
-        Collection<Shape3D> collection = view.getShape3DMap().getMap().values();
+      if (view.getShape2DMap() != null) {
+        Collection<Shape2D> collection = view.getShape2DMap().getMap().values();
 
-        for (Shape3D shape : collection) {
+        for (Shape2D shape : collection) {
           shape.applyPropertyMaps(obj);
         }
       } else {
 
         // Get the associated shape
-        Shape3D shape = view.getShape();
+        Shape2D shape = view.getShape();
 
         if (shape != null) {
           // Apply property maps
@@ -461,31 +461,31 @@ public class UpdateManager {
         }
       }
 
-      // EmbeddedViews
+      // AttachedViews
       if (view.getAttachedList() != null) {
-        for (View embeddedView : view.getAttachedList()) {
-          if (embeddedView.getShape3DMap() != null) {
-            for (Shape3D shape : embeddedView.getShape3DMap().getMap().values()) {
+        for (View attachedView : view.getAttachedList()) {
+          if (attachedView.getShape2DMap() != null) {
+            for (Shape2D shape : attachedView.getShape2DMap().getMap().values()) {
               shape.applyPropertyMaps(obj);
             }
 
-            if (embeddedView.getAttachedList() != null) {
-              for (View embeddedView2 : embeddedView.getAttachedList()) {
-                if (embeddedView2.getShape3DMap() != null) {
-                  for (Shape3D shape : embeddedView2.getShape3DMap().getMap()
+            if (attachedView.getAttachedList() != null) {
+              for (View attachedView2 : attachedView.getAttachedList()) {
+                if (attachedView2.getShape2DMap() != null) {
+                  for (Shape2D shape : attachedView2.getShape2DMap().getMap()
                       .values()) {
                     shape.applyPropertyMaps(obj);
                   }
                 }
               }
             }
-          } else if (embeddedView.getShape() != null) {
-            embeddedView.getShape().applyPropertyMaps(obj);
+          } else if (attachedView.getShape() != null) {
+            attachedView.getShape().applyPropertyMaps(obj);
 
-            if (embeddedView.getAttachedList() != null) {
-              for (View embeddedView2 : embeddedView.getAttachedList()) {
-                if (embeddedView2.getShape() != null) {
-                  embeddedView2.getShape().applyPropertyMaps(obj);
+            if (attachedView.getAttachedList() != null) {
+              for (View attachedView2 : attachedView.getAttachedList()) {
+                if (attachedView2.getShape() != null) {
+                  attachedView2.getShape().applyPropertyMaps(obj);
                 }
               }
             }
@@ -506,24 +506,24 @@ public class UpdateManager {
 
     if (view != null) {
       // Get the associated shape
-      Shape3D shape = view.getShape();
+      Shape2D shape = view.getShape();
 
       if (shape != null) {
         // Apply property maps
         shape.applyPropertyMaps(obj);
       }
 
-      // EmbeddedViews
+      // AttachedViews
       if (view.getAttachedList() != null) {
-        for (View embeddedView : view.getAttachedList()) {
-          if (embeddedView.getShape() != null) {
-            embeddedView.getShape().applyPropertyMaps(obj);
+        for (View attachedView : view.getAttachedList()) {
+          if (attachedView.getShape() != null) {
+            attachedView.getShape().applyPropertyMaps(obj);
           }
 
-          if (embeddedView.getAttachedList() != null) {
-            for (View embeddedView2 : embeddedView.getAttachedList()) {
-              if (embeddedView2.getShape() != null) {
-                embeddedView2.getShape().applyPropertyMaps(obj);
+          if (attachedView.getAttachedList() != null) {
+            for (View attachedView2 : attachedView.getAttachedList()) {
+              if (attachedView2.getShape() != null) {
+                attachedView2.getShape().applyPropertyMaps(obj);
               }
             }
           }
@@ -543,24 +543,24 @@ public class UpdateManager {
 
     if (view != null) {
       // Get the associated shape
-      Shape3D shape = view.getShape();
+      Shape2D shape = view.getShape();
 
       if (shape != null) {
         // Apply property maps
         shape.applyPropertyMaps(obj);
       }
 
-      // EmbeddedViews
+      // AttachedViews
       if (view.getAttachedList() != null) {
-        for (View embeddedView : view.getAttachedList()) {
-          if (embeddedView.getShape() != null) {
-            embeddedView.getShape().applyPropertyMaps(obj);
+        for (View attachedView : view.getAttachedList()) {
+          if (attachedView.getShape() != null) {
+            attachedView.getShape().applyPropertyMaps(obj);
           }
 
-          if (embeddedView.getAttachedList() != null) {
-            for (View embeddedView2 : embeddedView.getAttachedList()) {
-              if (embeddedView2.getShape() != null) {
-                embeddedView2.getShape().applyPropertyMaps(obj);
+          if (attachedView.getAttachedList() != null) {
+            for (View attachedView2 : attachedView.getAttachedList()) {
+              if (attachedView2.getShape() != null) {
+                attachedView2.getShape().applyPropertyMaps(obj);
               }
             }
           }
@@ -580,24 +580,24 @@ public class UpdateManager {
 
     if (view != null) {
       // Get the associated shape
-      Shape3D shape = view.getShape();
+      Shape2D shape = view.getShape();
 
       if (shape != null) {
         // Apply property maps
         shape.applyPropertyMaps(agt);
       }
 
-      // EmbeddedViews
+      // AttachedViews
       if (view.getAttachedList() != null) {
-        for (View embeddedView : view.getAttachedList()) {
-          if (embeddedView.getShape() != null) {
-            embeddedView.getShape().applyPropertyMaps(agt);
+        for (View attachedView : view.getAttachedList()) {
+          if (attachedView.getShape() != null) {
+            attachedView.getShape().applyPropertyMaps(agt);
           }
 
-          if (embeddedView.getAttachedList() != null) {
-            for (View embeddedView2 : embeddedView.getAttachedList()) {
-              if (embeddedView2.getShape() != null) {
-                embeddedView2.getShape().applyPropertyMaps(agt);
+          if (attachedView.getAttachedList() != null) {
+            for (View attachedView2 : attachedView.getAttachedList()) {
+              if (attachedView2.getShape() != null) {
+                attachedView2.getShape().applyPropertyMaps(agt);
               }
             }
           }
@@ -981,8 +981,8 @@ public class UpdateManager {
       View view = viewMap.get(phyAgt.getId());
 
       if (view != null) {
-    	if (view.getShape3DMap() != null) {
-    	  view.getShape3DMap().determineShape((Physical) obj, view);
+    	if (view.getShape2DMap() != null) {
+    	  view.getShape2DMap().determineShape((Physical) obj, view);
     	}
 
     	if (view.getShape() != null) {
@@ -1129,8 +1129,8 @@ public class UpdateManager {
       View view = viewMap.get(phyObj.getId());
 
       if (view != null) {
-        if (view.getShape3DMap() != null) {
-          view.getShape3DMap().determineShape((Physical) obj, view);
+        if (view.getShape2DMap() != null) {
+          view.getShape2DMap().determineShape((Physical) obj, view);
         }
 
         if (view.getShape() != null) {

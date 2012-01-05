@@ -14,10 +14,10 @@ import aors.logger.model.SlotType;
 import aors.model.envsim.Objekt;
 import aors.model.envsim.Physical;
 import aors.module.visopengl3d.space.view.PropertyMap;
+import aors.module.visopengl3d.space.view.SpaceView;
 import aors.module.visopengl3d.utility.Color;
 
 import com.sun.opengl.util.texture.Texture;
-import com.sun.opengl.util.texture.TextureCoords;
 
 /**
  * The Shape2D class is the base class for all two dimensional shapes.
@@ -112,8 +112,8 @@ public abstract class Shape2D implements Cloneable {
 	protected Texture texture;
 	protected String textureFilename;
 
-	// Embedded shape
-	protected Shape2D embeddedShape;
+	// Attached shape
+	protected Shape2D attachedShape;
 
 	// Flag indicating that the display list needs to be recompiled
 	protected boolean recompile;
@@ -148,98 +148,19 @@ public abstract class Shape2D implements Cloneable {
 	 */
 	public abstract void generateDisplayList(GL2 gl, GLU glu);
 
-	/**
-	 * Calculates the vertices lying on the shapes contour. Either the contour of
-	 * the whole shape (outShape) or the contour of a smaller version of the shape
-	 * (inShape), that is used to apply a border around the shape. If inContour is
-	 * null only the outer contour will be calculated.
-	 * 
-	 * @param outContour
-	 *          List storing vertices of the shapes contour.
-	 * @param inContour
-	 *          List storing vertices of the shapes border.
-	 */
-	protected abstract void calculateContour(ArrayList<double[]> outContour,
-			ArrayList<double[]> inContour);
-
-	/**
-	 * Applies a color to each vertex in a list of vertices.
-	 * 
-	 * @param contour
-	 *          List of vertices.
-	 * @param color
-	 *          Color that will be applied to each vertex.
-	 */
-	protected void applyColor(ArrayList<double[]> contour, Color color) {
-		for (double[] vertex : contour) {
-			// Set the RGBA components
-			vertex[3] = color.getRed();
-			vertex[4] = color.getGreen();
-			vertex[5] = color.getBlue();
-			vertex[6] = color.getAlpha();
-		}
-	}
-
-	/**
-	 * Performs a mapping from object coordinates into texture coordinates. If the
-	 * second parameter equals null texture coordinates will be set to 0.
-	 * 
-	 * @param contour
-	 *          List storing vertices.
-	 * @param tc
-	 *          tImage coordinates of the texture image.
-	 */
-	protected void applyTexture(ArrayList<double[]> contour, TextureCoords tc) {
-		/*
-		 * Initialize the texture coordinates to 0 if no image coordinates are
-		 * available.
-		 */
-		if (tc == null) {
-			for (double[] vertex : contour) {
-				vertex[7] = 0;
-				vertex[8] = 0;
-			}
-		} else {
-			// Maximal and minimal extensions of the polygon
-			double xMin = contour.get(0)[0];
-			double xMax = contour.get(0)[0];
-			double yMin = contour.get(0)[1];
-			double yMax = contour.get(0)[1];
-
-			// Loop over all vertices to find the maxima and minima
-			for (double[] vertex : contour) {
-				if (vertex[0] < xMin)
-					xMin = vertex[0];
-
-				if (vertex[0] > xMax)
-					xMax = vertex[0];
-
-				if (vertex[1] < yMin)
-					yMin = vertex[1];
-
-				if (vertex[1] > yMax)
-					yMax = vertex[1];
-			}
-
-			// Dimensions of the polygon
-			double width = xMax - xMin;
-			double height = yMax - yMin;
-
-			// Texture coordinates
-			double s = 0, t = 0;
-
-			// Loop over all vertices to find the appropriate texture
-			// coordinates
-			for (double[] vertex : contour) {
-				s = tc.left() + (width - (xMax - vertex[0])) / width;
-				t = tc.bottom() - (height - (yMax - vertex[1])) / height;
-
-				vertex[7] = s;
-				vertex[8] = t;
-			}
-		}
-	}
-
+  /**
+   * Normalizes a vector by dividing its components through its length
+   * 
+   * @param v
+   *      vector, which should be normalized, as an array
+   */
+  public void normalize(double[] v) {
+    double length = Math.sqrt(v[0]*v[0] + v[1]*v[1] + v[2]*v[2]);
+    v[0] /= length;
+    v[1] /= length;
+    v[2] /= length;
+  }
+	
 	/**
 	 * Applies state changes of shape properties to the shape, for the initial
 	 * state.
@@ -806,12 +727,12 @@ public abstract class Shape2D implements Cloneable {
 		this.propertyMaps = propertyMaps;
 	}
 
-	public Shape2D getEmbeddedShape() {
-		return embeddedShape;
+	public Shape2D getAttachedShape() {
+		return attachedShape;
 	}
 
-	public void setEmbeddedShape(Shape2D embeddedShape) {
-		this.embeddedShape = embeddedShape;
+	public void setAttachedShape(Shape2D attachedShape) {
+		this.attachedShape = attachedShape;
 	}
 
 	public Positioning getPositioning() {
@@ -892,5 +813,9 @@ public abstract class Shape2D implements Cloneable {
 
 	public void setRelativeY(double relativeY) {
 		this.relativeY = relativeY;
+	}
+	
+	public double getObjectHeight() {
+	  return SpaceView.getObjectHeight();
 	}
 }

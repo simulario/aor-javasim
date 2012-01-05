@@ -6,9 +6,10 @@ import javax.media.opengl.GL2;
 import javax.media.opengl.glu.GLU;
 
 import aors.module.visopengl3d.engine.TessellatedPolygon;
-import aors.module.visopengl3d.shape.Cylinder;
+import aors.module.visopengl3d.shape.Cuboid;
 import aors.module.visopengl3d.space.model.OneDimSpaceModel;
 import aors.module.visopengl3d.space.view.Alignment;
+import aors.module.visopengl3d.space.view.SpaceView;
 import aors.module.visopengl3d.utility.Color;
 import aors.space.Space;
 
@@ -42,6 +43,8 @@ public class Track implements SpaceComponent {
 
   // Stroke width of the track in world dimension (pixel)
   private double trackWidth;
+  
+  private double trackHeight;
 
   // Color of the track
   private Color trackColor;
@@ -138,7 +141,7 @@ public class Track implements SpaceComponent {
 
   
   /**
-   * Generates Cylinder for a track that is aligned either vertically or horizontally.
+   * Generates display list for a track that is aligned either vertically or horizontally.
    * 
    * @param gl
    * @param glu
@@ -146,42 +149,46 @@ public class Track implements SpaceComponent {
   public void generateDisplayList(GL2 gl, GLU glu) {
 	  if (alignment.equals(Alignment.horizontal)
 			  || alignment.equals(Alignment.vertical)) {
-		 	//Create and initialize new cylinder which should represent the track
-		    Cylinder cylinder = new Cylinder();
-		    cylinder.setWidth(trackWidth);	    
-		    cylinder.setFill(trackColor);
-		    cylinder.setZ(0);
+		 	//Create and initialize new cuboid which should represent the track
+	    Cuboid cuboid = new Cuboid();
+	    	    
+	    cuboid.setFill(trackColor);
+	    cuboid.setHeight(trackHeight);
+	    cuboid.setY(-trackHeight/2);
 
-		    if (alignment.equals(Alignment.horizontal)) {
-		    	cylinder.setHeight(x2-x1);
-		    	cylinder.setX(x1 + (x2-x1)/2);
-		    	cylinder.setY(y1);
-		    	cylinder.setRotZ(90);
-		    } else {
-		    	cylinder.setHeight(y2-y1);
-		    	cylinder.setX(x1);
-		    	cylinder.setY(y1 + (y2-y1)/2);
-		    }
+	    if (alignment.equals(Alignment.horizontal)) {
+	      cuboid.setWidth(x2-x1);
+	    	cuboid.setDepth(trackWidth);
+	    	//cuboid.setX(x1 + (x2-x1)/2);
+	    	cuboid.setX(0);
+	    	cuboid.setZ(-y1);
+	    } else {
+	      cuboid.setWidth(trackWidth);
+	    	cuboid.setDepth(y2-y1);
+	    	cuboid.setX(x1);
+	    	//cuboid.setZ(y1 + (y2-y1)/2);
+	    	cuboid.setZ(0);
+	    }
+    
+	    // generate display list for cylinder
+	    cuboid.generateDisplayList(gl, glu);
+
+	    // Get a denominator for the display list
+	    displayList = gl.glGenLists(1);
+
+	    // Create the display list
+	    gl.glNewList(displayList, GL2.GL_COMPILE);
 	    
-		    // generate display list for cylinder
-		    cylinder.generateDisplayList(gl, glu);
-
-		    // Get a denominator for the display list
-		    displayList = gl.glGenLists(1);
-
-		    // Create the display list
-		    gl.glNewList(displayList, GL2.GL_COMPILE);
-		    
-		    gl.glPushMatrix();
-		    
-		    //gl.glTranslated(cylinder.getX(), cylinder.getY(), cylinder.getZ());
-		    //gl.glRotated(cylinder.getRotZ(), 0.0, 0.0, 1.0);
-		    
-		    cylinder.display(gl, glu);
-		    
-		    gl.glPopMatrix();
-		    
-		    gl.glEndList();
+	    gl.glPushMatrix();
+	    
+	    gl.glTranslated(cuboid.getX(), cuboid.getY(), cuboid.getZ());
+	    //gl.glRotated(cylinder.getRotZ(), 0.0, 0.0, 1.0);
+	    
+	    cuboid.display(gl, glu);
+	    
+	    gl.glPopMatrix();
+	    
+	    gl.glEndList();
 	  }
   }
   
@@ -396,14 +403,22 @@ public class Track implements SpaceComponent {
 
     // Map to horizontal alignment
     if (alignment == Alignment.horizontal) {
+      //vertex[0] = x1 + ((worldLength * x) / spaceLength);
+      //vertex[1] = y1;
+      
       vertex[0] = x1 + ((worldLength * x) / spaceLength);
-      vertex[1] = y1;
+      vertex[1] = SpaceView.getObjectHeight()/2;
+      vertex[2] = -y1;
     }
 
     // Map to vertical alignment
     if (alignment == Alignment.vertical) {
+      //vertex[0] = x1;
+      //vertex[1] = y1 + ((worldLength * x) / spaceLength);
+      
       vertex[0] = x1;
-      vertex[1] = y1 + ((worldLength * x) / spaceLength);
+      vertex[1] = SpaceView.getObjectHeight()/2;
+      vertex[2] = -y1 - ((worldLength * x) / spaceLength);
     }
 
     // Map to circular alignment
@@ -503,6 +518,14 @@ public class Track implements SpaceComponent {
 
   public void setTrackWidth(double trackWidth) {
     this.trackWidth = trackWidth;
+  }
+  
+  public double getTrackHeight() {
+    return trackHeight;
+  }
+
+  public void setTrackHeight(double trackHeight) {
+    this.trackHeight = trackHeight;
   }
 
   public Color getTrackColor() {

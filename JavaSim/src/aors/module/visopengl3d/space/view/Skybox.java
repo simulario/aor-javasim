@@ -3,12 +3,10 @@ package aors.module.visopengl3d.space.view;
 
 
 import aors.module.visopengl3d.utility.Color;
-import aors.module.visopengl3d.utility.TextureLoader;
 
 import com.sun.opengl.util.texture.Texture;
 import com.sun.opengl.util.texture.TextureCoords;
 
-import java.io.File;
 import java.util.EnumMap;
 
 import javax.media.opengl.GL2;

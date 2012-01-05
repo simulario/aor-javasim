@@ -3,7 +3,6 @@ package aors.module.visopengl3d.engine;
 import java.awt.Point;
 import java.io.File;
 import java.nio.IntBuffer;
-//import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Map;
 
@@ -19,19 +18,22 @@ import aors.model.envsim.PhysicalAgentObject;
 import aors.model.envsim.PhysicalObject;
 import aors.module.visopengl3d.gui.VisualizationPanel;
 import aors.module.visopengl3d.shape.DisplayInfo;
-//import aors.module.visopengl3d.shape.Positioning;
-import aors.module.visopengl3d.shape.Shape3D;
-//import aors.module.visopengl3d.shape.ShapeType;
+import aors.module.visopengl3d.shape.Shape2D;
+import aors.module.visopengl3d.shape.Sphere;
 import aors.module.visopengl3d.shape.View;
 import aors.module.visopengl3d.space.component.SpaceComponent;
 import aors.module.visopengl3d.space.model.GridSpaceModel;
 import aors.module.visopengl3d.space.model.SpaceModel;
+import aors.module.visopengl3d.space.view.Alignment;
 import aors.module.visopengl3d.space.view.Face;
+import aors.module.visopengl3d.space.view.GlobalCamera;
 import aors.module.visopengl3d.space.view.GridSpaceView;
+import aors.module.visopengl3d.space.view.OneDimSpaceView;
 import aors.module.visopengl3d.space.view.Skybox;
 import aors.module.visopengl3d.space.view.SpaceView;
 import aors.module.visopengl3d.space.view.TwoDimSpaceView;
 import aors.module.visopengl3d.utility.Camera2D;
+import aors.module.visopengl3d.utility.Color;
 import aors.module.visopengl3d.utility.Offset;
 import aors.module.visopengl3d.utility.TextureLoader;
 import aors.space.Space;
@@ -89,9 +91,12 @@ public class Engine implements GLEventListener {
 
   // Scene camera model
   private Camera2D camera;
+  
+  public final boolean DEBUG = false;
 
   @Override
   public void display(GLAutoDrawable drawable) {
+	System.out.println("display");
     GL2 gl = (GL2) drawable.getGL();
 
     // Clear color and depth buffer
@@ -101,13 +106,50 @@ public class Engine implements GLEventListener {
     gl.glLoadIdentity();
     
     // determine elapsed time
-    camera.getElapsedTime();
+    //camera.getElapsedTime();
     // Apply camera transformations
-    camera.zoom(gl);
+    //camera.zoom(gl);
     
-    camera.scroll(gl);
-    camera.rotate(gl);
+    //camera.scroll(gl);
+    //camera.rotate(gl);
     
+    if(DEBUG) {
+    	Sphere sphere = new Sphere();
+    	sphere.setFill(Color.RED);
+    	sphere.setWidth(10);
+    	sphere.setX(0);
+    	sphere.setY(0);
+    	sphere.setZ(0);
+    	sphere.generateDisplayList(gl, glu);
+    	gl.glPushMatrix();
+        gl.glTranslated(sphere.getX(), sphere.getY(), sphere.getZ());
+    	sphere.display(gl, glu);
+    	gl.glPopMatrix();
+    	
+    	Sphere sphere1 = new Sphere();
+    	sphere1.setFill(Color.YELLOW);
+    	sphere1.setWidth(10);
+    	sphere1.setX(100);
+    	sphere1.setY(0);
+    	sphere1.setZ(0);
+    	sphere1.generateDisplayList(gl, glu);
+    	gl.glPushMatrix();
+        gl.glTranslated(sphere1.getX(), sphere1.getY(), sphere1.getZ());
+    	sphere1.display(gl, glu);
+    	gl.glPopMatrix();
+    	
+    	Sphere sphere2 = new Sphere();
+    	sphere2.setFill(Color.GREEN);
+    	sphere2.setWidth(10);
+    	sphere2.setX(0);
+    	sphere2.setY(0);
+    	sphere2.setZ(100);
+    	sphere2.generateDisplayList(gl, glu);
+    	gl.glPushMatrix();
+        gl.glTranslated(sphere2.getX(), sphere2.getY(), sphere2.getZ());
+    	sphere2.display(gl, glu);
+    	gl.glPopMatrix();
+    }
 
     // Display the space model & objects
     if (spaceModel != null) {
@@ -141,10 +183,12 @@ public class Engine implements GLEventListener {
 
   @Override
   public void dispose(GLAutoDrawable drawable) {
+	  System.out.println("dispose");
   }
 
   @Override
   public void init(GLAutoDrawable drawable) {
+	  System.out.println("init");
     GL2 gl = (GL2) drawable.getGL();
 
     // Set the clearing color
@@ -231,6 +275,9 @@ public class Engine implements GLEventListener {
   @Override
   public void reshape(GLAutoDrawable drawable, int x, int y, int width,
       int height) {
+	  System.out.println("reshape");
+	  System.out.println("width "+ width);
+	  System.out.println("height "+height);
     GL2 gl = (GL2) drawable.getGL();
 
     // Border around the drawing area
@@ -248,30 +295,92 @@ public class Engine implements GLEventListener {
 
     // ratio of width to height
     double aspect = ((double)width)/((double)height);
+    
+    double fovy = 45;
     // Define a perspective viewing volume
-    glu.gluPerspective(45, aspect, 1, 1000);
-  
+    glu.gluPerspective(fovy, aspect, 1, 2000);
+
+    // Initialize the drawing area
+    drawingArea = new Offset((-width / 2) + BORDER, (-height / 2) + BORDER,
+        (width / 2) - BORDER, (height / 2) - BORDER);
+    
+    if (spaceModel.getGeneralSpaceModel() == null) {
+      spaceModel.setxMax(drawingArea.getWidth());
+      spaceModel.setyMax(drawingArea.getHeight());
+    }
+    
+    // Get the space type
+    SpaceType type = spaceModel.getSpaceType();
+    
+    if(type.equals(SpaceType.OneD)) {
+      OneDimSpaceView spaceView = (OneDimSpaceView)spaceModel.getSpaceView();
+      if(spaceView.getAlignment() == Alignment.horizontal) {
+        double drawingAreaHeight = 0;
+        if(spaceView.getAbsoluteTrackWidth() != 0) {
+          // absolute trackWidth
+          drawingAreaHeight = spaceModel.getMultiplicity() * spaceView.getAbsoluteTrackWidth()
+            + (spaceModel.getMultiplicity()-1) * spaceView.getTrackDistance();
+        } else {
+          //relative trackWidth
+          drawingAreaHeight = spaceModel.getxMax() * height / width;
+          // trackDistance muss berechnet werden
+        }
+        drawingArea = new Offset(-spaceModel.getxMax()/2, -drawingAreaHeight/2, spaceModel.getxMax()/2, drawingAreaHeight/2);
+      } else if(spaceView.getAlignment() == Alignment.vertical) {
+        
+        double drawingAreaWidth = 0;
+        if(spaceView.getAbsoluteTrackWidth() != 0) {
+          // absolute trackWidth
+          drawingAreaWidth = spaceModel.getMultiplicity() * spaceView.getAbsoluteTrackWidth()
+            + (spaceModel.getMultiplicity()-1) * spaceView.getTrackDistance();
+        } else {
+          //relative trackWidth
+          drawingAreaWidth = spaceModel.getxMax() * width / height;
+          // trackDistance muss berechnet werden
+        }
+        drawingArea = new Offset(-drawingAreaWidth/2, -spaceModel.getxMax()/2, drawingAreaWidth/2, spaceModel.getxMax()/2);
+        
+      } else if(spaceView.getAlignment() == Alignment.circular) {
+        //drawingArea = new Offset();
+      }
+    } else if(type.equals(SpaceType.TwoD) || type.equals(SpaceType.TwoDGrid) || type.equals(SpaceType.TwoDLateralView)) {
+      drawingArea = new Offset(-spaceModel.getxMax()/2, -spaceModel.getyMax()/2, spaceModel.getxMax()/2, spaceModel.getyMax()/2);
+    }
+      
+    // Set the space models drawing area
+    spaceModel.setDrawingArea(drawingArea);
+    
     // Set the camera position
-    SpaceView spaceView = spaceModel.getSpaceView();
-    if(spaceView instanceof TwoDimSpaceView && ((TwoDimSpaceView)spaceView).getHasGlobalCameraPosition()) {
-    	TwoDimSpaceView twoDimSpaceView = (TwoDimSpaceView)spaceView;
-    	double[] eyePosition = twoDimSpaceView.getEyePosition();
-    	double[] lookAt = twoDimSpaceView.getLookAt();
-    	double[] upVector = twoDimSpaceView.getUpVector();
+    GlobalCamera globalCamera = spaceModel.getSpaceView().getGlobalCamera();
+    
+    if(globalCamera != null) {
+    	double[] eyePosition = globalCamera.getEyePosition();
+    	double[] lookAt = globalCamera.getLookAt();
+    	double[] upVector = globalCamera.getUpVector();
     	glu.gluLookAt(eyePosition[0], eyePosition[1], eyePosition[2],
     				  lookAt[0], lookAt[1], lookAt[2],
     				  upVector[0], upVector[1], upVector[2]);
     } else {
-    	glu.gluLookAt(0, 0, 400, 0, 0, 0, 0, 1, 0);
+      double fovy_rad = Math.PI * fovy / 180;
+    	// determine camera height from drawingArea height
+      double cameraHeightFromDrawingAreaHeight = (drawingArea.getHeight() + BORDER) / (2 * Math.tan(fovy_rad/2));
+      
+      // determine height from xmax
+      double drawingAreaHeightFromDrawingAreaWidth = (drawingArea.getWidth() + BORDER) * height / width;
+      double cameraHeightFromDrawingAreaWidth = drawingAreaHeightFromDrawingAreaWidth / (2 * Math.tan(fovy_rad/2));
+      
+      // take the maximum height
+      double cameraHeight = Math.max(cameraHeightFromDrawingAreaHeight, cameraHeightFromDrawingAreaWidth);
+      
+      if(cameraHeight < 1 + SpaceView.getObjectHeight()) cameraHeight = 1 + SpaceView.getObjectHeight();
+      //if(cameraHeight > 999) glu.gluPerspective(fovy, aspect, 1, cameraHeight+1);
+    	
+    	glu.gluLookAt(0, cameraHeight, 0, 0, 0, 0, 0, 0, -1);
     }
     
     // Reset model view matrix stack
     gl.glMatrixMode(GL2.GL_MODELVIEW);
     gl.glLoadIdentity();
-    
-    // Initialize the drawing area
-    drawingArea = new Offset((-width / 2) + BORDER, (-height / 2) + BORDER,
-        (width / 2) - BORDER, (height / 2) - BORDER);
 
     // Reinitialize
     init(drawable);
@@ -283,28 +392,26 @@ public class Engine implements GLEventListener {
    * @param gl
    */
   private void prepareSpaceModel(GL2 gl) {
+	  System.out.println("prepareSpaceModel");
     // Adjust drawing area (find correct pixel values)
-    double w_tmp = 0;
-    double h_tmp = 0;
-    double w_px = 0;
-    double h_px = 0;
+    //double w_tmp = 0;
+    //double h_tmp = 0;
+    //double w_px = 0;
+    //double h_px = 0;
 
-    if (spaceModel.getGeneralSpaceModel() == null) {
-      spaceModel.setxMax(drawingArea.getWidth());
-      spaceModel.setyMax(drawingArea.getHeight());
-    }
+    
 
-    w_tmp = drawingArea.getWidth() / spaceModel.getxMax();
-    h_tmp = drawingArea.getHeight() / spaceModel.getyMax();
+    //w_tmp = drawingArea.getWidth() / spaceModel.getxMax();
+    //h_tmp = drawingArea.getHeight() / spaceModel.getyMax();
 
-    double proportion = Math.min(w_tmp, h_tmp);
+    //double proportion = Math.min(w_tmp, h_tmp);
 
-    w_px = proportion * spaceModel.getxMax();
-    h_px = proportion * spaceModel.getyMax();
+    //w_px = proportion * spaceModel.getxMax();
+    //h_px = proportion * spaceModel.getyMax();
 
-    drawingArea = new Offset(-w_px / 2.0, -h_px / 2.0, w_px / 2.0, h_px / 2.0);
-
-    // Set the space models drawing area
+    //drawingArea = new Offset(-w_px / 2.0, -h_px / 2.0, w_px / 2.0, h_px / 2.0);
+    
+	  // Set the space models drawing area
     spaceModel.setDrawingArea(drawingArea);
 
     // Get the space type
@@ -380,6 +487,7 @@ public class Engine implements GLEventListener {
    * @param gl
    */
   private void prepareObjects(GL2 gl) {
+	  System.out.println("prepareObjects");
     // Get all objects as a collection (to be able to iterate over it)
     Collection<Objekt> objCollection = objMap.values();
 
@@ -389,7 +497,7 @@ public class Engine implements GLEventListener {
 
       if (view != null) {
         // Get the associated shape
-        Shape3D shape = view.getShape();
+        Shape2D shape = view.getShape();
 
         if (shape != null) {
           // Load texture
@@ -399,29 +507,29 @@ public class Engine implements GLEventListener {
           }
         }
 
-        // Load embedded views textures
+        // Load attached views textures
         if (view.getAttachedList() != null) {
-          for (View embeddedView : view.getAttachedList()) {
-            if (embeddedView.getShape() != null) {
+          for (View attachedView : view.getAttachedList()) {
+            if (attachedView.getShape() != null) {
               // Load texture
-              if (embeddedView.getShape().getTextureFilename() != null
-                  && embeddedView.getShape().getTexture() == null) {
-                embeddedView.getShape().setTexture(
-                    loadTexture(embeddedView.getShape().getTextureFilename()));
-                embeddedView.getShape().setRecompile(true);
+              if (attachedView.getShape().getTextureFilename() != null
+                  && attachedView.getShape().getTexture() == null) {
+                attachedView.getShape().setTexture(
+                    loadTexture(attachedView.getShape().getTextureFilename()));
+                attachedView.getShape().setRecompile(true);
               }
             }
 
-            if (embeddedView.getAttachedList() != null) {
-              for (View embeddedView2 : embeddedView.getAttachedList()) {
-                if (embeddedView2.getShape() != null) {
+            if (attachedView.getAttachedList() != null) {
+              for (View attachedView2 : attachedView.getAttachedList()) {
+                if (attachedView2.getShape() != null) {
                   // Load texture
-                  if (embeddedView2.getShape().getTextureFilename() != null
-                      && embeddedView2.getShape().getTexture() == null) {
-                    embeddedView2.getShape().setTexture(
-                        loadTexture(embeddedView2.getShape()
+                  if (attachedView2.getShape().getTextureFilename() != null
+                      && attachedView2.getShape().getTexture() == null) {
+                    attachedView2.getShape().setTexture(
+                        loadTexture(attachedView2.getShape()
                             .getTextureFilename()));
-                    embeddedView2.getShape().setRecompile(true);
+                    attachedView2.getShape().setRecompile(true);
                   }
                 }
               }
@@ -438,6 +546,7 @@ public class Engine implements GLEventListener {
    * @param filename
    */
   private Texture loadTexture(String filename) {
+	  System.out.println("loadTexture");
     // Search in the project's media directory
     String path = projectDirectory.getPath() + File.separator + "media"
         + File.separator + "images" + File.separator + filename;
@@ -468,6 +577,7 @@ public class Engine implements GLEventListener {
    * @param glu
    */
   private void displayObjects(GL2 gl, GLU glu) {
+	  System.out.println("displayObjects");
     // Get all objects as a collection (to be able to iterate over it)
     Collection<Objekt> objCollection = objMap.values();
 
@@ -549,7 +659,7 @@ public class Engine implements GLEventListener {
 
     if (view != null) {
       if (view.getShape() != null) {
-        Shape3D shape = view.getShape();
+        Shape2D shape = view.getShape();
 
         // Parse the point string for polygons or polylines
 /*        if (shape.getType().equals(ShapeType.Polygon)
@@ -649,15 +759,15 @@ public class Engine implements GLEventListener {
           displaySingleObject(pos, rot, shape, gl, glu);
 
           if (view.getAttachedList() != null) {
-            for (View embeddedView : view.getAttachedList()) {
-              double[] embeddedOffset = null;
-              embeddedOffset = displayEmbeddedView(embeddedView, shape, pos,
+            for (View attachedView : view.getAttachedList()) {
+              double[] attachedOffset = null;
+              attachedOffset = displayAttachedView(attachedView, shape, pos,
                   null, rot, gl, glu);
 
-              if (embeddedView.getAttachedList() != null) {
-                for (View embeddedView2 : embeddedView.getAttachedList()) {
-                  displayEmbeddedView(embeddedView2, embeddedView.getShape(),
-                      pos, embeddedOffset, rot, gl, glu);
+              if (attachedView.getAttachedList() != null) {
+                for (View attachedView2 : attachedView.getAttachedList()) {
+                  displayAttachedView(attachedView2, attachedView.getShape(),
+                      pos, attachedOffset, rot, gl, glu);
                 }
               }
             }
@@ -672,66 +782,66 @@ public class Engine implements GLEventListener {
     }
   }
 
-  private double[] displayEmbeddedView(View embeddedView, Shape3D parent,
+  private double[] displayAttachedView(View attachedView, Shape2D parent,
       double[] pos, double[] offset, double rot, GL2 gl, GLU glu) {
     // Get the shape
-    Shape3D embeddedShape = embeddedView.getShape();
+    Shape2D attachedShape = attachedView.getShape();
 
-    if (embeddedShape != null) {
+    if (attachedShape != null) {
 
-      mapEmbedded(embeddedShape, parent);
+      mapAttached(attachedShape, parent);
       /*
        * Check if the shape was changed by a ShapePropertyVisualizationMap  and regenerate its
        * display list if necessary.
        */
-      if (embeddedShape.isRecompile()) {
-        embeddedShape.generateDisplayList(gl, glu);
-        embeddedShape.setRecompile(false);
+      if (attachedShape.isRecompile()) {
+        attachedShape.generateDisplayList(gl, glu);
+        attachedShape.setRecompile(false);
       }
 
       // Check if the shape's display list was generated at all
-      if (embeddedShape.getDisplayList() == -1) {
-        embeddedShape.generateDisplayList(gl, glu);
+      if (attachedShape.getDisplayList() == -1) {
+        attachedShape.generateDisplayList(gl, glu);
       }
 
-      double[] embeddedOffset = new double[2];
+      double[] attachedOffset = new double[2];
 
       // Map position
       if (offset != null) {
-        if (embeddedShape.isOffsetXRelative()) {
-          embeddedOffset[0] = offset[0] + (embeddedShape.getOffsetX() / 100)
+        if (attachedShape.isOffsetXRelative()) {
+          attachedOffset[0] = offset[0] + (attachedShape.getOffsetX() / 100)
               * parent.getWidth();
         } else {
-          embeddedOffset[0] = offset[0] + embeddedShape.getOffsetX();
+          attachedOffset[0] = offset[0] + attachedShape.getOffsetX();
         }
 
-        if (embeddedShape.isOffsetYRelative()) {
-          embeddedOffset[1] = offset[1] + (embeddedShape.getOffsetY() / 100)
+        if (attachedShape.isOffsetYRelative()) {
+          attachedOffset[1] = offset[1] + (attachedShape.getOffsetY() / 100)
               * parent.getHeight();
         } else {
-          embeddedOffset[1] = offset[1] + embeddedShape.getOffsetY();
+          attachedOffset[1] = offset[1] + attachedShape.getOffsetY();
         }
       } else {
-        if (embeddedShape.isOffsetXRelative()) {
-          embeddedOffset[0] = (embeddedShape.getOffsetX() / 100)
+        if (attachedShape.isOffsetXRelative()) {
+          attachedOffset[0] = (attachedShape.getOffsetX() / 100)
               * parent.getWidth();
         } else {
-          embeddedOffset[0] = embeddedShape.getOffsetX();
+          attachedOffset[0] = attachedShape.getOffsetX();
         }
 
-        if (embeddedShape.isOffsetYRelative()) {
-          embeddedOffset[1] = (embeddedShape.getOffsetY() / 100)
+        if (attachedShape.isOffsetYRelative()) {
+          attachedOffset[1] = (attachedShape.getOffsetY() / 100)
               * parent.getHeight();
         } else {
-          embeddedOffset[1] = embeddedShape.getOffsetY();
+          attachedOffset[1] = attachedShape.getOffsetY();
         }
       }
 
-      // Display embedded shape
-      displayEmbeddedObject(pos, embeddedOffset, rot, embeddedShape,
-          embeddedView.getAttachedLabel(), gl, glu);
+      // Display attached shape
+      displayAttachedObject(pos, attachedOffset, rot, attachedShape,
+          attachedView.getAttachedLabel(), gl, glu);
 
-      return embeddedOffset;
+      return attachedOffset;
     }
 
     return null;
@@ -750,7 +860,7 @@ public class Engine implements GLEventListener {
 
     if (view != null) {
       // Get the associated shape
-      Shape3D shape = view.getShape();
+      Shape2D shape = view.getShape();
 
       if (shape != null) {
         // Get the display info
@@ -790,8 +900,8 @@ public class Engine implements GLEventListener {
         // Check if the object position is valid
         if (pos[0] < spaceModel.getDrawingArea().x1
             || pos[0] > spaceModel.getDrawingArea().x2
-            || pos[1] < spaceModel.getDrawingArea().y1
-            || pos[1] > spaceModel.getDrawingArea().y2) {
+            || pos[2] > -spaceModel.getDrawingArea().y1
+            || pos[2] < -spaceModel.getDrawingArea().y2) {
           System.out.println("Visualization Warning: Object with ID "
               + obj.getId() + " is outside of the visible area!");
           return;
@@ -840,15 +950,15 @@ public class Engine implements GLEventListener {
           displaySingleObject(pos, 0, shape, gl, glu);
 
           if (view.getAttachedList() != null) {
-            for (View embeddedView : view.getAttachedList()) {
-              double[] embeddedOffset = null;
-              embeddedOffset = displayEmbeddedView(embeddedView, shape, pos,
+            for (View attachedView : view.getAttachedList()) {
+              double[] attachedOffset = null;
+              attachedOffset = displayAttachedView(attachedView, shape, pos,
                   null, 0, gl, glu);
 
-              if (embeddedView.getAttachedList() != null) {
-                for (View embeddedView2 : embeddedView.getAttachedList()) {
-                  displayEmbeddedView(embeddedView2, embeddedView.getShape(),
-                      pos, embeddedOffset, 0, gl, glu);
+              if (attachedView.getAttachedList() != null) {
+                for (View attachedView2 : attachedView.getAttachedList()) {
+                  displayAttachedView(attachedView2, attachedView.getShape(),
+                      pos, attachedOffset, 0, gl, glu);
                 }
               }
             }
@@ -870,7 +980,7 @@ public class Engine implements GLEventListener {
    * @param shape
    * @param gl
    */
-  private void mapNonPhysicals(Shape3D shape) {
+  private void mapNonPhysicals(Shape2D shape) {
 //    if (!shape.getType().equals(ShapeType.Polygon)
 //        && !shape.getType().equals(ShapeType.Polyline)) {
       if (shape.isHeightRelative()) {
@@ -924,37 +1034,37 @@ public class Engine implements GLEventListener {
 */
   }
 
-  private void mapEmbedded(Shape3D embeddedShape, Shape3D parent) {
-//    if (!embeddedShape.getType().equals(ShapeType.Polygon)
-//        && !embeddedShape.getType().equals(ShapeType.Polyline)) {
-      if (embeddedShape.isHeightRelative()) {
-        embeddedShape.setHeight((embeddedShape.getRelativeHeight() / 100)
+  private void mapAttached(Shape2D attachedShape, Shape2D parent) {
+//    if (!attachedShape.getType().equals(ShapeType.Polygon)
+//        && !attachedShape.getType().equals(ShapeType.Polyline)) {
+      if (attachedShape.isHeightRelative()) {
+        attachedShape.setHeight((attachedShape.getRelativeHeight() / 100)
             * parent.getHeight());
-        embeddedShape.setRecompile(true);
+        attachedShape.setRecompile(true);
       }
 
-      if (embeddedShape.isWidthRelative()) {
-        embeddedShape.setWidth((embeddedShape.getRelativeWidth() / 100)
+      if (attachedShape.isWidthRelative()) {
+        attachedShape.setWidth((attachedShape.getRelativeWidth() / 100)
             * parent.getWidth());
-        embeddedShape.setRecompile(true);
+        attachedShape.setRecompile(true);
       }
 /*
-    } else if (embeddedShape.getType().equals(ShapeType.Polygon)
-        || embeddedShape.getType().equals(ShapeType.Polyline)) {
+    } else if (attachedShape.getType().equals(ShapeType.Polygon)
+        || attachedShape.getType().equals(ShapeType.Polyline)) {
       // Determine the width and height of a polygon
       double minX = 0;
       double maxX = 0;
       double minY = 0;
       double maxY = 0;
 
-      if (embeddedShape.getPointList() != null) {
-        if (!embeddedShape.getPointList().isEmpty()) {
-          minX = embeddedShape.getPointList().get(0)[0];
-          maxX = embeddedShape.getPointList().get(0)[0];
-          minY = embeddedShape.getPointList().get(0)[1];
-          maxY = embeddedShape.getPointList().get(0)[1];
+      if (attachedShape.getPointList() != null) {
+        if (!attachedShape.getPointList().isEmpty()) {
+          minX = attachedShape.getPointList().get(0)[0];
+          maxX = attachedShape.getPointList().get(0)[0];
+          minY = attachedShape.getPointList().get(0)[1];
+          maxY = attachedShape.getPointList().get(0)[1];
 
-          for (double[] point : embeddedShape.getPointList()) {
+          for (double[] point : attachedShape.getPointList()) {
             if (point[0] < minX) {
               minX = point[0];
             }
@@ -974,8 +1084,8 @@ public class Engine implements GLEventListener {
         }
       }
 
-      embeddedShape.setWidth(maxX - minX);
-      embeddedShape.setHeight(maxY - minY);
+      attachedShape.setWidth(maxX - minX);
+      attachedShape.setHeight(maxY - minY);
     }
 */
   }
@@ -985,10 +1095,10 @@ public class Engine implements GLEventListener {
    * 
    * @param shape
    */
-  private double[] getNonPhysicalObjectPosition(Shape3D shape) {
+  private double[] getNonPhysicalObjectPosition(Shape2D shape) {
     double[] position = new double[3];
     double x = 0;
-    double y = 0;
+    double z = 0;
 
     if (shape.isxRelative()) {
       x = (shape.getRelativeX() / 100) * spaceModel.getDrawingArea().getWidth();
@@ -997,15 +1107,15 @@ public class Engine implements GLEventListener {
     }
 
     if (shape.isyRelative()) {
-      y = (shape.getRelativeY() / 100)
+      z = -(shape.getRelativeY() / 100)
           * spaceModel.getDrawingArea().getHeight();
     } else {
-      y = shape.getY();
+      z = -shape.getY();
     }
 
     position[0] = drawingArea.x1 + x;
-    position[1] = drawingArea.y1 + y;
-    position[2] = 0;
+    position[1] = SpaceView.getObjectHeight()/2;
+    position[2] = -drawingArea.y1 + z;
 
     return position;
   }
@@ -1039,12 +1149,12 @@ public class Engine implements GLEventListener {
     return -1;
   }
 
-  private void updateShapeDimensions(int index, Shape3D shape, Physical phy) {
+  private void updateShapeDimensions(int index, Shape2D shape, Physical phy) {
     // Get the space component the physical is placed onto
     SpaceComponent comp = spaceModel.getSpaceComponents().get(index);
 
     /*
-     * Update the shape's dimensions (and those of embedded shapes) if they have
+     * Update the shape's dimensions (and those of attached shapes) if they have
      * changed and regenerate the shape's display list if necessary.
      */
 /*    if (shape.getType().equals(ShapeType.Rectangle)
@@ -1065,7 +1175,7 @@ public class Engine implements GLEventListener {
         shape.setWidth(mappedWidth);
         shape.setHeight(mappedHeight);
 
-        // Update embedded shapes as well
+        // Update attached shapes as well
         if (shape.getAttachedShape() != null) {
 
           if (shape.getAttachedShape().getAttachedShape() != null) {
@@ -1144,7 +1254,7 @@ public class Engine implements GLEventListener {
                 point[1] = point[1] * scaleHeight;
               }
 
-              // Update embedded shapes as well
+              // Update attached shapes as well
               if (shape.getAttachedShape() != null) {
 
                 if (shape.getAttachedShape().getAttachedShape() != null) {
@@ -1175,11 +1285,11 @@ public class Engine implements GLEventListener {
     // Get the mapped position
     double[] pos = comp.getWorldCoordinates(phy.getX(), phy.getY());
 
-    if (pos != null) {
+    //if (pos != null) {
       // Add the z index
-      pos[2] = phy.getZ();
-    }
-
+    //  pos[2] = phy.getZ();
+    //}
+    
     return pos;
   }
 
@@ -1212,7 +1322,7 @@ public class Engine implements GLEventListener {
    * @param glu
    */
   private void displaySingleObject(double[] position, double rotation,
-      Shape3D shape, GL2 gl, GLU glu) {
+      Shape2D shape, GL2 gl, GLU glu) {
     // Save the current model view matrix
     gl.glPushMatrix();
 
@@ -1229,8 +1339,8 @@ public class Engine implements GLEventListener {
     gl.glPopMatrix();
   }
 
-  private void displayEmbeddedObject(double[] position, double[] offset,
-      double rotation, Shape3D shape, String label, GL2 gl, GLU glu) {
+  private void displayAttachedObject(double[] position, double[] offset,
+      double rotation, Shape2D shape, String label, GL2 gl, GLU glu) {
     // Save the current model view matrix
     gl.glPushMatrix();
 
@@ -1245,7 +1355,7 @@ public class Engine implements GLEventListener {
     // Display the shape
     shape.display(gl, glu);
 
-    // Display the label of an embedded view
+    // Display the label of an attached view
     if (label != null) {
       gl.glColor3d(0, 0, 0);
 

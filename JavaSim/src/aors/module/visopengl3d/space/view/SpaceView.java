@@ -28,6 +28,9 @@ public abstract class SpaceView {
   
   // Skybox
   protected Skybox skybox;
+  protected GlobalCamera globalCamera;
+  
+  protected static double objectHeight = 10;
   
 
   public Color getCanvasColor() {
@@ -52,5 +55,21 @@ public abstract class SpaceView {
 
   public void setSkybox(Skybox skybox) {
 	this.skybox = skybox;
+  }
+  
+  public GlobalCamera getGlobalCamera() {
+	    return globalCamera;
+	  }
+
+  public void setGlobalCamera(GlobalCamera globalCamera) {
+	this.globalCamera = globalCamera;
+  }
+  
+  public static double getObjectHeight() {
+    return objectHeight;
+    }
+
+  public static void setObjectHeight(double objHeight) {
+    objectHeight = objHeight;
   }
 }
