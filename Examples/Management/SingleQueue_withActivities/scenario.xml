@@ -37,11 +37,11 @@
 				while the other items of the queue represent the waiting line.</h:p>
 			</description>
 			<description xml:lang="de">
-				Kunden kommen in zufälligen Zeitabständen an einem Service-Schalter an, wo sie in einer Warteschlange warten müssen, 
+				<h:p>Kunden kommen in zufälligen Zeitabständen an einem Service-Schalter an, wo sie in einer Warteschlange warten müssen, 
 				wenn der Schalter beschäftigt ist. Die Zeit zwischen zwei Kundenankünften ist gleichförmig verteilt zwischen 1 und 8 Minuten. 
 				Die Zeit zur Erbringung eines Dienstes variiert zwischen 1 und 6 Minuten, mit den Wahrscheinlichkeiten 0.1, 0.2, 0.3, 0.25, 
 				0.1 beziehunsgweise 0.05. Es sollen zwei Statistiken erhoben werden: der Service-Nutzungsgrad (gesamte Servicezeit geteilt 
-				durch die Gesamtzeit) und die maximale Länge der Warteschlange.
+				durch die Gesamtzeit) und die maximale Länge der Warteschlange.</h:p>
 			</description>
 			<CcLicense license="CC BY-SA"/>
 			<mediaFiles>
@@ -104,9 +104,6 @@
 					<UpdateObject objectVariable="sd">
 						<Slot property="serviceDeskBusy" value="false" />
 					</UpdateObject>
-					<UpdateObject objectVariable="cq">
-						<Decrement property="queueLength" value="1"/>
-					</UpdateObject>
 				</ActivityEndEffect>
 			</ActivityType>	
 			<!-- =================================================== -->
@@ -118,16 +115,16 @@
 			<ObjectType name="CustomerQueue">
 				<!-- ==================================== -->
 				<documentation>
-					<dc:description>Used just for animation reasons.</dc:description>
+					<description>Used just for animation reasons.</description>
 				</documentation>
 				<Attribute name="queueLength" type="Float" />
 			</ObjectType>	
 			<!-- ====================================== -->
 			<AgentType name="ServiceDesk">
 			<!-- ==================================== -->
-				<Attribute name="serviceDeskBusy" type="Boolean"/>
+				<Attribute name="serviceDeskBusy" type="Boolean" />
 				<ReferenceProperty name="waitingCustomers" type="Customer" upperMultiplicity="unbounded">
-					<description>This property represents a first-in-first-out queue. </description>
+					<documentation> This property represents a first-in-first-out queue. </documentation>
 				</ReferenceProperty>
 				<Function name="randomServiceTime" resultType="Integer">
 					<Body language="Java"><![CDATA[
@@ -156,7 +153,7 @@ int r = aors.util.Random.uniformInt(0,99);
 				<DO>
 					<UPDATE-ENV>
 						<Create>
-							<Object type="Customer" objectVariable="c">
+							<Object type="Customer" objectVariable="cust">
 								<Slot property="arrivalTime">
 									<PropertyValueExpr entityVariable="e" property="occurrenceTime" />
 								</Slot>
@@ -164,37 +161,26 @@ int r = aors.util.Random.uniformInt(0,99);
 						</Create>
 						<UpdateObject objectVariable="sd">
 							<MultiValuedSlot property="waitingCustomers">
-								<AddLast itemVariable="c"/>
+								<AddLast itemVariable="cust" />
 							</MultiValuedSlot>
+						</UpdateObject>
+						<UpdateObject objectVariable="cq">
+							<Slot property="queueLength">
+								<ValueExpr language="Java">cq.getQueueLength() + 1</ValueExpr>
+							</Slot>
 						</UpdateObject>
 					</UPDATE-ENV>
 				</DO>
 				<IF language="Java"><![CDATA[
-              !sd.isServiceDeskBusy() 
+                 !sd.isServiceDeskBusy() 
                  ]]></IF>
 				<THEN>
-					<UPDATE-ENV>
-						<UpdateObject objectVariable="cq">
-							<Slot property="queueLength">
-								<ValueExpr language="Java">cq.getQueueLength() + 1</ValueExpr>
-							</Slot>
-						</UpdateObject>
-					</UPDATE-ENV>
 					<SCHEDULE-EVT>
 						<ActivityStartEventExpr activityType="PerformService" >
-							<CorrelationValue language="Java">e.getId()</CorrelationValue>
+							<CorrelationValue language="Java">cust.getId()</CorrelationValue>
 						</ActivityStartEventExpr>
 					</SCHEDULE-EVT>
 				</THEN>
-				<ELSE>
-					<UPDATE-ENV>
-						<UpdateObject objectVariable="cq">
-							<Slot property="queueLength">
-								<ValueExpr language="Java">cq.getQueueLength() + 1</ValueExpr>
-							</Slot>
-						</UpdateObject>
-					</UPDATE-ENV>
-				</ELSE>
 			</EnvironmentRule>		
 			<!-- =================================================== -->
 			<EnvironmentRule name="Departure_Rule">
@@ -215,7 +201,7 @@ sd.getWaitingCustomers().size() > 0
 					<UPDATE-ENV>
 						<UpdateObject objectVariable="sd">
 							<MultiValuedSlot property="waitingCustomers">
-								<RemoveFirst itemVariable="cust"/>
+								<RemoveFirst itemVariable="cust" />
 							</MultiValuedSlot>
 						</UpdateObject>
 						<UpdateStatisticsVariable variable="nmrOfDepartures">
@@ -237,8 +223,8 @@ sd.getWaitingCustomers().size() > 0
 					</UPDATE-ENV>
 					<SCHEDULE-EVT>
 						<ActivityStartEventExpr activityType="PerformService">
-							<Condition language="Java">sd.getWaitingCustomers().size() > 0 </Condition>
-							<CorrelationValue language="Java">e.getId()</CorrelationValue>
+							<Condition language="Java">cq.getQueueLength() > 0 </Condition>
+							<CorrelationValue language="Java">cust.getId()</CorrelationValue>
 						</ActivityStartEventExpr>
 					</SCHEDULE-EVT>
 				</THEN>
