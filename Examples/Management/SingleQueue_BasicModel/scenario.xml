@@ -61,8 +61,8 @@
 						/ SimParameter.SIMULATION_STEPS * 100
 					</ValueExpr>
 					<ValueExpr language="JavaScript">
-						__SimStatistics.totalServiceTime.getValue()
-						/ __SimParameter.SIMULATION_STEPS * 100 
+						SimStatistics.totalServiceTime.getValue()
+						/ SimParameter.SIMULATION_STEPS * 100 
 					</ValueExpr>
 				</Source>
 			</Variable>
@@ -96,7 +96,7 @@
 		else return 6;					// with probability 0.05
 		]]></Body>
 				<Body language="JavaScript"><![CDATA[
-		var r = __Random.uniformInt(0,99);
+		var r = Random.uniformInt(0,99);
 		if (r<10) return 1; 			// with probability 0.10
 		else if (r<30) return 2;		// with probability 0.20
 		else if (r<60) return 3;		// with probability 0.30
@@ -137,10 +137,10 @@
 				<WHEN eventType="CustomerArrival"/>
 				<FOR dataVariable="srvTm" dataType="Integer">
 					<ValueExpr language="Java"> Global.randomServiceTime() </ValueExpr>
-					<ValueExpr language="JavaScript"> __Global.randomServiceTime() </ValueExpr>
+					<ValueExpr language="JavaScript"> Global.randomServiceTime() </ValueExpr>
 				</FOR>
 				<IF language="Java"> Global.serviceDeskBusy </IF>
-				<IF language="JavaScript"> __Global.serviceDeskBusy </IF>
+				<IF language="JavaScript"> Global.serviceDeskBusy </IF>
 				<THEN>
 					<UPDATE-ENV>
 						<IncrementGlobalVariable name="queueLength" value="1" />
@@ -173,7 +173,7 @@
 				<WHEN eventType="CustomerDeparture" eventVariable="dep"/>
 				<FOR dataVariable="srvTm" dataType="Integer">
 					<ValueExpr language="Java">Global.randomServiceTime()</ValueExpr>
-					<ValueExpr language="JavaScript">__Global.randomServiceTime()</ValueExpr>
+					<ValueExpr language="JavaScript">Global.randomServiceTime()</ValueExpr>
 				</FOR>
 				<DO>
 					<UPDATE-ENV>
@@ -182,13 +182,13 @@
 								SimStatistics.totalServiceTime.getValue() + dep.getServiceTime()
 							</ValueExpr>
 							<ValueExpr language="JavaScript">
-								__SimStatistics.totalServiceTime.getValue() + this.dep.getServiceTime()
+								SimStatistics.totalServiceTime.getValue() + this.dep.getServiceTime()
 							</ValueExpr>
 						</UpdateStatisticsVariable>
 					</UPDATE-ENV>
 				</DO>
 				<IF language="Java"> Global.queueLength == 0 </IF>
-				<IF language="JavaScript"> __Global.queueLength === 0 </IF>
+				<IF language="JavaScript">Global.queueLength === 0 </IF>
 				<THEN>
 					<UPDATE-ENV>
 						<UpdateGlobalVariable name="serviceDeskBusy" value="false"/>

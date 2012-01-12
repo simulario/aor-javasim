@@ -21,8 +21,8 @@
         <dc:subject xml:lang="de">Agentenbasierte Simulation des klassischen Bomberman Spiels</dc:subject>
         <dc:contributor>Gerd Wagner</dc:contributor>
         <dc:contributor>Gabriel Diaconita</dc:contributor>
-        <dc:source>Most images are taken from the "Bombermaaan" game developed by the "Bombermaaan project" (http://bombermaaan.sourceforge.net/).
-        </dc:source>
+        <source>Most images are taken from the "Bombermaaan" game developed by the "Bombermaaan project" (http://bombermaaan.sourceforge.net/).
+        </source>
         <aors:shortDescription xml:lang="en" xmlns="http://www.w3.org/1999/xhtml">
             A reconstruction of the classical <a href="http://en.wikipedia.org/wiki/Bomberman">Bomberman</a> game originally published in 1983 by Hudson Soft".
         </aors:shortDescription>
@@ -50,7 +50,7 @@
         <SpaceModel geometry="Euclidean">
             <TwoDimensionalGrid xMax="15" yMax="13">
                 <!-- only neccessary for drawing gras blocks -->
-                <GridCellProperty name="cellRole" type="Integer" initialValue="__CellContent.NONE"/>
+                <GridCellProperty name="cellRole" type="Integer" initialValue="CellContent.NONE"/>
             </TwoDimensionalGrid>
         </SpaceModel>
         
@@ -141,13 +141,12 @@
             ================================================================================= -->
             <GlobalFunction name="bombermanColorName" resultType="String">
                 <documentation>
-                    <dc:description> Returns the color name of the bomberman
-                    </dc:description>
+                      Returns the color name of the bomberman
                 </documentation>
                 <Body language="JavaScript">
                     <![CDATA[
                         var names = ["Black", "White", "Red", "Blue", "Green"];
-                        return names[__Global.bombermanNameIndex++%5];
+                        return names[Global.bombermanNameIndex++%5];
                     ]]>
                 </Body>
             </GlobalFunction>
@@ -156,13 +155,13 @@
             ================================================================================= -->
             <GlobalFunction name="createLists" resultType="Integer">
                 <documentation>
-                    <dc:description> Function put the coordinates of the blocks into corresponding arrays.
+                      Function put the coordinates of the blocks into corresponding arrays.
             array form: x0, y0, x1, y1, ....
-                    </dc:description>
+                     
                 </documentation>
                 <Body language="JavaScript">
                     <![CDATA[
-                        var map = __Global.getGameMap();
+                        var map = Global.getGameMap();
                         var x = map[0].length;
                         var y = map.length;
                         
@@ -172,23 +171,23 @@
                             {
                                 switch(map[y-i][j-1])
                                 {
-                                    case(__CellContent.DESTROYABLE):
+                                    case( CellContent.DESTROYABLE):
                                     {
-                                        __Global.destroyableBlockList.push(j);
-                                        __Global.destroyableBlockList.push(i);
+                                         Global.destroyableBlockList.push(j);
+                                         Global.destroyableBlockList.push(i);
                                         break;
                                     }
-                                    case(__CellContent.SOLID):
+                                    case( CellContent.SOLID):
                                     {
-                                        __Global.solidBlockList.push(j);
-                                        __Global.solidBlockList.push(i);
+                                         Global.solidBlockList.push(j);
+                                         Global.solidBlockList.push(i);
                                         break;
                                     }
-                                    case(__CellContent.BOMERBMAN):
+                                    case( CellContent.BOMERBMAN):
                                     {
-                                        __Global.bombermanList.push(j);
-                                        __Global.bombermanList.push(i);
-                                        __Global.GameMap[y-i][j-1] = __CellContent.NONE;
+                                         Global.bombermanList.push(j);
+                                         Global.bombermanList.push(i);
+                                         Global.GameMap[y-i][j-1] =  CellContent.NONE;
                                         break;
                                     }
                                     default:{break}
@@ -205,9 +204,9 @@
             ================================================================================= -->
             <GlobalFunction name="getNextEntryOfList" resultType="Integer">
                 <documentation>
-                    <dc:description> Function returns the next element of the list corresponding to the given parameter
+                      Function returns the next element of the list corresponding to the given parameter
             and increases the corresponding index
-                    </dc:description>
+                     
                 </documentation>
                 <Parameter name="blockType" type="Integer" />
                 <Body language="JavaScript">
@@ -216,19 +215,19 @@
                         
                         switch(blockType)
                         {
-                            case(__CellContent.DESTROYABLE):
+                            case( CellContent.DESTROYABLE):
                             {
-                                result = __Global.destroyableBlockList[__Global.destroyableBlockListIndex++];
+                                result =  Global.destroyableBlockList[ Global.destroyableBlockListIndex++];
                                 break;
                             }
-                            case(__CellContent.SOLID):
+                            case( CellContent.SOLID):
                             {
-                                result = __Global.solidBlockList[__Global.solidBlockListIndex++];
+                                result =  Global.solidBlockList[ Global.solidBlockListIndex++];
                                 break;
                             }
-                            case(__CellContent.BOMBERMAN):
+                            case( CellContent.BOMBERMAN):
                             {
-                                result = __Global.bombermanList[__Global.bombermanListIndex++];
+                                result =  Global.bombermanList[ Global.bombermanListIndex++];
                                 break;
                             }
                             default: {break;}
@@ -243,13 +242,13 @@
             ================================================================================= -->
             <GlobalFunction name="convert" resultType="Array">
                 <documentation>
-                    <dc:description> Function converts the user readable map into an internal representation using an
+                      Function converts the user readable map into an internal representation using an
             enumeration.
-                    </dc:description>
+                     
                 </documentation>
                 <Body language="JavaScript">
                     <![CDATA[
-                        var realMap = __Global.getTempGameMap();
+                        var realMap =  Global.getTempGameMap();
                         
                         for (i = 0; i < realMap.length; i++)
                         {
@@ -257,10 +256,10 @@
                             {
                                 switch(realMap[i][j])
                                 {
-                                    case(0) : realMap[i][j] = __CellContent.NONE; break;
-                                    case(1) : realMap[i][j] = __CellContent.SOLID; break;
-                                    case(2) : realMap[i][j] = __CellContent.DESTROYABLE; break;
-                                    default: realMap[i][j] = __CellContent.BOMERBMAN; break;
+                                    case(0) : realMap[i][j] =  CellContent.NONE; break;
+                                    case(1) : realMap[i][j] =  CellContent.SOLID; break;
+                                    case(2) : realMap[i][j] =  CellContent.DESTROYABLE; break;
+                                    default: realMap[i][j] =  CellContent.BOMERBMAN; break;
                                 }
                             }
                         }
@@ -274,9 +273,9 @@
             ================================================================================= -->
             <GlobalFunction name="setMapCell" resultType="Array">
                 <documentation>
-                    <dc:description> Function sets the given MapCell with the given CellContent value and returns
+                      Function sets the given MapCell with the given CellContent value and returns
             the hole map
-                    </dc:description>
+                     
                 </documentation>
                 <Parameter name="x" type="Integer" />
                 <Parameter name="y" type="Integer" />
@@ -285,7 +284,7 @@
                     <![CDATA[
                         if (x > 0 && y > 0)
                         {
-                            var map = __Global.getGameMap();
+                            var map =  Global.getGameMap();
                             var rows = map.length;
                             
                             map[rows-y][x-1] = status;
@@ -299,9 +298,9 @@
             ================================================================================= -->
             <GlobalFunction name="setBombermanMapCell" resultType="Array">
                 <documentation>
-                    <dc:description> Function sets the given MapCell with the given CellContent value and returns
+                      Function sets the given MapCell with the given CellContent value and returns
             the hole map (the map for computer controlled )
-                    </dc:description>
+                     
                 </documentation>
                 <Parameter name="x" type="Integer" />
                 <Parameter name="y" type="Integer" />
@@ -310,13 +309,13 @@
                 <Body language="JavaScript">
                     <![CDATA[
                         if (status === -2)
-                            __Global.markBombAreaOnBombermanMap(x, y, range);
+                             Global.markBombAreaOnBombermanMap(x, y, range);
                         else if (status === 0 && range > 0)
-                            __Global.unMarkBombAreaOnBombermanMap(x, y, range);
+                             Global.unMarkBombAreaOnBombermanMap(x, y, range);
                             
                         if (x > 0 && y > 0)
                         {
-                            var map = __Global.getBombermanGameMap();
+                            var map =  Global.getBombermanGameMap();
                             var rows = map.length;
                             
                             map[rows-y][x-1] = status;
@@ -330,8 +329,8 @@
             ================================================================================= -->
             <GlobalFunction name="markBombAreaOnBombermanMap" resultType="void">
                 <documentation>
-                    <dc:description> Function marks the cells of the bombermanmap which are in range of an bomb. So the computer controlled bomberman know there not to move.
-                    </dc:description>
+                      Function marks the cells of the bombermanmap which are in range of an bomb. So the computer controlled bomberman know there not to move.
+                     
                 </documentation>
                 <Parameter name="x" type="Integer" />
                 <Parameter name="y" type="Integer" />
@@ -340,29 +339,29 @@
                     <![CDATA[
                         for (i = 1; i <= range; i++)
                         {
-                            if (!__Global.isBlockOnCoordinates(x-i,y))
-                                __Global.setBombermanMapCell(x-i, y, -1);
+                            if (! Global.isBlockOnCoordinates(x-i,y))
+                                 Global.setBombermanMapCell(x-i, y, -1);
                             else
                                 break;                        
                         }
                         for (i = 1; i <= range; i++)
                         {
-                            if (!__Global.isBlockOnCoordinates(x+i,y))
-                                __Global.setBombermanMapCell(x+i, y, -1);
+                            if (! Global.isBlockOnCoordinates(x+i,y))
+                                 Global.setBombermanMapCell(x+i, y, -1);
                             else
                                 break;
                         }
                         for (i = 1; i <= range; i++)
                         {
-                            if (!__Global.isBlockOnCoordinates(x,y-i))
-                                __Global.setBombermanMapCell(x, y-i, -1);
+                            if (! Global.isBlockOnCoordinates(x,y-i))
+                                 Global.setBombermanMapCell(x, y-i, -1);
                             else
                                 break;
                         }
                         for (i = 1; i <= range; i++)
                         {
-                            if (!__Global.isBlockOnCoordinates(x,y+i))
-                                __Global.setBombermanMapCell(x, y+i, -1);
+                            if (! Global.isBlockOnCoordinates(x,y+i))
+                                 Global.setBombermanMapCell(x, y+i, -1);
                             else
                                 break;
                         }
@@ -374,42 +373,42 @@
             ================================================================================= -->
             <GlobalFunction name="unMarkBombAreaOnBombermanMap" resultType="void">
                 <documentation>
-                    <dc:description> Funtion unmarks the mark cells of the bombermanmap if the corresponding bombs detonates.
-                    </dc:description>
+                      Funtion unmarks the mark cells of the bombermanmap if the corresponding bombs detonates.
+                     
                 </documentation>
                 <Parameter name="x" type="Integer" />
                 <Parameter name="y" type="Integer" />
                 <Parameter name="range" type="Integer" />
                 <Body language="JavaScript">
                     <![CDATA[
-                        map = __Global.getBombermanGameMap();
+                        map =  Global.getBombermanGameMap();
                         height = map.length;
                         
                         for (i = 1; i <= range; i++)
                         {
                             if (map[height-y][x-i-1] === -1)
-                                __Global.setBombermanMapCell(x-i, y, 0);
+                                 Global.setBombermanMapCell(x-i, y, 0);
                             else
                                 break;                        
                         }
                         for (i = 1; i <= range; i++)
                         {
                             if (map[height-y][x+i-1] === -1)
-                                __Global.setBombermanMapCell(x+i, y, 0);
+                                 Global.setBombermanMapCell(x+i, y, 0);
                             else
                                 break;
                         }
                         for (i = 1; i <= range; i++)
                         {
                             if (map[height-(y-i)][x-1] === -1)
-                                __Global.setBombermanMapCell(x, y-i, 0);
+                                 Global.setBombermanMapCell(x, y-i, 0);
                             else
                                 break;
                         }
                         for (i = 1; i <= range; i++)
                         {
                             if (map[height-(y+i)][x-1] === -1)
-                                __Global.setBombermanMapCell(x, y+i, 0);
+                                 Global.setBombermanMapCell(x, y+i, 0);
                             else
                                 break;
                         }
@@ -421,20 +420,20 @@
             ==================================================================================-->
             <GlobalFunction name="isBlockOnCoordinates" resultType="boolean">
                 <documentation>
-                    <dc:description> Checks if the bomberman could move to the given position, e.g. not possible if
+                      Checks if the bomberman could move to the given position, e.g. not possible if
             there is a solid block
-                    </dc:description>
+                     
                 </documentation>
                 <Parameter name="x" type="int"/>
                 <Parameter name="y" type="int"/>
                 <Body language="JavaScript">
                     <![CDATA[
-                        var map = __Global.getGameMap();
+                        var map =  Global.getGameMap();
                         var rows = map.length;
                         
-                        if ((map[rows-y][x-1] === __CellContent.SOLID) || 
-                            (map[rows-y][x-1] === __CellContent.DESTROYABLE) || 
-                            (map[rows-y][x-1] === __CellContent.BOMB))
+                        if ((map[rows-y][x-1] ===  CellContent.SOLID) || 
+                            (map[rows-y][x-1] ===  CellContent.DESTROYABLE) || 
+                            (map[rows-y][x-1] ===  CellContent.BOMB))
                         {
                             return true;
                         }
@@ -447,8 +446,8 @@
             ================================================================================= -->
             <GlobalFunction name="checkIfBombermanInRange" resultType="Boolean">
                 <documentation>
-                    <dc:description> Function checks if a bomberman is in range of an bomb explosion.
-                    </dc:description>
+                      Function checks if a bomberman is in range of an bomb explosion.
+                     
                 </documentation>
                 <Parameter name="bombermanX" type="Integer"/>
                 <Parameter name="bombermanY" type="Integer"/>
@@ -464,7 +463,7 @@
                             {
                                 for(i=bombX; i<bombermanX-1; i++)
                                 {
-                                    if (__Global.GameMap[__Global.MapHeight-bombY][i] !== __CellContent.NONE)
+                                    if ( Global.GameMap[ Global.MapHeight-bombY][i] !==  CellContent.NONE)
                                     return false;
                                 }
                                 return true;
@@ -474,7 +473,7 @@
                             {
                                 for(i=bombX; i>bombermanX+1; i--)
                                 {
-                                    if (__Global.GameMap[__Global.MapHeight-bombY][i-2] !== __CellContent.NONE)
+                                    if ( Global.GameMap[ Global.MapHeight-bombY][i-2] !==  CellContent.NONE)
                                     return false;
                                 }
                                 return true;
@@ -484,7 +483,7 @@
                             {
                                 for(i=bombY; i<bombermanY-1; i++)
                                 {
-                                    if (__Global.GameMap[__Global.MapHeight-i-1][bombX-1] !== __CellContent.NONE)
+                                    if ( Global.GameMap[ Global.MapHeight-i-1][bombX-1] !==  CellContent.NONE)
                                     return false;
                                 }
                                 return true;
@@ -494,7 +493,7 @@
                             {
                                 for(i=bombY; i>bombermanY+1; i--)
                                 {
-                                    if (__Global.GameMap[__Global.MapHeight-i+1][bombX-1] !== __CellContent.NONE)
+                                    if ( Global.GameMap[ Global.MapHeight-i+1][bombX-1] !==  CellContent.NONE)
                                     return false;
                                 }                                
                                 return true;
@@ -509,8 +508,8 @@
             ================================================================================= -->
             <GlobalFunction name="couldBlockBeDestroyed" resultType="Boolean">
                 <documentation>
-                    <dc:description> Function which checks, if a given block could be destroyed by a given bomb
-                    </dc:description>
+                      Function which checks, if a given block could be destroyed by a given bomb
+                     
                 </documentation>
                 <Parameter name="blockX" type="Integer"/>
                 <Parameter name="blockY" type="Integer"/>
@@ -520,63 +519,63 @@
                 <Parameter name="bombId" type="Integer"/>
                 <Body language="JavaScript">
                     <![CDATA[
-                        if ((__Global.getOldSimulationTick() < __Simulator.getCurrentSimulationStep()) || (bombId !== __Global.getLastBombId()))
+                        if (( Global.getOldSimulationTick() <  Simulator.getCurrentSimulationStep()) || (bombId !==  Global.getLastBombId()))
                         {
-                            __Global.setOldSimulationTick(__Simulator.getCurrentSimulationStep());
-                            __Global.setLastBombId(bombId);
-                            __Global.setLeftBomb(false);
-                            __Global.setOverBomb(false);
-                            __Global.setRightBomb(false);
-                            __Global.setUnderBomb(false);
+                             Global.setOldSimulationTick( Simulator.getCurrentSimulationStep());
+                             Global.setLastBombId(bombId);
+                             Global.setLeftBomb(false);
+                             Global.setOverBomb(false);
+                             Global.setRightBomb(false);
+                             Global.setUnderBomb(false);
                         }
                     
                         if((bombX === blockX || bombY === blockY) && (Math.abs(bombX+bombY - (blockX+blockY)) <= bombRange))
                         {
                             /* Bombe links neben Block */
-                            if ((bombY === blockY && bombX < blockX) && !__Global.RightBomb)
+                            if ((bombY === blockY && bombX < blockX) && ! Global.RightBomb)
                             {
                                 for(i=bombX; i<blockX-1; i++)
                                 {
-                                    if (__Global.GameMap[__Global.MapHeight-bombY][i] !== __CellContent.NONE)
+                                    if ( Global.GameMap[ Global.MapHeight-bombY][i] !==  CellContent.NONE)
                                     return false;
                                 }
-                                __Global.RightBomb = true;
+                                 Global.RightBomb = true;
                                 
                                 return true;
                             }
                             /* Bombe rechts neben Block */
-                            else if ((bombY === blockY && bombX > blockX) && !__Global.LeftBomb)
+                            else if ((bombY === blockY && bombX > blockX) && ! Global.LeftBomb)
                             {
                                 for(i=bombX; i>blockX+1; i--)
                                 {
-                                    if (__Global.GameMap[__Global.MapHeight-bombY][i-2] !== __CellContent.NONE)
+                                    if ( Global.GameMap[ Global.MapHeight-bombY][i-2] !==  CellContent.NONE)
                                     return false;
                                 }
-                                __Global.LeftBomb = true;
+                                 Global.LeftBomb = true;
                                 
                                 return true;
                             }
                             /* Bombe unterhalb von Block */
-                            else if ((bombX === blockX && bombY < blockY) && !__Global.OverBomb)
+                            else if ((bombX === blockX && bombY < blockY) && ! Global.OverBomb)
                             {
                                 for(i=bombY; i<blockY-1; i++)
                                 {
-                                    if (__Global.GameMap[__Global.MapHeight-i-1][bombX-1] !== __CellContent.NONE)
+                                    if ( Global.GameMap[ Global.MapHeight-i-1][bombX-1] !==  CellContent.NONE)
                                         return false;
                                 }
-                                __Global.OverBomb = true;
+                                 Global.OverBomb = true;
                                 
                                 return true;
                             }
                             /* Bombe muss oberhalb von Block sein */
-                            else if ((bombX === blockX && bombY > blockY) && !__Global.UnderBomb)
+                            else if ((bombX === blockX && bombY > blockY) && ! Global.UnderBomb)
                             {
                                 for(i=bombY; i>blockY+1; i--)
                                 {
-                                    if (__Global.GameMap[__Global.MapHeight-i+1][bombX-1] !== __CellContent.NONE)
+                                    if ( Global.GameMap[ Global.MapHeight-i+1][bombX-1] !==  CellContent.NONE)
                                     return false;
                                 }
-                                __Global.UnderBomb = true;
+                                 Global.UnderBomb = true;
                                 
                                 return true;
                             }
@@ -590,17 +589,17 @@
             ================================================================================= -->
             <GlobalFunction name="convertToItem" resultType="Integer">
                 <documentation>
-                    <dc:description> Converts the given integer into an enumaration of type "item"
-                    </dc:description>
+                      Converts the given integer into an enumaration of type "item"
+                     
                 </documentation>
                 <Parameter name="item" type="Integer"/>
                 <Body language="JavaScript">
                     <![CDATA[
                         switch(item)
                         {
-                            case(1): return __Items.BOMB; break;
-                            case(2): return __Items.FIRE; break;
-                            case(3): return __Items.DETONATOR; break;
+                            case(1): return  Items.BOMB; break;
+                            case(2): return  Items.FIRE; break;
+                            case(3): return  Items.DETONATOR; break;
                             default: return 0;
                         }
                     ]]>
@@ -611,20 +610,20 @@
             ================================================================================= -->
             <GlobalFunction name="toggleItem" resultType="Integer">
                 <documentation>
-                    <dc:description> This function is only for animation purposes. Every item toogles between two states. The "normal" and the "_toggle" state. So it is possible to switch the image and animate the item.
-                    </dc:description>
+                      This function is only for animation purposes. Every item toogles between two states. The "normal" and the "_toggle" state. So it is possible to switch the image and animate the item.
+                     
                 </documentation>
                 <Parameter name="item" type="Integer"/>
                 <Body language="JavaScript">
                     <![CDATA[
                        switch(item)
                         {
-                            case(__Items.BOMB): return __Items.BOMB_TOGGLE; break;
-                            case(__Items.BOMB_TOGGLE): return __Items.BOMB; break;
-                            case(__Items.FIRE): return __Items.FIRE_TOGGLE; break;
-                            case(__Items.FIRE_TOGGLE): return __Items.FIRE; break;
-                            case(__Items.DETONATOR): return __Items.DETONATOR_TOGGLE; break;
-                            case(__Items.DETONATOR_TOGGLE): return __Items.DETONATOR; break;
+                            case( Items.BOMB): return  Items.BOMB_TOGGLE; break;
+                            case( Items.BOMB_TOGGLE): return  Items.BOMB; break;
+                            case( Items.FIRE): return  Items.FIRE_TOGGLE; break;
+                            case( Items.FIRE_TOGGLE): return  Items.FIRE; break;
+                            case( Items.DETONATOR): return  Items.DETONATOR_TOGGLE; break;
+                            case( Items.DETONATOR_TOGGLE): return  Items.DETONATOR; break;
                             default: return 0; break;
                         }
                     ]]>
@@ -635,18 +634,18 @@
             ================================================================================= -->
             <GlobalFunction name="getInitialBombState" resultType="Integer">
                 <documentation>
-                    <dc:description> This function decides which images for a bomb are shown. The self destroying one or the detonator bomb ones.
-                    </dc:description>
+                      This function decides which images for a bomb are shown. The self destroying one or the detonator bomb ones.
+                     
                 </documentation>
                 <Parameter name="bombState" type="Boolean"/>
                 <Body language="JavaScript">
                     <![CDATA[
                         if (bombState)
                         {
-                            return __BombState.NOTTICKING1;
+                            return  BombState.NOTTICKING1;
                         }
                         
-                        return __BombState.TICKING1;
+                        return  BombState.TICKING1;
                     ]]>
                 </Body>
             </GlobalFunction>
@@ -655,20 +654,20 @@
             ================================================================================= -->
             <GlobalFunction name="getNextBombState" resultType="Integer">
                 <documentation>
-                    <dc:description> This function is only for animation purposes. It changes the state of the ticking bomb, so it is possible to use different images.
-                    </dc:description>
+                      This function is only for animation purposes. It changes the state of the ticking bomb, so it is possible to use different images.
+                     
                 </documentation>
                 <Parameter name="bombState" type="Integer"/>
                 <Body language="JavaScript">
                     <![CDATA[
                         switch(bombState)
                         {
-                            case(__BombState.TICKING1): return __BombState.TICKING2; break;
-                            case(__BombState.TICKING2): return __BombState.TICKING3; break;
-                            case(__BombState.TICKING3): return __BombState.TICKING1; break;
-                            case(__BombState.NOTTICKING1): return __BombState.NOTTICKING2; break;
-                            case(__BombState.NOTTICKING2): return __BombState.NOTTICKING3; break;
-                            case(__BombState.NOTTICKING3): return __BombState.NOTTICKING1; break;
+                            case( BombState.TICKING1): return  BombState.TICKING2; break;
+                            case( BombState.TICKING2): return  BombState.TICKING3; break;
+                            case( BombState.TICKING3): return  BombState.TICKING1; break;
+                            case( BombState.NOTTICKING1): return  BombState.NOTTICKING2; break;
+                            case( BombState.NOTTICKING2): return  BombState.NOTTICKING3; break;
+                            case( BombState.NOTTICKING3): return  BombState.NOTTICKING1; break;
                             default: return 0; break;
                         }
                     ]]>
@@ -679,8 +678,8 @@
             ================================================================================= -->
             <GlobalFunction name="searchSaveSpot" resultType="Array">
                 <documentation>
-                    <dc:description> This function searches recursive an save spot from the given spot.
-                    </dc:description>
+                      This function searches recursive an save spot from the given spot.
+                     
                 </documentation>
                 <Parameter name="direction" type="Integer"/>
                 <Parameter name="x" type="Integer"/>
@@ -690,52 +689,52 @@
                         if (direction > 3)
                             return null;
                         
-                        var position = __Global.lookForSaveSpotAround(x,y);
+                        var position =  Global.lookForSaveSpotAround(x,y);
                         if (position === null)
                         {
                             var isBlock = false;
                             switch(direction)
                             {
-                                case(0): isBlock = __Global.isBlockOnCoordinates(x, y+1); break;
-                                case(1): isBlock = __Global.isBlockOnCoordinates(x+1, y); break;
-                                case(2): isBlock = __Global.isBlockOnCoordinates(x, y-1); break;
-                                case(3): isBlock = __Global.isBlockOnCoordinates(x-1, y); break;
+                                case(0): isBlock =  Global.isBlockOnCoordinates(x, y+1); break;
+                                case(1): isBlock =  Global.isBlockOnCoordinates(x+1, y); break;
+                                case(2): isBlock =  Global.isBlockOnCoordinates(x, y-1); break;
+                                case(3): isBlock =  Global.isBlockOnCoordinates(x-1, y); break;
                                 default: break;
                             }
                             
                             if(isBlock)
-                                return __Global.searchSaveSpot(direction+1, x, y);
+                                return  Global.searchSaveSpot(direction+1, x, y);
                             
                             switch(direction)
                             {
                                 case(0): {
-                                            var result = __Global.searchSaveSpot(direction, x, y+1);
+                                            var result =  Global.searchSaveSpot(direction, x, y+1);
                                             if (result === null)
-                                                return __Global.searchSaveSpot(direction+1, x, y);
+                                                return  Global.searchSaveSpot(direction+1, x, y);
                                             else
                                                 return result;
                                             break;
                                           }
                                 case(1): {
-                                            var result = __Global.searchSaveSpot(direction, x+1, y);
+                                            var result =  Global.searchSaveSpot(direction, x+1, y);
                                             if (result === null)
-                                                return __Global.searchSaveSpot(direction+1, x, y);
+                                                return  Global.searchSaveSpot(direction+1, x, y);
                                             else
                                                 return result;
                                             break;
                                           }
                                 case(2): {
-                                            var result = __Global.searchSaveSpot(direction, x, y-1);
+                                            var result =  Global.searchSaveSpot(direction, x, y-1);
                                             if (result === null)
-                                                return __Global.searchSaveSpot(direction+1, x, y);
+                                                return  Global.searchSaveSpot(direction+1, x, y);
                                             else
                                                 return result;
                                             break;
                                           }
                                 case(3): {
-                                            var result = __Global.searchSaveSpot(direction, x-1, y);
+                                            var result =  Global.searchSaveSpot(direction, x-1, y);
                                             if (result === null)
-                                                return __Global.searchSaveSpot(direction+1, x, y);
+                                                return  Global.searchSaveSpot(direction+1, x, y);
                                             else
                                                 return result;
                                             break;
@@ -755,14 +754,13 @@
             ================================================================================= -->
             <GlobalFunction name="lookForSaveSpotAround" resultType="Array">
                 <documentation>
-                    <dc:description> The function "look" if there is an save spot directly around the given spot. if not "null" will be returned.
-                    </dc:description>
+                    The function "look" if there is an save spot directly around the given spot. if not "null" will be returned.
                 </documentation>
                 <Parameter name="x" type="Integer"/>
                 <Parameter name="y" type="Integer"/>
                 <Body language="JavaScript">
                     <![CDATA[
-                        var map = __Global.getBombermanGameMap();
+                        var map =  Global.getBombermanGameMap();
                         var height = map.length;
                         
                         if (map[height-y-1][x-1] ===  0) return new Array(x,y+1);
@@ -779,13 +777,12 @@
             ================================================================================= -->
             <GlobalFunction name="chooseTarget" resultType="Object">
                 <documentation>
-                    <dc:description> The function calculates an target for the copmuter controlled bomberman. Actual it only chooses the position of the bomberman with id = 1.
-                    </dc:description>
+                   The function calculates an target for the copmuter controlled bomberman. Actual it only chooses the position of the bomberman with id = 1. 
                 </documentation>
                 <Parameter name="bomberman" type="Object"/>
                 <Body language="JavaScript">
                     <![CDATA[
-                        var bombermanList = __Simulator.envSim.getObjectsByType("Bomberman");
+                        var bombermanList =  Simulator.envSim.getObjectsByType("Bomberman");
                         
                         var result = {x: 0, y: 0};
                         for (i = 0; i < bombermanList.size(); i++)
@@ -809,13 +806,12 @@
             ================================================================================= -->
             <GlobalFunction name="checkIfEnemyAround" resultType="Boolean">
                 <documentation>
-                    <dc:description> This function checks if there is an enemy around the given bomberman.
-                    </dc:description>
+                    This function checks if there is an enemy around the given bomberman.
                 </documentation>
                 <Parameter name="bomberman" type="Object"/>
                 <Body language="JavaScript">
                     <![CDATA[
-                        var bombermanList = __Simulator.envSim.getObjectsByType("Bomberman");
+                        var bombermanList =  Simulator.envSim.getObjectsByType("Bomberman");
                         
                         for (i = 0; i < bombermanList.size(); i++)
                         {
@@ -838,14 +834,13 @@
             ================================================================================= -->
             <GlobalFunction name="isDestroyableBlockAround" resultType="Boolean">
                 <documentation>
-                    <dc:description> Functions checks if there is an destroyable block around the given position.
-                    </dc:description>
+                    Functions checks if there is an destroyable block around the given position.
                 </documentation>
                 <Parameter name="x" type="Integer"/>
                 <Parameter name="y" type="Integer"/>
                 <Body language="JavaScript">
                     <![CDATA[
-                        var map = __Global.getBombermanGameMap();
+                        var map =  Global.getBombermanGameMap();
                         var height = map.length;
                         
                         if (map[height-y-1][x-1] ===  2) return true;
@@ -862,13 +857,12 @@
             ================================================================================= -->
             <GlobalFunction name="mainAi" resultType="void">
                 <documentation>
-                    <dc:description> Function for the computer controlled bombermans intelligence.
-                    </dc:description>
+                    Function for the computer controlled bombermans intelligence.
                 </documentation>
                 <Parameter name="bomberman" type="Object"/>
                 <Body language="JavaScript">
                     <![CDATA[
-                        var map = __Global.getBombermanGameMap();
+                        var map =  Global.getBombermanGameMap();
                         var height = map.length;
                         
                         bomberman.setNextX(0);
@@ -886,14 +880,14 @@
                             *
                             * try to find a save spot
                             */
-                            var saveSpot = __Global.searchSaveSpot(0, bomberman.getX(), bomberman.getY());
+                            var saveSpot =  Global.searchSaveSpot(0, bomberman.getX(), bomberman.getY());
                             
                             if (saveSpot !== null)
                             {
                                 /*
                                 * save spot found, now find a way to it with help of a* algo
                                 */
-                                var astar = new js.algorithms.ASTAR(__Global.getBombermanGameMap(), [-1,0,3,4,5,6,7]);
+                                var astar = new js.algorithms.ASTAR( Global.getBombermanGameMap(), [-1,0,3,4,5,6,7]);
                                 
                                 var start = {x : bomberman.getX()-1, y : bomberman.getY()-1};
                                 var target = {x: (saveSpot[0]-1), y: (saveSpot[1]-1)};
@@ -925,14 +919,14 @@
                             //
                             // is an enemy in the near of the bomberman
                             //
-                            if (bomberman.getNumberOfBombs() > 0 && __Global.checkIfEnemyAround(bomberman))
+                            if (bomberman.getNumberOfBombs() > 0 &&  Global.checkIfEnemyAround(bomberman))
                             {
                                 bomberman.setPlantBomb(true);
                             }
                             
-                            var enemyPos = __Global.chooseTarget(bomberman);
+                            var enemyPos =  Global.chooseTarget(bomberman);
                             
-                            var astar = new js.algorithms.ASTAR(__Global.getBombermanGameMap(), [-1,0,3,4,5,6,7]);
+                            var astar = new js.algorithms.ASTAR( Global.getBombermanGameMap(), [-1,0,3,4,5,6,7]);
                             
                             var start = {x : bomberman.getX()-1, y : bomberman.getY()-1};
                             var target = {x: enemyPos.x-1, y: enemyPos.y-1};
@@ -946,9 +940,9 @@
                             }
                             else
                             {
-                                var saveSpot = __Global.searchSaveSpot(0, bomberman.getX(), bomberman.getY());
+                                var saveSpot =  Global.searchSaveSpot(0, bomberman.getX(), bomberman.getY());
                                 if (bomberman.getNumberOfBombs() > 0 &&
-                                    __Global.isDestroyableBlockAround(bomberman.getX(), bomberman.getY()) &&
+                                     Global.isDestroyableBlockAround(bomberman.getX(), bomberman.getY()) &&
                                     (saveSpot !== null)
                                     )
                                 {
@@ -962,28 +956,28 @@
                                     
                                     if (enemyPos.y > bomberman.getY() && 
                                         (saveSpot !== null) &&
-                                        !__Global.isBlockOnCoordinates(bomberman.getX(), bomberman.getY()+1) &&
+                                        ! Global.isBlockOnCoordinates(bomberman.getX(), bomberman.getY()+1) &&
                                         map[height-(bomberman.getY()+1)][ bomberman.getX()-1] !== -1)
                                     {
                                         bomberman.setNextY(1);
                                     }
                                     else if (enemyPos.y < bomberman.getY() && 
                                             (saveSpot !== null) &&
-                                            !__Global.isBlockOnCoordinates(bomberman.getX(), bomberman.getY()-1) &&
+                                            ! Global.isBlockOnCoordinates(bomberman.getX(), bomberman.getY()-1) &&
                                             map[height-(bomberman.getY()-1)][ bomberman.getX()-1] !== -1)
                                     {
                                         bomberman.setNextY(-1);
                                     }
                                     else if (enemyPos.x > bomberman.getX() && 
                                             (saveSpot !== null) &&
-                                            !__Global.isBlockOnCoordinates(bomberman.getX()+1, bomberman.getY()) &&
+                                            ! Global.isBlockOnCoordinates(bomberman.getX()+1, bomberman.getY()) &&
                                             map[height-bomberman.getY()][ bomberman.getX()] !== -1)
                                     {
                                         bomberman.setNextX(1);
                                     }
                                     else if (enemyPos.x < bomberman.getX() && 
                                             (saveSpot !== null) &&
-                                            !__Global.isBlockOnCoordinates(bomberman.getX()-1, bomberman.getY()) &&
+                                            ! Global.isBlockOnCoordinates(bomberman.getX()-1, bomberman.getY()) &&
                                             map[height-bomberman.getY()][ bomberman.getX()-2] !== -1)
                                     {
                                         bomberman.setNextX(-1);
@@ -998,7 +992,7 @@
                                         else if (randomValue < 2)  bomberman.setNextX(1);
                                         else if (randomValue < 3)  bomberman.setNextY(-1);
                                         else bomberman.setNextX(-1);*/
-                                        var astar = new js.algorithms.ASTAR(__Global.getBombermanGameMap(), [-1,0,3,4,5,6,7]);
+                                        var astar = new js.algorithms.ASTAR( Global.getBombermanGameMap(), [-1,0,3,4,5,6,7]);
                             
                                         var start = {x : bomberman.getX()-1, y : bomberman.getY()-1};
                                         var target = {x: saveSpot[0]-1, y: saveSpot[1]-1};
@@ -1027,28 +1021,27 @@
             ================================================================================= -->
             <GlobalFunction name="updateWins" resultType="Array">
                 <documentation>
-                    <dc:description> Updates the wins of all bombermans. Works as follows:
+                    Updates the wins of all bombermans. Works as follows:
             There is a global Array named "bombermanWins" which is updated if only one bomberman
             is alive. For the user it would be nice to see, how many times a bomberman has won,
             so the score should be printed. But it is not possible to print with an CDATA
             construct, so the array is splittet in 5 global variables.
-                    </dc:description>
                 </documentation>
                 <Parameter name="bombermanId" type="Integer"/>
                 <Body language="JavaScript">
                     <![CDATA[
-                        __Global.bombermanWins[bombermanId-1] = __Global.bombermanWins[bombermanId-1] + 1;
+                         Global.bombermanWins[bombermanId-1] =  Global.bombermanWins[bombermanId-1] + 1;
                         
                         switch(bombermanId)
                         {
-                            case(1): __Global.setWinsBomberman1(__Global.getWinsBomberman1() + 1); break;
-                            case(2): __Global.setWinsBomberman2(__Global.getWinsBomberman2() + 1); break;
-                            case(3): __Global.setWinsBomberman3(__Global.getWinsBomberman3() + 1); break;
-                            case(4): __Global.setWinsBomberman4(__Global.getWinsBomberman4() + 1); break;
-                            case(5): __Global.setWinsBomberman5(__Global.getWinsBomberman5() + 1); break;
+                            case(1):  Global.setWinsBomberman1( Global.getWinsBomberman1() + 1); break;
+                            case(2):  Global.setWinsBomberman2( Global.getWinsBomberman2() + 1); break;
+                            case(3):  Global.setWinsBomberman3( Global.getWinsBomberman3() + 1); break;
+                            case(4):  Global.setWinsBomberman4( Global.getWinsBomberman4() + 1); break;
+                            case(5):  Global.setWinsBomberman5( Global.getWinsBomberman5() + 1); break;
                             default: break;
                         }
-                        return __Global.getBombermanWins()
+                        return  Global.getBombermanWins()
                     ]]>
                 </Body>
             </GlobalFunction>
@@ -1057,8 +1050,7 @@
             ================================================================================= -->
             <GlobalFunction name="calcRandomItem" resultType="Integer">
                 <documentation>
-                    <dc:description> Function to distribute items with different probability.
-                    </dc:description>
+                    Function to distribute items with different probability.
                 </documentation>
                 <Body language="JavaScript">
                     <![CDATA[
@@ -1140,17 +1132,16 @@
                 <Attribute type="Integer" name="nextDirection"/>
                 <Function name="calcNextMove" resultType="Integer">
           <documentation>
-            <dc:description> Function calculates the direction of the Bomberman (only for animation)
-            </dc:description>
+            Function calculates the direction of the Bomberman (only for animation)
           </documentation>
                     <Body language="JavaScript">
                         <![CDATA[
-                            __Global.mainAi(this);
+                             Global.mainAi(this);
                             
-                            if (this.getNextX() < 0) this.setNextDirection(__Direction.LEFT);
-                            if (this.getNextX() > 0) this.setNextDirection(__Direction.RIGHT);
-                            if (this.getNextY() < 0) this.setNextDirection(__Direction.DOWN);
-                            if (this.getNextY() > 0) this.setNextDirection(__Direction.UP);
+                            if (this.getNextX() < 0) this.setNextDirection( Direction.LEFT);
+                            if (this.getNextX() > 0) this.setNextDirection( Direction.RIGHT);
+                            if (this.getNextY() < 0) this.setNextDirection( Direction.DOWN);
+                            if (this.getNextY() > 0) this.setNextDirection( Direction.UP);
                             
                             if (this.getNextX() !== 0 || this.getNextY() !== 0)
                                 return true;
@@ -1161,13 +1152,12 @@
                 </Function>
                 <ReactionRule name="Move_ReactionRule" agentVariable="bomberman">
           <documentation>
-            <dc:description> ReactionRule moves the computer controlled Bomberman
-            </dc:description>
+            ReactionRule moves the computer controlled Bomberman
           </documentation>
                     <ON-EACH-SIMULATION-STEP/>
                     <IF language="JavaScript">
                         <![CDATA[
-                            __Simulator.getCurrentSimulationStep() % 10 === 0 && this.bomberman.calcNextMove()
+                             Simulator.getCurrentSimulationStep() % 10 === 0 && this.bomberman.calcNextMove()
                         ]]>
                     </IF>
                     <THEN>
@@ -1209,13 +1199,13 @@
                 </ReactionRule>
                 <ReactionRule name="Detonator_ReactionRule" agentVariable="bomberman">
           <documentation>
-            <dc:description> ReactionRule scedules the DetonateBombs Event
-            </dc:description>
+              ReactionRule scedules the DetonateBombs Event
+             
           </documentation>
                     <ON-EACH-SIMULATION-STEP/>
                     <IF language="JavaScript">
                         <![CDATA[
-                            __Simulator.getCurrentSimulationStep() % 10 === 0 && this.bomberman.isNextDetonate()
+                             Simulator.getCurrentSimulationStep() % 10 === 0 && this.bomberman.isNextDetonate()
                         ]]>
                     </IF>
                     <THEN>
@@ -1234,13 +1224,13 @@
                 </ReactionRule>
                 <ReactionRule name="PlantBomb_ReactionRule" agentVariable="bomberman">
           <documentation>
-            <dc:description> ReactionRule scedules the PlantBomb Event
-            </dc:description>
+              ReactionRule scedules the PlantBomb Event
+             
           </documentation>
                     <ON-EACH-SIMULATION-STEP/>
                     <IF language="JavaScript">
                         <![CDATA[
-                            __Simulator.getCurrentSimulationStep() % 10 === 0 && this.bomberman.isPlantBomb()
+                             Simulator.getCurrentSimulationStep() % 10 === 0 && this.bomberman.isPlantBomb()
                         ]]>
                     </IF>
                     <THEN>
@@ -1269,12 +1259,12 @@
                 <!-- move left -->
                 <ActionRule name="MoveLeft_ActionRule" agentVariable="bomberman">
           <documentation>
-            <dc:description> ActionRule to move the Bomberman in Direction LEFT (only for animation) and scedules the moveBomberman Event
-            </dc:description>
+              ActionRule to move the Bomberman in Direction LEFT (only for animation) and scedules the moveBomberman Event
+             
           </documentation>  
                     <DO>
                         <UPDATE-AGT>
-                            <Slot property="movingDirection" value="__Direction.LEFT" />
+                            <Slot property="movingDirection" value=" Direction.LEFT" />
                         </UPDATE-AGT>
                         <SCHEDULE-EVT>
                             <ActionEventExpr actionEventType="MoveBomberman">
@@ -1294,12 +1284,12 @@
                 <!-- move up -->
                 <ActionRule name="MoveUp_ActionRule" agentVariable="bomberman">
           <documentation>
-            <dc:description> ActionRule to move the Bomberman in Direction UP (only for animation) and scedules the moveBomberman Event
-            </dc:description>
+              ActionRule to move the Bomberman in Direction UP (only for animation) and scedules the moveBomberman Event
+             
           </documentation>
                     <DO>
                         <UPDATE-AGT>
-                            <Slot property="movingDirection" value="__Direction.UP" />
+                            <Slot property="movingDirection" value=" Direction.UP" />
                         </UPDATE-AGT>
                         <SCHEDULE-EVT>
                             <ActionEventExpr actionEventType="MoveBomberman">
@@ -1319,12 +1309,12 @@
                 <!-- move right -->
                 <ActionRule name="MoveRight_ActionRule" agentVariable="bomberman">
           <documentation>
-            <dc:description> ActionRule to move the Bomberman in Direction RIGHT (only for animation) and scedules the moveBomberman Event
-            </dc:description>
+              ActionRule to move the Bomberman in Direction RIGHT (only for animation) and scedules the moveBomberman Event
+             
           </documentation>
                     <DO>
                         <UPDATE-AGT>
-                            <Slot property="movingDirection" value="__Direction.RIGHT" />
+                            <Slot property="movingDirection" value=" Direction.RIGHT" />
                         </UPDATE-AGT>
                         <SCHEDULE-EVT>
                             <ActionEventExpr actionEventType="MoveBomberman">
@@ -1344,12 +1334,12 @@
                 <!-- move down -->
                 <ActionRule name="MoveDown_ActionRule" agentVariable="bomberman">
           <documentation>
-            <dc:description> ActionRule to move the Bomberman in Direction DOWN (only for animation) and scedules the moveBomberman Event
-            </dc:description>
+              ActionRule to move the Bomberman in Direction DOWN (only for animation) and scedules the moveBomberman Event
+             
           </documentation>
                     <DO>
                         <UPDATE-AGT>
-                            <Slot property="movingDirection" value="__Direction.DOWN" />
+                            <Slot property="movingDirection" value=" Direction.DOWN" />
                         </UPDATE-AGT>
                         <SCHEDULE-EVT>
                             <ActionEventExpr actionEventType="MoveBomberman">
@@ -1369,8 +1359,8 @@
                 <!-- plant a bomb -->
                 <ActionRule name="PlantBomb_ActionRule" agentVariable="bomberman">
           <documentation>
-            <dc:description> ActionRule to schedule the PlantBomb Event to plant the Bomb of the player
-            </dc:description>
+              ActionRule to schedule the PlantBomb Event to plant the Bomb of the player
+             
           </documentation>
                     <IF language="JavaScript">
                         <![CDATA[
@@ -1402,8 +1392,8 @@
                 </ActionRule>
                 <ActionRule name="Detonator_ActionRule" agentVariable="bomberman">
           <documentation>
-            <dc:description> ActionRule to schedule the DetonateBombs Event to detonate all planted bombs
-            </dc:description>
+              ActionRule to schedule the DetonateBombs Event to detonate all planted bombs
+             
           </documentation>
                     <IF language="JavaScript">
                         <![CDATA[
@@ -1469,8 +1459,8 @@
             ================================================================================= -->
             <EnvironmentRule name="MoveBomberman_Rule">
         <documentation>
-          <dc:description> Rule reacts on moveEvent of every bomberman. Checks also if move is possible.
-          </dc:description>
+            Rule reacts on moveEvent of every bomberman. Checks also if move is possible.
+           
         </documentation>
                 <WHEN eventType="MoveBomberman" eventVariable="moveEvent"/>
                 <FOR-ObjectVariable objectType="Bomberman" variable="bomberman">
@@ -1482,7 +1472,7 @@
                 </FOR-ObjectVariable>
                 <IF language="JavaScript">
                     <![CDATA[
-                            !__Global.isBlockOnCoordinates(this.bomberman.getX()+this.moveEvent.getX(),this.bomberman.getY()+this.moveEvent.getY())
+                            ! Global.isBlockOnCoordinates(this.bomberman.getX()+this.moveEvent.getX(),this.bomberman.getY()+this.moveEvent.getY())
                     ]]>
                 </IF>
                 <THEN>
@@ -1522,9 +1512,9 @@
             ================================================================================= -->
             <EnvironmentRule name="PlantBomb_Rule">
         <documentation>
-          <dc:description>Rule reacts on planEvent and places the bomb in the __Global.GameMap and creates an
+           Rule reacts on planEvent and places the bomb in the  Global.GameMap and creates an
             object of type Bomb
-          </dc:description>
+           
         </documentation>
                 <WHEN eventType="PlantBomb" eventVariable="plantEvent"/>
                 <FOR-ObjectVariable objectType="Bomberman" variable="bomberman">
@@ -1536,7 +1526,7 @@
                 </FOR-ObjectVariable>
                 <IF language="JavaScript">
                     <![CDATA[
-                        __Global.getGameMap()[__Global.getGameMap().length-this.bomberman.getY()][this.bomberman.getX()-1] !== __CellContent.BOMB 
+                         Global.getGameMap()[ Global.getGameMap().length-this.bomberman.getY()][this.bomberman.getX()-1] !==  CellContent.BOMB 
                     ]]>
                 </IF>
                 <THEN>
@@ -1544,14 +1534,14 @@
                         <UpdateGlobalVariable name="GameMap">
                             <ValueExpr language="JavaScript">
                              <![CDATA[
-                                 __Global.setMapCell(this.bomberman.getX(), this.bomberman.getY(), __CellContent.BOMB)
+                                  Global.setMapCell(this.bomberman.getX(), this.bomberman.getY(),  CellContent.BOMB)
                              ]]>
                             </ValueExpr>
                         </UpdateGlobalVariable>
                         <UpdateGlobalVariable name="BombermanGameMap">
                             <ValueExpr language="JavaScript">
                                 <![CDATA[
-                                    __Global.setBombermanMapCell(this.bomberman.getX(), this.bomberman.getY(), -2, this.bomberman.getBombRange())
+                                     Global.setBombermanMapCell(this.bomberman.getX(), this.bomberman.getY(), -2, this.bomberman.getBombRange())
                                 ]]>
                             </ValueExpr>
                         </UpdateGlobalVariable>
@@ -1595,7 +1585,7 @@
                                  <Slot property="bombState">
                                      <ValueExpr language="JavaScript">
                                          <![CDATA[
-                                             __Global.getInitialBombState(this.bomberman.isDetonator())
+                                              Global.getInitialBombState(this.bomberman.isDetonator())
                                          ]]>
                                      </ValueExpr>
                                  </Slot>
@@ -1609,14 +1599,14 @@
             ================================================================================= -->
             <EnvironmentRule name="BombState_Rule">
         <documentation>
-          <dc:description>Rule has only visualisation purposes. Bomb is pumping up and down -> image toggle 
-          </dc:description>
+           Rule has only visualisation purposes. Bomb is pumping up and down -> image toggle 
+           
         </documentation>
                 <ON-EACH-SIMULATION-STEP />
                 <FOR-ObjectVariable objectType="Bomb" variable="bomb" />
                 <IF language="JavaScript">
                     <![CDATA[
-                        __Simulator.getCurrentSimulationStep() % 5 === 0
+                         Simulator.getCurrentSimulationStep() % 5 === 0
                     ]]>
                 </IF>
                 <THEN>
@@ -1625,7 +1615,7 @@
                             <Slot property="bombState">
                                 <ValueExpr language="JavaScript">
                                     <![CDATA[
-                                        __Global.getNextBombState(this.bomb.getBombState())
+                                         Global.getNextBombState(this.bomb.getBombState())
                                     ]]>
                                 </ValueExpr>
                             </Slot>
@@ -1638,14 +1628,14 @@
             ================================================================================= -->
             <EnvironmentRule name="ItemToggle_Rule">
         <documentation>
-          <dc:description> Rule to toggle the item pictures. Depents on the itemstate.
-          </dc:description>
+            Rule to toggle the item pictures. Depents on the itemstate.
+           
         </documentation>
                 <ON-EACH-SIMULATION-STEP />
                 <FOR-ObjectVariable objectType="Item" variable="item" />
                 <IF language="JavaScript">
                     <![CDATA[
-                        __Simulator.getCurrentSimulationStep() % 5 === 0
+                         Simulator.getCurrentSimulationStep() % 5 === 0
                     ]]>
                 </IF>
                 <THEN>
@@ -1654,7 +1644,7 @@
                             <Slot property="kind">
                                 <ValueExpr language="JavaScript">
                                     <![CDATA[
-                                        __Global.toggleItem(this.item.getKind())
+                                         Global.toggleItem(this.item.getKind())
                                     ]]>
                                 </ValueExpr>
                             </Slot>
@@ -1667,9 +1657,9 @@
             ================================================================================= -->
             <EnvironmentRule name="DecreaseBombTimers_Rule">
         <documentation>
-          <dc:description>Rule is executed in every simulation step and decreases the bomb timer of all bombs
+           Rule is executed in every simulation step and decreases the bomb timer of all bombs
             by 1 exactly till 0
-          </dc:description>
+           
         </documentation>
                 <ON-EACH-SIMULATION-STEP/>
                 <FOR-ObjectVariable objectType="Bomb" variable="bomb">
@@ -1759,8 +1749,8 @@
             ================================================================================= -->
             <EnvironmentRule name="DetonateBombs_Rule">
         <documentation>
-          <dc:description> Rule to detonate bombs (schedule destroyBomb Event) of given bomberman
-          </dc:description>
+            Rule to detonate bombs (schedule destroyBomb Event) of given bomberman
+           
         </documentation>
                 <WHEN eventType="DetonateBombs" eventVariable="detBo"/>
                 <FOR-ObjectVariable variable="bomb" objectType="Bomb" >
@@ -1840,15 +1830,15 @@
             ================================================================================= -->
             <EnvironmentRule name="CheckIfBombermanGetsKilled_Rule">
         <documentation>
-          <dc:description> Rule checks if a Bomberman gets killed by the bomb
-          </dc:description>
+            Rule checks if a Bomberman gets killed by the bomb
+           
         </documentation>
                 <WHEN eventType="ExplodeBomb" eventVariable="exBo"/>
                 <FOR-ObjectVariable variable="bomberman" objectType="Bomberman" >
                     <SelectionCondition language="JavaScript">
                         <![CDATA[
                             (this.bomberman.getX() === this.exBo.getX() && this.bomberman.getY() === this.exBo.getY()) ||
-                            __Global.checkIfBombermanInRange(this.bomberman.getX(), this.bomberman.getY(), this.exBo.getX(), this.exBo.getY(), this.exBo.getRange())  
+                             Global.checkIfBombermanInRange(this.bomberman.getX(), this.bomberman.getY(), this.exBo.getX(), this.exBo.getY(), this.exBo.getRange())  
                         ]]>
                     </SelectionCondition>
                 </FOR-ObjectVariable>
@@ -1871,14 +1861,14 @@
             ================================================================================= -->
             <EnvironmentRule name="CheckIfBlockGetsDestroyed_Rule">
         <documentation>
-          <dc:description> Rule checks if a block gets destroyed by the bomb
-          </dc:description>
+            Rule checks if a block gets destroyed by the bomb
+           
         </documentation>
                 <WHEN eventType="ExplodeBomb" eventVariable="exBo"/>
                 <FOR-ObjectVariable variable="dB" objectType="DestroyableBlock" >
                     <SelectionCondition language="JavaScript">
                         <![CDATA[
-                            __Global.couldBlockBeDestroyed(this.dB.getX(), this.dB.getY(), this.exBo.getX(), this.exBo.getY(), this.exBo.getRange(), this.exBo.getBombId())  
+                             Global.couldBlockBeDestroyed(this.dB.getX(), this.dB.getY(), this.exBo.getX(), this.exBo.getY(), this.exBo.getRange(), this.exBo.getBombId())  
                         ]]>
                         </SelectionCondition>
                 </FOR-ObjectVariable>
@@ -1901,14 +1891,14 @@
             ================================================================================= -->
             <EnvironmentRule name="CheckIfItemGetsDestroyed_Rule">
         <documentation>
-          <dc:description> Rule checks if an item gets destroyed by the bomb.
-          </dc:description>
+            Rule checks if an item gets destroyed by the bomb.
+           
         </documentation>
                 <WHEN eventType="ExplodeBomb" eventVariable="exBo"/>
                 <FOR-ObjectVariable variable="item" objectType="Item" >
                     <SelectionCondition language="JavaScript">
                         <![CDATA[
-                            __Global.couldBlockBeDestroyed(this.item.getX(), this.item.getY(), this.exBo.getX(), this.exBo.getY(), this.exBo.getRange(), this.exBo.getBombId())  
+                             Global.couldBlockBeDestroyed(this.item.getX(), this.item.getY(), this.exBo.getX(), this.exBo.getY(), this.exBo.getRange(), this.exBo.getBombId())  
                         ]]>
                     </SelectionCondition>
                 </FOR-ObjectVariable>
@@ -1931,15 +1921,15 @@
             ================================================================================= -->
             <EnvironmentRule name="CheckIfBombGetsDestroyed_Rule">      
         <documentation>
-          <dc:description> Rule checks if a bomb is in range of the other bomb and sets the timer to 0 (explosion)
-          </dc:description>
+            Rule checks if a bomb is in range of the other bomb and sets the timer to 0 (explosion)
+           
         </documentation>
                 <WHEN eventType="ExplodeBomb" eventVariable="exBo"/>
                 <FOR-ObjectVariable variable="bomb" objectType="Bomb" >
                     <SelectionCondition language="JavaScript">
                         <![CDATA[
                             this.bomb.getId() !== this.exBo.getBombId() && 
-                            __Global.couldBlockBeDestroyed(this.bomb.getX(), this.bomb.getY(), this.exBo.getX(), this.exBo.getY(), this.exBo.getRange(), this.exBo.getBombId())  
+                             Global.couldBlockBeDestroyed(this.bomb.getX(), this.bomb.getY(), this.exBo.getX(), this.exBo.getY(), this.exBo.getRange(), this.exBo.getBombId())  
                         ]]>
                     </SelectionCondition>
                 </FOR-ObjectVariable>
@@ -1957,8 +1947,8 @@
             ================================================================================= -->
             <EnvironmentRule name="CheckBombermanFoundBombItem_Rule">      
         <documentation>
-          <dc:description> Rule checks if the bomberman collects a bombitem.
-          </dc:description>
+            Rule checks if the bomberman collects a bombitem.
+           
         </documentation>
                 <WHEN eventType="BombermanHasMoved" eventVariable="moveEvent"/>
                 <FOR-ObjectVariable objectType="Bomberman" variable="bomberman">
@@ -1971,7 +1961,7 @@
                 <FOR-ObjectVariable objectType="Item" variable="item">
                     <SelectionCondition language="JavaScript">
                         <![CDATA[
-                            this.item.getX() === this.bomberman.getX() && this.item.getY() === this.bomberman.getY() && (this.item.getKind() === __Items.BOMB || this.item.getKind() === __Items.BOMB_TOGGLE)
+                            this.item.getX() === this.bomberman.getX() && this.item.getY() === this.bomberman.getY() && (this.item.getKind() ===  Items.BOMB || this.item.getKind() ===  Items.BOMB_TOGGLE)
                         ]]>
                     </SelectionCondition>
                 </FOR-ObjectVariable>
@@ -2000,8 +1990,8 @@
             ================================================================================= -->
             <EnvironmentRule name="CheckBombermanFoundFireItem_Rule">
         <documentation>
-          <dc:description> Rule checks if the bomberman collects a fireitem.
-          </dc:description>
+            Rule checks if the bomberman collects a fireitem.
+           
         </documentation>
                 <WHEN eventType="BombermanHasMoved" eventVariable="moveEvent"/>
                 <FOR-ObjectVariable objectType="Bomberman" variable="bomberman">
@@ -2014,7 +2004,7 @@
                 <FOR-ObjectVariable objectType="Item" variable="item">
                     <SelectionCondition language="JavaScript">
                         <![CDATA[
-                            this.item.getX() === this.bomberman.getX() && this.item.getY() === this.bomberman.getY() && (this.item.getKind() === __Items.FIRE || this.item.getKind() === __Items.FIRE_TOGGLE)
+                            this.item.getX() === this.bomberman.getX() && this.item.getY() === this.bomberman.getY() && (this.item.getKind() ===  Items.FIRE || this.item.getKind() ===  Items.FIRE_TOGGLE)
                         ]]>
                     </SelectionCondition>
                 </FOR-ObjectVariable>
@@ -2043,8 +2033,8 @@
             ================================================================================= -->
             <EnvironmentRule name="CheckBombermanFoundDetonatorItem_Rule">
         <documentation>
-          <dc:description> Rule checks if the bomberman collects a detonatoritem.
-          </dc:description>
+            Rule checks if the bomberman collects a detonatoritem.
+           
         </documentation>
                 <WHEN eventType="BombermanHasMoved" eventVariable="moveEvent"/>
                 <FOR-ObjectVariable objectType="Bomberman" variable="bomberman">
@@ -2057,7 +2047,7 @@
                 <FOR-ObjectVariable objectType="Item" variable="item">
                     <SelectionCondition language="JavaScript">
                         <![CDATA[
-                            this.item.getX() === this.bomberman.getX() && this.item.getY() === this.bomberman.getY() && (this.item.getKind() === __Items.DETONATOR || this.item.getKind() === __Items.DETONATOR_TOGGLE)
+                            this.item.getX() === this.bomberman.getX() && this.item.getY() === this.bomberman.getY() && (this.item.getKind() ===  Items.DETONATOR || this.item.getKind() ===  Items.DETONATOR_TOGGLE)
                         ]]>
                     </SelectionCondition>
                 </FOR-ObjectVariable>
@@ -2086,8 +2076,8 @@
             ================================================================================= -->
             <EnvironmentRule name="DestroyBlock_Rule">
         <documentation>
-          <dc:description>Destroys the given block and also creates an item.
-          </dc:description>
+           Destroys the given block and also creates an item.
+           
         </documentation>
                 <WHEN eventType="DestroyBlock" eventVariable="desBo"/>
                 <FOR-ObjectVariable objectType="DestroyableBlock" variable="dB">
@@ -2099,7 +2089,7 @@
                 </FOR-ObjectVariable>
                 <IF language="JavaScript">
                     <![CDATA[
-                        !__Global.isGameReset()
+                        ! Global.isGameReset()
                     ]]>
                 </IF>
                 <THEN>
@@ -2132,14 +2122,14 @@
                         <UpdateGlobalVariable name="GameMap">
                             <ValueExpr language="JavaScript">
                                 <![CDATA[
-                                    __Global.setMapCell(this.dB.getX(), this.dB.getY(), __CellContent.NONE)
+                                     Global.setMapCell(this.dB.getX(), this.dB.getY(),  CellContent.NONE)
                                     ]]>
                             </ValueExpr>
                         </UpdateGlobalVariable>
                         <UpdateGlobalVariable name="BombermanGameMap">
                             <ValueExpr language="JavaScript">
                                 <![CDATA[
-                                    __Global.setBombermanMapCell(this.dB.getX(), this.dB.getY(), 0, 0)
+                                     Global.setBombermanMapCell(this.dB.getX(), this.dB.getY(), 0, 0)
                                     ]]>
                             </ValueExpr>
                         </UpdateGlobalVariable>
@@ -2157,10 +2147,10 @@
             ================================================================================= -->
             <EnvironmentRule name="DestroyBomb_Rule">
         <documentation>
-          <dc:description>Destroys the given bomb.
+           Destroys the given bomb.
             Also the animation for the explosion is created, but only if the game will not be
             restartet.
-          </dc:description>
+           
         </documentation>
                 <WHEN eventType="DestroyBomb" eventVariable="desBo"/>
                 <FOR-ObjectVariable objectType="Bomb" variable="bomb">
@@ -2172,7 +2162,7 @@
                 </FOR-ObjectVariable>
                 <IF language="JavaScript">
                     <![CDATA[
-                        __Global.isGameReset()
+                         Global.isGameReset()
                     ]]>
                 </IF>
                 <THEN>
@@ -2185,14 +2175,14 @@
                         <UpdateGlobalVariable name="GameMap">
                             <ValueExpr language="JavaScript">
                                 <![CDATA[
-                                    __Global.setMapCell(this.bomb.getX(), this.bomb.getY(), __CellContent.NONE)
+                                     Global.setMapCell(this.bomb.getX(), this.bomb.getY(),  CellContent.NONE)
                                 ]]>
                             </ValueExpr>
                         </UpdateGlobalVariable>
                         <UpdateGlobalVariable name="BombermanGameMap">
                             <ValueExpr language="JavaScript">
                                 <![CDATA[
-                                    __Global.setBombermanMapCell(this.bomb.getX(), this.bomb.getY(), 0, this.bomb.getRange())
+                                     Global.setBombermanMapCell(this.bomb.getX(), this.bomb.getY(), 0, this.bomb.getRange())
                                 ]]>
                             </ValueExpr>
                         </UpdateGlobalVariable>
@@ -2223,8 +2213,8 @@
             ================================================================================= -->
             <EnvironmentRule name="IncreaseBombNumberOfBombs_Rule">
         <documentation>
-          <dc:description>Increases the number of bombs for the corresponding bomberman.
-          </dc:description>
+           Increases the number of bombs for the corresponding bomberman.
+           
         </documentation>
                 <WHEN eventType="DestroyBomb" eventVariable="desBo"/>
                 <FOR-ObjectVariable objectType="Bomberman" variable="bomberman">
@@ -2247,8 +2237,8 @@
             ================================================================================= -->
             <EnvironmentRule name="DestroyItem_Rule">
         <documentation>
-          <dc:description>Destroys the item and actualize the map.
-          </dc:description>
+           Destroys the item and actualize the map.
+           
         </documentation>
                 <WHEN eventType="DestroyItem" eventVariable="desIt"/>
                 <FOR-ObjectVariable objectType="Item" variable="item">
@@ -2263,7 +2253,7 @@
                         <UpdateGlobalVariable name="GameMap">
                             <ValueExpr language="JavaScript">
                                 <![CDATA[
-                                  __Global.setMapCell(this.item.getX(), this.item.getY(), __CellContent.NONE)
+                                   Global.setMapCell(this.item.getX(), this.item.getY(),  CellContent.NONE)
                                     ]]>
                             </ValueExpr>
                         </UpdateGlobalVariable>
@@ -2276,8 +2266,8 @@
             ================================================================================= -->
             <EnvironmentRule name="KillBomberman_Rule">
         <documentation>
-          <dc:description>Kills the bomberman.
-          </dc:description>
+           Kills the bomberman.
+           
         </documentation>
                 <WHEN eventType="BombermanDies" eventVariable="event"/>
                 <FOR-ObjectVariable objectType="Bomberman" variable="bomberman">
@@ -2289,7 +2279,7 @@
                 </FOR-ObjectVariable>
                 <IF language="JavaScript">
                     <![CDATA[
-                        this.getEnvironmentSimulator().getObjectsByType("Bomberman").size() <= 2 && !__Global.isGameReset()
+                        this.getEnvironmentSimulator().getObjectsByType("Bomberman").size() <= 2 && ! Global.isGameReset()
                     ]]>
                 </IF>
                 <THEN>
@@ -2314,8 +2304,8 @@
             ================================================================================= -->
             <EnvironmentRule name="ResetGame_Rule">
         <documentation>
-          <dc:description>Reset the game by destroying all bombs.
-          </dc:description>
+           Reset the game by destroying all bombs.
+           
         </documentation>
                 <WHEN eventType="ResetGame"/>
                 <FOR-ObjectVariable variable="bomb" objectType="Bomb" />
@@ -2345,8 +2335,8 @@
             ================================================================================= -->
             <EnvironmentRule name="ResetGame2_Rule">
         <documentation>
-          <dc:description>Reset the game by destroying all items.
-          </dc:description>
+           Reset the game by destroying all items.
+           
         </documentation>
                 <WHEN eventType="ResetGame"/>
                 <FOR-ObjectVariable variable="item" objectType="Item" />
@@ -2369,8 +2359,8 @@
             ================================================================================= -->
             <EnvironmentRule name="ResetGame3_Rule">
         <documentation>
-          <dc:description>Reset the game by destroying all destroyable blocks.
-          </dc:description>
+           Reset the game by destroying all destroyable blocks.
+           
         </documentation>
                 <WHEN eventType="ResetGame"/>
                 <FOR-ObjectVariable variable="desBo" objectType="DestroyableBlock" />
@@ -2393,8 +2383,8 @@
             ================================================================================= -->
             <EnvironmentRule name="ResetGame4_Rule">
         <documentation>
-          <dc:description>Last bomberman gets killed and his global win stats get updated.
-          </dc:description>
+           Last bomberman gets killed and his global win stats get updated.
+           
         </documentation>
                 <WHEN eventType="ResetGame"/>
                 <FOR-ObjectVariable variable="bomberman" objectType="Bomberman" />
@@ -2403,7 +2393,7 @@
                         <UpdateGlobalVariable name="bombermanWins">
                             <ValueExpr language="JavaScript">
                                 <![CDATA[
-                                    __Global.updateWins(this.bomberman.getId()) 
+                                     Global.updateWins(this.bomberman.getId()) 
                                 ]]>
                             </ValueExpr>
                         </UpdateGlobalVariable>
@@ -2423,13 +2413,13 @@
             </EnvironmentRule>
             <EnvironmentRule name="ResetGame5_Rule">
               <documentation>
-          <dc:description>Winning Sound if player wins.
-          </dc:description>
+           Winning Sound if player wins.
+           
         </documentation>
                 <WHEN eventType="ResetGame2"/>
                 <IF language="JavaScript">
                     <![CDATA[
-                        __Global.getWinsBomberman1() >= 5
+                         Global.getWinsBomberman1() >= 5
                     ]]>
                 </IF>
                 <THEN>
@@ -2444,18 +2434,18 @@
             ================================================================================= -->
             <EnvironmentRule name="ResetGame6_Rule">
         <documentation>
-          <dc:description>If anyone wins 5 rounds the game/simulation stops.
+           If anyone wins 5 rounds the game/simulation stops.
           Otherwise all obstacles and players are reseted and a new round begins.
-          </dc:description>
+           
         </documentation>
                 <WHEN eventType="ResetGame3" />
                 <IF language="JavaScript">
                     <![CDATA[
-                        __Global.getWinsBomberman1() >= 5 ||
-                        __Global.getWinsBomberman2() >= 5 ||
-                        __Global.getWinsBomberman3() >= 5 ||
-                        __Global.getWinsBomberman4() >= 5 ||
-                        __Global.getWinsBomberman5() >= 5
+                         Global.getWinsBomberman1() >= 5 ||
+                         Global.getWinsBomberman2() >= 5 ||
+                         Global.getWinsBomberman3() >= 5 ||
+                         Global.getWinsBomberman4() >= 5 ||
+                         Global.getWinsBomberman5() >= 5
                     ]]>
                 </IF>
                 <THEN>
@@ -2470,14 +2460,14 @@
                         <UpdateGlobalVariable name="GameMap">
                             <ValueExpr language="JavaScript">
                                 <![CDATA[
-                                    __Global.convert()                   
+                                     Global.convert()                   
                                 ]]>
                             </ValueExpr>
                         </UpdateGlobalVariable>
                         <UpdateGlobalVariable name="BombermanGameMap">
                             <ValueExpr language="JavaScript">
                                 <![CDATA[
-                                    __Global.getTempGameMap()
+                                     Global.getTempGameMap()
                                 ]]>
                             </ValueExpr>
                         </UpdateGlobalVariable>
@@ -2489,50 +2479,50 @@
                                 <Slot property="name">
                                     <ValueExpr language="JavaScript">
                                         <![CDATA[
-                                            __Global.bombermanColorName()
+                                             Global.bombermanColorName()
                                         ]]>
                                     </ValueExpr>
                                 </Slot>
                                 <Slot property="x">
                                     <ValueExpr language="JavaScript">
                                         <![CDATA[
-                                            __Global.getNextEntryOfList(__CellContent.BOMBERMAN)
+                                             Global.getNextEntryOfList( CellContent.BOMBERMAN)
                                         ]]>
                                     </ValueExpr>
                                 </Slot>
                                 <Slot property="y">
                                     <ValueExpr language="JavaScript">
                                         <![CDATA[
-                                            __Global.getNextEntryOfList(__CellContent.BOMBERMAN)
+                                             Global.getNextEntryOfList( CellContent.BOMBERMAN)
                                         ]]>
                                     </ValueExpr>
                                 </Slot>
-                                <Slot property="movingDirection" value="__Direction.DOWN" />
+                                <Slot property="movingDirection" value=" Direction.DOWN" />
                             </PhysicalAgents>
                             <PhysicalObjects type="DestroyableBlock" rangeStartID="2000">
                                 <RangeEndID language="JavaScript">
                                     <![CDATA[
-                                        2000 + __Global.destroyableBlockList.length
+                                        2000 +  Global.destroyableBlockList.length
                                     ]]>
                                 </RangeEndID>
                                 <Slot property="x">
                                     <ValueExpr language="JavaScript">
                                         <![CDATA[
-                                            __Global.getNextEntryOfList(__CellContent.DESTROYABLE)
+                                             Global.getNextEntryOfList( CellContent.DESTROYABLE)
                                         ]]>
                                     </ValueExpr>
                                 </Slot>
                                 <Slot property="y">
                                     <ValueExpr language="JavaScript">
                                         <![CDATA[
-                                            __Global.getNextEntryOfList(__CellContent.DESTROYABLE)
+                                             Global.getNextEntryOfList( CellContent.DESTROYABLE)
                                         ]]>
                                     </ValueExpr>
                                 </Slot>
                                 <Slot property="item">
                                     <ValueExpr language="JavaScript">
                                         <![CDATA[
-                                            __Global.calcRandomItem()
+                                             Global.calcRandomItem()
                                         ]]>
                                     </ValueExpr>
                                 </Slot>
@@ -2546,15 +2536,15 @@
             ================================================================================= -->
             <EnvironmentRule name="AnimateExplosionCentral_Rule">
         <documentation>
-          <dc:description>Changes the state of the central explosion and also destroys the object if animation
+           Changes the state of the central explosion and also destroys the object if animation
             ends.
-          </dc:description>
+           
         </documentation>
                 <ON-EACH-SIMULATION-STEP/>
                 <FOR-ObjectVariable objectType="ExplodingBombCentral" variable="explosion" />
                 <IF language="JavaScript">
                     <![CDATA[
-                        __Simulator.getCurrentSimulationStep() % 2 === 0 && this.explosion.getState() > 0
+                         Simulator.getCurrentSimulationStep() % 2 === 0 && this.explosion.getState() > 0
                     ]]>
                 </IF>
                 <THEN>
@@ -2567,8 +2557,8 @@
             </EnvironmentRule>
             <EnvironmentRule name="DestroyExplosionCentral_Rule">
               <documentation>
-          <dc:description>Animation for bombexplosion.
-          </dc:description>
+           Animation for bombexplosion.
+           
         </documentation>
                 <ON-EACH-SIMULATION-STEP/>
                 <FOR-ObjectVariable objectType="ExplodingBombCentral" variable="explosion" />
@@ -2588,15 +2578,15 @@
             ================================================================================= -->
             <EnvironmentRule name="AnimateBurningBrick_Rule">
         <documentation>
-          <dc:description>Changes the state of the brick destruction and also destroys the object if animation
+           Changes the state of the brick destruction and also destroys the object if animation
             ends.
-          </dc:description>
+           
         </documentation>
                 <ON-EACH-SIMULATION-STEP/>
                 <FOR-ObjectVariable objectType="BurningBrick" variable="brick" />
                 <IF language="JavaScript">
                     <![CDATA[
-                        __Simulator.getCurrentSimulationStep() % 2 === 0 && this.brick.getState() > 0
+                         Simulator.getCurrentSimulationStep() % 2 === 0 && this.brick.getState() > 0
                     ]]>
                 </IF>
                 <THEN>
@@ -2609,8 +2599,8 @@
             </EnvironmentRule>
             <EnvironmentRule name="DestroyBurningBrick_Rule">
               <documentation>
-          <dc:description>Burns the destroyable block down.
-          </dc:description>
+           Burns the destroyable block down.
+           
         </documentation>
                 <ON-EACH-SIMULATION-STEP/>
                 <FOR-ObjectVariable objectType="BurningBrick" variable="brick" />
@@ -2655,8 +2645,8 @@
             ================================================================================= -->
             <EnvironmentRule name="CreateItem_Rule">
         <documentation>
-          <dc:description>Creates an item if one should.
-          </dc:description>
+           Creates an item if one should.
+           
         </documentation>
                 <WHEN eventType="CreateItem" eventVariable="event"/>
                 <IF language="JavaScript">
@@ -2685,7 +2675,7 @@
                                 <Slot property="kind">
                                     <ValueExpr language="JavaScript">
                                         <![CDATA[
-                                                __Global.convertToItem(this.event.getItem())
+                                                 Global.convertToItem(this.event.getItem())
                                             ]]>
                                     </ValueExpr>
                                 </Slot>
@@ -2694,7 +2684,7 @@
                         <UpdateGlobalVariable name="GameMap">
                             <ValueExpr language="JavaScript">
                                 <![CDATA[
-                                    __Global.setMapCell(this.event.getX(), this.event.getY(), __CellContent.ITEM)
+                                     Global.setMapCell(this.event.getX(), this.event.getY(),  CellContent.ITEM)
                                     ]]>
                             </ValueExpr>
                         </UpdateGlobalVariable>
@@ -2708,14 +2698,14 @@
         <GlobalVariable name="GameMap">
             <ValueExpr language="JavaScript">
                 <![CDATA[
-                      __Global.convert()
+                       Global.convert()
                 ]]>
             </ValueExpr>
         </GlobalVariable>
         <GlobalVariable name="BombermanGameMap">
             <ValueExpr language="JavaScript">
                 <![CDATA[
-                      __Global.getTempGameMap()
+                       Global.getTempGameMap()
                 ]]>
             </ValueExpr>
         </GlobalVariable>
@@ -2743,14 +2733,14 @@
         <GlobalVariable name="MapWidth">
             <ValueExpr language="JavaScript">
                 <![CDATA[
-                    __Global.getTempGameMap()[0].length + __Global.createLists()
+                     Global.getTempGameMap()[0].length +  Global.createLists()
                 ]]>
             </ValueExpr>
         </GlobalVariable>
         <GlobalVariable name="MapHeight">
             <ValueExpr language="JavaScript">
                 <![CDATA[
-                   __Global.getTempGameMap().length
+                    Global.getTempGameMap().length
                 ]]>
             </ValueExpr>
         </GlobalVariable>
@@ -2767,44 +2757,44 @@
             <Slot property="name">
                 <ValueExpr language="JavaScript">
                     <![CDATA[
-                        __Global.bombermanColorName()
+                         Global.bombermanColorName()
                     ]]>
                 </ValueExpr>
             </Slot>
             <Slot property="x">
                 <ValueExpr language="JavaScript">
                     <![CDATA[
-                        __Global.getNextEntryOfList(__CellContent.BOMBERMAN)
+                         Global.getNextEntryOfList( CellContent.BOMBERMAN)
                     ]]>
                 </ValueExpr>
             </Slot>
             <Slot property="y">
                 <ValueExpr language="JavaScript">
                     <![CDATA[
-                        __Global.getNextEntryOfList(__CellContent.BOMBERMAN)
+                         Global.getNextEntryOfList( CellContent.BOMBERMAN)
                     ]]>
                 </ValueExpr>
             </Slot>
-            <Slot property="movingDirection" value="__Direction.DOWN" />
+            <Slot property="movingDirection" value=" Direction.DOWN" />
         </PhysicalAgents>
         
         <PhysicalObjects type="SolidBlock" rangeStartID="1000" >
             <RangeEndID language="JavaScript">
                 <![CDATA[
-                    1000 + __Global.solidBlockList.length
+                    1000 +  Global.solidBlockList.length
                 ]]>
             </RangeEndID>
             <Slot property="x">
                 <ValueExpr language="JavaScript">
                     <![CDATA[
-                        __Global.getNextEntryOfList(__CellContent.SOLID)
+                         Global.getNextEntryOfList( CellContent.SOLID)
                     ]]>
                 </ValueExpr>
             </Slot>
             <Slot property="y">
                 <ValueExpr language="JavaScript">
                     <![CDATA[
-                        __Global.getNextEntryOfList(__CellContent.SOLID)
+                         Global.getNextEntryOfList( CellContent.SOLID)
                     ]]>
                 </ValueExpr>
             </Slot>
@@ -2813,27 +2803,27 @@
         <PhysicalObjects type="DestroyableBlock" rangeStartID="2000">
             <RangeEndID language="JavaScript">
                 <![CDATA[
-                    2000 + __Global.destroyableBlockList.length
+                    2000 +  Global.destroyableBlockList.length
                 ]]>
             </RangeEndID>
             <Slot property="x">
                 <ValueExpr language="JavaScript">
                     <![CDATA[
-                        __Global.getNextEntryOfList(__CellContent.DESTROYABLE)
+                         Global.getNextEntryOfList( CellContent.DESTROYABLE)
                     ]]>
                 </ValueExpr>
             </Slot>
             <Slot property="y">
                 <ValueExpr language="JavaScript">
                     <![CDATA[
-                        __Global.getNextEntryOfList(__CellContent.DESTROYABLE)
+                         Global.getNextEntryOfList( CellContent.DESTROYABLE)
                     ]]>
                 </ValueExpr>
             </Slot>
             <Slot property="item">
                 <ValueExpr language="JavaScript">
                     <![CDATA[
-                        __Global.calcRandomItem()
+                         Global.calcRandomItem()
                     ]]>
                 </ValueExpr>
             </Slot>
@@ -2955,13 +2945,13 @@
                     </PhysicalShape2D>
                 </PhysicalObjectView>
                 <EventAppearance eventType="DestroyBomb">
-                    <Sound soundFile="boom.wav" />
+                    <Sound soundFile="boom" />
                 </EventAppearance>
                 <EventAppearance eventType="GotItem">
-                    <Sound soundFile="gotItem.wav" />
+                    <Sound soundFile="gotItem" />
                 </EventAppearance>
                 <EventAppearance eventType="GameLoose">
-                    <Sound soundFile="loose.wav"/>
+                    <Sound soundFile="loose"/>
                 </EventAppearance>
             </Views>
             <AgentControlUI initiallyPlayedAgent="Bomberman">
