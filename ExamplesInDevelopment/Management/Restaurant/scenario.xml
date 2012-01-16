@@ -11,7 +11,7 @@
 	<SimulationParameters simulationSteps="3000" stepDuration="1" timeUnit="s" randomSeed="1111"/>
 	<SimulationModel modelName="DriveThruRestaurant_AgentBasedVersion"
 		modelTitle="A drive-through restaurant with a menu board, a kitchen and a pickup window">
-
+<!--
 		<documentation>
 			<description>As a car enters from the street, the driver, who we will call Fred, decides whether or not to get in line. If Fred decides to leave the restaurant, he leaves as a dissatisfied customer. One of the great things about a simulation is that it is easy to track these type of customers. In most real-world systems, it is usually difficult to track lostCustomers who leave dissatisfied. If Fred decides to get in line, then he waits until the menu board (with the speaker no normal human being can understand) is available. At that time, Fred gives the order to the order taker. After the order is taken, then two things occur simultaneously: (1) Fred moves forward if there is room. If there is no room, then he has to wait at the menu board until there is room to move forward. As soon as there is room, he moves so the next customer can order. (2) The order is sent electronically back to the kitchen where it is prepared as soon as the Cook is available. As soon as Fred reaches the pickup window, then he pays and picks up his food, if it is ready. If the food is not ready, then Fred has to wait until his order is prepared.</description>
 			<dc:created>20111101</dc:created>
@@ -19,7 +19,7 @@
 			<dc:contributor>Oana Nicolae</dc:contributor>
 			<dc:source>Extending "Introduction to Simulation" by R.G. Ingalls. In: Proceedings of the 2008 Winter Simulation Conference.</dc:source>
 		</documentation>
-
+-->
 		<Statistics>
 			<Variable name="numberOfCustomers" dataType="Integer"/>
 			<Variable name="numberOfLostCustomers" dataType="Integer"/>
@@ -48,24 +48,24 @@ SimStatistics.cumulativeResponseTime.getValue() / SimStatistics.nrOfDepartures.g
 				       New introduced Statistics variables
 				 =================================================== -->
 			
-			<Variable name="bankMenuBoard" dataType="Integer">
+			<Variable name="availableCashMenuBoard" dataType="Integer">
 				<Source computeOnlyAtEnd="true">
-					<ObjectProperty property="bank" objectType="OrderTaker" />					
+					<ObjectProperty property="availableCash" objectType="OrderTaker" />					
 				</Source>
 			</Variable>
-			<Variable name="bankWaitress" dataType="Integer">
+			<Variable name="availableCashWaitress" dataType="Integer">
 				<Source computeOnlyAtEnd="true">
-					<ObjectProperty property="bank" objectType="Waitress" />					
+					<ObjectProperty property="availableCash" objectType="Waitress" />					
 				</Source>
 			</Variable>
-			<Variable name="bankKitchen" dataType="Integer">
+			<Variable name="availableCashKitchen" dataType="Integer">
 				<Source computeOnlyAtEnd="true">
-					<ObjectProperty property="bank" objectType="Cook" />					
+					<ObjectProperty property="availableCash" objectType="Cook" />					
 				</Source>
 			</Variable>
-			<Variable name="bankManager" dataType="Integer">
+			<Variable name="availableCashManager" dataType="Integer">
 				<Source computeOnlyAtEnd="true">
-					<ObjectProperty property="bank" objectType="Manager" />					
+					<ObjectProperty property="availableCash" objectType="Manager" />					
 				</Source>
 			</Variable>
 		</Statistics>	
@@ -180,17 +180,18 @@ int r2 = Random.uniformInt(1,6);
 			<!-- =================================================== -->
 			<AgentType name="Employee" superType="Person">
 				<!-- ======================================================= -->
-				<Attribute type="Integer" name="bank" />
+				<Attribute type="Integer" name="availableCash" />
 				<PeriodicTimeEventType name="EndOfMonth" periodicity="30" />
 				<ReactionRule name="EndOfMonthRule" agentVariable="emp">
+				
 				<documentation>
-				  <dc:description>At every 30 days by simulating a real employee, he ask for the paycheck</dc:description>  
+				  <description>At every 30 days by simulating a real employee, he ask for the paycheck</description>  
 				</documentation>
 					<WHEN eventType="EndOfMonth"/>
 					<DO>
 						<UPDATE-AGT>
-							<Slot property="bank">
-								<ValueExpr language="Java">emp.getBank()+600</ValueExpr>
+							<Slot property="availableCash">
+								<ValueExpr language="Java">emp.getAvailableCash()+600</ValueExpr>
 							</Slot>
 						</UPDATE-AGT>
 					</DO>
@@ -204,7 +205,9 @@ int r2 = Random.uniformInt(1,6);
 				<Attribute name="maxMenuBoardQL" type="Integer"/>
 				<Attribute name="menuBoardBusy" type="Boolean"/>
 				<ReferenceProperty name="menuBoardQueue" type="Customer" upperMultiplicity="unbounded">
+					<documentation>
 					<description>This property represents a first-in-first-out queue.</description>
+					</documentation>
 				</ReferenceProperty>
 				<!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->
 				<Function name="getMessagePart" resultType="String">
@@ -369,7 +372,9 @@ Integer.parseInt(getMessagePart(evt.getReminderMsg(),3))
 				<Attribute name="maxPickupQL" type="Integer"/>
 				<Attribute name="pickupWindowBusy" type="Boolean"/>
 				<ReferenceProperty name="pickupWindowQueue" type="Customer" upperMultiplicity="unbounded">
+					<documentation>
 					<description>This property represents a first-in-first-out queue. </description>
+						</documentation>
 				</ReferenceProperty>
 				<!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~-->
 				<Function name="pizzaPrice" resultType="Float">
@@ -539,7 +544,7 @@ cust.getOrderNo()
 			<EnvironmentRule name="OpenRestaurant_Rule">
 				<!-- ======================================================= -->
 				<documentation>
-					<dc:description>Is a preparatory rule to simulate the opening of the restaurant.In this rule will be added to the restaurant employees</dc:description>
+					<description>Is a preparatory rule to simulate the opening of the restaurant.In this rule will be added to the restaurant employees</description>
 				</documentation>
 				<WHEN eventType="OpenRestaurant"/>
 				<FOR objectVariable="org" objectType="Organization" objectIdRef="10"/>
@@ -989,13 +994,13 @@ mes.getCustID()
 		<!-- =================================================== -->
 		<Agent type="Manager" name="BillGates" id="9">
 			<!-- =================================================== -->
-			<Slot property="bank" value="0"/>
+			<Slot property="availableCash" value="0"/>
 			<PeriodicTimeEvent type="EndOfMonth" occurrenceTime="30"/>
 		</Agent>	
 		<!-- =================================================== -->
 		<Agent type="OrderTaker" name="MB" id="1">
 			<!-- =================================================== -->
-			<Slot property="bank" value="0"/>		
+			<Slot property="availableCash" value="0"/>		
 			<Slot property="menuBoardBusy" value="false"/>
 			<Slot property="maxMenuBoardQL" value="5"/>
 			<Slot property="menuBoardQueue">
@@ -1006,13 +1011,13 @@ mes.getCustID()
 		<!-- =================================================== -->
 		<Agent type="Cook" name="K" id="5">
 			<!-- =================================================== -->
-			<Slot property="bank" value="1"/>
+			<Slot property="availableCash" value="1"/>
 			<PeriodicTimeEvent type="EndOfMonth" occurrenceTime="30"/>
 		</Agent>
 		<!-- =================================================== -->
 		<Agent type="Waitress" name="PW" id="2">
 			<!-- =================================================== -->
-			<Slot property="bank" value="2"/>
+			<Slot property="availableCash" value="2"/>
 			<Slot property="pickupWindowBusy" value="false"/>
 			<Slot property="maxPickupQL" value="5"/>
 			<Slot property="pickupWindowQueue">
@@ -1196,43 +1201,43 @@ mes.getCustID()
 					<Text xml:lang="ro">Care este dimensiunea maxima a listei de asteptare pentru serviciul de distributie comenzi?</Text>
 				</Hint>
 			</StatisticsVariableUI>
-			<StatisticsVariableUI variable="bankMenuBoard">
+			<StatisticsVariableUI variable="availableCashOrderTaker">
 				<Label>
-					<Text xml:lang="en">Bank value of the OrderTaker at the end of the simulationb</Text>
+					<Text xml:lang="en">Available Cash value of the OrderTaker at the end of the simulationb</Text>
 					<Text xml:lang="ro">Castigul persoanei care preia comanda la finalul simularii</Text>
 				</Label>
 				<Hint>
-					<Text xml:lang="en">What is the value of the bank for the OrderTaker at the end of the simulation ?</Text>
+					<Text xml:lang="en">What is the value of the availableCash for the OrderTaker at the end of the simulation ?</Text>
 					<Text xml:lang="ro">Care este venitul persoanei care ia comanda la finalul simularii ?</Text>
 				</Hint>
 			</StatisticsVariableUI>
-			<StatisticsVariableUI variable="bankKitchen">
+			<StatisticsVariableUI variable="availableCashKook">
 				<Label>
-					<Text xml:lang="en">Bank value of the Kitchen Chef at the end of the simulation</Text>
+					<Text xml:lang="en">Available Cash value of the Kitchen Chef at the end of the simulation</Text>
 					<Text xml:lang="ro">Castigul bucatarului la finalul simularii</Text>
 				</Label>
 				<Hint>
-					<Text xml:lang="en">What is the value of the bank for the Chef at the end of the simulation ?</Text>
+					<Text xml:lang="en">What is the value of the availableCash for the Chef at the end of the simulation ?</Text>
 					<Text xml:lang="ro">Care este venitul bucatarului la finalul simularii ?</Text>
 				</Hint>
 			</StatisticsVariableUI>
-			<StatisticsVariableUI variable="bankWaitress">
+			<StatisticsVariableUI variable="availableCashWaitress">
 				<Label>
-					<Text xml:lang="en">Bank value of the waitress at the end of the simulation</Text>
+					<Text xml:lang="en">Available Cash value of the waitress at the end of the simulation</Text>
 					<Text xml:lang="ro">Castigul chelneritei la finalul simularii </Text>
 				</Label>
 				<Hint>
-					<Text xml:lang="en">What is the value of the bank for the Waitress at the end of the simulation ?</Text>
+					<Text xml:lang="en">What is the value of the availableCash for the Waitress at the end of the simulation ?</Text>
 					<Text xml:lang="ro">Care este venitul chelneritei la finalul simularii ?</Text>
 				</Hint>
 			</StatisticsVariableUI>
-			<StatisticsVariableUI variable="bankManager">
+			<StatisticsVariableUI variable="availableCashManager">
 				<Label>
-					<Text xml:lang="en">Bank value of the manager at the end of the simulation</Text>
+					<Text xml:lang="en">Available Cash value of the manager at the end of the simulation</Text>
 					<Text xml:lang="ro">Castigul managerului la finalul simularii</Text>
 				</Label>
 				<Hint>
-					<Text xml:lang="en">What is the value of the bank for the manager at the end of the simulation ?</Text>
+					<Text xml:lang="en">What is the value of the availableCash for the manager at the end of the simulation ?</Text>
 					<Text xml:lang="ro">Care este venitul managerului la finalul simularii ?</Text>
 				</Hint>
 			</StatisticsVariableUI>
