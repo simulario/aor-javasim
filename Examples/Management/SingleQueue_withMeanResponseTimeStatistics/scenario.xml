@@ -15,22 +15,22 @@
   <SimulationModel modelName="SingleServiceQueue_withMeanResponseTimeStatistics"
     modelTitle="A single service queue with customer objects creation and destruction">
 
-    <documentation>
+  	<documentation xmlns:h="http://www.w3.org/1999/xhtml">
       <dc:creator>Gerd Wagner</dc:creator>
       <dc:created>20081001</dc:created>
       <dc:contributor>Jens Werner</dc:contributor>
       <dc:contributor>Oana Nicolae</dc:contributor>
       <dc:modified>20111201</dc:modified>
-      <dc:description>Customers arrive at random times at a service desk where they have to wait in a queue when the service desk is busy. 
+      <description><h:p>Customers arrive at random times at a service desk where they have to wait in a queue when the service desk is busy. 
       	The time between two customer arrivals is uniformly distributed between 1 and 8 minutes. The times for completing a service 
       	vary from 1 to 6 minutes, with probabilities 0.1, 0.2, 0.3, 0.25, 0.1, 0.05, respectively. Two statistics are to be collected: 
       	the "mean response time" (the length of time a customer spends in the system) and the mean proportion of customers 
       	who spend 5 or more minutes in the system (the latter is not yet implemented). An arriving customer is represented by 
       	a newly generated object, which is destroyed again, when this customer leaves the system. The customer in service 
       	is represented by the first/topmost item in the First-In-First-Out queue, while the remaining items of the queue 
-      	represent the waiting line.</dc:description>
-    	<informationModelDiagram>InformationModel.png</informationModelDiagram>
-      <processModelDiagram>BPMN-Diagram.png</processModelDiagram>
+      	represent the waiting line.</h:p></description>
+  		<informationModelDiagram file="InformationModel.png"/>
+  		<processModelDiagram file="BPMN-Diagram.png"/>
     </documentation>
 
     <Statistics>
@@ -65,7 +65,7 @@
    		<!-- =================================================== -->
     		<Attribute name="busy" type="Boolean"/>
     		<ReferenceProperty name="waitingCustomers" type="Customer" upperMultiplicity="unbounded">
-    			<description>This property represents a first-in-first-out queue. </description>
+    			<documentation>This property represents a first-in-first-out queue. </documentation>
     		</ReferenceProperty>
     		<Function name="randomServiceTime" resultType="Integer">
     			<Body language="Java"><![CDATA[
@@ -77,8 +77,7 @@
 		else if (r<95) return 5;	// with probability 0.10
 		else return 6;				// with probability 0.05
         ]]></Body>
-    		</Function>
-    		
+    		</Function>    		
     	</ObjectType>
     </EntityTypes>
 
@@ -87,9 +86,9 @@
       <EnvironmentRule name="ArrivalRule">
       <!-- =================================================== -->
         <documentation>
-          <dc:description>When a new customer arrives, a new customer object is created and added to the customer queue. 
+          When a new customer arrives, a new customer object is created and added to the customer queue. 
           	Then, if the service desk is not busy, the customer is going to be serviced and hence the service desk gets busy, 
-          	and for ending the service, a departure event (with a delay being set to a random service time) is scheduled.</dc:description>
+          	and for ending the service, a departure event (with a delay being set to a random service time) is scheduled.
         </documentation>
         <WHEN eventType="CustomerArrival" eventVariable="e"/>
       	<FOR-ObjectVariable variable="sd" objectType="ServiceDesk" objectIdRef="1"/>
@@ -127,10 +126,10 @@
       <EnvironmentRule name="DepartureRule">
       <!-- =================================================== -->
         <documentation>
-          <dc:description>When a customer departs, she is removed rom the queue and the statistics isnupdated. 
+          When a customer departs, she is removed rom the queue and the statistics isnupdated. 
           	If the waiting line then is empty (the queue size is equal to 0), 
           	the service desk is no longer busy. Otherwise, the next customer will be serviced, 
-          	so a new future departure event is created (with a delay given by the random service time). </dc:description>
+          	so a new future departure event is created (with a delay given by the random service time). 
         </documentation>
         <WHEN eventType="CustomerDeparture" eventVariable="e"/>
       	<FOR-ObjectVariable variable="sd" objectType="ServiceDesk" objectIdRef="1"/>
