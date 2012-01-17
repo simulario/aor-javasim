@@ -82,31 +82,6 @@
 				</Source>
 			</Variable>
 		</Statistics>
-		<Globals>
-			<GlobalVariable name="queueLength" dataType="Integer" />
-			<GlobalVariable name="serviceDeskBusy" dataType="Boolean" />
-			<GlobalFunction name="randomServiceTime" resultType="Integer">
-				<Body language="Java"><![CDATA[
-		int r = Random.uniformInt(0,99);
-		if (r<10) return 1; 			// with probability 0.10
-		else if (r<30) return 2;		// with probability 0.20
-		else if (r<60) return 3;		// with probability 0.30
-		else if (r<85) return 4;		// with probability 0.25
-		else if (r<95) return 5;		// with probability 0.10
-		else return 6;					// with probability 0.05
-		]]></Body>
-				<Body language="JavaScript"><![CDATA[
-		var r = Random.uniformInt(0,99);
-		if (r<10) return 1; 			// with probability 0.10
-		else if (r<30) return 2;		// with probability 0.20
-		else if (r<60) return 3;		// with probability 0.30
-		else if (r<85) return 4;		// with probability 0.25
-		else if (r<95) return 5;		// with probability 0.10
-		else return 6;					// with probability 0.05
-		]]></Body>
-			</GlobalFunction>
-		</Globals>
-
 		<EntityTypes>
 			<!-- =================================================== -->
 			<ExogenousEventType name="CustomerArrival">
@@ -122,6 +97,32 @@
 			<!-- =================================================== -->
 				<Attribute name="serviceTime" type="Integer"/>
 			</CausedEventType>
+			<!-- =================================================== -->
+			<ObjectType name="ServiceDesk">
+			<!-- =================================================== -->
+				<Attribute name="queueLength" type="Integer" />
+				<Attribute name="busy" type="Boolean"/>
+				<Function name="randomServiceTime" resultType="Integer">
+					<Body language="Java"><![CDATA[
+		int r = Random.uniformInt(0,99);
+		if (r<10) return 1; 			// with probability 0.10
+		else if (r<30) return 2;		// with probability 0.20
+		else if (r<60) return 3;		// with probability 0.30
+		else if (r<85) return 4;		// with probability 0.25
+		else if (r<95) return 5;		// with probability 0.10
+		else return 6;					// with probability 0.05
+		]]></Body>
+					<Body language="JavaScript"><![CDATA[
+		var r = Random.uniformInt(0,99);
+		if (r<10) return 1; 			// with probability 0.10
+		else if (r<30) return 2;		// with probability 0.20
+		else if (r<60) return 3;		// with probability 0.30
+		else if (r<85) return 4;		// with probability 0.25
+		else if (r<95) return 5;		// with probability 0.10
+		else return 6;					// with probability 0.05
+		]]></Body>
+				</Function>    		
+			</ObjectType>
 		</EntityTypes>
 
 		<EnvironmentRules>
@@ -135,20 +136,24 @@
 					to a random service time) is created .
 				</documentation>
 				<WHEN eventType="CustomerArrival"/>
-				<FOR dataVariable="srvTm" dataType="Integer">
-					<ValueExpr language="Java"> Global.randomServiceTime() </ValueExpr>
-					<ValueExpr language="JavaScript"> Global.randomServiceTime() </ValueExpr>
-				</FOR>
-				<IF language="Java"> Global.serviceDeskBusy </IF>
-				<IF language="JavaScript"> Global.serviceDeskBusy </IF>
+				<FOR-ObjectVariable variable="sd" objectType="ServiceDesk" objectIdRef="1"/>
+				<FOR-DataVariable variable="srvTm" dataType="Integer">
+					<ValueExpr language="Java JavaScript"> sd.randomServiceTime() </ValueExpr>
+				</FOR-DataVariable>
+				<IF language="Java JavaScript"> sd.isBusy() </IF>
 				<THEN>
 					<UPDATE-ENV>
 						<IncrementGlobalVariable name="queueLength" value="1" />
+						<UpdateObject objectVariable="sd">
+							<Increment property="queueLength" value="1"/>
+						</UpdateObject>
 					</UPDATE-ENV>
 				</THEN>
 				<ELSE>
 					<UPDATE-ENV>
-						<UpdateGlobalVariable name="serviceDeskBusy" value="true"/>
+						<UpdateObject objectVariable="sd">
+							<Slot property="busy" value="true"/>
+						</UpdateObject>
 					</UPDATE-ENV>
 					<SCHEDULE-EVT>
 						<CausedEventExpr eventType="CustomerDeparture">
@@ -171,10 +176,10 @@
 					(with a delay given by the random service time), and the queue size is decreased by 1.
 				</documentation>
 				<WHEN eventType="CustomerDeparture" eventVariable="dep"/>
-				<FOR dataVariable="srvTm" dataType="Integer">
-					<ValueExpr language="Java">Global.randomServiceTime()</ValueExpr>
-					<ValueExpr language="JavaScript">Global.randomServiceTime()</ValueExpr>
-				</FOR>
+				<FOR-ObjectVariable variable="sd" objectType="ServiceDesk" objectIdRef="1"/>
+				<FOR-DataVariable variable="srvTm" dataType="Integer">
+					<ValueExpr language="Java JavaScript"> sd.randomServiceTime() </ValueExpr>
+				</FOR-DataVariable>
 				<DO>
 					<UPDATE-ENV>
 						<UpdateStatisticsVariable variable="totalServiceTime">
@@ -216,8 +221,10 @@
 	<!-- =================================================== -->
 	<InitialState>
 	<!-- =================================================== -->
-		<GlobalVariable name="serviceDeskBusy" value="false" />
-		<GlobalVariable name="queueLength" value="0" />
+		<Object type="ServiceDesk" id="1" name="ServiceDesk">
+			<Slot property="queueLength" value="0"/>
+			<Slot property="busy" value="false"/>
+		</Object>
 		<ExogenousEvent type="CustomerArrival" occurrenceTime="1" />
 	</InitialState>
 	<!-- =================================================== -->
