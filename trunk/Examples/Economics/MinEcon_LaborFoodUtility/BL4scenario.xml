@@ -1,0 +1,221 @@
+<SimulationScenario xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+ xsi:schemaLocation="http://aor-simulation.org ../../../AORSL/AORSL_0-9.xsd"
+ xmlns:dc="http://purl.org/dc/elements/1.1/"
+ xmlns="http://aor-simulation.org"
+ xmlns:aors="http://aor-simulation.org"
+ version="0.9"
+ scenarioName="MinEcon_LaborFoodUtility_BL4scenario"
+ simulationManagerDirectory="../../..">
+    <SimulationParameters simulationSteps="3000" timeUnit="h" stepTimeDelay="0" randomSeed="47" />
+    <SimulationModel modelName="MinEcon_LaborFoodUtility_BL4">
+        <documentation>
+            <dc:title>Minimal Economy with a Labor, Food and Utility Market</dc:title>
+            <dc:subject>Agent-based computational economics</dc:subject>
+            <dc:creator>Lars Langjahr</dc:creator>
+            <dc:created>20101031</dc:created>
+            <dc:contributor>Gerd Wagner</dc:contributor>
+            <dc:contributor>Gabriel Diaconita</dc:contributor>
+            <dc:modified>20101203</dc:modified>
+        </documentation>
+        <Statistics>
+          <Variable name="PriceFood" dataType="Float">
+              <Source>
+                  <ObjectProperty property="lastMarketPrice" objectType="Mkarket" objectIdRef="2"/>
+              </Source>
+          </Variable>
+          <Variable name="BuyOffersFood" dataType="Float">
+              <Source>
+                  <ObjectProperty property="Demand" objectType="Market" objectIdRef="2"/>
+              </Source>
+          </Variable>
+          <Variable name="SellOffersFood" dataType="Float">
+              <Source>
+                  <ObjectProperty property="Supply" objectType="Market" objectIdRef="2"/>
+              </Source>
+          </Variable>     
+          <Variable name="PriceUtility" dataType="Float">
+              <Source>
+                  <ObjectProperty property="lastMarketPrice" objectType="Market" objectIdRef="4"/>
+              </Source>
+          </Variable>
+          <Variable name="BuyOffersUtility" dataType="Float">
+              <Source>
+                  <ObjectProperty property="Demand" objectType="Market" objectIdRef="4"/>
+              </Source>
+          </Variable>            
+          <Variable name="SellOffersUtility" dataType="Float">
+              <Source>
+                  <ObjectProperty property="Supply" objectType="Market" objectIdRef="4"/>
+              </Source>
+          </Variable>
+          <Variable name="PriceLabor" dataType="Float">
+              <Source>
+                  <ObjectProperty property="lastMarketPrice" objectType="Market" objectIdRef="3"/>
+              </Source>
+          </Variable>
+          <Variable name="BuyOffersLabor" dataType="Float">
+              <Source>
+                  <ObjectProperty property="Demand" objectType="Market" objectIdRef="3"/>
+              </Source>
+          </Variable>
+          <Variable name="SellOffersLabor" dataType="Float">
+              <Source>
+                  <ObjectProperty property="Supply" objectType="Market" objectIdRef="3"/>
+              </Source>
+          </Variable>
+        </Statistics>
+        
+        <DataTypes>
+            <ComplexDataType name="TradeOffer">
+                <Attribute type="String" name="product"/>
+                <Attribute type="Float" name="price"/>
+                <Attribute type="Float" name="quantity"/>
+                <Attribute type="Boolean" name="buy"/>
+                <Attribute type="Integer" name="bidderIdRef"/>
+            </ComplexDataType>
+        </DataTypes>
+        <EntityTypes>
+            <!--==========================================-->
+            <MessageType name="StartOfDay_Notification">
+                <documentation>A message of the market to announce the trading price of the last day</documentation>
+                <Attribute type="Float" name="price"/>
+                <Attribute type="String" name="marketType"/>
+            </MessageType>
+            <!--==========================================-->
+            <MessageType name="Act_msg">
+                <documentation>A message to an EconomicAgent, which signals them to being with their work.</documentation>
+            </MessageType>
+            <!--==========================================-->
+            <MessageType name="ClearMarket">
+                <documentation>A message to a Market, which ends the trading day.</documentation>
+            </MessageType>
+            <!--==========================================-->
+            <MessageType name="BL4Offer">
+                <documentation>A list of oofers to the market, made by a BL4Agent.</documentation>
+                <ComplexDataProperty name="offers" type="TradeOffer" upperMultiplicity="unbounded" />
+            </MessageType>
+            <!--==========================================-->
+            <MessageType name="MatchingOffer">
+                <documentation>A successful trade returned from the market</documentation>
+                <ComplexDataProperty name="offer" type="TradeOffer" />
+            </MessageType>
+            <!--==========================================-->
+            <ExogenousEventType name="Init">
+                <documentation>Triggers certain EnvironmentRule, needed for the initialization</documentation>
+            </ExogenousEventType>
+            <!--==========================================-->
+            <ExogenousEventType name="StartOfDay" periodicity="9">
+                <documentation>
+                    Starts a new day. EnvironmentRules are triggered, which check if a person has enough food, a firm is bankrupt
+                    and send the marketprices of the last day is announced to all EconomicAgents.
+                </documentation>
+            </ExogenousEventType>
+            <!--==========================================-->
+            <ExogenousEventType name="StartWork" periodicity="9">
+                <documentation>Triggers the StartWork_ER-EnvironmentRule, which tells the EconomicAgents to start with their work.</documentation>
+            </ExogenousEventType>
+            <!--==========================================-->
+            <ExogenousEventType name="CloseMarket" periodicity="9">
+                <documentation>
+                Ends the day, by triggering the CloseMarket_ER-EnvironmentRule.
+                Which tells the Markets to end the trading day and calculate a new market price.
+                </documentation>
+            </ExogenousEventType>
+            <!--==========================================-->
+            <AgentType name="EconomicAgent">
+            <!--==========================================-->
+                <documentation>
+                    Superclass of Person and Firm, which has the basic functionality for communicating with the market(price updates and succesfull transactions).
+                    Further it adds help functions to find a specific asset or to create an offer.
+                    
+                    LABOR_ALLOWANCE: The amount of labor, a laborer offers every day.
+                    lastFoodPrice, lastLaborPrice, lastUtilityPrice: The trading price of the last day.
+                </documentation>
+                <ComplexDataProperty name="assets" type="aors.util.economics.Quantity" upperMultiplicity="unbounded" />
+                <Attribute type="Float" name="LABOR_ALLOWANCE" initialValue="1.0"/>
+                <Attribute type="Float" name="RANDOM_FACTOR" initialValue="0.01"/>
+                <Attribute type="Float" name="lastFoodPrice" initialValue="0"/>
+                <Attribute type="Float" name="lastLaborPrice" initialValue="0"/>
+                <Attribute type="Float" name="lastUtilityPrice" initialValue="0"/>
+                <!--======================================-->
+                <Function name="getAssetByName" resultType="aors.util.economics.Quantity">
+                    <documentation>
+                        Finds an asset from the AsstsList by String.
+                    </documentation>
+                    <Body language="Java"><![CDATA[
+                        int i;
+                        aors.util.ArrayListInterface<aors.util.economics.Quantity> assets = getAssets();
+                        for (i=0; i < assets.size(); i++){
+                          if (!assets.get(i).isDiscrete()) {
+                            if (((aors.util.economics.ContinuousQuantity)assets.get(i)).getContinuousQuantityType().getName().equals(name)) break;
+                          } else {
+                            if (((aors.util.economics.DiscreteQuantity)assets.get(i)).getType().equals(name)) break;
+                          }
+                        }
+                        return assets.get(i);
+                        ]]></Body>
+                    <Body language="JavaScript"><![CDATA[
+                        var i;
+                        var assets = this.getAssets();
+                        for (i=0; i < assets.size(); i++){
+                          if (!assets.get(i).isDiscrete()) {
+                            if (assets.get(i).getContinuousQuantityType().getName() === name) break;
+                          } else {
+                            if (assets.get(i).getType() === name) break;
+                          }
+                        }
+                        return assets.get(i);
+                        ]]></Body>
+                </Function>
+                <!--~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~-->
+                <ReactionRule name="StartOfDay_Food_Rule">
+                    <!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->
+                    <documentation>The price of the food market is updated.</documentation>
+                    <WHEN eventType="InMessageEvent" messageType="StartOfDay_Notification" messageVariable="msg"/>
+                    <IF language="Java">this.msg.getMarketType().equals("Food")</IF>
+                    <IF language="JavaScript">this.msg.getMarketType() === "Food"</IF>
+                    <THEN>
+                        <UPDATE-AGT>
+                            <Slot property="lastFoodPrice">
+                                <PropertyValueExpr entityVariable="msg" property="price"/>
+                            </Slot>
+                        </UPDATE-AGT>
+                    </THEN>
+                </ReactionRule>
+                <!--~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~-->
+                <ReactionRule name="StartOfDay_Labor_Rule">
+                    <!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->
+                    <documentation>The price of the labor market is updated.</documentation>
+                    <WHEN eventType="InMessageEvent" messageType="StartOfDay_Notification" messageVariable="msg"/>
+                    <IF language="Java">this.msg.getMarketType().equals("Labor")</IF>
+                    <IF language="JavaScript">this.msg.getMarketType() === "Labor"</IF>
+                    <THEN>
+                        <UPDATE-AGT>
+                            <Slot property="lastLaborPrice">
+                                <PropertyValueExpr entityVariable="msg" property="price"/>
+                            </Slot>
+                        </UPDATE-AGT>
+                    </THEN>
+                </ReactionRule>
+                <!--~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~-->
+                <ReactionRule name="StartOfDay_Utility_Rule">
+                    <!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->
+                    <documentation>The price of the utility market is updated.</documentation>
+                    <WHEN eventType="InMessageEvent" messageType="StartOfDay_Notification" messageVariable="msg"/>
+                    <IF language="Java">this.msg.getMarketType().equals("Utility")</IF>
+                    <IF language="JavaScript">this.msg.getMarketType() === "Utility"</IF>
+                    <THEN>
+                        <UPDATE-AGT>
+                            <Slot property="lastUtilityPrice">
+                                <PropertyValueExpr entityVariable="msg" property="price"/>
+                            </Slot>
+                        </UPDATE-AGT>
+                    </THEN>
+                </ReactionRule>
+            </AgentType>
+        </EntityTypes>
+    </SimulationModel>
+    <InitialState>
+        
+    </InitialState>
+</SimulationScenario>
