@@ -19,7 +19,7 @@
 			<dc:created>20081001</dc:created>
 			<dc:modified>20111125</dc:modified>
 			<dc:title>Single Queue</dc:title>
-			<dc:title xml:lang="de">Einfach-Warteschlange</dc:title>
+			<dc:title xml:lang="de">Warteschlange</dc:title>
 			<shortDescription>A simple model of a service queue just using global variables and abstracting away 
 				from the involved objects.</shortDescription>
 			<shortDescription xml:lang="de">Ein einfaches Modell einer Service-Warteschlange, das nur globale 
@@ -30,8 +30,8 @@
 				for completing a service vary from 1 to 6 minutes, with probabilities 0.1, 0.2, 0.3, 0.25, 0.1, 0.05, 
 				respectively.	Two statistics are to be collected: service utilization (total service time divided by total time) 
 				and maximum queue length.</p>
-				<p>The information about the service desk is modeled with the help of two (global) variables: <code>queueLength</code> 
-					and <code>serviceDeskBusy</code>. The model includes two event types: <code>CustomerArrival</code> 
+				<p>The information about the service desk is modeled with the help of an object type <code>ServiceDesk</code> with two attributes: 
+					<code>queueLength</code> and <code>busy</code>. The model also includes two event types: <code>CustomerArrival</code> 
 					and <code>CustomerDeparture</code>.</p>
 			</ers:description>
 			<ers:description xmlns="http://www.w3.org/1999/xhtml" xml:lang="de">
@@ -40,9 +40,9 @@
 				Die Zeit zur Erbringung eines Dienstes variiert zwischen 1 und 6 Minuten, mit den Wahrscheinlichkeiten 0.1, 0.2, 0.3, 0.25, 
 				0.1 beziehunsgweise 0.05. Es sollen zwei Statistiken erhoben werden: der Service-Nutzungsgrad (gesamte Servicezeit geteilt 
 				durch die Gesamtzeit) und die maximale Länge der Warteschlange.</p>
-				<p>Die Informationen über den Service-Schalter werden mit Hilfe von zwei (globalen) Variablen modelliert: <code>queueLength</code> 
-					und <code>serviceDeskBusy</code>. Das Modell beinhaltet zwei Ereignistypen: <code>CustomerArrival</code> 
-					und <code>CustomerDeparture</code>.</p>
+				<p>Die Informationen über den Service-Schalter werden mit Hilfe eines Objekttyps <code>ServiceDesk</code> mit zwei 
+					Attributen modelliert: <code>queueLength</code> und <code>busy</code>. Das Modell beinhaltet außerdem zwei Ereignistypen: 
+					<code>CustomerArrival</code> und <code>CustomerDeparture</code>.</p>
 			</ers:description>
 			<CcLicense license="CC BY-SA"/>
 			<mediaFiles>
@@ -61,52 +61,27 @@
 						/ SimParameter.SIMULATION_STEPS * 100
 					</ValueExpr>
 					<ValueExpr language="JavaScript">
-						__SimStatistics.totalServiceTime.getValue()
-						/ __SimParameter.SIMULATION_STEPS * 100 
+						SimStatistics.totalServiceTime.getValue()
+						/ SimParameter.SIMULATION_STEPS * 100 
 					</ValueExpr>
 				</Source>
 			</Variable>
 			<Variable name="queueLength" dataType="Integer">
 				<Source>
-					<GlobalVariable name="queueLength"/>
+					<ObjectProperty property="queueLength" objectType="ServiceDesk" objectIdRef="1"/>
 				</Source>
 			</Variable>			
 			<Variable name="maxQueueLength" dataType="Integer">
 				<Source aggregationFunction="max">
-					<GlobalVariable name="queueLength"/>
+					<ObjectProperty property="queueLength" objectType="ServiceDesk" objectIdRef="1"/>
 				</Source>
 			</Variable>
 			<Variable name="avgQueueLength" dataType="Float">
 				<Source aggregationFunction="avg">
-					<GlobalVariable name="queueLength"/>
+					<ObjectProperty property="queueLength" objectType="ServiceDesk" objectIdRef="1"/>
 				</Source>
 			</Variable>
 		</Statistics>
-		<Globals>
-			<GlobalVariable name="queueLength" dataType="Integer" />
-			<GlobalVariable name="serviceDeskBusy" dataType="Boolean" />
-			<GlobalFunction name="randomServiceTime" resultType="Integer">
-				<Body language="Java"><![CDATA[
-		int r = Random.uniformInt(0,99);
-		if (r<10) return 1; 			// with probability 0.10
-		else if (r<30) return 2;		// with probability 0.20
-		else if (r<60) return 3;		// with probability 0.30
-		else if (r<85) return 4;		// with probability 0.25
-		else if (r<95) return 5;		// with probability 0.10
-		else return 6;					// with probability 0.05
-		]]></Body>
-				<Body language="JavaScript"><![CDATA[
-		var r = __Random.uniformInt(0,99);
-		if (r<10) return 1; 			// with probability 0.10
-		else if (r<30) return 2;		// with probability 0.20
-		else if (r<60) return 3;		// with probability 0.30
-		else if (r<85) return 4;		// with probability 0.25
-		else if (r<95) return 5;		// with probability 0.10
-		else return 6;					// with probability 0.05
-		]]></Body>
-			</GlobalFunction>
-		</Globals>
-
 		<EntityTypes>
 			<!-- =================================================== -->
 			<ExogenousEventType name="CustomerArrival">
@@ -122,6 +97,32 @@
 			<!-- =================================================== -->
 				<Attribute name="serviceTime" type="Integer"/>
 			</CausedEventType>
+			<!-- =================================================== -->
+			<ObjectType name="ServiceDesk">
+			<!-- =================================================== -->
+				<Attribute name="queueLength" type="Integer" />
+				<Attribute name="busy" type="Boolean"/>
+				<Function name="randomServiceTime" resultType="Integer">
+					<Body language="Java"><![CDATA[
+		int r = Random.uniformInt(0,99);
+		if (r<10) return 1; 			// with probability 0.10
+		else if (r<30) return 2;		// with probability 0.20
+		else if (r<60) return 3;		// with probability 0.30
+		else if (r<85) return 4;		// with probability 0.25
+		else if (r<95) return 5;		// with probability 0.10
+		else return 6;					// with probability 0.05
+		]]></Body>
+					<Body language="JavaScript"><![CDATA[
+		var r = Random.uniformInt(0,99);
+		if (r<10) return 1; 			// with probability 0.10
+		else if (r<30) return 2;		// with probability 0.20
+		else if (r<60) return 3;		// with probability 0.30
+		else if (r<85) return 4;		// with probability 0.25
+		else if (r<95) return 5;		// with probability 0.10
+		else return 6;					// with probability 0.05
+		]]></Body>
+				</Function>    		
+			</ObjectType>
 		</EntityTypes>
 
 		<EnvironmentRules>
@@ -135,28 +136,31 @@
 					to a random service time) is created .
 				</documentation>
 				<WHEN eventType="CustomerArrival"/>
-				<FOR dataVariable="srvTm" dataType="Integer">
-					<ValueExpr language="Java">Global.randomServiceTime()</ValueExpr>
-					<ValueExpr language="JavaScript">__Global.randomServiceTime()</ValueExpr>
-				</FOR>
-				<IF language="Java">Global.serviceDeskBusy </IF>
-				<IF language="JavaScript">__Global.serviceDeskBusy</IF>
+				<FOR-ObjectVariable variable="srvDesk" objectType="ServiceDesk" objectIdRef="1"/>
+				<FOR-DataVariable variable="srvTm" dataType="Integer">
+					<ValueExpr language="Java JavaScript"> this.srvDesk.randomServiceTime() </ValueExpr>
+				</FOR-DataVariable>
+				<IF language="Java JavaScript"> this.srvDesk.isBusy() </IF>
 				<THEN>
 					<UPDATE-ENV>
-						<IncrementGlobalVariable name="queueLength" value="1" />
+						<UpdateObject objectVariable="srvDesk">
+							<Increment property="queueLength" value="1"/>
+						</UpdateObject>
 					</UPDATE-ENV>
 				</THEN>
 				<ELSE>
 					<UPDATE-ENV>
-						<UpdateGlobalVariable name="serviceDeskBusy" value="true"/>
+						<UpdateObject objectVariable="srvDesk">
+							<Slot property="busy" value="true"/>
+						</UpdateObject>
 					</UPDATE-ENV>
 					<SCHEDULE-EVT>
 						<CausedEventExpr eventType="CustomerDeparture">
 							<Delay>
-								<ValueExpr language="Java JavaScript">this.srvTm</ValueExpr>
+								<ValueExpr language="Java JavaScript"> this.srvTm </ValueExpr>
 							</Delay>
 							<Slot property="serviceTime">
-								<ValueExpr language="Java JavaScript">this.srvTm</ValueExpr>
+								<ValueExpr language="Java JavaScript"> this.srvTm </ValueExpr>
 							</Slot>
 						</CausedEventExpr>
 					</SCHEDULE-EVT>
@@ -170,54 +174,55 @@
 					Otherwise, the next customer will be serviced, so a new future CustomerDeparture event is created 
 					(with a delay given by the random service time), and the queue size is decreased by 1.
 				</documentation>
-				<WHEN eventType="CustomerDeparture" eventVariable="dep"/>
-				<FOR dataVariable="srvTm" dataType="Integer">
-					<ValueExpr language="Java">Global.randomServiceTime()</ValueExpr>
-					<ValueExpr language="JavaScript">__Global.randomServiceTime()</ValueExpr>
-				</FOR>
+				<WHEN eventType="CustomerDeparture" eventVariable="depEvt"/>
+				<FOR-ObjectVariable variable="srvDesk" objectType="ServiceDesk" objectIdRef="1"/>
+				<FOR-DataVariable variable="srvTm" dataType="Integer">
+					<ValueExpr language="Java JavaScript"> this.srvDesk.randomServiceTime() </ValueExpr>
+				</FOR-DataVariable>
 				<DO>
 					<UPDATE-ENV>
 						<UpdateStatisticsVariable variable="totalServiceTime">
-							<ValueExpr language="Java">
-								SimStatistics.totalServiceTime.getValue() + dep.getServiceTime()
-							</ValueExpr>
-							<ValueExpr language="JavaScript">
-								__SimStatistics.totalServiceTime.getValue() + this.dep.getServiceTime()
+							<ValueExpr language="Java JavaScript">
+								SimStatistics.totalServiceTime.getValue() + this.depEvt.getServiceTime()
 							</ValueExpr>
 						</UpdateStatisticsVariable>
 					</UPDATE-ENV>
 				</DO>
-				<IF language="Java"> Global.queueLength == 0 </IF>
-				<IF language="JavaScript"> __Global.queueLength === 0 </IF>
+				<IF language="Java JavaScript"> this.srvDesk.getQueueLength() == 0 </IF>
 				<THEN>
 					<UPDATE-ENV>
-						<UpdateGlobalVariable name="serviceDeskBusy" value="false"/>
+						<UpdateObject objectVariable="srvDesk">
+							<Slot property="busy" value="false"/>
+						</UpdateObject>
 					</UPDATE-ENV>
 				</THEN>
 				<ELSE>
 					<UPDATE-ENV>
-						<IncrementGlobalVariable name="queueLength" value="-1"/>
+						<UpdateObject objectVariable="srvDesk">
+							<Decrement property="queueLength" value="1"/>
+						</UpdateObject>
 					</UPDATE-ENV>
 					<SCHEDULE-EVT>
 						<CausedEventExpr eventType="CustomerDeparture">
 							<Delay>
-								<ValueExpr language="Java JavaScript">this.srvTm</ValueExpr>
+								<ValueExpr language="Java JavaScript"> this.srvTm </ValueExpr>
 							</Delay>
 							<Slot property="serviceTime">
-								<ValueExpr language="Java JavaScript">this.srvTm</ValueExpr>
+								<ValueExpr language="Java JavaScript"> this.srvTm </ValueExpr>
 							</Slot>
 						</CausedEventExpr>
 					</SCHEDULE-EVT>
 				</ELSE>
 			</EnvironmentRule>
 		</EnvironmentRules>
-	</SimulationModel>
-	
+	</SimulationModel>	
 	<!-- =================================================== -->
 	<InitialState>
 	<!-- =================================================== -->
-		<GlobalVariable name="serviceDeskBusy" value="false" />
-		<GlobalVariable name="queueLength" value="0" />
+		<Object type="ServiceDesk" id="1" name="ServiceDesk">
+			<Slot property="queueLength" value="0"/>
+			<Slot property="busy" value="false"/>
+		</Object>
 		<ExogenousEvent type="CustomerArrival" occurrenceTime="1" />
 	</InitialState>
 	<!-- =================================================== -->
@@ -255,7 +260,7 @@
 					<Text xml:lang="es">Cual es el tiempo promedio de uso del servicio?</Text>
 					<Text xml:lang="ro">Care este timpul mediu de utilizare a serviciului?</Text>
 				</Hint>
-				<Format decimalPlaces="2"><Math>%</Math></Format>
+				<Format decimalPlaces="1"><Math>%</Math></Format>
 			</StatisticsVariableUI>
 			<StatisticsVariableUI variable="avgQueueLength">
 				<Label>
@@ -291,5 +296,25 @@
 				</Hint>
 			</StatisticsVariableUI>
 		</StatisticsUI>
+		<AnimationUI>
+			<Views>
+				<SpaceView>
+					<TwoDimensionalSpaceView2D backgroundColor="darkgrey" />
+				</SpaceView>
+				<ObjectView objectType="ServiceDesk" objectIdRef="1">
+					<Shape2D x="850px" y="350px">
+						<Square fill="yellow" width="50" stroke="black" strokeWidth="10" />
+					</Shape2D>
+					<DisplayInfo property="queueLength" content=" customers" />
+					<AttachedShape2D offsetX="-15px" offsetY="0px">
+						<Shape2D>
+						<Rectangle positioning="RightCenter" fill="yellow" width="1" height="10" stroke="black" strokeWidth="2">
+							<ShapePropertyVisualizationMap shapeProperty="width" property="queueLength" mapType="polynomial" a0="0" a1="50"/>
+						</Rectangle>
+						</Shape2D>
+					</AttachedShape2D>
+				</ObjectView>	
+			</Views>
+		</AnimationUI>	
 	</UserInterface>
 </SimulationScenario>
