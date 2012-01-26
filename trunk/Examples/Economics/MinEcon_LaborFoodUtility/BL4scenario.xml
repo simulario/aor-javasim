@@ -140,7 +140,7 @@
                 <!--======================================-->
                 <Function name="getAssetByName" resultType="aors.util.economics.Quantity">
                     <documentation>
-                        Finds an asset from the AsstsList by String.
+                        Finds an asset from the AssetsList by String.
                     </documentation>
                     <Body language="Java"><![CDATA[
                         int i;
@@ -154,18 +154,19 @@
                         }
                         return assets.get(i);
                         ]]></Body>
-                    <Body language="JavaScript"><![CDATA[
-                        var i;
-                        var assets = this.getAssets();
-                        for (i=0; i < assets.size(); i++){
-                          if (!assets.get(i).isDiscrete()) {
-                            if (assets.get(i).getContinuousQuantityType().getName() === name) break;
-                          } else {
-                            if (assets.get(i).getType() === name) break;
-                          }
-                        }
-                        return assets.get(i);
-                        ]]></Body>
+                    	<Body language="JavaScript"><![CDATA[
+						            var i;
+						            var assets = this.getAssets();
+						            for (i=0; i < assets.size(); i++){
+						          	 if (!assets.get(i).isDiscrete()) {
+						        		   if (assets.get(i).getContinuousQuantityType().getName() === name) break;
+						            	  } else {
+						        	  	    if (assets.get(i).getType() === name) break;
+						            	  }
+						            }
+												//alert(assets.size() +" "+ i + " "+ assets.get(i));
+						            return assets.get(i);
+					            ]]></Body>	
                 </Function>
                 <!--~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~-->
                 <ReactionRule name="StartOfDay_Food_Rule">
@@ -646,7 +647,7 @@
                         var quantum = this.getEAT_AMOUNT() * 1.0;
                         var purse = moneyAmount;
                         for (var x = this.getAssetByName("Food").getQuantity(); x <= 1.5 * this.getTARGET_FOOD_STOCK(); x += quantum) {
-                          if (x === 0.0) x = = 0.00000000001;
+                          if (x === 0.0) x = 0.00000000001;
                           var random_value = js.util.Random.uniform(0.0, 1.0);
                           var mod = 0.1 * Math.pow(this.getTARGET_FOOD_STOCK() / x, 0.2) + 0.90 + random_value * this.getRANDOM_Factor();
                           var price = mod * this.getLastFoodPRice();
@@ -710,7 +711,7 @@
                           price = this.getLastLaborPrice();
                           var frac = 0.95;
                           var random_value = js.util.Random.normal(0.0, 1.0);
-                          var mod = Math.max(Math.min(random_value, 2.0), -2) / 2) * (1 - frac) + 1;
+                          var mod = Math.max(Math.min(random_value, 2.0), -2) / 2 * (1 - frac) + 1;
                           price *= mod;
                         }
                         var o = new minecon_laborfoodutility_bl4scenario.model.dataTypes.TradeOffer();
@@ -2118,7 +2119,7 @@
 				    } ]]>
                 </ValueExpr>
                 <ValueExpr language="JavaScript"><![CDATA[ 
-					new js.util.ArrayList(new aors.util.economics.ContinuousQuantity(00.0, new aors.util.economics.ContinuousQuantityType("Food", "Stk")), 
+					new js.util.ArrayList(new aors.util.economics.ContinuousQuantity(0.0, new aors.util.economics.ContinuousQuantityType("Food", "Stk")), 
 					new aors.util.economics.ContinuousQuantity(100.0, new aors.util.economics.ContinuousQuantityType("Money", "Stk")), 
 					new aors.util.economics.ContinuousQuantity(0.0, new aors.util.economics.ContinuousQuantityType("Labor", "Stk")),
 					new aors.util.economics.DiscreteQuantity("Utility", 5))
@@ -2133,6 +2134,7 @@
                 <ValueExpr language="JavaScript"><![CDATA[ new js.util.ArrayList() ]]></ValueExpr>
             </Slot>
         </Agents>
+				<ExogenousEvent type="Init" occurrenceTime="1" />
         <!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->
         <ExogenousEvent occurrenceTime="1" type="StartOfDay" />
         <!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->
