@@ -42,6 +42,7 @@ public class Shape2DMap {
    * @param obj
    */
   public void determineShape(Objekt obj, View view) {
+    System.out.println("determineShape(Objekt obj, View view)");
     if (propertyName != null) {
       try {
         // Get the property
@@ -52,6 +53,7 @@ public class Shape2DMap {
 
         // Get the property's type
         propertyType = field.get(obj);
+        System.out.println(propertyType);
 
         if (propertyType instanceof Long || propertyType instanceof Double) {
           // Get the property's value
@@ -63,10 +65,12 @@ public class Shape2DMap {
         }
 
         if (propertyType instanceof Boolean) {
+          System.out.println("Boolean");
           // Get the property's value
           String propertyValue = field.get(obj).toString();
           
           if (map.get(propertyValue) != null) {
+            System.out.println(map.get(propertyValue).getType());
             view.setShape2D(map.get(propertyValue));
           }
         }
@@ -109,6 +113,7 @@ public class Shape2DMap {
    * @param objType
    */
   public void determinePropertyValue(ObjectType objType, View view) {
+    System.out.println("determinePropertyValue(ObjectType objType, View view)");
     if (propertyName != null) {
       for (SlotType slot : objType.getSlot()) {
         if (slot.getProperty().equals(propertyName)) {
@@ -151,6 +156,7 @@ public class Shape2DMap {
    * @param objType
    */
   public void determinePropertyValue(ObjType objType, View view) {
+    System.out.println("determinePropertyValue(ObjType objType, View view)");
     if (propertyName != null) {
       for (SlotType slot : objType.getSlot()) {
         if (slot.getProperty().equals(propertyName)) {
@@ -193,6 +199,7 @@ public class Shape2DMap {
    * @param agtType
    */
   public void determinePropertyValue(AgtType agtType, View view) {
+    System.out.println("determinePropertyValue(AgtType agtType, View view)");
     if (propertyName != null) {
       for (SlotType slot : agtType.getSlot()) {
         if (slot.getProperty().equals(propertyName)) {
@@ -235,6 +242,7 @@ public class Shape2DMap {
    * @param phy
    */
   public void determineShape(Physical phy, View view) {
+    System.out.println("determineShape(Physical phy, View view)");
     if (propertyName != null) {
       String propertyValue = null;
 

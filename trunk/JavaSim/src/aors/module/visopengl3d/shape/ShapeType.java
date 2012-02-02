@@ -9,5 +9,5 @@ package aors.module.visopengl3d.shape;
  */
 public enum ShapeType {
   Cube, Cuboid, Cone, Cylinder, Mesh, Pyramid, RegularTriangularPrism, Sphere, Tetrahedra,
-  Circle, Ellipse, Polygon, Polyline, Rectangle, RegularPolygon, Square, Triangle
+  Arc, Circle, Ellipse, Polygon, Polyline, Rectangle, RegularPolygon, Square, Triangle
 }
