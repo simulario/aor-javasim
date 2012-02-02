@@ -118,7 +118,7 @@ public class PropertyMap {
   }
 
   /**
-   * Performs a equality case wise mapping.
+   * Performs an equality case wise mapping.
    * 
    * @param propertyValue
    */

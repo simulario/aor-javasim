@@ -30,13 +30,13 @@ public class RegularTriangularPrism extends Shape3D {
 		fill.setAlpha(fillOpacity);
 		
 		// Get a denominator for the display list
-	    displayList = gl.glGenLists(1);
+    displayList = gl.glGenLists(1);
 
-	    // Create the display list
-	    gl.glNewList(displayList, GL2.GL_COMPILE);
-	        
-	    // Don't draw anything if the dimensions are too small
-	    if (width > 0 && height > 0 && depth > 0) {
+    // Create the display list
+    gl.glNewList(displayList, GL2.GL_COMPILE);
+        
+    // Don't draw anything if the dimensions are too small
+    if (width > 0 && height > 0 && depth > 0) {
 	    	
 	      // half width of the regular triangular prism
 		  double halfWidth = width/2;

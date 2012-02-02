@@ -23,7 +23,7 @@ public class Square extends Shape2D {
   
   @Override
   public void generateDisplayList(GL2 gl, GLU glu) {
-    
+    System.out.println("generateDisplayList");
     double objectHeight = getObjectHeight();
     double depth = width;
     
@@ -59,6 +59,38 @@ public class Square extends Shape2D {
         {halfWidth, halfHeight, -halfDepth},  // Top back right
         {-halfWidth, halfHeight, -halfDepth}  // Top back left
       };
+      
+      gl.glPushMatrix();
+      
+      switch(positioning) {
+        case LeftBottom:
+          gl.glTranslated(halfWidth, 0, -halfDepth);
+          break;
+        case LeftCenter:
+          gl.glTranslated(halfWidth, 0, 0);
+          break;
+        case LeftTop:
+          gl.glTranslated(halfWidth, 0, halfDepth);
+          break;
+        case CenterBottom:
+          gl.glTranslated(0, 0, -halfDepth);
+          break;
+        case CenterCenter:
+          gl.glTranslated(0, 0, 0);
+          break;
+        case CenterTop:
+          gl.glTranslated(0, 0, halfDepth);
+          break;
+        case RightBottom:
+          gl.glTranslated(-halfWidth, 0, -halfDepth);
+          break;
+        case RightCenter:
+          gl.glTranslated(-halfWidth, 0, 0);
+          break;
+        case RightTop:
+          gl.glTranslated(-halfWidth, 0, halfDepth);
+          break;
+      }
         
       // Check if the cuboid will be rendered with a texture applied to it
       if (texture != null) {
@@ -74,7 +106,7 @@ public class Square extends Shape2D {
         // Enable texture support
         texture.bind();
         texture.enable();
-          
+        
         // draw the six faces of the cuboid as rectangles with texture coordinates
         gl.glBegin(GL2.GL_QUADS);
           
@@ -122,7 +154,7 @@ public class Square extends Shape2D {
         gl.glTexCoord2d(tc.left(), tc.top()); gl.glVertex3dv(vertices[5], 0);
         
         gl.glEnd();
-
+        
         // Disable texture support
         texture.disable();
         
@@ -178,6 +210,8 @@ public class Square extends Shape2D {
           
       }
     }
+    
+    gl.glPopMatrix();
     
     gl.glEndList();
     

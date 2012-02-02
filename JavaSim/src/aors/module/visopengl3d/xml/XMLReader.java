@@ -13,10 +13,12 @@ import org.w3c.dom.Node;
 import org.w3c.dom.NodeList;
 
 import aors.GeneralSpaceModel.SpaceType;
+import aors.module.visopengl3d.shape.Arc;
 import aors.module.visopengl3d.shape.Circle;
 import aors.module.visopengl3d.shape.Ellipse;
 import aors.module.visopengl3d.shape.Positioning;
 import aors.module.visopengl3d.shape.Rectangle;
+import aors.module.visopengl3d.shape.RegularPolygon;
 import aors.module.visopengl3d.shape.Shape2D;
 import aors.module.visopengl3d.shape.Square;
 import aors.module.visopengl3d.shape.Triangle;
@@ -1203,10 +1205,16 @@ public class XMLReader {
       }
 
       // Found "RegularPolygon" node
-      //else if (childNodes.item(i).getNodeName().equals(Shape2D.REGULAR_POLYGON)) {
+      else if (childNodes.item(i).getNodeName().equals(Shape2D.REGULAR_POLYGON)) {
         // Read all data from "RegularPolygon" node
-      //  shape = readRegularPolygon(childNodes.item(i));
-      //}
+        shape = readRegularPolygon(childNodes.item(i));
+      }
+      
+      // Found "Arc" node
+      else if (childNodes.item(i).getNodeName().equals(Shape2D.ARC)) {
+        // Read all data from "Arc" node
+        shape = readArc(childNodes.item(i));
+      }
 
       // Found "Polygon" node
       //else if (childNodes.item(i).getNodeName().equals(Shape2D.POLYGON)) {
@@ -1269,10 +1277,16 @@ public class XMLReader {
       }
 
       // Found "RegularPolygon" node
-      //else if (childNodes.item(j).getNodeName().equals(Shape2D.REGULAR_POLYGON)) {
+      else if (childNodes.item(j).getNodeName().equals(Shape2D.REGULAR_POLYGON)) {
         // Read all data from "RegularPolygon" node
-      //  shape = readRegularPolygon(childNodes.item(j));
-      //}
+        shape = readRegularPolygon(childNodes.item(j));
+      }
+      
+      // Found "Arc" node
+      else if (childNodes.item(j).getNodeName().equals(Shape2D.ARC)) {
+        // Read all data from "Arc" node
+        shape = readArc(childNodes.item(j));
+      }
 
       // Found "Polygon" node
       //else if (childNodes.item(j).getNodeName().equals(Shape2D.POLYGON)) {
@@ -1585,10 +1599,52 @@ public class XMLReader {
           shape.setHeight(Double.valueOf(value) * 2);
         }
       }
+      
+      /*else if (name.equals(Shape2D.DIAMETER)) {
+        // Check if the value is relative or absolute
+        if (value.contains("%")) {
+          shape
+              .setWidth(Double.valueOf(value.substring(0, value.length() - 1)));
+          shape.setRelativeWidth(Double.valueOf(value.substring(0, value
+              .length() - 1)));
+          shape.setWidthRelative(true);
+        } else if (value.contains("px")) {
+          shape
+              .setWidth(Double.valueOf(value.substring(0, value.length() - 2)));
+        } else {
+          double sideLength = 2 * (Double.valueOf(value) / 2) * Math.sin(Math.PI / numberOfPoints);
+          shape.setWidth(Double.valueOf(value));
+        }
+      }*/
+      
+      else if (name.equals(Shape2D.SIDE_LENGTH)) {
+        // Check if the value is relative or absolute
+        if (value.contains("%")) {
+          shape
+              .setWidth(Double.valueOf(value.substring(0, value.length() - 1)));
+          shape.setRelativeWidth(Double.valueOf(value.substring(0, value
+              .length() - 1)));
+          shape.setWidthRelative(true);
+        } else if (value.contains("px")) {
+          shape
+              .setWidth(Double.valueOf(value.substring(0, value.length() - 2)));
+        } else {
+          shape.setWidth(Double.valueOf(value));
+        }
+      }
 
       else if (name.equals(Shape2D.NUMBER_OF_POINTS)) {
         shape.setNumberOfPoints(Double.valueOf(value));
       }
+      
+      else if (name.equals(Shape2D.ANGLE))
+        shape.setAngle(Double.valueOf(value));
+      
+      else if (name.equals(Shape2D.START_ANGLE))
+        shape.setStartAngle(Double.valueOf(value)); 
+      
+      else if (name.equals(Shape2D.END_ANGLE))
+        shape.setEndAngle(Double.valueOf(value)); 
 
       else if (name.equals(Shape2D.FILL_RGB) && !fillSet) {
         shape.setFill(new Color(value));
@@ -1827,6 +1883,36 @@ public class XMLReader {
     readShapeAttributes(node, ellipse);
 
     return ellipse;
+  }
+  
+  /**
+   * Reads all data from a "RegularPolygon" node.
+   * 
+   * @param node
+   */
+  private Shape2D readRegularPolygon(Node node) {
+    // Create a new RegularPolygon instance
+    RegularPolygon regPoly = new RegularPolygon();
+
+    // Get shape attributes
+    readShapeAttributes(node, regPoly);
+
+    return regPoly;
+  }
+  
+  /**
+   * Reads all data from an "Arc" node.
+   * 
+   * @param node
+   */
+  private Shape2D readArc(Node node) {
+    // Create a new Rectangle instance
+    Arc arc = new Arc();
+
+    // Get shape attributes
+    readShapeAttributes(node, arc);
+
+    return arc;
   }
   
   /**
@@ -2380,7 +2466,7 @@ public class XMLReader {
   private Shape2DMap readShape2DMap(Node node) {
     Shape2DMap s2dm = new Shape2DMap();
 
-    // Retrieve all attributes of the "Shape2dVisualizationMap" or "PhysicalShape2DMap"
+    // Retrieve all attributes of the "Shape2dVisualizationMap" or "PhysicalShape2DVisualizationMap"
     // node
     NamedNodeMap attributes = node.getAttributes();
 
@@ -2394,7 +2480,7 @@ public class XMLReader {
       }
     }
 
-    // Retrieve child nodes the "Shape2dVisualizationMap" or "PhysicalShape2DMap" node
+    // Retrieve child nodes of the "Shape2dVisualizationMap" or "PhysicalShape2DVisualizationMap" node
     NodeList childNodes = node.getChildNodes();
 
     for (int i = 0; i < childNodes.getLength(); i++) {

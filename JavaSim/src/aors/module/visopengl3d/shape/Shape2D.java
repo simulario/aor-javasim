@@ -13,6 +13,7 @@ import aors.logger.model.ObjectType;
 import aors.logger.model.SlotType;
 import aors.model.envsim.Objekt;
 import aors.model.envsim.Physical;
+import aors.module.visopengl3d.utility.TextureLoader;
 import aors.module.visopengl3d.space.view.PropertyMap;
 import aors.module.visopengl3d.space.view.SpaceView;
 import aors.module.visopengl3d.utility.Color;
@@ -43,6 +44,7 @@ public abstract class Shape2D implements Cloneable {
 	public static final String REGULAR_POLYGON = "RegularPolygon";
 	public static final String POLYGON = "Polygon";
 	public static final String POLYLINE = "Polyline";
+	public static final String ARC = "Arc";
 
 	// String constants for shape attributes
 	public static final String FILL = "fill";
@@ -67,6 +69,13 @@ public abstract class Shape2D implements Cloneable {
 	public static final String RX = "rx";
 	public static final String RY = "ry";
 	public static final String POINTS = "points";
+	public static final String DIAMETER = "diameter";
+	public static final String SIDE_LENGTH = "sideLength";
+	public static final String ANGLE = "angle";
+	public static final String START_ANGLE = "startAngle";
+	public static final String END_ANGLE = "endAngle";
+	public static final String HORIZONTAL_FLIP = "horizontalFlip";
+	public static final String ROT = "rot";
 
 	// Shape type
 	protected ShapeType type;
@@ -96,6 +105,11 @@ public abstract class Shape2D implements Cloneable {
 
 	// Number of points for regular polygons
 	protected double numberOfPoints = 3;
+	
+	protected double angle = 360;
+	protected double startAngle = 0;
+	protected double endAngle = 360;
+	protected boolean useEndAngle = false;
 
 	// Colors
 	protected Color fill = Color.BLACK;
@@ -159,6 +173,24 @@ public abstract class Shape2D implements Cloneable {
     v[0] /= length;
     v[1] /= length;
     v[2] /= length;
+  }
+  
+  public double[] crossProduct(double[] vector1, double[] vector2) {
+    double[] crossProduct = {
+      vector1[1]*vector2[2] - vector1[2]*vector2[1],
+      vector1[2]*vector2[0] - vector1[0]*vector2[2],
+      vector1[0]*vector2[1] - vector1[1]*vector2[0]
+    };
+    return crossProduct;
+  }
+  
+  public double[] subtractVectors(double[] vector1, double[] vector2) {
+    double[] result = {
+      vector1[0] - vector2[0],
+      vector1[1] - vector2[1],
+      vector1[2] - vector2[2],
+    }; 
+    return result;
   }
 	
 	/**
@@ -316,7 +348,7 @@ public abstract class Shape2D implements Cloneable {
 				if (propertyMap.getPropertyName().equals("x"))
 					updateVisualProperty(propertyMap.getVisualPropertyName(), propertyMap
 							.performMapping(phy.getX()));
-
+				
 				else if (propertyMap.getPropertyName().equals("y"))
 					updateVisualProperty(propertyMap.getVisualPropertyName(), propertyMap
 							.performMapping(phy.getY()));
@@ -556,6 +588,71 @@ public abstract class Shape2D implements Cloneable {
 				}
 				recompile = true;
 			}
+			
+			else if (shapeProperty.equals(TEXTURE)) {
+			  if(value != textureFilename) {
+          textureFilename = value;
+          texture = TextureLoader.load(value);
+          recompile = true;
+			  }
+      }
+			
+			else if (shapeProperty.equals(NUMBER_OF_POINTS)) {
+			  if(Double.valueOf(value) != numberOfPoints) {
+			    numberOfPoints = Double.valueOf(value);
+			    recompile = true;
+			  }
+      }
+			
+			/*else if (shapeProperty.equals(ANGLE)) {
+        if(Double.valueOf(value) != angle) {
+          angle = Double.valueOf(value);
+          recompile = true;
+        }
+      }
+			
+			else if (shapeProperty.equals(START_ANGLE)) {
+        if(Double.valueOf(value) != startAngle) {
+          startAngle = Double.valueOf(value);
+          recompile = true;
+        }
+      }
+			
+			else if (shapeProperty.equals(END_ANGLE)) {
+        if(Double.valueOf(value) != endAngle) {
+          endAngle = Double.valueOf(value);
+          recompile = true;
+        }
+      }
+			
+			else if (shapeProperty.equals(DIAMETER)) {
+			  double sideLength = 2 * (Double.valueOf(value) / 2) * Math.sin(Math.PI / numberOfPoints);
+        if(sideLength != width) {
+          width = sideLength;
+          recompile = true;
+        }
+      }
+			
+			else if (shapeProperty.equals(SIDE_LENGTH)) {
+        if(Double.valueOf(value) != width) {
+          width = Double.valueOf(value);
+          recompile = true;
+        }
+      }
+      
+      else if (shapeProperty.equals(HORIZONTAL_FLIP)) {
+        if(Boolean.valueOf(value) != horizontalFlip) {
+          horizontalFlip = Boolean.valueOf(value);
+          recompile = true;
+        }
+      }
+      
+      else if (shapeProperty.equals(ROT)) {
+        if(Double.valueOf(value) != rot) {
+          rot = Double.valueOf(value);
+          recompile = true;
+        }
+      }*/
 		}
 	}
 
@@ -818,4 +915,29 @@ public abstract class Shape2D implements Cloneable {
 	public double getObjectHeight() {
 	  return SpaceView.getObjectHeight();
 	}
+	
+	public double getAngle() {
+    return angle;
+  }
+
+  public void setAngle(double angle) {
+    this.angle = angle;
+  }
+	
+	public double getStartAngle() {
+    return startAngle;
+  }
+
+  public void setStartAngle(double startAngle) {
+    this.startAngle = startAngle;
+  }
+  
+  public double getEndAngle() {
+    return endAngle;
+  }
+
+  public void setEndAngle(double endAngle) {
+    this.endAngle = endAngle;
+    this.useEndAngle = true;
+  }
 }
