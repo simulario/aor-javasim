@@ -1,0 +1,448 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<?xml-stylesheet type="text/xsl" href="prettyprint.xsl"?>
+
+<SimulationScenario version="0.9" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+    xsi:schemaLocation="http://aor-simulation.org ../../../AORSL/AORSL_0-9.xsd"
+    xmlns="http://aor-simulation.org" xmlns:aors="http://aor-simulation.org"
+    xmlns:dc="http://purl.org/dc/elements/1.1/" scenarioName="University_OrganizationVersion"
+    scenarioTitle="An example of how the Universty works"
+    simulationManagerDirectory="../../..">
+    
+    <SimulationParameters simulationSteps="100" timeUnit="h" stepDuration="1"/>
+    <SimulationModel modelName="University_OrganizationVersion" modelTitle="An example of how the Universty works">
+        <documentation>
+           <!-- <description>University Organization</description>-->
+            <dc:created>20111114</dc:created>
+            <dc:creator>Duca Bogdan</dc:creator>
+            <dc:contributor>Oana Nicolae</dc:contributor>
+        </documentation>
+                
+        <EntityTypes>
+            <ExogenousEventType name="CreateStudyProgram"/>
+            <CausedEventType name="StudyProgramEnrollment"/>
+            <CausedEventType name="CreateCourseOffering"/>
+            <CausedEventType name="CourseEnrollment"/>
+			<CausedEventType name="Monday">
+                <Attribute type="Integer"  name="NrOfDaysLeft"/>
+           </CausedEventType>
+            <CausedEventType name="Tuesday">
+                <Attribute type="Integer"  name="NrOfDaysLeft"/>
+           </CausedEventType>
+            <CausedEventType name="Wednesday">
+                <Attribute type="Integer"  name="NrOfDaysLeft"/>
+           </CausedEventType>
+            <CausedEventType name="Thursday">
+                <Attribute type="Integer"  name="NrOfDaysLeft"/>
+           </CausedEventType>
+            <CausedEventType name="Friday">
+                <Attribute type="Integer"  name="NrOfDaysLeft"/>
+           </CausedEventType>
+           <CausedEventType name="StartOfExamination"/>
+           <CausedEventType name="EndOfExamination"/>
+				
+            <!-- =================================================== 
+                Defining the objects. -->
+            <!-- =================================================== -->
+            
+            <ObjectType name="Course">
+                <!-- =================================================== -->
+                <Attribute type="String" name="name" />
+                <Attribute type="String" name="description" />
+                <Attribute type="String" name="language" />
+                <Attribute type="Integer" name="maxNrOfStudents" />
+                <ReferenceProperty name="prerequisites" type="Course" lowerMultiplicity="0" upperMultiplicity="unbounded"/>
+                <ReferenceProperty name="studyPrograms" type="StudyProgram" lowerMultiplicity="1" upperMultiplicity="unbounded"/>
+            </ObjectType>
+            <!-- =================================================== -->
+            <ObjectType name="CourseOffering" superType="Course">
+                <!-- =================================================== -->
+                <Attribute type="String" name="semester"/>
+                <Attribute type="String" name="startDate"/>
+                <Attribute type="String" name="endDate"/>
+                <Attribute type="String" name="day"/>
+                <ReferenceProperty name="exams" type="Exam" lowerMultiplicity="1" upperMultiplicity="2"/>
+                <ReferenceProperty name="teachers" type="Teacher" lowerMultiplicity="1" upperMultiplicity="unbounded"/>
+                <ReferenceProperty name="students" type="Student" lowerMultiplicity="0" upperMultiplicity="unbounded"/>
+            </ObjectType>
+         
+         
+            <!-- =================================================== -->
+            <ObjectType name="Exam">
+                <Attribute type="String" name="date"/>
+                <ReferenceProperty name="examsParticipations" type="ExamParticipation" lowerMultiplicity="1" upperMultiplicity="unbounded"/>
+             </ObjectType>
+            <!-- =================================================== -->
+            <ObjectType name="ExamParticipation">
+                <!-- =================================================== -->
+                <Attribute type="Integer" name="Integer"/>
+                <ReferenceProperty name="exams" type="Exam" lowerMultiplicity="1" upperMultiplicity="1"/>
+                <ReferenceProperty name="students" type="Student" lowerMultiplicity="0" upperMultiplicity="unbounded"/>
+            </ObjectType>   
+            <!-- =================================================== -->
+            <ObjectType name="StudyProgram">
+                <!-- =================================================== -->
+                <Attribute type="String" name="name"/>
+                <Attribute type="String" name="description"/>
+                <ReferenceProperty name="students" type="Student" lowerMultiplicity="0" upperMultiplicity="unbounded"/>
+            </ObjectType>            
+            
+            <!-- =================================================== 
+                Here we introduce the people with different roles.
+                =================================================== -->
+            <!-- =================================================== -->
+          
+            <AgentType name="Person">
+                <!-- =================================================== -->
+                <Attribute type="String" name="firstName" />
+                <Attribute type="String" name="lastName" />
+                <Attribute type="String" name="image"/>
+            </AgentType>
+            <!-- =================================================== -->
+            <AgentType name="Student" superType="Person">
+                <!-- =================================================== -->
+                <Attribute type="Integer" name="studentID" />
+                <Attribute type="String" name="degree" />
+                <Attribute type="String" name="fieldOfStudy" />
+                <Attribute type="String" name="semesterOfStudy" />
+                <ReferenceProperty name="enrolledCourse" type="CourseOffering" lowerMultiplicity="0" upperMultiplicity="unbounded"/>
+                <ReferenceProperty name="studyPrograms" type="StudyProgram" lowerMultiplicity="0" upperMultiplicity="unbounded"/>
+                <ReferenceProperty name="examsParticipations" type="ExamParticipation" lowerMultiplicity="1" upperMultiplicity="unbounded"/>
+                <!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->
+                <ReactionRule name="StudyProgramEnrollmentRule" agentVariable="stud">
+                    <WHEN eventType="StudyProgramEnrollment"/>
+				</ReactionRule>
+                <!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->
+                <ReactionRule name="CourseEnrollmentRule" agentVariable="stud">
+                    <WHEN eventType="CourseEnrollment" eventVariable="evt"/>
+				</ReactionRule>
+                
+            </AgentType>
+            <!-- =================================================== -->
+            <AgentType name="Employee" superType="Person" >
+                <!-- =================================================== -->
+                <Attribute type="String" name="jobTitle"/>
+            </AgentType>
+            <!-- =================================================== -->
+            <AgentType name="Teacher" superType="Employee">
+                <!-- =================================================== -->
+                <ReferenceProperty name="courses" type="CourseOffering" lowerMultiplicity="1" upperMultiplicity="unbounded"/>
+            </AgentType>
+            
+            <!-- =================================================== 
+                Defining the organization University and the corresponding
+                sub organizations units. -->
+            <!-- =================================================== -->
+            <AgentType name="Organization">
+                <!-- =================================================== -->
+                <Attribute type="String" name="foundationDate" />
+                <ReferenceProperty name="employees" type="Employee" lowerMultiplicity="1" upperMultiplicity="unbounded"/>
+            </AgentType>
+            <!-- =================================================== -->
+            <AgentType name="University" superType="Organization">
+                <!-- =================================================== -->
+                <ReferenceProperty name="offeredStudyProgram" type="StudyProgram" lowerMultiplicity="1" upperMultiplicity="unbounded"/>
+            </AgentType>
+       </EntityTypes>
+        <EnvironmentRules>
+            <!-- ======================================================= -->
+            <EnvironmentRule name="CreateStudyProgramRule">
+                <!-- ======================================================= -->
+                <documentation>
+                    <description>It simulates the preparation before the semester starts. A new object StudyProgram is created
+                                 and added to University Agent. </description>
+                </documentation>
+                <!-- =================================================== -->
+                <WHEN eventType="CreateStudyProgram"/>
+                <DO>
+                    <SCHEDULE-EVT>
+                        <CausedEventExpr eventType="CreateCourseOffering">
+                            <Delay>
+                                <ValueExpr language="Java">1</ValueExpr>
+                            </Delay>
+                        </CausedEventExpr>
+                        <CausedEventExpr eventType="StudyProgramEnrollment">
+                            <Delay>
+                                <ValueExpr language="Java">1</ValueExpr>
+							</Delay>
+						</CausedEventExpr>
+                    </SCHEDULE-EVT>
+                </DO>
+            </EnvironmentRule>
+			<!-- ======================================================= -->
+			<EnvironmentRule name="CreateCourseOfferingRule">
+				<!-- ======================================================= -->
+				<documentation>
+					<description></description>
+				</documentation>
+				<!-- =================================================== -->
+				<WHEN eventType="CreateCourseOffering"/>
+				<DO>
+					<SCHEDULE-EVT>
+						<CausedEventExpr eventType="Monday">
+                             <Delay>
+								<ValueExpr language="Java">1</ValueExpr>
+							</Delay>
+                            <Slot property="NrOfDaysLeft" value="13" />
+                        </CausedEventExpr>
+                        <CausedEventExpr eventType="CourseEnrollment">
+                              <Delay>
+                                <ValueExpr language="Java">1</ValueExpr>
+							</Delay>
+						</CausedEventExpr>
+					</SCHEDULE-EVT>
+				</DO>
+			</EnvironmentRule>
+			<!-- ======================================================= -->
+			<EnvironmentRule name="MondayRule">
+				<!-- ======================================================= -->
+				<documentation>
+					<description></description>
+				</documentation>
+				<!-- =================================================== -->
+				<WHEN eventType="Monday"  eventVariable="evt"/>
+        		<DO>
+					<SCHEDULE-EVT>
+						<CausedEventExpr eventType="Tuesday">
+                            <Condition language="Java">(evt.getNrOfDaysLeft()-1)>0</Condition>
+							<Delay>
+								<ValueExpr language="Java">1</ValueExpr>
+							</Delay>
+                            <Slot property="NrOfDaysLeft">
+                                <ValueExpr language="Java">evt.getNrOfDaysLeft()-1</ValueExpr>
+							</Slot>
+						</CausedEventExpr>
+                        <CausedEventExpr eventType="StartOfExamination">
+                            <Condition language="Java">0>=(evt.getNrOfDaysLeft()-1)</Condition>
+                            <Delay> 
+                               <ValueExpr language="Java">1</ValueExpr>
+							</Delay>
+						</CausedEventExpr>
+					</SCHEDULE-EVT>
+				</DO>
+         	</EnvironmentRule>
+            <!-- ======================================================= -->
+			<EnvironmentRule name="TuesdayRule">
+				<!-- ======================================================= -->
+				<documentation>
+					<description></description>
+				</documentation>
+				<!-- =================================================== -->
+				<WHEN eventType="Tuesday" eventVariable="evt"/>
+      			<DO>
+					<SCHEDULE-EVT>
+						<CausedEventExpr eventType="Wednesday">
+                             <Condition language="Java">(evt.getNrOfDaysLeft()-1)>0</Condition>
+							<Delay>
+								<ValueExpr language="Java">1</ValueExpr>
+							</Delay>
+                            <Slot property="NrOfDaysLeft">
+                                <ValueExpr language="Java">evt.getNrOfDaysLeft()-1</ValueExpr>
+							</Slot>
+						</CausedEventExpr>
+                        <CausedEventExpr eventType="StartOfExamination">
+                            <Condition language="Java">0>=(evt.getNrOfDaysLeft()-1)</Condition>
+                            <Delay> 
+                               <ValueExpr language="Java">1</ValueExpr>
+							</Delay>
+						</CausedEventExpr>
+					</SCHEDULE-EVT>
+				</DO>
+               
+			</EnvironmentRule>
+            <!-- ======================================================= -->
+			<EnvironmentRule name="WednesdayRule">
+				<!-- ======================================================= -->
+				<documentation>
+					<description></description>
+				</documentation>
+				<!-- =================================================== -->
+				<WHEN eventType="Wednesday" eventVariable="evt"/>
+
+				<DO>
+					<SCHEDULE-EVT>
+						<CausedEventExpr eventType="Thursday">
+                             <Condition language="Java">(evt.getNrOfDaysLeft()-1)>0</Condition>
+							<Delay>
+								<ValueExpr language="Java">1</ValueExpr>
+							</Delay>
+                            <Slot property="NrOfDaysLeft">
+                                <ValueExpr language="Java">evt.getNrOfDaysLeft()-1</ValueExpr>
+							</Slot>
+						</CausedEventExpr>
+                        <CausedEventExpr eventType="StartOfExamination">
+                            <Condition language="Java">0>=(evt.getNrOfDaysLeft()-1)</Condition>
+                            <Delay> 
+                               <ValueExpr language="Java">1</ValueExpr>
+							</Delay>
+						</CausedEventExpr>
+					</SCHEDULE-EVT>
+				</DO>
+                
+			</EnvironmentRule>
+            <!-- ======================================================= -->
+			<EnvironmentRule name="ThursdayRule">
+				<!-- ======================================================= -->
+				<documentation>
+					<description></description>
+				</documentation>
+				<!-- =================================================== -->
+				<WHEN eventType="Thursday" eventVariable="evt"/>
+    			<DO>
+					<SCHEDULE-EVT>
+						<CausedEventExpr eventType="Friday">
+                             <Condition language="Java">(evt.getNrOfDaysLeft()-1)>0</Condition>
+							<Delay>
+								<ValueExpr language="Java">1</ValueExpr>
+							</Delay>
+                            <Slot property="NrOfDaysLeft">
+                                <ValueExpr language="Java">evt.getNrOfDaysLeft()-1</ValueExpr>
+							</Slot>
+						</CausedEventExpr>
+                        <CausedEventExpr eventType="StartOfExamination">
+                            <Condition language="Java">0>=(evt.getNrOfDaysLeft()-1)</Condition>
+                            <Delay> 
+                               <ValueExpr language="Java">1</ValueExpr>
+							</Delay>
+						</CausedEventExpr>
+					</SCHEDULE-EVT>
+				</DO>
+               
+			</EnvironmentRule>
+                   <!-- ======================================================= -->
+			<EnvironmentRule name="FridayRule">
+				<!-- ======================================================= -->
+				<documentation>
+					<description></description>
+				</documentation>
+				<!-- =================================================== -->
+				<WHEN eventType="Friday" eventVariable="evt"/>
+
+				<DO>
+					<SCHEDULE-EVT>
+						<CausedEventExpr eventType="Monday">
+                             <Condition language="Java">(evt.getNrOfDaysLeft()-3)>0</Condition>
+							<Delay>
+								<ValueExpr language="Java">1</ValueExpr>
+							</Delay>
+                            <Slot property="NrOfDaysLeft">
+                                <ValueExpr language="Java">evt.getNrOfDaysLeft()-3</ValueExpr>
+							</Slot>
+						</CausedEventExpr>
+                        <CausedEventExpr eventType="StartOfExamination">
+                            <Condition language="Java">0 >=(evt.getNrOfDaysLeft()-3)</Condition>
+                            <Delay> 
+                               <ValueExpr language="Java">1</ValueExpr>
+							</Delay>
+						</CausedEventExpr>
+					</SCHEDULE-EVT>
+				</DO>
+               
+			</EnvironmentRule>
+			<!-- ======================================================= -->
+			<EnvironmentRule name="StartOfExaminationRule">
+				<!-- ======================================================= -->
+				<documentation>
+					<description></description>
+				</documentation>
+				<!-- =================================================== -->
+				<WHEN eventType="StartOfExamination"/>
+				<DO>
+					<SCHEDULE-EVT>
+						<CausedEventExpr eventType="EndOfExamination">
+							<Delay>
+								<ValueExpr language="Java">1</ValueExpr>
+							</Delay>
+						</CausedEventExpr>
+					</SCHEDULE-EVT>
+				</DO>
+			</EnvironmentRule>
+					<!-- ======================================================= -->
+			<EnvironmentRule name="EndOfExaminationRule">
+            <!-- ======================================================= -->
+            <documentation>
+                <description></description>
+            </documentation>
+            <!-- =================================================== -->
+            <WHEN eventType="EndOfExamination"/>
+            <DO>
+                <SCHEDULE-EVT>
+                    <CausedEventExpr eventType="Monday">
+                        <Delay>
+                            <ValueExpr language="Java">1</ValueExpr>
+                        </Delay>
+                         <Slot property="NrOfDaysLeft" value="13" />
+                    </CausedEventExpr>
+                </SCHEDULE-EVT>
+            </DO>
+        </EnvironmentRule>
+        </EnvironmentRules>
+        
+    </SimulationModel>
+    <!-- =================================================== -->
+    <InitialState>
+        
+        <ExogenousEvent type="CreateStudyProgram" occurrenceTime="1"/>
+         <!-- =================================================== 
+            Instance of the organization.In our case just one the University... -->
+        <!-- =================================================== -->
+        <Agent type="University" id="1" name="BTU">
+            <Slot property="foundationDate" value="1990"/>
+            <Slot property="employees">
+                <ValueExpr language="Java"><![CDATA[ new ArrayList<Employee>()]]></ValueExpr>
+            </Slot>
+        </Agent>
+        
+        <!-- =================================================== 
+            Instance of students,professor and secretary... -->
+        <!-- =================================================== -->
+        <Agent type="Teacher" name="GerdWagner" id="10">
+            <Slot property="firstName" value="Gerd"/>
+            <Slot property="lastName" value="Wagner"/>
+            <Slot property="image" value="none"/>
+            <Slot property="jobTitle" value="none"/>
+            <Slot property="courses">
+                <ValueExpr language="Java"><![CDATA[ new ArrayList<CourseOffering>()]]></ValueExpr>
+            </Slot>
+        </Agent>
+        <Agent type="Student" name="BogdanDuca" id="20">
+            <Slot property="firstName" value="Bogdan"/>
+            <Slot property="lastName" value="Duca"/>
+            <Slot property="image" value="none"/>
+            <Slot property="studentID" value="1234567"/>
+            <Slot property="degree" value="Bachelor"/>
+            <Slot property="fieldOfStudy" value="ComputerScience"/>
+            <Slot property="semesterOfStudy" value="1"/>
+            <Slot property="enrolledCourse">
+                <ValueExpr language="Java"><![CDATA[ new ArrayList<CourseOffering>()]]></ValueExpr>
+            </Slot>
+			   <Slot property="studyPrograms">
+                <ValueExpr language="Java"><![CDATA[new ArrayList<StudyProgram>()]]></ValueExpr>
+            </Slot>
+            <Slot property="examsParticipations">
+                <ValueExpr language="Java"><![CDATA[new ArrayList<ExamParticipation>()]]></ValueExpr>
+            </Slot>
+         
+        </Agent>
+        
+        <Agent type="Student" name="OanaNicolae" id="21">
+            <Slot property="firstName" value="Oana"/>
+            <Slot property="lastName" value="Nicolae"/>
+            <Slot property="image" value="none"/>
+            <Slot property="studentID" value="7654321"/>
+            <Slot property="degree" value="Master"/>
+            <Slot property="fieldOfStudy" value="ComputerScience"/>
+            <Slot property="semesterOfStudy" value="2"/>
+            <Slot property="enrolledCourse">
+                <ValueExpr language="Java"><![CDATA[ new ArrayList<CourseOffering>()]]></ValueExpr>
+            </Slot>
+			           <Slot property="studyPrograms">
+                <ValueExpr language="Java"><![CDATA[new ArrayList<StudyProgram>()]]></ValueExpr>
+            </Slot>
+            <Slot property="examsParticipations">
+                <ValueExpr language="Java"><![CDATA[new ArrayList<ExamParticipation>()]]></ValueExpr>
+            </Slot>
+ 
+         </Agent>
+    </InitialState>
+    
+    </SimulationScenario>
