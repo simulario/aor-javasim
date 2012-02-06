@@ -69,6 +69,7 @@
         <DataTypes>
             <ComplexDataType name="TradeOffer">
                 <Attribute type="String" name="product"/>
+                <Attribute type="Float" name="quantity"/>
                 <Attribute type="Float" name="price"/>
                 <Attribute type="Boolean" name="buy"/>
                 <Attribute type="Integer" name="bidderIdRef"/>
@@ -337,7 +338,7 @@
                         <UPDATE-AGT>
                             <Call procedure="withdraw" contextObjectVariable="asset">
                                 <Argument parameter="q">
-                                    <ValueExpr language="Java JavaScript">this.getOffer().getQuantity()</ValueExpr>
+                                    <ValueExpr language="Java JavaScript">this.msg.getOffer().getQuantity()</ValueExpr>
                                 </Argument>
                             </Call>
                         </UPDATE-AGT>
@@ -486,7 +487,7 @@
                             </Slot>
                             <Slot property="minN">
                                 <ValueExpr language="Java JavaScript">
-                                    <![CDATA[ this.agt.getAssetByName("Food").getQuantity() < 2 * this.agt.getEatAmount() ? this.agt.getEAT_AMOUNT() : 0]]>
+                                    <![CDATA[ this.agt.getAssetByName("Food").getQuantity() < 2 * this.agt.getEAT_AMOUNT() ? this.agt.getEAT_AMOUNT() : 0]]>
                                 </ValueExpr>
                             </Slot>
                         </UPDATE-AGT>
@@ -501,7 +502,7 @@
                                     setMin(getMinN());
                                     }</ValueExpr>
                                     <ValueExpr language="JavaScript">
-                                        this.agt.CreateOffer("Food, this.agt.getNConsumption(), true, this.agt.getMinN())
+                                        this.agt.createOffer("Food", this.agt.getNConsumption(), true, this.agt.getMinN())
                                     </ValueExpr>
                                 </Slot>
                             </OutMessageEventExpr>
@@ -554,10 +555,993 @@
                    </DO>
                </ReactionRule>
             </AgentType>
-            <!-- ========================================== -->            
+            <!-- ========================================== --> 
+            <AgentType name="BL6Firm" superType="Firm">
+                <documentation>
+                    A BL6Firm is either a farm or a factory.
+                    A firm buys labor from the market, converts this labor into a product and sells the product on the market.
+                </documentation>
+                <Attribute type="String" name="product"/>
+                <Attribute type="Float" name="capacity"/>
+                <Attribute type="Float" name="output"/>
+                <Attribute type="Float" name="wageBudget"/>
+                <Attribute type="Float" name="wage"/>
+                <Attribute type="Float" name="loan"/>
+                <Attribute type="Float" name="revenue"/>
+                <Attribute type="Float" name="profit"/>
+                <Attribute type="Float" name="marginalProfit"/>
+                <Attribute type="Float" name="capitalCost"/>
+                <Attribute type="Float" name="totalCost"/>
+                <Attribute type="Float" name="A"/>
+                <Attribute type="Float" name="beta"/>
+                <Attribute type="Float" name="phi"/>
+                <Attribute type="Float" name="lambda"/>
+                <Attribute type="Float" name="eUtilThreshold"/>
+                <Attribute type="Float" name="rUtilThreshold"/>
+                <Attribute type="Float" name="capitalQty"/>
+                <Attribute type="Float" name="capityVal"/>
+                <Attribute type="Float" name="MC"/>
+                <Attribute type="Boolean" name="first" initialValue="true"/>
+                <!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->
+                <ReactionRule name="buyLabor_Rule" agentVariable="agt">
+                    <documentation>Tries to buy labor from the market</documentation>
+                    <WHEN eventType="InMessageEvent" messageType="Act_msg"/>
+                    <DO>
+                        <SCHEDULE-EVT>
+                            <OutMessageEventExpr messageType="BL6Offer" receiverIdRefs="3">
+                                <Slot property="offer">
+                                    <ValueExpr language="Java">new TradeOffer() {
+                                      setProduct("Labor");
+                                      setQuantity(getWageBudget());
+                                      setBuy(true);
+                                      setBidderIdRef(getId());
+                                      }</ValueExpr>
+                                    <ValueExpr language="JavaScript">
+                                        this.agt.createOffer("Labor", this.agt.getWageBudget(), true)
+                                    </ValueExpr>
+                                </Slot>
+                            </OutMessageEventExpr>
+                        </SCHEDULE-EVT>
+                    </DO>
+                </ReactionRule>
+            </AgentType>
+            <!-- =========================================== -->
+            <AgentType name="BL6Farm" superType="BL6Firm">
+                <documentation>A farm is a firm which produces food.</documentation>
+                <!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->
+                <Function name="updateProduct" resultType="void">
+                    <documentation>Deposits the produced food and withdraw the uses labor</documentation>
+                    <Body language="Java JavaScript"><![CDATA[
+                        if(this.getOutput() > 0) {
+                          this.getAssetByName("Food").deposit(this.getOutput());
+                        }
+                        
+                        this.getAssetByName("Labor").withdraw(this.getAssetByName("Labor").getQuantity());
+                        ]]></Body>
+                </Function>
+                <!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->
+                <ReactionRule name="revenue_Rule">
+                    <documentation>Calculates the revenue of this day</documentation>
+                    <WHEN eventType="InMessageEvent" messageType="MatchingOffer" messageVariable="msg"/>
+                    <IF language="Java"><![CDATA[ !this.msg.getOffer().isBuy() && this.msg.getOffer().getProduct().equals("Food") ]]></IF>
+                    <IF language="JavaScript"><![CDATA[ !this.msg.getOffer().isBuy() && this.msg.getOffer().getProduct() === "Food" ]]></IF>
+                    <THEN>
+                        <UPDATE-AGT>
+                            <Slot property="revenue">
+                                <ValueExpr language="Java JavaScript">this.msg.getOffer().getQuantity() * this.msg.getOffer().getPrice()</ValueExpr>
+                            </Slot>
+                        </UPDATE-AGT>
+                    </THEN>
+                </ReactionRule>
+                <!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->
+                <ReactionRule name="produceFood_Rule" agentVariable="agt">
+                    <documentation>Caclculates the wages for the Laborer and the output of the Farm</documentation>
+                    <WHEN eventType="InMessageEvent" messageType="Act_msg"/>
+                    <DO>
+                        <UPDATE-AGT>
+                            <Slot property="totalCost">
+                                <PropertyValueExpr entityVariable="agt" property="wageBudget"/>
+                            </Slot>
+                            <!-- Capitalcost -->
+                            <Slot property="profit">
+                                <ValueExpr language="Java JavaScript">this.agt.getRevenue() - this.agt.getTotalCost()</ValueExpr>
+                            </Slot>
+                            <Slot property="capacity">
+                                <ValueExpr language="Java JavaScript">this.agt.getA() *  Math.pow(this.agt.getAssetByName("Labor").getQuantity(), this.agt.getBeta()) * Math.pow(30, 1 - this.agt.getBeta())</ValueExpr>
+                            <!-- Capital als Konstante -->
+                            </Slot>
+                            <Slot property="wage">
+                                <ValueExpr language="Java JavaScript">this.agt.getAssetByName("Labor").getQuantity() > 0 ? this.agt.getWageBudget() / this.agt.getAssetByName("Labor").getQuantity() : 0</ValueExpr>
+                            </Slot>
+                        </UPDATE-AGT>
+                    </DO>
+                    <IF language="Java JavaScript">this.agt.getAssetByName("Labor").getQuantity() > 0</IF>
+                    <THEN>
+                        <UPDATE-AGT>
+                            <Slot property="wageBudget">
+                                <ValueExpr language="Java JavaScript">this.agt.isFirst() ? this.agt.getWageBudget() : Math.max(0, this.agt.getWageBudget() + this.agt.getLambda() * (this.agt.getAssetByName("Money").getQuantity() - this.agt.getTotalCost()))</ValueExpr>
+                            </Slot>
+                            <Slot property="MC">
+                                <ValueExpr language="Java JavaScript"><![CDATA[
+                                    this.agt.getWage() / this.agt.getBeta()
+                                    * Math.pow(this.agt.getA(), -1 / this.agt.getBeta())
+                                    * Math.pow(this.agt.getOutput(), 1 / this.agt.getBeta() - 1)
+                                    * Math.pow(30, 1 - 1/this.agt.getBeta())
+                                    ]]></ValueExpr>
+                                <!-- Capital als Konstante -->
+                            </Slot>
+                            <Slot property="marginalProfit">
+                                <ValueExpr language="Java JavaScript">this.agt.getLastFoodPrice() - this.agt.getMC()</ValueExpr>
+                            </Slot>
+                            <Slot property="output">
+                                <ValueExpr language="Java JavaScript">this.agt.getOutput() * (1 + this.agt.getPhi() * this.agt.getMarginalProfit() / this.agt.getLastFoodPrice())</ValueExpr>
+                            </Slot>
+                            <Slot property="output">
+                                <ValueExpr language="Java JavaScript">Math.min(this.agt.getCapacity(), this.agt.getOutput())</ValueExpr>
+                            </Slot>
+                            <Slot property="output">
+                                <ValueExpr language="Java JavaScript">(this.agt.isFirst()) ? 50 : this.agt.getOutput()</ValueExpr>
+                            </Slot>
+                            <Slot property="first" value="false" />
+                            <Call procedure="updateProduct" contextObjectVariable="agt"></Call>
+                        </UPDATE-AGT>
+                    </THEN>
+                </ReactionRule>
+                <!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->
+                <ReactionRule name="sellFood_Rule" agentVariable="agt">
+                    <documentation>Tries to sell food to the market.</documentation>
+                    <WHEN eventType="InMessageEvent" messageType="Act_msg"/>
+                    <IF language="Java JavaScript">getAssetByName("Food").getQuantity() > 0</IF>
+                    <THEN>
+                        <SCHEDULE-EVT>
+                            <OutMessageEventExpr messageType="BL6Offer" receiverIdRefs="2">
+                                <Slot property="offer">
+                                    <ValueExpr language="Java">new TradeOffer() {
+                                      setProduct("Food");
+                                      setQuantity(getAssetByName("Food").getQuantity());
+                                      set
+                                      }</ValueExpr>
+                                    <ValueExpr language="JavaScript">this.agt.createOffer("Food", this.agt.getAssetByName("Food").getQuantity(), false)</ValueExpr>
+                                </Slot>
+                            </OutMessageEventExpr>
+                        </SCHEDULE-EVT>
+                    </THEN>
+                </ReactionRule>                
+            </AgentType>
+            <!-- ================================================ -->
+            <AgentType name="BL6Factory" superType="BL6Firm">
+                <documentation>A factory is a firm which produces utility.</documentation>
+                <!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->
+                <Function name="updateProduct" resultType="void">
+                    <documentation>Deposits the produced utility and withdraw the uses labor</documentation>
+                    <Body language="Java JavaScript"><![CDATA[
+                        if (this.getOutput() > 0){
+                          this.getAssetByName("Utility").deposit(this.getOutput());
+                        }           
+                        this.getAssetByName("Labor").withdraw(this.getAssetByName("Labor").getQuantity());
+                        ]]></Body>
+                </Function>
+                <!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->
+                <ReactionRule name="revenue_Rule">
+                    <documentation>calculates the revenue of this day</documentation>
+                    <WHEN eventType="InMessageEvent" messageType="MatchingOffer" messageVariable="msg"/>
+                    <IF language="Java"><![CDATA[ !this.msg.getOffer().isBuy() && this.msg.getOffer().getProduct().equals("Utility") ]]></IF>
+                    <IF language="JavaScript"><![CDATA[ !this.msg.getOffer().isBuy() && this.msg.getOffer().getProduct() === "Utility" ]]></IF>
+                    <THEN>
+                        <UPDATE-AGT>
+                            <Slot property="revenue">
+                                <ValueExpr language="Java JavaScript">this.msg.getOffer().getQuantity * this.msg.getOffer().getPrice()</ValueExpr>
+                            </Slot>
+                        </UPDATE-AGT>
+                    </THEN>
+                </ReactionRule>
+                <!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->
+                <ReactionRule name="produceUtility_Rule" agentVariable="agt">
+                    <documentation>Calculates the wages for the Laborers and the output of the Factory</documentation>
+                    <WHEN eventType="InMessageEvent" messageType="Act_msg"/>
+                    <DO>
+                        <UPDATE-AGT>
+                            <Slot property="totalCost">
+                                <PropertyValueExpr entityVariable="agt" property="wageBudget"/>
+                                <!-- Capicalcost -->
+                            </Slot>
+                            <Slot property="profit">
+                                <ValueExpr language="Java JavaScript">this.agt.getRevenue() - this.agt.getTotalCost()</ValueExpr>
+                            </Slot>
+                            <Slot property="capacity">
+                                <ValueExpr language="Java JavaScript">this.agt.getA() * Math.pow(this.agt.getAssetByName("Labor").getQuantity(), this.agt.getBeta()) * Math.pow(30, 1 - this.agt.getBeta())</ValueExpr>
+                            <!-- Capital als Konstante -->
+                            </Slot>
+                            <Slot property="wage">
+                                <ValueExpr language="Java JavaScript">this.agt.getAssetByName("Labor").getQuantity() > 0 ? this.agt.getWageBudget() / this.agt.getAssetByName("Labor").getQuantity() : 0</ValueExpr>
+                            </Slot>
+                        </UPDATE-AGT>
+                    </DO>
+                    <IF language="Java JavaScript">this.agt.getAssetByName("Labor").getQuantity() > 0</IF>
+                    <THEN>
+                        <UPDATE-AGT>
+                            <Slot property="wageBudget">
+                                <ValueExpr language="Java">this.agt.isFirst() ? this.agt.getWageBudget() : Math.max(0, this.agt.getWageBudget() + this.agt.getLambda() * (this.agt.getAssetByName("Money").getQuantity() - this.agt.getTotalCost() ))</ValueExpr>
+                            </Slot>
+                            <Slot property="MC">
+                                <ValueExpr language="Java JavaScript"><![CDATA[
+                                    this.agt.getWage() / this.agt.getBeta()
+                                    * Math.pow(this.agt.getA(), - 1 / this.agt.getBeta())
+                                    * Math.pow(this.agt.getOutput(), 1 / this.agt.getBeta() - 1)
+                                    * Math.pow(30, 1 - 1 / this.agt.getBeta())
+                                    ]]></ValueExpr>
+                                <!-- Capital als Konstante -->
+                            </Slot>
+                            <Slot property="marginalProfit">
+                                <ValueExpr language="Java JavaScript">this.agt.getLastUtilityPrice() - this.agt.getMC()</ValueExpr>
+                            </Slot>
+                            <Slot property="output">
+                                <ValueExpr language="Java JavaScript">this.agt.getOutput() * (1 + this.agt.getPhi() * this.agt.getMarginalProfit() / this.agt.getLastUtilityPrice() )</ValueExpr>
+                            </Slot>
+                            <Slot property="output">
+                                <ValueExpr language="Java JavaScript">Math.min(this.agt.getCapacity(), this.agt.getOutput())</ValueExpr>
+                            </Slot>
+                            <Slot property="output">
+                                <ValueExpr language="Java JavaScript">(this.agt.isFirst()) ? 40 : this.agt.getOutput()</ValueExpr>
+                            </Slot>
+                            <Slot property="first" value="false" />
+                            <Call procedure="updateProduct" contextObjectVariable="agt"></Call>
+                        </UPDATE-AGT>
+                    </THEN>
+                </ReactionRule>
+                <!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->
+                <ReactionRule name="sellUtility_Rule" agentVariable="agt">
+                    <documentation>Tries to sell utility to the market.</documentation>
+                    <WHEN eventType="InMessageEvent" messageType="Act_msg"/>
+                    <IF language="Java JavaScript">getAssetByName("Utility").getQuantity() > 0</IF>
+                    <THEN>
+                        <SCHEDULE-EVT>
+                            <OutMessageEventExpr messageType="BL6Offer" receiverIdRefs="4">
+                                <Slot property="offer">
+                                    <ValueExpr language="Java"><![CDATA[
+                                        new TradeOffer() {
+                                          setProduct("Utility");
+                                          setQuantity(getAssetByName("Utility").getQuantity());
+                                          setBuy(false);
+                                          setBidderIdRef(getId());
+                                        }
+                                        ]]></ValueExpr>
+                                    <ValueExpr language="JavaScript">this.agt.createOffer("Utility", this.agt.getAssetByName("Utility").getQuantity(), false)</ValueExpr>
+                                </Slot>
+                            </OutMessageEventExpr>
+                        </SCHEDULE-EVT>
+                    </THEN>
+                </ReactionRule>
+            </AgentType> 
+            <!-- ====================================== -->       
+            <AgentType name="Market">
+                <documentation>Collects offers made by Firms and Persons and tries to match buy and sell offers.</documentation>
+                <Attribute type="String" name="commodity"/>
+                <Attribute type="String" name="currency"/>
+                <Attribute type="Float" name="supply"/>
+                <Attribute type="Float" name="demand"/>
+                <Attribute type="Float" name="lastMarketPrice"/>
+                <ComplexDataProperty name="buyOffers" type="TradeOffer" upperMultiplicity="unbounded" />
+                <ComplexDataProperty name="sellOffers" type="TradeOffer" upperMultiplicity="unbounded" />
+                <ComplexDataProperty name="transactions" type="TradeOffer" upperMultiplicity="unbounded" />
+                <!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->
+                <Function name="clear" resultType="void">
+                    <documentation>abstract function</documentation>
+                    <Body language="Java JavaScript"></Body>
+                </Function>
+               <!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->
+               <ReactionRule name="Accept_BL6Offer" agentVariable="m">
+                   <!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->
+                   <documentation>BL6Offers are stored</documentation>
+                   <WHEN eventType="InMessageEvent" messageType="BL6Offer" messageVariable="msg"/>
+                   <IF language="Java JavaScript">this.msg.getOffer().isBuy()</IF>
+                   <THEN>
+                       <UPDATE-AGT>
+                           <MultiValuedSlot property="buyOffers">
+                               <AddLast>
+                                   <ItemExpr language="Java JavaScript">this.msg.getOffer()</ItemExpr>
+                               </AddLast>
+                           </MultiValuedSlot>
+                       </UPDATE-AGT>
+                   </THEN>
+                   <ELSE>
+                       <UPDATE-AGT>
+                           <MultiValuedSlot property="sellOffers">
+                               <AddLast>
+                                   <ItemExpr language="Java JavaScript">this.msg.getOffer()</ItemExpr>
+                               </AddLast>
+                           </MultiValuedSlot>
+                       </UPDATE-AGT>
+                   </ELSE>
+               </ReactionRule>
+               <!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->
+               <ReactionRule name="Clear" agentVariable="m">
+                   <documentation>The market gets cleared</documentation>
+                   <WHEN eventType="InMessageEvent" messageType="ClearMarket"/>
+                   <DO>
+                       <UPDATE-AGT>
+                           <Call procedure="clear" contextObjectVariable="m"></Call>
+                       </UPDATE-AGT>
+                       <SCHEDULE-EVT>
+                           <ReminderEventExpr>
+                               <ReminderMsg language="Java JavaScript">"transactions ready"</ReminderMsg>
+                           </ReminderEventExpr>
+                       </SCHEDULE-EVT>
+                   </DO>
+               </ReactionRule>
+               <!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->
+               <ReactionRule name="Return_TradeOffers" agentVariable="m">
+                   <documentation>Done trades are returned to the persons and firms</documentation>
+                   <WHEN eventType="ReminderEvent" eventVariable="evt"/>
+                   <FOR-ListItemVariable variable="o" listItemType="TradeOffer">
+                       <ListExpr language="Java JavaScript">this.m.getTransactions()</ListExpr>
+                   </FOR-ListItemVariable>
+                   <IF language="Java"><![CDATA[ this.evt.getReminderMsg().equals("transactions ready") ]]></IF>
+                   <IF language="JavaScript"><![CDATA[ this.evt.getReminderMsg() === "transactions ready" ]]></IF>
+                   <THEN>
+                       <SCHEDULE-EVT>
+                           <OutMessageEventExpr messageType="MatchingOffer">
+                               <ReceiverIdRef language="Java JavaScript">this.o.getBidderIdRef()</ReceiverIdRef>
+                               <Slot property="offer">
+                                   <ObjectValueExpr objectVariable="o"/>
+                               </Slot>
+                           </OutMessageEventExpr>
+                       </SCHEDULE-EVT>
+                   </THEN>
+               </ReactionRule>                
+            </AgentType>
+            <!-- ===================================================== -->
+            <AgentType name="BL6Market" superType="Market">
+                <documentation>Superclass for baseline6 markets</documentation>
+            </AgentType>
+            <!-- ====================================================== -->
+            <AgentType name="BL6ConsumerMarket" superType="BL6Market">
+                <documentation>The baseline6 market for food and utility</documentation>
+                <Attribute type="Float" name="zeta" initialValue="0.1"/>
+                <Attribute type="Float" name="initLow"/>
+                <Attribute type="Float" name="initHigh"/>
+                <Attribute type="Boolean" name="first" initialValue="true"/>
+                <!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->
+                <Function name="clear" resultType="void">
+                    <documentation>Calculates the market price and adds the corrensponding buy and selloffers to the transactionlist</documentation>
+                    <Body language="Java"><![CDATA[
+                        getTransactions().clear();
+						setDemand(0);
+						setSupply(0);
+						double low;
+						double high;
+						double supply = 0;
+						double demand = 0;
+						double price = 0;
+						if(isFirst()){
+							setFirst(false);
+							low = getInitLow();
+							high = getInitHigh();
+						} else {
+							low = getLastMarketPrice() * (1 - getZeta());
+							high = getLastMarketPrice() * (1 + getZeta());
+						}
+						for(TradeOffer offer : getSellOffers()){
+							supply +=  offer.getQuantity();
+						}
+						while(true){
+							price = (low + high) / 2;
+							for(TradeOffer offer : getBuyOffers()){
+								if(offer.getProduct().equals("Food")){
+									demand += Math.max(offer.getQuantity() / price, offer.getMin());
+								}else{
+									demand += offer.getQuantity() / price;
+								}
+							}
+							if(Math.abs(demand - supply) < 0.1 || Math.abs(high - low) < 0.01) break;
+							
+							if(demand > supply){
+								low = price;
+							}
+							else{
+								high = price;
+							}
+						}
+						for(TradeOffer offer : getBuyOffers()){
+							offer.setPrice(price);
+						}
+						for(TradeOffer offer : getSellOffers()){
+							offer.setPrice(price);
+						}
+						getTransactions().addAll(getBuyOffers());
+						getTransactions().addAll(getSellOffers());
+						getBuyOffers().clear();
+						getSellOffers().clear();
+						setLastMarketPrice(price);
+						setSupply(supply);
+						setDemand(demand);
+						]]></Body>
+                    <Body language="JavaScript"><![CDATA[
+                        this.getTransactions().clear();
+						this.setDemand(0);
+						this.setSupply(0);
+						var low;
+						var high;
+						var supply = 0;
+						var demand = 0;
+						var price = 0;
+						var buyOffers = this.getBuyOffers();
+						var sellOffers = this.getSellOffers();
+						if(this.isFirst()){
+							this.setFirst(false);
+							low = this.getInitLow();
+							high = this.getInitHigh();
+						} else {
+							low = this.getLastMarketPrice() * (1 - this.getZeta());
+							high = this.getLastMarketPrice() * (1 + this.getZeta());
+						}
+						/*for(var offer in this.getSellOffers()){
+							supply +=  offer.getQuantity();
+						}*/
+						for(var i=0; i < sellOffers.size();i++ ){
+							supply += sellOffers.get(i).getQuantity();
+						}
+						while(true){
+							price = (low + high) / 2;
+							/*for(var offer in this.getBuyOffers()){
+								if(offer.getProduct().equals("Food")){
+									demand += Math.max(offer.getQuantity() / price, offer.getMin());
+								}else{
+									demand += offer.getQuantity() / price;
+								}
+							}*/
+							for(var i=0;i<buyOffers.size();i++){
+								var offer = buyOffers.get(i);
+								if( offer.getProduct() === "Food"){
+									demand += Math.max(offer.getQuantity() / price, offer.getMin());
+								}else{
+									demand += offer.getQuantity() / price;
+								}
+							}
+							if(Math.abs(demand - supply) < 0.1 || Math.abs(high - low) < 0.01) break;
+							
+							if(demand > supply){
+								low = price;
+							}
+							else{
+								high = price;
+							}
+						}
+						/*for(var offer in this.getBuyOffers()){
+							offer.setPrice(price);
+						}
+						for(var offer in this.getSellOffers()){
+							offer.setPrice(price);
+						}*/
+						for(var i=0;i<buyOffers.size();i++){
+							buyOffers.get(i).setPrice(price);
+						}
+						for(var i=0;i<sellOffers.size();i++){
+							sellOffers.get(i).setPrice(price);
+						}
+						this.getTransactions().addAll(this.getBuyOffers());
+						this.getTransactions().addAll(this.getSellOffers());
+						this.getBuyOffers().clear();
+						this.getSellOffers().clear();
+						this.setLastMarketPrice(price);
+						this.setSupply(supply);
+						this.setDemand(demand);
+                        ]]></Body>
+                </Function>
+            </AgentType>
+            <!-- =================================================== -->
+            <AgentType name="BL6LaborMarket" superType="BL6Market">
+                <documentation>The baseline6 market for labor</documentation>
+                <Attribute type="Float" name="totalBudget"/>
+                <!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->
+                <Function name="clear" resultType="void">
+                    <documentation>Calculates the market price and adds the corresponding buy and selloffers to the transactionlist</documentation>
+                    <Body language="Java"><![CDATA[
+						getTransactions().clear();
+						setDemand(0);
+						setSupply(0);
+						java.util.Collections.shuffle( getBuyOffers(), new java.util.Random() );
+						java.util.Collections.shuffle( getSellOffers(), new java.util.Random() );
+						int low = 0;
+						double sum = 0;
+						for (TradeOffer employer : getBuyOffers()) {
+							sum += employer.getQuantity();
+							int high =(int) (Math.min(1, sum / getTotalBudget()) * getSellOffers().size());
+							double wage = employer.getQuantity() / (high - low);
+							for (int i = low; i < high; i++) {
+								sim.model.dataTypes.TradeOffer o = new sim.model.dataTypes.TradeOffer();
+					            o.setProduct("Labor");
+				            	o.setQuantity(1);
+				            	o.setPrice(wage);
+				            	o.setBuy(true);
+				            	o.setBidderIdRef(employer.getBidderIdRef());
+				            	getTransactions().add(o);
+				            	setDemand(getDemand() + 1);
+				            	o = new sim.model.dataTypes.TradeOffer();
+				            	o.setProduct("Labor");
+				            	o.setQuantity(1);
+				            	o.setPrice(wage);
+				            	o.setBuy(false);
+				            	o.setBidderIdRef(getSellOffers().get(i).getBidderIdRef());
+				            	getTransactions().add(o); 
+				            	setSupply(getSupply() + 1);
+				            	setLastMarketPrice(wage);
+							}
+							low = high;
+						}
+						setTotalBudget(0);
+						getBuyOffers().clear();
+						getSellOffers().clear();
+						]]></Body>
+                    <Body language="JavaScript"><![CDATA[
+						this.getTransactions().clear();
+						this.setDemand(0);
+						this.setSupply(0);
+						this.getBuyOffers().sort(function() {return 0.5 - Math.random()});
+						this.getSellOffers().sort(function() {return 0.5 - Math.random()});
+						var low = 0;
+						var sum = 0;
+						for ( var i = 0; i < this.getBuyOffers().size(); i++) {
+							var employer = this.getBuyOffers().get(i);
+							sum += employer.getQuantity();
+							var high = Math.floor(Math.min(1, sum / this.getTotalBudget()) * this.getSellOffers().size());
+							var wage = employer.getQuantity() / (high - low);
+							for (var j = low; j < high; j++) {
+								var o = new sim.model.dataTypes.TradeOffer();
+					            o.setProduct("Labor");
+				            	o.setQuantity(1);
+				            	o.setPrice(wage);
+				            	o.setBuy(true);
+				            	o.setBidderIdRef( employer.getBidderIdRef() );
+				            	this.getTransactions().add(o);
+				            	this.setDemand(this.getDemand() + 1);
+				            	o = new sim.model.dataTypes.TradeOffer();
+				            	o.setProduct("Labor");
+				            	o.setQuantity(1);
+				            	o.setPrice(wage);
+				            	o.setBuy(false);
+				            	o.setBidderIdRef( this.getSellOffers().get(j).getBidderIdRef() );
+				            	this.getTransactions().add(o); 
+				            	this.setSupply(this.getSupply() + 1);
+				            	this.setLastMarketPrice(wage);
+							}
+							low = high;
+						}
+						this.setTotalBudget(0);
+						this.getBuyOffers().clear();
+						this.getSellOffers().clear();
+					]]></Body>
+                </Function>
+                <!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->
+                <ReactionRule name="TotalBudget_Rule" agentVariable="agt">
+                    <!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->
+                    <documentation>Calculates the trandingvolume of the day</documentation>
+                    <WHEN eventType="InMessageEvent" messageType="BL6Offer" messageVariable="msg"/>
+                    <IF language="Java JavaScript">this.msg.getOffer().isBuy()</IF>
+                    <THEN>
+                        <UPDATE-AGT>
+                            <Slot property="totalBudget">
+                                <ValueExpr language="Java JavaScript">this.agt.getTotalBudget() + this.msg.getOffer().getQuantity()</ValueExpr>
+                            </Slot>
+                        </UPDATE-AGT>
+                    </THEN>
+                </ReactionRule>
+            </AgentType>
         </EntityTypes>
-    </SimulationModel>
-    <InitialState>
+        <EnvironmentRules>
+            <EnvironmentRule name="Create_InitialBuyOffers_ER">
+                <documentation>Create initial buyoffers for BL6Labor</documentation>
+                <WHEN eventType="Init"/>
+                <FOR-ObjectVariable variable="m" objectType="BL6LaborMarket" />
+                <FOR-ObjectVariable variable="f" objectType="BL6Firm" />
+                <DO>
+                    <UPDATE-ENV>
+                        <UpdateObject objectVariable="m">
+                            <MultiValuedSlot property="buyOffers">
+                                <AddLast>
+                                    <ItemExpr language="Java"><![CDATA[ new TradeOffer(){
+                                          setProduct("Labor");
+                                          setQuantity(f.getWageBudget());
+                                          setBuy(true);
+                                          setBidderIdRef(f.getId());
+                                          }]]></ItemExpr>
+                                    <ItemExpr language="JavaScript">this.f.createOffer("Labor", this.f.getWageBudget(), true)</ItemExpr>
+                                </AddLast>
+                            </MultiValuedSlot>
+                            <Slot property="totalBudget">
+                                <ValueExpr language="Java JavaScript">this.m.getTotalBudget() + this.f.getWageBudget()</ValueExpr>
+                            </Slot>
+                        </UpdateObject>
+                    </UPDATE-ENV>
+                </DO>
+            </EnvironmentRule>
+            <!-- =================================================== -->
+            <EnvironmentRule name="Create_InitialSellOffers_ER">
+                <documentation>Create initial selloffers for BL6Labor</documentation>
+                <WHEN eventType="Init"/>
+                <FOR-ObjectVariable variable="m" objectType="BL6LaborMarket" />
+                <FOR-ObjectVariable variable="p" objectType="BL6Person" />
+                <DO>
+                    <UPDATE-ENV>
+                        <UpdateObject objectVariable="m">
+                            <MultiValuedSlot property="sellOffers">
+                                <AddLast>
+                                    <ItemExpr language="Java"><![CDATA[ new TradeOffer() {
+                                          setProduct("Labor");
+                                          setQuantity(1);
+                                          setBuy(false);
+                                          setBidderIdRef(p.getId());
+                                          }]]></ItemExpr>
+                                    <ItemExpr language="JavaScript">this.p.createOffer("Labor", 1, false)</ItemExpr>
+                                </AddLast>
+                            </MultiValuedSlot>
+                        </UpdateObject>
+                    </UPDATE-ENV>
+                </DO>
+            </EnvironmentRule>
+            <!-- =================================================== -->
+            <EnvironmentRule name="Initial_Clear_LaborMarket_ER">
+                <documentation>Initially clears the BL6LaborMarket</documentation>
+                <WHEN eventType="Init"/>
+                <FOR-ObjectVariable variable="m" objectType="BL6LaborMarket" />
+                <DO>
+                    <UPDATE-ENV>
+                        <Call procedure="clear" contextObjectVariable="m" />
+                    </UPDATE-ENV>
+                </DO>
+            </EnvironmentRule>
+            <!-- =============================================== -->
+            <EnvironmentRule name="Initial_Send_MatchingOffers_ER">
+                <documentation>Done trades are returned to the persons and firms</documentation>
+                <WHEN eventType="Init"/>
+                <FOR-ObjectVariable variable="m" objectType="BL6LaborMarket" />
+                <FOR-ListItemVariable variable="o" listItemType="TradeOffer">
+                    <ListExpr language="Java JavaScript">this.m.getTransactions()</ListExpr>
+                </FOR-ListItemVariable>
+                <DO>
+                    <SCHEDULE-EVT>
+                        <InMessageEventExpr messageType="MatchingOffer">
+                            <SenderIdRef language="Java JavaScript">this.m.getId()</SenderIdRef>
+                            <ReceiverIdRef language="Java JavaScript">this.o.getBidderIdRef()</ReceiverIdRef>
+                            <Slot property="offer">
+                                <ObjectValueExpr objectVariable="o"/>
+                            </Slot>
+                        </InMessageEventExpr>
+                    </SCHEDULE-EVT>
+                </DO>
+            </EnvironmentRule>
+            <!-- Day -->
+            <EnvironmentRule name="AtStartOfDayEat_ER">
+                <!-- ============================================= -->
+                <documentation>Every person tries to eat. If he can't eat, then dies</documentation>
+                <WHEN eventType="StartOfDay" eventVariable="evt"/>
+                <FOR-ObjectVariable variable="p" objectType="Person" />
+                <IF language="Java JavaScript"><![CDATA[ this.p.getAssetByName("Food").withdraw(this.p.getEAT_AMOUNT()) < this.p.getEAT_AMOUNT() ]]></IF>
+                <THEN>
+                    <UPDATE-ENV>
+                        <DestroyObject>
+                            <ObjectIdRef language="Java JavaScript">this.p.getId()</ObjectIdRef>
+                        </DestroyObject>
+                    </UPDATE-ENV>
+                </THEN>
+            </EnvironmentRule>
+            <!-- =============================================== -->
+            <EnvironmentRule name="StartOfDay_Rule_ER">
+                <documentation>For all markets that exist, the market price of the last day is send to every person and firm</documentation>
+                <WHEN eventType="StartOfDay"/>
+                <FOR-ObjectVariable variable="m" objectType="Market" />
+                <FOR-ObjectVariable variable="e" objectType="EconomicAgent" />
+                <DO>
+                    <SCHEDULE-EVT>
+                        <InMessageEventExpr messageType="StartOfDay_Notification">
+                            <SenderIdRef language="Java JavaScript">this.m.getId()</SenderIdRef>
+                            <ReceiverIdRef language="Java JavaScript">this.e.getId()</ReceiverIdRef>
+                            <Slot property="price">
+                                <PropertyValueExpr entityVariable="m" property="lastMarketPrice"/>
+                            </Slot>
+                            <Slot property="marketType">
+                                <PropertyValueExpr entityVariable="m" property="commodity"/>
+                            </Slot>
+                        </InMessageEventExpr>
+                    </SCHEDULE-EVT>
+                </DO>
+            </EnvironmentRule>
+            <!-- ============================================= -->
+            <EnvironmentRule name="StartWork_ER">
+                <!-- ========================================= -->
+                <documentation>Act_msg is sent to every person and firm, which signals them to being with their work</documentation>
+                <WHEN eventType="StartWork"/>
+                <FOR-ObjectVariable variable="e" objectType="EconomicAgent" />
+                <DO>
+                    <SCHEDULE-EVT>
+                        <InMessageEventExpr messageType="Act_msg" senderIdRef="0">
+                            <ReceiverIdRef language="Java JavaScript">this.e.getId()</ReceiverIdRef>
+                        </InMessageEventExpr>
+                        <!-- Act aufteilen -->
+                    </SCHEDULE-EVT>
+                </DO>
+            </EnvironmentRule>
+            <!-- =========================================== -->
+            <EnvironmentRule name="CloseMarket_ER">
+                <!-- ======================================= -->
+                <documentation>ClearMarket is sent to every market, which ends the trading day.</documentation>
+                <WHEN eventType="CloseMarket"/>
+                <FOR-ObjectVariable variable="m" objectType="Market" />
+                <DO>
+                    <SCHEDULE-EVT>
+                        <InMessageEventExpr messageType="ClearMarket" senderIdRef="0">
+                            <ReceiverIdRef language="Java JavaScript">this.m.getId()</ReceiverIdRef>
+                        </InMessageEventExpr>
+                    </SCHEDULE-EVT>
+                </DO>
+            </EnvironmentRule>
+        </EnvironmentRules>
         
+    </SimulationModel>
+    <!-- ========================== -->
+    <InitialState>
+        <Agent name = "BL6FoodMarket" type="BL6ConsumerMarket" id="2">
+            <Slot property="buyOffers">
+                <ValueExpr language="Java"><![CDATA[ new ArrayList<sim.model.dataTypes.TradeOffer()> ]]></ValueExpr>
+                <ValueExpr language="JavaScript"><![CDATA[ new js.util.ArrayList() ]]></ValueExpr>
+            </Slot>
+            <Slot property="sellOffers">
+                <ValueExpr language="Java"><![CDATA[ new ArrayList<sim.model.dataTypes.TradeOffer()> ]]></ValueExpr>
+                <ValueExpr language="JavaScript"><![CDATA[ new js.util.ArrayList() ]]></ValueExpr>
+            </Slot>
+            <Slot property="transactions">
+                <ValueExpr language="Java"><![CDATA[ new ArrayList<sim.model.dataTypes.TradeOffer()> ]]></ValueExpr>
+                <ValueExpr language="JavaScript"><![CDATA[ new js.util.ArrayList()]]></ValueExpr>
+            </Slot>
+            <Slot property="commodity" value="Food" />
+            <Slot property="currency" value="Money" />
+            <Slot property="initLow" value="0.1" />
+            <Slot property="initHigh" value="5.0" />
+            <Slot property="lastMarketPrice" value="0.2" />
+        </Agent>
+        <Agent type="BL6ConsumerMarket" name="BL6UtilityMarket" id="4">
+            <Slot property="buyOffers">
+                <ValueExpr language="Java"><![CDATA[ new ArrayList<sim.model.dataTypes.TradeOffer()> ]]></ValueExpr>
+                <ValueExpr language="JavaScript"><![CDATA[ new js.util.ArrayList() ]]></ValueExpr>
+            </Slot>
+            <Slot property="sellOffers">
+                <ValueExpr language="Java"><![CDATA[ new ArrayList<sim.mode.dataTypes.TradeOffer()> ]]></ValueExpr>
+                <ValueExpr language="JavaScript"><![CDATA[ new js.util.ArrayList() ]]></ValueExpr>
+            </Slot>
+            <Slot property="transactions">
+                <ValueExpr language="Java"><![CDATA[ new ArrayList<sim.model.dataTypes.TradeOffer()> ]]></ValueExpr>
+                <ValueExpr language="JavaScript"><![CDATA[ new js.util.ArrayList() ]]></ValueExpr>
+            </Slot>
+            <Slot property="commodity" value="Utility" />
+            <Slot property="currency" value="Money" />
+            <Slot property="initLow" value="0.1" />
+            <Slot property="initHigh" value="5.0" />
+            <Slot property="lastMarketPrice" value="1.0" />
+        </Agent>
+        <Agent type="BL6LaborMarket" id="3">
+            <Slot property="commodity" value="Labor" />
+            <Slot property="currency" value="Money" />
+            <Slot property="buyOffers">
+                <ValueExpr language="Java"><![CDATA[ new ArrayList<sim.model.dataTypes.TradeOffer()> ]]></ValueExpr>
+                <ValueExpr language="JavaScript"><![CDATA[ new js.util.ArrayList() ]]></ValueExpr>
+            </Slot>
+            <Slot property="sellOffers">
+                <ValueExpr language="Java"><![CDATA[ new ArrayList<sim.model.dataTyeps.TradeOffer()> ]]></ValueExpr>
+                <ValueExpr language="JavaScript"><![CDATA[ new js.util.ArrayList() ]]></ValueExpr>
+            </Slot>
+            <Slot property="transactions">
+                <ValueExpr language="Java"><![CDATA[ new ArrayList<sim.model.dataTypes.TradeOffer()> ]]></ValueExpr>
+                <ValueExpr language="JavaScript"><![CDATA[ new js.util.ArrayList() ]]></ValueExpr>
+            </Slot>
+            <Slot property="lastMarketPrice" value="0.4" />
+        </Agent>
+        <Agents type="BL6Laborer" rangeStartID="5000" rangeEndID="5449">
+            <Slot property="assets">
+                <ValueExpr language="Java">
+                    <![CDATA[ new ArrayList<aors.util.economics.Quantity>(){
+						{
+							add(new aors.util.economics.ContinuousQuantity(15.0, new aors.util.economics.ContinuousQuantityType("Food", "Stk")));
+							add(new aors.util.economics.ContinuousQuantity(0.0, new aors.util.economics.ContinuousQuantityType("Money", "Stk")));
+							add(new aors.util.economics.ContinuousQuantity(0.0, new aors.util.economics.ContinuousQuantityType("Labor", "Stk")));
+							add(new aors.util.economics.ContinuousQuantity(0.0, new aors.util.economics.ContinuousQuantityType("Utility", "Stk")));
+						}
+				} ]]></ValueExpr>
+                <ValueExpr language="JavaScript"><![CDATA[ 
+					new js.util.ArrayList(new aors.util.economics.ContinuousQuantity(15.0, new aors.util.economics.ContinuousQuantityType("Food", "Stk")), 
+					new aors.util.economics.ContinuousQuantity(100.0, new aors.util.economics.ContinuousQuantityType("Money", "Stk")), 
+					new aors.util.economics.ContinuousQuantity(0.0, new aors.util.economics.ContinuousQuantityType("Labor", "Stk")),
+					new aors.util.economics.ContinuousQuantity(0.0, new aors.util.economics.ContinuousQuantityType("Utility", "Stk")))
+				]]></ValueExpr>
+            </Slot>
+            <Slot property="EAT_AMOUNT" value="1.0" />
+            <Slot property="TARGET_FOOD_STOCK" value="26.0" />
+            <Slot property="savingRate" value="0.9" />
+        </Agents>
+        <Agents type="BL6Farm" rangeStartID="6000" rangeEndID="6009">
+            <Slot property="assets">
+                <ValueExpr language="Java">
+                    <![CDATA[ new ArrayList<aors.util.economics.Quantity>(){
+					        {
+					            add(new aors.util.economics.ContinuousQuantity(0.0, new aors.util.economics.ContinuousQuantityType("Food", "Stk")));
+								add(new aors.util.economics.ContinuousQuantity(100.0, new aors.util.economics.ContinuousQuantityType("Money", "Stk")));
+								add(new aors.util.economics.ContinuousQuantity(0.0, new aors.util.economics.ContinuousQuantityType("Labor", "Stk")));
+					        }
+					    } ]]>
+                </ValueExpr>
+                <ValueExpr language="JavaScript"><![CDATA[ 
+					new js.util.ArrayList(new aors.util.economics.ContinuousQuantity(0.0, new aors.util.economics.ContinuousQuantityType("Food", "Stk")), 
+					new aors.util.economics.ContinuousQuantity(100.0, new aors.util.economics.ContinuousQuantityType("Money", "Stk")), 
+					new aors.util.economics.ContinuousQuantity(0.0, new aors.util.economics.ContinuousQuantityType("Labor", "Stk")))
+				]]></ValueExpr>
+            </Slot>
+            <Slot property="A" value="2"></Slot>
+            <Slot property="beta" value="0.5"></Slot>
+            <Slot property="phi" value="0.5"></Slot>
+            <Slot property="lambda" value="0.2"></Slot>
+            <Slot property="eUrilThreshold" value="0.9"></Slot>
+            <Slot property="rUtilThreshold" value="0.75"></Slot>
+            <Slot property="output" value="60"></Slot>
+            <Slot property="wageBudget" value="100"></Slot>
+            <Slot property="loan" value="1000"></Slot>
+            <Slot property="capitalCost" value="0"></Slot>
+        </Agents>
+        <Agents type="BL6Factory" rangeStartID="7000" rangeEndID="7009">
+            <Slot property="assets">
+                <ValueExpr language="Java">
+                    <![CDATA[ new ArrayList<aors.util.economics.Quantity>(){
+					        {
+								add(new aors.util.economics.ContinuousQuantity(100.0, new aors.util.economics.ContinuousQuantityType("Money", "Stk")));
+								add(new aors.util.economics.ContinuousQuantity(0.0, new aors.util.economics.ContinuousQuantityType("Labor", "Stk")));
+								add(new aors.util.economics.ContinuousQuantity(0.0, new aors.util.economics.ContinuousQuantityType("Utility", "Stk")));
+					        }
+					    } ]]>
+                </ValueExpr>
+                <ValueExpr language="JavaScript"><![CDATA[ 
+					new js.util.ArrayList(new aors.util.economics.ContinuousQuantity(100.0, new aors.util.economics.ContinuousQuantityType("Money", "Stk")), 
+					new aors.util.economics.ContinuousQuantity(0.0, new aors.util.economics.ContinuousQuantityType("Labor", "Stk")),
+					new aors.util.economics.ContinuousQuantity(0.0, new aors.util.economics.ContinuousQuantityType("Utility", "Stk")))
+				]]></ValueExpr>
+            </Slot>
+            <Slot property="A" value="2"></Slot>
+            <Slot property="beta" value="0.5"></Slot>
+            <Slot property="phi" value="0.5"></Slot>
+            <Slot property="lambda" value="0.2"></Slot>
+            <Slot property="eUrilThreshold" value="0.9"></Slot>
+            <Slot property="rUtilThreshold" value="0.75"></Slot>
+            <Slot property="output" value="40"></Slot>
+            <Slot property="wageBudget" value="100"></Slot>
+            <Slot property="loan" value="0"></Slot>
+            <Slot property="capitalCost" value="0"></Slot>
+        </Agents>
+        <ExogenousEvent type="Init" occurrenceTime="1" />        
+        <!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->
+        <ExogenousEvent occurrenceTime="1" type="StartOfDay" />
+        <!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->
+        <ExogenousEvent occurrenceTime="3" type="StartWork" />
+        <!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->
+        <ExogenousEvent occurrenceTime="6" type="CloseMarket" />
     </InitialState>
+    
+    <!-- ============================================= -->
+    <UserInterface supportedLanguages="en">
+        <StatisticsUI>
+            <StatisticsVariableUI variable="PriceFood" comparisonGroup="pricevsfood">
+                <Label>
+                    <Text xml:lang="en">FoodPrice</Text>
+                </Label>
+                <Hint>
+                    <Text xml:lang="en">Average price of the foodmarket</Text>
+                </Hint>
+                <Format decimalPlaces="2">
+                    <Currency>EUR(&#8364;)</Currency>
+                </Format>
+            </StatisticsVariableUI>
+            <StatisticsVariableUI variable="BuyOffersFood" comparisonGroup="pricevsfood">
+                <Label>
+                    <Text xml:lang="en">Food BuyOffers</Text>
+                </Label>
+                <Hint>
+                    <Text xml:lang="en">number of buyoffers for food</Text>
+                </Hint>
+            </StatisticsVariableUI>
+            <StatisticsVariableUI variable="SellOffersFood" comparisonGroup="pricevsfood">
+                <Label>
+                    <Text xml:lang="en">Food SellOffers</Text>
+                </Label>
+                <Hint>
+                    <Text xml:lang="en">number of selloffers for food</Text>
+                </Hint>
+            </StatisticsVariableUI>
+            <StatisticsVariableUI variable="PriceLabor" comparisonGroup="pricevslabor">
+                <Label>
+                    <Text xml:lang="en">LaborPrice</Text>
+                </Label>
+                <Hint>
+                    <Text xml:lang="en">Average price of the labormarket</Text>
+                </Hint>
+                <Format decimalPlaces="2">
+                    <Currency>EUR(&#8364;)</Currency>
+                </Format>
+            </StatisticsVariableUI>
+            <StatisticsVariableUI variable="BuyOffersLabor" comparisonGroup="pricevslabor">
+                <Label>
+                    <Text xml:lang="en">Labor BuyOffers</Text>
+                </Label>
+                <Hint>
+                    <Text xml:lang="en">number of buyoffers for labor</Text>
+                </Hint>
+            </StatisticsVariableUI>
+            <StatisticsVariableUI variable="SellOffersLabor" comparisonGroup="pricevslabor">
+                <Label>
+                    <Text xml:lang="en">Labor SellOffers</Text>
+                </Label>
+                <Hint>
+                    <Text xml:lang="en">number of selloffers for labor</Text>
+                </Hint>
+            </StatisticsVariableUI>
+            <StatisticsVariableUI variable="PriceUtility" comparisonGroup="pricevsutility">
+                <Label>
+                    <Text xml:lang="en">UtilityPrice</Text>
+                </Label>
+                <Hint>
+                    <Text xml:lang="en">Average price of the utilitymarket</Text>
+                </Hint>
+                <Format decimalPlaces="2">
+                    <Currency>EUR(&#8364;)</Currency>
+                </Format>
+            </StatisticsVariableUI>
+            <StatisticsVariableUI variable="BuyOffersUtility" comparisonGroup="pricevsutility">
+                <Label>
+                    <Text xml:lang="en">Utility BuyOffers</Text>
+                </Label>
+                <Hint>
+                    <Text xml:lang="en">number of buyoffers for utility</Text>
+                </Hint>
+            </StatisticsVariableUI>
+            <StatisticsVariableUI variable="SellOffersUtility" comparisonGroup="pricevsutility">
+                <Label>
+                    <Text xml:lang="en">Utility SellOffers</Text>
+                </Label>
+                <Hint>
+                    <Text xml:lang="en">number of selloffers for labor</Text>
+                </Hint>
+            </StatisticsVariableUI>
+        </StatisticsUI>
+        <AnimationUI>
+            <StartPageText>
+                <aors:HtmlText xmlns="http://www.w3.org/1999/xhtml"><p>This is just an experimental<br/>
+                    visualization!</p></aors:HtmlText>
+            </StartPageText>
+            
+            <Views>
+                <ObjectView objectType="Laborer">
+                    <Shape2D y="400">
+                        <Rectangle width="4" height="10" fill="blue">
+                            <ShapePropertyVisualizationMap shapeProperty="x" property="id" mapType="polynomial" a0="-6000" a1="6"/>
+                            <!--
+                                <ShapePropertyVisualizationMap shapeProperty="fillR" property="moneyAmount" mapType="polynomial" a1="1"/>
+                            -->
+                        </Rectangle>
+                    </Shape2D>
+                </ObjectView>
+                <ObjectView objectType="Farm">
+                    <Shape2D y="50">
+                        <Rectangle width="30" positioning="LeftBottom" texture="backgrounds\GreenLeaves.jpg">
+                            <ShapePropertyVisualizationMap shapeProperty="x" property="id" mapType="polynomial" a0="-150000" a1="50"/>
+                            <ShapePropertyVisualizationMap shapeProperty="height" property="amountProduced" mapType="polynomial" a0="20" a1="2"/>
+                        </Rectangle>
+                    </Shape2D>
+                </ObjectView>
+                <ObjectView objectType="Factory">
+                    <Shape2D y="250">
+                        <Rectangle width="40" positioning="LeftBottom" texture="backgrounds\LightgrayMarble.jpg">
+                            <ShapePropertyVisualizationMap shapeProperty="x" property="id" mapType="polynomial" a0="-200000" a1="50"/>
+                            <ShapePropertyVisualizationMap shapeProperty="height" property="amountProduced" mapType="polynomial" a0="20" a1="2"/>
+                        </Rectangle>
+                    </Shape2D>
+                </ObjectView>
+            </Views>
+        </AnimationUI>		
+    </UserInterface>
 </SimulationScenario>
+
