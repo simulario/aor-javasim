@@ -88,8 +88,8 @@
                 <!-- =================================================== -->
                 <Attribute type="String" name="name"/>
                 <Attribute type="String" name="description"/>
-                <ReferenceProperty name="students" type="Student" lowerMultiplicity="0"
-                    upperMultiplicity="unbounded"/>
+                <ReferenceProperty name="students" type="Student" lowerMultiplicity="0" upperMultiplicity="unbounded"/>
+                <ReferenceProperty name="courses" type="Course" lowerMultiplicity="1" upperMultiplicity="unbounded"/>
             </ObjectType>
             <!-- =================================================== 
                 Here we introduce the people with different roles.
@@ -161,7 +161,94 @@
                 </documentation>
                 <!-- =================================================== -->
                 <WHEN eventType="CreateStudyProgram"/>
+                <FOR objectVariable="uni" objectType="University" objectIdRef="1"/>
+                <FOR objectVariable="stdPrg1" objectType="StudyProgram" objectIdRef="40"/>
+                <FOR objectVariable="stdPrg2" objectType="StudyProgram" objectIdRef="41"/>
+                <FOR objectVariable="crs01" objectType="Course" objectIdRef="31"/>
+                <FOR objectVariable="crs02" objectType="Course" objectIdRef="32"/>
+                <FOR objectVariable="crs03" objectType="Course" objectIdRef="33"/>
+                <FOR objectVariable="crs04" objectType="Course" objectIdRef="34"/>
+                <FOR objectVariable="crs05" objectType="Course" objectIdRef="35"/>
+                <FOR objectVariable="crs06" objectType="Course" objectIdRef="36"/>
+                <FOR objectVariable="crs07" objectType="Course" objectIdRef="37"/>
+                <FOR objectVariable="crs08" objectType="Course" objectIdRef="38"/>
+                <FOR objectVariable="crs09" objectType="Course" objectIdRef="39"/>
+                <FOR objectVariable="crs10" objectType="Course" objectIdRef="30"/>
                 <DO>
+                    <UPDATE-ENV>
+                        <UpdateObject objectVariable="stdPrg1">
+                            <MultiValuedSlot property="courses">
+                                <AddLast itemVariable="crs01"/>
+                            </MultiValuedSlot>
+                            <MultiValuedSlot property="courses">
+                                <AddLast itemVariable="crs02"/>
+                            </MultiValuedSlot>
+                            <MultiValuedSlot property="courses">
+                                <AddLast itemVariable="crs03"/>
+                            </MultiValuedSlot>
+                            <MultiValuedSlot property="courses">
+                                <AddLast itemVariable="crs04"/>
+                            </MultiValuedSlot>
+                            <MultiValuedSlot property="courses">
+                                <AddLast itemVariable="crs05"/>
+                            </MultiValuedSlot>
+                            <MultiValuedSlot property="courses">
+                                <AddLast itemVariable="crs06"/>
+                            </MultiValuedSlot>
+                            <MultiValuedSlot property="courses">
+                                <AddLast itemVariable="crs07"/>
+                            </MultiValuedSlot>
+                            <MultiValuedSlot property="courses">
+                                <AddLast itemVariable="crs08"/>
+                            </MultiValuedSlot>                  
+                            <MultiValuedSlot property="courses">                            
+                                <AddLast itemVariable="crs09"/>
+                            </MultiValuedSlot>
+                            <MultiValuedSlot property="courses">
+                                <AddLast itemVariable="crs10"/>
+                            </MultiValuedSlot>
+                        </UpdateObject>
+                        <UpdateObject objectVariable="stdPrg2">
+                            <MultiValuedSlot property="courses">
+                                <AddLast itemVariable="crs01"/>
+                            </MultiValuedSlot>
+                            <MultiValuedSlot property="courses">
+                                <AddLast itemVariable="crs02"/>
+                            </MultiValuedSlot>
+                            <MultiValuedSlot property="courses">
+                                <AddLast itemVariable="crs03"/>
+                            </MultiValuedSlot>
+                            <MultiValuedSlot property="courses">
+                                <AddLast itemVariable="crs04"/>
+                            </MultiValuedSlot>
+                            <MultiValuedSlot property="courses">
+                                <AddLast itemVariable="crs05"/>
+                            </MultiValuedSlot>
+                            <MultiValuedSlot property="courses">
+                                <AddLast itemVariable="crs06"/>
+                            </MultiValuedSlot>
+                            <MultiValuedSlot property="courses">
+                                <AddLast itemVariable="crs07"/>
+                            </MultiValuedSlot>
+                            <MultiValuedSlot property="courses">
+                                <AddLast itemVariable="crs08"/>
+                            </MultiValuedSlot>                  
+                            <MultiValuedSlot property="courses">                            
+                                <AddLast itemVariable="crs09"/>
+                            </MultiValuedSlot>
+                            <MultiValuedSlot property="courses">
+                                <AddLast itemVariable="crs10"/>
+                            </MultiValuedSlot>
+                        </UpdateObject>
+                        <UpdateObject objectVariable="uni">
+                            <MultiValuedSlot property="offeredStudyProgram">
+                                <AddLast itemVariable="stdPrg1"/>
+                            </MultiValuedSlot>
+                            <MultiValuedSlot property="offeredStudyProgram">
+                                <AddLast itemVariable="stdPrg2"/>
+                            </MultiValuedSlot>
+                        </UpdateObject>
+                    </UPDATE-ENV>
                     <SCHEDULE-EVT>
                         <CausedEventExpr eventType="CreateCourseOffering">
                             <Delay>
@@ -434,8 +521,11 @@
             <Slot property="employees">
                 <ValueExpr language="Java"><![CDATA[ new ArrayList<Employee>()]]></ValueExpr>
             </Slot>
+            <Slot property="offeredStudyProgram">
+                <ValueExpr language="Java"><![CDATA[ new ArrayList<StudyProgram>()]]></ValueExpr>
+            </Slot>
         </Agent>
-
+        
         <!-- =================================================== 
             Instance of students,professor and secretary... -->
         <!-- =================================================== -->
@@ -467,7 +557,6 @@
             </Slot>
 
         </Agent>
-
         <Agent type="Student" name="OanaNicolae" id="21">
             <Slot property="firstName" value="Oana"/>
             <Slot property="lastName" value="Nicolae"/>
@@ -485,8 +574,447 @@
             <Slot property="examsParticipations">
                 <ValueExpr language="Java"><![CDATA[new ArrayList<ExamParticipation>()]]></ValueExpr>
             </Slot>
-
         </Agent>
+
+        <!-- =================================================== 
+            Instance of courses... -->
+        <!-- =================================================== -->
+        <Object type="Course" name="Course01" id="31">
+            <Slot property="name" value="Programmieren mit C und C++"/>
+            <Slot property="description" value="none"/>
+            <Slot property="language" value="Deutsch"/>
+            <Slot property="maxNrOfStudents" value="100"/>
+            <Slot property="prerequisites">
+                <ValueExpr language="Java"><![CDATA[ new ArrayList<Course>()]]></ValueExpr>
+            </Slot>
+            <Slot property="studyPrograms">
+                <ValueExpr language="Java"><![CDATA[ new ArrayList<StudyProgram>()]]></ValueExpr>
+            </Slot>
+            
+        </Object>
+        <!-- =================================================== -->
+        <Object type="Course" name="Course02" id="32">
+            <Slot property="name" value="E-Learning: Konzepte, Architekturen und Technologien"/>
+            <Slot property="description" value="none"/>
+            <Slot property="language" value="Deutsch"/>
+            <Slot property="maxNrOfStudents" value="100"/>
+            <Slot property="prerequisites">
+                <ValueExpr language="Java"><![CDATA[ new ArrayList<Course>()]]></ValueExpr>
+            </Slot>
+            <Slot property="studyPrograms">
+                <ValueExpr language="Java"><![CDATA[ new ArrayList<StudyProgram>()]]></ValueExpr>
+            </Slot>
+        </Object>
+        <!-- =================================================== -->
+        <Object type="Course" name="Course03" id="33">
+            <Slot property="name" value="Specification Languages and Processing Techniques for Web Documents"/>
+            <Slot property="description" value="none"/>
+            <Slot property="language" value="English"/>
+            <Slot property="maxNrOfStudents" value="100"/>
+            <Slot property="prerequisites">
+                <ValueExpr language="Java"><![CDATA[ new ArrayList<Course>()]]></ValueExpr>
+            </Slot>
+            <Slot property="studyPrograms">
+                <ValueExpr language="Java"><![CDATA[ new ArrayList<StudyProgram>()]]></ValueExpr>
+            </Slot>
+        </Object>
+        <!-- =================================================== -->
+        <Object type="Course" name="Course04" id="34">
+            <Slot property="name" value="Logische Grundlagen von Informationssystemen"/>
+            <Slot property="description" value="none"/>
+            <Slot property="language" value="Deutsch"/>
+            <Slot property="maxNrOfStudents" value="100"/>
+            <Slot property="prerequisites">
+                <ValueExpr language="Java"><![CDATA[ new ArrayList<Course>()]]></ValueExpr>
+            </Slot>
+            <Slot property="studyPrograms">
+                <ValueExpr language="Java"><![CDATA[ new ArrayList<StudyProgram>()]]></ValueExpr>
+            </Slot>
+        </Object>
+        <!-- =================================================== -->
+        <Object type="Course" name="Course05" id="35">
+            <Slot property="name" value="Designing and Implementing Web Applications"/>
+            <Slot property="description" value="none"/>
+            <Slot property="language" value="English"/>
+            <Slot property="maxNrOfStudents" value="100"/>
+            <Slot property="prerequisites">
+                <ValueExpr language="Java"><![CDATA[ new ArrayList<Course>()]]></ValueExpr>
+            </Slot>
+            <Slot property="studyPrograms">
+                <ValueExpr language="Java"><![CDATA[ new ArrayList<StudyProgram>()]]></ValueExpr>
+            </Slot>
+        </Object>
+        <!-- =================================================== -->
+        <Object type="Course" name="Course06" id="36">
+            <Slot property="name" value="Multiagenten-Systeme"/>
+            <Slot property="description" value="none"/>
+            <Slot property="language" value="Deutsch"/>
+            <Slot property="maxNrOfStudents" value="100"/>
+            <Slot property="prerequisites">
+                <ValueExpr language="Java"><![CDATA[ new ArrayList<Course>()]]></ValueExpr>
+            </Slot>
+            <Slot property="studyPrograms">
+                <ValueExpr language="Java"><![CDATA[ new ArrayList<StudyProgram>()]]></ValueExpr>
+            </Slot>
+        </Object>
+        <!-- =================================================== -->
+        <Object type="Course" name="Course07" id="37">
+            <Slot property="name" value="Spezifikationssprachen und Software-Werkzeuge für Semantic-Web-Anwendungen"/>
+            <Slot property="description" value="none"/>
+            <Slot property="language" value="Deutsch"/>
+            <Slot property="maxNrOfStudents" value="100"/>
+            <Slot property="prerequisites">
+                <ValueExpr language="Java"><![CDATA[ new ArrayList<Course>()]]></ValueExpr>
+            </Slot>
+            <Slot property="studyPrograms">
+                <ValueExpr language="Java"><![CDATA[ new ArrayList<StudyProgram>()]]></ValueExpr>
+            </Slot>
+        </Object>
+        <!-- =================================================== -->
+        <Object type="Course" name="Course08" id="38">
+            <Slot property="name" value="Introduction to eBusiness Technologies"/>
+            <Slot property="description" value="none"/>
+            <Slot property="language" value="English"/>
+            <Slot property="maxNrOfStudents" value="100"/>
+            <Slot property="prerequisites">
+                <ValueExpr language="Java"><![CDATA[ new ArrayList<Course>()]]></ValueExpr>
+            </Slot>
+            <Slot property="studyPrograms">
+                <ValueExpr language="Java"><![CDATA[ new ArrayList<StudyProgram>()]]></ValueExpr>
+            </Slot>
+        </Object>
+        <!-- =================================================== -->
+        <Object type="Course" name="Course09" id="39">
+            <Slot property="name" value="Web-Technologies Lab"/>
+            <Slot property="description" value="none"/>
+            <Slot property="language" value="English"/>
+            <Slot property="maxNrOfStudents" value="100"/>
+            <Slot property="prerequisites">
+                <ValueExpr language="Java"><![CDATA[ new ArrayList<Course>()]]></ValueExpr>
+            </Slot>
+            <Slot property="studyPrograms">
+                <ValueExpr language="Java"><![CDATA[ new ArrayList<StudyProgram>()]]></ValueExpr>
+            </Slot>
+        </Object>
+        <!-- =================================================== -->
+        <Object type="Course" name="Course10" id="30">
+            <Slot property="name" value="Modeling and Simulation of Discrete Systems"/>
+            <Slot property="description" value="none"/>
+            <Slot property="language" value="English"/>
+            <Slot property="maxNrOfStudents" value="100"/>
+            <Slot property="prerequisites">
+                <ValueExpr language="Java"><![CDATA[ new ArrayList<Course>()]]></ValueExpr>
+            </Slot>
+            <Slot property="studyPrograms">
+                <ValueExpr language="Java"><![CDATA[ new ArrayList<StudyProgram>()]]></ValueExpr>
+            </Slot>
+        </Object>
+        <!-- =================================================== 
+            Instance of studyProgram... -->
+        <!-- =================================================== -->
+        <Object type="StudyProgram"  name="StudyProgram00" id="40">
+            <Slot property="name" value="Informatik"/>
+            <Slot property="description" value="none"/>
+            <Slot property="students">
+                <ValueExpr language="Java"><![CDATA[ new ArrayList<Student>()]]></ValueExpr>
+            </Slot>         
+            <Slot property="courses">
+                <ValueExpr language="Java"><![CDATA[ new ArrayList<Course>()]]></ValueExpr>
+            </Slot>            
+        </Object>
+        <!-- =================================================== -->
+        <Object type="StudyProgram" name="StudyProgram01" id="41">
+            <Slot property="name" value="eBusiness "/>
+            <Slot property="description" value="none"/>
+            <Slot property="students">
+                <ValueExpr language="Java"><![CDATA[ new ArrayList<Student>()]]></ValueExpr>
+            </Slot>         
+            <Slot property="courses">
+                <ValueExpr language="Java"><![CDATA[ new ArrayList<Course>()]]></ValueExpr>
+            </Slot>  
+        </Object>
+        <!-- =================================================== 
+            Instance of exam... -->
+        <!-- =================================================== -->
+        <Object type="Exam" name="Exam1" id="50">
+            <Slot property="date" value="none"/>
+            <Slot property="examsParticipations">
+                <ValueExpr language="Java"><![CDATA[ new ArrayList<ExamParticipation>()]]></ValueExpr>
+            </Slot>
+        </Object>
+        <!-- =================================================== 
+            Instance of courseOffering... -->
+        <!-- =================================================== -->
+        <Object type="CourseOffering" name="CourseOffering01" id="61">
+            <Slot property="semester" value="WinterSemester"/>
+            <Slot property="startDate" value="none"/>
+            <Slot property="endDate" value="none"/>
+            <Slot property="day" value="Monday"/>
+            <Slot property="exams">
+                <ValueExpr language="Java"><![CDATA[ new ArrayList<Exam>()]]></ValueExpr>
+            </Slot>
+            <Slot property="teachers">
+                <ValueExpr language="Java"><![CDATA[ new ArrayList<Teacher>()]]></ValueExpr>
+            </Slot>
+            <Slot property="students">
+                <ValueExpr language="Java"><![CDATA[ new ArrayList<Student>()]]></ValueExpr>
+            </Slot>
+            <Slot property="name" value="Programmieren mit C und C++"/>
+            <Slot property="description" value="none"/>
+            <Slot property="language" value="Deutsch"/>
+            <Slot property="maxNrOfStudents" value="100"/>
+            <Slot property="prerequisites">
+                <ValueExpr language="Java"><![CDATA[ new ArrayList<Course>()]]></ValueExpr>
+            </Slot>
+            <Slot property="studyPrograms">
+                <ValueExpr language="Java"><![CDATA[ new ArrayList<StudyProgram>()]]></ValueExpr>
+            </Slot>
+
+            
+        </Object>
+        <!-- =================================================== -->
+        <Object type="CourseOffering" name="CourseOffering02" id="62">
+            <Slot property="semester" value="WinterSemester"/>
+            <Slot property="startDate" value="none"/>
+            <Slot property="endDate" value="none"/>
+            <Slot property="day" value="Monday"/>
+            <Slot property="exams">
+                <ValueExpr language="Java"><![CDATA[ new ArrayList<Exam>()]]></ValueExpr>
+            </Slot>
+            <Slot property="teachers">
+                <ValueExpr language="Java"><![CDATA[ new ArrayList<Teacher>()]]></ValueExpr>
+            </Slot>
+            <Slot property="students">
+                <ValueExpr language="Java"><![CDATA[ new ArrayList<Student>()]]></ValueExpr>
+            </Slot>
+            <Slot property="name" value="E-Learning: Konzepte, Architekturen und Technologien"/>
+            <Slot property="description" value="none"/>
+            <Slot property="language" value="Deutsch"/>
+            <Slot property="maxNrOfStudents" value="100"/>
+            <Slot property="prerequisites">
+                <ValueExpr language="Java"><![CDATA[ new ArrayList<Course>()]]></ValueExpr>
+            </Slot>
+            <Slot property="studyPrograms">
+                <ValueExpr language="Java"><![CDATA[ new ArrayList<StudyProgram>()]]></ValueExpr>
+            </Slot>
+
+        </Object>
+        <!-- =================================================== -->
+        <Object type="CourseOffering" name="CourseOffering03" id="63">
+            <Slot property="Semester" value="WinterSemester"/>
+            <Slot property="startDate" value="none"/>
+            <Slot property="endDate" value="none"/>
+            <Slot property="day" value="Monday"/>
+            <Slot property="exams">
+                <ValueExpr language="Java"><![CDATA[ new ArrayList<Exam>()]]></ValueExpr>
+            </Slot>
+            <Slot property="teachers">
+                <ValueExpr language="Java"><![CDATA[ new ArrayList<Teacher>()]]></ValueExpr>
+            </Slot>
+            <Slot property="students">
+                <ValueExpr language="Java"><![CDATA[ new ArrayList<Student>()]]></ValueExpr>
+            </Slot>
+            <Slot property="name" value="Specification Languages and Processing Techniques for Web Documents"/>
+            <Slot property="description" value="none"/>
+            <Slot property="language" value="English"/>
+            <Slot property="maxNrOfStudents" value="100"/>
+            <Slot property="prerequisites">
+                <ValueExpr language="Java"><![CDATA[ new ArrayList<Course>()]]></ValueExpr>
+            </Slot>
+            <Slot property="studyPrograms">
+                <ValueExpr language="Java"><![CDATA[ new ArrayList<StudyProgram>()]]></ValueExpr>
+            </Slot>
+
+        </Object>
+        <!-- =================================================== -->
+        <Object type="CourseOffering" name="CourseOffering04" id="64">
+            <Slot property="Semester" value="WinterSemester"/>
+            <Slot property="startDate" value="none"/>
+            <Slot property="endDate" value="none"/>
+            <Slot property="day" value="Monday"/>
+            <Slot property="exams">
+                <ValueExpr language="Java"><![CDATA[ new ArrayList<Exam>()]]></ValueExpr>
+            </Slot>
+            <Slot property="teachers">
+                <ValueExpr language="Java"><![CDATA[ new ArrayList<Teacher>()]]></ValueExpr>
+            </Slot>
+            <Slot property="students">
+                <ValueExpr language="Java"><![CDATA[ new ArrayList<Student>()]]></ValueExpr>
+            </Slot>
+            <Slot property="name" value="Logische Grundlagen von Informationssystemen"/>
+            <Slot property="description" value="none"/>
+            <Slot property="language" value="Deutsch"/>
+            <Slot property="maxNrOfStudents" value="100"/>
+            <Slot property="prerequisites">
+                <ValueExpr language="Java"><![CDATA[ new ArrayList<Course>()]]></ValueExpr>
+            </Slot>
+            <Slot property="studyPrograms">
+                <ValueExpr language="Java"><![CDATA[ new ArrayList<StudyProgram>()]]></ValueExpr>
+            </Slot>
+
+        </Object>
+        <!-- =================================================== -->
+        <Object type="CourseOffering" name="CourseOffering05" id="65">
+            <Slot property="Semester" value="WinterSemester"/>
+            <Slot property="startDate" value="none"/>
+            <Slot property="endDate" value="none"/>
+            <Slot property="day" value="Monday"/>
+            <Slot property="exams">
+                <ValueExpr language="Java"><![CDATA[ new ArrayList<Exam>()]]></ValueExpr>
+            </Slot>
+            <Slot property="teachers">
+                <ValueExpr language="Java"><![CDATA[ new ArrayList<Teacher>()]]></ValueExpr>
+            </Slot>
+            <Slot property="students">
+                <ValueExpr language="Java"><![CDATA[ new ArrayList<Student>()]]></ValueExpr>
+            </Slot>
+            <Slot property="name" value="Designing and Implementing Web Applications"/>
+            <Slot property="description" value="none"/>
+            <Slot property="language" value="English"/>
+            <Slot property="maxNrOfStudents" value="100"/>
+            <Slot property="prerequisites">
+                <ValueExpr language="Java"><![CDATA[ new ArrayList<Course>()]]></ValueExpr>
+            </Slot>
+            <Slot property="studyPrograms">
+                <ValueExpr language="Java"><![CDATA[ new ArrayList<StudyProgram>()]]></ValueExpr>
+            </Slot>
+
+        </Object>
+        <!-- =================================================== -->
+        <Object type="CourseOffering" name="CourseOffering06" id="66">
+            <Slot property="Semester" value="WinterSemester"/>
+            <Slot property="startDate" value="none"/>
+            <Slot property="endDate" value="none"/>
+            <Slot property="day" value="Monday"/>
+            <Slot property="exams">
+                <ValueExpr language="Java"><![CDATA[ new ArrayList<Exam>()]]></ValueExpr>
+            </Slot>
+            <Slot property="teachers">
+                <ValueExpr language="Java"><![CDATA[ new ArrayList<Teacher>()]]></ValueExpr>
+            </Slot>
+            <Slot property="students">
+                <ValueExpr language="Java"><![CDATA[ new ArrayList<Student>()]]></ValueExpr>
+            </Slot>
+            <Slot property="name" value="Multiagenten-Systeme"/>
+            <Slot property="description" value="none"/>
+            <Slot property="language" value="Deutsch"/>
+            <Slot property="maxNrOfStudents" value="100"/>
+            <Slot property="prerequisites">
+                <ValueExpr language="Java"><![CDATA[ new ArrayList<Course>()]]></ValueExpr>
+            </Slot>
+            <Slot property="studyPrograms">
+                <ValueExpr language="Java"><![CDATA[ new ArrayList<StudyProgram>()]]></ValueExpr>
+            </Slot>
+
+        </Object>
+        <!-- =================================================== -->
+        <Object type="CourseOffering" name="CourseOffering07" id="67">
+            <Slot property="Semester" value="WinterSemester"/>
+            <Slot property="startDate" value="none"/>
+            <Slot property="endDate" value="none"/>
+            <Slot property="day" value="Monday"/>
+            <Slot property="exams">
+                <ValueExpr language="Java"><![CDATA[ new ArrayList<Exam>()]]></ValueExpr>
+            </Slot>
+            <Slot property="teachers">
+                <ValueExpr language="Java"><![CDATA[ new ArrayList<Teacher>()]]></ValueExpr>
+            </Slot>
+            <Slot property="students">
+                <ValueExpr language="Java"><![CDATA[ new ArrayList<Student>()]]></ValueExpr>
+            </Slot>
+            <Slot property="name" value="Spezifikationssprachen und Software-Werkzeuge für Semantic-Web-Anwendungen"/>
+            <Slot property="description" value="none"/>
+            <Slot property="language" value="Deutsch"/>
+            <Slot property="maxNrOfStudents" value="100"/>
+            <Slot property="prerequisites">
+                <ValueExpr language="Java"><![CDATA[ new ArrayList<Course>()]]></ValueExpr>
+            </Slot>
+            <Slot property="studyPrograms">
+                <ValueExpr language="Java"><![CDATA[ new ArrayList<StudyProgram>()]]></ValueExpr>
+            </Slot>
+
+        </Object>
+        <!-- =================================================== -->
+        <Object type="CourseOffering" name="CourseOffering08" id="68">
+            <Slot property="Semester" value="WinterSemester"/>
+            <Slot property="startDate" value="none"/>
+            <Slot property="endDate" value="none"/>
+            <Slot property="day" value="Monday"/>
+            <Slot property="exams">
+                <ValueExpr language="Java"><![CDATA[ new ArrayList<Exam>()]]></ValueExpr>
+            </Slot>
+            <Slot property="teachers">
+                <ValueExpr language="Java"><![CDATA[ new ArrayList<Teacher>()]]></ValueExpr>
+            </Slot>
+            <Slot property="students">
+                <ValueExpr language="Java"><![CDATA[ new ArrayList<Student>()]]></ValueExpr>
+            </Slot>
+            <Slot property="name" value="Introduction to eBusiness Technologies"/>
+            <Slot property="description" value="none"/>
+            <Slot property="language" value="English"/>
+            <Slot property="maxNrOfStudents" value="100"/>
+            <Slot property="prerequisites">
+                <ValueExpr language="Java"><![CDATA[ new ArrayList<Course>()]]></ValueExpr>
+            </Slot>
+            <Slot property="studyPrograms">
+                <ValueExpr language="Java"><![CDATA[ new ArrayList<StudyProgram>()]]></ValueExpr>
+            </Slot>
+
+        </Object>
+        <!-- =================================================== -->
+        <Object type="CourseOffering" name="CourseOffering09" id="69">
+            <Slot property="Semester" value="WinterSemester"/>
+            <Slot property="startDate" value="none"/>
+            <Slot property="endDate" value="none"/>
+            <Slot property="day" value="Monday"/>
+            <Slot property="exams">
+                <ValueExpr language="Java"><![CDATA[ new ArrayList<Exam>()]]></ValueExpr>
+            </Slot>
+            <Slot property="teachers">
+                <ValueExpr language="Java"><![CDATA[ new ArrayList<Teacher>()]]></ValueExpr>
+            </Slot>
+            <Slot property="students">
+                <ValueExpr language="Java"><![CDATA[ new ArrayList<Student>()]]></ValueExpr>
+            </Slot>
+            <Slot property="name" value="Web-Technologies Lab"/>
+            <Slot property="description" value="none"/>
+            <Slot property="language" value="English"/>
+            <Slot property="maxNrOfStudents" value="100"/>
+            <Slot property="prerequisites">
+                <ValueExpr language="Java"><![CDATA[ new ArrayList<Course>()]]></ValueExpr>
+            </Slot>
+            <Slot property="studyPrograms">
+                <ValueExpr language="Java"><![CDATA[ new ArrayList<StudyProgram>()]]></ValueExpr>
+            </Slot>
+
+        </Object>
+        <!-- =================================================== -->
+        <Object type="CourseOffering" name="CourseOffering10" id="60">
+            <Slot property="Semester" value="WinterSemester"/>
+            <Slot property="startDate" value="none"/>
+            <Slot property="endDate" value="none"/>
+            <Slot property="day" value="Monday"/>
+            <Slot property="exams">
+                <ValueExpr language="Java"><![CDATA[ new ArrayList<Exam>()]]></ValueExpr>
+            </Slot>
+            <Slot property="teachers">
+                <ValueExpr language="Java"><![CDATA[ new ArrayList<Teacher>()]]></ValueExpr>
+            </Slot>
+            <Slot property="students">
+                <ValueExpr language="Java"><![CDATA[ new ArrayList<Student>()]]></ValueExpr>
+            </Slot>
+            <Slot property="name" value="Modeling and Simulation of Discrete Systems"/>
+            <Slot property="description" value="none"/>
+            <Slot property="language" value="English"/>
+            <Slot property="maxNrOfStudents" value="100"/>
+            <Slot property="prerequisites">
+                <ValueExpr language="Java"><![CDATA[ new ArrayList<Course>()]]></ValueExpr>
+            </Slot>
+            <Slot property="studyPrograms">
+                <ValueExpr language="Java"><![CDATA[ new ArrayList<StudyProgram>()]]></ValueExpr>
+            </Slot>
+            
+        </Object>
     </InitialState>
 
 </SimulationScenario>
