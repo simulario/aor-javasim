@@ -34,22 +34,22 @@ public class Ellipse extends Shape2D {
     
     gl.glPushMatrix();
     
+    // draw Cylinder with a radius of (width+height)/2.0
+    double radius = (width+height)/3.0;
+    
     // radius in x and y direction of the elliptic cylinder
-    double radiusX = width / 2;
-    double radiusY = height / 2;
+    double scaleX = width / (2.0*radius);
+    double scaleY = height / (2.0*radius);
     
     // rotate and translate the cylinder, so that the top points in direction of the positive y-axis
     // and one half of the cylinder is on the positive y-axis and the other half is on the negative y-axis
     // then scale the cylinder in x and z direction, so that it has an elliptic base
-    gl.glScaled(radiusX, 1, radiusY);
+    gl.glScaled(scaleX, 1, scaleY);
     gl.glTranslated(0, -objectHeight/2, 0);
     gl.glRotated(-90, 1, 0, 0);
     
-    // draw Cylinder with a radius of 1
-    double radius = 1;
-    
     // Don't draw anything if the dimensions are too small
-    if (objectHeight > 0 && radiusX > 0 & radiusY > 0) {
+    if (objectHeight > 0 && width > 0 && height > 0) {
       
       // GLUquadric objects for the side face, top face and bottom face of the cylinder
       GLUquadric side = glu.gluNewQuadric();

@@ -31,9 +31,6 @@ public class Arc extends Shape2D {
 
     if(arcAngle > 360) arcAngle = 360;
     
-    System.out.println("radius: " + radius);
-    System.out.println("arcAngle: " + arcAngle);
-    
     
     // Set the alpha value of the fill color to the fill opacity
     fill.setAlpha(fillOpacity);
@@ -58,9 +55,6 @@ public class Arc extends Shape2D {
       }
       double sliceAngle = arcAngle / slices;
       
-      System.out.println("slices: " + slices);
-      System.out.println("sliceAngle: " + sliceAngle);
-      
       // array containing the vertices of the top face of the 3D arc
       double[][] topVertices = new double[slices+1][3];
       
@@ -76,9 +70,6 @@ public class Arc extends Shape2D {
         bottomVertices[i][0] = topVertices[i][0];
         bottomVertices[i][1] = -topVertices[i][1];
         bottomVertices[i][2] = topVertices[i][2];
-        
-        System.out.println("topVertice "+i+": " + topVertices[i][0]+", "+topVertices[i][1]+", "+topVertices[i][2]);
-        System.out.println("bottomVertice "+i+": " + bottomVertices[i][0]+", "+bottomVertices[i][1]+", "+bottomVertices[i][2]);
       }
       
       double[] centerTop = {0.0, objectHeight/2, 0.0};

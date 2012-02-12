@@ -9,7 +9,7 @@ import aors.module.visopengl3d.utility.Color;
 import aors.module.visopengl3d.utility.Offset;
 
 import com.sun.opengl.util.texture.Texture;
-//import com.sun.opengl.util.texture.TextureCoords;
+import com.sun.opengl.util.texture.TextureCoords;
 
 /**
  * Margin of a two dimensional continuous space model.
@@ -47,41 +47,62 @@ public class Margin implements SpaceComponent {
     offset = new Offset(x1, y1, x2, y2);
   }
 
+ 
+  
   @Override
   public void display(GL2 gl, GLU glu) {
-    /*if (backgroundImg != null) {
+    if (backgroundImg != null) {
       // Get texture coordinates
       TextureCoords tc = backgroundImg.getImageTexCoords();
 
-      // Set the color to white
-      gl.glColor3d(1, 1, 1);
+      // Set the drawing color to white (because of texture)
+      gl.glColor4dv(Color.WHITE.getColor(), 0);
 
       // Enable texture
+      backgroundImg.bind();
       backgroundImg.enable();
 
       // Draw the background with texture
       gl.glBegin(GL2.GL_QUADS);
-      gl.glTexCoord2d(tc.left(), tc.bottom());
-      gl.glVertex2d(offset.x1, offset.y1);
-      gl.glTexCoord2d(tc.right(), tc.bottom());
-      gl.glVertex2d(offset.x2, offset.y1);
-      gl.glTexCoord2d(tc.right(), tc.top());
-      gl.glVertex2d(offset.x2, offset.y2);
-      gl.glTexCoord2d(tc.left(), tc.top());
-      gl.glVertex2d(offset.x1, offset.y2);
+      double[] normal = {0, 1, 0};
+      gl.glNormal3dv(normal, 0);
+      gl.glTexCoord2d(tc.left(), tc.bottom()); gl.glVertex3d(offset.x1, 0, -offset.y1);
+      gl.glTexCoord2d(tc.right(), tc.bottom()); gl.glVertex3d(offset.x2, 0, -offset.y1);
+      gl.glTexCoord2d(tc.right(), tc.top()); gl.glVertex3d(offset.x2, 0, -offset.y2);
+      gl.glTexCoord2d(tc.left(), tc.top()); gl.glVertex3d(offset.x1, 0, -offset.y2);
       gl.glEnd();
 
       // Disable texture
       backgroundImg.disable();
+      
     } else {
+      // Set the drawing color
       gl.glColor4dv(backgroundColor.getColor(), 0);
-      gl.glRectd(offset.x1, offset.y1, offset.x2, offset.y2);
+      
+      // Draw the background
+      gl.glBegin(GL2.GL_QUADS);
+      double[] normal = {0, 1, 0};
+      gl.glNormal3dv(normal, 0);
+      gl.glVertex3d(offset.x1, 0, -offset.y1);
+      gl.glVertex3d(offset.x2, 0, -offset.y1);
+      gl.glVertex3d(offset.x2, 0, -offset.y2);
+      gl.glVertex3d(offset.x1, 0, -offset.y2);
+      gl.glEnd();
     }
 
     // Draw the border
     gl.glColor4dv(borderColor.getColor(), 0);
+    
     gl.glPolygonMode(GL2.GL_FRONT_AND_BACK, GL2.GL_LINE);
-    gl.glRectd(offset.x1, offset.y1, offset.x2, offset.y2);*/
+
+    gl.glBegin(GL2.GL_QUADS);
+    double[] normal = {0, 1, 0};
+    gl.glNormal3dv(normal, 0);
+    gl.glVertex3d(offset.x1, 0, -offset.y1);
+    gl.glVertex3d(offset.x2, 0, -offset.y1);
+    gl.glVertex3d(offset.x2, 0, -offset.y2);
+    gl.glVertex3d(offset.x1, 0, -offset.y2);
+    gl.glEnd();
   }
 
   @Override

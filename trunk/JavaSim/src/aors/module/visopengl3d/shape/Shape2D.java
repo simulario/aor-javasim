@@ -19,6 +19,7 @@ import aors.module.visopengl3d.space.view.SpaceView;
 import aors.module.visopengl3d.utility.Color;
 
 import com.sun.opengl.util.texture.Texture;
+import com.sun.opengl.util.texture.TextureCoords;
 
 /**
  * The Shape2D class is the base class for all two dimensional shapes.
@@ -193,6 +194,107 @@ public abstract class Shape2D implements Cloneable {
     return result;
   }
 	
+  /**
+   * Applies a color to each vertex in a list of vertices.
+   * 
+   * @param contour
+   *          List of vertices.
+   * @param color
+   *          Color that will be applied to each vertex.
+   */
+  protected void applyColor(ArrayList<double[]> contour, Color color) {
+    for (double[] vertex : contour) {
+      // Set the RGBA components
+      vertex[3] = color.getRed();
+      vertex[4] = color.getGreen();
+      vertex[5] = color.getBlue();
+      vertex[6] = color.getAlpha();
+    }
+  }
+  
+  /**
+   * Performs a mapping from object coordinates into texture coordinates. If the
+   * second parameter equals null texture coordinates will be set to 0.
+   * 
+   * @param contour
+   *          List storing vertices.
+   * @param tc
+   *          tImage coordinates of the texture image.
+   * @param verticalFlipped
+   *          Specifies, if the texture should be flipped vertical (for the bottom face).
+   */
+  protected void applyTexture(ArrayList<double[]> contour, TextureCoords tc, boolean verticalFlipped) {
+    /*
+     * Initialize the texture coordinates to 0 if no image coordinates are
+     * available.
+     */
+    if (tc == null) {
+      for (double[] vertex : contour) {
+        vertex[7] = 0;
+        vertex[8] = 0;
+      }
+    } else {
+      // Maximal and minimal extensions of the polygon
+      double xMin = contour.get(0)[0];
+      double xMax = contour.get(0)[0];
+      double zMin = contour.get(0)[2];
+      double zMax = contour.get(0)[2];
+
+      // Loop over all vertices to find the maxima and minima
+      for (double[] vertex : contour) {
+        if (vertex[0] < xMin)
+          xMin = vertex[0];
+
+        if (vertex[0] > xMax)
+          xMax = vertex[0];
+
+        if (vertex[2] < zMin)
+          zMin = vertex[2];
+
+        if (vertex[2] > zMax)
+          zMax = vertex[2];
+      }
+
+      // Dimensions of the polygon
+      double width = xMax - xMin;
+      double height = zMax - zMin;
+
+      // Texture coordinates
+      double s = 0, t = 0;
+
+      // Loop over all vertices to find the appropriate texture
+      // coordinates
+      for (double[] vertex : contour) {
+        s = tc.left() + ((vertex[0] - xMin) / width);
+        if(!verticalFlipped) {
+          t = tc.bottom() + ((vertex[2] - zMin) / height);
+        } else {
+          t = tc.bottom() + ((zMax - vertex[2]) / height);
+        }
+
+        vertex[7] = s;
+        vertex[8] = t;
+      }
+    }
+  }
+  
+  /**
+   * Applies a normal to each vertex in a list of vertices.
+   * 
+   * @param contour
+   *          List of vertices.
+   * @param normal
+   *          Normal that will be applied to each vertex.
+   */
+  protected void applyNormal(ArrayList<double[]> contour, double[] normal) {
+    for (double[] vertex : contour) {
+      // Set the x, y and z coordinates of the normal
+      vertex[9] = normal[0];
+      vertex[10] = normal[1];
+      vertex[11] = normal[2];
+    }
+  }
+  
 	/**
 	 * Applies state changes of shape properties to the shape, for the initial
 	 * state.
