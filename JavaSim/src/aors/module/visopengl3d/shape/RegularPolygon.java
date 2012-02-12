@@ -121,7 +121,7 @@ public class RegularPolygon extends Shape2D {
         gl.glEnd();
         
           
-        // draw the n faces of the 3D regular polygon as rectangles with texture coordinates
+        // draw the n side faces of the 3D regular polygon as rectangles with texture coordinates
         gl.glBegin(GL2.GL_QUADS);
         
         //double phi = 2 * Math.PI / numberOfPoints;
@@ -185,7 +185,7 @@ public class RegularPolygon extends Shape2D {
         for(int i = 0; i < numberOfPoints; i++) {
           double[] normal = crossProduct(
               subtractVectors(bottomVertices[i], topVertices[i]),
-              subtractVectors(topVertices[i+1], topVertices[i+1]));
+              subtractVectors(topVertices[i+1], topVertices[i]));
           
           /*{objectHeight * radius * (Math.sin(phi * (i+1)) - Math.sin(phi * i)),
                              0, 

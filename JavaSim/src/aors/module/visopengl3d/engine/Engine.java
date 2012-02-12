@@ -112,44 +112,6 @@ public class Engine implements GLEventListener {
     
     //camera.scroll(gl);
     //camera.rotate(gl);
-    
-    if(DEBUG) {
-    	Sphere sphere = new Sphere();
-    	sphere.setFill(Color.RED);
-    	sphere.setWidth(10);
-    	sphere.setX(0);
-    	sphere.setY(0);
-    	sphere.setZ(0);
-    	sphere.generateDisplayList(gl, glu);
-    	gl.glPushMatrix();
-        gl.glTranslated(sphere.getX(), sphere.getY(), sphere.getZ());
-    	sphere.display(gl, glu);
-    	gl.glPopMatrix();
-    	
-    	Sphere sphere1 = new Sphere();
-    	sphere1.setFill(Color.YELLOW);
-    	sphere1.setWidth(10);
-    	sphere1.setX(100);
-    	sphere1.setY(0);
-    	sphere1.setZ(0);
-    	sphere1.generateDisplayList(gl, glu);
-    	gl.glPushMatrix();
-        gl.glTranslated(sphere1.getX(), sphere1.getY(), sphere1.getZ());
-    	sphere1.display(gl, glu);
-    	gl.glPopMatrix();
-    	
-    	Sphere sphere2 = new Sphere();
-    	sphere2.setFill(Color.GREEN);
-    	sphere2.setWidth(10);
-    	sphere2.setX(0);
-    	sphere2.setY(0);
-    	sphere2.setZ(100);
-    	sphere2.generateDisplayList(gl, glu);
-    	gl.glPushMatrix();
-        gl.glTranslated(sphere2.getX(), sphere2.getY(), sphere2.getZ());
-    	sphere2.display(gl, glu);
-    	gl.glPopMatrix();
-    }
 
     // Display the space model & objects
     if (spaceModel != null) {
@@ -163,7 +125,7 @@ public class Engine implements GLEventListener {
       
       Skybox skybox = spaceModel.getSpaceView().getSkybox();
       if(skybox != null) {
-      	skybox.setPosition(camera.getPosition());
+      	//skybox.setPosition(camera.getPosition());
       	skybox.display(gl, glu);
       }
 
@@ -304,7 +266,7 @@ public class Engine implements GLEventListener {
     drawingArea = new Offset((-width / 2) + BORDER, (-height / 2) + BORDER,
         (width / 2) - BORDER, (height / 2) - BORDER);
     
-    if (spaceModel.getGeneralSpaceModel() == null) {
+    /*if (spaceModel.getGeneralSpaceModel() == null) {
       spaceModel.setxMax(drawingArea.getWidth());
       spaceModel.setyMax(drawingArea.getHeight());
     }
@@ -345,7 +307,7 @@ public class Engine implements GLEventListener {
       }
     } else if(type.equals(SpaceType.TwoD) || type.equals(SpaceType.TwoDGrid) || type.equals(SpaceType.TwoDLateralView)) {
       drawingArea = new Offset(-spaceModel.getxMax()/2, -spaceModel.getyMax()/2, spaceModel.getxMax()/2, spaceModel.getyMax()/2);
-    }
+    }*/
       
     // Set the space models drawing area
     spaceModel.setDrawingArea(drawingArea);
@@ -360,6 +322,11 @@ public class Engine implements GLEventListener {
     	glu.gluLookAt(eyePosition[0], eyePosition[1], eyePosition[2],
     				  lookAt[0], lookAt[1], lookAt[2],
     				  upVector[0], upVector[1], upVector[2]);
+    	
+      Skybox skybox = spaceModel.getSpaceView().getSkybox();
+      if(skybox != null) {
+        skybox.setPosition(globalCamera.getEyePosition());
+      }
     } else {
       double fovy_rad = Math.PI * fovy / 180;
     	// determine camera height from drawingArea height
@@ -374,14 +341,19 @@ public class Engine implements GLEventListener {
       
       if(cameraHeight < 1 + SpaceView.getObjectHeight()) cameraHeight = 1 + SpaceView.getObjectHeight();
       //if(cameraHeight > 999) glu.gluPerspective(fovy, aspect, 1, cameraHeight+1);
-    	
+      
     	glu.gluLookAt(0, cameraHeight, 0, 0, 0, 0, 0, 0, -1);
+    	double[] position = {0, cameraHeight, 0};
+    	Skybox skybox = spaceModel.getSpaceView().getSkybox();
+      if(skybox != null) {
+        skybox.setPosition(position);
+      }
     }
     
     // Reset model view matrix stack
     gl.glMatrixMode(GL2.GL_MODELVIEW);
     gl.glLoadIdentity();
-
+    
     // Reinitialize
     init(drawable);
   }
@@ -394,22 +366,20 @@ public class Engine implements GLEventListener {
   private void prepareSpaceModel(GL2 gl) {
 	  System.out.println("prepareSpaceModel");
     // Adjust drawing area (find correct pixel values)
-    //double w_tmp = 0;
-    //double h_tmp = 0;
-    //double w_px = 0;
-    //double h_px = 0;
+    double w_tmp = 0;
+    double h_tmp = 0;
+    double w_px = 0;
+    double h_px = 0;
 
-    
+    w_tmp = drawingArea.getWidth() / spaceModel.getxMax();
+    h_tmp = drawingArea.getHeight() / spaceModel.getyMax();
 
-    //w_tmp = drawingArea.getWidth() / spaceModel.getxMax();
-    //h_tmp = drawingArea.getHeight() / spaceModel.getyMax();
+    double proportion = Math.min(w_tmp, h_tmp);
 
-    //double proportion = Math.min(w_tmp, h_tmp);
+    w_px = proportion * spaceModel.getxMax();
+    h_px = proportion * spaceModel.getyMax();
 
-    //w_px = proportion * spaceModel.getxMax();
-    //h_px = proportion * spaceModel.getyMax();
-
-    //drawingArea = new Offset(-w_px / 2.0, -h_px / 2.0, w_px / 2.0, h_px / 2.0);
+    drawingArea = new Offset(-w_px / 2.0, -h_px / 2.0, w_px / 2.0, h_px / 2.0);
     
 	  // Set the space models drawing area
     spaceModel.setDrawingArea(drawingArea);
@@ -469,13 +439,13 @@ public class Engine implements GLEventListener {
     Skybox skybox = spaceModel.getSpaceView().getSkybox();
     if(skybox != null) {
     	Class<?> faceClass = Face.class;
-		for (Face face : (Face[])faceClass.getEnumConstants())  {
-			String textureFilename = skybox.getTextureFilename(face);
-			
-			if(textureFilename != null) {
-				skybox.setTexture(face, loadTexture(textureFilename)); 
-			}
-		}
+  		for (Face face : (Face[])faceClass.getEnumConstants())  {
+  			String textureFilename = skybox.getTextureFilename(face);
+  			
+  			if(textureFilename != null) {
+  				skybox.setTexture(face, loadTexture(textureFilename)); 
+  			}
+  		}
     	
     	skybox.generateDisplayList(gl, glu);
     }

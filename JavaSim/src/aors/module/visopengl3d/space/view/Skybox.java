@@ -65,6 +65,17 @@ public class Skybox {
 			  	{halfWidth, halfWidth, -halfWidth},		// Top back right
 			  	{-halfWidth, halfWidth, -halfWidth}		// Top back left
 		};
+	    
+	  double[][] normals = {
+	      {1.0, 1.0, -1.0},
+	      {-1.0, 1.0, -1.0},
+	      {-1.0, 1.0, 1.0},
+	      {1.0, 1.0, 1.0},
+	      {1.0, -1.0, -1.0},
+	      {-1.0, -1.0, -1.0},
+	      {-1.0, -1.0, 1.0},
+	      {1.0, -1.0, 1.0}
+	  };
 		  
 		Class<?> faceClass = Face.class;
 		// Draw all faces of the skybox as rectangles with or without texture
@@ -91,51 +102,69 @@ public class Skybox {
 		        switch(face) {
 		        	case front:
 		        		// Front Face
-				        gl.glNormal3d(0, 0, -1);
-						gl.glTexCoord2d(tc.left(), tc.bottom()); gl.glVertex3dv(vertices[1], 0);
-						gl.glTexCoord2d(tc.right(), tc.bottom()); gl.glVertex3dv(vertices[0], 0);
-						gl.glTexCoord2d(tc.right(), tc.top()); gl.glVertex3dv(vertices[4], 0);
-						gl.glTexCoord2d(tc.left(), tc.top()); gl.glVertex3dv(vertices[5], 0);
+				        gl.glNormal3dv(normals[1], 0);
+    						gl.glTexCoord2d(tc.left(), tc.bottom()); gl.glVertex3dv(vertices[1], 0);
+    						gl.glNormal3dv(normals[0], 0);
+    						gl.glTexCoord2d(tc.right(), tc.bottom()); gl.glVertex3dv(vertices[0], 0);
+    						gl.glNormal3dv(normals[4], 0);
+    						gl.glTexCoord2d(tc.right(), tc.top()); gl.glVertex3dv(vertices[4], 0);
+    						gl.glNormal3dv(normals[5], 0);
+    						gl.glTexCoord2d(tc.left(), tc.top()); gl.glVertex3dv(vertices[5], 0);
 		        		break;
 		        	case back:
 		        		// Back Face
-		    			gl.glNormal3d(0, 0, 1);
-		    			gl.glTexCoord2d(tc.left(), tc.bottom()); gl.glVertex3dv(vertices[3], 0);
-		    			gl.glTexCoord2d(tc.right(), tc.bottom()); gl.glVertex3dv(vertices[2], 0);
-		    			gl.glTexCoord2d(tc.right(), tc.top()); gl.glVertex3dv(vertices[6], 0);
-		    			gl.glTexCoord2d(tc.left(), tc.top()); gl.glVertex3dv(vertices[7], 0);
+		        	  gl.glNormal3dv(normals[3], 0);
+  		    			gl.glTexCoord2d(tc.left(), tc.bottom()); gl.glVertex3dv(vertices[3], 0);
+  		    			gl.glNormal3dv(normals[2], 0);
+  		    			gl.glTexCoord2d(tc.right(), tc.bottom()); gl.glVertex3dv(vertices[2], 0);
+  		    			gl.glNormal3dv(normals[6], 0);
+  		    			gl.glTexCoord2d(tc.right(), tc.top()); gl.glVertex3dv(vertices[6], 0);
+  		    			gl.glNormal3dv(normals[7], 0);
+  		    			gl.glTexCoord2d(tc.left(), tc.top()); gl.glVertex3dv(vertices[7], 0);
 		        		break;
 		        	case top:
 		        		// Top Face
-		    			gl.glNormal3d(0, -1, 0);
-		    			gl.glTexCoord2d(tc.left(), tc.bottom()); gl.glVertex3dv(vertices[7], 0);
-		    			gl.glTexCoord2d(tc.right(), tc.bottom()); gl.glVertex3dv(vertices[6], 0);
-		    			gl.glTexCoord2d(tc.right(), tc.top()); gl.glVertex3dv(vertices[5], 0);
-		    			gl.glTexCoord2d(tc.left(), tc.top()); gl.glVertex3dv(vertices[4], 0);
+		        	  gl.glNormal3dv(normals[7], 0);
+  		    			gl.glTexCoord2d(tc.left(), tc.bottom()); gl.glVertex3dv(vertices[7], 0);
+  		    			gl.glNormal3dv(normals[6], 0);
+  		    			gl.glTexCoord2d(tc.right(), tc.bottom()); gl.glVertex3dv(vertices[6], 0);
+  		    			gl.glNormal3dv(normals[5], 0);
+  		    			gl.glTexCoord2d(tc.right(), tc.top()); gl.glVertex3dv(vertices[5], 0);
+  		    			gl.glNormal3dv(normals[4], 0);
+  		    			gl.glTexCoord2d(tc.left(), tc.top()); gl.glVertex3dv(vertices[4], 0);
 		        		break;
 		        	case bottom:
 		        		// Bottom Face
-		        		gl.glNormal3d(0, 1, 0);
-		    			gl.glTexCoord2d(tc.left(), tc.bottom()); gl.glVertex3dv(vertices[0], 0);
-		    			gl.glTexCoord2d(tc.right(), tc.bottom()); gl.glVertex3dv(vertices[1], 0);
-		    			gl.glTexCoord2d(tc.right(), tc.top()); gl.glVertex3dv(vertices[2], 0);
-		    			gl.glTexCoord2d(tc.left(), tc.top()); gl.glVertex3dv(vertices[3], 0);
+		        	  gl.glNormal3dv(normals[0], 0);
+  		    			gl.glTexCoord2d(tc.left(), tc.bottom()); gl.glVertex3dv(vertices[0], 0);
+  		    			gl.glNormal3dv(normals[1], 0);
+  		    			gl.glTexCoord2d(tc.right(), tc.bottom()); gl.glVertex3dv(vertices[1], 0);
+  		    			gl.glNormal3dv(normals[2], 0);
+  		    			gl.glTexCoord2d(tc.right(), tc.top()); gl.glVertex3dv(vertices[2], 0);
+  		    			gl.glNormal3dv(normals[3], 0);
+  		    			gl.glTexCoord2d(tc.left(), tc.top()); gl.glVertex3dv(vertices[3], 0);
 		        		break;
 		        	case left:
 		        		// Left Face
-		    			gl.glNormal3d(1, 0, 0);
-		    			gl.glTexCoord2d(tc.left(), tc.bottom()); gl.glVertex3dv(vertices[0], 0);
-		    			gl.glTexCoord2d(tc.right(), tc.bottom()); gl.glVertex3dv(vertices[3], 0);
-		    			gl.glTexCoord2d(tc.right(), tc.top()); gl.glVertex3dv(vertices[7], 0);
-		    			gl.glTexCoord2d(tc.left(), tc.top()); gl.glVertex3dv(vertices[4], 0);
+		        	  gl.glNormal3dv(normals[0], 0);
+  		    			gl.glTexCoord2d(tc.left(), tc.bottom()); gl.glVertex3dv(vertices[0], 0);
+  		    			gl.glNormal3dv(normals[3], 0);
+  		    			gl.glTexCoord2d(tc.right(), tc.bottom()); gl.glVertex3dv(vertices[3], 0);
+  		    			gl.glNormal3dv(normals[7], 0);
+  		    			gl.glTexCoord2d(tc.right(), tc.top()); gl.glVertex3dv(vertices[7], 0);
+  		    			gl.glNormal3dv(normals[4], 0);
+  		    			gl.glTexCoord2d(tc.left(), tc.top()); gl.glVertex3dv(vertices[4], 0);
 		        		break;
 		        	case right:
 		        		// Right Face
-		    			gl.glNormal3d(-1, 0, 0);
-		    			gl.glTexCoord2d(tc.left(), tc.bottom()); gl.glVertex3dv(vertices[2], 0);
-		    			gl.glTexCoord2d(tc.right(), tc.bottom()); gl.glVertex3dv(vertices[1], 0);
-		    			gl.glTexCoord2d(tc.right(), tc.top()); gl.glVertex3dv(vertices[5], 0);
-		    			gl.glTexCoord2d(tc.left(), tc.top()); gl.glVertex3dv(vertices[6], 0);
+		        	  gl.glNormal3dv(normals[2], 0);
+  		    			gl.glTexCoord2d(tc.left(), tc.bottom()); gl.glVertex3dv(vertices[2], 0);
+  		    			gl.glNormal3dv(normals[1], 0);
+  		    			gl.glTexCoord2d(tc.right(), tc.bottom()); gl.glVertex3dv(vertices[1], 0);
+  		    			gl.glNormal3dv(normals[5], 0);
+  		    			gl.glTexCoord2d(tc.right(), tc.top()); gl.glVertex3dv(vertices[5], 0);
+  		    			gl.glNormal3dv(normals[6], 0);
+  		    			gl.glTexCoord2d(tc.left(), tc.top()); gl.glVertex3dv(vertices[6], 0);
 		        		break;
 		        }
 		        
@@ -144,7 +173,7 @@ public class Skybox {
 			  	// Disable texture support
 		        texture.disable();
 		        
-		    } else {
+		    } /*else {
 		    	
 		    	// Set the drawing color to white
 		    	gl.glColor4dv(Color.LIGHTBLUE.getColor(), 0);
@@ -204,7 +233,7 @@ public class Skybox {
 			    }
 			        
 			    gl.glEnd();
-		    }
+		    }*/
 	    }
 	    
 	    gl.glEndList();
@@ -222,11 +251,15 @@ public class Skybox {
 	public void display(GL2 gl, GLU glu) {
 		if (displayList != -1) {
 			gl.glDisable(GL2.GL_DEPTH_TEST);
+			gl.glDisable(GL2.GL_LIGHTING);
+			gl.glDisable(GL2.GL_LIGHT0);
 			gl.glPushMatrix();
 		    gl.glLoadIdentity();
 			gl.glTranslated(position[0], position[1], position[2]);
 			gl.glCallList(displayList);
 			gl.glPopMatrix();
+			gl.glEnable(GL2.GL_LIGHT0);
+			gl.glEnable(GL2.GL_LIGHTING);
 			gl.glEnable(GL2.GL_DEPTH_TEST);
 		}
 	}

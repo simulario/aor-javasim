@@ -13,16 +13,17 @@ import org.w3c.dom.Node;
 import org.w3c.dom.NodeList;
 
 import aors.GeneralSpaceModel.SpaceType;
+import aors.module.visopengl3d.lang.LanguageManager;
 import aors.module.visopengl3d.shape.Arc;
 import aors.module.visopengl3d.shape.Circle;
 import aors.module.visopengl3d.shape.Ellipse;
+import aors.module.visopengl3d.shape.Polygon;
 import aors.module.visopengl3d.shape.Positioning;
 import aors.module.visopengl3d.shape.Rectangle;
 import aors.module.visopengl3d.shape.RegularPolygon;
 import aors.module.visopengl3d.shape.Shape2D;
 import aors.module.visopengl3d.shape.Square;
 import aors.module.visopengl3d.shape.Triangle;
-import aors.module.visopengl3d.lang.LanguageManager;
 //import aors.module.visopengl3d.shape.Cube;
 //import aors.module.visopengl3d.shape.Cuboid;
 //import aors.module.visopengl3d.shape.Cone;
@@ -1217,10 +1218,10 @@ public class XMLReader {
       }
 
       // Found "Polygon" node
-      //else if (childNodes.item(i).getNodeName().equals(Shape2D.POLYGON)) {
+      else if (childNodes.item(i).getNodeName().equals(Shape2D.POLYGON)) {
         // Read all data from "Polygon" node
-      //  shape = readPolygon(childNodes.item(i));
-      //}
+        shape = readPolygon(childNodes.item(i));
+      }
 
       // Found "PolyLine" node
       //else if (childNodes.item(i).getNodeName().equals(Shape2D.POLYLINE)) {
@@ -1289,10 +1290,10 @@ public class XMLReader {
       }
 
       // Found "Polygon" node
-      //else if (childNodes.item(j).getNodeName().equals(Shape2D.POLYGON)) {
+      else if (childNodes.item(j).getNodeName().equals(Shape2D.POLYGON)) {
         // Read all data from "Polygon" node
-      //  shape = readPolygon(childNodes.item(j));
-      //}
+        shape = readPolygon(childNodes.item(j));
+      }
 
       // Found "PolyLine" node
       //else if (childNodes.item(j).getNodeName().equals(Shape2D.POLYLINE)) {
@@ -1693,9 +1694,9 @@ public class XMLReader {
         }
       }
 
-      //else if (name.equals(Shape2D.POINTS)) {
-      //  shape.setPointList(readPointString(value));
-      //}
+      else if (name.equals(Shape2D.POINTS)) {
+        shape.setPointList(readPointString(value));
+      }
     }
 
     // Read possible shape property maps
@@ -1913,6 +1914,21 @@ public class XMLReader {
     readShapeAttributes(node, arc);
 
     return arc;
+  }
+  
+  /**
+   * Reads all data from a "Polygon" node.
+   * 
+   * @param node
+   */
+  private Shape2D readPolygon(Node node) {
+    // Create a new Polygon instance
+    Polygon poly = new Polygon();
+
+    // Get shape attributes
+    readShapeAttributes(node, poly);
+
+    return poly;
   }
   
   /**
@@ -2370,7 +2386,7 @@ public class XMLReader {
     return attachedView;
   }*/
 
-  /*public ArrayList<double[]> readPointString(String str) {
+  public ArrayList<double[]> readPointString(String str) {
     ArrayList<double[]> pointList = new ArrayList<double[]>();
 
     // Check if the point string is valid
@@ -2461,7 +2477,7 @@ public class XMLReader {
     }
 
     return pointList;
-  }*/
+  }
 
   private Shape2DMap readShape2DMap(Node node) {
     Shape2DMap s2dm = new Shape2DMap();
