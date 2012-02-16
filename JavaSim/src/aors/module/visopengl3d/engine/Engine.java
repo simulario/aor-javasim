@@ -96,7 +96,6 @@ public class Engine implements GLEventListener {
 
   @Override
   public void display(GLAutoDrawable drawable) {
-	System.out.println("display");
     GL2 gl = (GL2) drawable.getGL();
 
     // Clear color and depth buffer
@@ -145,12 +144,10 @@ public class Engine implements GLEventListener {
 
   @Override
   public void dispose(GLAutoDrawable drawable) {
-	  System.out.println("dispose");
   }
 
   @Override
   public void init(GLAutoDrawable drawable) {
-	  System.out.println("init");
     GL2 gl = (GL2) drawable.getGL();
 
     // Set the clearing color
@@ -237,9 +234,6 @@ public class Engine implements GLEventListener {
   @Override
   public void reshape(GLAutoDrawable drawable, int x, int y, int width,
       int height) {
-	  System.out.println("reshape");
-	  System.out.println("width "+ width);
-	  System.out.println("height "+height);
     GL2 gl = (GL2) drawable.getGL();
 
     // Border around the drawing area
@@ -364,7 +358,6 @@ public class Engine implements GLEventListener {
    * @param gl
    */
   private void prepareSpaceModel(GL2 gl) {
-	  System.out.println("prepareSpaceModel");
 	  
 	  // Get the space type
     //SpaceType type = spaceModel.getSpaceType();
@@ -477,7 +470,6 @@ public class Engine implements GLEventListener {
    * @param gl
    */
   private void prepareObjects(GL2 gl) {
-	  System.out.println("prepareObjects");
     // Get all objects as a collection (to be able to iterate over it)
     Collection<Objekt> objCollection = objMap.values();
 
@@ -536,7 +528,6 @@ public class Engine implements GLEventListener {
    * @param filename
    */
   private Texture loadTexture(String filename) {
-	  System.out.println("loadTexture");
     // Search in the project's media directory
     String path = projectDirectory.getPath() + File.separator + "media"
         + File.separator + "images" + File.separator + filename;
@@ -567,7 +558,6 @@ public class Engine implements GLEventListener {
    * @param glu
    */
   private void displayObjects(GL2 gl, GLU glu) {
-	  System.out.println("displayObjects");
     // Get all objects as a collection (to be able to iterate over it)
     Collection<Objekt> objCollection = objMap.values();
 
