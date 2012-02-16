@@ -365,12 +365,29 @@ public class Engine implements GLEventListener {
    */
   private void prepareSpaceModel(GL2 gl) {
 	  System.out.println("prepareSpaceModel");
+	  
+	  // Get the space type
+    //SpaceType type = spaceModel.getSpaceType();
+	  
     // Adjust drawing area (find correct pixel values)
     double w_tmp = 0;
     double h_tmp = 0;
     double w_px = 0;
     double h_px = 0;
-
+    
+    /*if(type.equals(SpaceType.OneD) || type.equals(SpaceType.OneDGrid)) {
+      OneDimSpaceView spaceView = (OneDimSpaceView)spaceModel.getSpaceView();
+      if(spaceView.getAlignment().equals(Alignment.horizontal)) {
+        double proportion = drawingArea.getWidth() / spaceModel.getxMax();
+        w_px = proportion * spaceModel.getxMax();
+        drawingArea = new Offset(-w_px / 2.0, drawingArea.y1, w_px / 2.0, drawingArea.y2);
+      } else {
+        double proportion = drawingArea.getHeight() / spaceModel.getxMax();
+        h_px = proportion * spaceModel.getxMax();
+        drawingArea = new Offset(drawingArea.x1, -h_px / 2.0, drawingArea.x2, h_px / 2.0);
+      }
+    } else {*/
+    
     w_tmp = drawingArea.getWidth() / spaceModel.getxMax();
     h_tmp = drawingArea.getHeight() / spaceModel.getyMax();
 
@@ -381,11 +398,14 @@ public class Engine implements GLEventListener {
 
     drawingArea = new Offset(-w_px / 2.0, -h_px / 2.0, w_px / 2.0, h_px / 2.0);
     
+    //}
+    
 	  // Set the space models drawing area
     spaceModel.setDrawingArea(drawingArea);
 
     // Get the space type
     SpaceType type = spaceModel.getSpaceType();
+    
 
     if (type.equals(SpaceType.TwoD)) {
       // Get the space view

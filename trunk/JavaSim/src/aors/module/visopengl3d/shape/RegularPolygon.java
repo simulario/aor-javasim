@@ -178,7 +178,7 @@ public class RegularPolygon extends Shape2D {
         
         gl.glEnd();
           
-        // draw the n faces of the 3D regular polygon as rectangles with texture coordinates
+        // draw the n faces of the 3D regular polygon as rectangles
         gl.glBegin(GL2.GL_QUADS);
         
         //double phi = 2 * Math.PI / numberOfPoints;
