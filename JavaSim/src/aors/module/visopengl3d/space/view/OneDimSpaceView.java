@@ -30,8 +30,6 @@ public class OneDimSpaceView extends SpaceView {
   private double absoluteTrackWidth;
   private double relativeTrackWidth;
   
-  private double trackDistance = 30;
-  
   private double trackHeight = 15;
 
   public Color getTrackColor() {
@@ -64,14 +62,6 @@ public class OneDimSpaceView extends SpaceView {
 
   public void setRelativeTrackWidth(double relativeTrackWidth) {
     this.relativeTrackWidth = relativeTrackWidth;
-  }
-
-  public double getTrackDistance() {
-	return trackDistance;
-  }
-
-  public void setTrackDistance(double trackDistance) {
-	this.trackDistance = trackDistance;
   }
   
   public double getTrackHeight() {

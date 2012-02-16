@@ -49,29 +49,26 @@ public class OneDimSpaceModel extends SpaceModel {
    * Creates and initializes linear space components.
    */
   private void initializeLinearTracks(GL2 gl, GLU glu) {
-    // Minimal distance between tracks
-    //final double MIN_DISTANCE = 30;
-
-    // Distance between tracks
-    //double distance = MIN_DISTANCE;
-
-    //if (oneDimSpaceView.getAlignment().equals(Alignment.horizontal))
-    //  distance = drawingArea.getHeight() / multiplicity;
-    //else
-    //  distance = drawingArea.getWidth() / multiplicity;
-
-    // Make sure the distance is not smaller than the minimal distance
-    //if (distance < MIN_DISTANCE)
-    //  distance = MIN_DISTANCE;
-
-    
-    
     // Determine the track width
     double trackWidth = computeTrackWidth();
     
+    // Minimal distance between middle lines of the tracks
+    final double MIN_DISTANCE = trackWidth + 10;
+    
     // distance between middle lines of the tracks
-    double distance = oneDimSpaceView.getTrackDistance() + trackWidth;
+    double distance = MIN_DISTANCE;
+    
+    if (oneDimSpaceView.getAlignment().equals(Alignment.horizontal))
+      distance = drawingArea.getHeight() / multiplicity;
+    else
+      distance = drawingArea.getWidth() / multiplicity;
 
+    // Make sure the distance is not smaller than the minimal distance
+    if (distance < MIN_DISTANCE) {
+      distance = MIN_DISTANCE;
+    }
+    
+    
     /*
      * Calculate the position of the first track, taking into account if the
      * multiplicity is even or not.

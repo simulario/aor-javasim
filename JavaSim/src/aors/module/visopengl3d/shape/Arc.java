@@ -42,7 +42,7 @@ public class Arc extends Shape2D {
     gl.glNewList(displayList, GL2.GL_COMPILE);
     
     // Don't draw anything if the dimensions are too small
-    if (arcAngle > 0 && objectHeight > 0) {
+    if (arcAngle > 0 && radius > 0 && objectHeight > 0) {
       
       // GLUquadric objects for the top face and bottom face of the 3D arc
       GLUquadric top = glu.gluNewQuadric();
