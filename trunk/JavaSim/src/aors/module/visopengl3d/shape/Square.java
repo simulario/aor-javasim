@@ -23,7 +23,6 @@ public class Square extends Shape2D {
   
   @Override
   public void generateDisplayList(GL2 gl, GLU glu) {
-    System.out.println("generateDisplayList");
     double objectHeight = getObjectHeight();
     double depth = width;
     
