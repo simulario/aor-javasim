@@ -61,9 +61,9 @@ public class GUIComponent extends JScrollPane implements GUIModule {
         "newt.dll" };
 
     // UNIX libraries
-    String[] libsUnix = { "libgluegen-rt.so", "libjogl_gl2.so",
-        "libnativewindow_awt.so", "libjogl_cg.so", "libnativewindow_jvm.so",
-        "libnativewindow_x11.so" };
+    String[] libsUnix = { "libjogl_cg.so",
+        "libjogl_desktop.so", "libnativewindow_awt.so",
+        "libnativewindow_x11.so", "libnewt.so"  };
 
     // MacOS libraries (currently not supported)
     String[] libsMac = null;
