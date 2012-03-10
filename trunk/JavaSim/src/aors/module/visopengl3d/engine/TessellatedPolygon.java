@@ -6,11 +6,11 @@ import javax.media.opengl.GL2;
 import javax.media.opengl.glu.GLU;
 import javax.media.opengl.glu.GLUtessellator;
 
-import aors.module.visopengl3d.utility.TesselationCallback;
+import aors.module.visopengl3d.engine.TessellationCallback;
 
 public class TessellatedPolygon {
   // Tessellation callbacks
-  TesselationCallback tessCallback;
+  TessellationCallback tessCallback;
 
   // Tesselation object
   GLUtessellator tobj;
@@ -25,7 +25,7 @@ public class TessellatedPolygon {
    *          OpenGL utility library object,
    */
   public void init(GL2 gl, GLU glu) {
-    tessCallback = new TesselationCallback(gl, glu);
+    tessCallback = new TessellationCallback(gl, glu);
     tobj = GLU.gluNewTess();
 
     // Register tessellation callbacks

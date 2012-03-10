@@ -176,6 +176,30 @@ public abstract class Shape2D implements Cloneable {
     v[2] /= length;
   }
   
+  public double[] normalizedVector(double[] v) {
+    double length = Math.sqrt(v[0]*v[0] + v[1]*v[1] + v[2]*v[2]);
+    double[] normalizedVector = {v[0] / length,
+                                 v[1] / length,
+                                 v[2] / length};
+    return normalizedVector;
+  }
+  
+  public double scalarProduct(double[] vector1, double[] vector2) {
+    double scalarProduct = vector1[0]*vector2[0] + vector1[1]*vector2[1] + vector1[2]*vector2[2];
+    return scalarProduct;
+  }
+  
+  public double vectorLength(double[] v) {
+    double length = Math.sqrt(v[0]*v[0] + v[1]*v[1] + v[2]*v[2]);
+    return length;
+  }
+  
+  public double cosAngleBetweenVectors(double[] vector1, double[] vector2) {
+    double scalarProduct = scalarProduct(vector1, vector2);
+    double cosAngle = scalarProduct / (vectorLength(vector1)*vectorLength(vector2));
+    return cosAngle;
+  }
+  
   public double[] crossProduct(double[] vector1, double[] vector2) {
     double[] crossProduct = {
       vector1[1]*vector2[2] - vector1[2]*vector2[1],
@@ -183,6 +207,15 @@ public abstract class Shape2D implements Cloneable {
       vector1[0]*vector2[1] - vector1[1]*vector2[0]
     };
     return crossProduct;
+  }
+  
+  public double[] addVectors(double[] vector1, double[] vector2) {
+    double[] result = {
+      vector1[0] + vector2[0],
+      vector1[1] + vector2[1],
+      vector1[2] + vector2[2],
+    }; 
+    return result;
   }
   
   public double[] subtractVectors(double[] vector1, double[] vector2) {
@@ -193,6 +226,17 @@ public abstract class Shape2D implements Cloneable {
     }; 
     return result;
   }
+  
+  public double[] multScalarWithVector(double scalar, double[] vector) {
+    double[] result = {
+      scalar * vector[0],
+      scalar * vector[1],
+      scalar * vector[2],
+    }; 
+    return result;
+  }
+  
+  
 	
   /**
    * Applies a color to each vertex in a list of vertices.

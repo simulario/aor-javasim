@@ -18,6 +18,7 @@ import aors.module.visopengl3d.shape.Arc;
 import aors.module.visopengl3d.shape.Circle;
 import aors.module.visopengl3d.shape.Ellipse;
 import aors.module.visopengl3d.shape.Polygon;
+import aors.module.visopengl3d.shape.PolyLine;
 import aors.module.visopengl3d.shape.Positioning;
 import aors.module.visopengl3d.shape.Rectangle;
 import aors.module.visopengl3d.shape.RegularPolygon;
@@ -1224,10 +1225,10 @@ public class XMLReader {
       }
 
       // Found "PolyLine" node
-      //else if (childNodes.item(i).getNodeName().equals(Shape2D.POLYLINE)) {
+      else if (childNodes.item(i).getNodeName().equals(Shape2D.POLYLINE)) {
         // Read all data from "PolyLine" node
-      //  shape = readPolyLine(childNodes.item(i));
-      //}
+        shape = readPolyLine(childNodes.item(i));
+      }
     }
 
     return shape;
@@ -1296,10 +1297,10 @@ public class XMLReader {
       }
 
       // Found "PolyLine" node
-      //else if (childNodes.item(j).getNodeName().equals(Shape2D.POLYLINE)) {
+      else if (childNodes.item(j).getNodeName().equals(Shape2D.POLYLINE)) {
         // Read all data from "PolyLine" node
-      //  shape = readPolyLine(childNodes.item(j));
-      //}
+        shape = readPolyLine(childNodes.item(j));
+      }
     }
 
     if (shape != null) {
@@ -1929,6 +1930,21 @@ public class XMLReader {
     readShapeAttributes(node, poly);
 
     return poly;
+  }
+  
+  /**
+   * Reads all data from a "PolyLine" node.
+   * 
+   * @param node
+   */
+  private Shape2D readPolyLine(Node node) {
+    // Create a new PolyLine instance
+    PolyLine polyLine = new PolyLine();
+
+    // Get shape attributes
+    readShapeAttributes(node, polyLine);
+
+    return polyLine;
   }
   
   /**

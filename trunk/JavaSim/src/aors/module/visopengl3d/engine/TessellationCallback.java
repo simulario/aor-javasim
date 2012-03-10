@@ -37,8 +37,7 @@ public class TessellationCallback implements GLUtessellatorCallback {
   @Override
   public void combine(double[] coords, Object[] data, float[] weight,
       Object[] outData) {
-
-    double[] combinedData = new double[9];
+    double[] combinedData = new double[12];
 
     // Get vertex coordinates
     combinedData[0] = coords[0];
@@ -70,6 +69,19 @@ public class TessellationCallback implements GLUtessellatorCallback {
     combinedData[8] = weight[0] * ((double[]) data[0])[8] + weight[1]
         * ((double[]) data[1])[8] + weight[2] * ((double[]) data[2])[8]
         + weight[3] * ((double[]) data[3])[8];
+    
+    // Get the normal coordinates
+    combinedData[9] = weight[0] * ((double[]) data[0])[9] + weight[1]
+        * ((double[]) data[1])[9] + weight[2] * ((double[]) data[2])[9]
+        + weight[3] * ((double[]) data[3])[9];
+
+    combinedData[10] = weight[0] * ((double[]) data[0])[10] + weight[1]
+        * ((double[]) data[1])[10] + weight[2] * ((double[]) data[2])[10]
+        + weight[3] * ((double[]) data[3])[10];
+
+    combinedData[11] = weight[0] * ((double[]) data[0])[11] + weight[1]
+        * ((double[]) data[1])[11] + weight[2] * ((double[]) data[2])[11]
+        + weight[3] * ((double[]) data[3])[11];
 
     // Hand over the combined data to the drawing mechanism
     outData[0] = combinedData;
@@ -104,6 +116,7 @@ public class TessellationCallback implements GLUtessellatorCallback {
 
     // Print out the error and shut down
     System.out.println("Tesselation Error: " + errorString);
+    
     System.exit(0);
   }
 
@@ -121,9 +134,12 @@ public class TessellationCallback implements GLUtessellatorCallback {
 
       // Apply texture
       gl.glTexCoord2d(data[7], data[8]);
+      
+      // Set normal
+      gl.glNormal3d(data[9], data[10], data[11]);
 
       // Draw the vertex
-      gl.glVertex2d(data[0], data[1]);
+      gl.glVertex3d(data[0], data[1], data[2]);
     }
   }
 

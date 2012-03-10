@@ -73,7 +73,7 @@ public class Cube extends Shape3D {
 	        gl.glBegin(GL2.GL_QUADS);
 	        
 			// Front Face
-	        gl.glNormal3d(0, 0, 1);
+	    gl.glNormal3d(0, 0, 1);
 			gl.glTexCoord2d(tc.left(), tc.bottom()); gl.glVertex3dv(vertices[0], 0);
 			gl.glTexCoord2d(tc.right(), tc.bottom()); gl.glVertex3dv(vertices[1], 0);
 			gl.glTexCoord2d(tc.right(), tc.top()); gl.glVertex3dv(vertices[5], 0);

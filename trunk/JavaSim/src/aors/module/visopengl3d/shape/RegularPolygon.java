@@ -127,8 +127,8 @@ public class RegularPolygon extends Shape2D {
         //double phi = 2 * Math.PI / numberOfPoints;
         for(int i = 0; i < numberOfPoints; i++) {
           double[] normal = crossProduct(
-                              subtractVectors(bottomVertices[i], topVertices[i]),
-                              subtractVectors(topVertices[i+1], topVertices[i]));
+                                subtractVectors(bottomVertices[i], topVertices[i]),
+                                subtractVectors(topVertices[i+1], topVertices[i]));
           /*double[] normal =  {objectHeight * radius * (Math.sin(phi * (i+1)) - Math.sin(phi * i)),
                              0, 
                              objectHeight * radius * (Math.cos(phi * (i+1)) - Math.cos(phi * i))};*/
