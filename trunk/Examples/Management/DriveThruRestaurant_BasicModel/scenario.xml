@@ -69,8 +69,16 @@
 			<Variable name="numberOfCustomers" dataType="Integer" />
 			<Variable name="numberOfLostCustomers" dataType="Integer" />
 			<Variable name="numberOfDepartures" dataType="Integer" />
-			<Variable name="menuBoardQueueLength" dataType="Integer" />
-			<Variable name="pickupWindowQueueLength" dataType="Integer" />
+			<Variable name="menuBoardQueueLength" dataType="Integer">
+				<Source>
+					<ObjectProperty property="queueLength" objectType="MenuBoard" objectIdRef="1"/>
+				</Source>
+			</Variable>
+			<Variable name="pickupWindowQueueLength" dataType="Integer">
+				<Source>
+					<ObjectProperty property="queueLength" objectType="PickupWindow" objectIdRef="2"/>
+				</Source>				
+			</Variable>
 			<Variable name="revenue" dataType="Float" />
 			
 			<Variable name="cumulativeResponseTime" dataType="Integer" />
@@ -150,8 +158,7 @@ var r2 = js.util.Random.uniformInt(1,6);
 			<ExogenousEventType name="CustomerArrival">
 			<!-- =================================================== -->
 				<Periodicity>
-					<ValueExpr language="Java">Global.twoDice(10)</ValueExpr>
-					<ValueExpr language="JavaScript">Global.twoDice(10)</ValueExpr>
+					<ValueExpr language="Java JavaScript">Global.twoDice(10)</ValueExpr>
 				</Periodicity>
 			</ExogenousEventType>
 			<!-- =================================================== -->
@@ -180,7 +187,7 @@ var r2 = js.util.Random.uniformInt(1,6);
 				</ReferenceProperty>
 				<!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->
 				<Function name="randomPizzaType" resultType="Integer">
-					<!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->
+				<!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->
 					<documentation>
 							The type of the pizza as a number between 0 and 5: 0 = Pizza Quattro Formaggi, 
 							1 = Pizza Quattro Stagioni, 2 = Pizza Capricciosa, 3 = Pizza Napoletana, 
@@ -240,7 +247,7 @@ return price[pizzaType];
 				<!-- ======================================================== -->
 				<documentation>
 					<description>When a car arrives at the Fast Food Restaurant, and the menu board queue is full, 
-						the customer leaves and he is considered a dissatisfied customer. Else, if the menu board queue 
+						the customer leaves and he is considered a lost customer. Else, if the menu board queue 
 						is not full then the car gets in the waiting line as a new customer. Furthermore, 
 						if the menu board service is not busy, a StartMenuBoardService is created. </description>
 				</documentation>
@@ -248,23 +255,19 @@ return price[pizzaType];
 				<FOR-ObjectVariable variable="mb" objectType="MenuBoard" objectIdRef="1" />
 				<IF language="Java JavaScript"><![CDATA[
 this.mb.getMenuBoardQueue().size() >= this.mb.getMaxMenuBoardLineSize()
-                ]]></IF>
-			<THEN>
-				<UPDATE-ENV>
-					<UpdateStatisticsVariable variable="numberOfLostCustomers">
-						<ValueExpr language="Java">SimStatistics.numberOfLostCustomers.getValue() + 1</ValueExpr>
-						<ValueExpr language="JavaScript">SimStatistics.numberOfLostCustomers.getValue() + 1</ValueExpr>
-					</UpdateStatisticsVariable>
-					<UpdateObject objectVariable="mb">
-						<Slot property="queueLength">
+         ]]></IF>
+				<THEN>
+					<UPDATE-ENV>
+						<UpdateStatisticsVariable variable="numberOfLostCustomers">
+							<ValueExpr language="Java JavaScript"> SimStatistics.numberOfLostCustomers.getValue() + 1 </ValueExpr>
+						</UpdateStatisticsVariable>
+<!--
+						<UpdateStatisticsVariable variable="menuBoardQueueLength">
 							<ValueExpr language="Java JavaScript">this.mb.getMenuBoardQueue().size()</ValueExpr>
-						</Slot>
-					</UpdateObject>
-					<UpdateStatisticsVariable variable="menuBoardQueueLength">
-						<ValueExpr language="Java JavaScript">this.mb.getMenuBoardQueue().size()</ValueExpr>
-					</UpdateStatisticsVariable>
-				</UPDATE-ENV>
-			</THEN>
+						</UpdateStatisticsVariable>
+-->
+					</UPDATE-ENV>
+				</THEN>
 				<ELSE>
 					<UPDATE-ENV>
 						<Create>
@@ -278,25 +281,22 @@ this.mb.getMenuBoardQueue().size() >= this.mb.getMaxMenuBoardLineSize()
 							<MultiValuedSlot property="menuBoardQueue">
 								<AddLast itemVariable="customer" />
 							</MultiValuedSlot>
-							<Slot property="queueLength">
-								<ValueExpr language="Java JavaScript">this.mb.getMenuBoardQueue().size()</ValueExpr>
-							</Slot>
+							<Increment property="queueLength" value="1"/>
 						</UpdateObject>
+<!--
 						<UpdateStatisticsVariable variable="menuBoardQueueLength">
 							<ValueExpr language="Java JavaScript">this.mb.getQueueLength()</ValueExpr>
 						</UpdateStatisticsVariable>
+-->
 						<UpdateStatisticsVariable variable="numberOfCustomers">
-							<ValueExpr language="Java"><![CDATA[
+							<ValueExpr language="Java JavaScript"><![CDATA[
 SimStatistics.numberOfCustomers.getValue() + 1								
-                            ]]></ValueExpr>
-							<ValueExpr language="JavaScript"><![CDATA[
-							SimStatistics.numberOfCustomers.getValue() + 1								
-							]]></ValueExpr>
+              ]]></ValueExpr>
 						</UpdateStatisticsVariable>
 					</UPDATE-ENV>
 					<SCHEDULE-EVT>
 						<CausedEventExpr eventType="StartMenuBoardService">
-							<Condition language="Java JavaScript"> !this.mb.isMenuBoardBusy() </Condition>
+							<Condition language="Java JavaScript"> this.mb.getQueueLength() == 1 </Condition>
 						</CausedEventExpr>
 					</SCHEDULE-EVT>
 				</ELSE>				
@@ -313,10 +313,10 @@ SimStatistics.numberOfCustomers.getValue() + 1
 				<WHEN eventType="StartMenuBoardService"/>
 				<FOR-ObjectVariable variable="mb" objectType="MenuBoard" objectIdRef="1" />
 				<FOR-ObjectVariable variable="cust" objectType="Customer">
-					<ObjectRef language="Java JavaScript">this.mb.getMenuBoardQueue().get(0)</ObjectRef>
+					<ObjectRef language="Java JavaScript"> this.mb.getMenuBoardQueue().get(0) </ObjectRef>
 				</FOR-ObjectVariable>
 				<FOR-DataVariable  variable="serviceTimeMB" dataType="Integer">
-					<ValueExpr language="Java JavaScript">Global.twoDice(10)</ValueExpr>
+					<ValueExpr language="Java JavaScript">Global.twoDice(4)</ValueExpr>
 				</FOR-DataVariable>
 				<FOR-DataVariable variable="serviceTimeK" dataType="Integer">
 					<ValueExpr language="Java JavaScript">Global.twoDice(8)</ValueExpr>
@@ -348,12 +348,12 @@ SimStatistics.numberOfCustomers.getValue() + 1
 					<SCHEDULE-EVT>
 						<CausedEventExpr eventType="EndMenuBoardService">
 							<Delay>
-								<ValueExpr language="Java JavaScript">this.serviceTimeMB</ValueExpr>
+								<ValueExpr language="Java JavaScript"> this.serviceTimeMB </ValueExpr>
 							</Delay>
 						</CausedEventExpr>
 						<CausedEventExpr eventType="EndKitchenService">
 							<Delay>
-								<ValueExpr language="Java JavaScript">this.serviceTimeK</ValueExpr>
+								<ValueExpr language="Java JavaScript"> this.serviceTimeMB + this.serviceTimeK </ValueExpr>
 							</Delay>
 							<Slot property="order">
 								<ObjectValueExpr objectVariable="ord"/>
@@ -363,20 +363,21 @@ SimStatistics.numberOfCustomers.getValue() + 1
 				</DO>
 			</EnvironmentRule>		
 			<!-- ============================================================================ -->
-			<EnvironmentRule name="EndMenuBoardServiceWhenPwqIsNotFull_Rule">
+			<EnvironmentRule name="EndMenuBoardService_Rule">
 			<!-- ============================================================================ -->
 				<documentation>
 					<description>When a menu board service ends and the pickup window queue is not full, 
 						then the current customer moves forward. If there are no more customers in the 
 						menu board queue, the menu board is no longer busy. Otherwise, a new 
 						StartMenuBoardService event	is created for serving the next customer. 
-					</description>
+						If the PickupWindowQueue is full, the customer cannot move forward, so the 
+						customer attribute waitingForPWFree is set to true.	</description>
 				</documentation>
 				<WHEN eventType="EndMenuBoardService" eventVariable="evt" />
 				<FOR-ObjectVariable variable="mb" objectType="MenuBoard" objectIdRef="1" />
 				<FOR-ObjectVariable variable="pw" objectType="PickupWindow" objectIdRef="2" />
 				<FOR-ObjectVariable variable="cust" objectType="Customer">
-					<ObjectRef language="Java JavaScript">this.mb.getMenuBoardQueue().get(0)</ObjectRef>
+					<ObjectRef language="Java JavaScript"> this.mb.getMenuBoardQueue().get(0) </ObjectRef>
 				</FOR-ObjectVariable>
 				<IF language="Java JavaScript"><![CDATA[
 this.pw.getPickupWindowQueue().size() < this.pw.getMaxPickupWindowLineSize() 
@@ -387,27 +388,23 @@ this.pw.getPickupWindowQueue().size() < this.pw.getMaxPickupWindowLineSize()
 							<MultiValuedSlot property="menuBoardQueue">
 								<RemoveFirst itemVariable="cust"/>
 							</MultiValuedSlot>
-							<Slot property="menuBoardBusy">
-								<ValueExpr language="Java JavaScript"> ( this.mb.getMenuBoardQueue().size() == 0) ? false : true </ValueExpr>
-							</Slot>
-							<Slot property="queueLength">
-								<ValueExpr language="Java JavaScript"> this.mb.getMenuBoardQueue().size() </ValueExpr>
-							</Slot>
+							<Decrement property="queueLength" value="1"/>
+							<Slot property="menuBoardBusy" value="false"/>
 						</UpdateObject>
 						<UpdateObject objectVariable="pw">
 							<MultiValuedSlot property="pickupWindowQueue">
 								<AddLast itemVariable="cust"/>
 							</MultiValuedSlot>
-							<Slot property="queueLength">
-								<ValueExpr language="Java JavaScript"> this.pw.getPickupWindowQueue().size() </ValueExpr>
-							</Slot>
+							<Increment property="queueLength" value="1"/>
 						</UpdateObject>
+<!--
 						<UpdateStatisticsVariable variable="menuBoardQueueLength">
 							<ValueExpr language="Java JavaScript"> this.mb.getQueueLength() </ValueExpr>
 						</UpdateStatisticsVariable>
 						<UpdateStatisticsVariable variable="pickupWindowQueueLength">
 							<ValueExpr language="Java JavaScript"> this.pw.getQueueLength() </ValueExpr>
 						</UpdateStatisticsVariable>
+-->					
 					</UPDATE-ENV>
 					<SCHEDULE-EVT>
 						<CausedEventExpr eventType="StartMenuBoardService">
@@ -417,49 +414,31 @@ this.mb.getMenuBoardQueue().size() > 0
 						</CausedEventExpr>
 						<CausedEventExpr eventType="StartPickupWindowService">
 							<Condition language="Java JavaScript"><![CDATA[
-!this.pw.isPickupWindowBusy() 
+this.pw.getPickupWindowQueue().size() == 1
 	            ]]></Condition>
 						</CausedEventExpr>
 					</SCHEDULE-EVT>
 				</THEN>
-			</EnvironmentRule>
-			<!-- ============================================================================ -->
-			<EnvironmentRule name="EndMenuBoardServiceWhenPwqIsFull_Rule">
-			<!-- ============================================================================ -->
-				<documentation>
-						When a menu board service ends, but the PickupWindowQueue is full, the customer 
-						cannot move forward, so the customer attribute waitingForPWFree is set to true.
-				</documentation>
-				<WHEN eventType="EndMenuBoardService" eventVariable="evt" />
-				<FOR-ObjectVariable variable="mb" objectType="MenuBoard" objectIdRef="1" />
-				<FOR-ObjectVariable variable="pw" objectType="PickupWindow" objectIdRef="2" />
-				<FOR-ObjectVariable variable="cust" objectType="Customer">
-					<ObjectRef language="Java JavaScript">this.mb.getMenuBoardQueue().get(0)</ObjectRef>
-				</FOR-ObjectVariable>
-				<IF language="Java JavaScript"><![CDATA[
-this.pw.getPickupWindowQueue().size() >= this.pw.getMaxPickupWindowLineSize() && this.cust.getOrder() != null 
-        ]]></IF>	
-				<THEN>
+				<ELSE>
 					<UPDATE-ENV>
 						<UpdateObject objectVariable="cust">
 							<Slot property="waitingForPWFree" value="true" />
 						</UpdateObject>
 					</UPDATE-ENV>
-				</THEN>
-			</EnvironmentRule>	
-			<!-- ========================================================================== -->
+				</ELSE>
+			</EnvironmentRule>
+			<!-- ======================================================================-->
 			<EnvironmentRule name="StartPickupWindowService_Rule">
+			<!-- ======================================================================-->
 				<documentation>
 						On StartPickupWindowService, the pickupWindowBusy variable is set to true, and 
-						when the customer's oder has already arrived, an EndPickupWindowService event 
+						if the customer's oder has already arrived, an EndPickupWindowService event 
 						is created with an appropriate delay. 
 				</documentation>
-			<!-- ======================================================================-->
 				<WHEN eventType="StartPickupWindowService" />
 				<FOR-ObjectVariable variable="pw" objectType="PickupWindow" objectIdRef="2" />
 				<FOR-DataVariable variable="serviceTimePW" dataType="Integer">
-					<ValueExpr language="Java">Global.twoDice(10)</ValueExpr>
-					<ValueExpr language="JavaScript">Global.twoDice(10)</ValueExpr>
+					<ValueExpr language="Java JavaScript">Global.twoDice(2)</ValueExpr>
 				</FOR-DataVariable>
 				<DO>
 				<UPDATE-ENV>
@@ -470,19 +449,18 @@ this.pw.getPickupWindowQueue().size() >= this.pw.getMaxPickupWindowLineSize() &&
 				<SCHEDULE-EVT>
 					<CausedEventExpr eventType="EndPickupWindowService">
 						<Condition language="Java JavaScript"><![CDATA[
-this.pw.getPickupWindowQueue().size() > 0 && this.pw.getPickupWindowQueue().get(0)!= null &&
-this.pw.getPickupWindowQueue().get(0).getOrder()!= null && this.pw.getPickupWindowQueue().get(0).getOrder().isArrived()
+this.pw.getPickupWindowQueue().get(0).getOrder().isArrived()
            ]]></Condition>
 						<Delay>
-							<ValueExpr language="Java">this.serviceTimePW</ValueExpr>
+							<ValueExpr language="Java"> this.serviceTimePW </ValueExpr>
 						</Delay>
 					</CausedEventExpr>
 				</SCHEDULE-EVT>
 			  </DO>
 			</EnvironmentRule>
-			<!-- ============================================= -->
+			<!-- ======================================================== -->
 			<EnvironmentRule name="EndKitchenService_Rule">
-			<!-- =========================================== -->
+			<!-- ======================================================== -->
 				<documentation>
 					On EndKitchenService, the order's arrived flag is set to true. Furthermore, if the arrived order 
 					is the order of the customer at the pickup window, then an EndPickupWindowService event is scheduled.
@@ -491,10 +469,10 @@ this.pw.getPickupWindowQueue().get(0).getOrder()!= null && this.pw.getPickupWind
 				<FOR-ObjectVariable variable="mb" objectType="MenuBoard" objectIdRef="1" />
 				<FOR-ObjectVariable variable="pw" objectType="PickupWindow" objectIdRef="2" />
 				<FOR-ObjectVariable variable="ord" objectType="Order">
-					<ObjectRef language="Java JavaScript">this.evt.getOrder()</ObjectRef>
+					<ObjectRef language="Java JavaScript"> this.evt.getOrder() </ObjectRef>
 				</FOR-ObjectVariable>
 				<FOR-DataVariable variable="serviceTimePW" dataType="Integer">
-					<ValueExpr language="Java JavaScript">Global.twoDice(10)</ValueExpr>
+					<ValueExpr language="Java JavaScript"> Global.twoDice(1) </ValueExpr>
 				</FOR-DataVariable>
 				<DO>
 					<UPDATE-ENV>
@@ -505,16 +483,17 @@ this.pw.getPickupWindowQueue().get(0).getOrder()!= null && this.pw.getPickupWind
 					<SCHEDULE-EVT>
 						<CausedEventExpr eventType="EndPickupWindowService">
 							<Condition language="Java JavaScript"><![CDATA[ 
-this.pw.getPickupWindowQueue().size() > 0 && this.pw.getPickupWindowQueue().get(0).getOrder().getId() == this.ord.getId()
+this.pw.getPickupWindowQueue().size() > 0 && 
+this.pw.getPickupWindowQueue().get(0).getOrder().getId() == this.ord.getId()
               ]]></Condition>
 							<Delay>
-								<ValueExpr language="Java">this.serviceTimePW</ValueExpr>
+								<ValueExpr language="Java"> this.serviceTimePW </ValueExpr>
 							</Delay>
 						</CausedEventExpr>
 					</SCHEDULE-EVT>
 				</DO>
 			</EnvironmentRule>			
-			<!-- ================================================================ -->
+			<!-- ======================================================== -->
 			<EnvironmentRule name="EndPickupWindowService_Rule">
 			<!-- ============================================================== -->
 				<documentation>
@@ -527,7 +506,7 @@ this.pw.getPickupWindowQueue().size() > 0 && this.pw.getPickupWindowQueue().get(
 				<FOR objectVariable="mb" objectType="MenuBoard" objectIdRef="1" />
 				<FOR objectVariable="pw" objectType="PickupWindow" objectIdRef="2" />
 				<FOR objectVariable="cust" objectType="Customer">
-					<ObjectRef language="Java JavaScript">this.pw.getPickupWindowQueue().get(0)</ObjectRef>
+					<ObjectRef language="Java JavaScript"> this.pw.getPickupWindowQueue().get(0) </ObjectRef>
 				</FOR>
 				<DO>
 					<UPDATE-ENV>
@@ -556,28 +535,26 @@ SimStatistics.revenue.getValue() + pw.pizzaPrice(( int) pw.getPickupWindowQueue(
 							<MultiValuedSlot property="pickupWindowQueue">
 								<RemoveFirst itemVariable="cust"/>
 							</MultiValuedSlot>
-							<Slot property="pickupWindowBusy">
-								<ValueExpr language="Java JavaScript"> (this.pw.getPickupWindowQueue().size() == 1) ? false : true </ValueExpr>
-							</Slot>
-							<Slot property="queueLength">
-								<ValueExpr language="Java JavaScript"> this.pw.getPickupWindowQueue().size() </ValueExpr>
-							</Slot>
+							<Decrement property="queueLength" value="1"/>
+							<Slot property="pickupWindowBusy" value="false"/>
 						</UpdateObject>
 						<DestroyObject objectVariable="cust" />
+<!--
 						<UpdateStatisticsVariable variable="pickupWindowQueueLength">
 							<ValueExpr language="Java JavaScript"> this.pw.getQueueLength() </ValueExpr>
 						</UpdateStatisticsVariable>
+-->
 					</UPDATE-ENV>
 					<SCHEDULE-EVT>
 						<CausedEventExpr eventType="StartPickupWindowService">
-							<Condition language="Java JavaScript"> 
-								this.pw.getPickupWindowQueue().size() > 0 || this.mb.getMenuBoardQueue().get(0).isWaitingForPWFree()
-							</Condition>
+							<Condition language="Java JavaScript"><![CDATA[ 
+this.pw.getPickupWindowQueue().size() > 0 
+							]]></Condition>
 						</CausedEventExpr>
 					</SCHEDULE-EVT>					
 				</DO>
 				<IF language="Java JavaScript"><![CDATA[
-this.mb.getMenuBoardQueue().get(0).isWaitingForPWFree() 
+this.mb.getMenuBoardQueue().size() > 0 && this.mb.getMenuBoardQueue().get(0).isWaitingForPWFree() 
          ]]></IF>
 				<THEN>
 					<UPDATE-ENV>
@@ -585,25 +562,36 @@ this.mb.getMenuBoardQueue().get(0).isWaitingForPWFree()
 							<MultiValuedSlot property="menuBoardQueue">
 								<RemoveFirst itemVariable="cust"/>
 							</MultiValuedSlot>
+							<Decrement property="queueLength" value="1"/>
 							<Slot property="menuBoardBusy">
-								<ValueExpr language="Java JavaScript"> ( this.mb.getMenuBoardQueue().size() == 0) ? false : true </ValueExpr>
-							</Slot>
-							<Slot property="queueLength">
-								<ValueExpr language="Java JavaScript"> this.mb.getMenuBoardQueue().size() </ValueExpr>
+								<ValueExpr language="Java JavaScript"> (this.mb.getQueueLength() == 0) ? false : true </ValueExpr>
 							</Slot>
 						</UpdateObject>
 						<UpdateObject objectVariable="pw">
 							<MultiValuedSlot property="pickupWindowQueue">
 								<AddLast itemVariable="cust"/>
 							</MultiValuedSlot>
-							<Slot property="queueLength">
-								<ValueExpr language="Java JavaScript"> this.pw.getPickupWindowQueue().size() </ValueExpr>
-							</Slot>
+							<Increment property="queueLength" value="1"/>
 						</UpdateObject>
+<!--
 						<UpdateStatisticsVariable variable="menuBoardQueueLength">
 							<ValueExpr language="Java JavaScript"> this.mb.getQueueLength() </ValueExpr>
 						</UpdateStatisticsVariable>						
+-->
 					</UPDATE-ENV>
+					<SCHEDULE-EVT>
+						<CausedEventExpr eventType="StartMenuBoardService">
+							<Condition language="Java JavaScript"><![CDATA[
+this.mb.getMenuBoardQueue().size() > 0
+	            ]]></Condition>
+						</CausedEventExpr>
+						<!-- Schedule StartPickupWindowService if the PW queue was empty before forwarding the waiting customer -->
+						<CausedEventExpr eventType="StartPickupWindowService">
+							<Condition language="Java JavaScript"><![CDATA[ 
+this.pw.getPickupWindowQueue().size() == 1  
+							]]></Condition>
+						</CausedEventExpr>
+					</SCHEDULE-EVT>
 				</THEN>
 			</EnvironmentRule>		
 		</EnvironmentRules>
