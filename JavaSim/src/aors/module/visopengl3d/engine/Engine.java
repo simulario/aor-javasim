@@ -322,7 +322,7 @@ public class Engine implements GLEventListener {
         skybox.setPosition(globalCamera.getEyePosition());
       }
     } else {
-      double fovy_rad = Math.PI * fovy / 180;
+      /*double fovy_rad = Math.PI * fovy / 180;
     	// determine camera height from drawingArea height
       double cameraHeightFromDrawingAreaHeight = (drawingArea.getHeight() + BORDER) / (2 * Math.tan(fovy_rad/2));
       
@@ -341,7 +341,8 @@ public class Engine implements GLEventListener {
     	Skybox skybox = spaceModel.getSpaceView().getSkybox();
       if(skybox != null) {
         skybox.setPosition(position);
-      }
+      }*/
+      glu.gluLookAt(0, 800, 800, 0, 0, 0, 0, 1, -1);
     }
     
     // Reset model view matrix stack
@@ -1310,7 +1311,7 @@ public class Engine implements GLEventListener {
     gl.glTranslated(position[0], position[1], position[2]);
 
     // Apply matrix rotation
-    gl.glRotated(rotation, 0.0f, 0.0f, 1.0f);
+    gl.glRotated(rotation, 0.0f, 1.0f, 0.0f);
     
     // Display the shape
     shape.display(gl, glu);

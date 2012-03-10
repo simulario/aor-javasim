@@ -41,7 +41,7 @@ public class OneDimSpaceModel extends SpaceModel {
         || oneDimSpaceView.getAlignment().equals(Alignment.vertical)) {
       initializeLinearTracks(gl, glu);
     } else {
-      initializeCircularTracks();
+      initializeCircularTracks(gl, glu);
     }
   }
 
@@ -126,7 +126,7 @@ public class OneDimSpaceModel extends SpaceModel {
   /**
    * Creates and initializes circular space components.
    */
-  private void initializeCircularTracks() {
+  private void initializeCircularTracks(GL2 gl, GLU glu) {
     // Minimal distance between tracks
     final double MIN_DISTANCE = 30;
 
@@ -167,7 +167,8 @@ public class OneDimSpaceModel extends SpaceModel {
     double worldLength = rightCenter[0] - leftCenter[0];
     double worldCircumference = (Math.PI / 2) * 2 * radius;
     double ratio = worldLength / worldCircumference;
-    double largestSpaceLength = (ratio / 2) * (xMax / 2);
+    //double largestSpaceLength = (ratio / 2) * (xMax / 2);
+    double largestSpaceLength = (ratio * xMax) / (2* (1+ratio));
 
     // Create the tracks and set up their attributes
     for (int i = 0; i < multiplicity; i++) {
@@ -177,12 +178,14 @@ public class OneDimSpaceModel extends SpaceModel {
       // Set up the tracks properties
       track.setTrackColor(oneDimSpaceView.getTrackColor());
       track.setTrackWidth(trackWidth);
+      track.setTrackHeight(oneDimSpaceView.getTrackHeight());
       track.setAlignment(oneDimSpaceView.getAlignment());
       track.setDistancePercentage(distancePercentage);
       track.setGlobalRatio(ratio);
       track.setSpaceModel(this);
       track.setupTrackDimensions(xMax);
       track.setLargestSpaceLength(largestSpaceLength);
+      track.generateDisplayList(gl, glu);
 
       // Add the track into the list
       spaceComponents.add(track);

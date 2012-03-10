@@ -30,7 +30,7 @@ public class OneDimSpaceView extends SpaceView {
   private double absoluteTrackWidth;
   private double relativeTrackWidth;
   
-  private double trackHeight = 15;
+  private double trackHeight = 30;
 
   public Color getTrackColor() {
     return trackColor;
