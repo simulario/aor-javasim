@@ -249,8 +249,10 @@ public class AORJavaGui extends JFrame implements ActionListener,
     this.getContentPane().setLocale(Locale.ENGLISH);
 
     // new simulator instance
-    this.simulationManager = new SimulationManager();
-
+    synchronized (getTreeLock()) { 
+    	this.simulationManager = new SimulationManager();
+    }
+   
     this.preferences = new DialogPreferences(this);
 
     String value = this.simulationManager.getProperties().getProperty(
@@ -2342,9 +2344,16 @@ public class AORJavaGui extends JFrame implements ActionListener,
           noCompilerFoundHTMLFileName));
       new DialogHtml(null, htmlContent, "Error");
     } else {
-      new AORJavaGui().setVisible(true);
+    	AORJavaGui app = new AORJavaGui();
+    	app.startGUI();
     }
 
+  }
+  
+  public void startGUI() {
+	  synchronized (getTreeLock()) {
+		  this.setVisible(true);
+	  }
   }
 
   @Override
