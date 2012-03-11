@@ -116,8 +116,6 @@ public class Project implements ProjectInterface {
   // the XML simulation description file name
   private String simDescXmlFileName = "scenario.xml";
 
-  private final String simDescriptionBackup = "scenario.bak";
-
   // the data bus that is assigned to this project
   private DataBus dataBus;
 
@@ -580,13 +578,6 @@ public class Project implements ProjectInterface {
     // try it first with the absolute path
     this.simulationDescriptionFile = new File(filePath);
 
-    // try it from the backup
-    if (!this.simulationDescriptionFile.exists()) {
-      filePath = directory + File.separator + this.projectName + File.separator
-          + this.simDescriptionBackup;
-      this.simulationDescriptionFile = new File(filePath);
-    }
-
     // try it from the project folder (old solution)
     if (!this.simulationDescriptionFile.exists()) {
       filePath = directory + File.separator + this.projectName + File.separator
@@ -625,10 +616,12 @@ public class Project implements ProjectInterface {
   /**
    * Save the XML simulation description to file.
    */
-  public void saveSimulationDescriptionBackup() {
+  public void saveSimulationDescription() {
     try {
       FileWriter fileWriter = new FileWriter(directory + File.separator
-          + projectName + File.separator + this.simDescriptionBackup);
+          + projectName + File.separator + this.simDescXmlFileName);
+      this.simulationDescriptionFilePath = directory + File.separator
+          + projectName + File.separator + this.simDescXmlFileName;
 
       if (this.simulationDescription == null) {
         this.setSimulationDescription("");
@@ -710,6 +703,8 @@ public class Project implements ProjectInterface {
       return false;
     }
 
+    this.saveSimulationDescription();
+    
     // create the projects properties
     Properties properties = new Properties();
     properties.put(this.propertyName, this.projectName);
@@ -735,7 +730,6 @@ public class Project implements ProjectInterface {
       ioe.printStackTrace();
     }
 
-    this.saveSimulationDescriptionBackup();
     result = true;
 
     this.saved = true;
