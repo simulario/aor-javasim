@@ -65,8 +65,6 @@ import aors.data.evt.sim.SimulationStepEvent;
 import aors.data.evt.sim.SimulationStepEventListener;
 import aors.data.java.helper.AbstractSimState;
 import aors.exceptions.SimulatorException;
-import aors.gui.helper.FileListener;
-import aors.gui.helper.FileMonitor;
 import aors.model.envevt.EnvironmentEvent;
 import aors.model.envsim.AgentObject;
 import aors.model.envsim.Objekt;
@@ -86,12 +84,10 @@ import aors.module.evt.ModuleEventSpeedUpSimulation;
  */
 public class AORJavaGui extends JFrame implements ActionListener,
     ChangeListener, SimulationEventListener, ObjektInitEventListener,
-    FileListener, SimulationStepEventListener, ModuleEventListener {
+    SimulationStepEventListener, ModuleEventListener {
 
   static final long serialVersionUID = 122140342341234L;
   private Runnable simulationThread;
-
-  private FileMonitor fileMonitor;
 
   private final String guiTitle = "AOR JavaSim";
   private final String tabAORSLName = "AORSL";
@@ -170,7 +166,8 @@ public class AORJavaGui extends JFrame implements ActionListener,
   public final static String messageNoJavaCompiler = "No Java Compiler was found. "
       + "Make sure you are running this application at least with the Java Standard Developer Kit (SDK) 6. "
       + "The Java Runtime Environment (JRE) is not sufficient because it does not include any Java Compiler.";
-  private final String messageSaveExistendProject = "Your simulation project has not been saved. Do you want to save it now?";
+  // private final String messageSaveExistendProject =
+  // "Your simulation project has not been saved. Do you want to save it now?";
   private final String messageGenerateAgain = "The simulation is already generated. Should it be generated again?";
   private final String messageCompileAgain = "The simulation project is already compiled. Should it be compiled again?";
   private final String messageNotImplemented = "This function is not implemented yet.";
@@ -259,7 +256,6 @@ public class AORJavaGui extends JFrame implements ActionListener,
     this.backgroundExecution = Executors.newCachedThreadPool();
 
     this.initListener();
-    this.startFileMonitorTask();
     this.preferences.selectLoggerRadioButton(simulationManager.getDataBus()
         .getLoggerType());
 
@@ -443,12 +439,13 @@ public class AORJavaGui extends JFrame implements ActionListener,
 
     // disable all not yet usable menu items
     ((Menu) this.getJMenuBar()).switchMenuItems(Arrays.asList(Menu.Item.SAVE,
-        Menu.Item.SAVE_AS, Menu.Item.CLOSE, Menu.Item.IMPORT_XML,
-        Menu.Item.EXPORT_XML, Menu.Item.EXPORT_JAR, Menu.Item.BUILD_ALL,
-        Menu.Item.VALIDATE_ONLY, Menu.Item.GENERATE_ONLY,
+        Menu.Item.SAVE_AS, Menu.Item.RELOAD_XML, Menu.Item.CLOSE,
+        Menu.Item.IMPORT_XML, Menu.Item.EXPORT_XML, Menu.Item.EXPORT_JAR,
+        Menu.Item.BUILD_ALL, Menu.Item.VALIDATE_ONLY, Menu.Item.GENERATE_ONLY,
         Menu.Item.COMPILE_ONLY, Menu.Item.RUN, Menu.Item.EXTERNAL_XML_EDITOR,
         Menu.Item.EXTERNAL_LOG_VIEWER), false);
 
+    this.toolBarFile.enableButton(Menu.Item.RELOAD_XML, false);
     this.toolBarFile.enableButton(Menu.Item.SAVE, false);
 
     this.toolBarFile.getButtonByActionCommand(Menu.Item.EXTERNAL_XML_EDITOR)
@@ -518,20 +515,6 @@ public class AORJavaGui extends JFrame implements ActionListener,
           .println("****************************************************");
     }
   }// constructor
-
-  private void startFileMonitorTask() {
-    if (this.fileMonitor == null) {
-      this.fileMonitor = new FileMonitor(1000);
-      this.fileMonitor.addListener(this);
-    }
-
-    this.fileMonitor.startFileMonitorNotifier();
-  }
-
-  private void stopFileMonitorTask() {
-    if (this.fileMonitor != null)
-      this.fileMonitor.stopFileMonitorNotifier();
-  }
 
   private void initListener() {
     // register the GUI as property change listener for events raised by the
@@ -1338,10 +1321,10 @@ public class AORJavaGui extends JFrame implements ActionListener,
               Menu.Item.EXTERNAL_XML_EDITOR).setEnabled(false);
           this.toolBarFile.getButtonByActionCommand(
               Menu.Item.EXTERNAL_LOG_VIEWER).setEnabled(false);
+          this.toolBarFile.enableButton(Menu.Item.RELOAD_XML, true);
 
           // enable the text area for reading
           this.tabAORSL.getEditorPane().setEnabled(true);
-
         }
 
       } else {
@@ -1384,10 +1367,6 @@ public class AORJavaGui extends JFrame implements ActionListener,
           if (this.simulationManager.loadProject(fileChooser.getSelectedFile()
               .getAbsolutePath())) {
 
-            // observe the used file
-            this.fileMonitor.addFile(this.simulationManager.getProject()
-                .getSimulationDescriptionFile());
-
             // set current user directory
             this.setCurrentUserDir(fileChooser.getSelectedFile().getParent());
 
@@ -1428,12 +1407,13 @@ public class AORJavaGui extends JFrame implements ActionListener,
 
             // switch the list of menu items on
             ((Menu) this.getJMenuBar()).switchMenuItems(Arrays.asList(
-                Menu.Item.SAVE, Menu.Item.SAVE_AS, Menu.Item.CLOSE,
-                Menu.Item.IMPORT_XML, Menu.Item.EXPORT_XML,
+                Menu.Item.SAVE, Menu.Item.SAVE_AS, Menu.Item.RELOAD_XML,
+                Menu.Item.CLOSE, Menu.Item.IMPORT_XML, Menu.Item.EXPORT_XML,
                 Menu.Item.BUILD_ALL, Menu.Item.VALIDATE_ONLY,
                 Menu.Item.GENERATE_ONLY), true);
 
             this.toolBarFile.enableButton(Menu.Item.SAVE, true);
+            this.toolBarFile.enableButton(Menu.Item.RELOAD_XML, true);
 
             // when the project is already generated, switch on the compile
             // command
@@ -1548,6 +1528,28 @@ public class AORJavaGui extends JFrame implements ActionListener,
 
   private void setCurrentUserDir(String path) {
     this.simulationManager.getProperties().setProperty("lastUserDir", path);
+  }
+
+  private void reloadXML() {
+
+    // if there is already an project in use
+    if (this.simulationManager.getProject() != null) {
+      Project prj = this.simulationManager.getProject();
+      prj.loadSimulationDescription();
+      String importedSimDesc = prj.getSimulationDescription();;
+
+      // if something was loaded
+      if (importedSimDesc != null) {
+
+        this.tabAORSL.getEditorPane().setText(
+            this.simulationManager.getProject().getSimulationDescription());
+
+      }
+    }
+
+    // initialize data from XML for module
+    this.simulationManager.initializeDom(this.simulationManager.getProject()
+        .getSimulationDescription());
   }
 
   private boolean saveProject() {
@@ -1689,29 +1691,24 @@ public class AORJavaGui extends JFrame implements ActionListener,
     this.tempStepTimeDelay = -1;
 
     this.toolBarSimulation.enableSimulationToolBarEditableComponents(false);
+    successful = true;
 
     // if there is already a project
     if (this.simulationManager.getProject() != null) {
       // if the current project has not been saved yet
-      if (!this.simulationManager.getProject().isSaved()) {
-        // ask the user to save it
-        int status = JOptionPane.showConfirmDialog(this,
-            this.messageSaveExistendProject, "", JOptionPane.YES_OPTION,
-            JOptionPane.QUESTION_MESSAGE);
-
-        // user clicked yes, to save the actual project
-        if (status == JOptionPane.YES_OPTION) {
-          // if the project was saved
-          if (this.saveProject()) {
-            successful = true;
-          }
-        } else {
-          successful = true;
-        }
-
-      } else {
-        successful = true;
-      }
+      /*
+       * if (!this.simulationManager.getProject().isSaved()) { // ask the user
+       * to save it int status = JOptionPane.showConfirmDialog(this,
+       * this.messageSaveExistendProject, "", JOptionPane.YES_OPTION,
+       * JOptionPane.QUESTION_MESSAGE);
+       * 
+       * // user clicked yes, to save the actual project if (status ==
+       * JOptionPane.YES_OPTION) { // if the project was saved if
+       * (this.saveProject()) { successful = true; } } else { successful = true;
+       * }
+       * 
+       * } else { successful = true; }
+       */
 
       // if the project is saved
       if (successful) {
@@ -1729,9 +1726,9 @@ public class AORJavaGui extends JFrame implements ActionListener,
 
         // disable some menu items
         ((Menu) this.getJMenuBar()).switchMenuItems(Arrays.asList(
-            Menu.Item.SAVE, Menu.Item.SAVE_AS, Menu.Item.CLOSE,
-            Menu.Item.IMPORT_XML, Menu.Item.EXPORT_XML, Menu.Item.EXPORT_JAR,
-            Menu.Item.BUILD_ALL, Menu.Item.VALIDATE_ONLY,
+            Menu.Item.SAVE, Menu.Item.SAVE_AS, Menu.Item.RELOAD_XML,
+            Menu.Item.CLOSE, Menu.Item.IMPORT_XML, Menu.Item.EXPORT_XML,
+            Menu.Item.EXPORT_JAR, Menu.Item.BUILD_ALL, Menu.Item.VALIDATE_ONLY,
             Menu.Item.GENERATE_ONLY, Menu.Item.COMPILE_ONLY,
             Menu.Item.EXTERNAL_XML_EDITOR, Menu.Item.EXTERNAL_LOG_VIEWER),
             false);
@@ -1741,6 +1738,7 @@ public class AORJavaGui extends JFrame implements ActionListener,
         this.toolBarFile.enableButton(Menu.Item.SAVE, false);
         this.toolBarFile.enableButton(Menu.Item.EXTERNAL_XML_EDITOR, false);
         this.toolBarFile.enableButton(Menu.Item.EXTERNAL_LOG_VIEWER, false);
+        this.toolBarFile.enableButton(Menu.Item.RELOAD_XML, false);
 
         // reset steps and delay to 0
         AORJavaGui.this.toolBarSimulation.setSimulationSteps(0);
@@ -1766,9 +1764,6 @@ public class AORJavaGui extends JFrame implements ActionListener,
 
         // reset to default title
         this.setTitle(this.guiTitle);
-
-        // remove files from file monitor
-        this.fileMonitor.removeAllFiles();
       }
 
       return true;
@@ -1796,9 +1791,9 @@ public class AORJavaGui extends JFrame implements ActionListener,
 
         // enable some menu items
         ((Menu) this.getJMenuBar()).switchMenuItems(Arrays.asList(
-            Menu.Item.SAVE, Menu.Item.SAVE_AS, Menu.Item.CLOSE,
-            Menu.Item.IMPORT_XML, Menu.Item.EXPORT_XML, Menu.Item.EXPORT_JAR,
-            Menu.Item.BUILD_ALL, Menu.Item.VALIDATE_ONLY,
+            Menu.Item.SAVE, Menu.Item.SAVE_AS, Menu.Item.RELOAD_XML,
+            Menu.Item.CLOSE, Menu.Item.IMPORT_XML, Menu.Item.EXPORT_XML,
+            Menu.Item.EXPORT_JAR, Menu.Item.BUILD_ALL, Menu.Item.VALIDATE_ONLY,
             Menu.Item.GENERATE_ONLY, Menu.Item.COMPILE_ONLY), true);
 
         this.toolBarFile.enableButton(Menu.Item.SAVE, true);
@@ -1843,10 +1838,7 @@ public class AORJavaGui extends JFrame implements ActionListener,
           this.simulationManager.getProject().setSimulationDescriptionFilePath(
               file.getAbsolutePath());
         this.simulationManager.getProject().setSimulationDescriptionFile(file);
-        this.fileMonitor.addFile(file);
         String strFromFile = this.simulationManager.readXMLFile(file);
-        if (!strFromFile.equals(""))
-          this.fileMonitor.addFile(file);
         return strFromFile;
       }
     }
@@ -1901,6 +1893,9 @@ public class AORJavaGui extends JFrame implements ActionListener,
       // click on: open icon & menu entry
     } else if (evt.getActionCommand().equals(Menu.Item.OPEN)) {
       this.openProject();
+
+    } else if (evt.getActionCommand().equals(Menu.Item.RELOAD_XML)) {
+      this.reloadXML();
 
     } else if (evt.getActionCommand().equals(Menu.Item.SAVE)) {
       this.saveProject();
@@ -1970,6 +1965,7 @@ public class AORJavaGui extends JFrame implements ActionListener,
       new DialogHtml(this, htmlContent, "About");
 
     } else if (evt.getActionCommand().equals("comboBoxChanged")) {
+      @SuppressWarnings("rawtypes")
       String lookAndFeelName = (String) ((JComboBox) evt.getSource())
           .getSelectedItem();
 
@@ -1997,8 +1993,10 @@ public class AORJavaGui extends JFrame implements ActionListener,
       if (this.preferences.isExternalXMLEditor()) {
         // disable the save functions, to avoid overwriting the AORSL from the
         // GUI
-        ((Menu) this.getJMenuBar()).switchMenuItems(
-            Arrays.asList(Menu.Item.SAVE, Menu.Item.SAVE_AS), false);
+        /*
+         * ((Menu) this.getJMenuBar()).switchMenuItems(
+         * Arrays.asList(Menu.Item.SAVE, Menu.Item.SAVE_AS), false);
+         */
 
         this.tabAORSL.getEditorPane().setEnabled(false);
         this.tabPane.setTitleAt(this.tabAORSLIndex,
@@ -2227,10 +2225,7 @@ public class AORJavaGui extends JFrame implements ActionListener,
         tabAORSL.getEditorPane().setText(aorsl);
       }
 
-    } else if (evt.getActionCommand().equals(
-        Menu.Item.RELOAD_XML)) {
-
-     
+    } else if (evt.getActionCommand().equals(Menu.Item.RELOAD_XML)) {
 
     } else {
       System.err.println("Unimplemented action event occured: "
@@ -2498,9 +2493,6 @@ public class AORJavaGui extends JFrame implements ActionListener,
         + maxSimulationIterationsNumber + " :  ");
     success.println("Ok");
 
-    // stop the file monitor task
-    this.stopFileMonitorTask();
-
     System.out.println(messageSimulationStarted);
   }
 
@@ -2620,48 +2612,6 @@ public class AORJavaGui extends JFrame implements ActionListener,
       SimulationDescription simulationDescription) {
     // TODO Auto-generated method stub
 
-  }
-
-  /**
-   * Usage:
-   * 
-   * 
-   * Comments: Overrides method {@code fileChange} from super class
-   * 
-   * 
-   * 
-   * @param file
-   */
-  @Override
-  public void fileChange(File file) {
-    String messageTextChangeFile = "This file was changed externaly. \nDo you want to relaod it?";
-    String messageTextRebuild = "Simulation rebuild is recommended. \nDo you want to rebuild the simulation?";
-    this.stopFileMonitorTask();
-    int confirmAnswer = JOptionPane.showConfirmDialog(this,
-        messageTextChangeFile, "Information", JOptionPane.YES_NO_OPTION);
-    if (confirmAnswer == JOptionPane.YES_OPTION) {
-      String xmlScenario = this.simulationManager.readXMLFile(file);
-      // System.out.println(MD5Generator.getMD5("MD5: " + xmlScenario));
-
-      if (this.simulationManager.getProject() != null) {
-        this.simulationManager.getProject().setSimulationDescription(
-            xmlScenario);
-        if (this.simulationManager.getProject().isGenerated()
-            && !this.simulationManager.getProject().checkBuildStatus()) {
-          confirmAnswer = JOptionPane.showConfirmDialog(this,
-              messageTextRebuild, "Information", JOptionPane.YES_NO_OPTION);
-
-          if (confirmAnswer == JOptionPane.YES_OPTION) {
-            this.build();
-          }
-
-        }
-      }
-      this.tabAORSL.getEditorPane().setText(xmlScenario);
-      this.simulationManager.initializeDom(xmlScenario);
-      this.fileMonitor.updateFile(file);
-    }
-    this.startFileMonitorTask();
   }
 
   @Override
