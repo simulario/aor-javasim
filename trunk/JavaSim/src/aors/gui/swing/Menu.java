@@ -160,12 +160,15 @@ public class Menu extends JMenuBar {
         .addMenuItem(this.projectMenu, Menu.Item.OPEN, Menu.Item.OPEN_MNEMONIC,
             KeyStroke.getKeyStroke('O', InputEvent.CTRL_MASK),
             Menu.Item.OPEN_IMAGE);
-    this
+    /*this
         .addMenuItem(this.projectMenu, Menu.Item.SAVE, Menu.Item.SAVE_MNEMONIC,
             KeyStroke.getKeyStroke('S', InputEvent.CTRL_MASK),
             Menu.Item.SAVE_IMAGE);
     this.addMenuItem(this.projectMenu, Menu.Item.SAVE_AS,
         Menu.Item.SAVE_AS_MNEMONIC, null, Menu.Item.SAVE_IMAGE);
+        */
+    this.addMenuItem(this.projectMenu, Menu.Item.RELOAD_XML,
+        Menu.Item.RELOAD_XML_MNEMONIC, null, Menu.Item.RELOAD_XML_IMAGE);
     this.addMenuItem(this.projectMenu, Menu.Item.CLOSE,
         Menu.Item.CLOSE_MNEMONIC, null, Menu.Item.CLOSE_IMAGE);
 
@@ -287,7 +290,7 @@ public class Menu extends JMenuBar {
    */
   public class Item {
 
-    public final static String NEW = "New";
+    public final static String NEW = "New from XML";
     public final static char NEW_MNEMONIC = 'n';
     public final static String NEW_IMAGE = "stock_generic-mimetype.png";
 
@@ -302,6 +305,10 @@ public class Menu extends JMenuBar {
     public final static String SAVE_AS = "Save as";
     public final static char SAVE_AS_MNEMONIC = 'v';
     public final static String SAVE_AS_IMAGE = "media-floppy.png";
+    
+    public final static String RELOAD_XML = "Reload XML";
+    public final static char RELOAD_XML_MNEMONIC = 'r';
+    public final static String RELOAD_XML_IMAGE = "xml-reload.png";
 
     public final static String CLOSE = "Close";
     public final static char CLOSE_MNEMONIC = 'c';

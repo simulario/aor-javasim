@@ -12,7 +12,8 @@ public class ToolBarFile extends ToolBar {
 
     this.addButton(Menu.Item.NEW, Menu.Item.NEW_IMAGE);
     this.addButton(Menu.Item.OPEN, Menu.Item.OPEN_IMAGE);
-    this.addButton(Menu.Item.SAVE, Menu.Item.SAVE_IMAGE);
+    this.addButton(Menu.Item.RELOAD_XML, Menu.Item.RELOAD_XML_IMAGE);
+    //this.addButton(Menu.Item.SAVE, Menu.Item.SAVE_IMAGE);
     // this.addButton(Menu.Item.EXIT, Menu.Item.EXIT_IMAGE);
     this.addButton(Menu.Item.EXTERNAL_XML_EDITOR,
         Menu.Item.EXTERNAL_XML_EDITOR_IMAGE);

@@ -190,13 +190,6 @@ public class AORJavaGui extends JFrame implements ActionListener,
   private final String messageSimulationStarted = "Simulation started.";
   private final String messageSimulationFinished = "Simulation finished.";
 
-  // options for user selection
-  private final String optionEmptyProject = "Create an empty project";
-  private final String optionOpenExistentDescription = "Open existent simulation description";
-
-  private final String[] optionsNewProject = { optionOpenExistentDescription,
-      optionEmptyProject, };
-
   public static final String CONTEXT_MENU_ITEM_PREFERENCES = "Preferences";
 
   private int tempSimSteps = -1;
@@ -249,10 +242,10 @@ public class AORJavaGui extends JFrame implements ActionListener,
     this.getContentPane().setLocale(Locale.ENGLISH);
 
     // new simulator instance
-    synchronized (getTreeLock()) { 
-    	this.simulationManager = new SimulationManager();
+    synchronized (getTreeLock()) {
+      this.simulationManager = new SimulationManager();
     }
-   
+
     this.preferences = new DialogPreferences(this);
 
     String value = this.simulationManager.getProperties().getProperty(
@@ -1285,126 +1278,78 @@ public class AORJavaGui extends JFrame implements ActionListener,
   }
 
   private void newProject() {
-    String selection = (String) JOptionPane.showInputDialog(this,
-        "Please select:", "New Project", JOptionPane.QUESTION_MESSAGE, null,
-        this.optionsNewProject, this.optionOpenExistentDescription);
 
-    // if anything useful was selected, except cancel or the X
-    if (selection != null) {
+    // close the previous project
+    if (this.closeProject()) {
+      // create a new project
+      this.simulationManager.newProject();
+      // if importing the XML is successful
+      if (this.importXML()) {
+        // enable all tabs
+        for (int tabIndex = 0; tabIndex < this.tabPane.getTabCount(); tabIndex++) {
+          this.tabPane.setEnabledAt(tabIndex, true);
+        }
 
-      boolean sucessfulSelection = false;
+        // initialize data from XML for module
+        this.simulationManager.initializeDom(this.simulationManager
+            .getProject().getSimulationDescription());
 
-      while (!sucessfulSelection) {
-        if (selection.equals(this.optionEmptyProject)) {
+        this.setTitle(this.guiTitle + " - Not Saved");
 
-          // close the previous project
-          this.closeProject();
+        // when an external XML editor / log viewer is preferred
+        if (preferences.isExternalXMLEditor()) {
+          // change the title of the AORSL tab
+          this.tabPane.setTitleAt(this.tabAORSLIndex,
+              this.tabAORSLNameExternalEditor);
 
-          // create a new project
-          this.simulationManager.newProject();
-          this.setTitle(this.guiTitle + " - " + "New Project");
-          this.tabAORSL.getEditorPane().setText("");
-          this.fileChooser.setSelectedFile(null);
-          this.simulationManager.getProject().setSimulationDescription("");
-          this.simulationManager.getProject().setSaved(true);
-
-          // enable the tab, when no external is used
-          this.tabPane.setEnabledAt(tabAORSLIndex,
-              !this.preferences.isExternalXMLEditor());
-
-          // enable the internal editor, when no external is used
-          this.tabAORSL.getEditorPane().setEnabled(
-              !this.preferences.isExternalXMLEditor());
-
-          // switch the list of menu items on
+          // switch on the menu items for the external functionality
           ((Menu) this.getJMenuBar()).switchMenuItems(Arrays.asList(
-              Menu.Item.SAVE, Menu.Item.SAVE_AS, Menu.Item.CLOSE,
-              Menu.Item.IMPORT_XML, Menu.Item.BUILD_ALL,
-              Menu.Item.VALIDATE_ONLY, Menu.Item.GENERATE_ONLY), true);
+              Menu.Item.EXTERNAL_XML_EDITOR, Menu.Item.EXTERNAL_LOG_VIEWER),
+              true);
 
-          this.toolBarFile.enableButton(Menu.Item.SAVE, true);
+          // switch on the regarding buttons
+          this.toolBarFile.getButtonByActionCommand(
+              Menu.Item.EXTERNAL_XML_EDITOR).setEnabled(true);
+          this.toolBarFile.getButtonByActionCommand(
+              Menu.Item.EXTERNAL_LOG_VIEWER).setEnabled(true);
 
-          sucessfulSelection = true;
-          // new project from existent simulation description
-        } else if (selection.equals(this.optionOpenExistentDescription)) {
-          // close the previous project
-          if (this.closeProject()) {
-            // create a new project
-            this.simulationManager.newProject();
-            // if importing the XML is successful
-            if (this.importXML()) {
-              // enable all tabs
-              for (int tabIndex = 0; tabIndex < this.tabPane.getTabCount(); tabIndex++) {
-                this.tabPane.setEnabledAt(tabIndex, true);
-              }
+          // switch on/off the external log viewer, depending if an log
+          // file
+          // name was set in the project
+          ((Menu) this.getJMenuBar()).getMenuItemByName(
+              Menu.Item.EXTERNAL_LOG_VIEWER).setEnabled(
+              !simulationManager.getProject().getLogFileName().equals(""));
 
-              // initialize data from XML for module
-              this.simulationManager.initializeDom(this.simulationManager
-                  .getProject().getSimulationDescription());
+          // disable the text area for editing
+          this.tabAORSL.getEditorPane().setEnabled(false);
 
-              this.setTitle(this.guiTitle + " - Not Saved");
+        } else {
+          // change the title of the AORSL tab
+          this.tabPane.setTitleAt(this.tabAORSLIndex, this.tabAORSLName);
 
-              // when an external XML editor / log viewer is preferred
-              if (preferences.isExternalXMLEditor()) {
-                // change the title of the AORSL tab
-                this.tabPane.setTitleAt(this.tabAORSLIndex,
-                    this.tabAORSLNameExternalEditor);
+          // enable the internal editor
+          // this.tabAORSL.getEditorPane().setEnabled(true);
 
-                // switch on the menu items for the external functionality
-                ((Menu) this.getJMenuBar()).switchMenuItems(Arrays.asList(
-                    Menu.Item.EXTERNAL_XML_EDITOR,
-                    Menu.Item.EXTERNAL_LOG_VIEWER), true);
+          // disable external functionality
+          ((Menu) this.getJMenuBar()).switchMenuItems(Arrays.asList(
+              Menu.Item.EXTERNAL_XML_EDITOR, Menu.Item.EXTERNAL_LOG_VIEWER),
+              false);
+          this.toolBarFile.getButtonByActionCommand(
+              Menu.Item.EXTERNAL_XML_EDITOR).setEnabled(false);
+          this.toolBarFile.getButtonByActionCommand(
+              Menu.Item.EXTERNAL_LOG_VIEWER).setEnabled(false);
 
-                // switch on the regarding buttons
-                this.toolBarFile.getButtonByActionCommand(
-                    Menu.Item.EXTERNAL_XML_EDITOR).setEnabled(true);
-                this.toolBarFile.getButtonByActionCommand(
-                    Menu.Item.EXTERNAL_LOG_VIEWER).setEnabled(true);
+          // enable the text area for reading
+          this.tabAORSL.getEditorPane().setEnabled(true);
 
-                // switch on/off the external log viewer, depending if an log
-                // file
-                // name was set in the project
-                ((Menu) this.getJMenuBar()).getMenuItemByName(
-                    Menu.Item.EXTERNAL_LOG_VIEWER)
-                    .setEnabled(
-                        !simulationManager.getProject().getLogFileName()
-                            .equals(""));
+        }
 
-                // disable the text area for editing
-                this.tabAORSL.getEditorPane().setEnabled(false);
+      } else {
+        this.closeProject();
+      }
 
-              } else {
-                // change the title of the AORSL tab
-                this.tabPane.setTitleAt(this.tabAORSLIndex, this.tabAORSLName);
-
-                // enable the internal editor
-                // this.tabAORSL.getEditorPane().setEnabled(true);
-
-                // disable external functionality
-                ((Menu) this.getJMenuBar()).switchMenuItems(Arrays.asList(
-                    Menu.Item.EXTERNAL_XML_EDITOR,
-                    Menu.Item.EXTERNAL_LOG_VIEWER), false);
-                this.toolBarFile.getButtonByActionCommand(
-                    Menu.Item.EXTERNAL_XML_EDITOR).setEnabled(false);
-                this.toolBarFile.getButtonByActionCommand(
-                    Menu.Item.EXTERNAL_LOG_VIEWER).setEnabled(false);
-
-                // enable the text area for reading
-                this.tabAORSL.getEditorPane().setEnabled(true);
-
-              }
-
-            } else {
-              this.closeProject();
-            }
-
-          } else {
-            System.err.println("Can not close the current project.");
-          }
-          sucessfulSelection = true;
-        }// if-else
-      }// while
-
+    } else {
+      System.err.println("Can not close the current project.");
     }
   }
 
@@ -2282,6 +2227,11 @@ public class AORJavaGui extends JFrame implements ActionListener,
         tabAORSL.getEditorPane().setText(aorsl);
       }
 
+    } else if (evt.getActionCommand().equals(
+        Menu.Item.RELOAD_XML)) {
+
+     
+
     } else {
       System.err.println("Unimplemented action event occured: "
           + evt.getActionCommand());
@@ -2344,16 +2294,16 @@ public class AORJavaGui extends JFrame implements ActionListener,
           noCompilerFoundHTMLFileName));
       new DialogHtml(null, htmlContent, "Error");
     } else {
-    	AORJavaGui app = new AORJavaGui();
-    	app.startGUI();
+      AORJavaGui app = new AORJavaGui();
+      app.startGUI();
     }
 
   }
-  
+
   public void startGUI() {
-	  synchronized (getTreeLock()) {
-		  this.setVisible(true);
-	  }
+    synchronized (getTreeLock()) {
+      this.setVisible(true);
+    }
   }
 
   @Override
