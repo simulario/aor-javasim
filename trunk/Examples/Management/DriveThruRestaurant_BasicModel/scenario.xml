@@ -14,7 +14,7 @@
 			<dc:creator>Oana Nicolae</dc:creator>
 			<dc:contributor>Gerd Wagner</dc:contributor>
 			<dc:created>20090331</dc:created>
-			<dc:modified>20110810</dc:modified>
+			<dc:modified>20120312</dc:modified>
 			<dc:title>Drive Thru</dc:title>
 			<dc:title xml:lang="de">Auto-Restaurant</dc:title>
 			<shortDescription>A simple model of a drive thru as a system with three queues: one for the order window, 
@@ -85,13 +85,12 @@
 					<ObjectProperty property="queueLength" objectType="PickupWindow" objectIdRef="2"/>
 				</Source>				
 			</Variable>
-			<Variable name="revenue" dataType="Float" />
-			
+			<Variable name="revenue" dataType="Float" />	
 			<Variable name="cumulativeResponseTime" dataType="Integer" />
 			<Variable name="meanResponseTime" dataType="Float">
 				<Source computeOnlyAtEnd="true">
 					<ValueExpr language="Java"> 
-						SimStatistics.cumulativeResponseTime.getValue() 
+					(double) SimStatistics.cumulativeResponseTime.getValue() 
 						/ SimStatistics.numberOfDepartures.getValue()
 					</ValueExpr>
 					<ValueExpr language="JavaScript">
@@ -99,18 +98,25 @@
 						/ SimStatistics.numberOfDepartures.getValue()
 					</ValueExpr>
 				</Source>
-			</Variable>
-			
+			</Variable>	
 			<Variable name="cumulativeMenuBoardServiceTime" dataType="Integer" />
 			<Variable name="menuBoardUtilization" dataType="Float">
 				<Source computeOnlyAtEnd="true">
-					<ValueExpr language="Java"> SimStatistics.cumulativeMenuBoardServiceTime.getValue() 
+					<ValueExpr language="Java"> (double) SimStatistics.cumulativeMenuBoardServiceTime.getValue() 
 						/ SimParameter.SIMULATION_STEPS * 100 </ValueExpr>
 					<ValueExpr language="JavaScript">SimStatistics.cumulativeMenuBoardServiceTime.getValue() 
 						/ SimParameter.SIMULATION_STEPS * 100 </ValueExpr>
 				</Source>
 			</Variable>
-
+			<Variable name="cumulativePickupWindowServiceTime" dataType="Integer" />
+			<Variable name="pickupWindowUtilization" dataType="Float">
+				<Source computeOnlyAtEnd="true">
+					<ValueExpr language="Java"> (double) SimStatistics.cumulativePickupWindowServiceTime.getValue() 
+						/ SimParameter.SIMULATION_STEPS * 100 </ValueExpr>
+					<ValueExpr language="JavaScript">SimStatistics.cumulativePickupWindowServiceTime.getValue() 
+						/ SimParameter.SIMULATION_STEPS * 100 </ValueExpr>
+				</Source>
+			</Variable>
 			<Variable name="maxLengthOfMBQ" dataType="Integer">
 				<Source aggregationFunction="max">
 					<ObjectProperty property="queueLength" objectType="MenuBoard" objectIdRef="1" />
@@ -457,6 +463,11 @@ this.pw.getPickupWindowQueue().size() == 1
 					<UpdateObject objectVariable="pw">
 						<Slot property="pickupWindowBusy" value="true" />
 					</UpdateObject>
+					<UpdateStatisticsVariable variable="cumulativePickupWindowServiceTime">
+						<ValueExpr language="Java JavaScript">
+							SimStatistics.cumulativePickupWindowServiceTime.getValue() + this.serviceTimePW
+						</ValueExpr>
+					</UpdateStatisticsVariable>
 				</UPDATE-ENV>
 				<SCHEDULE-EVT>
 					<CausedEventExpr eventType="EndPickupWindowService">
@@ -749,26 +760,9 @@ this.pw.getPickupWindowQueue().size() == 1
 					<Text xml:lang="es">Cuál es el tiempo medio empleado por el uso del servicio de recepcion de pedidos comidas?</Text>
 					<Text xml:lang="ro">Care este timpul mediu de utilizare a serviciului de preluare comenzi?</Text>
 				</Hint>
-				<Format decimalPlaces="1"><Math>%</Math></Format>
+				<Format decimalPlaces="2"><Math>%</Math></Format>
 			</StatisticsVariableUI>
-			<!--
-				<StatisticsVariableUI variable="kitchenUtilization">
-				<Label>
-					<Text xml:lang="en">Kitchen utilization</Text>
-					<Text xml:lang="de">Küchen-Nutzung</Text>
-					<Text xml:lang="fr">L'utilisation de la cuisine</Text>
-					<Text xml:lang="es">Utilización de la cocina</Text>
-					<Text xml:lang="ro">Utilizare bucatarie</Text>
-				</Label>
-				<Hint>
-					<Text xml:lang="en">What is the utilization of the kitchen?</Text>
-					<Text xml:lang="de">Wie hoch ist der Nutzungsgrad der Küche?</Text>
-					<Text xml:lang="fr">Quel est le temps moyen de l'utilisation de la cuisine?</Text>
-					<Text xml:lang="es">Cuál es el tiempo medio empleado por el uso del servicio de cucina?</Text>
-					<Text xml:lang="ro">Care este timpul mediu de utilizare a bucatariei?</Text>
-				</Hint>
-				<Format decimalPlaces="1"><Math>%</Math></Format>
-			</StatisticsVariableUI>
+			
 			<StatisticsVariableUI variable="pickupWindowUtilization">
 				<Label>
 					<Text xml:lang="en">Pickup window utilization</Text>
@@ -786,7 +780,25 @@ this.pw.getPickupWindowQueue().size() == 1
 				</Hint>
 				<Format decimalPlaces="1"><Math>%</Math></Format>
 			</StatisticsVariableUI>
--->
+			<!--
+			<StatisticsVariableUI variable="kitchenUtilization">
+			<Label>
+			<Text xml:lang="en">Kitchen utilization</Text>
+			<Text xml:lang="de">Küchen-Nutzung</Text>
+			<Text xml:lang="fr">L'utilisation de la cuisine</Text>
+			<Text xml:lang="es">Utilización de la cocina</Text>
+			<Text xml:lang="ro">Utilizare bucatarie</Text>
+			</Label>
+			<Hint>
+			<Text xml:lang="en">What is the utilization of the kitchen?</Text>
+			<Text xml:lang="de">Wie hoch ist der Nutzungsgrad der Küche?</Text>
+			<Text xml:lang="fr">Quel est le temps moyen de l'utilisation de la cuisine?</Text>
+			<Text xml:lang="es">Cuál es el tiempo medio empleado por el uso del servicio de cucina?</Text>
+			<Text xml:lang="ro">Care este timpul mediu de utilizare a bucatariei?</Text>
+			</Hint>
+			<Format decimalPlaces="1"><Math>%</Math></Format>
+			</StatisticsVariableUI>
+			-->
 			<StatisticsVariableUI variable="maxLengthOfMBQ">
 				<Label>
 					<Text xml:lang="en">Maximum length of menu board queue</Text>
@@ -819,7 +831,7 @@ this.pw.getPickupWindowQueue().size() == 1
 					<Text xml:lang="ro">Care este dimensiunea maxima a listei de asteptare pentru serviciul de distributie comenzi?</Text>
 				</Hint>
 			</StatisticsVariableUI>
-			<StatisticsVariableUI variable="menuBoardQueueLength" comparisonGroup="MenuBoard_PickupWindow">
+			<StatisticsVariableUI variable="menuBoardQueueLength" comparisonGroup="MenuBoard_PickupWindow" showChart="true">
 				<Label>
 					<Text xml:lang="en">Length of menu board queue</Text>
 					<Text xml:lang="de">Länge der Auftragsannahme-Warteschlange</Text>
@@ -835,7 +847,7 @@ this.pw.getPickupWindowQueue().size() == 1
 					<Text xml:lang="ro">Care este dimensiunea listei de asteptare pentru serviciul de preluare comenzi?</Text>
 				</Hint>
 			</StatisticsVariableUI>
-			<StatisticsVariableUI variable="pickupWindowQueueLength" comparisonGroup="MenuBoard_PickupWindow">
+			<StatisticsVariableUI variable="pickupWindowQueueLength" comparisonGroup="MenuBoard_PickupWindow" showChart="true">
 				<Label>
 					<Text xml:lang="en">Length of pickup window queue</Text>
 					<Text xml:lang="de">Länge der Ausgabefenster-Warteschlange</Text>
@@ -864,8 +876,8 @@ this.pw.getPickupWindowQueue().size() == 1
 					<!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->
 					<Shape2D x="40%" y="35%">
 						<Square width="100" stroke="darkgrey" strokeWidth="30">
-							<ShapePropertyVisualizationMap shapeProperty="fill" property="queueLength"
-								mapType="caseWise" v0="green" a0="1" a1="100" v1="red" />
+							<ShapePropertyVisualizationMap shapeProperty="fill" property="menuBoardBusy"
+								mapType="equalityCaseWise" v0="green" a0="false" a1="true" v1="red" />
 						</Square>
 					</Shape2D>
 					<DisplayInfo property="queueLength" content=" customers" />
@@ -888,10 +900,10 @@ this.pw.getPickupWindowQueue().size() == 1
 				<!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->
 				<ObjectView objectType="PickupWindow" displayName="true" objectIdRef="2">
 					<!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->
-					<Shape2D x="70%" y="35%">
+					<Shape2D x="80%" y="35%">
 						<Square width="100" stroke="darkgrey" strokeWidth="30">
-							<ShapePropertyVisualizationMap shapeProperty="fill" property="queueLength"
-								mapType="caseWise" v0="green" a0="1" a1="100" v1="red" />
+							<ShapePropertyVisualizationMap shapeProperty="fill" property="pickupWindowBusy"
+								mapType="equalityCaseWise" v0="green" a0="false" a1="true" v1="red" />
 						</Square>
 					</Shape2D>
 					<DisplayInfo property="queueLength" content=" customers" />
