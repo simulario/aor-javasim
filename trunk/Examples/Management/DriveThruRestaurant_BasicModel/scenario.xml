@@ -61,8 +61,14 @@
 			<titleImage file="DriveThru.png"/>
 			<processModelDiagram file="DriveThru_ProcessModel.png"/>
 			<mediaFiles>
+				<image file="Queue_Cmon-Fotolia.JPG" license="© Cmon Fotolia.com" author="Cmon" />
+				<image file="Queue_Cmon-Fotolia_1.JPG" license="© Cmon Fotolia.com" author="Cmon" />
+				<image file="Queue_Cmon-Fotolia_2.JPG" license="© Cmon Fotolia.com" author="Cmon" />
+				<image file="Queue_Cmon-Fotolia_3.JPG" license="© Cmon Fotolia.com" author="Cmon" />
+				<image file="Queue_Cmon-Fotolia_4.JPG" license="© Cmon Fotolia.com" author="Cmon" />
+				<image file="Queue_Cmon-Fotolia_5.JPG" license="© Cmon Fotolia.com" author="Cmon" />
 				<image file="DriveThru.png" license="© R.G. Ingalls"/>
-				<image file="DriveThru_ProcessModel.png" author="Oana Nicolae" license="CC BY-SA"/>
+				<image file="DriveThru_ProcessModel.png" author="Oana Nicolae" license="CC BY-SA" />
 			</mediaFiles>
 		</documentation>
 		<Statistics>
@@ -71,7 +77,7 @@
 			<Variable name="numberOfDepartures" dataType="Integer" />
 			<Variable name="menuBoardQueueLength" dataType="Integer">
 				<Source>
-					<ObjectProperty property="queueLength" objectType="MenuBoard" objectIdRef="1"/>
+					<ObjectProperty property="queueLength" objectType="MenuBoard" objectIdRef="1" />
 				</Source>
 			</Variable>
 			<Variable name="pickupWindowQueueLength" dataType="Integer">
@@ -189,15 +195,19 @@ var r2 = js.util.Random.uniformInt(1,6);
 				<Function name="randomPizzaType" resultType="Integer">
 				<!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->
 					<documentation>
-							The type of the pizza as a number between 0 and 5: 0 = Pizza Quattro Formaggi, 
-							1 = Pizza Quattro Stagioni, 2 = Pizza Capricciosa, 3 = Pizza Napoletana, 
-							4 = Pizza Marinara, 5 = Pizza Margherita. 
+							The type of the pizza as a number between 2 and 12 : 2 = Pizza Quattro Formaggi, 
+							3 = Pizza Quattro Stagioni, 4 = Pizza Capricciosa, 5 = Pizza Napoletana, 
+							6 = Pizza Marinara, 7 = Pizza Margherita etc.
 					</documentation>
 					<Body language="Java"><![CDATA[
-return Random.uniformInt(0,5);
+			int a = Random.uniformInt(1,6);		
+			int b = Random.uniformInt(1,6);
+            return a+b;
                     ]]></Body>
 					<Body language="JavaScript"><![CDATA[
-						return Random.uniformInt(0,5);						
+			var a = js.util.Random.uniformInt(1,6);		
+			var b = js.util.Random.uniformInt(1,6);
+            return a+b;					
 				     ]]></Body>
 				</Function>
 			</ObjectType>	
@@ -217,11 +227,13 @@ return Random.uniformInt(0,5);
 					<!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->
 					<Parameter name="pizzaType" type="Integer" />
 					<Body language="Java"><![CDATA[
-double[] price = {8.90, 9.80, 8.50, 7.20, 7.80, 5.20};
+// old calculation for the price of an order: double[] price = {8.90, 9.80, 8.50, 7.20, 7.80, 5.20};
+double[] price = {2.0, 4.0, 6.0, 8.0, 10.0, 12.0, 14.0, 16.0, 18.0, 20.0, 22.0};
 return price[(int)pizzaType];
 	               ]]></Body>
 					<Body language="JavaScript"><![CDATA[
-var price = new js.util.ArrayList(8.90, 9.80, 8.50, 7.20, 7.80, 5.20);
+// old calculation for the price of an order: var price = new js.util.ArrayList(8.90, 9.80, 8.50, 7.20, 7.80, 5.20);
+var price = new js.util.ArrayList(2.0, 4.0, 6.0, 8.0, 10.0, 12.0, 14.0, 16.0, 18.0, 20.0, 22.0);
 return price[pizzaType];
 				   ]]></Body>
 				</Function>
@@ -316,7 +328,7 @@ SimStatistics.numberOfCustomers.getValue() + 1
 					<ObjectRef language="Java JavaScript"> this.mb.getMenuBoardQueue().get(0) </ObjectRef>
 				</FOR-ObjectVariable>
 				<FOR-DataVariable  variable="serviceTimeMB" dataType="Integer">
-					<ValueExpr language="Java JavaScript">Global.twoDice(4)</ValueExpr>
+					<ValueExpr language="Java JavaScript">Global.twoDice(10)</ValueExpr>
 				</FOR-DataVariable>
 				<FOR-DataVariable variable="serviceTimeK" dataType="Integer">
 					<ValueExpr language="Java JavaScript">Global.twoDice(8)</ValueExpr>
@@ -381,7 +393,7 @@ SimStatistics.numberOfCustomers.getValue() + 1
 				</FOR-ObjectVariable>
 				<IF language="Java JavaScript"><![CDATA[
 this.pw.getPickupWindowQueue().size() < this.pw.getMaxPickupWindowLineSize() 
-        ]]></IF>
+            ]]></IF>
 				<THEN>
 					<UPDATE-ENV>
 						<UpdateObject objectVariable="mb">
@@ -438,7 +450,7 @@ this.pw.getPickupWindowQueue().size() == 1
 				<WHEN eventType="StartPickupWindowService" />
 				<FOR-ObjectVariable variable="pw" objectType="PickupWindow" objectIdRef="2" />
 				<FOR-DataVariable variable="serviceTimePW" dataType="Integer">
-					<ValueExpr language="Java JavaScript">Global.twoDice(2)</ValueExpr>
+					<ValueExpr language="Java JavaScript">Global.twoDice(10)</ValueExpr>
 				</FOR-DataVariable>
 				<DO>
 				<UPDATE-ENV>
@@ -472,7 +484,7 @@ this.pw.getPickupWindowQueue().get(0).getOrder().isArrived()
 					<ObjectRef language="Java JavaScript"> this.evt.getOrder() </ObjectRef>
 				</FOR-ObjectVariable>
 				<FOR-DataVariable variable="serviceTimePW" dataType="Integer">
-					<ValueExpr language="Java JavaScript"> Global.twoDice(1) </ValueExpr>
+					<ValueExpr language="Java JavaScript"> Global.twoDice(10) </ValueExpr>
 				</FOR-DataVariable>
 				<DO>
 					<UPDATE-ENV>
@@ -598,9 +610,9 @@ this.pw.getPickupWindowQueue().size() == 1
 	</SimulationModel>
 	<!-- ======================================== -->
 	<InitialState>
-		<!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->
+		<!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->
 		<Object type="MenuBoard" name="MenuBoard" id="1">
-		<!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->
+		<!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->
 			<Slot property="menuBoardBusy" value="false" />
 			<Slot property="maxMenuBoardLineSize" value="5" />
 			<Slot property="queueLength" value="0" />
@@ -609,9 +621,9 @@ this.pw.getPickupWindowQueue().size() == 1
 				<ValueExpr language="JavaScript">new js.util.ArrayList()</ValueExpr>
 			</Slot>
 		</Object> 	
-		<!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->
+		<!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->
 		<Object type="PickupWindow" name="PickupWindow" id="2">
-		<!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->
+		<!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->
 			<Slot property="pickupWindowBusy" value="false" />
 			<Slot property="maxPickupWindowLineSize" value="5" />
 			<Slot property="queueLength" value="0" />
@@ -845,42 +857,60 @@ this.pw.getPickupWindowQueue().size() == 1
 		<!-- ================================================== -->
 			<Views>
 				<SpaceView>
-					<TwoDimensionalSpaceView2D backgroundColor="lightgrey" />
+					<TwoDimensionalSpaceView2D backgroundColor="white" />
 				</SpaceView>
-				<!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->
-				<ObjectView objectType="MenuBoard" displayName="true">
-					<!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->
-					<Shape2D x="600px" y="250px">
-						<Rectangle fill="green" height="50" width="50" stroke="black" strokeWidth="10" positioning="CenterBottom">
-							<ShapePropertyVisualizationMap shapeProperty="fill" property="menuBoardBusy" mapType="equalityCaseWise" v0="green" a0="false" a1="true" v1="red"/>
-						</Rectangle>
+				<!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->
+				<ObjectView objectType="MenuBoard" displayName="true" objectIdRef="1">
+					<!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->
+					<Shape2D x="40%" y="35%">
+						<Square width="100" stroke="darkgrey" strokeWidth="30">
+							<ShapePropertyVisualizationMap shapeProperty="fill" property="queueLength"
+								mapType="caseWise" v0="green" a0="1" a1="100" v1="red" />
+						</Square>
 					</Shape2D>
-					<DisplayInfo content="customers" property="queueLength" />
-					<AttachedShape2D offsetX="-25px" offsetY="70px">
+					<DisplayInfo property="queueLength" content=" customers" />
+					<AttachedShape2D offsetX="-120px" offsetY="0px">
 						<Shape2D>
-							<Rectangle positioning="LeftCenter" fill="yellow" height="10" width="1" stroke="black" strokeWidth="2">
-								<ShapePropertyVisualizationMap shapeProperty="width" property="queueLength" mapType="polynomial" a0="0" a1="50"/>
+							<Rectangle positioning="RightCenter" fill="yellow" width="1" height="100" stroke="black"
+								strokeWidth="2">
+								<ShapePropertyVisualizationMap shapeProperty="width" property="queueLength"
+									mapType="polynomial" a0="0" a1="40" />
+								<ShapePropertyVisualizationMap shapeProperty="texture" property="queueLength"
+									mapType="equalityCaseWise" a0="0" v0="Queue_Cmon-Fotolia.JPG" a1="1"
+									v1="Queue_Cmon-Fotolia_1.JPG" a2="2" v2="Queue_Cmon-Fotolia_2.JPG" a3="3"
+									v3="Queue_Cmon-Fotolia_3.JPG" />
+								<ShapePropertyVisualizationMap shapeProperty="texture" property="queueLength" mapType="equalityCaseWise"
+									a0="4" v0="Queue_Cmon-Fotolia_4.JPG" a1="5" v1="Queue_Cmon-Fotolia_5.JPG" />
 							</Rectangle>
 						</Shape2D>
 					</AttachedShape2D>
-				</ObjectView>
-				<!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->
-				<ObjectView objectType="PickupWindow" displayName="true">
-					<!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->
-					<Shape2D x="250px" y="250px">
-						<Rectangle fill="green" width="50" height="50" stroke="black" strokeWidth="10" positioning="CenterBottom">
-							<ShapePropertyVisualizationMap shapeProperty="fill" property="pickupWindowBusy" mapType="equalityCaseWise" v0="green" a0="false" a1="true" v1="red"/>
-						</Rectangle>
+				</ObjectView>	
+				<!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->
+				<ObjectView objectType="PickupWindow" displayName="true" objectIdRef="2">
+					<!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->
+					<Shape2D x="70%" y="35%">
+						<Square width="100" stroke="darkgrey" strokeWidth="30">
+							<ShapePropertyVisualizationMap shapeProperty="fill" property="queueLength"
+								mapType="caseWise" v0="green" a0="1" a1="100" v1="red" />
+						</Square>
 					</Shape2D>
-					<DisplayInfo content="customers"  property="queueLength" />
-					<AttachedShape2D offsetX="-25px" offsetY="70px">
+					<DisplayInfo property="queueLength" content=" customers" />
+					<AttachedShape2D offsetX="-70px" offsetY="0px">
 						<Shape2D>
-							<Rectangle positioning="LeftCenter" fill="yellow" height="10" width="1" stroke="black" strokeWidth="2">
-								<ShapePropertyVisualizationMap shapeProperty="width" property="queueLength" mapType="polynomial" a0="0" a1="50"/>
+							<Rectangle positioning="RightCenter" fill="yellow" width="1" height="100" stroke="black"
+								strokeWidth="2">
+								<ShapePropertyVisualizationMap shapeProperty="width" property="queueLength"
+									mapType="polynomial" a0="0" a1="40" />
+								<ShapePropertyVisualizationMap shapeProperty="texture" property="queueLength"
+									mapType="equalityCaseWise" a0="0" v0="Queue_Cmon-Fotolia.JPG" a1="1"
+									v1="Queue_Cmon-Fotolia_1.JPG" a2="2" v2="Queue_Cmon-Fotolia_2.JPG" a3="3"
+									v3="Queue_Cmon-Fotolia_3.JPG" />
+								<ShapePropertyVisualizationMap shapeProperty="texture" property="queueLength" mapType="equalityCaseWise"
+									a0="4" v0="Queue_Cmon-Fotolia_4.JPG" a1="5" v1="Queue_Cmon-Fotolia_5.JPG" />
 							</Rectangle>
 						</Shape2D>
 					</AttachedShape2D>
-				</ObjectView>			
+				</ObjectView>	
 			</Views>
 		</AnimationUI>
 	</UserInterface>
