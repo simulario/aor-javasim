@@ -23,11 +23,19 @@ public class ShapePropertyVisualizationMap {
   public static final String A1 = "a1";
   public static final String A2 = "a2";
   public static final String A3 = "a3";
+  public static final String A4 = "a4";
+  public static final String A5 = "a5";
+  public static final String A6 = "a6";
+  public static final String A7 = "a7";
   public static final String V0 = "v0";
   public static final String V1 = "v1";
   public static final String V2 = "v2";
   public static final String V3 = "v3";
   public static final String V4 = "v4";
+  public static final String V5 = "v5";
+  public static final String V6 = "v6";
+  public static final String V7 = "v7";
+  public static final String V8 = "v8";
 
   // Reference to the property class
   private Object propertyClass;
@@ -42,10 +50,10 @@ public class ShapePropertyVisualizationMap {
   private MapType mapType;
 
   // Decision parameters
-  private Object a0, a1, a2, a3;
+  private Object a0, a1, a2, a3, a4, a5, a6, a7;
 
   // Value parameters
-  private String v0, v1, v2, v3, v4;
+  private String v0, v1, v2, v3, v4, v5, v6, v7, v8;
 
   public String getShapeProperty() {
     return shapeProperty;
@@ -102,6 +110,38 @@ public class ShapePropertyVisualizationMap {
   public void setA3(Object a3) {
     this.a3 = a3;
   }
+  
+  public Object getA4() {
+    return a4;
+  }
+
+  public void setA4(Object a4) {
+    this.a4 = a4;
+  }
+  
+  public Object getA5() {
+    return a5;
+  }
+
+  public void setA5(Object a5) {
+    this.a5 = a5;
+  }
+  
+  public Object getA6() {
+    return a6;
+  }
+
+  public void setA6(Object a6) {
+    this.a6 = a6;
+  }
+  
+  public Object getA7() {
+    return a7;
+  }
+
+  public void setA7(Object a7) {
+    this.a7 = a7;
+  }
 
   public String getV0() {
     return v0;
@@ -142,6 +182,42 @@ public class ShapePropertyVisualizationMap {
   public void setV4(String v4) {
     this.v4 = v4;
   }
+  
+  public String getV5() {
+    return v5;
+  }
+
+  public void setV5(String v5) {
+    this.v5 = v5;
+  }
+
+  
+  public String getV6() {
+    return v6;
+  }
+
+  public void setV6(String v6) {
+    this.v6 = v6;
+  }
+
+  
+  public String getV7() {
+    return v7;
+  }
+
+  public void setV7(String v7) {
+    this.v7 = v7;
+  }
+
+  
+  public String getV8() {
+    return v8;
+  }
+
+  public void setV8(String v8) {
+    this.v8 = v8;
+  }
+
 
   public Object getPropertyClass() {
     return propertyClass;
