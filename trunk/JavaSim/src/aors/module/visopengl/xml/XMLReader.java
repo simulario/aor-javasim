@@ -169,15 +169,15 @@ public class XMLReader {
              * When the space view node matches the space models space type, it
              * will be associated to the space model.
              */
-            if (spaceViewChildNodes.item(j).getNodeName().equals(
-                OneDimSpaceView.ONE_DIMENSIONAL)) {
+            if (spaceViewChildNodes.item(j).getNodeName()
+                .equals(OneDimSpaceView.ONE_DIMENSIONAL)) {
               if (spaceType.equals(SpaceType.OneD)) {
                 spaceView = getOneDimSpaceView(spaceViewChildNodes.item(j));
               }
             }
 
-            else if (spaceViewChildNodes.item(j).getNodeName().equals(
-                GridSpaceView.TWO_DIMENSIONAL_GRID)) {
+            else if (spaceViewChildNodes.item(j).getNodeName()
+                .equals(GridSpaceView.TWO_DIMENSIONAL_GRID)) {
               if (spaceType.equals(SpaceType.TwoDGrid)) {
                 spaceView = getGridSpaceView(spaceViewChildNodes.item(j));
                 spaceView.setPropertyMaps(getPropertyMaps(spaceViewChildNodes
@@ -185,8 +185,8 @@ public class XMLReader {
               }
             }
 
-            else if (spaceViewChildNodes.item(j).getNodeName().equals(
-                TwoDimSpaceView.TWO_DIMENSIONAL)) {
+            else if (spaceViewChildNodes.item(j).getNodeName()
+                .equals(TwoDimSpaceView.TWO_DIMENSIONAL)) {
               if (spaceType.equals(SpaceType.TwoD)
                   || spaceType.equals(SpaceType.TwoDLateralView)) {
                 spaceView = getTwoDimSpaceView(spaceViewChildNodes.item(j));
@@ -618,8 +618,8 @@ public class XMLReader {
         readDisplayInfo(childNodes.item(i), displayInfo);
       }
 
-      if (childNodes.item(i).getNodeName().equals(
-          Shape2DMap.PHYSICAL_SHAPE2D_MAP)) {
+      if (childNodes.item(i).getNodeName()
+          .equals(Shape2DMap.PHYSICAL_SHAPE2D_MAP)) {
         // Read a "PhysicalShape2DMap" node
         shape2DMap = readShape2DMap(childNodes.item(i));
       }
@@ -972,8 +972,8 @@ public class XMLReader {
         if (value.contains("%")) {
           shape
               .setWidth(Double.valueOf(value.substring(0, value.length() - 1)));
-          shape.setRelativeWidth(Double.valueOf(value.substring(0, value
-              .length() - 1)));
+          shape.setRelativeWidth(Double.valueOf(value.substring(0,
+              value.length() - 1)));
           shape.setWidthRelative(true);
         } else if (value.contains("px")) {
           shape
@@ -986,14 +986,14 @@ public class XMLReader {
       else if (name.equals(Shape2D.HEIGHT)) {
         // Check if the height is relative or absolute
         if (value.contains("%")) {
-          shape.setHeight(Double
-              .valueOf(value.substring(0, value.length() - 1)));
-          shape.setRelativeHeight(Double.valueOf(value.substring(0, value
-              .length() - 1)));
+          shape
+              .setHeight(Double.valueOf(value.substring(0, value.length() - 1)));
+          shape.setRelativeHeight(Double.valueOf(value.substring(0,
+              value.length() - 1)));
           shape.setHeightRelative(true);
         } else if (value.contains("px")) {
-          shape.setHeight(Double
-              .valueOf(value.substring(0, value.length() - 2)));
+          shape
+              .setHeight(Double.valueOf(value.substring(0, value.length() - 2)));
         } else {
           shape.setHeight(Double.valueOf(value));
         }
@@ -1246,13 +1246,13 @@ public class XMLReader {
     if (childNodes.getLength() > 0) {
       for (int i = 0; i < childNodes.getLength(); i++) {
         /*
-         * Search for the GridCellPropertyVisualizationMap or ShapePropertyVisualizationMap
-         * nodes.
+         * Search for the GridCellPropertyVisualizationMap or
+         * ShapePropertyVisualizationMap nodes.
          */
-        if (childNodes.item(i).getNodeName().equals(
-            PropertyMap.GRID_PROPERTY_MAP)
-            || childNodes.item(i).getNodeName().equals(
-                ShapePropertyVisualizationMap.SHAPE_PROPERTY_MAP)) {
+        if (childNodes.item(i).getNodeName()
+            .equals(PropertyMap.GRID_PROPERTY_MAP)
+            || childNodes.item(i).getNodeName()
+                .equals(ShapePropertyVisualizationMap.SHAPE_PROPERTY_MAP)) {
           // Create a PropertyMap instance
           PropertyMap pm = new PropertyMap();
 
@@ -1304,6 +1304,18 @@ public class XMLReader {
             else if (name.equals(PropertyMap.A3))
               pm.setA3(value);
 
+            else if (name.equals(PropertyMap.A4))
+              pm.setA4(value);
+
+            else if (name.equals(PropertyMap.A5))
+              pm.setA5(value);
+
+            else if (name.equals(PropertyMap.A6))
+              pm.setA6(value);
+
+            else if (name.equals(PropertyMap.A7))
+              pm.setA7(value);
+
             else if (name.equals(PropertyMap.V0))
               pm.setV0(value);
 
@@ -1318,6 +1330,18 @@ public class XMLReader {
 
             else if (name.equals(PropertyMap.V4))
               pm.setV4(value);
+
+            else if (name.equals(PropertyMap.V5))
+              pm.setV5(value);
+
+            else if (name.equals(PropertyMap.V6))
+              pm.setV6(value);
+
+            else if (name.equals(PropertyMap.V7))
+              pm.setV7(value);
+
+            else if (name.equals(PropertyMap.V8))
+              pm.setV8(value);
           }
 
           // Add the shape property map into the list
@@ -1396,8 +1420,8 @@ public class XMLReader {
         embeddedView.setShape2D(readShape2D(childNodes.item(i)));
       }
 
-      if (childNodes.item(i).getNodeName().equals(
-          Shape2DMap.PHYSICAL_SHAPE2D_MAP)
+      if (childNodes.item(i).getNodeName()
+          .equals(Shape2DMap.PHYSICAL_SHAPE2D_MAP)
           || childNodes.item(i).getNodeName().equals(Shape2DMap.SHAPE2D_MAP)) {
         embeddedView.setShape2DMap(readShape2DMap(childNodes.item(i)));
       }
@@ -1527,7 +1551,8 @@ public class XMLReader {
   private Shape2DMap readShape2DMap(Node node) {
     Shape2DMap s2dm = new Shape2DMap();
 
-    // Retrieve all attributes of the "Shape2dVisualizationMap" or "PhysicalShape2DMap"
+    // Retrieve all attributes of the "Shape2dVisualizationMap" or
+    // "PhysicalShape2DMap"
     // node
     NamedNodeMap attributes = node.getAttributes();
 
@@ -1541,7 +1566,8 @@ public class XMLReader {
       }
     }
 
-    // Retrieve child nodes the "Shape2dVisualizationMap" or "PhysicalShape2DMap" node
+    // Retrieve child nodes the "Shape2dVisualizationMap" or
+    // "PhysicalShape2DMap" node
     NodeList childNodes = node.getChildNodes();
 
     for (int i = 0; i < childNodes.getLength(); i++) {
@@ -1576,8 +1602,8 @@ public class XMLReader {
         NodeList caseChildNodes = childNodes.item(i).getChildNodes();
 
         for (int j = 0; j < caseChildNodes.getLength(); j++) {
-          if (caseChildNodes.item(j).getNodeName().equals(
-              Shape2D.PHYSICAL_SHAPE_2D)) {
+          if (caseChildNodes.item(j).getNodeName()
+              .equals(Shape2D.PHYSICAL_SHAPE_2D)) {
             // Read a "PhysicalShape2D" node
             shape = readPhysicalShape2D(caseChildNodes.item(j));
           }
