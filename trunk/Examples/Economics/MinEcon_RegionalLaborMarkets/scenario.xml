@@ -1,0 +1,3191 @@
+<?xml version="1.0"?>
+<?xml-stylesheet type="text/xsl" href="prettyprint.xsl"?>
+
+<SimulationScenario version="0.9" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xsi:schemaLocation="http://aor-simulation.org ../../../ext/AORSL/AORSL_0-9.xsd"
+	xmlns="http://aor-simulation.org" xmlns:aors="http://aor-simulation.org"
+	xmlns:dc="http://purl.org/dc/elements/1.1/"
+	scenarioName="Regional_Labor_Markets"
+	scenarioTitle="Regional Labor Markets"
+	simulationManagerDirectory="../../..">
+	
+	<SimulationParameters simulationSteps="5000" timeUnit="D" stepTimeDelay="0"/>
+	<SimulationModel modelName="Regional_Labor_Markets" modelTitle="Regional Labor Markets">
+		<documentation>
+			<dc:created>20100601</dc:created>
+			<dc:creator>Xi Niu</dc:creator>
+			<dc:contributor>Prof. Dr. Gerd Wagner</dc:contributor>
+			<aors:source xmlns="http://www.w3.org/1999/xhtml">
+				The agent-based macroeconomic model was developed by Herbert Dawid, Simon Gemkow, Philipp
+				Harting and Michael Neugart (see http://jasss.soc.surrey.ac.uk/12/4/5.html).
+			</aors:source>
+			<aors:shortDescription xml:lang="en" xmlns="http://www.w3.org/1999/xhtml">
+				Simulates an economy with three goods: labor, investment goods and consumption goods, four types of
+				agents: household, consumption goods producer, mall and capital goods producer, and three markets:
+				an investment goods, a comsumption goods and a labor market.
+			</aors:shortDescription>
+			<aors:shortDescription xml:lang="zh" xmlns="http://www.w3.org/1999/xhtml">
+				模拟一个经济体，其包含三种商品：劳动，投资品和消费品，四种代理：家庭，消费品生产
+				商，商场和投资品生产商，以及三种市场：投资品市场，消费品市场和劳动市场。
+			</aors:shortDescription>
+			<aors:description xml:lang="en" xmlns="http://www.w3.org/1999/xhtml">
+				<p>This model simulates an economy with three goods: labor, investment goods and consumption goods,
+				four types of agents: household, consumption goods producer, mall and capital goods producer, and
+				three markets: an investment goods, a comsumption goods and a labor market. Investment goods are
+				offered with infinite supply at an exogenously given price and there exists only one type of investment
+				goods. The quality and price of supplied investment goods increase randomly over time. Together with
+				labor, investment goods are used by consumption goods producers to produce consumption goods.
+				These goods are sold at malls to households. Malls are seen as the non-profit local market platforms.
+				The consumption goods producer needs more laborers in order to expand its production scale. For this
+				reason, it offers job vacancies based on the planned output. The household who is job seeker looks for
+				a suitable position based on the corresponding salaries of these vacancies.</p>
+			</aors:description>
+			<aors:description xml:lang="zh" xmlns="http://www.w3.org/1999/xhtml">
+				<p>该模型模拟了一个经济体，其包含三种商品：劳动，投资品和消费品，四种代理：家庭，消
+				费品生产商，商场和投资品生产商，以及三种市场：投资品市场，消费品市场和劳动市场。
+				投资品是由投资品生产商生产，其价格则由外部指定并无限供应，投资品的质量和价格会根
+				据时间随机地增长。消费品生产商使用劳动力和投资品作为生产要素进行消费品的生产，而
+				后其产品则经由商场销售给消费者。商场是被视为非营利性的商品销售平台。为了扩大生产
+				规模，消费品生产商根据其生产计划向求职者提供工作职位。求职者则基于生产商所提供的
+				工资选择合适的职位。</p>
+			</aors:description>
+			<dc:license>Creative Commons Attribution-NonCommercial-ShareAlike 3.0, 
+				see http://creativecommons.org/licenses/by-nc-sa/3.0/</dc:license>
+		</documentation>
+		
+		<Statistics>
+			<Variable name="outputLowSkillRegion" dataType="Float"/>
+			<Variable name="outputHighSkillRegion" dataType="Float"/>
+			<Variable name="totalOutput" dataType="Float"/>
+			<Variable name="numberOfCommutersFromLowToHighSkillRegion" dataType="Integer"/>
+			<Variable name="numberOfCommutersFromHighToLowSkillRegion" dataType="Integer"/>
+			<Variable name="averagePriceLowSkillRegion" dataType="Float"/>
+			<Variable name="averagePriceHighSkillRegion" dataType="Float"/>
+			<Variable name="capitalStockLowSkillRegion" dataType="Float"/>
+			<Variable name="capitalStockHighSkillRegion" dataType="Float"/>
+			<Variable name="totalLaborIncomeOfWorkersLowSkillRegion" dataType="Float"/>
+			<Variable name="totalLaborIncomeOfWorkersHighSkillRegion" dataType="Float"/>
+		</Statistics>
+		
+		<DataTypes>
+			<ComplexDataType name="ProductInStock">
+				<Attribute name="firmId" type="Integer"/>
+				<Attribute name="price" type="Float"/>
+				<Attribute name="quantity" type="Float"/>
+			</ComplexDataType>
+			
+			<ComplexDataType name="ProductListItem">
+				<Attribute name="firmId" type="Integer"/>
+				<Attribute name="consumptionValue" type="Float"/>
+				<Attribute name="selectionProbability" type="Float"/>
+			</ComplexDataType>
+			
+			<ComplexDataType name="ProductDemandRecord">
+				<Attribute name="mallId" type="Integer"/>
+				<Attribute name="demand" type="Float"/>
+				<Attribute name="maximumDemand" type="Float"/>
+				<Attribute name="optimalStockLevel" type="Float"/>
+			</ComplexDataType>
+			
+			<ComplexDataType name="InventoryPosition">
+				<Attribute name="mallId" type="Integer"/>
+				<Attribute name="quantity" type="Float"/>
+				<Attribute name="adjustmentFactor" type="Float"/>
+			</ComplexDataType>
+			
+			<ComplexDataType name="WorkerInFirm">
+				<Attribute name="householdId" type="Integer"/>
+				<Attribute name="wage" type="Float"/>
+				<Attribute name="generalSkillLevel" type="Integer"/>
+				<Attribute name="specificSkillLevel" type="Float"/>
+			</ComplexDataType>
+			
+			<ComplexDataType name="JobApplicationRecord">
+				<Attribute name="householdId" type="Integer"/>
+				<Attribute name="generalSkillLevel" type="Integer"/>
+				<Attribute name="specificSkillLevel" type="Float"/>
+			</ComplexDataType>
+			
+			<ComplexDataType name="JobOfferRecord">
+				<Attribute name="firmId" type="Integer"/>
+				<Attribute name="wageOffer" type="Float"/>
+				<Attribute name="netWageOffer" type="Float"/>
+			</ComplexDataType>
+		</DataTypes>
+		
+		<Globals>
+			<GlobalVariable name="period" dataType="Integer"/>
+			<GlobalVariable name="comm" dataType="Float"/>
+			<GlobalVariable name="investmentSalesPrice" dataType="Float"/>
+			<GlobalVariable name="qualityOfInvestment" dataType="Float"/>
+			<GlobalVariable name="innovationProbability" dataType="Float"/>
+			
+			<GlobalVariable name="producedQuantityLowSkillRegion" dataType="Float"/>
+			<GlobalVariable name="producedQuantityHighSkillRegion" dataType="Float"/>
+			<GlobalVariable name="commutingEmployeesLowSkillRegion" dataType="Integer"/>
+			<GlobalVariable name="commutingEmployeesHighSkillRegion" dataType="Integer"/>
+			<GlobalVariable name="priceLowSkillRegion" dataType="Float"/>
+			<GlobalVariable name="priceHighSkillRegion" dataType="Float"/>
+			<GlobalVariable name="totalLaborIncomeLowSkillRegion" dataType="Float"/>
+			<GlobalVariable name="totalLaborIncomeHighSkillRegion" dataType="Float"/>
+			<GlobalVariable name="capitalLowSkillRegion" dataType="Float"/>
+			<GlobalVariable name="capitalHighSkillRegion" dataType="Float"/>
+			
+			<GlobalFunction name="wouldInnovate" resultType="Float">
+				<documentation>
+					<description xml:lang="en">Every month the quality of the investment good is increased with probability 10% where with probability 90% there is no change of quality.</description>
+					<description xml:lang="zh">每月投资品的质量有10%的概率会增加，而有90%的几率保持不变。</description>
+				</documentation>
+				<Body language="Java"><![CDATA[
+					int r = Random.uniformInt(0, 99);
+					if (r < 10) return 0.05;
+					else return 0.0;
+					]]></Body>
+				<Body language="JavaScript"><![CDATA[
+					var r = js.util.Random.uniformInt(0, 99);
+					if (r < 10) return 0.05;
+					else return 0.0;
+					]]></Body>
+			</GlobalFunction>
+			
+			<GlobalFunction name="wouldBeJobSeeker" resultType="Boolean">
+				<documentation>
+					<description xml:lang="en">A randomly determined fraction 10% of employed workers who do an on-the-job search.</description>
+					<description xml:lang="zh">随机选取10%的在业人员作为求职者。</description>
+				</documentation>
+				<Body language="Java"><![CDATA[
+					int r = Random.uniformInt(0, 99);
+					if (r < 10) return true;
+					else return false;
+					]]></Body>
+				<Body language="JavaScript"><![CDATA[
+					var r = js.util.Random.uniformInt(0, 99);
+					if (r < 10) return true;
+					else return false;
+					]]></Body>
+			</GlobalFunction>
+			
+			<!--<GlobalFunction name="determineInitialWage" resultType="Float">
+				<documentation>
+					<description xml:lang="en">The initial wage of a worker can be determined according to his general skill level.</description>
+					<description xml:lang="zh">工人的初始工资是由其一般技能水平确定。</description>
+				</documentation>
+				<Parameter name="generalSkillLevel" type="Integer"/>
+				<Body language="Java JavaScript"><![CDATA[
+					if (generalSkillLevel == 1) return 1.0;
+					else if (generalSkillLevel == 2) return 1.02;
+					else if (generalSkillLevel == 3) return 1.04;
+					else if (generalSkillLevel == 4) return 1.06;
+					else return 1.08;
+					]]></Body>
+					</GlobalFunction>-->
+			
+			<GlobalFunction name="lowSkillRegion" resultType="Integer">
+				<documentation>
+					<description xml:lang="en">In a low skill region the skill distribution is such that 80% of workers have the lowest general skill level, whereas the remaining workers are equally distributed across the other four levels of general skills.</description>
+					<description xml:lang="zh">低技能区的技能分配情况。</description>
+				</documentation>
+				<Body language="Java"><![CDATA[
+					int r = Random.uniformInt(0, 99);
+					if (r < 80) return 1;					// with probability 0.80
+					else if (r < 85) return 2;		// with probability 0.05
+					else if (r < 90) return 3;		// with probability 0.05
+					else if (r < 95) return 4;		// with probability 0.05
+					else return 5;								// with probability 0.05
+					]]></Body>
+				<Body language="JavaScript"><![CDATA[
+					var r = js.util.Random.uniformInt(0, 99);
+					if (r < 80) return 1;					// with probability 0.80
+					else if (r < 85) return 2;		// with probability 0.05
+					else if (r < 90) return 3;		// with probability 0.05
+					else if (r < 95) return 4;		// with probability 0.05
+					else return 5;								// with probability 0.05
+					]]></Body>
+			</GlobalFunction>
+			
+			<GlobalFunction name="mediumSkillRegion" resultType="Integer">
+				<documentation>
+					<description xml:lang="en">In a medium skill region the skill distribution is such that 80% of workers have the general skill level 3, whereas the remaining workers are equally distributed across the other four levels of general skills.</description>
+					<description xml:lang="zh">中技能区的技能分配情况。</description>
+				</documentation>
+				<Body language="Java"><![CDATA[
+					int r = Random.uniformInt(0, 99);
+					if (r < 5) return 1;					// with probability 0.05
+					else if (r < 10) return 2;		// with probability 0.05
+					else if (r < 90) return 3;		// with probability 0.80
+					else if (r < 95) return 4;		// with probability 0.05
+					else return 5;								// with probability 0.05
+					]]></Body>
+				<Body language="JavaScript"><![CDATA[
+					var r = js.util.Random.uniformInt(0, 99);
+					if (r < 5) return 1;					// with probability 0.05
+					else if (r < 10) return 2;		// with probability 0.05
+					else if (r < 90) return 3;		// with probability 0.80
+					else if (r < 95) return 4;		// with probability 0.05
+					else return 5;								// with probability 0.05
+					]]></Body>
+			</GlobalFunction>
+			
+			<GlobalFunction name="highSkillRegion" resultType="Integer">
+				<documentation>
+					<description xml:lang="en">In a high skill region the skill distribution is such that 80% of workers have the highest general skill level, whereas the remaining workers are equally distributed across the other four levels of general skills.</description>
+					<description xml:lang="zh">高技能区的技能分配情况。</description>
+				</documentation>
+				<Body language="Java"><![CDATA[
+					int r = Random.uniformInt(0, 99);
+					if (r < 5) return 1;					// with probability 0.05
+					else if (r < 10) return 2;		// with probability 0.05
+					else if (r < 15) return 3;		// with probability 0.05
+					else if (r < 20) return 4;		// with probability 0.05
+					else return 5;								// with probability 0.80
+					]]></Body>
+				<Body language="JavaScript"><![CDATA[
+					var r = js.util.Random.uniformInt(0, 99);
+					if (r < 5) return 1;					// with probability 0.05
+					else if (r < 10) return 2;		// with probability 0.05
+					else if (r < 15) return 3;		// with probability 0.05
+					else if (r < 20) return 4;		// with probability 0.05
+					else return 5;								// with probability 0.80
+					]]></Body>
+			</GlobalFunction>
+		</Globals>
+		
+		<EntityTypes>
+			<MessageType name="TellCurrentStockLevel">
+				<Attribute name="quantity" type="Float"/>
+			</MessageType>
+			
+			<MessageType name="TellSalesRevenue">
+				<Attribute name="revenue" type="Float"/>
+				<Attribute name="quantity" type="Float"/>
+			</MessageType>
+			
+			<MessageType name="TellDismissal"/>
+			
+			<MessageType name="TellVacancy">
+				<Attribute name="generalSkillLevel" type="Integer"/>
+				<Attribute name="specificSkillLevel" type="Float"/>
+			</MessageType>
+			
+			<MessageType name="JobOffer">
+				<Attribute name="wageOffer" type="Float"/>
+				<Attribute name="region" type="Integer"/>
+			</MessageType>
+			
+			<MessageType name="AcceptJob">
+				<Attribute name="wage" type="Float"/>
+				<Attribute name="generalSkillLevel" type="Integer"/>
+				<Attribute name="specificSkillLevel" type="Float"/>
+			</MessageType>
+			
+			<MessageType name="ResignJob"/>
+			
+			<MessageType name="DeliverProduct">
+				<Attribute name="quantity" type="Float"/>
+			</MessageType>
+			
+			<MessageType name="TellWage">
+				<Attribute name="wage" type="Float"/>
+				<Attribute name="region" type="Integer"/>
+			</MessageType>
+			
+			<MessageType name="TellSpecificSkillLevel">
+				<Attribute name="specificSkillLevel" type="Float"/>
+			</MessageType>
+			
+			<ActionEventType name="BuyNewInvestment"/>
+			
+			<ActionEventType name="DismissWorker"/>
+			
+			<ActionEventType name="PostVacancyInformation">
+				<Attribute name="firmId" type="Integer"/>
+				<Attribute name="wageOffer" type="Float"/>
+			</ActionEventType>
+			
+			<ActionEventType name="InFirstIterationOfferJob"/>
+			
+			<ActionEventType name="DistributeProduct"/>
+			
+			<ActionEventType name="PayWage"/>
+			
+			<ActionEventType name="IncreaseSpecificSkillLevel"/>
+			
+			<ActionEventType name="PayEqualShare">
+				<Attribute name="share" type="Float"/>
+			</ActionEventType>
+			
+			<ActionEventType name="PayDividend">
+				<Attribute name="dividend" type="Float"/>
+			</ActionEventType>
+			
+			<ActionEventType name="SetNewPrice">
+				<Attribute name="price" type="Float"/>
+			</ActionEventType>
+			
+			<ExogenousEventType name="Init"/>
+			<ExogenousEventType name="StartOfMonth" periodicity="24"/>
+			<ExogenousEventType name="AtWeeklyIndividualConsumption" periodicity="6"/>
+			<ExogenousEventType name="EndFirstIterationLaborSupply" periodicity="24"/>
+			<ExogenousEventType name="EndSecondIterationLaborSupply" periodicity="24"/>
+			<ExogenousEventType name="EndOfMonth" periodicity="24"/>
+			
+			<AgentType name="CapitalGoodsProducer">
+				<documentation>
+					<description xml:lang="en">Capital goods producer supplies investment goods infinitely at an exogenously given price. The quality of supplied investment goods increases randomly over time. Profit of capital goods producer is uniformly distributed to all households.</description>
+					<description xml:lang="zh">投资品是由投资品生产商生产，其价格则由外部指定并无限供应，投资品的质量会根据时间随机地增长，投资品生产商将其销售所得的收入平均分配给每个人。</description>
+				</documentation>
+				<Attribute name="investmentSalesRevenue" type="Float"/>
+				<Attribute name="equalShare" type="Float"/>
+				
+				<PeriodicTimeEventType name="CalculateEqualShare" periodicity="24"/>
+				
+				<ReactionRule name="CalculateEqualShare_Rule" agentVariable="i">
+					<documentation>
+						<description xml:lang="en">Revenues accruing with the investment good producer are distributed in equal shares among all households.</description>
+						<description xml:lang="zh">投资品生产商将其销售所得的收入平均分配给每个人。</description>
+					</documentation>
+					<WHEN eventType="CalculateEqualShare"/>
+					<DO>
+						<UPDATE-AGT>
+							<Slot property="equalShare">
+								<ValueExpr language="Java JavaScript"><![CDATA[ this.i.getInvestmentSalesRevenue() / 400 ]]></ValueExpr>
+							</Slot>
+							<Slot property="investmentSalesRevenue" value="0.0"/>
+						</UPDATE-AGT>
+						<SCHEDULE-EVT>
+							<ActionEventExpr actionEventType="PayEqualShare">
+								<Slot property="share">
+									<ValueExpr language="Java JavaScript"><![CDATA[ this.i.getEqualShare() ]]></ValueExpr>
+								</Slot>
+							</ActionEventExpr>
+						</SCHEDULE-EVT>
+					</DO>
+				</ReactionRule>
+			</AgentType>
+			
+			<AgentType name="Mall">
+				<documentation>
+					<description xml:lang="en">Consumption goods are sold at malls. Malls are treated as local market platforms where CGPs store and offer their products and consumers come to buy goods at posted prices.</description>
+					<description xml:lang="zh">消费品通过商场进行销售，商场是被视为非营利性的商品销售平台。</description>
+				</documentation>
+				<ComplexDataProperty name="productsInStock" type="ProductInStock" upperMultiplicity="unbounded"/>
+				
+				<Function name="updateInventory" resultType="void">
+					<documentation>
+						<description xml:lang="en">The local stock levels at the malls are updated.</description>
+						<description xml:lang="zh">产品库存更新函数。</description>
+					</documentation>
+					<Parameter name="firmId" type="Integer"/>
+					<Parameter name="quantity" type="Float"/>
+					<Body language="Java"><![CDATA[
+						for (ProductInStock p : getProductsInStock()) {
+							if (p.getFirmId() == firmId) {
+								p.setQuantity(p.getQuantity() + quantity);
+							}
+						}
+						]]></Body>
+					<Body language="JavaScript"><![CDATA[
+						var productsInStock = this.getProductsInStock();
+						for (var i = 0; i < productsInStock.size(); i++) {
+							if (productsInStock.get(i).getFirmId() == firmId) {
+								productsInStock.get(i).setQuantity(productsInStock.get(i).getQuantity() + quantity);
+							}
+						}
+						]]></Body>
+				</Function>
+				
+				<Function name="updatePrice" resultType="void">
+					<documentation>
+						<description xml:lang="en">The prices of consumption goods are updated.</description>
+						<description xml:lang="zh">产品价格更新函数。</description>
+					</documentation>
+					<Parameter name="firmId" type="Integer"/>
+					<Parameter name="price" type="Float"/>
+					<Body language="Java"><![CDATA[
+						for (ProductInStock p : getProductsInStock()) {
+							if (p.getFirmId() == firmId) {
+								p.setPrice(price);
+							}
+						}
+						]]></Body>
+					<Body language="JavaScript"><![CDATA[
+						var productsInStock = this.getProductsInStock();
+						for (var i = 0; i < productsInStock.size(); i++) {
+							if (productsInStock.get(i).getFirmId() == firmId) {
+								productsInStock.get(i).setPrice(price);
+							}
+						}
+						]]></Body>
+				</Function>
+				
+				<Function name="createProduct" resultType="ProductInStock">
+					<Parameter name="firmId" type="Integer"/>
+					<Parameter name="price" type="Float"/>
+					<Parameter name="quantity" type="Float"/>
+					<Body language="JavaScript"><![CDATA[
+						var product = new sim.model.dataTypes.ProductInStock();
+						product.setFirmId(firmId);
+						product.setPrice(price);
+						product.setQuantity(quantity);
+						return product;
+						]]></Body>
+				</Function>
+				
+				<PeriodicTimeEventType name="AtStartOfMonthCheckStockLevel" periodicity="24"/>
+				
+				<ReactionRule name="AtStartOfMonthCheckStockLevel_Rule" agentVariable="m">
+					<documentation>
+						<description xml:lang="en">Reporting the current stock level.</description>
+						<description xml:lang="zh">汇报当前产品库存。</description>
+					</documentation>
+					<WHEN eventType="AtStartOfMonthCheckStockLevel"/>
+					<FOR-ListItemVariable variable="p" listItemType="ProductInStock">
+						<ListExpr language="Java JavaScript"><![CDATA[ this.m.getProductsInStock() ]]></ListExpr>
+					</FOR-ListItemVariable>
+					<DO>
+						<SCHEDULE-EVT>
+							<OutMessageEventExpr messageType="TellCurrentStockLevel">
+								<ReceiverIdRef language="Java JavaScript"><![CDATA[ this.p.getFirmId() ]]></ReceiverIdRef>
+								<Slot property="quantity">
+									<ValueExpr language="Java JavaScript"><![CDATA[ this.p.getQuantity() ]]></ValueExpr>
+								</Slot>
+							</OutMessageEventExpr>
+						</SCHEDULE-EVT>
+					</DO>
+				</ReactionRule>
+				
+				<ReactionRule name="DeliverProduct_Rule" agentVariable="m">
+					<documentation>
+						<description xml:lang="en">When the produced quantities are delivered, the local stock levels at the malls are updated.</description>
+						<description xml:lang="zh">商场接收到产品后，更新其对应的库存。</description>
+					</documentation>
+					<WHEN eventType="InMessageEvent" messageType="DeliverProduct" messageVariable="msg" eventVariable="evt"/>
+					<DO>
+						<UPDATE-AGT>
+							<Call procedure="updateInventory" contextObjectVariable="m">
+								<Argument parameter="firmId">
+									<ValueExpr language="Java JavaScript"><![CDATA[ this.evt.getSenderIdRef() ]]></ValueExpr>
+								</Argument>
+								<Argument parameter="quantity">
+									<ValueExpr language="Java JavaScript"><![CDATA[ this.msg.getQuantity() ]]></ValueExpr>
+								</Argument>
+							</Call>
+						</UPDATE-AGT>
+					</DO>
+				</ReactionRule>
+			</AgentType>
+			
+			<AgentType name="ConsumptionGoodsProducer">
+				<documentation>
+					<description xml:lang="en">CGPs use a vintage capital stock and labor to produce the consumption good on a monthly basis. The consumption good is then distributed to the different regions this producer serves. For simplicity it is assumed that all producers offer their products in all regions. Each producer keeps a stock of its products at each of the regional malls and offers the good at a posted price that is updated once a month at the point in time when the stock is replenished.</description>
+					<description xml:lang="zh">消费品生产商使用劳动力和投资品作为生产要素进行消费品的生产，而后其产品则经由商场销售给消费者。</description>
+				</documentation>
+				<Attribute name="region" type="Integer"/>
+				<Attribute name="productSalesPrice" type="Float"/>
+				<Attribute name="productSalesRevenue" type="Float"/>
+				<Attribute name="productSalesQuantity" type="Float"/>
+				<Attribute name="grossInvestment" type="Float"/>
+				<Attribute name="physicalCapitalStock" type="Float"/>
+				<Attribute name="newInvestment" type="Float"/>
+				<Attribute name="totalQualityOfCapitalStock" type="Float"/>
+				<Attribute name="averageQualityOfCapitalStock" type="Float"/>
+				<Attribute name="producedQuantity" type="Float"/>
+				<Attribute name="costOfProduction" type="Float"/>
+				<Attribute name="unitCostOfProduction" type="Float"/>
+				<Attribute name="monthlyRealizedProfit" type="Float"/>
+				<Attribute name="currentBalanceOfSavingAccount" type="Float"/>
+				<Attribute name="equalDividend" type="Float"/>
+				<!--<Attribute name="optimalStockLevel" type="Float"/>-->
+				<Attribute name="laborSupplyQuantity" type="Integer"/>
+				<Attribute name="wageOffer" type="Float"/>
+				
+				<!-- labor intensity of production: ConsumptionGoodsProducer.getALPHA() -->
+				<Attribute name="ALPHA" type="Float" initialValue="0.662" isStatic="true"/>
+				<!-- capital intensity of production -->
+				<Attribute name="BETA" type="Float" initialValue="0.338" isStatic="true"/>
+				
+				<Attribute name="lastFourProducedQuantities" type="Float" upperMultiplicity="unbounded"/>
+				
+				<ComplexDataProperty name="productDemands" type="ProductDemandRecord" upperMultiplicity="unbounded"/>
+				<ComplexDataProperty name="inventoryPositions" type="InventoryPosition" upperMultiplicity="unbounded"/>
+				<ComplexDataProperty name="workersInFirm" type="WorkerInFirm" upperMultiplicity="unbounded"/>
+				<ComplexDataProperty name="dismissalsList" type="WorkerInFirm" upperMultiplicity="unbounded"/>
+				<ComplexDataProperty name="jobApplications" type="JobApplicationRecord" upperMultiplicity="unbounded"/>
+				
+				<Function name="updateDemand" resultType="void">
+					<documentation>
+						<description xml:lang="en">The demand of consumption goods is updated.</description>
+						<description xml:lang="zh">产品需求更新函数。</description>
+					</documentation>
+					<Parameter name="mallId" type="Integer"/>
+					<Parameter name="demand" type="Float"/>
+					<Body language="Java"><![CDATA[
+						for (ProductDemandRecord p : getProductDemands()) {
+							if (p.getMallId() == mallId) {
+								p.setDemand(p.getDemand() + demand);
+							}
+						}
+						]]></Body>
+					<Body language="JavaScript"><![CDATA[
+						var productDemands = this.getProductDemands();
+						for (var i = 0; i < productDemands.size(); i++) {
+							if (productDemands.get(i).getMallId() == mallId) {
+								productDemands.get(i).setDemand(productDemands.get(i).getDemand() + demand);
+							}
+						}
+						]]></Body>
+				</Function>
+				
+				<Function name="updateOptimalStockLevel" resultType="void">
+					<documentation>
+						<description xml:lang="en">The optimal stock level of consumption goods is updated.</description>
+						<description xml:lang="zh">产品最优库存更新函数。</description>
+					</documentation>
+					<Body language="Java"><![CDATA[
+						for (ProductDemandRecord p : getProductDemands()) {
+							if (p.getDemand() > p.getMaximumDemand()) {
+								p.setMaximumDemand(p.getDemand());
+							}
+							p.setOptimalStockLevel((getProductSalesPrice() - (1 - 0.95) * getUnitCostOfProduction()) / (getProductSalesPrice() + 0.05) * p.getMaximumDemand() * 2);
+							p.setDemand(0.0);
+						}
+						]]></Body>
+					<Body language="JavaScript"><![CDATA[
+						var productDemands = this.getProductDemands();
+						for (var i = 0; i < productDemands.size(); i++) {
+							if (productDemands.get(i).getDemand() > productDemands.get(i).getMaximumDemand()) {
+								productDemands.get(i).setMaximumDemand(productDemands.get(i).getDemand());
+							}
+							productDemands.get(i).setOptimalStockLevel((this.getProductSalesPrice() - (1 - 0.95) * this.getUnitCostOfProduction()) / (this.getProductSalesPrice() + 0.05) * productDemands.get(i).getMaximumDemand() * 2);
+							productDemands.get(i).setDemand(0.0);
+						}
+						]]></Body>
+				</Function>
+				
+				<Function name="getDemandRecordFromListWithId" resultType="ProductDemandRecord">
+					<documentation>
+						<description xml:lang="en">Get a record from the "productDemands" list.</description>
+						<description xml:lang="zh">从列表中获取一条记录。</description>
+					</documentation>
+					<Parameter name="mallId" type="Integer"/>
+					<Body language="Java"><![CDATA[
+						for (ProductDemandRecord p : getProductDemands()) {
+							if (p.getMallId() == mallId) {
+								return p;
+							}
+						}
+						return null;
+						]]></Body>
+					<Body language="JavaScript"><![CDATA[
+						var productDemands = this.getProductDemands();
+						for (var i = 0; i < productDemands.size(); i++) {
+							if (productDemands.get(i).getMallId() == mallId) {
+								return productDemands.get(i);
+							}
+						}
+						return null;
+						]]></Body>
+				</Function>
+				
+				<Function name="desireProductionQuantity" resultType="Float">
+					<documentation>
+						<description xml:lang="en">In order to smooth the simulation and to avoid excessive oscillations, the final planned production quantity is a linear combination of the sum of the orders received by all malls and a mean of the certain number of previous actual production quantities.</description>
+						<description xml:lang="zh">每个周期的产品计划生产数量借助于一个线性函数计算所得。</description>
+					</documentation>
+					<Body language="Java"><![CDATA[
+						double sumOfOrders = 0.0;
+						double sumOfLastFourProducedQuantities = 0.0;
+						double meanOfLastFourProducedQuantities = 0.0;
+						double plannedOutput = 0.0;
+						
+						for (InventoryPosition i : getInventoryPositions()) {
+							sumOfOrders += i.getQuantity();
+						}
+						
+						if (sumOfOrders == 0.0) {
+							for (InventoryPosition j : getInventoryPositions()) {
+								j.setAdjustmentFactor(1 / getInventoryPositions().size());
+							}
+						}
+						else {
+							for (InventoryPosition k : getInventoryPositions()) {
+								k.setAdjustmentFactor(k.getQuantity() / sumOfOrders);
+							}
+						}
+						
+						for (Double l : getLastFourProducedQuantities()) {
+							sumOfLastFourProducedQuantities += l;
+						}
+						meanOfLastFourProducedQuantities = sumOfLastFourProducedQuantities / 4;
+						
+						plannedOutput = 0.5 * sumOfOrders + (1 - 0.5) * meanOfLastFourProducedQuantities;
+						
+						return plannedOutput;
+						]]></Body>
+					<Body language="JavaScript"><![CDATA[
+						var sumOfOrders = 0.0;
+						var sumOfLastFourProducedQuantities = 0.0;
+						var meanOfLastFourProducedQuantities = 0.0;
+						var plannedOutput = 0.0;
+						
+						for (var i = 0; i < this.getInventoryPositions().size(); i++) {
+							sumOfOrders += this.getInventoryPositions().get(i).getQuantity();
+						}
+						
+						if (sumOfOrders == 0.0) {
+							for (var j = 0; j < this.getInventoryPositions().size(); j++) {
+								this.getInventoryPositions().get(j).setAdjustmentFactor(1 / this.getInventoryPositions().size());
+							}
+						}
+						else {
+							for (var k = 0; k < this.getInventoryPositions().size(); k++) {
+								this.getInventoryPositions().get(k).setAdjustmentFactor(this.getInventoryPositions().get(k).getQuantity() / sumOfOrders);
+							}
+						}
+						
+						for (var l = 0; l < this.getLastFourProducedQuantities().size(); l++) {
+							sumOfLastFourProducedQuantities += this.getLastFourProducedQuantities().get(l);
+						}
+						meanOfLastFourProducedQuantities = sumOfLastFourProducedQuantities / 4;
+						
+						plannedOutput = 0.5 * sumOfOrders + (1 - 0.5) * meanOfLastFourProducedQuantities;
+						
+						return plannedOutput;
+						]]></Body>
+				</Function>
+				
+				<Function name="determineLaborCost" resultType="Float">
+					<documentation>
+						<description xml:lang="en">Get the total labor cost of every CGP.</description>
+						<description xml:lang="zh">计算每个生产商在生产消费品时所需的劳动力成本。</description>
+					</documentation>
+					<Body language="Java"><![CDATA[
+						double sumOfWages = 0.0;
+						
+						for (WorkerInFirm w : getWorkersInFirm()) {
+							sumOfWages += w.getWage();
+						}
+						
+						return sumOfWages;
+						]]></Body>
+					<Body language="JavaScript"><![CDATA[
+						var sumOfWages = 0.0;
+						var workersInFirm = this.getWorkersInFirm();
+						
+						for (var i = 0; i < workersInFirm.size(); i++) {
+							sumOfWages += workersInFirm.get(i).getWage();
+						}
+						
+						return sumOfWages;
+						]]></Body>
+				</Function>
+				
+				<Function name="determineAverageSpecificSkillLevel" resultType="Float">
+					<documentation>
+						<description xml:lang="en">Get the average specific skill level in CGP.</description>
+						<description xml:lang="zh">获得生产商所雇工人的平均特殊技能水平。</description>
+					</documentation>
+					<Body language="Java"><![CDATA[
+						double sumOfSpecificSkillLevels = 0.0;
+						
+						for (WorkerInFirm w : getWorkersInFirm()) {
+							sumOfSpecificSkillLevels += w.getSpecificSkillLevel();
+						}
+						
+						return sumOfSpecificSkillLevels / getWorkersInFirm().size();
+						]]></Body>
+					<Body language="JavaScript"><![CDATA[
+						var sumOfSpecificSkillLevels = 0.0;
+						var workersInFirm = this.getWorkersInFirm();
+						
+						for (var i = 0; i < workersInFirm.size(); i++) {
+							sumOfSpecificSkillLevels += workersInFirm.get(i).getSpecificSkillLevel();
+						}
+						
+						return sumOfSpecificSkillLevels / workersInFirm.size();
+						]]></Body>
+				</Function>
+				
+				<Function name="determineProductionPlan" resultType="void">
+					<documentation>
+						<description xml:lang="en">CGPs aim to realize a capital to labor ratio according to the standard rule for CES production functions.</description>
+						<description xml:lang="zh">生产商为生产确定生产要素的计划投入量，即劳动力和投资品的计划投入量。</description>
+					</documentation>
+					<Parameter name="laborPrice" type="Float"/>
+					<Parameter name="investmentPrice" type="Float"/>
+					<Parameter name="plannedProductionQuantity" type="Float"/>
+					<Parameter name="averageSpecificSkillLevel" type="Float"/>
+					<Parameter name="averageCapitalStockQuality" type="Float"/>
+					<Body language="Java"><![CDATA[
+						double plannedInvestmentInput = Math.pow((0.338 * laborPrice), (0.662)) * plannedProductionQuantity / (Math.pow((0.662 * investmentPrice), (0.662)) * Math.min(averageCapitalStockQuality, averageSpecificSkillLevel));
+						double plannedLaborInput = Math.pow((0.662 * investmentPrice), (0.338)) * plannedProductionQuantity / (Math.pow((0.338 * laborPrice), (0.338)) * Math.min(averageCapitalStockQuality, averageSpecificSkillLevel));
+						
+						if (plannedInvestmentInput >= getGrossInvestment()) {
+							setNewInvestment(plannedInvestmentInput - getGrossInvestment());
+						}
+						else {
+							setNewInvestment(0.0);
+							plannedLaborInput = Math.pow((plannedProductionQuantity / (Math.pow((getGrossInvestment()), (0.338)) * Math.min(averageCapitalStockQuality, averageSpecificSkillLevel))), (1 / 0.662));
+						}
+						
+						setLaborSupplyQuantity((int)Math.ceil(plannedLaborInput) - getWorkersInFirm().size());
+						]]></Body>
+					<Body language="JavaScript"><![CDATA[
+						var plannedInvestmentInput = Math.pow((0.338 * laborPrice), (0.662)) * plannedProductionQuantity / (Math.pow((0.662 * investmentPrice), (0.662)) * Math.min(averageCapitalStockQuality, averageSpecificSkillLevel));
+						var plannedLaborInput = Math.pow((0.662 * investmentPrice), (0.338)) * plannedProductionQuantity / (Math.pow((0.338 * laborPrice), (0.338)) * Math.min(averageCapitalStockQuality, averageSpecificSkillLevel));
+						
+						if (plannedInvestmentInput >= this.getGrossInvestment()) {
+							this.setNewInvestment(plannedInvestmentInput - this.getGrossInvestment());
+						}
+						else {
+							this.setNewInvestment(0.0);
+							plannedLaborInput = Math.pow((plannedProductionQuantity / (Math.pow((this.getGrossInvestment()), (0.338)) * Math.min(averageCapitalStockQuality, averageSpecificSkillLevel))), (1 / 0.662));
+						}
+						
+						this.setLaborSupplyQuantity(Math.ceil(plannedLaborInput) - this.getWorkersInFirm().size());
+						]]></Body>
+				</Function>
+				
+				<Function name="downsizingIncumbentWorkforce" resultType="Boolean">
+					<documentation>
+						<description xml:lang="en">In case of downsizing the incumbent workforce, the CGP dismisses workers with lowest general skill levels first.</description>
+						<description xml:lang="zh">一旦需要裁员，生产商将先解雇普通技能水平相对比较低的工人。</description>
+					</documentation>
+					<Body language="Java"><![CDATA[
+						java.util.Comparator<sim.model.dataTypes.WorkerInFirm> comparator;
+						comparator = new java.util.Comparator<sim.model.dataTypes.WorkerInFirm>() {
+							public int compare(sim.model.dataTypes.WorkerInFirm a, sim.model.dataTypes.WorkerInFirm b) {
+								double p1 = a.getGeneralSkillLevel();
+								double p2 = b.getGeneralSkillLevel();
+								if (p1 < p2) return -1;
+								if (p1 > p2) return 1;
+		         		return 0;
+							}
+						};
+						
+						java.util.Collections.shuffle(getWorkersInFirm());
+						java.util.Collections.sort(getWorkersInFirm(), comparator);
+						
+						if (getDismissalsList().size() > 0) {
+							getDismissalsList().clear();
+						}
+						
+						int i;
+						if (getLaborSupplyQuantity() >= 0) {
+							return false;
+						}
+						else {
+							for (i = 0; i < Math.abs(getLaborSupplyQuantity()); i++) {
+								getDismissalsList().add(getWorkersInFirm().get(i));
+							}
+							return true;
+						}
+						]]></Body>
+					<Body language="JavaScript"><![CDATA[
+						var workersInFirm = this.getWorkersInFirm();
+						
+						var comparator = function(a, b) {
+							var p1 = a.getGeneralSkillLevel();
+							var p2 = b.getGeneralSkillLevel();
+							if (p1 < p2) return -1;
+							if (p1 > p2) return 1;
+		         						return 0;
+						}
+						
+						workersInFirm.sort(function() {return 0.5 - Math.random()});
+						workersInFirm.sort(comparator);
+						
+						if (this.getDismissalsList().size() > 0) {
+							this.getDismissalsList().clear();
+						}
+						
+						if (this.getLaborSupplyQuantity() >= 0) {
+							return false;
+						}
+						else {
+							for (var i = 0; i < Math.abs(this.getLaborSupplyQuantity()); i++) {
+								this.getDismissalsList().add(workersInFirm.get(i));
+							}
+							return true;
+						}
+						]]></Body>
+				</Function>
+				
+				<Function name="deleteWorkerRecordFromList" resultType="void">
+					<documentation>
+						<description xml:lang="en">When a worker resigns or is dismissed, he is dropped from the list of workers.</description>
+						<description xml:lang="zh">删除列表记录函数。</description>
+					</documentation>
+					<Parameter name="householdId" type="Integer"/>
+					<Body language="Java"><![CDATA[
+						int i;
+						for (i = 0; i < getWorkersInFirm().size(); i++) {
+							if (getWorkersInFirm().get(i).getHouseholdId() == householdId) {
+								getWorkersInFirm().remove(i);
+							}
+						}
+						]]></Body>
+					<Body language="JavaScript"><![CDATA[
+						var workersInFirm = this.getWorkersInFirm();
+						for (var i = 0; i < workersInFirm.size(); i++) {
+							if (workersInFirm.get(i).getHouseholdId() == householdId) {
+								workersInFirm.remove(i);
+							}
+						}
+						]]></Body>
+				</Function>
+				
+				<Function name="determineJobOffer" resultType="void">
+					<documentation>
+						<description xml:lang="en">Every CGP ranks the applicants. Applicants with higher general skill levels are ranked higher. If there are two or more applicants with equal general skill levels, but different specific skill levels, the applicant with the higher specific skill level is ranked higher. Based on their ranking CGPs send job offers to as many applicants as they have vacancies to fill.</description>
+						<description xml:lang="zh">生产商通过对求职申请的筛选确定合格的求职者。</description>
+					</documentation>
+					<Body language="Java"><![CDATA[
+						java.util.Comparator<sim.model.dataTypes.JobApplicationRecord> comparator;
+						comparator = new java.util.Comparator<sim.model.dataTypes.JobApplicationRecord>() {
+							public int compare(sim.model.dataTypes.JobApplicationRecord a, sim.model.dataTypes.JobApplicationRecord b) {
+								Double p1 = new Double(- a.getGeneralSkillLevel());
+								Double p2 = new Double(- b.getGeneralSkillLevel());
+								Double p3 = new Double(- a.getSpecificSkillLevel());
+								Double p4 = new Double(- b.getSpecificSkillLevel());
+								int i = p1.compareTo(p2);
+								if (i == 0) {
+									return p3.compareTo(p4);
+								}
+								else {
+									return i;
+								}
+							}
+						};
+						
+						java.util.Collections.shuffle(getJobApplications());
+						java.util.Collections.sort(getJobApplications(), comparator);
+						
+						int j = (int)getLaborSupplyQuantity();
+						while (j < getJobApplications().size()) {
+							getJobApplications().remove(j);
+						}
+						]]></Body>
+					<Body language="JavaScript"><![CDATA[
+						var i = 0;
+						var jobApplications = this.getJobApplications();
+						
+						var comparator = function(a, b) {
+							var p1 = - a.getGeneralSkillLevel();
+							var p2 = - b.getGeneralSkillLevel();
+							var p3 = - a.getSpecificSkillLevel();
+							var p4 = - b.getSpecificSkillLevel();
+							if (p1 < p2) {
+								i = -1;
+							}
+							else if (p1 > p2) {
+								i = 1;
+							}
+							else {
+								i = 0;
+							}
+							if (i == 0) {
+								if (p3 < p4) return -1;
+								else if (p3 > p4) return 1;
+								else return 0;
+							}
+							else {
+								return i;
+							}
+						}
+						
+						jobApplications.sort(function() {return 0.5 - Math.random()});
+						jobApplications.sort(comparator);
+						
+						var j = this.getLaborSupplyQuantity();
+						while (j < jobApplications.size()) {
+							jobApplications.remove(j);
+						}
+						]]></Body>
+				</Function>
+				
+				<Function name="clearJobApplications" resultType="void">
+					<documentation>
+						<description xml:lang="en">Clear the list of applicants.</description>
+						<description xml:lang="zh">清空申请者列表。</description>
+					</documentation>
+					<Body language="Java"><![CDATA[
+						getJobApplications().clear();
+						]]></Body>
+					<Body language="JavaScript"><![CDATA[
+						this.getJobApplications().clear();
+						]]></Body>
+				</Function>
+				
+				<Function name="productionProgress" resultType="void">
+					<documentation>
+						<description xml:lang="en">The production technology in the consumption goods sector is represented by a Cobb-Douglas type production function with complementarities between the quality of the investment good and the specific skills of employees for using that type of technology. Factor productivity is determined by the minimum of the average quality of physical capital and the average level of relevant specific skills of the workers. Capital and labor input is substitutable with a constant elasticity and we assume constant returns to scale.</description>
+						<description xml:lang="zh">消费品生产函数。</description>
+					</documentation>
+					<Parameter name="averageSpecificSkillLevel" type="Float"/>
+					<Parameter name="averageCapitalStockQuality" type="Float"/>
+					<Parameter name="labor" type="Float"/>
+					<Parameter name="investment" type="Float"/>
+					<Body language="Java"><![CDATA[
+						setProducedQuantity(Math.min(averageSpecificSkillLevel, averageCapitalStockQuality) * Math.pow((labor), (0.662)) * Math.pow((investment), (0.338)));
+						]]></Body>
+					<Body language="JavaScript"><![CDATA[
+						this.setProducedQuantity(Math.min(averageSpecificSkillLevel, averageCapitalStockQuality) * Math.pow((labor), (0.662)) * Math.pow((investment), (0.338)));
+						]]></Body>
+				</Function>
+				
+				<Function name="updateSpecificSkillLevel" resultType="void">
+					<documentation>
+						<description xml:lang="en">The specific skill level of a worker is updated.</description>
+						<description xml:lang="zh">工人特殊技能更新函数。</description>
+					</documentation>
+					<Parameter name="householdId" type="Integer"/>
+					<Parameter name="specificSkillLevel" type="Float"/>
+					<Body language="Java"><![CDATA[
+						for (WorkerInFirm w : getWorkersInFirm()) {
+							if (w.getHouseholdId() == householdId) {
+								w.setSpecificSkillLevel(specificSkillLevel);
+							}
+						}
+						]]></Body>
+					<Body language="JavaScript"><![CDATA[
+						var workersInFirm = this.getWorkersInFirm();
+						for (var i = 0; i < workersInFirm.size(); i++) {
+							if (workersInFirm.get(i).getHouseholdId() == householdId) {
+								workersInFirm.get(i).setSpecificSkillLevel(specificSkillLevel);
+							}
+						}
+						]]></Body>
+				</Function>
+				
+				<Function name="determineDividend" resultType="void">
+					<documentation>
+						<description xml:lang="en">Similar to the capital goods producer, we assume that all households hold equal shares in all consumption goods producers, consequently the dividends are equally distributed to the households. In order to avoid exceeding accumulations of savings as well as excessive indebtedness, we employ a simple dividend policy that provides different dividend rates depending on the current balance of saving account. The rule states that a CGP pays no dividends, if the balance is negative and the debt is on a scale above the last monthly revenue. If the balance is positive and savings are above the monthly revenue, the CGP disburses all profits. In the remaining case, if the balance is between these critical levels, a fixed proportion div ∈ [0,1] of profits is paid out.</description>
+						<description xml:lang="zh">生产商借助于一个简单的股利政策确定当月应发放的红利。</description>
+					</documentation>
+					<Body language="Java"><![CDATA[
+						setCostOfProduction(getGrossInvestment() + determineLaborCost());
+						if (getProducedQuantity() > 0.0) {
+							setUnitCostOfProduction(getCostOfProduction() / getProducedQuantity());
+							setProductSalesPrice((1 + 0.02) * getUnitCostOfProduction());
+						}
+						setMonthlyRealizedProfit(getProductSalesRevenue() - getCostOfProduction());
+						
+						if (getMonthlyRealizedProfit() <= 0.0) {
+							setEqualDividend(0.0);
+							setCurrentBalanceOfSavingAccount(getCurrentBalanceOfSavingAccount() + getMonthlyRealizedProfit());
+							setProductSalesRevenue(0.0);
+							setProductSalesQuantity(0.0);
+						}
+						else {
+							if (getCurrentBalanceOfSavingAccount() < 0.0 && Math.abs(getCurrentBalanceOfSavingAccount()) > getProductSalesRevenue()) {
+								setEqualDividend(0.0);
+								setCurrentBalanceOfSavingAccount(getCurrentBalanceOfSavingAccount() + getMonthlyRealizedProfit());
+								setProductSalesRevenue(0.0);
+								setProductSalesQuantity(0.0);
+							}
+							else if (getCurrentBalanceOfSavingAccount() > 0.0 && getCurrentBalanceOfSavingAccount() > getProductSalesRevenue()) {
+								setEqualDividend(getMonthlyRealizedProfit() / 400);
+								setProductSalesRevenue(0.0);
+								setProductSalesQuantity(0.0);
+							}
+							else {
+								setEqualDividend(0.9 * getMonthlyRealizedProfit() / 400);
+								setCurrentBalanceOfSavingAccount(getCurrentBalanceOfSavingAccount() + (1 - 0.9) * getMonthlyRealizedProfit());
+								setProductSalesRevenue(0.0);
+								setProductSalesQuantity(0.0);
+							}
+						}
+						]]></Body>
+					<Body language="JavaScript"><![CDATA[
+						this.setCostOfProduction(this.getGrossInvestment() + this.determineLaborCost());
+						if (this.getProducedQuantity() > 0.0) {
+							this.setUnitCostOfProduction(this.getCostOfProduction() / this.getProducedQuantity());
+							this.setProductSalesPrice((1 + 0.02) * this.getUnitCostOfProduction());
+						}
+						this.setMonthlyRealizedProfit(this.getProductSalesRevenue() - this.getCostOfProduction());
+						
+						if (this.getMonthlyRealizedProfit() <= 0.0) {
+							this.setEqualDividend(0.0);
+							this.setCurrentBalanceOfSavingAccount(this.getCurrentBalanceOfSavingAccount() + this.getMonthlyRealizedProfit());
+							this.setProductSalesRevenue(0.0);
+							this.setProductSalesQuantity(0.0);
+						}
+						else {
+							if (this.getCurrentBalanceOfSavingAccount() < 0.0 && Math.abs(this.getCurrentBalanceOfSavingAccount()) > this.getProductSalesRevenue()) {
+								this.setEqualDividend(0.0);
+								this.setCurrentBalanceOfSavingAccount(this.getCurrentBalanceOfSavingAccount() + this.getMonthlyRealizedProfit());
+								this.setProductSalesRevenue(0.0);
+								this.setProductSalesQuantity(0.0);
+							}
+							else if (this.getCurrentBalanceOfSavingAccount() > 0.0 && this.getCurrentBalanceOfSavingAccount() > this.getProductSalesRevenue()) {
+								this.setEqualDividend(this.getMonthlyRealizedProfit() / 400);
+								this.setProductSalesRevenue(0.0);
+								this.setProductSalesQuantity(0.0);
+							}
+							else {
+								this.setEqualDividend(0.9 * this.getMonthlyRealizedProfit() / 400);
+								this.setCurrentBalanceOfSavingAccount(this.getCurrentBalanceOfSavingAccount() + (1 - 0.9) * this.getMonthlyRealizedProfit());
+								this.setProductSalesRevenue(0.0);
+								this.setProductSalesQuantity(0.0);
+							}
+						}
+						]]></Body>
+				</Function>
+				
+				<Function name="clearInventoryPositions" resultType="void">
+					<documentation>
+						<description xml:lang="en">Clear the list of inventory positions.</description>
+						<description xml:lang="zh">清空库存补充列表。</description>
+					</documentation>
+					<Body language="Java"><![CDATA[
+						getInventoryPositions().clear();
+						]]></Body>
+					<Body language="JavaScript"><![CDATA[
+						this.getInventoryPositions().clear();
+						]]></Body>
+				</Function>
+				
+				<Function name="updateLastFourProducedQuantities" resultType="void">
+					<documentation>
+						<description xml:lang="en">Update the last 4 production quantities.</description>
+						<description xml:lang="zh">更新上四个周期的产量记录。</description>
+					</documentation>
+					<Body language="Java"><![CDATA[
+						getLastFourProducedQuantities().remove(0);
+						getLastFourProducedQuantities().add(getProducedQuantity());
+						]]></Body>
+					<Body language="JavaScript"><![CDATA[
+						this.getLastFourProducedQuantities().remove(0);
+						this.getLastFourProducedQuantities().add(this.getProducedQuantity());
+						]]></Body>
+				</Function>
+				
+				<Function name="createProductDemand" resultType="ProductDemandRecord">
+					<Parameter name="mallId" type="Integer"/>
+					<Parameter name="demand" type="Float"/>
+					<Parameter name="maximumDemand" type="Float"/>
+					<Parameter name="optimalStockLevel" type="Float"/>
+					<Body language="JavaScript"><![CDATA[
+						var productDemand = new sim.model.dataTypes.ProductDemandRecord();
+						productDemand.setMallId(mallId);
+						productDemand.setDemand(demand);
+						productDemand.setMaximumDemand(maximumDemand);
+						productDemand.setOptimalStockLevel(optimalStockLevel);
+						return productDemand;
+						]]></Body>
+				</Function>
+				
+				<Function name="createInventory" resultType="InventoryPosition">
+					<Parameter name="mallId" type="Integer"/>
+					<Parameter name="quantity" type="Float"/>
+					<Parameter name="adjustmentFactor" type="Float"/>
+					<Body language="JavaScript"><![CDATA[
+						var inventory = new sim.model.dataTypes.InventoryPosition();
+						inventory.setMallId(mallId);
+						inventory.setQuantity(quantity);
+						inventory.setAdjustmentFactor(adjustmentFactor);
+						return inventory;
+						]]></Body>
+				</Function>
+				
+				<Function name="createWorker" resultType="WorkerInFirm">
+					<Parameter name="householdId" type="Integer"/>
+					<Parameter name="wage" type="Float"/>
+					<Parameter name="generalSkillLevel" type="Integer"/>
+					<Parameter name="specificSkillLevel" type="Float"/>
+					<Body language="JavaScript"><![CDATA[
+						var worker = new sim.model.dataTypes.WorkerInFirm();
+						worker.setHouseholdId(householdId);
+						worker.setWage(wage);
+						worker.setGeneralSkillLevel(generalSkillLevel);
+						worker.setSpecificSkillLevel(specificSkillLevel);
+						return worker;
+						]]></Body>
+				</Function>
+				
+				<Function name="createJobApplication" resultType="JobApplicationRecord">
+					<Parameter name="householdId" type="Integer"/>
+					<Parameter name="generalSkillLevel" type="Integer"/>
+					<Parameter name="specificSkillLevel" type="Float"/>
+					<Body language="JavaScript"><![CDATA[
+						var jobApplication = new sim.model.dataTypes.JobApplicationRecord();
+						jobApplication.setHouseholdId(householdId);
+						jobApplication.setGeneralSkillLevel(generalSkillLevel);
+						jobApplication.setSpecificSkillLevel(specificSkillLevel);
+						return jobApplication;
+						]]></Body>
+				</Function>
+				
+				<PeriodicTimeEventType name="MakeProductionPlan" periodicity="24"/>
+				<PeriodicTimeEventType name="InFirstIterationRankApplicant" periodicity="24"/>
+				<PeriodicTimeEventType name="StartSecondIterationLaborSupply" periodicity="24"/>
+				<PeriodicTimeEventType name="InSecondIterationRankApplicant" periodicity="24"/>
+				<PeriodicTimeEventType name="StartOfProduction" periodicity="24"/>
+				<PeriodicTimeEventType name="CalculateDividend" periodicity="24"/>
+				
+				<ReactionRule name="TellCurrentStockLevel_Rule" agentVariable="f">
+					<documentation>
+						<description xml:lang="en">Every CGP receives messages from all the malls it serves reporting the current stock level and checks once every period whether any of the stocks it keeps at different malls have to be refilled.</description>
+						<description xml:lang="zh">生产商收到从商场发来的当前产品库存报告并确定是否需要为其补充产品。</description>
+					</documentation>
+					<WHEN eventType="InMessageEvent" messageType="TellCurrentStockLevel" messageVariable="msg" eventVariable="evt"/>
+					<IF language="Java JavaScript"><![CDATA[ this.msg.getQuantity() >= this.f.getDemandRecordFromListWithId(this.evt.getSenderIdRef()).getOptimalStockLevel() ]]></IF>
+					<THEN>
+						<UPDATE-AGT>
+							<MultiValuedSlot property="inventoryPositions">
+								<AddLast>
+									<ItemExpr language="Java"><![CDATA[
+										new InventoryPosition() {
+											{
+												setMallId(evt.getSenderIdRef());
+												setQuantity(0.0);
+												setAdjustmentFactor(0.0);
+											}
+										}
+										]]></ItemExpr>
+									<ItemExpr language="JavaScript"><![CDATA[
+										this.f.createInventory(this.evt.getSenderIdRef(), 0.0, 0.0)
+										]]></ItemExpr>
+								</AddLast>
+							</MultiValuedSlot>
+						</UPDATE-AGT>
+					</THEN>
+					<ELSE>
+						<UPDATE-AGT>
+							<MultiValuedSlot property="inventoryPositions">
+								<AddLast>
+									<ItemExpr language="Java"><![CDATA[
+										new InventoryPosition() {
+											{
+												setMallId(evt.getSenderIdRef());
+												setQuantity(f.getDemandRecordFromListWithId(evt.getSenderIdRef()).getOptimalStockLevel() - msg.getQuantity());
+												setAdjustmentFactor(0.0);
+											}
+										}
+										]]></ItemExpr>
+									<ItemExpr language="JavaScript"><![CDATA[
+										this.f.createInventory(this.evt.getSenderIdRef(), this.f.getDemandRecordFromListWithId(this.evt.getSenderIdRef()).getOptimalStockLevel() - this.msg.getQuantity(), 0.0)
+										]]></ItemExpr>
+								</AddLast>
+							</MultiValuedSlot>
+						</UPDATE-AGT>
+					</ELSE>
+				</ReactionRule>
+				
+				<ReactionRule name="MakeProductionPlan_Rule" agentVariable="f">
+					<documentation>
+						<description xml:lang="en">The CGP implements its production plan.</description>
+						<description xml:lang="zh">生产商实施生产计划。</description>
+					</documentation>
+					<WHEN eventType="MakeProductionPlan"/>
+					<DO>
+						<UPDATE-AGT>
+							<Call procedure="determineProductionPlan" contextObjectVariable="f">
+								<Argument parameter="laborPrice">
+									<ValueExpr language="Java JavaScript"><![CDATA[ this.f.determineLaborCost() / this.f.getWorkersInFirm().size() ]]></ValueExpr>
+								</Argument>
+								<Argument parameter="investmentPrice">
+									<ValueExpr language="Java"><![CDATA[ Global.getInvestmentSalesPrice() ]]></ValueExpr>
+									<ValueExpr language="JavaScript"><![CDATA[ sim.controller.Global.getInvestmentSalesPrice() ]]></ValueExpr>
+								</Argument>
+								<Argument parameter="plannedProductionQuantity">
+									<ValueExpr language="Java JavaScript"><![CDATA[ this.f.desireProductionQuantity() ]]></ValueExpr>
+								</Argument>
+								<Argument parameter="averageSpecificSkillLevel">
+									<ValueExpr language="Java JavaScript"><![CDATA[ this.f.determineAverageSpecificSkillLevel() ]]></ValueExpr>
+								</Argument>
+								<Argument parameter="averageCapitalStockQuality">
+									<ValueExpr language="Java JavaScript"><![CDATA[ this.f.getAverageQualityOfCapitalStock() ]]></ValueExpr>
+								</Argument>
+							</Call>
+						</UPDATE-AGT>
+						<SCHEDULE-EVT>
+							<ActionEventExpr actionEventType="BuyNewInvestment">
+								<Condition language="Java JavaScript"><![CDATA[ this.f.getNewInvestment() > 0.0 ]]></Condition>
+							</ActionEventExpr>
+							<ActionEventExpr actionEventType="DismissWorker">
+								<Condition language="Java JavaScript"><![CDATA[ this.f.downsizingIncumbentWorkforce() ]]></Condition>
+							</ActionEventExpr>
+							<ActionEventExpr actionEventType="PostVacancyInformation">
+								<Condition language="Java JavaScript"><![CDATA[ this.f.getLaborSupplyQuantity() > 0 ]]></Condition>
+								<Delay>
+									<ValueExpr language="Java JavaScript"><![CDATA[ 3 ]]></ValueExpr>
+								</Delay>
+								<Slot property="firmId">
+									<ValueExpr language="Java JavaScript"><![CDATA[ this.f.getId() ]]></ValueExpr>
+								</Slot>
+								<Slot property="wageOffer">
+									<ValueExpr language="Java JavaScript"><![CDATA[ this.f.getWageOffer() * this.f.determineAverageSpecificSkillLevel() ]]></ValueExpr>
+								</Slot>
+							</ActionEventExpr>
+						</SCHEDULE-EVT>
+					</DO>
+				</ReactionRule>
+				
+				<ReactionRule name="TellSalesRevenue_Rule" agentVariable="f">
+					<documentation>
+						<description xml:lang="en">The CGP receives sales revenue from every regional mall it serves.</description>
+						<description xml:lang="zh">生产商收取销售收入。</description>
+					</documentation>
+					<WHEN eventType="InMessageEvent" messageType="TellSalesRevenue" messageVariable="msg" eventVariable="evt"/>
+					<DO>
+						<UPDATE-AGT>
+							<Slot property="productSalesRevenue">
+								<ValueExpr language="Java JavaScript"><![CDATA[ this.f.getProductSalesRevenue() + this.msg.getRevenue() ]]></ValueExpr>
+							</Slot>
+							<Slot property="productSalesQuantity">
+								<ValueExpr language="Java JavaScript"><![CDATA[ this.f.getProductSalesQuantity() + this.msg.getQuantity() ]]></ValueExpr>
+							</Slot>
+							<Call procedure="updateDemand" contextObjectVariable="f">
+								<Argument parameter="mallId">
+									<ValueExpr language="Java JavaScript"><![CDATA[ this.evt.getSenderIdRef() ]]></ValueExpr>
+								</Argument>
+								<Argument parameter="demand">
+									<ValueExpr language="Java JavaScript"><![CDATA[ this.msg.getQuantity() ]]></ValueExpr>
+								</Argument>
+							</Call>
+						</UPDATE-AGT>
+					</DO>
+				</ReactionRule>
+				
+				<ReactionRule name="TellVacancy_Rule" agentVariable="f">
+					<documentation>
+						<description xml:lang="en">The CGP receives informations from the applicants about their general as well as his specific skill levels.</description>
+						<description xml:lang="zh">生产商收到求职者的职位申请并将其添加到申请列表。</description>
+					</documentation>
+					<WHEN eventType="InMessageEvent" messageType="TellVacancy" messageVariable="msg" eventVariable="evt"/>
+					<DO>
+						<UPDATE-AGT>
+							<MultiValuedSlot property="jobApplications">
+								<AddLast>
+									<ItemExpr language="Java"><![CDATA[
+										new JobApplicationRecord() {
+											{
+												setHouseholdId(evt.getSenderIdRef());
+												setGeneralSkillLevel(msg.getGeneralSkillLevel());
+												setSpecificSkillLevel(msg.getSpecificSkillLevel());
+											}
+										}
+										]]></ItemExpr>
+									<ItemExpr language="JavaScript"><![CDATA[
+										this.f.createJobApplication(this.evt.getSenderIdRef(), this.msg.getGeneralSkillLevel(), this.msg.getSpecificSkillLevel())
+										]]></ItemExpr>
+								</AddLast>
+							</MultiValuedSlot>
+						</UPDATE-AGT>
+					</DO>
+				</ReactionRule>
+				
+				<ReactionRule name="InFirstIterationRankApplicant_Rule" agentVariable="f">
+					<documentation>
+						<description xml:lang="en">Every CGP ranks the applicants. Applicants with higher general skill levels are ranked higher. If there are two or more applicants with equal general skill levels, but different specific skill levels, the applicant with the higher specific skill level is ranked higher. Based on their ranking CGPs send job offers to as many applicants as they have vacancies to fill.</description>
+						<description xml:lang="zh">生产商在第一轮招聘中通过对求职申请的筛选确定合格的求职者。</description>
+					</documentation>
+					<WHEN eventType="InFirstIterationRankApplicant"/>
+					<IF language="Java JavaScript"><![CDATA[ this.f.getJobApplications().size() > 0 ]]></IF>
+					<THEN>
+						<UPDATE-AGT>
+							<Call procedure="determineJobOffer" contextObjectVariable="f"/>
+						</UPDATE-AGT>
+						<SCHEDULE-EVT>
+							<ActionEventExpr actionEventType="InFirstIterationOfferJob"/>
+						</SCHEDULE-EVT>
+					</THEN>
+				</ReactionRule>
+				
+				<ReactionRule name="AcceptJob_Rule" agentVariable="f">
+					<documentation>
+						<description xml:lang="en">The CGP receives acceptances from the applicants and adds them to the list of workers.</description>
+						<description xml:lang="zh">生产商收到申请者职位接受的回复。</description>
+					</documentation>
+					<WHEN eventType="InMessageEvent" messageType="AcceptJob" messageVariable="msg" eventVariable="evt"/>
+					<DO>
+						<UPDATE-AGT>
+							<Slot property="laborSupplyQuantity">
+								<ValueExpr language="Java JavaScript"><![CDATA[ this.f.getLaborSupplyQuantity() - 1 ]]></ValueExpr>
+							</Slot>
+							<MultiValuedSlot property="workersInFirm">
+								<AddLast>
+									<ItemExpr language="Java"><![CDATA[
+										new WorkerInFirm() {
+											{
+												setHouseholdId(evt.getSenderIdRef());
+												setWage(msg.getWage());
+												setGeneralSkillLevel(msg.getGeneralSkillLevel());
+												setSpecificSkillLevel(msg.getSpecificSkillLevel());
+											}
+										}
+										]]></ItemExpr>
+									<ItemExpr language="JavaScript"><![CDATA[
+										this.f.createWorker(this.evt.getSenderIdRef(), this.msg.getWage(), this.msg.getGeneralSkillLevel(), this.msg.getSpecificSkillLevel())
+										]]></ItemExpr>
+								</AddLast>
+							</MultiValuedSlot>
+						</UPDATE-AGT>
+					</DO>
+				</ReactionRule>
+				
+				<ReactionRule name="ResignJob_Rule" agentVariable="f">
+					<documentation>
+						<description xml:lang="en">The CGP receives resignation from its employee and drops him from the list of workers.</description>
+						<description xml:lang="zh">生产商收到工人的辞职通知。</description>
+					</documentation>
+					<WHEN eventType="InMessageEvent" messageType="ResignJob" messageVariable="msg" eventVariable="evt"/>
+					<DO>
+						<UPDATE-AGT>
+							<Slot property="laborSupplyQuantity">
+								<ValueExpr language="Java JavaScript"><![CDATA[ this.f.getLaborSupplyQuantity() + 1 ]]></ValueExpr>
+							</Slot>
+							<Call procedure="deleteWorkerRecordFromList" contextObjectVariable="f">
+								<Argument parameter="householdId">
+									<ValueExpr language="Java JavaScript"><![CDATA[ this.evt.getSenderIdRef() ]]></ValueExpr>
+								</Argument>
+							</Call>
+						</UPDATE-AGT>
+					</DO>
+				</ReactionRule>
+				
+				<ReactionRule name="StartSecondIterationLaborSupply_Rule" agentVariable="f">
+					<documentation>
+						<description xml:lang="en">The CGP starts hiring again.</description>
+						<description xml:lang="zh">开始第二轮招聘。</description>
+					</documentation>
+					<WHEN eventType="StartSecondIterationLaborSupply"/>
+					<IF language="Java JavaScript"><![CDATA[ this.f.getLaborSupplyQuantity() > 0 ]]></IF>
+					<THEN>
+						<SCHEDULE-EVT>
+							<ActionEventExpr actionEventType="PostVacancyInformation">
+								<Slot property="firmId">
+									<ValueExpr language="Java JavaScript"><![CDATA[ this.f.getId() ]]></ValueExpr>
+								</Slot>
+								<Slot property="wageOffer">
+									<ValueExpr language="Java JavaScript"><![CDATA[ this.f.getWageOffer() * this.f.determineAverageSpecificSkillLevel() ]]></ValueExpr>
+								</Slot>
+							</ActionEventExpr>
+						</SCHEDULE-EVT>
+					</THEN>
+				</ReactionRule>
+				
+				<ReactionRule name="InSecondIterationRankApplicant_Rule" agentVariable="f">
+					<documentation>
+						<description xml:lang="en">Every CGP ranks the applicants. Applicants with higher general skill levels are ranked higher. If there are two or more applicants with equal general skill levels, but different specific skill levels, the applicant with the higher specific skill level is ranked higher. Based on their ranking CGPs send job offers to as many applicants as they have vacancies to fill.</description>
+						<description xml:lang="zh">生产商在第二轮招聘中通过对求职申请的筛选确定合格的求职者。</description>
+					</documentation>
+					<WHEN eventType="InSecondIterationRankApplicant"/>
+					<IF language="Java JavaScript"><![CDATA[ this.f.getJobApplications().size() > 0 ]]></IF>
+					<THEN>
+						<UPDATE-AGT>
+							<Call procedure="determineJobOffer" contextObjectVariable="f"/>
+						</UPDATE-AGT>
+						<SCHEDULE-EVT>
+							<ActionEventExpr actionEventType="InFirstIterationOfferJob"/>
+						</SCHEDULE-EVT>
+					</THEN>
+				</ReactionRule>
+				
+				<ReactionRule name="StartOfProduction_Rule" agentVariable="f">
+					<documentation>
+						<description xml:lang="en">Production takes place.</description>
+						<description xml:lang="zh">生产商开始生产。</description>
+					</documentation>
+					<WHEN eventType="StartOfProduction"/>
+					<DO>
+						<UPDATE-AGT>
+							<Call procedure="productionProgress" contextObjectVariable="f">
+								<Argument parameter="averageSpecificSkillLevel">
+									<ValueExpr language="Java JavaScript"><![CDATA[ this.f.determineAverageSpecificSkillLevel() ]]></ValueExpr>
+								</Argument>
+								<Argument parameter="averageCapitalStockQuality">
+									<ValueExpr language="Java JavaScript"><![CDATA[ this.f.getAverageQualityOfCapitalStock() ]]></ValueExpr>
+								</Argument>
+								<Argument parameter="labor">
+									<ValueExpr language="Java JavaScript"><![CDATA[ this.f.getWorkersInFirm().size() ]]></ValueExpr>
+								</Argument>
+								<Argument parameter="investment">
+									<ValueExpr language="Java JavaScript"><![CDATA[ this.f.getGrossInvestment() ]]></ValueExpr>
+								</Argument>
+							</Call>
+						</UPDATE-AGT>
+						<SCHEDULE-EVT>
+							<ActionEventExpr actionEventType="DistributeProduct"/>
+							<ActionEventExpr actionEventType="PayWage"/>
+							<ActionEventExpr actionEventType="IncreaseSpecificSkillLevel"/>
+						</SCHEDULE-EVT>
+					</DO>
+				</ReactionRule>
+				
+				<ReactionRule name="CalculateDividend_Rule" agentVariable="f">
+					<documentation>
+						<description xml:lang="en">The CGP calculates the dividends according to its monthly realized profit.</description>
+						<description xml:lang="zh">生产商计算并分配红利。</description>
+					</documentation>
+					<WHEN eventType="CalculateDividend"/>
+					<DO>
+						<UPDATE-AGT>
+							<Call procedure="determineDividend" contextObjectVariable="f"/>
+						</UPDATE-AGT>
+						<SCHEDULE-EVT>
+							<ActionEventExpr actionEventType="PayDividend">
+								<Condition language="Java JavaScript"><![CDATA[ this.f.getEqualDividend() > 0.0 ]]></Condition>
+								<Slot property="dividend">
+									<ValueExpr language="Java JavaScript"><![CDATA[ this.f.getEqualDividend() ]]></ValueExpr>
+								</Slot>
+							</ActionEventExpr>
+							<ActionEventExpr actionEventType="SetNewPrice">
+								<Slot property="price">
+									<ValueExpr language="Java JavaScript"><![CDATA[ this.f.getProductSalesPrice() ]]></ValueExpr>
+								</Slot>
+							</ActionEventExpr>
+						</SCHEDULE-EVT>
+					</DO>
+				</ReactionRule>
+			</AgentType>
+			
+			<AgentType name="Household">
+				<documentation>
+					<description xml:lang="en">Each household determines once a month the budget which it will spend for consumption based on its income and its assets carried over from the previous period. Once a week the household then visits the (regional) mall to purchase consumption goods. When visiting the mall each consumer collects information about the range of goods provided and about the prices and inventories of the different goods.</description>
+					<description xml:lang="zh">每个家庭每月为其当月的消费制定一次预算，然后每周去商场购物一次。</description>
+				</documentation>
+				<Attribute name="region" type="Integer"/>
+				<Attribute name="firm" type="Integer"/>
+				<Attribute name="lastFirm" type="Integer"/>
+				<Attribute name="jobSeeker" type="Boolean"/>
+				<Attribute name="generalSkillLevel" type="Integer"/>
+				<Attribute name="specificSkillLevel" type="Float"/>
+				<Attribute name="currentWage" type="Float"/>
+				<Attribute name="laborIncome" type="Float"/>
+				<Attribute name="totalIncome" type="Float"/>
+				<Attribute name="meanIncome" type="Float"/>
+				<Attribute name="currentIncome" type="Float"/>
+				<Attribute name="savingAccount" type="Float"/>
+				<Attribute name="cashOnHand" type="Float"/>
+				<Attribute name="consumptionBudget" type="Float"/>
+				<Attribute name="weekConsumptionBudget" type="Float"/>
+				<Attribute name="remainingConsumptionBudget" type="Float"/>
+				<Attribute name="selectFirstProductId" type="Integer"/>
+				<Attribute name="selectSecondProductId" type="Integer"/>
+				<Attribute name="spendBudgetForFirstProduct" type="Float"/>
+				<Attribute name="spendBudgetForSecondProduct" type="Float"/>
+				<Attribute name="purchaseQuantityForFirstProduct" type="Float"/>
+				<Attribute name="purchaseQuantityForSecondProduct" type="Float"/>
+				
+				<ComplexDataProperty name="availableProducts" type="ProductListItem" upperMultiplicity="unbounded"/>
+				<ComplexDataProperty name="jobOffers" type="JobOfferRecord" upperMultiplicity="unbounded"/>
+				
+				<Function name="determineConsumptionBudget" resultType="void">
+					<documentation>
+						<description xml:lang="en">Our decision rule for determining the savings is based on the work of Deaton (1991). Deaton examines the saving behavior of impatient consumers when they are not permitted to borrow. In a scenario with independent and identically distributed income draws, he obtains a consumption function depending on cash on hand, which has the following characteristics: There exists a critical value of cash on hand. When the available liquidity is below this critical value the whole cash on hand will be spent. In the opposite case the agent will save a part of his cash on hand. The assets act like a buffer stock which protect consumption against bad income draws.</description>
+						<description xml:lang="zh">制定消费预算函数。</description>
+					</documentation>
+					<Body language="Java"><![CDATA[
+						setTotalIncome(getTotalIncome() + getCurrentIncome());
+						setMeanIncome(getTotalIncome() / Global.getPeriod());
+						setCashOnHand(getSavingAccount() + getRemainingConsumptionBudget() + getCurrentIncome());
+						setRemainingConsumptionBudget(0.0);
+						setCurrentIncome(0.0);
+						
+						if (getCashOnHand() > 0.9 * getMeanIncome()) {
+							setConsumptionBudget(getCashOnHand() - 0.1 * (getCashOnHand() - 0.9 * getMeanIncome()));
+							setSavingAccount(getCashOnHand() - getConsumptionBudget());
+						}
+						else {
+							setConsumptionBudget(getCashOnHand());
+							setSavingAccount(0.0);
+						}
+						]]></Body>
+					<Body language="JavaScript"><![CDATA[
+						this.setTotalIncome(this.getTotalIncome() + this.getCurrentIncome());
+						this.setMeanIncome(this.getTotalIncome() / sim.controller.Global.getPeriod());
+						this.setCashOnHand(this.getSavingAccount() + this.getRemainingConsumptionBudget() + this.getCurrentIncome());
+						this.setRemainingConsumptionBudget(0.0);
+						this.setCurrentIncome(0.0);
+						
+						if (this.getCashOnHand() > 0.9 * this.getMeanIncome()) {
+							this.setConsumptionBudget(this.getCashOnHand() - 0.1 * (this.getCashOnHand() - 0.9 * this.getMeanIncome()));
+							this.setSavingAccount(this.getCashOnHand() - this.getConsumptionBudget());
+						}
+						else {
+							this.setConsumptionBudget(this.getCashOnHand());
+							this.setSavingAccount(0.0);
+						}
+						]]></Body>
+				</Function>
+				
+				<Function name="consumptionDecision" resultType="void">
+					<documentation>
+						<description xml:lang="en">At the weekly visit to the mall in his region each consumer collects information about the range of goods provided and about the prices and inventories of the different goods. Once the consumer has selected a good he spends his entire budget for that good if the stock at the mall is sufficiently large. In case the consumer cannot spend all his budget on the product selected first, he spends as much as possible, removes that product from the list, updates the logit values and selects another product to spend the remaining consumption budget there. If he is rationed again, he spends as much as possible on the second selected product, rolls over the remaining budget to the following week and finishes the visit to the mall.</description>
+						<description xml:lang="zh">消费者开始决定消费。</description>
+					</documentation>
+					<Parameter name="productsCollection" type="List" itemType="ProductInStock"/>
+					<Body language="Java"><![CDATA[
+						for (ProductInStock i : productsCollection) {
+							if (i.getQuantity() > 0.0) {
+								sim.model.dataTypes.ProductListItem p = new sim.model.dataTypes.ProductListItem();
+								p.setFirmId(i.getFirmId());
+								p.setConsumptionValue(Math.pow((i.getPrice()), (-1 * 8.5)));
+								p.setSelectionProbability(0.0);
+								getAvailableProducts().add(p);
+							}
+						}
+						
+						setWeekConsumptionBudget(getConsumptionBudget() / 4 + getRemainingConsumptionBudget());
+						setSelectFirstProductId(productSelection());
+						if (getSelectFirstProductId() == 0) {
+							setSpendBudgetForFirstProduct(0.0);
+							setPurchaseQuantityForFirstProduct(0.0);
+							setSelectSecondProductId(0);
+							setSpendBudgetForSecondProduct(0.0);
+							setPurchaseQuantityForSecondProduct(0.0);
+							setRemainingConsumptionBudget(getWeekConsumptionBudget());
+							setWeekConsumptionBudget(0.0);
+						}
+						else {
+							for (ProductInStock j : productsCollection) {
+								if (j.getFirmId() == getSelectFirstProductId()) {
+									if (j.getQuantity() >= getWeekConsumptionBudget() / j.getPrice()) {
+										setSpendBudgetForFirstProduct(getWeekConsumptionBudget());
+										setPurchaseQuantityForFirstProduct(getWeekConsumptionBudget() / j.getPrice());
+										j.setQuantity(j.getQuantity() - getPurchaseQuantityForFirstProduct());
+										setSelectSecondProductId(0);
+										setSpendBudgetForSecondProduct(0.0);
+										setPurchaseQuantityForSecondProduct(0.0);
+										setRemainingConsumptionBudget(0.0);
+										setWeekConsumptionBudget(0.0);
+										getAvailableProducts().clear();
+									}
+									else {
+										setSpendBudgetForFirstProduct(j.getQuantity() * j.getPrice());
+										setPurchaseQuantityForFirstProduct(j.getQuantity());
+										j.setQuantity(0.0);
+										setWeekConsumptionBudget(getWeekConsumptionBudget() - getSpendBudgetForFirstProduct());
+										deleteProductRecordFromList(getSelectFirstProductId());
+										setSelectSecondProductId(productSelection());
+										if (getSelectSecondProductId() == 0) {
+											setSpendBudgetForSecondProduct(0.0);
+											setPurchaseQuantityForSecondProduct(0.0);
+											setRemainingConsumptionBudget(getWeekConsumptionBudget());
+											setWeekConsumptionBudget(0.0);
+										}
+										else {
+											for (ProductInStock k : productsCollection) {
+												if (k.getFirmId() == getSelectSecondProductId()) {
+													if (k.getQuantity() >= getWeekConsumptionBudget() / k.getPrice()) {
+														setSpendBudgetForSecondProduct(getWeekConsumptionBudget());
+														setPurchaseQuantityForSecondProduct(getWeekConsumptionBudget() / k.getPrice());
+														k.setQuantity(k.getQuantity() - getPurchaseQuantityForSecondProduct());
+														setRemainingConsumptionBudget(0.0);
+														setWeekConsumptionBudget(0.0);
+														getAvailableProducts().clear();
+													}
+													else {
+														setSpendBudgetForSecondProduct(k.getQuantity() * k.getPrice());
+														setPurchaseQuantityForSecondProduct(k.getQuantity());
+														k.setQuantity(0.0);
+														setRemainingConsumptionBudget(getWeekConsumptionBudget() - getSpendBudgetForSecondProduct());
+														setWeekConsumptionBudget(0.0);
+														getAvailableProducts().clear();
+													}
+												}
+											}
+										}
+									}
+								}
+							}
+						}
+						]]></Body>
+					<Body language="JavaScript"><![CDATA[
+						for (var i = 0; i < productsCollection.size(); i++) {
+							if (productsCollection.get(i).getQuantity() > 0.0) {
+								var p = new sim.model.dataTypes.ProductListItem();
+								p.setFirmId(productsCollection.get(i).getFirmId());
+								p.setConsumptionValue(Math.pow((productsCollection.get(i).getPrice()), (-1 * 8.5)));
+								p.setSelectionProbability(0.0);
+								this.getAvailableProducts().add(p);
+							}
+						}
+						
+						this.setWeekConsumptionBudget(this.getConsumptionBudget() / 4 + this.getRemainingConsumptionBudget());
+						this.setSelectFirstProductId(this.productSelection());
+						if (this.getSelectFirstProductId() == 0) {
+							this.setSpendBudgetForFirstProduct(0.0);
+							this.setPurchaseQuantityForFirstProduct(0.0);
+							this.setSelectSecondProductId(0);
+							this.setSpendBudgetForSecondProduct(0.0);
+							this.setPurchaseQuantityForSecondProduct(0.0);
+							this.setRemainingConsumptionBudget(this.getWeekConsumptionBudget());
+							this.setWeekConsumptionBudget(0.0);
+						}
+						else {
+							for (var j = 0; j < productsCollection.size(); j++) {
+								if (productsCollection.get(j).getFirmId() == this.getSelectFirstProductId()) {
+									if (productsCollection.get(j).getQuantity() >= this.getWeekConsumptionBudget() / productsCollection.get(j).getPrice()) {
+										this.setSpendBudgetForFirstProduct(this.getWeekConsumptionBudget());
+										this.setPurchaseQuantityForFirstProduct(this.getWeekConsumptionBudget() / productsCollection.get(j).getPrice());
+										productsCollection.get(j).setQuantity(productsCollection.get(j).getQuantity() - this.getPurchaseQuantityForFirstProduct());
+										this.setSelectSecondProductId(0);
+										this.setSpendBudgetForSecondProduct(0.0);
+										this.setPurchaseQuantityForSecondProduct(0.0);
+										this.setRemainingConsumptionBudget(0.0);
+										this.setWeekConsumptionBudget(0.0);
+										this.getAvailableProducts().clear();
+									}
+									else {
+										this.setSpendBudgetForFirstProduct(productsCollection.get(j).getQuantity() * productsCollection.get(j).getPrice());
+										this.setPurchaseQuantityForFirstProduct(productsCollection.get(j).getQuantity());
+										productsCollection.get(j).setQuantity(0.0);
+										this.setWeekConsumptionBudget(this.getWeekConsumptionBudget() - this.getSpendBudgetForFirstProduct());
+										this.deleteProductRecordFromList(this.getSelectFirstProductId());
+										this.setSelectSecondProductId(this.productSelection());
+										if (this.getSelectSecondProductId() == 0) {
+											this.setSpendBudgetForSecondProduct(0.0);
+											this.setPurchaseQuantityForSecondProduct(0.0);
+											this.setRemainingConsumptionBudget(this.getWeekConsumptionBudget());
+											this.setWeekConsumptionBudget(0.0);
+										}
+										else {
+											for (var k = 0; k < productsCollection.size(); k++) {
+												if (productsCollection.get(k).getFirmId() == this.getSelectSecondProductId()) {
+													if (productsCollection.get(k).getQuantity() >= this.getWeekConsumptionBudget() / productsCollection.get(k).getPrice()) {
+														this.setSpendBudgetForSecondProduct(this.getWeekConsumptionBudget());
+														this.setPurchaseQuantityForSecondProduct(this.getWeekConsumptionBudget() / productsCollection.get(k).getPrice());
+														productsCollection.get(k).setQuantity(productsCollection.get(k).getQuantity() - this.getPurchaseQuantityForSecondProduct());
+														this.setRemainingConsumptionBudget(0.0);
+														this.setWeekConsumptionBudget(0.0);
+														this.getAvailableProducts().clear();
+													}
+													else {
+														this.setSpendBudgetForSecondProduct(productsCollection.get(k).getQuantity() * productsCollection.get(k).getPrice());
+														this.setPurchaseQuantityForSecondProduct(productsCollection.get(k).getQuantity());
+														productsCollection.get(k).setQuantity(0.0);
+														this.setRemainingConsumptionBudget(this.getWeekConsumptionBudget() - this.getSpendBudgetForSecondProduct());
+														this.setWeekConsumptionBudget(0.0);
+														this.getAvailableProducts().clear();
+													}
+												}
+											}
+										}
+									}
+								}
+							}
+						}
+						]]></Body>
+				</Function>
+				
+				<Function name="productSelection" resultType="Integer">
+					<documentation>
+						<description xml:lang="en">In the Marketing literature it is standard to describe individual consumption decisions using logit models. We assume that the decision of a consumer which good to buy is random, where purchasing probabilities are based on the logit values he attaches to the different choices he is aware of.</description>
+						<description xml:lang="zh">消费者确定其想要购买的消费品。</description>
+					</documentation>
+					<Body language="Java"><![CDATA[
+						double r = Math.random();
+						double sumOfValues = 0.0;
+						int productSelectId = 0;
+						int j;
+						
+						if (getAvailableProducts().size() == 0) {
+							productSelectId = 0;
+						}
+						else {
+							for (ProductListItem i : getAvailableProducts()) {
+								sumOfValues += i.getConsumptionValue();
+							}
+							for (j = 0; j < getAvailableProducts().size(); j++) {
+								if (j == 0) {
+									getAvailableProducts().get(j).setSelectionProbability(getAvailableProducts().get(j).getConsumptionValue() / sumOfValues);
+									if (r < getAvailableProducts().get(j).getSelectionProbability()) {
+										productSelectId = (int)getAvailableProducts().get(j).getFirmId();
+									}
+								}
+								else {
+									getAvailableProducts().get(j).setConsumptionValue(getAvailableProducts().get(j).getConsumptionValue() + getAvailableProducts().get(j - 1).getConsumptionValue());
+									getAvailableProducts().get(j).setSelectionProbability(getAvailableProducts().get(j).getConsumptionValue() / sumOfValues);
+									if (r < getAvailableProducts().get(j).getSelectionProbability() && r >= getAvailableProducts().get(j - 1).getSelectionProbability()) {
+										productSelectId = (int)getAvailableProducts().get(j).getFirmId();
+									}
+								}
+							}
+						}
+						
+						return productSelectId;
+						]]></Body>
+					<Body language="JavaScript"><![CDATA[
+						var r = Math.random();
+						var sumOfValues = 0.0;
+						var productSelectId = 0;
+						var availableProducts = this.getAvailableProducts();
+						
+						if (availableProducts.size() == 0) {
+							productSelectId = 0;
+						}
+						else {
+							for (var i = 0; i < availableProducts.size(); i++) {
+								sumOfValues += availableProducts.get(i).getConsumptionValue();
+							}
+							for (var j = 0; j < availableProducts.size(); j++) {
+								if (j == 0) {
+									availableProducts.get(j).setSelectionProbability(availableProducts.get(j).getConsumptionValue() / sumOfValues);
+									if (r < availableProducts.get(j).getSelectionProbability()) {
+										productSelectId = availableProducts.get(j).getFirmId();
+									}
+								}
+								else {
+									availableProducts.get(j).setConsumptionValue(availableProducts.get(j).getConsumptionValue() + availableProducts.get(j - 1).getConsumptionValue());
+									availableProducts.get(j).setSelectionProbability(availableProducts.get(j).getConsumptionValue() / sumOfValues);
+									if (r < availableProducts.get(j).getSelectionProbability() && r >= availableProducts.get(j - 1).getSelectionProbability()) {
+										productSelectId = availableProducts.get(j).getFirmId();
+									}
+								}
+							}
+						}
+						
+						return productSelectId;
+						]]></Body>
+				</Function>
+				
+				<Function name="deleteProductRecordFromList" resultType="void">
+					<documentation>
+						<description xml:lang="en">In case the consumer cannot spend all his budget on the product selected first, he spends as much as possible, removes that product from the list.</description>
+						<description xml:lang="zh">清空消费者的产品抽样列表。</description>
+					</documentation>
+					<Parameter name="firmId" type="Integer"/>
+					<Body language="Java"><![CDATA[
+						int i;
+						for (i = 0; i < getAvailableProducts().size(); i++) {
+							if (getAvailableProducts().get(i).getFirmId() == firmId) {
+								getAvailableProducts().remove(i);
+							}
+						}
+						]]></Body>
+					<Body language="JavaScript"><![CDATA[
+						var availableProducts = this.getAvailableProducts();
+						for (var i = 0; i < availableProducts.size(); i++) {
+							if (availableProducts.get(i).getFirmId() == firmId) {
+								availableProducts.remove(i);
+							}
+						}
+						]]></Body>
+				</Function>
+				
+				<Function name="determineJobAcceptance" resultType="void">
+					<documentation>
+						<description xml:lang="en">Each worker ranks the incoming job offers according to the wages net of commuting costs (comm > 0) that may arise if he was to accept a job in the region where he does not live. Each worker accepts the highest ranked job offer at the advertised wage rate.</description>
+						<description xml:lang="zh">求职者对向其提供职位的生产商进行筛选并最终接受一份满意的工作。</description>
+					</documentation>
+					<Body language="Java"><![CDATA[
+						java.util.Comparator<sim.model.dataTypes.JobOfferRecord> comparator;
+						comparator = new java.util.Comparator<sim.model.dataTypes.JobOfferRecord>() {
+							public int compare(sim.model.dataTypes.JobOfferRecord a, sim.model.dataTypes.JobOfferRecord b) {
+								double p1 = - a.getNetWageOffer();
+								double p2 = - b.getNetWageOffer();
+								if (p1 < p2) return -1;
+								if (p1 > p2) return 1;
+								return 0;
+							}
+						};
+						
+						java.util.Collections.shuffle(getJobOffers());
+						java.util.Collections.sort(getJobOffers(), comparator);
+						
+						setLastFirm(getFirm());
+						setFirm(getJobOffers().get(0).getFirmId());
+						setCurrentWage(getJobOffers().get(0).getWageOffer());
+						setJobSeeker(false);
+						
+						getJobOffers().clear();
+						]]></Body>
+					<Body language="JavaScript"><![CDATA[
+						var jobOffers = this.getJobOffers();
+						
+						var comparator = function(a, b) {
+							var p1 = - a.getNetWageOffer();
+							var p2 = - b.getNetWageOffer();
+							if (p1 < p2) return -1;
+							if (p1 > p2) return 1;
+		         						return 0;
+						}
+						
+						jobOffers.sort(function() {return 0.5 - Math.random()});
+						jobOffers.sort(comparator);
+						
+						this.setLastFirm(this.getFirm());
+						this.setFirm(jobOffers.get(0).getFirmId());
+						this.setCurrentWage(jobOffers.get(0).getWageOffer());
+						this.setJobSeeker(false);
+						
+						jobOffers.clear();
+						]]></Body>
+				</Function>
+				
+				<Function name="createJobOffer" resultType="JobOfferRecord">
+					<Parameter name="firmId" type="Integer"/>
+					<Parameter name="wageOffer" type="Float"/>
+					<Parameter name="netWageOffer" type="Float"/>
+					<Body language="JavaScript"><![CDATA[
+						var jobOffer = new sim.model.dataTypes.JobOfferRecord();
+						jobOffer.setFirmId(firmId);
+						jobOffer.setWageOffer(wageOffer);
+						jobOffer.setNetWageOffer(netWageOffer);
+						return jobOffer;
+						]]></Body>
+				</Function>
+				
+				<PeriodicTimeEventType name="AtStartOfMonthDetermineConsumptionBudget" periodicity="24"/>
+				<PeriodicTimeEventType name="InFirstIterationAcceptJob" periodicity="24"/>
+				<PeriodicTimeEventType name="InSecondIterationAcceptJob" periodicity="24"/>
+				
+				<ReactionRule name="AtStartOfMonthDetermineConsumptionBudget_Rule" agentVariable="h">
+					<documentation>
+						<description xml:lang="en">Once a month households receive their income. Depending on the available cash, that is the current income from factor markets (i.e. labor income and dividends distributed by capital and consumption goods producers) plus assets carried over from the previous period, the household sets the budget which it will spend for consumption and consequently determines the remaining part which is saved.</description>
+						<description xml:lang="zh">消费者每月制定一次消费预算。</description>
+					</documentation>
+					<WHEN eventType="AtStartOfMonthDetermineConsumptionBudget"/>
+					<DO>
+						<UPDATE-AGT>
+							<Call procedure="determineConsumptionBudget" contextObjectVariable="h"/>
+						</UPDATE-AGT>
+					</DO>
+				</ReactionRule>
+				
+				<ReactionRule name="TellDismissal_Rule" agentVariable="h">
+					<documentation>
+						<description xml:lang="en">A worker gets a notice that he is dismissed.</description>
+						<description xml:lang="zh">工人收到被解雇的消息，他失业了。</description>
+					</documentation>
+					<WHEN eventType="InMessageEvent" messageType="TellDismissal"/>
+					<DO>
+						<UPDATE-AGT>
+							<Slot property="lastFirm">
+								<ValueExpr language="Java JavaScript"><![CDATA[ this.h.getFirm() ]]></ValueExpr>
+							</Slot>
+							<Slot property="firm" value="100"/>
+							<Slot property="jobSeeker" value="true"/>
+						</UPDATE-AGT>
+					</DO>
+				</ReactionRule>
+				
+				<ReactionRule name="JobOffer_Rule" agentVariable="h">
+					<documentation>
+						<description xml:lang="en">The job seeker receives the incoming job offers.</description>
+						<description xml:lang="zh">求职者收到由生产商提供的职位邀请。</description>
+					</documentation>
+					<WHEN eventType="InMessageEvent" messageType="JobOffer" messageVariable="msg" eventVariable="evt"/>
+					<IF language="Java JavaScript"><![CDATA[ this.msg.getRegion() == this.h.getRegion() ]]></IF>
+					<THEN>
+						<UPDATE-AGT>
+							<MultiValuedSlot property="jobOffers">
+								<AddLast>
+									<ItemExpr language="Java"><![CDATA[
+										new JobOfferRecord() {
+											{
+												setFirmId(evt.getSenderIdRef());
+												setWageOffer(msg.getWageOffer());
+												setNetWageOffer(msg.getWageOffer());
+											}
+										}
+										]]></ItemExpr>
+									<ItemExpr language="JavaScript"><![CDATA[
+										this.h.createJobOffer(this.evt.getSenderIdRef(), this.msg.getWageOffer(), this.msg.getWageOffer())
+										]]></ItemExpr>
+								</AddLast>
+							</MultiValuedSlot>
+						</UPDATE-AGT>
+					</THEN>
+					<ELSE>
+						<UPDATE-AGT>
+							<MultiValuedSlot property="jobOffers">
+								<AddLast>
+									<ItemExpr language="Java"><![CDATA[
+										new JobOfferRecord() {
+											{
+												setFirmId(evt.getSenderIdRef());
+												setWageOffer(msg.getWageOffer());
+												setNetWageOffer(msg.getWageOffer() - Global.getComm());
+											}
+										}
+										]]></ItemExpr>
+									<ItemExpr language="JavaScript"><![CDATA[
+										this.h.createJobOffer(this.evt.getSenderIdRef(), this.msg.getWageOffer(), this.msg.getWageOffer() - sim.controller.Global.getComm())
+										]]></ItemExpr>
+								</AddLast>
+							</MultiValuedSlot>
+						</UPDATE-AGT>
+					</ELSE>
+				</ReactionRule>
+				
+				<ReactionRule name="InFirstIterationAcceptJob_Rule" agentVariable="h">
+					<documentation>
+						<description xml:lang="en">The job seeker accepts the highest ranked job offer.</description>
+						<description xml:lang="zh">求职者接受他最满意的职位。</description>
+					</documentation>
+					<WHEN eventType="InFirstIterationAcceptJob"/>
+					<IF language="Java JavaScript"><![CDATA[ this.h.getJobOffers().size() > 0 ]]></IF>
+					<THEN>
+						<UPDATE-AGT>
+							<Call procedure="determineJobAcceptance" contextObjectVariable="h"/>
+						</UPDATE-AGT>
+						<SCHEDULE-EVT>
+							<OutMessageEventExpr messageType="AcceptJob">
+								<ReceiverIdRef language="Java JavaScript"><![CDATA[ this.h.getFirm() ]]></ReceiverIdRef>
+								<Slot property="wage">
+									<ValueExpr language="Java JavaScript"><![CDATA[ this.h.getCurrentWage() ]]></ValueExpr>
+								</Slot>
+								<Slot property="generalSkillLevel">
+									<ValueExpr language="Java JavaScript"><![CDATA[ this.h.getGeneralSkillLevel() ]]></ValueExpr>
+								</Slot>
+								<Slot property="specificSkillLevel">
+									<ValueExpr language="Java JavaScript"><![CDATA[ this.h.getSpecificSkillLevel() ]]></ValueExpr>
+								</Slot>
+							</OutMessageEventExpr>
+							<OutMessageEventExpr messageType="ResignJob">
+								<Condition language="Java JavaScript"><![CDATA[ this.h.getLastFirm() != 100 ]]></Condition>
+								<ReceiverIdRef language="Java JavaScript"><![CDATA[ this.h.getLastFirm() ]]></ReceiverIdRef>
+							</OutMessageEventExpr>
+						</SCHEDULE-EVT>
+					</THEN>
+				</ReactionRule>
+				
+				<ReactionRule name="InSecondIterationAcceptJob_Rule" agentVariable="h">
+					<documentation>
+						<description xml:lang="en">The job seeker accepts the highest ranked job offer.</description>
+						<description xml:lang="zh">求职者接受他最满意的职位。</description>
+					</documentation>
+					<WHEN eventType="InSecondIterationAcceptJob"/>
+					<IF language="Java JavaScript"><![CDATA[ this.h.getJobOffers().size() > 0 ]]></IF>
+					<THEN>
+						<UPDATE-AGT>
+							<Call procedure="determineJobAcceptance" contextObjectVariable="h"/>
+						</UPDATE-AGT>
+						<SCHEDULE-EVT>
+							<OutMessageEventExpr messageType="AcceptJob">
+								<ReceiverIdRef language="Java JavaScript"><![CDATA[ this.h.getFirm() ]]></ReceiverIdRef>
+								<Slot property="wage">
+									<ValueExpr language="Java JavaScript"><![CDATA[ this.h.getCurrentWage() ]]></ValueExpr>
+								</Slot>
+								<Slot property="generalSkillLevel">
+									<ValueExpr language="Java JavaScript"><![CDATA[ this.h.getGeneralSkillLevel() ]]></ValueExpr>
+								</Slot>
+								<Slot property="specificSkillLevel">
+									<ValueExpr language="Java JavaScript"><![CDATA[ this.h.getSpecificSkillLevel() ]]></ValueExpr>
+								</Slot>
+							</OutMessageEventExpr>
+							<OutMessageEventExpr messageType="ResignJob">
+								<Condition language="Java JavaScript"><![CDATA[ this.h.getLastFirm() != 100 ]]></Condition>
+								<ReceiverIdRef language="Java JavaScript"><![CDATA[ this.h.getLastFirm() ]]></ReceiverIdRef>
+							</OutMessageEventExpr>
+						</SCHEDULE-EVT>
+					</THEN>
+				</ReactionRule>
+				
+				<ReactionRule name="TellWage_Rule" agentVariable="h">
+					<documentation>
+						<description xml:lang="en">All workers receive the wages for the full month from his employer.</description>
+						<description xml:lang="zh">工人从其雇主那里收到当月工资。</description>
+					</documentation>
+					<WHEN eventType="InMessageEvent" messageType="TellWage" messageVariable="msg"/>
+					<IF language="Java JavaScript"><![CDATA[ this.msg.getRegion() == this.h.getRegion() ]]></IF>
+					<THEN>
+						<UPDATE-AGT>
+							<Slot property="laborIncome">
+								<ValueExpr language="Java JavaScript"><![CDATA[ this.msg.getWage() ]]></ValueExpr>
+							</Slot>
+							<Slot property="currentIncome">
+								<ValueExpr language="Java JavaScript"><![CDATA[ this.h.getCurrentIncome() + this.h.getLaborIncome() ]]></ValueExpr>
+							</Slot>
+						</UPDATE-AGT>
+					</THEN>
+					<ELSE>
+						<UPDATE-AGT>
+							<Slot property="laborIncome">
+								<ValueExpr language="Java"><![CDATA[ msg.getWage() - Global.getComm() ]]></ValueExpr>
+								<ValueExpr language="JavaScript"><![CDATA[ this.msg.getWage() - sim.controller.Global.getComm() ]]></ValueExpr>
+							</Slot>
+							<Slot property="currentIncome">
+								<ValueExpr language="Java JavaScript"><![CDATA[ this.h.getCurrentIncome() + this.h.getLaborIncome() ]]></ValueExpr>
+							</Slot>
+						</UPDATE-AGT>
+					</ELSE>
+				</ReactionRule>
+				
+				<ReactionRule name="TellSpecificSkillLevel_Rule" agentVariable="h">
+					<documentation>
+						<description xml:lang="en">All workers increase his specific skill level from his employer.</description>
+						<description xml:lang="zh">工人提高其特殊技能水平。</description>
+					</documentation>
+					<WHEN eventType="InMessageEvent" messageType="TellSpecificSkillLevel" messageVariable="msg"/>
+					<DO>
+						<UPDATE-AGT>
+							<Slot property="specificSkillLevel">
+								<ValueExpr language="Java JavaScript"><![CDATA[ this.msg.getSpecificSkillLevel() ]]></ValueExpr>
+							</Slot>
+						</UPDATE-AGT>
+					</DO>
+				</ReactionRule>
+			</AgentType>
+		</EntityTypes>
+		
+		<EnvironmentRules>
+			<EnvironmentRule name="Create_InitialProductsInStock_Rule">
+				<documentation>
+					<description xml:lang="en">Every CGP keeps a stock of its products at every regional mall.</description>
+					<description xml:lang="zh">初始化生产商在每个商场所提供产品的库存。</description>
+				</documentation>
+				<WHEN eventType="Init"/>
+				<FOR-ObjectVariable variable="m" objectType="Mall"/>
+				<FOR-ObjectVariable variable="f" objectType="ConsumptionGoodsProducer"/>
+				<DO>
+					<UPDATE-ENV>
+						<UpdateObject objectVariable="m">
+							<MultiValuedSlot property="productsInStock">
+								<AddLast>
+									<ItemExpr language="Java"><![CDATA[
+										new ProductInStock() {
+											{
+												setFirmId(f.getId());
+												setPrice(f.getProductSalesPrice());
+												setQuantity(8.0);
+											}
+										}
+										]]></ItemExpr>
+									<ItemExpr language="JavaScript"><![CDATA[
+										this.m.createProduct(this.f.getId(), this.f.getProductSalesPrice(), 8.0)
+										]]></ItemExpr>
+								</AddLast>
+							</MultiValuedSlot>
+						</UpdateObject>
+						<UpdateObject objectVariable="f">
+							<MultiValuedSlot property="productDemands">
+								<AddLast>
+									<ItemExpr language="Java"><![CDATA[
+										new ProductDemandRecord() {
+											{
+												setMallId(m.getId());
+												setDemand(0.0);
+												setMaximumDemand(8.0);
+												setOptimalStockLevel(0.0);
+											}
+										}
+										]]></ItemExpr>
+									<ItemExpr language="JavaScript"><![CDATA[
+										this.f.createProductDemand(this.m.getId(), 0.0, 8.0, 0.0)
+										]]></ItemExpr>
+								</AddLast>
+							</MultiValuedSlot>
+						</UpdateObject>
+					</UPDATE-ENV>
+				</DO>
+			</EnvironmentRule>
+			
+			<!--<EnvironmentRule name="Create_InitialReservationWage_Rule">
+		    	<documentation>
+		    		<description xml:lang="en">Get an initial reservation wage of every household on the basis of his general skill level.</description>
+		    		<description xml:lang="zh">初始化工人的保留工资。</description>
+		    	</documentation>
+		    	<WHEN eventType="Init"/>
+		    	<FOR-ObjectVariable variable="h" objectType="Household"/>
+		    	<DO>
+					<UPDATE-ENV>
+						<UpdateObject objectVariable="h">
+							<Slot property="currentWage">
+								<ValueExpr language="Java"><![CDATA[ Global.determineInitialWage(h.getGeneralSkillLevel()) ]]></ValueExpr>
+								<ValueExpr language="JavaScript"><![CDATA[ sim.controller.Global.determineInitialWage(this.h.getGeneralSkillLevel()) ]]></ValueExpr>
+							</Slot>
+						</UpdateObject>
+					</UPDATE-ENV>
+				</DO>
+				</EnvironmentRule>-->
+			
+			<EnvironmentRule name="Create_InitialUnemployedWorkerAsJobSeeker_Rule">
+				<documentation>
+					<description xml:lang="en">Set the unemployed workers as job seekers.</description>
+					<description xml:lang="zh">初始化失业者为求职者。</description>
+				</documentation>
+				<WHEN eventType="Init"/>
+				<FOR-ObjectVariable variable="h" objectType="Household"/>
+				<IF language="Java JavaScript"><![CDATA[ this.h.getFirm() == 100 ]]></IF>
+				<THEN>
+					<UPDATE-ENV>
+						<UpdateObject objectVariable="h">
+							<Slot property="jobSeeker" value="true"/>
+						</UpdateObject>
+					</UPDATE-ENV>
+				</THEN>
+			</EnvironmentRule>
+			
+			<EnvironmentRule name="Create_InitialWorkersInFirm_Rule">
+				<documentation>
+					<description xml:lang="en">Confirm the incumbent workforce of Every CGP.</description>
+					<description xml:lang="zh">初始化确认生产商的现有劳动力。</description>
+				</documentation>
+				<WHEN eventType="Init"/>
+				<FOR-ObjectVariable variable="f" objectType="ConsumptionGoodsProducer"/>
+				<FOR-ObjectVariable variable="h" objectType="Household"/>
+				<IF language="Java JavaScript"><![CDATA[ this.f.getId() == this.h.getFirm() ]]></IF>
+				<THEN>
+					<UPDATE-ENV>
+						<UpdateObject objectVariable="f">
+							<MultiValuedSlot property="workersInFirm">
+								<AddLast>
+									<ItemExpr language="Java"><![CDATA[
+										new WorkerInFirm() {
+											{
+												setHouseholdId(h.getId());
+												setWage(h.getCurrentWage());
+												setGeneralSkillLevel(h.getGeneralSkillLevel());
+												setSpecificSkillLevel(h.getSpecificSkillLevel());
+											}
+										}
+										]]></ItemExpr>
+									<ItemExpr language="JavaScript"><![CDATA[
+										this.f.createWorker(this.h.getId(), this.h.getCurrentWage(), this.h.getGeneralSkillLevel(), this.h.getSpecificSkillLevel())
+										]]></ItemExpr>
+								</AddLast>
+							</MultiValuedSlot>
+						</UpdateObject>
+					</UPDATE-ENV>
+				</THEN>
+			</EnvironmentRule>
+			
+			<EnvironmentRule name="AtStartOfMonthDetermineEmployedWorkerAsJobSeeker_Rule">
+				<documentation>
+					<description xml:lang="en">A randomly determined fraction (10%) of employed workers who search on-the-job.</description>
+					<description xml:lang="zh">随机确定10%的工人作为求职者。</description>
+				</documentation>
+				<WHEN eventType="StartOfMonth"/>
+				<FOR-ObjectVariable variable="h" objectType="Household"/>
+				<IF language="Java"><![CDATA[ h.getFirm() != 100 && Global.wouldBeJobSeeker() ]]></IF>
+				<IF language="JavaScript"><![CDATA[ this.h.getFirm() != 100 && sim.controller.Global.wouldBeJobSeeker() ]]></IF>
+				<THEN>
+					<UPDATE-ENV>
+						<UpdateObject objectVariable="h">
+							<Slot property="jobSeeker" value="true"/>
+						</UpdateObject>
+					</UPDATE-ENV>
+				</THEN>
+			</EnvironmentRule>
+			
+			<EnvironmentRule name="AtStartOfMonthStatistics_Rule">
+				<documentation>
+					<description xml:lang="en">Make statistics.</description>
+					<description xml:lang="zh">用于统计。</description>
+				</documentation>
+				<WHEN eventType="StartOfMonth"/>
+				<FOR-ObjectVariable variable="f" objectType="ConsumptionGoodsProducer"/>
+				<IF language="Java JavaScript"><![CDATA[ this.f.getRegion() == 1 ]]></IF>
+				<THEN>
+					<UPDATE-ENV>
+						<UpdateGlobalVariable name="priceLowSkillRegion">
+							<ValueExpr language="Java"><![CDATA[ Global.getPriceLowSkillRegion() + f.getProductSalesPrice() ]]></ValueExpr>
+							<ValueExpr language="JavaScript"><![CDATA[ sim.controller.Global.getPriceLowSkillRegion() + this.f.getProductSalesPrice() ]]></ValueExpr>
+						</UpdateGlobalVariable>
+					</UPDATE-ENV>
+				</THEN>
+				<ELSE>
+					<UPDATE-ENV>
+						<UpdateGlobalVariable name="priceHighSkillRegion">
+							<ValueExpr language="Java"><![CDATA[ Global.getPriceHighSkillRegion() + f.getProductSalesPrice() ]]></ValueExpr>
+							<ValueExpr language="JavaScript"><![CDATA[ sim.controller.Global.getPriceHighSkillRegion() + this.f.getProductSalesPrice() ]]></ValueExpr>
+						</UpdateGlobalVariable>
+					</UPDATE-ENV>
+				</ELSE>
+			</EnvironmentRule>
+			
+			<EnvironmentRule name="AtStartOfMonthStatistics1_Rule">
+				<documentation>
+					<description xml:lang="en">Make statistics.</description>
+					<description xml:lang="zh">用于统计。</description>
+				</documentation>
+				<WHEN eventType="StartOfMonth"/>
+				<FOR-ObjectVariable variable="h" objectType="Household"/>
+				<IF language="Java JavaScript"><![CDATA[ this.h.getRegion() == 1 ]]></IF>
+				<THEN>
+					<UPDATE-ENV>
+						<UpdateGlobalVariable name="totalLaborIncomeLowSkillRegion">
+							<ValueExpr language="Java"><![CDATA[ Global.getTotalLaborIncomeLowSkillRegion() + h.getLaborIncome() ]]></ValueExpr>
+							<ValueExpr language="JavaScript"><![CDATA[ sim.controller.Global.getTotalLaborIncomeLowSkillRegion() + this.h.getLaborIncome() ]]></ValueExpr>
+						</UpdateGlobalVariable>
+					</UPDATE-ENV>
+				</THEN>
+				<ELSE>
+					<UPDATE-ENV>
+						<UpdateGlobalVariable name="totalLaborIncomeHighSkillRegion">
+							<ValueExpr language="Java"><![CDATA[ Global.getTotalLaborIncomeHighSkillRegion() + h.getLaborIncome() ]]></ValueExpr>
+							<ValueExpr language="JavaScript"><![CDATA[ sim.controller.Global.getTotalLaborIncomeHighSkillRegion() + this.h.getLaborIncome() ]]></ValueExpr>
+						</UpdateGlobalVariable>
+					</UPDATE-ENV>
+				</ELSE>
+			</EnvironmentRule>
+			
+			<EnvironmentRule name="AtWeeklyIndividualConsumption_Rule">
+				<documentation>
+					<description xml:lang="en">On a weekly basis, sampling prices at the (regional) mall the consumer decides which goods to buy.</description>
+					<description xml:lang="zh">消费者每周进行一次购物。</description>
+				</documentation>
+				<WHEN eventType="AtWeeklyIndividualConsumption"/>
+				<FOR-ObjectVariable variable="m" objectType="Mall"/>
+				<FOR-ObjectVariable variable="h" objectType="Household"/>
+				<IF language="Java JavaScript"><![CDATA[ this.m.getId() == this.h.getRegion() ]]></IF>
+				<THEN>
+					<UPDATE-ENV>
+						<Call procedure="consumptionDecision" contextObjectVariable="h">
+							<Argument parameter="productsCollection">
+								<ValueExpr language="Java JavaScript"><![CDATA[ this.m.getProductsInStock() ]]></ValueExpr>
+							</Argument>
+						</Call>
+					</UPDATE-ENV>
+					<SCHEDULE-EVT>
+						<InMessageEventExpr messageType="TellSalesRevenue">
+							<Condition language="Java JavaScript"><![CDATA[ this.h.getSelectFirstProductId() != 0 ]]></Condition>
+							<SenderIdRef language="Java JavaScript"><![CDATA[ this.m.getId() ]]></SenderIdRef>
+							<ReceiverIdRef language="Java JavaScript"><![CDATA[ this.h.getSelectFirstProductId() ]]></ReceiverIdRef>
+							<Slot property="revenue">
+								<ValueExpr language="Java JavaScript"><![CDATA[ this.h.getSpendBudgetForFirstProduct() ]]></ValueExpr>
+							</Slot>
+							<Slot property="quantity">
+								<ValueExpr language="Java JavaScript"><![CDATA[ this.h.getPurchaseQuantityForFirstProduct() ]]></ValueExpr>
+							</Slot>
+						</InMessageEventExpr>
+						<InMessageEventExpr messageType="TellSalesRevenue">
+							<Condition language="Java JavaScript"><![CDATA[ this.h.getSelectSecondProductId() != 0 ]]></Condition>
+							<SenderIdRef language="Java JavaScript"><![CDATA[ this.m.getId() ]]></SenderIdRef>
+							<ReceiverIdRef language="Java JavaScript"><![CDATA[ this.h.getSelectSecondProductId() ]]></ReceiverIdRef>
+							<Slot property="revenue">
+								<ValueExpr language="Java JavaScript"><![CDATA[ this.h.getSpendBudgetForSecondProduct() ]]></ValueExpr>
+							</Slot>
+							<Slot property="quantity">
+								<ValueExpr language="Java JavaScript"><![CDATA[ this.h.getPurchaseQuantityForSecondProduct() ]]></ValueExpr>
+							</Slot>
+						</InMessageEventExpr>
+					</SCHEDULE-EVT>
+				</THEN>
+			</EnvironmentRule>
+			
+			<EnvironmentRule name="ConsumptionGoodsProducerBuyNewInvestment_Rule">
+				<documentation>
+					<description xml:lang="en">A CGP purchases the needed investments from the (unique) capital goods producer thereby improving the quality of its capital stock. The quality of the capital stock of a CGP is updated as old capital is replaced by new investments.</description>
+					<description xml:lang="zh">消费品生产商从投资品生产商那里购买其所需要的投资品。</description>
+				</documentation>
+				<WHEN eventType="BuyNewInvestment" eventVariable="e"/>
+				<FOR objectVariable="i" objectType="CapitalGoodsProducer" objectIdRef="11"/>
+				<FOR objectVariable="f" objectType="ConsumptionGoodsProducer">
+					<ObjectRef language="Java JavaScript"><![CDATA[ this.e.getActor() ]]></ObjectRef>
+				</FOR>
+				<DO>
+					<UPDATE-ENV>
+						<UpdateObject objectVariable="i">
+							<Slot property="investmentSalesRevenue">
+								<ValueExpr language="Java JavaScript"><![CDATA[ this.i.getInvestmentSalesRevenue() + this.f.getNewInvestment() ]]></ValueExpr>
+							</Slot>
+						</UpdateObject>
+						<UpdateObject objectVariable="f">
+							<Slot property="grossInvestment">
+								<ValueExpr language="Java JavaScript"><![CDATA[ this.f.getGrossInvestment() + this.f.getNewInvestment() ]]></ValueExpr>
+							</Slot>
+							<Slot property="physicalCapitalStock">
+								<ValueExpr language="Java"><![CDATA[ f.getPhysicalCapitalStock() + f.getNewInvestment() / Global.getInvestmentSalesPrice() ]]></ValueExpr>
+								<ValueExpr language="JavaScript"><![CDATA[ this.f.getPhysicalCapitalStock() + this.f.getNewInvestment() / sim.controller.Global.getInvestmentSalesPrice() ]]></ValueExpr>
+							</Slot>
+							<Slot property="totalQualityOfCapitalStock">
+								<ValueExpr language="Java"><![CDATA[ f.getTotalQualityOfCapitalStock() + f.getNewInvestment() / Global.getInvestmentSalesPrice() * Global.getQualityOfInvestment() ]]></ValueExpr>
+								<ValueExpr language="JavaScript"><![CDATA[ this.f.getTotalQualityOfCapitalStock() + this.f.getNewInvestment() / sim.controller.Global.getInvestmentSalesPrice() * sim.controller.Global.getQualityOfInvestment() ]]></ValueExpr>
+							</Slot>
+							<Slot property="averageQualityOfCapitalStock">
+								<ValueExpr language="Java JavaScript"><![CDATA[ this.f.getTotalQualityOfCapitalStock() / this.f.getPhysicalCapitalStock() ]]></ValueExpr>
+							</Slot>
+						</UpdateObject>
+					</UPDATE-ENV>
+				</DO>
+			</EnvironmentRule>
+			
+			<EnvironmentRule name="ConsumptionGoodsProducerDismissWorker_Rule">
+				<documentation>
+					<description xml:lang="en">The CGP dismisses workers.</description>
+					<description xml:lang="zh">生产商解雇工人。</description>
+				</documentation>
+				<WHEN eventType="DismissWorker" eventVariable="e"/>
+				<FOR objectVariable="f" objectType="ConsumptionGoodsProducer">
+					<ObjectRef language="Java JavaScript"><![CDATA[ this.e.getActor() ]]></ObjectRef>
+				</FOR>
+				<FOR-ListItemVariable variable="w" listItemType="WorkerInFirm">
+					<ListExpr language="Java JavaScript"><![CDATA[ this.f.getDismissalsList() ]]></ListExpr>
+				</FOR-ListItemVariable>
+				<DO>
+					<UPDATE-ENV>
+						<UpdateObject objectVariable="f">
+							<Slot property="laborSupplyQuantity">
+								<ValueExpr language="Java JavaScript"><![CDATA[ this.f.getLaborSupplyQuantity() + 1 ]]></ValueExpr>
+							</Slot>
+						</UpdateObject>
+						<Call procedure="deleteWorkerRecordFromList" contextObjectVariable="f">
+							<Argument parameter="householdId">
+								<ValueExpr language="Java JavaScript"><![CDATA[ this.w.getHouseholdId() ]]></ValueExpr>
+							</Argument>
+						</Call>
+					</UPDATE-ENV>
+					<SCHEDULE-EVT>
+						<InMessageEventExpr messageType="TellDismissal">
+							<SenderIdRef language="Java JavaScript"><![CDATA[ this.e.getActorIdRef() ]]></SenderIdRef>
+							<ReceiverIdRef language="Java JavaScript"><![CDATA[ this.w.getHouseholdId() ]]></ReceiverIdRef>
+						</InMessageEventExpr>
+					</SCHEDULE-EVT>
+				</DO>
+			</EnvironmentRule>
+			
+			<EnvironmentRule name="ConsumptionGoodsProducerPostVacancyInformation_Rule">
+				<documentation>
+					<description xml:lang="en">The CGPs post vacancies including wage offers.</description>
+					<description xml:lang="zh">生产商开始招聘。</description>
+				</documentation>
+				<WHEN eventType="PostVacancyInformation" eventVariable="e"/>
+				<FOR-ObjectVariable variable="h" objectType="Household"/>
+				<IF language="Java JavaScript"><![CDATA[ this.e.getFirmId() != this.h.getFirm() && this.e.getWageOffer() >= this.h.getCurrentWage() && this.h.isJobSeeker() ]]></IF>
+				<THEN>
+					<SCHEDULE-EVT>
+						<InMessageEventExpr messageType="TellVacancy">
+							<SenderIdRef language="Java JavaScript"><![CDATA[ this.h.getId() ]]></SenderIdRef>
+							<ReceiverIdRef language="Java JavaScript"><![CDATA[ this.e.getActorIdRef() ]]></ReceiverIdRef>
+							<Slot property="generalSkillLevel">
+								<ValueExpr language="Java JavaScript"><![CDATA[ this.h.getGeneralSkillLevel() ]]></ValueExpr>
+							</Slot>
+							<Slot property="specificSkillLevel">
+								<ValueExpr language="Java JavaScript"><![CDATA[ this.h.getSpecificSkillLevel() ]]></ValueExpr>
+							</Slot>
+						</InMessageEventExpr>
+					</SCHEDULE-EVT>
+				</THEN>
+			</EnvironmentRule>
+			
+			<EnvironmentRule name="InFirstIterationConsumptionGoodsProducerOfferJob_Rule">
+				<documentation>
+					<description xml:lang="en">CGPs send job offers to as many applicants as they have vacancies to fill.</description>
+					<description xml:lang="zh">生产商提供职位给合格的求职者。</description>
+				</documentation>
+				<WHEN eventType="InFirstIterationOfferJob" eventVariable="e"/>
+				<FOR objectVariable="f" objectType="ConsumptionGoodsProducer">
+					<ObjectRef language="Java JavaScript"><![CDATA[ this.e.getActor() ]]></ObjectRef>
+				</FOR>
+				<FOR-ListItemVariable variable="a" listItemType="JobApplicationRecord">
+					<ListExpr language="Java JavaScript"><![CDATA[ this.f.getJobApplications() ]]></ListExpr>
+				</FOR-ListItemVariable>
+				<DO>
+					<SCHEDULE-EVT>
+						<InMessageEventExpr messageType="JobOffer">
+							<SenderIdRef language="Java JavaScript"><![CDATA[ this.e.getActorIdRef() ]]></SenderIdRef>
+							<ReceiverIdRef language="Java JavaScript"><![CDATA[ this.a.getHouseholdId() ]]></ReceiverIdRef>
+							<Slot property="wageOffer">
+								<ValueExpr language="Java JavaScript"><![CDATA[ this.f.getWageOffer() * this.f.determineAverageSpecificSkillLevel() ]]></ValueExpr>
+							</Slot>
+							<Slot property="region">
+								<ValueExpr language="Java JavaScript"><![CDATA[ this.f.getRegion() ]]></ValueExpr>
+							</Slot>
+						</InMessageEventExpr>
+					</SCHEDULE-EVT>
+				</DO>
+			</EnvironmentRule>
+			
+			<EnvironmentRule name="EndFirstIterationConsumptionGoodsProducerClearJobApplications_Rule">
+				<documentation>
+					<description xml:lang="en">After an iteration CGPs clear the list of applicants.</description>
+					<description xml:lang="zh">第一轮招聘结束后，生产商清空申请者列表。</description>
+				</documentation>
+				<WHEN eventType="EndFirstIterationLaborSupply"/>
+				<FOR-ObjectVariable variable="f" objectType="ConsumptionGoodsProducer"/>
+				<IF language="Java JavaScript"><![CDATA[ this.f.getJobApplications().size() > 0 ]]></IF>
+				<THEN>
+					<UPDATE-ENV>
+						<Call procedure="clearJobApplications" contextObjectVariable="f"/>
+					</UPDATE-ENV>
+				</THEN>
+			</EnvironmentRule>
+			
+			<EnvironmentRule name="EndFirstIterationConsumptionGoodsProducerRaiseWageOffer_Rule">
+				<documentation>
+					<description xml:lang="en">If the number of vacancies after first iteration not filled exceeds some threshold, the CGP raises the wage offer.</description>
+					<description xml:lang="zh">第一轮招聘结束后，如果剩余的空缺职位数量仍超出一定界限，生产商则增加其为职位所提供的工资。</description>
+				</documentation>
+				<WHEN eventType="EndFirstIterationLaborSupply"/>
+				<FOR-ObjectVariable variable="f" objectType="ConsumptionGoodsProducer"/>
+				<IF language="Java JavaScript"><![CDATA[ this.f.getLaborSupplyQuantity() > 5 ]]></IF>
+				<THEN>
+					<UPDATE-ENV>
+						<UpdateObject objectVariable="f">
+							<Slot property="wageOffer">
+								<ValueExpr language="Java JavaScript"><![CDATA[ (1 + 0.02) * this.f.getWageOffer() ]]></ValueExpr>
+							</Slot>
+						</UpdateObject>
+					</UPDATE-ENV>
+				</THEN>
+			</EnvironmentRule>
+			
+			<EnvironmentRule name="EndFirstIterationJobSeekerReduceReservationWage_Rule">
+				<documentation>
+					<description xml:lang="en">If an unemployed job seeker after first iteration did not find a job he reduces his reservation wage, there exists a lower bound to the reservation wage (1.0).</description>
+					<description xml:lang="zh">第一轮招聘结束后，如果失业者还未找到工作，他将降低其保留工资。</description>
+				</documentation>
+				<WHEN eventType="EndFirstIterationLaborSupply"/>
+				<FOR-ObjectVariable variable="h" objectType="Household"/>
+				<IF language="Java JavaScript"><![CDATA[ this.h.getFirm() == 100 && (1 - 0.02) * this.h.getCurrentWage() >= 1.0 ]]></IF>
+				<THEN>
+					<UPDATE-ENV>
+						<UpdateObject objectVariable="h">
+							<Slot property="currentWage">
+								<ValueExpr language="Java JavaScript"><![CDATA[ (1 - 0.02) * this.h.getCurrentWage() ]]></ValueExpr>
+							</Slot>
+						</UpdateObject>
+					</UPDATE-ENV>
+				</THEN>
+			</EnvironmentRule>
+			
+			<EnvironmentRule name="EndSecondIterationConsumptionGoodsProducerClearJobApplications_Rule">
+				<documentation>
+					<description xml:lang="en">After an iteration CGPs clear the list of applicants.</description>
+					<description xml:lang="zh">第二轮招聘结束后，生产商清空申请者列表。</description>
+				</documentation>
+				<WHEN eventType="EndSecondIterationLaborSupply"/>
+				<FOR-ObjectVariable variable="f" objectType="ConsumptionGoodsProducer"/>
+				<IF language="Java JavaScript"><![CDATA[ this.f.getJobApplications().size() > 0 ]]></IF>
+				<THEN>
+					<UPDATE-ENV>
+						<Call procedure="clearJobApplications" contextObjectVariable="f"/>
+					</UPDATE-ENV>
+				</THEN>
+			</EnvironmentRule>
+			
+			<EnvironmentRule name="EndSecondIterationStatistics_Rule">
+				<documentation>
+					<description xml:lang="en">Make statistics.</description>
+					<description xml:lang="zh">用于统计。</description>
+				</documentation>
+				<WHEN eventType="EndSecondIterationLaborSupply"/>
+				<FOR-ObjectVariable variable="f" objectType="ConsumptionGoodsProducer"/>
+				<IF language="Java JavaScript"><![CDATA[ this.f.getRegion() == 1 ]]></IF>
+				<THEN>
+					<UPDATE-ENV>
+						<UpdateGlobalVariable name="capitalLowSkillRegion">
+							<ValueExpr language="Java"><![CDATA[ Global.getCapitalLowSkillRegion() + f.getTotalQualityOfCapitalStock() ]]></ValueExpr>
+							<ValueExpr language="JavaScript"><![CDATA[ sim.controller.Global.getCapitalLowSkillRegion() + this.f.getTotalQualityOfCapitalStock() ]]></ValueExpr>
+						</UpdateGlobalVariable>
+					</UPDATE-ENV>
+				</THEN>
+				<ELSE>
+					<UPDATE-ENV>
+						<UpdateGlobalVariable name="capitalHighSkillRegion">
+							<ValueExpr language="Java"><![CDATA[ Global.getCapitalHighSkillRegion() + f.getTotalQualityOfCapitalStock() ]]></ValueExpr>
+							<ValueExpr language="JavaScript"><![CDATA[ sim.controller.Global.getCapitalHighSkillRegion() + this.f.getTotalQualityOfCapitalStock() ]]></ValueExpr>
+						</UpdateGlobalVariable>
+					</UPDATE-ENV>
+				</ELSE>
+			</EnvironmentRule>
+			
+			<EnvironmentRule name="EndSecondIterationStatisticsLowSkillRegion_Rule">
+				<documentation>
+					<description xml:lang="en">Make statistics.</description>
+					<description xml:lang="zh">用于统计。</description>
+				</documentation>
+				<WHEN eventType="EndSecondIterationLaborSupply"/>
+				<FOR-ObjectVariable variable="h" objectType="Household"/>
+				<IF language="Java JavaScript"><![CDATA[ this.h.getId() <= 1200 && this.h.getFirm() > 105 ]]></IF>
+				<THEN>
+					<UPDATE-ENV>
+						<IncrementGlobalVariable name="commutingEmployeesLowSkillRegion" value="1"/>
+					</UPDATE-ENV>
+				</THEN>
+			</EnvironmentRule>
+			
+			<EnvironmentRule name="EndSecondIterationStatisticsHighSkillRegion_Rule">
+				<documentation>
+					<description xml:lang="en">Make statistics.</description>
+					<description xml:lang="zh">用于统计。</description>
+				</documentation>
+				<WHEN eventType="EndSecondIterationLaborSupply"/>
+				<FOR-ObjectVariable variable="h" objectType="Household"/>
+				<IF language="Java JavaScript"><![CDATA[ this.h.getId() > 1200 && this.h.getFirm() > 100 && this.h.getFirm() <= 105 ]]></IF>
+				<THEN>
+					<UPDATE-ENV>
+						<IncrementGlobalVariable name="commutingEmployeesHighSkillRegion" value="1"/>
+					</UPDATE-ENV>
+				</THEN>
+			</EnvironmentRule>
+			
+			<EnvironmentRule name="ConsumptionGoodsProducerDistributeProduct_Rule">
+				<documentation>
+					<description xml:lang="en">The produced quantities are delivered by the CGP to the malls it serves.</description>
+					<description xml:lang="zh">生产商开始配送产品。</description>
+				</documentation>
+				<WHEN eventType="DistributeProduct" eventVariable="e"/>
+				<FOR objectVariable="f" objectType="ConsumptionGoodsProducer">
+					<ObjectRef language="Java JavaScript"><![CDATA[ this.e.getActor() ]]></ObjectRef>
+				</FOR>
+				<FOR-ListItemVariable variable="o" listItemType="InventoryPosition">
+					<ListExpr language="Java JavaScript"><![CDATA[ this.f.getInventoryPositions() ]]></ListExpr>
+				</FOR-ListItemVariable>
+				<IF language="Java JavaScript"><![CDATA[ this.o.getMallId() == 1 ]]></IF>
+				<THEN>
+					<UPDATE-ENV>
+						<UpdateGlobalVariable name="producedQuantityLowSkillRegion">
+							<ValueExpr language="Java"><![CDATA[ Global.getProducedQuantityLowSkillRegion() + o.getAdjustmentFactor() * f.getProducedQuantity() ]]></ValueExpr>
+							<ValueExpr language="JavaScript"><![CDATA[ sim.controller.Global.getProducedQuantityLowSkillRegion() + this.o.getAdjustmentFactor() * this.f.getProducedQuantity() ]]></ValueExpr>
+						</UpdateGlobalVariable>
+					</UPDATE-ENV>
+					<SCHEDULE-EVT>
+						<InMessageEventExpr messageType="DeliverProduct">
+							<SenderIdRef language="Java JavaScript"><![CDATA[ this.e.getActorIdRef() ]]></SenderIdRef>
+							<ReceiverIdRef language="Java JavaScript"><![CDATA[ this.o.getMallId() ]]></ReceiverIdRef>
+							<Slot property="quantity">
+								<ValueExpr language="Java JavaScript"><![CDATA[ this.o.getAdjustmentFactor() * this.f.getProducedQuantity() ]]></ValueExpr>
+							</Slot>
+						</InMessageEventExpr>
+					</SCHEDULE-EVT>
+				</THEN>
+				<ELSE>
+					<UPDATE-ENV>
+						<UpdateGlobalVariable name="producedQuantityHighSkillRegion">
+							<ValueExpr language="Java"><![CDATA[ Global.getProducedQuantityHighSkillRegion() + o.getAdjustmentFactor() * f.getProducedQuantity() ]]></ValueExpr>
+							<ValueExpr language="JavaScript"><![CDATA[ sim.controller.Global.getProducedQuantityHighSkillRegion() + this.o.getAdjustmentFactor() * this.f.getProducedQuantity() ]]></ValueExpr>
+						</UpdateGlobalVariable>
+					</UPDATE-ENV>
+					<SCHEDULE-EVT>
+						<InMessageEventExpr messageType="DeliverProduct">
+							<SenderIdRef language="Java JavaScript"><![CDATA[ this.e.getActorIdRef() ]]></SenderIdRef>
+							<ReceiverIdRef language="Java JavaScript"><![CDATA[ this.o.getMallId() ]]></ReceiverIdRef>
+							<Slot property="quantity">
+								<ValueExpr language="Java JavaScript"><![CDATA[ this.o.getAdjustmentFactor() * this.f.getProducedQuantity() ]]></ValueExpr>
+							</Slot>
+						</InMessageEventExpr>
+					</SCHEDULE-EVT>
+				</ELSE>
+			</EnvironmentRule>
+			
+			<EnvironmentRule name="ConsumptionGoodsProducerPayWage_Rule">
+				<documentation>
+					<description xml:lang="en">Wages for the full month are paid to all workers.</description>
+					<description xml:lang="zh">生产商按月支付给工人工资。</description>
+				</documentation>
+				<WHEN eventType="PayWage" eventVariable="e"/>
+				<FOR objectVariable="f" objectType="ConsumptionGoodsProducer">
+					<ObjectRef language="Java JavaScript"><![CDATA[ this.e.getActor() ]]></ObjectRef>
+				</FOR>
+				<FOR-ListItemVariable variable="w" listItemType="WorkerInFirm">
+					<ListExpr language="Java JavaScript"><![CDATA[ this.f.getWorkersInFirm() ]]></ListExpr>
+				</FOR-ListItemVariable>
+				<DO>
+					<SCHEDULE-EVT>
+						<InMessageEventExpr messageType="TellWage">
+							<SenderIdRef language="Java JavaScript"><![CDATA[ this.e.getActorIdRef() ]]></SenderIdRef>
+							<ReceiverIdRef language="Java JavaScript"><![CDATA[ this.w.getHouseholdId() ]]></ReceiverIdRef>
+							<Slot property="wage">
+								<ValueExpr language="Java JavaScript"><![CDATA[ this.w.getWage() ]]></ValueExpr>
+							</Slot>
+							<Slot property="region">
+								<ValueExpr language="Java JavaScript"><![CDATA[ this.f.getRegion() ]]></ValueExpr>
+							</Slot>
+						</InMessageEventExpr>
+					</SCHEDULE-EVT>
+				</DO>
+			</EnvironmentRule>
+			
+			<EnvironmentRule name="ConsumptionGoodsProducerIncreaseSpecificSkillLevel_Rule">
+				<documentation>
+					<description xml:lang="en">The specific skill levels of workers are updated.</description>
+					<description xml:lang="zh">更新工人的特殊技能水平。</description>
+				</documentation>
+				<WHEN eventType="IncreaseSpecificSkillLevel" eventVariable="e"/>
+				<FOR objectVariable="f" objectType="ConsumptionGoodsProducer">
+					<ObjectRef language="Java JavaScript"><![CDATA[ this.e.getActor() ]]></ObjectRef>
+				</FOR>
+				<FOR-ListItemVariable variable="w" listItemType="WorkerInFirm">
+					<ListExpr language="Java JavaScript"><![CDATA[ this.f.getWorkersInFirm() ]]></ListExpr>
+				</FOR-ListItemVariable>
+				<DO>
+					<UPDATE-ENV>
+						<Call procedure="updateSpecificSkillLevel" contextObjectVariable="f">
+							<Argument parameter="householdId">
+								<ValueExpr language="Java JavaScript"><![CDATA[ this.w.getHouseholdId() ]]></ValueExpr>
+							</Argument>
+							<Argument parameter="specificSkillLevel">
+								<ValueExpr language="Java JavaScript"><![CDATA[ this.w.getSpecificSkillLevel() + (1 - Math.pow((0.5), (1 / (20 + 0.25 * (this.w.getGeneralSkillLevel() - 1) * (4 - 20))))) * (this.f.getAverageQualityOfCapitalStock() - this.w.getSpecificSkillLevel()) ]]></ValueExpr>
+							</Argument>
+						</Call>
+					</UPDATE-ENV>
+					<SCHEDULE-EVT>
+						<InMessageEventExpr messageType="TellSpecificSkillLevel">
+							<SenderIdRef language="Java JavaScript"><![CDATA[ this.e.getActorIdRef() ]]></SenderIdRef>
+							<ReceiverIdRef language="Java JavaScript"><![CDATA[ this.w.getHouseholdId() ]]></ReceiverIdRef>
+							<Slot property="specificSkillLevel">
+								<ValueExpr language="Java JavaScript"><![CDATA[ this.w.getSpecificSkillLevel() ]]></ValueExpr>
+							</Slot>
+						</InMessageEventExpr>
+					</SCHEDULE-EVT>
+				</DO>
+			</EnvironmentRule>
+			
+			<EnvironmentRule name="EndOfMonth_Rule">
+				<documentation>
+					<description xml:lang="en">Every month the quality and the price of the investment good are increased.</description>
+					<description xml:lang="zh">投资品的质量和价格会根据时间随机地增长。</description>
+				</documentation>
+				<WHEN eventType="EndOfMonth"/>
+				<DO>
+					<UPDATE-ENV>
+						<IncrementGlobalVariable name="period" value="1"/>
+						<UpdateGlobalVariable name="innovationProbability">
+							<ValueExpr language="Java"><![CDATA[ Global.wouldInnovate() ]]></ValueExpr>
+							<ValueExpr language="JavaScript"><![CDATA[ sim.controller.Global.wouldInnovate() ]]></ValueExpr>
+						</UpdateGlobalVariable>
+						<UpdateGlobalVariable name="qualityOfInvestment">
+							<ValueExpr language="Java"><![CDATA[ (1 + Global.getInnovationProbability()) * Global.getQualityOfInvestment() ]]></ValueExpr>
+							<ValueExpr language="JavaScript"><![CDATA[ (1 + sim.controller.Global.getInnovationProbability()) * sim.controller.Global.getQualityOfInvestment() ]]></ValueExpr>
+						</UpdateGlobalVariable>
+						<UpdateGlobalVariable name="investmentSalesPrice">
+							<ValueExpr language="Java"><![CDATA[ (1 + Global.getInnovationProbability()) * Global.getInvestmentSalesPrice() ]]></ValueExpr>
+							<ValueExpr language="JavaScript"><![CDATA[ (1 + sim.controller.Global.getInnovationProbability()) * sim.controller.Global.getInvestmentSalesPrice() ]]></ValueExpr>
+						</UpdateGlobalVariable>
+					</UPDATE-ENV>
+				</DO>
+			</EnvironmentRule>
+			
+			<EnvironmentRule name="EndOfMonthStatistics_Rule">
+				<documentation>
+					<description xml:lang="en">Make statistics.</description>
+					<description xml:lang="zh">用于统计。</description>
+				</documentation>
+				<WHEN eventType="EndOfMonth"/>
+				<DO>
+					<UPDATE-ENV>
+						<UpdateStatisticsVariable variable="outputLowSkillRegion">
+							<ValueExpr language="Java"><![CDATA[ Global.getProducedQuantityLowSkillRegion() ]]></ValueExpr>
+							<ValueExpr language="JavaScript"><![CDATA[ sim.controller.Global.getProducedQuantityLowSkillRegion() ]]></ValueExpr>
+						</UpdateStatisticsVariable>
+						<UpdateStatisticsVariable variable="outputHighSkillRegion">
+							<ValueExpr language="Java"><![CDATA[ Global.getProducedQuantityHighSkillRegion() ]]></ValueExpr>
+							<ValueExpr language="JavaScript"><![CDATA[ sim.controller.Global.getProducedQuantityHighSkillRegion() ]]></ValueExpr>
+						</UpdateStatisticsVariable>
+						<UpdateStatisticsVariable variable="totalOutput">
+							<ValueExpr language="Java"><![CDATA[ Global.getProducedQuantityLowSkillRegion() + Global.getProducedQuantityHighSkillRegion() ]]></ValueExpr>
+							<ValueExpr language="JavaScript"><![CDATA[ sim.controller.Global.getProducedQuantityLowSkillRegion() + sim.controller.Global.getProducedQuantityHighSkillRegion() ]]></ValueExpr>
+						</UpdateStatisticsVariable>
+						<UpdateStatisticsVariable variable="numberOfCommutersFromLowToHighSkillRegion">
+							<ValueExpr language="Java"><![CDATA[ Global.getCommutingEmployeesLowSkillRegion() ]]></ValueExpr>
+							<ValueExpr language="JavaScript"><![CDATA[ sim.controller.Global.getCommutingEmployeesLowSkillRegion() ]]></ValueExpr>
+						</UpdateStatisticsVariable>
+						<UpdateStatisticsVariable variable="numberOfCommutersFromHighToLowSkillRegion">
+							<ValueExpr language="Java"><![CDATA[ Global.getCommutingEmployeesHighSkillRegion() ]]></ValueExpr>
+							<ValueExpr language="JavaScript"><![CDATA[ sim.controller.Global.getCommutingEmployeesHighSkillRegion() ]]></ValueExpr>
+						</UpdateStatisticsVariable>
+						<UpdateStatisticsVariable variable="averagePriceLowSkillRegion">
+							<ValueExpr language="Java"><![CDATA[ Global.getPriceLowSkillRegion() / 5 ]]></ValueExpr>
+							<ValueExpr language="JavaScript"><![CDATA[ sim.controller.Global.getPriceLowSkillRegion() / 5 ]]></ValueExpr>
+						</UpdateStatisticsVariable>
+						<UpdateStatisticsVariable variable="averagePriceHighSkillRegion">
+							<ValueExpr language="Java"><![CDATA[ Global.getPriceHighSkillRegion() / 5 ]]></ValueExpr>
+							<ValueExpr language="JavaScript"><![CDATA[ sim.controller.Global.getPriceHighSkillRegion() / 5 ]]></ValueExpr>
+						</UpdateStatisticsVariable>
+						<UpdateStatisticsVariable variable="capitalStockLowSkillRegion">
+							<ValueExpr language="Java"><![CDATA[ Global.getCapitalLowSkillRegion() ]]></ValueExpr>
+							<ValueExpr language="JavaScript"><![CDATA[ sim.controller.Global.getCapitalLowSkillRegion() ]]></ValueExpr>
+						</UpdateStatisticsVariable>
+						<UpdateStatisticsVariable variable="capitalStockHighSkillRegion">
+							<ValueExpr language="Java"><![CDATA[ Global.getCapitalHighSkillRegion() ]]></ValueExpr>
+							<ValueExpr language="JavaScript"><![CDATA[ sim.controller.Global.getCapitalHighSkillRegion() ]]></ValueExpr>
+						</UpdateStatisticsVariable>
+						<UpdateStatisticsVariable variable="totalLaborIncomeOfWorkersLowSkillRegion">
+							<ValueExpr language="Java"><![CDATA[ Global.getTotalLaborIncomeLowSkillRegion() ]]></ValueExpr>
+							<ValueExpr language="JavaScript"><![CDATA[ sim.controller.Global.getTotalLaborIncomeLowSkillRegion() ]]></ValueExpr>
+						</UpdateStatisticsVariable>
+						<UpdateStatisticsVariable variable="totalLaborIncomeOfWorkersHighSkillRegion">
+							<ValueExpr language="Java"><![CDATA[ Global.getTotalLaborIncomeHighSkillRegion() ]]></ValueExpr>
+							<ValueExpr language="JavaScript"><![CDATA[ sim.controller.Global.getTotalLaborIncomeHighSkillRegion() ]]></ValueExpr>
+						</UpdateStatisticsVariable>
+						<UpdateGlobalVariable name="producedQuantityLowSkillRegion" value="0.0"/>
+						<UpdateGlobalVariable name="producedQuantityHighSkillRegion" value="0.0"/>
+						<UpdateGlobalVariable name="commutingEmployeesLowSkillRegion" value="0"/>
+						<UpdateGlobalVariable name="commutingEmployeesHighSkillRegion" value="0"/>
+						<UpdateGlobalVariable name="priceLowSkillRegion" value="0.0"/>
+						<UpdateGlobalVariable name="priceHighSkillRegion" value="0.0"/>
+						<UpdateGlobalVariable name="capitalLowSkillRegion" value="0.0"/>
+						<UpdateGlobalVariable name="capitalHighSkillRegion" value="0.0"/>
+						<UpdateGlobalVariable name="totalLaborIncomeLowSkillRegion" value="0.0"/>
+						<UpdateGlobalVariable name="totalLaborIncomeHighSkillRegion" value="0.0"/>
+					</UPDATE-ENV>
+				</DO>
+			</EnvironmentRule>
+			
+			<EnvironmentRule name="AtEndOfMonthConsumptionGoodsProducerClearInventoryPositions_Rule">
+				<documentation>
+					<description xml:lang="en">CGPs clear the list of inventory positions.</description>
+					<description xml:lang="zh">生产商清空库存补充列表。</description>
+				</documentation>
+				<WHEN eventType="EndOfMonth"/>
+				<FOR-ObjectVariable variable="f" objectType="ConsumptionGoodsProducer"/>
+				<DO>
+					<UPDATE-ENV>
+						<UpdateObject objectVariable="f">
+							<Slot property="grossInvestment">
+								<ValueExpr language="Java JavaScript"><![CDATA[ (1 - 0.01) * this.f.getGrossInvestment() ]]></ValueExpr>
+							</Slot>
+						</UpdateObject>
+						<Call procedure="updateOptimalStockLevel" contextObjectVariable="f"/>
+						<Call procedure="clearInventoryPositions" contextObjectVariable="f"/>
+						<Call procedure="updateLastFourProducedQuantities" contextObjectVariable="f"/>
+					</UPDATE-ENV>
+				</DO>
+			</EnvironmentRule>
+			
+			<EnvironmentRule name="AtEndOfMonthPayWage_Rule">
+				<documentation>
+					<description xml:lang="en">The unemployed workers get the unemployment benefits.</description>
+					<description xml:lang="zh">失业者领取失业救济金。</description>
+				</documentation>
+				<WHEN eventType="EndOfMonth"/>
+				<FOR-ObjectVariable variable="h" objectType="Household"/>
+				<IF language="Java JavaScript"><![CDATA[ this.h.getFirm() == 100 ]]></IF>
+				<THEN>
+					<UPDATE-ENV>
+						<UpdateObject objectVariable="h">
+							<Slot property="currentIncome">
+								<ValueExpr language="Java JavaScript"><![CDATA[ this.h.getCurrentIncome() + 0.5 ]]></ValueExpr>
+							</Slot>
+						</UpdateObject>
+					</UPDATE-ENV>
+				</THEN>
+			</EnvironmentRule>
+			
+			<EnvironmentRule name="AtEndOfMonthDetermineEmployedWorkerNotAsJobSeeker_Rule">
+				<documentation>
+					<description xml:lang="en">Reset the value of "jobSeeker" of a job seeker, who actually has a job.</description>
+					<description xml:lang="zh">重置工人的求职者属性。</description>
+				</documentation>
+				<WHEN eventType="EndOfMonth"/>
+				<FOR-ObjectVariable variable="h" objectType="Household"/>
+				<IF language="Java JavaScript"><![CDATA[ this.h.getFirm() != 100 && this.h.isJobSeeker() ]]></IF>
+				<THEN>
+					<UPDATE-ENV>
+						<UpdateObject objectVariable="h">
+							<Slot property="jobSeeker" value="false"/>
+						</UpdateObject>
+					</UPDATE-ENV>
+				</THEN>
+			</EnvironmentRule>
+			
+			<EnvironmentRule name="CapitalGoodsProducerPayEqualShare_Rule">
+				<documentation>
+					<description xml:lang="en">All households hold equal shares in capital goods producer.</description>
+					<description xml:lang="zh">投资品生产商发放红利。</description>
+				</documentation>
+				<WHEN eventType="PayEqualShare" eventVariable="e"/>
+				<FOR-ObjectVariable variable="h" objectType="Household"/>
+				<DO>
+					<UPDATE-ENV>
+						<UpdateObject objectVariable="h">
+							<Slot property="currentIncome">
+								<ValueExpr language="Java JavaScript"><![CDATA[ this.h.getCurrentIncome() + this.e.getShare() ]]></ValueExpr>
+							</Slot>
+						</UpdateObject>
+					</UPDATE-ENV>
+				</DO>
+			</EnvironmentRule>
+			
+			<EnvironmentRule name="ConsumptionGoodsProducerPayDividend_Rule">
+				<documentation>
+					<description xml:lang="en">The CGP pays dividends to all households.</description>
+					<description xml:lang="zh">消费品生产商发放红利。</description>
+				</documentation>
+				<WHEN eventType="PayDividend" eventVariable="e"/>
+				<FOR-ObjectVariable variable="h" objectType="Household"/>
+				<DO>
+					<UPDATE-ENV>
+						<UpdateObject objectVariable="h">
+							<Slot property="currentIncome">
+								<ValueExpr language="Java JavaScript"><![CDATA[ this.h.getCurrentIncome() + this.e.getDividend() ]]></ValueExpr>
+							</Slot>
+						</UpdateObject>
+					</UPDATE-ENV>
+				</DO>
+			</EnvironmentRule>
+			
+			<EnvironmentRule name="ConsumptionGoodsProducerSetNewPrice_Rule">
+				<documentation>
+					<description xml:lang="en">Once the CGP determines to update the price for all regions where it offers its goods, the new price is sent to the regional malls and posted there for the following month.</description>
+					<description xml:lang="zh">消费品生产商更新产品价格。</description>
+				</documentation>
+				<WHEN eventType="SetNewPrice" eventVariable="e"/>
+				<FOR-ObjectVariable variable="m" objectType="Mall"/>
+				<DO>
+					<UPDATE-ENV>
+						<Call procedure="updatePrice" contextObjectVariable="m">
+							<Argument parameter="firmId">
+								<ValueExpr language="Java JavaScript"><![CDATA[ this.e.getActorIdRef() ]]></ValueExpr>
+							</Argument>
+							<Argument parameter="price">
+								<ValueExpr language="Java JavaScript"><![CDATA[ this.e.getPrice() ]]></ValueExpr>
+							</Argument>
+						</Call>
+					</UPDATE-ENV>
+				</DO>
+			</EnvironmentRule>
+		</EnvironmentRules>
+	</SimulationModel>
+	
+	<InitialState>
+		<Agent type="CapitalGoodsProducer" id="11">
+			<Slot property="investmentSalesRevenue" value="0.0"/>
+			<Slot property="equalShare" value="0.0"/>
+			
+			<PeriodicTimeEvent type="CalculateEqualShare" occurrenceTime="24"/>
+		</Agent>
+		
+		<Agents type="Mall" rangeStartID="1" rangeEndID="2">
+			<Slot property="productsInStock">
+				<ValueExpr language="Java"><![CDATA[ new ArrayList<sim.model.dataTypes.ProductInStock>() ]]></ValueExpr>
+				<ValueExpr language="JavaScript"><![CDATA[ new js.util.ArrayList() ]]></ValueExpr>
+			</Slot>
+			
+			<PeriodicTimeEvent type="AtStartOfMonthCheckStockLevel" occurrenceTime="2"/>
+		</Agents>
+		
+		<Agents type="ConsumptionGoodsProducer" rangeStartID="101" rangeEndID="105">
+			<Slot property="productDemands">
+				<ValueExpr language="Java"><![CDATA[ new ArrayList<sim.model.dataTypes.ProductDemandRecord>() ]]></ValueExpr>
+				<ValueExpr language="JavaScript"><![CDATA[ new js.util.ArrayList() ]]></ValueExpr>
+			</Slot>
+			<Slot property="inventoryPositions">
+				<ValueExpr language="Java"><![CDATA[ new ArrayList<sim.model.dataTypes.InventoryPosition>() ]]></ValueExpr>
+				<ValueExpr language="JavaScript"><![CDATA[ new js.util.ArrayList() ]]></ValueExpr>
+			</Slot>
+			<Slot property="workersInFirm">
+				<ValueExpr language="Java"><![CDATA[ new ArrayList<sim.model.dataTypes.WorkerInFirm>() ]]></ValueExpr>
+				<ValueExpr language="JavaScript"><![CDATA[ new js.util.ArrayList() ]]></ValueExpr>
+			</Slot>
+			<Slot property="dismissalsList">
+				<ValueExpr language="Java"><![CDATA[ new ArrayList<sim.model.dataTypes.WorkerInFirm>() ]]></ValueExpr>
+				<ValueExpr language="JavaScript"><![CDATA[ new js.util.ArrayList() ]]></ValueExpr>
+			</Slot>
+			<Slot property="jobApplications">
+				<ValueExpr language="Java"><![CDATA[ new ArrayList<sim.model.dataTypes.JobApplicationRecord>() ]]></ValueExpr>
+				<ValueExpr language="JavaScript"><![CDATA[ new js.util.ArrayList() ]]></ValueExpr>
+			</Slot>
+			<Slot property="lastFourProducedQuantities">
+				<ValueExpr language="Java"><![CDATA[
+					new ArrayList<Double>() {
+						{
+							add(new Double(16.0));
+							add(new Double(16.0));
+							add(new Double(16.0));
+							add(new Double(16.0));
+						}
+					}
+					]]></ValueExpr>
+				<ValueExpr language="JavaScript"><![CDATA[
+					new js.util.ArrayList(16.0, 16.0, 16.0, 16.0)
+					]]></ValueExpr>
+			</Slot>
+			
+			<Slot property="region" value="1"/>
+			<Slot property="productSalesPrice" value="2.25"/>
+			<Slot property="productSalesRevenue" value="0.0"/>
+			<Slot property="productSalesQuantity" value="0.0"/>
+			<Slot property="grossInvestment" value="10.0"/>
+			<Slot property="physicalCapitalStock" value="10.0"/>
+			<Slot property="newInvestment" value="0.0"/>
+			<Slot property="totalQualityOfCapitalStock" value="10.0"/>
+			<Slot property="averageQualityOfCapitalStock" value="1.0"/>
+			<Slot property="producedQuantity" value="0.0"/>
+			<Slot property="costOfProduction" value="0.0"/>
+			<Slot property="unitCostOfProduction" value="1.0"/>
+			<Slot property="monthlyRealizedProfit" value="0.0"/>
+			<Slot property="currentBalanceOfSavingAccount" value="0.0"/>
+			<Slot property="equalDividend" value="0.0"/>
+			<!--<Slot property="optimalStockLevel" value="20.0"/>-->
+			<Slot property="laborSupplyQuantity" value="0"/>
+			<Slot property="wageOffer" value="1.0"/>
+			
+			<PeriodicTimeEvent type="MakeProductionPlan" occurrenceTime="4"/>
+			<PeriodicTimeEvent type="InFirstIterationRankApplicant" occurrenceTime="9"/>
+			<PeriodicTimeEvent type="StartSecondIterationLaborSupply" occurrenceTime="15"/>
+			<PeriodicTimeEvent type="InSecondIterationRankApplicant" occurrenceTime="18"/>
+			<PeriodicTimeEvent type="StartOfProduction" occurrenceTime="23"/>
+			<PeriodicTimeEvent type="CalculateDividend" occurrenceTime="24"/>
+		</Agents>
+		
+		<Agents type="ConsumptionGoodsProducer" rangeStartID="106" rangeEndID="110">
+			<Slot property="productDemands">
+				<ValueExpr language="Java"><![CDATA[ new ArrayList<sim.model.dataTypes.ProductDemandRecord>() ]]></ValueExpr>
+				<ValueExpr language="JavaScript"><![CDATA[ new js.util.ArrayList() ]]></ValueExpr>
+			</Slot>
+			<Slot property="inventoryPositions">
+				<ValueExpr language="Java"><![CDATA[ new ArrayList<sim.model.dataTypes.InventoryPosition>() ]]></ValueExpr>
+				<ValueExpr language="JavaScript"><![CDATA[ new js.util.ArrayList() ]]></ValueExpr>
+			</Slot>
+			<Slot property="workersInFirm">
+				<ValueExpr language="Java"><![CDATA[ new ArrayList<sim.model.dataTypes.WorkerInFirm>() ]]></ValueExpr>
+				<ValueExpr language="JavaScript"><![CDATA[ new js.util.ArrayList() ]]></ValueExpr>
+			</Slot>
+			<Slot property="dismissalsList">
+				<ValueExpr language="Java"><![CDATA[ new ArrayList<sim.model.dataTypes.WorkerInFirm>() ]]></ValueExpr>
+				<ValueExpr language="JavaScript"><![CDATA[ new js.util.ArrayList() ]]></ValueExpr>
+			</Slot>
+			<Slot property="jobApplications">
+				<ValueExpr language="Java"><![CDATA[ new ArrayList<sim.model.dataTypes.JobApplicationRecord>() ]]></ValueExpr>
+				<ValueExpr language="JavaScript"><![CDATA[ new js.util.ArrayList() ]]></ValueExpr>
+			</Slot>
+			<Slot property="lastFourProducedQuantities">
+				<ValueExpr language="Java"><![CDATA[
+					new ArrayList<Double>() {
+						{
+							add(new Double(16.0));
+							add(new Double(16.0));
+							add(new Double(16.0));
+							add(new Double(16.0));
+						}
+					}
+					]]></ValueExpr>
+				<ValueExpr language="JavaScript"><![CDATA[
+					new js.util.ArrayList(16.0, 16.0, 16.0, 16.0)
+					]]></ValueExpr>
+			</Slot>
+			
+			<Slot property="region" value="2"/>
+			<Slot property="productSalesPrice" value="2.25"/>
+			<Slot property="productSalesRevenue" value="0.0"/>
+			<Slot property="productSalesQuantity" value="0.0"/>
+			<Slot property="grossInvestment" value="10.0"/>
+			<Slot property="physicalCapitalStock" value="10.0"/>
+			<Slot property="newInvestment" value="0.0"/>
+			<Slot property="totalQualityOfCapitalStock" value="10.0"/>
+			<Slot property="averageQualityOfCapitalStock" value="1.0"/>
+			<Slot property="producedQuantity" value="0.0"/>
+			<Slot property="costOfProduction" value="0.0"/>
+			<Slot property="unitCostOfProduction" value="1.0"/>
+			<Slot property="monthlyRealizedProfit" value="0.0"/>
+			<Slot property="currentBalanceOfSavingAccount" value="0.0"/>
+			<Slot property="equalDividend" value="0.0"/>
+			<!--<Slot property="optimalStockLevel" value="20.0"/>-->
+			<Slot property="laborSupplyQuantity" value="0"/>
+			<Slot property="wageOffer" value="1.0"/>
+			
+			<PeriodicTimeEvent type="MakeProductionPlan" occurrenceTime="4"/>
+			<PeriodicTimeEvent type="InFirstIterationRankApplicant" occurrenceTime="9"/>
+			<PeriodicTimeEvent type="StartSecondIterationLaborSupply" occurrenceTime="15"/>
+			<PeriodicTimeEvent type="InSecondIterationRankApplicant" occurrenceTime="18"/>
+			<PeriodicTimeEvent type="StartOfProduction" occurrenceTime="23"/>
+			<PeriodicTimeEvent type="CalculateDividend" occurrenceTime="24"/>
+		</Agents>
+		
+		<Agents type="Household" rangeStartID="1001" rangeEndID="1200">
+			<Slot property="availableProducts">
+				<ValueExpr language="Java"><![CDATA[ new ArrayList<sim.model.dataTypes.ProductListItem>() ]]></ValueExpr>
+				<ValueExpr language="JavaScript"><![CDATA[ new js.util.ArrayList() ]]></ValueExpr>
+			</Slot>
+			<Slot property="jobOffers">
+				<ValueExpr language="Java"><![CDATA[ new ArrayList<sim.model.dataTypes.JobOfferRecord>() ]]></ValueExpr>
+				<ValueExpr language="JavaScript"><![CDATA[ new js.util.ArrayList() ]]></ValueExpr>
+			</Slot>
+			
+			<Slot property="region" value="1"/>
+			<Slot property="firm">
+				<RandomVariable>
+					<UniformInt lowerBound="100" upperBound="110"/>
+				</RandomVariable>
+			</Slot>
+			<Slot property="lastFirm" value="0"/>
+			<Slot property="jobSeeker" value="false"/>
+			<Slot property="generalSkillLevel">
+				<ValueExpr language="Java"><![CDATA[ Global.lowSkillRegion() ]]></ValueExpr>
+				<ValueExpr language="JavaScript"><![CDATA[ sim.controller.Global.lowSkillRegion() ]]></ValueExpr>
+			</Slot>
+			<Slot property="specificSkillLevel" value="1.0"/>
+			<Slot property="currentWage" value="1.0"/>
+			<Slot property="laborIncome" value="0.0"/>
+			<Slot property="totalIncome" value="0.0"/>
+			<Slot property="meanIncome" value="0.0"/>
+			<Slot property="currentIncome" value="1.0"/>
+			<Slot property="savingAccount" value="0.0"/>
+			<Slot property="cashOnHand" value="0.0"/>
+			<Slot property="consumptionBudget" value="0.0"/>
+			<Slot property="weekConsumptionBudget" value="0.0"/>
+			<Slot property="remainingConsumptionBudget" value="0.0"/>
+			<Slot property="selectFirstProductId" value="0"/>
+			<Slot property="selectSecondProductId" value="0"/>
+			<Slot property="spendBudgetForFirstProduct" value="0.0"/>
+			<Slot property="spendBudgetForSecondProduct" value="0.0"/>
+			<Slot property="purchaseQuantityForFirstProduct" value="0.0"/>
+			<Slot property="purchaseQuantityForSecondProduct" value="0.0"/>
+			
+			<PeriodicTimeEvent type="AtStartOfMonthDetermineConsumptionBudget" occurrenceTime="2"/>
+			<PeriodicTimeEvent type="InFirstIterationAcceptJob" occurrenceTime="12"/>
+			<PeriodicTimeEvent type="InSecondIterationAcceptJob" occurrenceTime="21"/>
+		</Agents>
+		
+		<Agents type="Household" rangeStartID="1201" rangeEndID="1400">
+			<Slot property="availableProducts">
+				<ValueExpr language="Java"><![CDATA[ new ArrayList<sim.model.dataTypes.ProductListItem>() ]]></ValueExpr>
+				<ValueExpr language="JavaScript"><![CDATA[ new js.util.ArrayList() ]]></ValueExpr>
+			</Slot>
+			<Slot property="jobOffers">
+				<ValueExpr language="Java"><![CDATA[ new ArrayList<sim.model.dataTypes.JobOfferRecord>() ]]></ValueExpr>
+				<ValueExpr language="JavaScript"><![CDATA[ new js.util.ArrayList() ]]></ValueExpr>
+			</Slot>
+			
+			<Slot property="region" value="2"/>
+			<Slot property="firm">
+				<RandomVariable>
+					<UniformInt lowerBound="100" upperBound="110"/>
+				</RandomVariable>
+			</Slot>
+			<Slot property="lastFirm" value="0"/>
+			<Slot property="jobSeeker" value="false"/>
+			<Slot property="generalSkillLevel">
+				<ValueExpr language="Java"><![CDATA[ Global.highSkillRegion() ]]></ValueExpr>
+				<ValueExpr language="JavaScript"><![CDATA[ sim.controller.Global.highSkillRegion() ]]></ValueExpr>
+			</Slot>
+			<Slot property="specificSkillLevel" value="1.0"/>
+			<Slot property="currentWage" value="1.0"/>
+			<Slot property="laborIncome" value="0.0"/>
+			<Slot property="totalIncome" value="0.0"/>
+			<Slot property="meanIncome" value="0.0"/>
+			<Slot property="currentIncome" value="1.0"/>
+			<Slot property="savingAccount" value="0.0"/>
+			<Slot property="cashOnHand" value="0.0"/>
+			<Slot property="consumptionBudget" value="0.0"/>
+			<Slot property="weekConsumptionBudget" value="0.0"/>
+			<Slot property="remainingConsumptionBudget" value="0.0"/>
+			<Slot property="selectFirstProductId" value="0"/>
+			<Slot property="selectSecondProductId" value="0"/>
+			<Slot property="spendBudgetForFirstProduct" value="0.0"/>
+			<Slot property="spendBudgetForSecondProduct" value="0.0"/>
+			<Slot property="purchaseQuantityForFirstProduct" value="0.0"/>
+			<Slot property="purchaseQuantityForSecondProduct" value="0.0"/>
+			
+			<PeriodicTimeEvent type="AtStartOfMonthDetermineConsumptionBudget" occurrenceTime="2"/>
+			<PeriodicTimeEvent type="InFirstIterationAcceptJob" occurrenceTime="12"/>
+			<PeriodicTimeEvent type="InSecondIterationAcceptJob" occurrenceTime="21"/>
+		</Agents>
+		
+		<GlobalVariable name="period" value="1"/>
+		<GlobalVariable name="comm" value="0.05"/>
+		<GlobalVariable name="investmentSalesPrice" value="1.0"/>
+		<GlobalVariable name="qualityOfInvestment" value="1.0"/>
+		<GlobalVariable name="innovationProbability" value="0.0"/>
+		
+		<GlobalVariable name="producedQuantityLowSkillRegion" value="0.0"/>
+		<GlobalVariable name="producedQuantityHighSkillRegion" value="0.0"/>
+		<GlobalVariable name="commutingEmployeesLowSkillRegion" value="0"/>
+		<GlobalVariable name="commutingEmployeesHighSkillRegion" value="0"/>
+		<GlobalVariable name="priceLowSkillRegion" value="0.0"/>
+		<GlobalVariable name="priceHighSkillRegion" value="0.0"/>
+		<GlobalVariable name="totalLaborIncomeLowSkillRegion" value="0.0"/>
+		<GlobalVariable name="totalLaborIncomeHighSkillRegion" value="0.0"/>
+		<GlobalVariable name="capitalLowSkillRegion" value="0.0"/>
+		<GlobalVariable name="capitalHighSkillRegion" value="0.0"/>
+		
+		<ExogenousEvent type="Init" occurrenceTime="1"/>
+		<ExogenousEvent type="StartOfMonth" occurrenceTime="2"/>
+		<ExogenousEvent type="AtWeeklyIndividualConsumption" occurrenceTime="3"/>
+		<ExogenousEvent type="EndFirstIterationLaborSupply" occurrenceTime="14"/>
+		<ExogenousEvent type="EndSecondIterationLaborSupply" occurrenceTime="23"/>
+		<ExogenousEvent type="EndOfMonth" occurrenceTime="25"/>
+	</InitialState>
+	
+	<UserInterface supportedLanguages="en">
+		<StatisticsUI>
+			<StatisticsVariableUI comparisonGroup="Output" variable="outputLowSkillRegion">
+				<Label>
+					<Text xml:lang="en">Output in low skill region</Text>
+				</Label>
+				<Hint>
+					<Text xml:lang="en">Production output per month of all consumption good producers in low skill region</Text>
+				</Hint>
+			</StatisticsVariableUI>
+			
+			<StatisticsVariableUI comparisonGroup="Output" variable="outputHighSkillRegion">
+				<Label>
+					<Text xml:lang="en">Output in high skill region</Text>
+				</Label>
+				<Hint>
+					<Text xml:lang="en">Production output per month of all consumption good producers in high skill region</Text>
+				</Hint>
+			</StatisticsVariableUI>
+			
+			<StatisticsVariableUI comparisonGroup="Output" variable="totalOutput">
+				<Label>
+					<Text xml:lang="en">Total output</Text>
+				</Label>
+				<Hint>
+					<Text xml:lang="en">Total production output per month of all consumption good producers</Text>
+				</Hint>
+			</StatisticsVariableUI>
+			
+			<StatisticsVariableUI comparisonGroup="NumberOfCommuters" variable="numberOfCommutersFromLowToHighSkillRegion">
+				<Label>
+					<Text xml:lang="en">Number of commuters from low to high skill region</Text>
+				</Label>
+				<Hint>
+					<Text xml:lang="en">Number of commuters from low to high skill region</Text>
+				</Hint>
+			</StatisticsVariableUI>
+			
+			<StatisticsVariableUI comparisonGroup="NumberOfCommuters" variable="numberOfCommutersFromHighToLowSkillRegion">
+				<Label>
+					<Text xml:lang="en">Number of commuters from high to low skill region</Text>
+				</Label>
+				<Hint>
+					<Text xml:lang="en">Number of commuters from high to low skill region</Text>
+				</Hint>
+			</StatisticsVariableUI>
+			
+			<StatisticsVariableUI comparisonGroup="AveragePrice" variable="averagePriceLowSkillRegion">
+				<Label>
+					<Text xml:lang="en">Prices in the low skill region</Text>
+				</Label>
+				<Hint>
+					<Text xml:lang="en">Prices in the low skill region</Text>
+				</Hint>
+			</StatisticsVariableUI>
+			
+			<StatisticsVariableUI comparisonGroup="AveragePrice" variable="averagePriceHighSkillRegion">
+				<Label>
+					<Text xml:lang="en">Prices in the high skill region</Text>
+				</Label>
+				<Hint>
+					<Text xml:lang="en">Prices in the high skill region</Text>
+				</Hint>
+			</StatisticsVariableUI>
+			
+			<StatisticsVariableUI comparisonGroup="CapitalStock" variable="capitalStockLowSkillRegion">
+				<Label>
+					<Text xml:lang="en">Capital stock in the low skill region</Text>
+				</Label>
+				<Hint>
+					<Text xml:lang="en">Capital stock in the low skill region</Text>
+				</Hint>
+			</StatisticsVariableUI>
+			
+			<StatisticsVariableUI comparisonGroup="CapitalStock" variable="capitalStockHighSkillRegion">
+				<Label>
+					<Text xml:lang="en">Capital stock in the high skill region</Text>
+				</Label>
+				<Hint>
+					<Text xml:lang="en">Capital stock in the high skill region</Text>
+				</Hint>
+			</StatisticsVariableUI>
+			
+			<StatisticsVariableUI comparisonGroup="TotalLaborIncomeOfWorkers" variable="totalLaborIncomeOfWorkersLowSkillRegion">
+				<Label>
+					<Text xml:lang="en">Total labor income of workers in the low skill region</Text>
+				</Label>
+				<Hint>
+					<Text xml:lang="en">Total labor income of workers in the low skill region</Text>
+				</Hint>
+			</StatisticsVariableUI>
+			
+			<StatisticsVariableUI comparisonGroup="TotalLaborIncomeOfWorkers" variable="totalLaborIncomeOfWorkersHighSkillRegion">
+				<Label>
+					<Text xml:lang="en">Total labor income of workers in the high skill region</Text>
+				</Label>
+				<Hint>
+					<Text xml:lang="en">Total labor income of workers in the high skill region</Text>
+				</Hint>
+			</StatisticsVariableUI>
+		</StatisticsUI>
+	</UserInterface>
+</SimulationScenario>
