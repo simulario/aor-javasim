@@ -8,7 +8,7 @@
     version="0.9"
     scenarioName="MinEcon_LaborFoodUtility_BL6scenario"
     simulationManagerDirectory="../../..">
-    <SimulationParameters simulationSteps="3000" timeUnit="h"  stepTimeDelay="0" randomSeed="47" createDebuggingOutput="true"/>
+    <SimulationParameters simulationSteps="3000" timeUnit="h"  stepTimeDelay="0" createDebuggingOutput="true"/>
     <SimulationModel modelName="MinEcon_LaborFoodUtility_BL6" modelTitle="A Minimal Economy with a Labor, Food and Utility Market">
       <documentation>
           <dc:title>Minimal Economy with a Labor, Food and Utility Market</dc:title>
@@ -74,7 +74,7 @@
 				<Attribute name="quantity" type="Float"/>
 				<Attribute name="buy" type="Boolean"/>
 				<Attribute name="bidderIdRef" type="Integer" />
-				<Attribute name="min" type="Float" /><!-- BL6 -->
+				<Attribute name="min" type="Float" />
 			</ComplexDataType>
 		</DataTypes>
 		<EntityTypes>
@@ -91,11 +91,6 @@
 			<!--====================================-->
 			<MessageType name="ClearMarket">
 				<documentation>A message to a Market, which ends the trading day.</documentation>
-			</MessageType>
-			<!-- =================================== -->
-			<MessageType name="BL4Offer">
-				<documentation>A list of offers to the market, made by a BL4Agent.</documentation>
-				<ComplexDataProperty name="offers" type="TradeOffer" upperMultiplicity="unbounded"/>
 			</MessageType>
 			<!-- =================================== -->
 			<MessageType name="BL6Offer">
@@ -189,14 +184,14 @@
 					<Parameter name="quantity" type="Float"/>
 					<Parameter name="buy" type="Boolean"/>
 					<Parameter name="min" type="Float"/>
-				    <Parameter name="id" type="Integer"/>
+				  <Parameter name="id" type="Integer"/>
 					<Body language="JavaScript"><![CDATA[
 						var offer = new sim.model.dataTypes.TradeOffer();
 						offer.setProduct(product);
 						offer.setQuantity(quantity);
-						offer.setBuy(buy);
-						offer.setBidderIdRef(this.getId());
+						offer.setBuy(buy);						
 						offer.setMin(min);
+						offer.setBidderIdRef(this.getId());
 						return offer;
 					]]></Body>
 				</Function>			
@@ -252,7 +247,7 @@
 					</documentation>
 					<WHEN eventType="InMessageEvent" messageType="MatchingOffer" messageVariable="msg" />
 					<FOR-ListItemVariable variable="asset" listItemType="Quantity">
-						<ListExpr language="Java JavaScript"><![CDATA[this.agt.getAssets()]]></ListExpr>
+						<ListExpr language="Java JavaScript"><![CDATA[ this.agt.getAssets() ]]></ListExpr>
 					</FOR-ListItemVariable>
 					<IF language="Java"><![CDATA[ !this.msg.getOffer().isBuy() && this.asset.getType().equals("Money") ]]></IF>
 					<IF language="JavaScript"><![CDATA[ !this.msg.getOffer().isBuy() && this.asset.getType() === "Money" ]]></IF>
@@ -260,7 +255,7 @@
 						<UPDATE-AGT>
 							<Call procedure="deposit" contextObjectVariable="asset">
 								<Argument parameter="q">
-									<ValueExpr language="Java JavaScript" logPeriodicity="1"><![CDATA[this.msg.getOffer().getQuantity() * this.msg.getOffer().getPrice()]]></ValueExpr>
+									<ValueExpr language="Java JavaScript" logPeriodicity="1"><![CDATA[ this.msg.getOffer().getQuantity() * this.msg.getOffer().getPrice() ]]></ValueExpr>
 								</Argument>	
 							</Call>
 						</UPDATE-AGT>
@@ -273,7 +268,7 @@
 					</documentation>
 					<WHEN eventType="InMessageEvent" messageType="MatchingOffer" messageVariable="msg" />
 					<FOR-ListItemVariable variable="asset" listItemType="Quantity">
-						<ListExpr language="Java JavaScript">this.agt.getAssets()</ListExpr>
+						<ListExpr language="Java JavaScript"><![CDATA[ this.agt.getAssets() ]]></ListExpr>
 					</FOR-ListItemVariable>
 					<IF language="Java"><![CDATA[ this.msg.getOffer().isBuy() && this.asset.getType().equals("Money") ]]></IF>
 					<IF language="JavaScript"><![CDATA[ this.msg.getOffer().isBuy() && this.asset.getType() === "Money" ]]></IF>
@@ -294,7 +289,7 @@
 					</documentation>
 					<WHEN eventType="InMessageEvent" messageType="MatchingOffer" messageVariable="msg" />
 					<FOR-ListItemVariable variable="asset" listItemType="Quantity">
-						<ListExpr language="Java JavaScript">this.agt.getAssets()</ListExpr>
+						<ListExpr language="Java JavaScript"><![CDATA[this.agt.getAssets()]]></ListExpr>
 					</FOR-ListItemVariable>
 					<IF language="Java"><![CDATA[ this.msg.getOffer().isBuy() && this.msg.getOffer().getProduct().equals("Food") && this.asset.getType().equals("Food") ]]></IF>
 					<IF language="JavaScript"><![CDATA[ this.msg.getOffer().isBuy() && this.msg.getOffer().getProduct() === "Food" && this.asset.getType() === "Food" ]]></IF>
@@ -302,7 +297,7 @@
 						<UPDATE-AGT>
 							<Call procedure="deposit" contextObjectVariable="asset">
 								<Argument parameter="q">
-									<ValueExpr language="Java JavaScript" logPeriodicity="1"><![CDATA[this.msg.getOffer().getQuantity()]]></ValueExpr>
+									<ValueExpr language="Java JavaScript" logPeriodicity="9"><![CDATA[this.msg.getOffer().getQuantity()]]></ValueExpr>
 								</Argument>	
 							</Call>
 						</UPDATE-AGT>
@@ -323,7 +318,7 @@
 						<UPDATE-AGT>
 							<Call procedure="withdraw" contextObjectVariable="asset">
 								<Argument parameter="q">
-									<ValueExpr language="Java JavaScript" logPeriodicity="1"><![CDATA[this.msg.getOffer().getQuantity()]]></ValueExpr>
+									<ValueExpr language="Java JavaScript" logPeriodicity="9"><![CDATA[ this.msg.getOffer().getQuantity() ]]></ValueExpr>
 								</Argument>	
 							</Call>
 						</UPDATE-AGT>
@@ -357,7 +352,7 @@
 					</documentation>
 					<WHEN eventType="InMessageEvent" messageType="MatchingOffer" messageVariable="msg" />
 					<FOR-ListItemVariable variable="asset" listItemType="Quantity">
-						<ListExpr language="Java JavaScript">this.agt.getAssets()</ListExpr>
+						<ListExpr language="Java JavaScript"><![CDATA[ this.agt.getAssets() ]]></ListExpr>
 					</FOR-ListItemVariable>
 					<IF language="Java"><![CDATA[ !this.msg.getOffer().isBuy() && this.msg.getOffer().getProduct().equals("Labor") && this.asset.getType().equals("Labor") ]]></IF>
 					<IF language="JavaScript"><![CDATA[ !this.msg.getOffer().isBuy() && this.msg.getOffer().getProduct() === "Labor" && this.asset.getType() === "Labor" ]]></IF>
@@ -386,7 +381,7 @@
 						<UPDATE-AGT>
 							<Call procedure="deposit" contextObjectVariable="asset">
 								<Argument parameter="q">
-									<ValueExpr language="Java JavaScript" logPeriodicity="1"><![CDATA[this.msg.getOffer().getQuantity()]]></ValueExpr>
+									<ValueExpr language="Java JavaScript" logPeriodicity="1"><![CDATA[ this.msg.getOffer().getQuantity() ]]></ValueExpr>
 								</Argument>	
 							</Call>
 						</UPDATE-AGT>
@@ -417,7 +412,7 @@
 			<!-- ============================================ -->
 			<AgentType name="Person" superType="EconomicAgent">
 				<documentation>
-						Superclass to represent a BL4- or BL6Person. 
+						Superclass to represent a BL6Person. 
 						
 						EAT_AMOUNT: The amount of food a person eats every day.
 						TARGET_FOOD_STOCK: The aimed food amount. 
@@ -430,7 +425,7 @@
 			<!-- ============================================ -->
 			<AgentType name="Firm" superType="EconomicAgent" >
 				<documentation>
-						Superclass to represent a BL4- or BL6Firm.
+						Superclass to represent a  BL6Firm.
 				</documentation>
 			</AgentType>
             <!-- ======================================== -->
@@ -450,7 +445,7 @@
 				<Attribute type="Float" name="epsilon" initialValue="0.1"/>
 				<Attribute type="Float" name="upsilon" initialValue="0.04"/>
 				<Attribute type="Float" name="savingRate"/>
-				<Attribute type="Float" name="consumption"/>
+				<Attribute type="Float" name="consumption" initialValue="0"/>
 				<Attribute type="Float" name="eConsumption"/>
 				<Attribute type="Float" name="nConsumption"/>
 				<Attribute type="Float" name="minN"/>
@@ -487,7 +482,7 @@
 								<ValueExpr language="Java JavaScript"><![CDATA[this.agt.getIncome() * this.agt.getBaseSavingToIncomeRatio()]]></ValueExpr>
 							</Slot>
 							<Slot property="targetConsumption">
-								<ValueExpr language="Java JavaScript"><![CDATA[this.agt.getAssetByName("Money").getQuantity() - this.agt.getTargetSavings()]]></ValueExpr>
+								<ValueExpr language="Java JavaScript"><![CDATA[ this.agt.getAssetByName("Money").getQuantity() - this.agt.getTargetSavings()]]></ValueExpr>
 							</Slot>
 							<Slot property="consumption">
 								<ValueExpr language="Java JavaScript"><![CDATA[
@@ -543,11 +538,7 @@
 										}</ValueExpr>
 									<ValueExpr language="JavaScript">				
 										<![CDATA[
-											this.agt.setProduct("Food")
-											this.agt.setQuantity(this.agt.getNConsumption())
-											this.agt.setBuy(true)
-											this.agt.setBidderIdRef(this.agt.getId())
-										    this.agt.setMin(this.agt.getMinN())										
+											this.agt.createOffer("Food", this.agt.getNConsumption(), true, this.agt.getMinN())			
 										]]>
 									</ValueExpr>
 								</Slot>
@@ -564,7 +555,7 @@
 					<DO>
 						<UPDATE-AGT>
 							<Slot property="eConsumption">
-								<ValueExpr language="Java JavaScript">this.agt.getConsumption() - this.agt.getNConsumption()</ValueExpr>
+								<ValueExpr language="Java JavaScript"><![CDATA[ this.agt.getConsumption() - this.agt.getNConsumption() ]]></ValueExpr>
 							</Slot>
 						</UPDATE-AGT>
 						<SCHEDULE-EVT>
@@ -579,7 +570,7 @@
 										}
 										}</ValueExpr>
 									<ValueExpr language="JavaScript"><![CDATA[
-										this.agt.createOffer( "Utility", this.agt.getEConsumption(), true )
+										this.agt.createOffer( "Utility", this.agt.getEConsumption(), true, 0 )
 									]]></ValueExpr>
 								</Slot>
 							</OutMessageEventExpr>
@@ -605,7 +596,7 @@
 										}
 										}</ValueExpr>
 									<ValueExpr language="JavaScript"><![CDATA[
-										this.agt.createOffer( "Labor", 1, false )
+									this.agt.createOffer( "Labor", 1, false, 0 )
 									]]></ValueExpr>
 								</Slot>
 							</OutMessageEventExpr>
@@ -660,9 +651,9 @@
 											setBidderIdRef(getId());
 										}
 										}</ValueExpr>
-									<ValueExpr language="JavaScript">
-										this.agt.createOffer( "Labor", this.agt.getWageBudget(), true)
-									</ValueExpr>
+									<ValueExpr language="JavaScript"><![CDATA[
+										this.agt.createOffer( "Labor", this.agt.getWageBudget(), true, 0)
+									]]></ValueExpr>
 								</Slot>
 							</OutMessageEventExpr>
 						</SCHEDULE-EVT>
@@ -681,12 +672,12 @@
 					<documentation>
 							Deposits the produced food and withdraw the uses labor
 					</documentation>
-					<Body language="Java JavaScript">
+					<Body language="Java JavaScript"><![CDATA[
 						if(this.getOutput() > 0){
 							this.getAssetByName("Food").deposit(this.getOutput());
 						}
 						this.getAssetByName("Labor").withdraw(this.getAssetByName("Labor").getQuantity());
-					</Body>
+					]]></Body>
 				</Function>
 				<!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->
 				<ReactionRule name="revenue_Rule">
@@ -698,7 +689,7 @@
 					<IF language="JavaScript"><![CDATA[ !this.msg.getOffer().isBuy() && this.msg.getOffer().getProduct() === "Food" ]]></IF>
 					<THEN>
 						<UPDATE-AGT>
-							<Slot property="revenue"><ValueExpr language="Java JavaScript">this.msg.getOffer().getQuantity() * this.msg.getOffer().getPrice()</ValueExpr></Slot>
+							<Slot property="revenue"><ValueExpr language="Java JavaScript"><![CDATA[this.msg.getOffer().getQuantity() * this.msg.getOffer().getPrice()]]></ValueExpr></Slot>
 						</UPDATE-AGT>
 					</THEN>
 				</ReactionRule>
@@ -713,54 +704,54 @@
 							<Slot property="totalCost"><PropertyValueExpr entityVariable="agt" property="wageBudget"/></Slot>
 							<!-- Capitalcost -->
 							<Slot property="profit">
-								<ValueExpr language="Java JavaScript">
+								<ValueExpr language="Java JavaScript"><![CDATA[
 									this.agt.getRevenue() - this.agt.getTotalCost()
-								</ValueExpr>
+								]]></ValueExpr>
 							</Slot>
 							<Slot property="capacity">
-								<ValueExpr language="Java JavaScript">
+								<ValueExpr language="Java JavaScript"><![CDATA[
 									this.agt.getA() * Math.pow(this.agt.getAssetByName("Labor").getQuantity(), this.agt.getBeta()) * Math.pow(30, 1 - this.agt.getBeta())
-								</ValueExpr>
+								]]></ValueExpr>
 								<!-- Capital als Konstante -->
 							</Slot>
 							<Slot property="wage">
-								<ValueExpr language="Java JavaScript">
+								<ValueExpr language="Java JavaScript"><![CDATA[
 									this.agt.getAssetByName("Labor").getQuantity() > 0 ? this.agt.getWageBudget() / this.agt.getAssetByName("Labor").getQuantity() : 0
-								</ValueExpr>
+								]]></ValueExpr>
 							</Slot>
 						</UPDATE-AGT>
 					</DO>
-					<IF language="Java JavaScript">this.agt.getAssetByName("Labor").getQuantity() > 0</IF>
+					<IF language="Java JavaScript"><![CDATA[this.agt.getAssetByName("Labor").getQuantity() > 0]]></IF>
 					<THEN>
 						<UPDATE-AGT>
 							<Slot property="wageBudget">
-								<ValueExpr language="Java JavaScript">
+								<ValueExpr language="Java JavaScript"><![CDATA[
 									this.agt.isFirst() ? this.agt.getWageBudget() : Math.max( 0 , this.agt.getWageBudget() + this.agt.getLambda() * ( this.agt.getAssetByName("Money").getQuantity() - this.agt.getTotalCost() ) )		
-								</ValueExpr>
+								]]></ValueExpr>
 							</Slot>
 							<Slot property="MC">
-								<ValueExpr language="Java JavaScript">
+								<ValueExpr language="Java JavaScript"><![CDATA[
 									this.agt.getWage() / this.agt.getBeta() 
 									* Math.pow( this.agt.getA(), -1/this.agt.getBeta() )
 									* Math.pow( this.agt.getOutput(), 1 / this.agt.getBeta() - 1 )
 									* Math.pow( 30, 1 - 1 / this.agt.getBeta() )
-								</ValueExpr>
+								]]></ValueExpr>
 								<!-- Capital als Konstante -->
 							</Slot>
 							<Slot property="marginalProfit">
-								<ValueExpr language="Java JavaScript">
+								<ValueExpr language="Java JavaScript"><![CDATA[
 									this.agt.getLastFoodPrice() - this.agt.getMC()
-								</ValueExpr>
+								]]></ValueExpr>
 							</Slot>
 							<Slot property="output">
-								<ValueExpr language="Java JavaScript">
+								<ValueExpr language="Java JavaScript"><![CDATA[
 									this.agt.getOutput() * ( 1 + this.agt.getPhi() * this.agt.getMarginalProfit() / this.agt.getLastFoodPrice() )
-								</ValueExpr>
+								]]></ValueExpr>
 							</Slot>
 							<Slot property="output">
-								<ValueExpr language="Java JavaScript">
+								<ValueExpr language="Java JavaScript"><![CDATA[
 									Math.min( this.agt.getCapacity(), this.agt.getOutput() )
-								</ValueExpr>
+								]]></ValueExpr>
 							</Slot>
 							<Slot property="output">
 								<ValueExpr language="Java JavaScript"><![CDATA[
@@ -778,7 +769,7 @@
 							Tries to sell food to the market.
 					</documentation>
 					<WHEN eventType="InMessageEvent" messageType="Act_msg"/>
-					<IF language="Java JavaScript">getAssetByName("Food").getQuantity() > 0</IF>
+					<IF language="Java JavaScript"><![CDATA[this.agt.getAssetByName("Food").getQuantity() > 0 ]]></IF>
 					<THEN>
 						<SCHEDULE-EVT>
 							<OutMessageEventExpr messageType="BL6Offer" receiverIdRefs="2">
@@ -792,7 +783,7 @@
 										}
 									}</ValueExpr>
 									<ValueExpr language="JavaScript"><![CDATA[
-										this.agt.createOffer( "Food", this.agt.getAssetByName("Food").getQuantity(), false )
+										this.agt.createOffer( "Food", this.agt.getAssetByName("Food").getQuantity(), false, 0 )
 									]]></ValueExpr>
 								</Slot>
 							</OutMessageEventExpr>
@@ -923,7 +914,7 @@
 										}
 									}</ValueExpr>
 									<ValueExpr language="JavaScript"><![CDATA[
-										this.agt.createOffer( "Utility", this.agt.getAssetByName("Utility").getQuantity(), false )
+										this.agt.createOffer( "Utility", this.agt.getAssetByName("Utility").getQuantity(), false, 0 )
 									]]></ValueExpr>
 								</Slot>
 							</OutMessageEventExpr>
@@ -1006,7 +997,7 @@
 			        </documentation>
 			        <WHEN eventType="ReminderEvent" eventVariable="evt" />
 			        <FOR-ListItemVariable variable="o" listItemType="TradeOffer">
-			            <ListExpr language="Java JavaScript">this.m.getTransactions()</ListExpr>
+			        	<ListExpr language="Java JavaScript"><![CDATA[this.m.getTransactions()]]></ListExpr>
 			        </FOR-ListItemVariable>
 			        <IF language="Java"><![CDATA[ this.evt.getReminderMsg().equals("transactions ready") ]]></IF>
 			        <IF language="JavaScript"><![CDATA[ this.evt.getReminderMsg() === "transactions ready" ]]></IF>
@@ -1231,20 +1222,20 @@
 							for (var j = low; j < high; j++) {
 								var o = new sim.model.dataTypes.TradeOffer();
 					            o.setProduct("Labor");
-				            	o.setQuantity(1);
-				            	o.setPrice(wage);
+											o.setPrice(wage);
+				            	o.setQuantity(1);				            	
 				            	o.setBuy(true);
 				            	o.setBidderIdRef( employer.getBidderIdRef() );
 				            	this.getTransactions().add(o);
 				            	this.setDemand(this.getDemand() + 1);
 				            	
-				            	var x = new sim.model.dataTypes.TradeOffer();
-				            	x.setProduct("Labor");
-				            	x.setQuantity(1);
-				            	x.setPrice(wage);
-				            	x.setBuy(false);
-				            	x.setBidderIdRef( this.getSellOffers().get(j).getBidderIdRef() );
-				            	this.getTransactions().add(x); 
+				              o = new sim.model.dataTypes.TradeOffer();
+				            	o.setProduct("Labor");
+											o.setPrice(wage);
+				            	o.setQuantity(1);				            	
+				            	o.setBuy(false);
+				            	o.setBidderIdRef( this.getSellOffers().get(j).getBidderIdRef() );
+				            	this.getTransactions().add(o); 
 				            	this.setSupply(this.getSupply() + 1);
 				            	this.setLastMarketPrice(wage);
 							}
@@ -1295,7 +1286,7 @@
                                         }
                                         }</ItemExpr>
                                     <ItemExpr language="JavaScript"><![CDATA[
-                                        this.f.createOffer("Labor", this.f.getWageBudget(), true)
+                                        this.f.createOffer("Labor", this.f.getWageBudget(), true, 0)
                                     ]]></ItemExpr>
                                 </AddLast>
                             </MultiValuedSlot>
@@ -1326,7 +1317,7 @@
                                     setBidderIdRef(p.getId());
                                     }
                                     }</ItemExpr><ItemExpr language="JavaScript"><![CDATA[
-                                        this.p.createOffer("Labor", 1, false)
+                                        this.p.createOffer("Labor", 1, false, 0)
                                     ]]></ItemExpr></AddLast>
                             </MultiValuedSlot>
                         </UpdateObject>
@@ -1379,24 +1370,7 @@
                 <IF language="Java JavaScript"><![CDATA[ this.p.getAssetByName("Food").withdraw(this.p.getEAT_AMOUNT()) < this.p.getEAT_AMOUNT() ]]></IF>
                 <THEN>
                     <UPDATE-ENV>
-                        <DestroyObject><ObjectIdRef language="Java JavaScript">this.p.getId()</ObjectIdRef></DestroyObject>
-                    </UPDATE-ENV>
-                </THEN>
-            </EnvironmentRule>
-            <!-- ============================= -->
-            <EnvironmentRule name="CheckBankrupt_ER">
-                <documentation>
-                    If a farm has no more money, food and labor or a factory has no more money, utility and labor , it is shut down(BL4 only)
-                </documentation>
-                <WHEN eventType="StartOfDay" eventVariable="evt" />
-                <FOR-ObjectVariable variable="f" objectType="Firm" />
-                <IF language="Java"><![CDATA[ ( ( this.f.getClass() == BL4Farm.class && this.f.getAssetByName("Food").getQuantity() == 0.0) 
-												|| (this.f.getClass() == BL4Factory.class && this.f.getAssetByName("Utility").getQuantity() == 0.0)
-											) && this.f.getAssetByName("Labor").getQuantity() == 0.0 && this.f.getAssetByName("Money").getQuantity() == 0.0 ]]></IF>
-                <IF language="JavaScript">false</IF>
-                <THEN>
-                    <UPDATE-ENV>
-                        <DestroyObject objectVariable="f"/>
+                    	<DestroyObject><ObjectIdRef language="Java JavaScript"><![CDATA[this.p.getId()]]></ObjectIdRef></DestroyObject>
                     </UPDATE-ENV>
                 </THEN>
             </EnvironmentRule>
@@ -1414,8 +1388,8 @@
                 <DO>
                     <SCHEDULE-EVT>
                         <InMessageEventExpr messageType="StartOfDay_Notification">
-                            <SenderIdRef language="Java JavaScript">this.m.getId()</SenderIdRef>
-                            <ReceiverIdRef language="Java JavaScript">this.e.getId()</ReceiverIdRef>
+                        	<SenderIdRef language="Java JavaScript"><![CDATA[ this.m.getId() ]]></SenderIdRef>
+                        	<ReceiverIdRef language="Java JavaScript"><![CDATA[ this.e.getId() ]]></ReceiverIdRef>
                             <Slot property="price">
                                 <PropertyValueExpr entityVariable="m" property="lastMarketPrice"/>
                             </Slot>
@@ -1437,7 +1411,7 @@
                 <DO>
                     <SCHEDULE-EVT>
                         <InMessageEventExpr messageType="Act_msg" senderIdRef="0">
-                            <ReceiverIdRef language="Java JavaScript">this.e.getId()</ReceiverIdRef>
+                        	<ReceiverIdRef language="Java JavaScript"><![CDATA[ this.e.getId() ]]></ReceiverIdRef>
                         </InMessageEventExpr>
                         <!-- Act aufteilen-->
                     </SCHEDULE-EVT>
@@ -1454,7 +1428,7 @@
                 <DO>
                     <SCHEDULE-EVT>
                         <InMessageEventExpr messageType="ClearMarket" senderIdRef="0">
-                            <ReceiverIdRef language="Java JavaScript">this.m.getId()</ReceiverIdRef>
+                        	<ReceiverIdRef language="Java JavaScript"><![CDATA[ this.m.getId() ]]></ReceiverIdRef>
                         </InMessageEventExpr>
                     </SCHEDULE-EVT>
                 </DO>
