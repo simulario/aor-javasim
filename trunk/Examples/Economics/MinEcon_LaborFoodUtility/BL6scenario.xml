@@ -27,12 +27,12 @@
 			</Variable>
 			<Variable name="BuyOffersFood" dataType="Float">	
 				<Source>
-					<ObjectProperty property="Demand" objectType="Market" objectIdRef="2"/>
+					<ObjectProperty property="demand" objectType="Market" objectIdRef="2"/>
 				</Source>
 			</Variable>
 			<Variable name="SellOffersFood" dataType="Float">	
 				<Source>
-					<ObjectProperty property="Supply" objectType="Market" objectIdRef="2"/>
+					<ObjectProperty property="supply" objectType="Market" objectIdRef="2"/>
 				</Source>
 			</Variable>
 			<Variable name="PriceUtility" dataType="Float">	
@@ -42,12 +42,12 @@
 			</Variable>
 			<Variable name="BuyOffersUtility" dataType="Float">	
 				<Source>
-					<ObjectProperty property="Demand" objectType="Market" objectIdRef="4"/>
+					<ObjectProperty property="demand" objectType="Market" objectIdRef="4"/>
 				</Source>
 			</Variable>
 			<Variable name="SellOffersUtility" dataType="Float">	
 				<Source>
-					<ObjectProperty property="Supply" objectType="Market" objectIdRef="4"/>
+					<ObjectProperty property="supply" objectType="Market" objectIdRef="4"/>
 				</Source>
 			</Variable>
 			<Variable name="PriceLabor" dataType="Float">	
@@ -57,12 +57,12 @@
 			</Variable>
 			<Variable name="BuyOffersLabor" dataType="Float">	
 				<Source>
-					<ObjectProperty property="Demand" objectType="Market" objectIdRef="3" />
+					<ObjectProperty property="demand" objectType="Market" objectIdRef="3" />
 				</Source>
 			</Variable>
 			<Variable name="SellOffersLabor" dataType="Float">	
 				<Source>
-					<ObjectProperty property="Supply" objectType="Market" objectIdRef="3" />
+					<ObjectProperty property="supply" objectType="Market" objectIdRef="3" />
 				</Source>
 			</Variable>
 		</Statistics>
@@ -185,15 +185,17 @@
 					<Parameter name="buy" type="Boolean"/>
 					<Parameter name="min" type="Float"/>
 				  <Parameter name="id" type="Integer"/>
-					<Body language="JavaScript"><![CDATA[
-						var offer = new sim.model.dataTypes.TradeOffer();
-						offer.setProduct(product);
-						offer.setQuantity(quantity);
-						offer.setBuy(buy);						
-						offer.setMin(min);
-						offer.setBidderIdRef(this.getId());
-						return offer;
-					]]></Body>
+					<Body language="JavaScript">
+						<![CDATA[
+							var offer = new sim.model.dataTypes.TradeOffer();
+							offer.setProduct(product);
+							offer.setQuantity(quantity);
+							offer.setBuy(buy);						
+							offer.setMin(min);
+							offer.setBidderIdRef(this.getId());
+							return offer;
+						]]>
+					</Body>
 				</Function>			
 				<!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~-->
 				<ReactionRule name="StartOfDay_Food_Rule">
@@ -461,7 +463,8 @@
 						Calculates the daily income
 					</documentation>
 					<WHEN eventType="InMessageEvent" messageType="MatchingOffer" messageVariable="msg" />
-					<IF language="Java JavaScript"><![CDATA[ !this.msg.getOffer().isBuy() && this.msg.getOffer().getProduct().equals("Labor") ]]></IF>
+					<IF language="Java"><![CDATA[ !this.msg.getOffer().isBuy() && this.msg.getOffer().getProduct().equals("Labor") ]]></IF>
+					<IF language="JavaScript"><![CDATA[ !this.msg.getOffer().isBuy() && this.msg.getOffer().getProduct() === "Labor" ]]></IF>
 					<THEN>
 						<UPDATE-AGT>
 							<Slot property="income"><ValueExpr language="Java JavaScript"><![CDATA[this.msg.getOffer().getQuantity() * this.msg.getOffer().getPrice()]]></ValueExpr></Slot>
@@ -476,6 +479,7 @@
 							The new consumption is calculated by the consumption of the last day and the new targetConsumption. 
 					</documentation>
 					<WHEN eventType="InMessageEvent" messageType="Act_msg"/>
+					
 					<DO>
 						<UPDATE-AGT>
 							<Slot property="targetSavings">
@@ -1112,13 +1116,6 @@
 						}
 						while(true){
 							price = (low + high) / 2;
-							/*for(var offer in this.getBuyOffers()){
-								if(offer.getProduct().equals("Food")){
-									demand += Math.max(offer.getQuantity() / price, offer.getMin());
-								}else{
-									demand += offer.getQuantity() / price;
-								}
-							}*/
 							for(var i=0;i<buyOffers.size();i++){
 								var offer = buyOffers.get(i); 
 								if( offer.getProduct() === "Food"){
@@ -1504,12 +1501,16 @@
 							add(new aors.util.economics.ContinuousQuantity(0.0, new aors.util.economics.ContinuousQuantityType("Utility", "Stk")));
 						}
 				} ]]></ValueExpr>
-                <ValueExpr language="JavaScript"><![CDATA[ 
-					new js.util.ArrayList(new aors.util.economics.ContinuousQuantity(15.0, new aors.util.economics.ContinuousQuantityType("Food", "Stk")), 
-					new aors.util.economics.ContinuousQuantity(100.0, new aors.util.economics.ContinuousQuantityType("Money", "Stk")), 
-					new aors.util.economics.ContinuousQuantity(0.0, new aors.util.economics.ContinuousQuantityType("Labor", "Stk")),
-					new aors.util.economics.ContinuousQuantity(0.0, new aors.util.economics.ContinuousQuantityType("Utility", "Stk")))
-				]]></ValueExpr>
+                <ValueExpr language="JavaScript">
+                	<![CDATA[ 
+						new js.util.ArrayList(
+							new aors.util.economics.ContinuousQuantity(15.0, new aors.util.economics.ContinuousQuantityType("Food", "Stk")), 
+							new aors.util.economics.ContinuousQuantity(0.0, new aors.util.economics.ContinuousQuantityType("Money", "Stk")), 
+							new aors.util.economics.ContinuousQuantity(0.0, new aors.util.economics.ContinuousQuantityType("Labor", "Stk")),
+							new aors.util.economics.ContinuousQuantity(0.0, new aors.util.economics.ContinuousQuantityType("Utility", "Stk"))
+						)
+					]]>
+                </ValueExpr>
             </Slot>
             <Slot property="EAT_AMOUNT" value="1.0" />
             <Slot property="TARGET_FOOD_STOCK" value="26.0" />
@@ -1560,7 +1561,7 @@
 					new aors.util.economics.ContinuousQuantity(0.0, new aors.util.economics.ContinuousQuantityType("Utility", "Stk")))
 				]]></ValueExpr>
             </Slot>
-            <Slot property="A" value="2"></Slot>
+            <Slot property="A" value="2"/>
             <Slot property="beta" value="0.5"></Slot>
             <Slot property="phi" value="0.5"></Slot>
             <Slot property="lambda" value="0.2"></Slot>
