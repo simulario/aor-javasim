@@ -82,23 +82,45 @@
 			<Variable name="nrOfDepartures" dataType="Float"/>
 			<Variable name="meanResponseTime" dataType="Float">
 				<Source computeOnlyAtEnd="true">
-					<ValueExpr language="Java"><![CDATA[
-SimStatistics.cumulativeResponseTime.getValue() / SimStatistics.nrOfDepartures.getValue()						
-						]]></ValueExpr>
+					<ValueExpr language="Java"> 
+						(double) SimStatistics.cumulativeResponseTime.getValue() 
+						/ SimStatistics.numberOfDepartures.getValue()
+					</ValueExpr>
+					<ValueExpr language="JavaScript">
+						SimStatistics.cumulativeResponseTime.getValue() 
+						/ SimStatistics.numberOfDepartures.getValue()
+					</ValueExpr>
 				</Source>
-			</Variable>
+			</Variable>	
 			<Variable name="maxLengthOfMBQ" dataType="Integer">
 				<Source aggregationFunction="max">
-					<ObjectProperty property="lengthOfQueue" objectType="Queue" objectIdRef="6"/>
+					<ObjectProperty property="queueLength" objectType="MenuBoard" objectIdRef="1" />
 				</Source>
 			</Variable>
 			<Variable name="maxLengthOfPWQ" dataType="Integer">
 				<Source aggregationFunction="max">
-					<ObjectProperty property="lengthOfQueue" objectType="Queue" objectIdRef="7"/>
+					<ObjectProperty property="queueLength" objectType="PickupWindow" objectIdRef="2" />
+				</Source>
+			</Variable>
+			<Variable name="cumulativeMenuBoardServiceTime" dataType="Integer" />
+			<Variable name="menuBoardUtilization" dataType="Float">
+				<Source computeOnlyAtEnd="true">
+					<ValueExpr language="Java"> (double) SimStatistics.cumulativeMenuBoardServiceTime.getValue() 
+						/ SimParameter.SIMULATION_STEPS * 100 </ValueExpr>
+					<ValueExpr language="JavaScript">SimStatistics.cumulativeMenuBoardServiceTime.getValue() 
+						/ SimParameter.SIMULATION_STEPS * 100 </ValueExpr>
+				</Source>
+			</Variable>
+			<Variable name="cumulativePickupWindowServiceTime" dataType="Integer" />
+			<Variable name="pickupWindowUtilization" dataType="Float">
+				<Source computeOnlyAtEnd="true">
+					<ValueExpr language="Java"> (double) SimStatistics.cumulativePickupWindowServiceTime.getValue() 
+						/ SimParameter.SIMULATION_STEPS * 100 </ValueExpr>
+					<ValueExpr language="JavaScript">SimStatistics.cumulativePickupWindowServiceTime.getValue() 
+						/ SimParameter.SIMULATION_STEPS * 100 </ValueExpr>
 				</Source>
 			</Variable>
 		</Statistics>
-
 		<Globals>
 			<!-- =========================================== -->
 			<GlobalFunction name="twoDice" resultType="Integer">
@@ -138,66 +160,59 @@ var r2 = js.util.Random.uniformInt(1,6);
 		</Globals>
 		<EntityTypes>
 			<!-- =================================================== -->
-			<MessageType name="OrderSolicitation"/>
+			<MessageType name="OrderSolicitation" />
 			<!-- =================================================== -->
 			<MessageType name="SendOrder">
 				<!-- =================================================== -->
-				<Attribute name="pizzaType" type="Integer"/>
+				<Attribute name="pizzaType" type="Integer" />
 			</MessageType>
 			<!-- =================================================== -->
 			<MessageType name="ConfirmOrder">
 				<!-- =================================================== -->
-				<Attribute name="orderNo" type="Integer"/>
+				<Attribute name="orderNo" type="Integer" />
 			</MessageType>
 			<!-- =================================================== -->
 			<MessageType name="ProductionOrder">
 				<!-- =================================================== -->
-				<Attribute type="Integer" name="orderNo"/>
-				<Attribute type="Integer" name="pizzaType"/>
-				<Attribute type="Integer" name="custID"/>
+				<Attribute type="Integer" name="orderNo" />
+				<Attribute type="Integer" name="pizzaType" />
+				<Attribute type="Integer" name="custID" />
 			</MessageType>
 			<!-- =================================================== -->
 			<MessageType name="OrderPrepared">
 				<!-- =================================================== -->
-				<Attribute type="Integer" name="orderNo"/>
-				<Attribute type="Integer" name="pizzaType"/>
-				<Attribute type="Integer" name="custID"/>
+				<Attribute type="Integer" name="orderNo" />
+				<Attribute type="Integer" name="pizzaType" />
+				<Attribute type="Integer" name="custID" />
 			</MessageType>
 			<!-- =================================================== -->
-			<MessageType name="AskOrderNo"/>
+			<MessageType name="AskOrderNo" />
 			<!-- =================================================== -->
 			<MessageType name="ReplyOrderNo">
 				<!-- =================================================== -->
-				<Attribute type="Integer" name="orderNo"/>
+				<Attribute type="Integer" name="orderNo" />
 			</MessageType>
 			<!-- =================================================== -->
-			<MessageType name="OrderArrived"/>
+			<MessageType name="OrderArrived" />
 			<!-- =================================================== -->
 			<MessageType name="HereIsYourPizza"/>
 			<!-- =================================================== -->
 			<ExogenousEventType name="CustomerArrival">
 				<!-- =================================================== -->
 				<Periodicity>
-					<ValueExpr language="Java">Global.twoDice(10)</ValueExpr>
+					<ValueExpr language="Java JavaScript">Global.twoDice(10)</ValueExpr>
 				</Periodicity>
 			</ExogenousEventType>
 			<!-- =================================================== -->
-			<CausedEventType name="StartMenuBoardService"/>
+			<CausedEventType name="StartMenuBoardService" />
 			<!-- =================================================== -->
-			<CausedEventType name="StartPickupWindowService"/>
-			<!-- =================================================== -->
-			
-			<!-- =================================================== -->
-			<ObjectType name="Queue">
-				<!-- =================================================== -->
-				<Attribute name="lengthOfQueue" type="Integer"/>
-			</ObjectType>
-
+			<CausedEventType name="StartPickupWindowService" />
 			<!-- =================================================== -->
 			<AgentType name="MenuBoard">
 				<!-- =================================================== -->
 				<Attribute name="maxMenuBoardQL" type="Integer" />
 				<Attribute name="menuBoardBusy" type="Boolean" />
+				<Attribute name="queueLength" type="Integer" />
 				<ReferenceProperty name="menuBoardQueue" type="Customer" upperMultiplicity="unbounded">
 					<documentation>
 						This property represents a first-in-first-out queue.
@@ -258,7 +273,7 @@ int i=messageInfo.indexOf("and");
 evt.getSenderIdRef() + "and" + evt.getOccurrenceTime()
 								]]></ReminderMsg>
 								<Delay>
-									<ValueExpr language="Java">Global.twoDice(10)</ValueExpr>
+									<ValueExpr language="Java JavaScript">Global.twoDice(10)</ValueExpr>
 								</Delay>
 							</ReminderEventExpr>
 						</SCHEDULE-EVT>
@@ -344,7 +359,7 @@ int j= substr.indexOf("and");
 (mes.getOrderNo()+"and"+mes.getPizzaType()+"and"+mes.getCustID())
 								]]></ReminderMsg>
 								<Delay>
-									<ValueExpr language="Java">Global.twoDice(8)</ValueExpr>
+									<ValueExpr language="Java JavaScript">Global.twoDice(8)</ValueExpr>
 								</Delay>
 							</ReminderEventExpr>
 						</SCHEDULE-EVT>
@@ -389,6 +404,7 @@ Integer.parseInt(getMessagePart(evt.getReminderMsg(),3))
 				<!-- =========================== -->
 				<Attribute name="maxPickupQL" type="Integer" />
 				<Attribute name="pickupWindowBusy" type="Boolean" />
+				<Attribute name="queueLength" type="Integer" />
 				<ReferenceProperty name="pickupWindowQueue" type="Customer" upperMultiplicity="unbounded">
 					<documentation>
 						This property represents a first-in-first-out queue. 
@@ -490,10 +506,10 @@ Integer.parseInt(evt.getReminderMsg())
 			<!-- =================================================== -->
 			<AgentType name="Customer">
 				<!-- =================================================== -->
-				<Attribute name="arrivalTime" type="Integer"/>
-				<Attribute name="waitingForPWFree" type="Boolean"/>
-				<Attribute name="orderNo" type="Integer"/>
-				<Attribute name="waitingForOrderToArrive" type="Boolean"/>
+				<Attribute name="arrivalTime" type="Integer" />
+				<Attribute name="waitingForPWFree" type="Boolean" />
+				<Attribute name="orderNo" type="Integer" />
+				<Attribute name="waitingForOrderToArrive" type="Boolean" />
 				<!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->
 				<SubjectiveFunction name="randomPizzaType" resultType="Integer">
 					<!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->
@@ -569,10 +585,10 @@ cust.getOrderNo()
 							his orderNo information.
 						</description>
 					</documentation>
-					<WHEN eventType="InMessageEvent" messageType="OrderArrived"/>
+					<WHEN eventType="InMessageEvent" messageType="OrderArrived" />
 					<DO>
 						<UPDATE-AGT>
-							<Slot property="waitingForOrderToArrive" value="false"/>
+							<Slot property="waitingForOrderToArrive" value="false" />
 						</UPDATE-AGT>
 					</DO>
 				</ReactionRule>
@@ -586,7 +602,7 @@ cust.getOrderNo()
 							his orderNo information.
 						</description>
 					</documentation>
-					<WHEN eventType="InMessageEvent" messageType="ConfirmOrder"/>
+					<WHEN eventType="InMessageEvent" messageType="ConfirmOrder" />
 					<DO>
 						<SCHEDULE-EVT>
 							<OutMessageEventExpr messageType="ConfirmOrder" receiverIdRefs="0">
@@ -604,14 +620,20 @@ cust.getOrderNo()
 			<EnvironmentRule name="CustomerArrival_Rule">
 				<!-- ======================================================== -->
 				<documentation>
-					<description>When a car arrives at the Fast Food Restaurant, and the Menu Board queue is full, the customer leaves and he is considered a dissatisfied customer. If Menu Board queue is not full then the car gets in the waiting line as a new customer. Furthermore, If the Menu Board service is not busy, a StartMenuBoardService is created. </description>
+					<description>
+						When a car arrives at the Fast Food Restaurant, and the Menu Board 
+						queue is full, the customer leaves and he is considered a dissatisfied customer. 
+						If Menu Board queue is not full then the car gets in the waiting line as a new 
+						customer. Furthermore, If the Menu Board service is not busy, a StartMenuBoardService 
+						is created. 
+					</description>
 				</documentation>
 				<WHEN eventType="CustomerArrival" eventVariable="evt"/>
 				<FOR objectVariable="mb" objectType="MenuBoard" objectIdRef="1"/>
 				<FOR objectVariable="q1" objectType="Queue" objectIdRef="6"/>
 				<IF language="Java"><![CDATA[
 mb.getMenuBoardQueue().size() >= mb.getMaxMenuBoardQL()
-        ]]></IF>
+                ]]></IF>
 				<THEN>
 					<UPDATE-ENV>
 						<UpdateStatisticsVariable variable="numberOfLostCustomers">
@@ -665,7 +687,11 @@ SimStatistics.numberOfCustomers.getValue() + 1
 			<EnvironmentRule name="StartMenuBoardService_Rule">
 				<!-- ================================================================ -->
 				<documentation>
-					<description> When the MenuBoard Service starts, the menuBoardBusy variable is set to true. The customer is asked with the help of an InMessage eventType to place the order. </description>
+					<description> 
+						When the MenuBoard Service starts, the menuBoardBusy variable 
+						is set to true. The customer is asked with the help of an InMessage eventType 
+						to place the order. 
+					</description>
 				</documentation>
 				<WHEN eventType="StartMenuBoardService"/>
 				<FOR objectVariable="mb" objectType="MenuBoard" objectIdRef="1"/>
@@ -690,7 +716,12 @@ SimStatistics.numberOfCustomers.getValue() + 1
 			<EnvironmentRule name="EndMenuBoardService_Rule">
 				<!-- ================================================================ -->
 				<documentation>
-					<description> When a menu board service ends, but the PickupWindowQueue is full, the customer cannot move forward. We just update the customer attribute, so we know that he is waiting for a free place in the Pickup Window waiting line.</description>
+					<description> 
+						When a menu board service ends, but the PickupWindowQueue is full, 
+						the customer cannot move forward. We just update the customer attribute, 
+						so we know that he is waiting for a free place in the Pickup Window waiting 
+						line.
+					</description>
 				</documentation>
 				<WHEN eventType="OutMessageEvent" messageType="ConfirmOrder" messageVariable="mes"/>
 				<FOR objectVariable="mb" objectType="MenuBoard" objectIdRef="1"/>
@@ -770,7 +801,11 @@ mb.getMenuBoardQueue().size() > 0
 			<EnvironmentRule name="StartPickupWindowService_Rule">
 				<!-- ======================================================================-->
 				<documentation>
-					<description> On StartPickupWindowService, the pickupWindowBusy variable is set to true, and, when the customer's order has already arrived, an HereIsYourPizza message is created with appropriate delay. </description>
+					<description> 
+						On StartPickupWindowService, the pickupWindowBusy variable is set to true, 
+						and, when the customer's order has already arrived, an HereIsYourPizza message is 
+						created with appropriate delay. 
+					</description>
 				</documentation>
 				<WHEN eventType="StartPickupWindowService"/>
 				<FOR objectVariable="pw" objectType="PickupWindow" objectIdRef="2"/>
@@ -798,7 +833,11 @@ pw.getPickupWindowQueue().size()>0 && cust1.isWaitingForOrderToArrive()
 			<EnvironmentRule name="StartPickupWindowService_AddRemoveFromBMQueue_Rule">
 			<!-- ======================================================================-->
 				<documentation>
-					<description> When a customer is waiting for PW Queue to be free, it should be moved from MB Queue to PW Queue as soon as it is a free place in the PW Queue. Also we need to shedule a new StartMenuBoardService event.</description>
+					<description> 
+						When a customer is waiting for PW Queue to be free, it should be 
+						moved from MB Queue to PW Queue as soon as it is a free place in the PW Queue. 
+						Also we need to shedule a new StartMenuBoardService event.
+					</description>
 				</documentation>
 				<WHEN eventType="StartPickupWindowService"/>
 				<FOR objectVariable="mb" objectType="MenuBoard" objectIdRef="1" />
@@ -850,7 +889,11 @@ mb.getMenuBoardQueue().size() > 0
 			<EnvironmentRule name="EndPickupWindowService_Rule">
 				<!-- ==================================================================== -->
 				<documentation>
-					<description> On EndPickupWindowService, when the queue is not full, the current customer object is removed from the queue and destroyed. Furthermore, if the queue is empty, the pickup window is no longer busy. Otherwise, a new StartPickupWindowService is created. </description>
+					<description> On EndPickupWindowService, when the queue is not full, the current 
+						customer object is removed from the queue and destroyed. Furthermore, if the 
+						queue is empty, the pickup window is no longer busy. Otherwise, a new 
+						StartPickupWindowService is created. 
+					</description>
 				</documentation>
 				<WHEN eventType="OutMessageEvent" messageType="HereIsYourPizza" eventVariable="evt"/>
 				<FOR objectVariable="mb" objectType="MenuBoard" objectIdRef="1"/>
@@ -949,7 +992,10 @@ SimStatistics.cumulativeResponseTime.getValue() + evt.getOccurrenceTime() - cust
 			<EnvironmentRule name="OrderPrepared_Rule">
 				<!-- ============================================================================= -->
 				<documentation>
-					<description> When an order is prepared, the Kitchen Service send it to the PW Service. The PW Service asks the client which is at the desk what is his orderNo (only if the client is waiting for his order to arrive).</description>
+					<description> When an order is prepared, the Kitchen Service send it to the PW Service.
+						The PW Service asks the client which is at the desk what is his orderNo (only if 
+						the client is waiting for his order to arrive).
+					</description>
 				</documentation>
 				<WHEN eventType="OutMessageEvent" messageType="OrderPrepared" messageVariable="mes"/>
 				<FOR objectVariable="pw" objectType="PickupWindow" objectIdRef="2"/>
@@ -1008,37 +1054,29 @@ mes.getCustID()
 	<!-- =================================================== -->		
 		<Agent type="MenuBoard" name="MB" id="1">
 		<!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->
-			<Slot property="menuBoardBusy" value="false"/>
-			<Slot property="maxMenuBoardQL" value="5"/>
+			<Slot property="menuBoardBusy" value="false" />
+			<Slot property="maxMenuBoardQL" value="5" />
+			<Slot property="queueLength" value="0" />
 			<Slot property="menuBoardQueue">
 				<ValueExpr language="Java"><![CDATA[ new ArrayList<Customer>()]]></ValueExpr>
 				<ValueExpr language="JavaScript">new js.util.ArrayList()</ValueExpr>
 			</Slot>
 		</Agent>
 		<!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->
-		<Agent type="Kitchen" name="K" id="5"/>
-		<!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->
 		<Agent type="PickupWindow" name="PW" id="2">
 		<!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->
-			<Slot property="pickupWindowBusy" value="false"/>
-			<Slot property="maxPickupQL" value="5"/>
+			<Slot property="pickupWindowBusy" value="false" />
+			<Slot property="maxPickupQL" value="5" />
+			<Slot property="queueLength" value="0" />
 			<Slot property="pickupWindowQueue">
 				<ValueExpr language="Java"><![CDATA[ new ArrayList<Customer>()]]></ValueExpr>
 				<ValueExpr language="JavaScript">new js.util.ArrayList()</ValueExpr>
 			</Slot>
 		</Agent>
 		<!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->
-		<Object type="Queue" id="6" name="MBQueue">
+		<Agent type="Kitchen" name="K" id="3" />
 		<!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->
-			<Slot property="lengthOfQueue" value="0"/>
-		</Object>
-		<!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->
-		<Object type="Queue" id="7" name="PWQueue">
-		<!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->
-			<Slot property="lengthOfQueue" value="0"/>
-		</Object>
-		<!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->
-		<ExogenousEvent type="CustomerArrival" occurrenceTime="1"/>
+		<ExogenousEvent type="CustomerArrival" occurrenceTime="1" />
 		<!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->
 	</InitialState>
 	<!-- =================================================== -->
@@ -1097,6 +1135,41 @@ mes.getCustID()
 					<Currency>EUR(&#8364;)</Currency>
 				</Format>
 			</StatisticsVariableUI>
+			<StatisticsVariableUI variable="menuBoardUtilization">
+				<Label>
+					<Text xml:lang="en">Menu board utilization</Text>
+					<Text xml:lang="de">Auftragsannahme-Nutzung</Text>
+					<Text xml:lang="fr">Utilisation du service pour la demande de nourriture</Text>
+					<Text xml:lang="es">El uso del servicio de recepcion de pedidos comidas</Text>
+					<Text xml:lang="ro">Utilizarea serviciului de preluare comenzi</Text>
+				</Label>
+				<Hint>
+					<Text xml:lang="en">What is the utilization of the restaurant's menu board (order taking service)?</Text>
+					<Text xml:lang="de">Wie hoch ist der Nutzungsgrad der Auftragsannahme?</Text>
+					<Text xml:lang="fr">Quel est le temps moyen de l'utilisation du service pour la demande de nourriture?</Text>
+					<Text xml:lang="es">Cuál es el tiempo medio empleado por el uso del servicio de recepcion de pedidos comidas?</Text>
+					<Text xml:lang="ro">Care este timpul mediu de utilizare a serviciului de preluare comenzi?</Text>
+				</Hint>
+				<Format decimalPlaces="2"><Math>%</Math></Format>
+			</StatisticsVariableUI>
+			
+			<StatisticsVariableUI variable="pickupWindowUtilization">
+				<Label>
+					<Text xml:lang="en">Pickup window utilization</Text>
+					<Text xml:lang="de">Ausgabefenster-Nutzung</Text>
+					<Text xml:lang="fr">Utilisation du distributeur de nourriture</Text>
+					<Text xml:lang="es">El uso del servicio de entrega de comidas</Text>
+					<Text xml:lang="ro">Utilizarea serviciului de distributie comenzi</Text>
+				</Label>
+				<Hint>
+					<Text xml:lang="en">What is the utilization of the pickup window?</Text>
+					<Text xml:lang="de">Wie hoch ist der Nutzungsgrad des Ausgabefensters?</Text>
+					<Text xml:lang="fr">Quel est le temps moyen de l'utilisation du service pour la distribution de nourriture?</Text>
+					<Text xml:lang="es">Cuál es el tiempo medio empleado por el uso del servicio para entrega de comidas?</Text>
+					<Text xml:lang="ro">Care este timpul mediu de utilizare a serviciului de distributie comenzi?</Text>
+				</Hint>
+				<Format decimalPlaces="1"><Math>%</Math></Format>
+			</StatisticsVariableUI>
 			<StatisticsVariableUI variable="meanResponseTime">
 				<Label>
 					<Text xml:lang="en">Mean response time</Text>
@@ -1146,54 +1219,92 @@ mes.getCustID()
 					<Text xml:lang="ro">Care este dimensiunea maxima a listei de asteptare pentru serviciul de distributie comenzi?</Text>
 				</Hint>
 			</StatisticsVariableUI>
+			<StatisticsVariableUI variable="menuBoardQueueLength" comparisonGroup="MenuBoard_PickupWindow" showChart="true">
+				<Label>
+					<Text xml:lang="en">Length of menu board queue</Text>
+					<Text xml:lang="de">Länge der Auftragsannahme-Warteschlange</Text>
+					<Text xml:lang="fr">Dimension de la queue pour la demande de nourriture</Text>
+					<Text xml:lang="es">Longitud de cola para recepcion de pedidos comidas</Text>
+					<Text xml:lang="ro">Dimensiunea listei de asteptare pentru serviciul de preluare comenzi</Text>
+				</Label>
+				<Hint>
+					<Text xml:lang="en">What is the length of the menu board queue?</Text>
+					<Text xml:lang="de">Was ist die Länge der Auftragsannahme-Warteschlange?</Text>
+					<Text xml:lang="fr">Quelle est la dimension de la queue pour la demande de nourriture?</Text>
+					<Text xml:lang="es">Cual es el tamaño de la cola para entrega de comidas?</Text>
+					<Text xml:lang="ro">Care este dimensiunea listei de asteptare pentru serviciul de preluare comenzi?</Text>
+				</Hint>
+			</StatisticsVariableUI>
+			<StatisticsVariableUI variable="pickupWindowQueueLength" comparisonGroup="MenuBoard_PickupWindow" showChart="true">
+				<Label>
+					<Text xml:lang="en">Length of pickup window queue</Text>
+					<Text xml:lang="de">Länge der Ausgabefenster-Warteschlange</Text>
+					<Text xml:lang="fr">Dimension de la queue pour la distribution de nourriture</Text>
+					<Text xml:lang="es">Longitud de cola para entrega de comidas</Text>
+					<Text xml:lang="ro">Dimensiunea listei de asteptare pentru serviciul de distributie comenzi</Text>
+				</Label>
+				<Hint>
+					<Text xml:lang="en">What is the length of the pickup window queue?</Text>
+					<Text xml:lang="de">Was ist die Länge der Ausgabefenster-Warteschlange?</Text>
+					<Text xml:lang="fr">Quelle est la dimension de la queue pour la distribution de nourriture?</Text>
+					<Text xml:lang="es">Cual es el tamaño de la cola para entrega de comidas?</Text>
+					<Text xml:lang="ro">Care este dimensiunea listei de asteptare pentru serviciul de distributie comenzi?</Text>
+				</Hint>
+			</StatisticsVariableUI>
 		</StatisticsUI>
 		<!-- ================================================== -->
 		<AnimationUI>
-		<!-- ================================================== -->
+			<!-- ================================================== -->
 			<Views>
 				<SpaceView>
-					<TwoDimensionalSpaceView2D backgroundColor="darkgrey"/>
+					<TwoDimensionalSpaceView2D backgroundColor="white" />
 				</SpaceView>
-				<!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->
-				<ObjectView objectType="MenuBoard">
-				<!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->
-					<Shape2D x="600px" y="250px">
-						<Rectangle fill="green" height="50" width="50" stroke="black" strokeWidth="10">
-							<ShapePropertyVisualizationMap shapeProperty="fill" property="menuBoardBusy" mapType="equalityCaseWise" v0="green" a0="false" a1="true" v1="red"/>
-						</Rectangle>
+				<!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->
+				<ObjectView objectType="MenuBoard" displayName="true" objectIdRef="1">
+					<!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->
+					<Shape2D x="40%" y="35%">
+						<Square width="100" stroke="darkgrey" strokeWidth="30">
+							<ShapePropertyVisualizationMap shapeProperty="fill" property="menuBoardBusy"
+								mapType="equalityCaseWise" v0="green" a0="false" a1="true" v1="red" />
+						</Square>
 					</Shape2D>
-					<DisplayInfo content="Menu Board" />
-				</ObjectView>
-				<!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->
-				<ObjectView objectType="PickupWindow">
-				<!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->
-					<Shape2D x="250px" y="250px">
-						<Rectangle fill="green" width="50" height="50" stroke="black" strokeWidth="10">
-							<ShapePropertyVisualizationMap shapeProperty="fill" property="pickupWindowBusy" mapType="equalityCaseWise" v0="green" a0="false" a1="true" v1="red"/>
-						</Rectangle>
+					<DisplayInfo property="queueLength" content=" customers" />
+					<AttachedShape2D offsetX="-70px" offsetY="0px">
+						<Shape2D>
+							<Rectangle positioning="RightCenter" fill="yellow" width="1" height="100">
+								<ShapePropertyVisualizationMap shapeProperty="width" property="queueLength"
+									mapType="polynomial" a0="0" a1="40" />
+								<ShapePropertyVisualizationMap shapeProperty="texture" property="queueLength"
+									mapType="equalityCaseWise" a0="0" v0="Queue_Cmon-Fotolia.jpg" a1="1"
+									v1="Queue_Cmon-Fotolia_1.jpg" a2="2" v2="Queue_Cmon-Fotolia_2.jpg" a3="3"
+									v3="Queue_Cmon-Fotolia_3.jpg" a4="4" v4="Queue_Cmon-Fotolia_4.jpg" a5="5" v5="Queue_Cmon-Fotolia_5.jpg"/>
+							</Rectangle>
+						</Shape2D>
+					</AttachedShape2D>
+				</ObjectView>	
+				<!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->
+				<ObjectView objectType="PickupWindow" displayName="true" objectIdRef="2">
+					<!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->
+					<Shape2D x="80%" y="35%">
+						<Square width="100" stroke="darkgrey" strokeWidth="30">
+							<ShapePropertyVisualizationMap shapeProperty="fill" property="pickupWindowBusy"
+								mapType="equalityCaseWise" v0="green" a0="false" a1="true" v1="red" />
+						</Square>
 					</Shape2D>
-					<DisplayInfo content="Pickup Window" />
-				</ObjectView>
-				<!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->
-				<ObjectView objectType="Queue" objectIdRef="7">
-				<!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->
-					<Shape2D x="225px" y="300px">
-						<Rectangle positioning="LeftCenter" fill="yellow" height="10" width="1" stroke="black" strokeWidth="2">
-							<ShapePropertyVisualizationMap shapeProperty="width" property="lengthOfQueue" mapType="polynomial" a0="0" a1="50"/>
-						</Rectangle>
-					</Shape2D>
-					<DisplayInfo content="customers"  property="lengthOfQueue"/>
-				</ObjectView>
-				<!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->
-				<ObjectView objectType="Queue" objectIdRef="6">
-				<!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->
-					<Shape2D x="575px" y="300px">
-						<Rectangle positioning="LeftCenter" fill="yellow" height="10" width="1" stroke="black" strokeWidth="2">
-							<ShapePropertyVisualizationMap shapeProperty="width" property="lengthOfQueue" mapType="polynomial" a0="0" a1="50"/>
-						</Rectangle>
-					</Shape2D>
-					<DisplayInfo content="customers" property="lengthOfQueue" />
-				</ObjectView>
+					<DisplayInfo property="queueLength" content=" customers" />
+					<AttachedShape2D offsetX="-70px" offsetY="0px">
+						<Shape2D>
+							<Rectangle positioning="RightCenter" fill="yellow" width="1" height="100">
+								<ShapePropertyVisualizationMap shapeProperty="width" property="queueLength"
+									mapType="polynomial" a0="0" a1="40" />
+								<ShapePropertyVisualizationMap shapeProperty="texture" property="queueLength"
+									mapType="equalityCaseWise" a0="0" v0="Queue_Cmon-Fotolia.jpg" a1="1"
+									v1="Queue_Cmon-Fotolia_1.jpg" a2="2" v2="Queue_Cmon-Fotolia_2.jpg" a3="3"
+									v3="Queue_Cmon-Fotolia_3.jpg" a4="4" v4="Queue_Cmon-Fotolia_4.jpg" a5="5" v5="Queue_Cmon-Fotolia_5.jpg"/>
+							</Rectangle>
+						</Shape2D>
+					</AttachedShape2D>
+				</ObjectView>	
 			</Views>
 		</AnimationUI>
 	</UserInterface>
