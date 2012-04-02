@@ -84,11 +84,11 @@
 				<Source computeOnlyAtEnd="true">
 					<ValueExpr language="Java"> 
 						(double) SimStatistics.cumulativeResponseTime.getValue() 
-						/ SimStatistics.numberOfDepartures.getValue()
+						/ SimStatistics.nrOfDepartures.getValue()
 					</ValueExpr>
 					<ValueExpr language="JavaScript">
 						SimStatistics.cumulativeResponseTime.getValue() 
-						/ SimStatistics.numberOfDepartures.getValue()
+						/ SimStatistics.nrOfDepartures.getValue()
 					</ValueExpr>
 				</Source>
 			</Variable>	
@@ -245,7 +245,7 @@ int i=messageInfo.indexOf("and");
  }
   return resultInfo; 
   ]]></Body>
-					<Body language="JavaScript"><![CDATA[ 
+  <Body language="JavaScript"><![CDATA[ 
 var  resultInfo = ""; 
 	if (argumentIndex == 1) {	
   		resultInfo = messageInfo[0];                  
@@ -272,7 +272,7 @@ var  resultInfo = "";
 						eventVariable="evt" />
 					<DO>
 						<SCHEDULE-EVT>
-							<OutMessageEventExpr messageType="ProductionOrder" receiverIdRefs="5">
+							<OutMessageEventExpr messageType="ProductionOrder" receiverIdRefs="3">
 								<Slot property="pizzaType">
 									<ValueExpr language="Java JavaScript">this.mes.getPizzaType()</ValueExpr>
 								</Slot>
@@ -342,8 +342,8 @@ parseInt( this.getMessagePart( this.evt.getReminderMsg(),2))
 							needed parts. 
 						</description>
 					</documentation>
-					<Parameter name="messageInfo" type="String"/>
-					<Parameter name="argumentIndex" type="Integer"/>
+					<Parameter name="messageInfo" type="String" />
+					<Parameter name="argumentIndex" type="Integer" />
 					<Body language="Java"><![CDATA[
 String resultInfo = ""; 
 int i = messageInfo.indexOf("and");
@@ -361,7 +361,7 @@ int j= substr.indexOf("and");
  }    
    return resultInfo; 
         ]]></Body>
-					<Body language="JavaScript"><![CDATA[
+	<Body language="JavaScript"><![CDATA[
    var resultInfo = ""; 
    if (argumentIndex == 1) {
   	resultInfo = messageInfo[0]; 
@@ -454,19 +454,19 @@ parseInt( this.getMessagePart( this.evt.getReminderMsg(),3))
 						This property represents a first-in-first-out queue. 
 					</documentation>
 				</ReferenceProperty>
-				<!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->
+				<!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->
 				<Function name="pizzaPrice" resultType="Float">
-					<!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->
+				<!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->
 					<Parameter name="pizzaType" type="Integer" />
 					<Body language="Java"><![CDATA[
 // old calculation for the price of an order: double[] price = {8.90, 9.80, 8.50, 7.20, 7.80, 5.20};
 double[] price = {0.0, 0.0, 2.0, 4.0, 6.0, 8.0, 10.0, 12.0, 14.0, 16.0, 18.0, 20.0, 22.0};
-return price[(int)pizzaType];
+	return price[(int)pizzaType];
 	               ]]></Body>
 					<Body language="JavaScript"><![CDATA[
 // old calculation for the price of an order: var price = [8.90, 9.80, 8.50, 7.20, 7.80, 5.20];
 var price = [0.0, 0.0, 2.0, 4.0, 6.0, 8.0, 10.0, 12.0, 14.0, 16.0, 18.0, 20.0, 22.0];
-return price[pizzaType];
+	return price[pizzaType];
 				   ]]></Body>
 				</Function>
 				<BeliefEntityType name="Order">
@@ -478,7 +478,7 @@ return price[pizzaType];
 					<documentation>
 						<description> 
 							The PW agent receives the prepared order from the Kitchen agent (i.e. the
-							orderNo) He uses this information and he creates for each new Customer agent a new Order
+							orderNo). He uses this information and he creates for each new Customer agent a new Order
 							BeliefEntityType for which it sets the orderNo attribute. 
 						</description>
 					</documentation>
@@ -519,7 +519,7 @@ this.mes.getOrderNo() == this.order.getOrderNo()
 								<ReceiverIdRef language="Java JavaScript">this.evt.getSenderIdRef()</ReceiverIdRef>
 							</OutMessageEventExpr>
 							<ReminderEventExpr>
-								<ReminderMsg language="Java JavaScript">this.evt.getSenderIdRef() + " "</ReminderMsg>
+								<ReminderMsg language="Java JavaScript">this.evt.getSenderIdRef() + ""</ReminderMsg>
 								<Delay>
 									<ValueExpr language="Java JavaScript">Global.twoDice(10)</ValueExpr>
 								</Delay>
@@ -687,12 +687,10 @@ this.mb.getMenuBoardQueue().size() >= this.mb.getMaxMenuBoardQL()
 						<UpdateStatisticsVariable variable="numberOfLostCustomers">
 							<ValueExpr language="Java JavaScript"><![CDATA[
 SimStatistics.numberOfLostCustomers.getValue() + 1
-						  ]]></ValueExpr>
+						   ]]></ValueExpr>
 						</UpdateStatisticsVariable>
 						<UpdateObject objectVariable="mb">
-							<Slot property="queueLength">
-								<ValueExpr language="Java JavaScript">this.mb.getMenuBoardQueue().size()</ValueExpr>
-							</Slot>
+							<Increment property="queueLength" value="1" />
 						</UpdateObject>
 					</UPDATE-ENV>
 				</THEN>
@@ -706,9 +704,7 @@ SimStatistics.numberOfLostCustomers.getValue() + 1
 							</Agent>
 						</Create>
 						<UpdateObject objectVariable="mb">
-							<Slot property="queueLength">
-								<ValueExpr language="Java">this.mb.getMenuBoardQueue().size() + 1</ValueExpr>
-							</Slot>
+							<Increment property="queueLength" value="1" />
 							<MultiValuedSlot property="menuBoardQueue">
 								<AddLast itemVariable="customer" />
 							</MultiValuedSlot>
@@ -768,9 +764,9 @@ SimStatistics.numberOfCustomers.getValue() + 1
 						line.
 					</description>
 				</documentation>
-				<WHEN eventType="OutMessageEvent" messageType="ConfirmOrder" messageVariable="mes"/>
-				<FOR-ObjectVariable variable="mb" objectType="MenuBoard" objectIdRef="1"/>
-				<FOR-ObjectVariable variable="pw" objectType="PickupWindow" objectIdRef="2"/>
+				<WHEN eventType="OutMessageEvent" messageType="ConfirmOrder" messageVariable="mes" />
+				<FOR-ObjectVariable variable="mb" objectType="MenuBoard" objectIdRef="1" />
+				<FOR-ObjectVariable variable="pw" objectType="PickupWindow" objectIdRef="2" />
 				<FOR-ObjectVariable variable="cust" objectType="Customer">
 					<ObjectRef language="Java">this.mb.getMenuBoardQueue().get(0)</ObjectRef>
 				</FOR-ObjectVariable>
@@ -784,13 +780,11 @@ this.pw.getPickupWindowQueue().size() >= this.pw.getMaxPickupQL()
 							<Slot property="orderNo">
 							<ValueExpr language="Java JavaScript"><![CDATA[
 this.mes.getOrderNo()
-						]]></ValueExpr>
+						    ]]></ValueExpr>
 							</Slot>
 						</UpdateObject>
 						<UpdateObject objectVariable="pw">
-							<Slot property="queueLength">
-								<ValueExpr language="Java JavaScript">this.pw.getPickupWindowQueue().size()</ValueExpr>
-							</Slot>
+						  <Increment property="queueLength" value="1" />
 						</UpdateObject>
 					</UPDATE-ENV>
 				</THEN>
@@ -806,20 +800,16 @@ this.mes.getOrderNo()
 			    			<Slot property="menuBoardBusy">
 			    				<ValueExpr language="Java JavaScript">this.mb.getMenuBoardQueue().size() == 1 ? false :true</ValueExpr>
 			    			</Slot>
-			    			<Slot property="queueLength">
-			    				<ValueExpr language="Java JavaScript">this.mb.getMenuBoardQueue().size() - 1</ValueExpr>
-			    			</Slot>
 			    			<MultiValuedSlot property="menuBoardQueue">
 			    				<RemoveFirst itemVariable="cust" />
 			    			</MultiValuedSlot>
+			    			<Decrement property="queueLength" value="1" />
 			    		</UpdateObject>
 			    		<UpdateObject objectVariable="pw">
-			    			<Slot property="queueLength">
-			    				<ValueExpr language="Java JavaScript">this.pw.getPickupWindowQueue().size() + 1</ValueExpr>
-			    			</Slot>
 			    			<MultiValuedSlot property="pickupWindowQueue">
 			    				<AddLast itemVariable="cust" />
 			    			</MultiValuedSlot>
+			    			<Increment property="queueLength" value="1" />
 			    		</UpdateObject>
 			    	</UPDATE-ENV>
 			    	<SCHEDULE-EVT>
@@ -848,7 +838,7 @@ this.mb.getMenuBoardQueue().size() > 0
 				</documentation>
 				<WHEN eventType="StartPickupWindowService" />
 				<FOR-ObjectVariable variable="pw" objectType="PickupWindow" objectIdRef="2" />
-				<FOR-ObjectVariable variable="cust1" objectType="Customer">
+				<FOR-ObjectVariable variable="cust" objectType="Customer">
 					<ObjectRef language="Java JavaScript">this.pw.getPickupWindowQueue().get(0)</ObjectRef>
 				</FOR-ObjectVariable>			
 				<DO>
@@ -860,10 +850,10 @@ this.mb.getMenuBoardQueue().size() > 0
 					<SCHEDULE-EVT>
 						<InMessageEventExpr messageType="AskOrderNo">
 							<Condition language="Java JavaScript"><![CDATA[
-this.pw.getPickupWindowQueue().size() > 0 && this.cust1.isWaitingForOrderToArrive()
+this.pw.getPickupWindowQueue().size() > 0 && this.cust.isWaitingForOrderToArrive()
                            ]]></Condition>
 							<SenderIdRef language="Java JavaScript">this.pw.getId()</SenderIdRef>
-							<ReceiverIdRef language="Java JavaScript">this.cust1.getId()</ReceiverIdRef>
+							<ReceiverIdRef language="Java JavaScript">this.cust.getId()</ReceiverIdRef>
 						</InMessageEventExpr>
 					</SCHEDULE-EVT>
 				</DO>
@@ -878,7 +868,7 @@ this.pw.getPickupWindowQueue().size() > 0 && this.cust1.isWaitingForOrderToArriv
 						Also we need to shedule a new StartMenuBoardService event.
 					</description>
 				</documentation>
-				<WHEN eventType="StartPickupWindowService"/>
+				<WHEN eventType="StartPickupWindowService" />
 				<FOR-ObjectVariable variable="mb" objectType="MenuBoard" objectIdRef="1" />
 				<FOR-ObjectVariable variable="pw" objectType="PickupWindow" objectIdRef="2" />
 				<FOR-ObjectVariable variable="cust" objectType="Customer">
@@ -890,20 +880,16 @@ this.mb.getMenuBoardQueue().size() > 0 && this.mb.getMenuBoardQueue().get(0).isW
 				<THEN>
 					<UPDATE-ENV>	
 						<UpdateObject objectVariable="mb">
-							<Slot property="queueLength">
-								<ValueExpr language="Java JavaScript">this.mb.getMenuBoardQueue().size() - 1</ValueExpr>
-							</Slot>
 							<MultiValuedSlot property="menuBoardQueue">
 								<RemoveFirst itemVariable="cust" />
 							</MultiValuedSlot>
+							<Decrement property="queueLength" value="1" />
 						</UpdateObject>
 						<UpdateObject objectVariable="pw">
-							<Slot property="queueLength">
-								<ValueExpr language="Java JavaScript">this.pw.getPickupWindowQueue().size() + 1</ValueExpr>
-							</Slot>
 							<MultiValuedSlot property="pickupWindowQueue">
 								<AddLast itemVariable="cust" />
 							</MultiValuedSlot>
+							<Increment property="queueLength" value="1" />
 						</UpdateObject>
 						<UpdateObject objectVariable="cust">
 							<Slot property="waitingForOrderToArrive" value="true" />
@@ -953,12 +939,10 @@ SimStatistics.cumulativeResponseTime.getValue() + this.evt.getOccurrenceTime() -
 							<Slot property="pickupWindowBusy">
 								<ValueExpr language="Java JavaScript">this.pw.getPickupWindowQueue().size() == 1 ? false : true</ValueExpr>
 							</Slot>
-							<Slot property="queueLength">
-								<ValueExpr language="Java JavaScript">this.pw.getPickupWindowQueue().size() - 1</ValueExpr>
-							</Slot>
 							<MultiValuedSlot property="pickupWindowQueue">
 								<RemoveFirst itemVariable="cust" />
 							</MultiValuedSlot>
+							<Decrement property="queueLength" value="1" />
 						</UpdateObject>
 						<DestroyObject objectVariable="cust" />
 					</UPDATE-ENV>
@@ -983,18 +967,16 @@ this.pw.getPickupWindowQueue().size() > 0
 SimStatistics.cumulativeResponseTime.getValue() + this.evt.getOccurrenceTime() - this.cust.getArrivalTime()
                             ]]></ValueExpr>
 						</UpdateStatisticsVariable>
-						<UpdateObject objectVariable="pw">
-							<Slot property="queueLength">
-								<ValueExpr language="Java JavaScript">this.pw.getPickupWindowQueue().size() - 1</ValueExpr>
-							</Slot>
+						<UpdateObject objectVariable="pw">	
 							<MultiValuedSlot property="pickupWindowQueue">
 								<RemoveFirst itemVariable="cust" />
 							</MultiValuedSlot>
+							<Decrement property="queueLength" value="1" />
 						</UpdateObject>
 						<DestroyObject objectVariable="cust" />
 					</UPDATE-ENV>
 					<SCHEDULE-EVT>
-						<CausedEventExpr eventType="StartPickupWindowService"/>
+						<CausedEventExpr eventType="StartPickupWindowService" />
 						<InMessageEventExpr messageType="ConfirmOrder">
 							<Condition language="Java"><![CDATA[
 ( mb.getMenuBoardQueue().size() > 0) && ( mb.getMenuBoardQueue().get(0) != null) &&
@@ -1012,12 +994,12 @@ SimStatistics.cumulativeResponseTime.getValue() + this.evt.getOccurrenceTime() -
 ( this.mb.getMenuBoardQueue().get(0)).getId()
 							]]></ReceiverIdRef>
 							<Slot property="orderNo">
-								<ValueExpr language="Java"><![CDATA[
+							  <ValueExpr language="Java"><![CDATA[
 (( Customer)mb.getMenuBoardQueue().get(0)).getOrderNo()
-                               ]]></ValueExpr>
-								<ValueExpr language="JavaScript"><![CDATA[
+                              ]]></ValueExpr>
+						      <ValueExpr language="JavaScript"><![CDATA[
 ( this.mb.getMenuBoardQueue().get(0)).getOrderNo()
-							    ]]></ValueExpr>		
+							  ]]></ValueExpr>		
 							</Slot>
 						</InMessageEventExpr>
 						<InMessageEventExpr messageType="HereIsYourPizza" senderIdRef="2">
@@ -1046,12 +1028,12 @@ this.mes.getCustID()
 					<ValueExpr language="Java JavaScript"><![CDATA[
 this.mes.getPizzaType()					
 				 ]]></ValueExpr>
-				</FOR-DataVariable>
+				</FOR-DataVariable> 
 				<DO>
 					<UPDATE-ENV>
 						<UpdateStatisticsVariable variable="revenue">
 							<ValueExpr language="Java JavaScript"><![CDATA[
-SimStatistics.revenue.getValue() + this.pw.pizzaPrice(pizzaType)
+SimStatistics.revenue.getValue() + this.pw.pizzaPrice( pizzaType)
 						]]></ValueExpr>
 						</UpdateStatisticsVariable>
 					</UPDATE-ENV>
@@ -1068,7 +1050,7 @@ this.custID && ( this.pw.getPickupWindowQueue().get(0)).isWaitingForOrderToArriv
 							<ReceiverIdRef language="Java JavaScript">this.custID</ReceiverIdRef>
 						</InMessageEventExpr>
 						<InMessageEventExpr messageType="OrderPrepared" receiverIdRefs="2"
-							senderIdRef="5">
+							senderIdRef="3">
 							<Slot property="orderNo">
 								<ValueExpr language="Java JavaScript"><![CDATA[
 this.mes.getOrderNo()
@@ -1122,7 +1104,7 @@ this.mes.getCustID()
 		<!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->
 	</InitialState>
 	<!-- =================================================== -->
-	<UserInterface supportedLanguages="en">
+	<UserInterface supportedLanguages="en de">
 	<!-- ================================================== -->
 		<StatisticsUI>
 		<!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->
@@ -1135,10 +1117,10 @@ this.mes.getCustID()
 					<Text xml:lang="ro">Numar clienti</Text>
 				</Label>
 				<Hint>
-					<Text xml:lang="en">How many customers have entered the restaurant?</Text>
-					<Text xml:lang="de">Wieviele Kunden haben das Restaurant betreten?</Text>
-					<Text xml:lang="fr">Combien de clients sont entres dans le restaurant?</Text>
-					<Text xml:lang="es">Cuantos clientes han entrado en el restaurante?</Text>
+					<Text xml:lang="en">How many customers have entered the restaurant ?</Text>
+					<Text xml:lang="de">Wieviele Kunden haben das Restaurant betreten ?</Text>
+					<Text xml:lang="fr">Combien de clients sont entres dans le restaurant ?</Text>
+					<Text xml:lang="es">Cuantos clientes han entrado en el restaurante ?</Text>
 					<Text xml:lang="ro">Cati clienti are restaurantul?</Text>
 				</Hint>
 			</StatisticsVariableUI>
@@ -1152,10 +1134,11 @@ this.mes.getCustID()
 				</Label>
 				<Hint>
 					<Text xml:lang="en">How many customers have left because the line was too long?</Text>
-					<Text xml:lang="de">Wieviele Kunden sind weggegangen, weil die Warteschlange zu lang war?</Text>
-					<Text xml:lang="fr">Combien de clients ont quitte le restaurant parce que la queue ete trop longue?</Text>
-					<Text xml:lang="es">Cuantos clientes se han ido porque la linea es demasiado largo?</Text>
-					<Text xml:lang="ro">Cati clienti a pierdut restaurantul?</Text>
+					<Text xml:lang="de">Wieviele Kunden sind weggegangen, weil die Warteschlange zu lang war ?</Text>
+					<Text xml:lang="fr">Combien de clients ont quitte le restaurant parce que la queue ete trop
+						longue ?</Text>
+					<Text xml:lang="es">Cuantos clientes se han ido porque la linea es demasiado largo ?</Text>
+					<Text xml:lang="ro">Cati clienti a pierdut restaurantul ?</Text>
 				</Hint>
 			</StatisticsVariableUI>
 			<StatisticsVariableUI variable="revenue">
@@ -1167,11 +1150,11 @@ this.mes.getCustID()
 					<Text xml:lang="ro">Cifra de afaceri</Text>
 				</Label>
 				<Hint>
-					<Text xml:lang="en">How much revenue did the restaurant make?</Text>
-					<Text xml:lang="de">Wieviel Umsatz hat das Restaurant gemacht?</Text>
-					<Text xml:lang="fr">Quel est le chiffre d'affaires du restaurant?</Text>
-					<Text xml:lang="es">Cuál es el volumen de negocios del restaurante?</Text>
-					<Text xml:lang="ro">Care este cifra de afaceri a restaurantului?</Text>
+					<Text xml:lang="en">How much revenue did the restaurant make ?</Text>
+					<Text xml:lang="de">Wieviel Umsatz hat das Restaurant gemacht ?</Text>
+					<Text xml:lang="fr">Quel est le chiffre d'affaires du restaurant ?</Text>
+					<Text xml:lang="es">Cuál es el volumen de negocios del restaurante ?</Text>
+					<Text xml:lang="ro">Care este cifra de afaceri a restaurantului ?</Text>
 				</Hint>
 				<Format decimalPlaces="2">
 					<Currency>EUR(&#8364;)</Currency>
@@ -1186,11 +1169,14 @@ this.mes.getCustID()
 					<Text xml:lang="ro">Utilizarea serviciului de preluare comenzi</Text>
 				</Label>
 				<Hint>
-					<Text xml:lang="en">What is the utilization of the restaurant's menu board (order taking service)?</Text>
-					<Text xml:lang="de">Wie hoch ist der Nutzungsgrad der Auftragsannahme?</Text>
-					<Text xml:lang="fr">Quel est le temps moyen de l'utilisation du service pour la demande de nourriture?</Text>
-					<Text xml:lang="es">Cuál es el tiempo medio empleado por el uso del servicio de recepcion de pedidos comidas?</Text>
-					<Text xml:lang="ro">Care este timpul mediu de utilizare a serviciului de preluare comenzi?</Text>
+					<Text xml:lang="en">What is the utilization of the restaurant's menu board (order taking
+						service) ?</Text>
+					<Text xml:lang="de">Wie hoch ist der Nutzungsgrad der Auftragsannahme ?</Text>
+					<Text xml:lang="fr">Quel est le temps moyen de l'utilisation du service pour la demande de
+						nourriture ?</Text>
+					<Text xml:lang="es">Cuál es el tiempo medio empleado por el uso del servicio de recepcion de
+						pedidos comidas ?</Text>
+					<Text xml:lang="ro">Care este timpul mediu de utilizare a serviciului de preluare comenzi ?</Text>
 				</Hint>
 				<Format decimalPlaces="2"><Math>%</Math></Format>
 			</StatisticsVariableUI>
@@ -1204,11 +1190,13 @@ this.mes.getCustID()
 					<Text xml:lang="ro">Utilizarea serviciului de distributie comenzi</Text>
 				</Label>
 				<Hint>
-					<Text xml:lang="en">What is the utilization of the pickup window?</Text>
-					<Text xml:lang="de">Wie hoch ist der Nutzungsgrad des Ausgabefensters?</Text>
-					<Text xml:lang="fr">Quel est le temps moyen de l'utilisation du service pour la distribution de nourriture?</Text>
-					<Text xml:lang="es">Cuál es el tiempo medio empleado por el uso del servicio para entrega de comidas?</Text>
-					<Text xml:lang="ro">Care este timpul mediu de utilizare a serviciului de distributie comenzi?</Text>
+					<Text xml:lang="en">What is the utilization of the pickup window ?</Text>
+					<Text xml:lang="de">Wie hoch ist der Nutzungsgrad des Ausgabefensters ?</Text>
+					<Text xml:lang="fr">Quel est le temps moyen de l'utilisation du service pour la distribution de
+						nourriture ?</Text>
+					<Text xml:lang="es">Cuál es el tiempo medio empleado por el uso del servicio para entrega de
+						comidas ?</Text>
+					<Text xml:lang="ro">Care este timpul mediu de utilizare a serviciului de distributie comenzi ?</Text>
 				</Hint>
 				<Format decimalPlaces="1"><Math>%</Math></Format>
 			</StatisticsVariableUI>
@@ -1221,11 +1209,11 @@ this.mes.getCustID()
 					<Text xml:lang="ro">Timpul mediu de raspuns</Text>
 				</Label>
 				<Hint>
-					<Text xml:lang="en">What is the average lenght of time the customer spends in the restaurant?</Text>
-					<Text xml:lang="de">Wie viel Zeit verbringt ein Kunde durchschnittlich im Restaurant?</Text>
-					<Text xml:lang="fr">Quel est le temps moyen passé par le client dans le restaurant?</Text>
-					<Text xml:lang="es">Cuál es el tiempo medio empleado por el cliente en el restaurante?</Text>
-					<Text xml:lang="ro">Care este durata medie de timp petrecuta de client in restaurant?</Text>
+					<Text xml:lang="en">What is the average lenght of time the customer spends in the restaurant ?</Text>
+					<Text xml:lang="de">Wie viel Zeit verbringt ein Kunde durchschnittlich im Restaurant ?</Text>
+					<Text xml:lang="fr">Quel est le temps moyen passé par le client dans le restaurant ?</Text>
+					<Text xml:lang="es">Cuál es el tiempo medio empleado por el cliente en el restaurante ?</Text>
+					<Text xml:lang="ro">Care este durata medie de timp petrecuta de client in restaurant ?</Text>
 				</Hint>
 				<Format decimalPlaces="1"><Time>s</Time></Format>
 			</StatisticsVariableUI>
@@ -1238,11 +1226,12 @@ this.mes.getCustID()
 					<Text xml:lang="ro">Dimensiunea maxima a listei de asteptare pentru serviciul de preluare comenzi</Text>
 				</Label>
 				<Hint>
-					<Text xml:lang="en">What is the maximum length of the menu board queue?</Text>
-					<Text xml:lang="de">Was ist die durchschnittliche Länge der Auftragsannahme-Warteschlange?</Text>
-					<Text xml:lang="fr">Quelle est la dimension maximale de la queue pour la demande de nourriture?</Text>
-					<Text xml:lang="es">Cual es el tamaño maximo de la cola para entrega de comidas?</Text>
-					<Text xml:lang="ro">Care este dimensiunea maxima a listei de asteptare pentru serviciul de preluare comenzi?</Text>
+					<Text xml:lang="en">What is the maximum length of the menu board queue ?</Text>
+					<Text xml:lang="de">Was ist die durchschnittliche Länge der Auftragsannahme-Warteschlange ?</Text>
+					<Text xml:lang="fr">Quelle est la dimension maximale de la queue pour la demande de nourriture ?</Text>
+					<Text xml:lang="es">Cual es el tamaño maximo de la cola para entrega de comidas ?</Text>
+					<Text xml:lang="ro">Care este dimensiunea maxima a listei de asteptare pentru serviciul de
+						preluare comenzi ?</Text>
 				</Hint>
 			</StatisticsVariableUI>
 			<StatisticsVariableUI variable="maxLengthOfPWQ">
@@ -1254,11 +1243,13 @@ this.mes.getCustID()
 					<Text xml:lang="ro">Dimensiunea maxima a listei de asteptare pentru serviciul de distributie comenzi</Text>
 				</Label>
 				<Hint>
-					<Text xml:lang="en">What is the maximum length of the pickup window queue?</Text>
-					<Text xml:lang="de">Was ist die durchschnittliche Länge der Ausgabefenster-Warteschlange?</Text>
-					<Text xml:lang="fr">Quelle est la dimension maximale de la queue pour la distribution de nourriture?</Text>
-					<Text xml:lang="es">Cual es el tamaño maximo de la cola para entrega de comidas?</Text>
-					<Text xml:lang="ro">Care este dimensiunea maxima a listei de asteptare pentru serviciul de distributie comenzi?</Text>
+					<Text xml:lang="en">What is the maximum length of the pickup window queue ?</Text>
+					<Text xml:lang="de">Was ist die durchschnittliche Länge der Ausgabefenster-Warteschlange ?</Text>
+					<Text xml:lang="fr">Quelle est la dimension maximale de la queue pour la distribution de
+						nourriture ?</Text>
+					<Text xml:lang="es">Cual es el tamaño maximo de la cola para entrega de comidas ?</Text>
+					<Text xml:lang="ro">Care este dimensiunea maxima a listei de asteptare pentru serviciul de
+						distributie comenzi ?</Text>
 				</Hint>
 			</StatisticsVariableUI>
 			<StatisticsVariableUI variable="menuBoardQueueLength" comparisonGroup="MenuBoard_PickupWindow" showChart="true">
@@ -1270,11 +1261,12 @@ this.mes.getCustID()
 					<Text xml:lang="ro">Dimensiunea listei de asteptare pentru serviciul de preluare comenzi</Text>
 				</Label>
 				<Hint>
-					<Text xml:lang="en">What is the length of the menu board queue?</Text>
-					<Text xml:lang="de">Was ist die Länge der Auftragsannahme-Warteschlange?</Text>
-					<Text xml:lang="fr">Quelle est la dimension de la queue pour la demande de nourriture?</Text>
-					<Text xml:lang="es">Cual es el tamaño de la cola para entrega de comidas?</Text>
-					<Text xml:lang="ro">Care este dimensiunea listei de asteptare pentru serviciul de preluare comenzi?</Text>
+					<Text xml:lang="en">What is the length of the menu board queue ?</Text>
+					<Text xml:lang="de">Was ist die Länge der Auftragsannahme-Warteschlange ?</Text>
+					<Text xml:lang="fr">Quelle est la dimension de la queue pour la demande de nourriture ?</Text>
+					<Text xml:lang="es">Cual es el tamaño de la cola para entrega de comidas ?</Text>
+					<Text xml:lang="ro">Care este dimensiunea listei de asteptare pentru serviciul de preluare
+						comenzi ?</Text>
 				</Hint>
 			</StatisticsVariableUI>
 			<StatisticsVariableUI variable="pickupWindowQueueLength" comparisonGroup="MenuBoard_PickupWindow" showChart="true">
@@ -1286,11 +1278,12 @@ this.mes.getCustID()
 					<Text xml:lang="ro">Dimensiunea listei de asteptare pentru serviciul de distributie comenzi</Text>
 				</Label>
 				<Hint>
-					<Text xml:lang="en">What is the length of the pickup window queue?</Text>
-					<Text xml:lang="de">Was ist die Länge der Ausgabefenster-Warteschlange?</Text>
-					<Text xml:lang="fr">Quelle est la dimension de la queue pour la distribution de nourriture?</Text>
-					<Text xml:lang="es">Cual es el tamaño de la cola para entrega de comidas?</Text>
-					<Text xml:lang="ro">Care este dimensiunea listei de asteptare pentru serviciul de distributie comenzi?</Text>
+					<Text xml:lang="en">What is the length of the pickup window queue ?</Text>
+					<Text xml:lang="de">Was ist die Länge der Ausgabefenster-Warteschlange ?</Text>
+					<Text xml:lang="fr">Quelle est la dimension de la queue pour la distribution de nourriture ?</Text>
+					<Text xml:lang="es">Cual es el tamaño de la cola para entrega de comidas ?</Text>
+					<Text xml:lang="ro">Care este dimensiunea listei de asteptare pentru serviciul de distributie
+						comenzi ?</Text>
 				</Hint>
 			</StatisticsVariableUI>
 		</StatisticsUI>
