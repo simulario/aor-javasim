@@ -77,31 +77,31 @@
 		<Statistics>
 			<Variable name="numberOfCustomers" dataType="Integer" />
 			<Variable name="numberOfLostCustomers" dataType="Integer" />
+			<Variable name="numberOfDepartures" dataType="Float" />
+			<Variable name="menuBoardQueueLength" dataType="Integer">
+				<Source>
+					<ObjectProperty property="queueLength" objectType="MenuBoard" objectIdRef="1" />
+				</Source>
+			</Variable>
+			<Variable name="pickupWindowQueueLength" dataType="Integer">
+				<Source>
+					<ObjectProperty property="queueLength" objectType="PickupWindow" objectIdRef="2"/>
+				</Source>				
+			</Variable>
 			<Variable name="revenue" dataType="Float" />
 			<Variable name="cumulativeResponseTime" dataType="Float" />
-			<Variable name="nrOfDepartures" dataType="Float" />
 			<Variable name="meanResponseTime" dataType="Float">
 				<Source computeOnlyAtEnd="true">
 					<ValueExpr language="Java"> 
 						(double) SimStatistics.cumulativeResponseTime.getValue() 
-						/ SimStatistics.nrOfDepartures.getValue()
+						/ SimStatistics.numberOfDepartures.getValue()
 					</ValueExpr>
 					<ValueExpr language="JavaScript">
 						SimStatistics.cumulativeResponseTime.getValue() 
-						/ SimStatistics.nrOfDepartures.getValue()
+						/ SimStatistics.numberOfDepartures.getValue()
 					</ValueExpr>
 				</Source>
 			</Variable>	
-			<Variable name="maxLengthOfMBQ" dataType="Integer">
-				<Source aggregationFunction="max">
-					<ObjectProperty property="queueLength" objectType="MenuBoard" objectIdRef="1" />
-				</Source>
-			</Variable>
-			<Variable name="maxLengthOfPWQ" dataType="Integer">
-				<Source aggregationFunction="max">
-					<ObjectProperty property="queueLength" objectType="PickupWindow" objectIdRef="2" />
-				</Source>
-			</Variable>
 			<Variable name="cumulativeMenuBoardServiceTime" dataType="Integer" />
 			<Variable name="menuBoardUtilization" dataType="Float">
 				<Source computeOnlyAtEnd="true">
@@ -118,6 +118,16 @@
 						/ SimParameter.SIMULATION_STEPS * 100 </ValueExpr>
 					<ValueExpr language="JavaScript">SimStatistics.cumulativePickupWindowServiceTime.getValue() 
 						/ SimParameter.SIMULATION_STEPS * 100 </ValueExpr>
+				</Source>
+			</Variable>
+			<Variable name="maxLengthOfMBQ" dataType="Integer">
+				<Source aggregationFunction="max">
+					<ObjectProperty property="queueLength" objectType="MenuBoard" objectIdRef="1" />
+				</Source>
+			</Variable>
+			<Variable name="maxLengthOfPWQ" dataType="Integer">
+				<Source aggregationFunction="max">
+					<ObjectProperty property="queueLength" objectType="PickupWindow" objectIdRef="2" />
 				</Source>
 			</Variable>
 		</Statistics>
@@ -210,8 +220,8 @@ var r2 = js.util.Random.uniformInt(1,6);
 			<!-- =================================================== -->
 			<AgentType name="MenuBoard">
 				<!-- =================================================== -->
-				<Attribute name="maxMenuBoardQL" type="Integer" />
 				<Attribute name="menuBoardBusy" type="Boolean" />
+				<Attribute name="maxMenuBoardLineSize" type="Integer" />
 				<Attribute name="queueLength" type="Integer" />
 				<ReferenceProperty name="menuBoardQueue" type="Customer" upperMultiplicity="unbounded">
 					<documentation>
@@ -222,7 +232,8 @@ var r2 = js.util.Random.uniformInt(1,6);
 				<Function name="getMessagePart" resultType="String">
 				<!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->
 					<documentation>
-						<description> The function deals with retrieving the needed information 
+						<description> 
+							The function deals with retrieving the needed information 
 							from a string that comprises two distinct information (customerId and his orderNo) 
 							separated by the "and" string. It is needed because the ReminderEvent has only one 
 							string field to send the information. From this field we need to extract the needed parts. 
@@ -232,29 +243,34 @@ var r2 = js.util.Random.uniformInt(1,6);
 					<Parameter name="argumentIndex" type="Integer" />
 					<Body language="Java"><![CDATA[ 
 String resultInfo= ""; 
-int i=messageInfo.indexOf("and");
+int i = messageInfo.indexOf("and");
 	if (argumentIndex == 1) {
   	if (i == 1) {
-  		resultInfo = Character.toString(messageInfo.charAt(0));
+  		resultInfo = Character.toString(messageInfo.charAt(22));
   	}
  	 else
-    	resultInfo = messageInfo.substring(0,i);                    
+    	resultInfo = messageInfo.substring(22,i);                    
  } 
  else	{
    resultInfo = messageInfo.substring( i+3, messageInfo.length());                       
  }
   return resultInfo; 
-  ]]></Body>
-  <Body language="JavaScript"><![CDATA[ 
-var  resultInfo = ""; 
-	if (argumentIndex == 1) {	
-  		resultInfo = messageInfo[0];                  
-      } 
-   else {
-        resultInfo = messageInfo[1];                       
-     }
-   return resultInfo; 
-              ]]></Body>
+                ]]></Body>
+                  <Body language="JavaScript"><![CDATA[ 
+var resultInfo = ""; 
+var i = messageInfo.indexOf("and");
+	if (argumentIndex == 1) {
+      if (i == 1) {
+  	    resultInfo = messageInfo.charAt(22);
+  	   }
+ 	  else
+        resultInfo = messageInfo.substring( 22,i);                    
+     } 
+    else	{
+     resultInfo = messageInfo.substring( i+3, messageInfo.length());                       
+    }
+     return resultInfo; 
+                 ]]></Body>
 				</Function>
 				<!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->
 				<ReactionRule name="SendOrder_Rule" agentVariable="mb">
@@ -285,7 +301,7 @@ var  resultInfo = "";
 							</OutMessageEventExpr>
 							<ReminderEventExpr>
 								<ReminderMsg language="Java JavaScript"><![CDATA[
-this.evt.getSenderIdRef() + "and" + this.evt.getOccurrenceTime()
+"EndOfMenuBoardService:" + this.evt.getSenderIdRef() + "and" + this.evt.getOccurrenceTime()
 								]]></ReminderMsg>
 								<Delay>
 									<ValueExpr language="Java JavaScript">Global.twoDice(10)</ValueExpr>
@@ -347,31 +363,34 @@ parseInt( this.getMessagePart( this.evt.getReminderMsg(),2))
 					<Body language="Java"><![CDATA[
 String resultInfo = ""; 
 int i = messageInfo.indexOf("and");
-String substr = messageInfo.substring(i+3,messageInfo.length());
+String substr = messageInfo.substring( i+3,messageInfo.length());
 int j= substr.indexOf("and");
 	if (argumentIndex == 1) {
-  	resultInfo=messageInfo.substring(0,i); 
+  	resultInfo=messageInfo.substring(20,i); 
   } 
   else
   if (argumentIndex == 2) {                                     
     resultInfo=substr.substring(0,j);
  }
   else {
-    resultInfo=substr.substring(j+3,substr.length());
+    resultInfo=substr.substring( j+3,substr.length());
  }    
    return resultInfo; 
         ]]></Body>
 	<Body language="JavaScript"><![CDATA[
-   var resultInfo = ""; 
-   if (argumentIndex == 1) {
-  	resultInfo = messageInfo[0]; 
-    } 
-  else
-  if (argumentIndex == 2) {                                     
-    resultInfo = messageInfo[1];
+var resultInfo = ""; 
+var i = messageInfo.indexOf("and");
+var substr = messageInfo.substring( i+3, messageInfo.length());
+var j= substr.indexOf("and");
+	if (argumentIndex == 1) {
+  	  resultInfo = messageInfo.substring( 20,i); 
+     } 
+    else
+    if (argumentIndex == 2) {                                     
+      resultInfo = substr.substring(0,j);
     }
-  else {
-    resultInfo = messageInfo[2];
+    else {
+      resultInfo = substr.substring( j+3, substr.length());
     }    
    return resultInfo; 
           ]]></Body>
@@ -391,7 +410,7 @@ int j= substr.indexOf("and");
 						<SCHEDULE-EVT>
 							<ReminderEventExpr>
 								<ReminderMsg language="Java JavaScript"><![CDATA[
-( this.mes.getOrderNo() + "and" + this.mes.getPizzaType() + "and" + this.mes.getCustID())
+("EndOfKitchenService:" + this.mes.getOrderNo() + "and" + this.mes.getPizzaType() + "and" + this.mes.getCustID())
 								]]></ReminderMsg>
 								<Delay>
 									<ValueExpr language="Java JavaScript">Global.twoDice(8)</ValueExpr>
@@ -446,8 +465,8 @@ parseInt( this.getMessagePart( this.evt.getReminderMsg(),3))
 			<!-- ============================= -->
 			<AgentType name="PickupWindow">
 				<!-- =========================== -->
-				<Attribute name="maxPickupQL" type="Integer" />
 				<Attribute name="pickupWindowBusy" type="Boolean" />
+				<Attribute name="maxPickupWindowLineSize" type="Integer" />
 				<Attribute name="queueLength" type="Integer" />
 				<ReferenceProperty name="pickupWindowQueue" type="Customer" upperMultiplicity="unbounded">
 					<documentation>
@@ -468,6 +487,28 @@ double[] price = {0.0, 0.0, 2.0, 4.0, 6.0, 8.0, 10.0, 12.0, 14.0, 16.0, 18.0, 20
 var price = [0.0, 0.0, 2.0, 4.0, 6.0, 8.0, 10.0, 12.0, 14.0, 16.0, 18.0, 20.0, 22.0];
 	return price[pizzaType];
 				   ]]></Body>
+				</Function>
+				<!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->
+				<Function name="getMessagePart" resultType="String">
+					<!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->
+					<documentation>
+						<description> 
+							The function deals with retrieving the needed information from a string 
+							that comprises the customer ID information. The function is needed bc. the 
+							ReminderEvent has only one string field to keep the information. From this 
+							field we need to extract the needed parts. 
+						</description>
+					</documentation>
+					<Parameter name="messageInfo" type="String" />
+					<Parameter name="argumentIndex" type="Integer" />
+					<Body language="Java"><![CDATA[
+String resultInfo = messageInfo.substring( 25, messageInfo.length());     
+   return resultInfo; 
+                   ]]></Body>
+					<Body language="JavaScript"><![CDATA[
+var resultInfo = messageInfo.substring( 25, messageInfo.length());
+   return resultInfo; 
+          ]]></Body>
 				</Function>
 				<BeliefEntityType name="Order">
 					<BeliefAttribute name="orderNo" type="Integer" initialValue="0" />
@@ -502,7 +543,7 @@ var price = [0.0, 0.0, 2.0, 4.0, 6.0, 8.0, 10.0, 12.0, 14.0, 16.0, 18.0, 20.0, 2
 							The PW agent asks the Customer agent about its orderNo SelfBeliefAttr and the
 							Customer replies this information. Then the PW agent verifies if the customer order is
 							already arrived. If the order is arrived then, it schedules a reminder event type with the
-							delay at the kitchen.
+							delay at the pickup window.
 						</description>
 					</documentation>
 					<WHEN eventType="InMessageEvent" messageType="ReplyOrderNo" messageVariable="mes" eventVariable="evt" />
@@ -519,7 +560,9 @@ this.mes.getOrderNo() == this.order.getOrderNo()
 								<ReceiverIdRef language="Java JavaScript">this.evt.getSenderIdRef()</ReceiverIdRef>
 							</OutMessageEventExpr>
 							<ReminderEventExpr>
-								<ReminderMsg language="Java JavaScript">this.evt.getSenderIdRef() + ""</ReminderMsg>
+								<ReminderMsg language="Java JavaScript"><![CDATA[
+									"EndOfPickupWindowService:" + this.evt.getSenderIdRef()
+								  ]]></ReminderMsg>
 								<Delay>
 									<ValueExpr language="Java JavaScript">Global.twoDice(10)</ValueExpr>
 								</Delay>
@@ -542,10 +585,10 @@ this.mes.getOrderNo() == this.order.getOrderNo()
 						<SCHEDULE-EVT>
 							<OutMessageEventExpr messageType="HereIsYourPizza">
 								<ReceiverIdRef language="Java"><![CDATA[
-Integer.parseInt( evt.getReminderMsg())
+Integer.parseInt( getMessagePart( evt.getReminderMsg(),1))
                                 ]]></ReceiverIdRef>
 								<ReceiverIdRef language="JavaScript"><![CDATA[
-parseInt( this.evt.getReminderMsg())
+parseInt( this.getMessagePart( this.evt.getReminderMsg(),1))
 								]]></ReceiverIdRef>
 							</OutMessageEventExpr>
 						</SCHEDULE-EVT>
@@ -673,14 +716,14 @@ this.cust.getOrderNo()
 						When a car arrives at the Fast Food Restaurant, and the Menu Board 
 						queue is full, the customer leaves and he is considered a dissatisfied customer. 
 						If Menu Board queue is not full then the car gets in the waiting line as a new 
-						customer. Furthermore, If the Menu Board service is not busy, a StartMenuBoardService 
+						customer. Furthermore, if the Menu Board service is not busy, a StartMenuBoardService 
 						is created. 
 					</description>
 				</documentation>
 				<WHEN eventType="CustomerArrival" eventVariable="evt" />
 				<FOR-ObjectVariable variable="mb" objectType="MenuBoard" objectIdRef="1" />
 				<IF language="Java JavaScript"><![CDATA[
-this.mb.getMenuBoardQueue().size() >= this.mb.getMaxMenuBoardQL()
+this.mb.getMenuBoardQueue().size() >= this.mb.getMaxMenuBoardLineSize()
                 ]]></IF>
 				<THEN>
 					<UPDATE-ENV>
@@ -736,11 +779,19 @@ SimStatistics.numberOfCustomers.getValue() + 1
 				<FOR-ObjectVariable variable="cust" objectType="Customer">
 					<ObjectRef language="Java JavaScript">this.mb.getMenuBoardQueue().get(0)</ObjectRef>
 				</FOR-ObjectVariable>
+				<FOR-DataVariable  variable="serviceTimeMB" dataType="Integer">
+					<ValueExpr language="Java JavaScript">Global.twoDice(10)</ValueExpr>
+				</FOR-DataVariable>
 				<DO>
 					<UPDATE-ENV>
 						<UpdateObject objectVariable="mb">
 							<Slot property="menuBoardBusy" value="true" />
 						</UpdateObject>
+						<UpdateStatisticsVariable variable="cumulativeMenuBoardServiceTime">
+							<ValueExpr language="Java JavaScript">
+								SimStatistics.cumulativeMenuBoardServiceTime.getValue() + this.serviceTimeMB
+							</ValueExpr>
+						</UpdateStatisticsVariable>
 					</UPDATE-ENV>
 					<SCHEDULE-EVT>
 						<InMessageEventExpr messageType="OrderSolicitation">
@@ -768,7 +819,7 @@ SimStatistics.numberOfCustomers.getValue() + 1
 					<ObjectRef language="Java">this.mb.getMenuBoardQueue().get(0)</ObjectRef>
 				</FOR-ObjectVariable>
 				<IF language="Java JavaScript"><![CDATA[
-this.pw.getPickupWindowQueue().size() >= this.pw.getMaxPickupQL()       
+this.pw.getPickupWindowQueue().size() >= this.pw.getMaxPickupWindowLineSize()       
                ]]></IF>
 				<THEN>
 					<UPDATE-ENV>
@@ -779,9 +830,6 @@ this.pw.getPickupWindowQueue().size() >= this.pw.getMaxPickupQL()
 this.mes.getOrderNo()
 						    ]]></ValueExpr>
 							</Slot>
-						</UpdateObject>
-						<UpdateObject objectVariable="pw">
-						  <Increment property="queueLength" value="1" />
 						</UpdateObject>
 					</UPDATE-ENV>
 				</THEN>
@@ -795,7 +843,7 @@ this.mes.getOrderNo()
 			    		</UpdateObject>
 			    		<UpdateObject objectVariable="mb">
 			    			<Slot property="menuBoardBusy">
-			    				<ValueExpr language="Java JavaScript">this.mb.getMenuBoardQueue().size() == 1 ? false :true</ValueExpr>
+			    				<ValueExpr language="Java JavaScript">this.mb.getMenuBoardQueue().size() == 1 ? false : true</ValueExpr>
 			    			</Slot>
 			    			<MultiValuedSlot property="menuBoardQueue">
 			    				<RemoveFirst itemVariable="cust" />
@@ -830,19 +878,27 @@ this.mb.getMenuBoardQueue().size() > 0
 					<description> 
 						On StartPickupWindowService, the pickupWindowBusy variable is set to true, 
 						and, when the customer's order has already arrived, an HereIsYourPizza message is 
-						created with appropriate delay. 
+						created with the appropriate delay. 
 					</description>
 				</documentation>
 				<WHEN eventType="StartPickupWindowService" />
 				<FOR-ObjectVariable variable="pw" objectType="PickupWindow" objectIdRef="2" />
 				<FOR-ObjectVariable variable="cust" objectType="Customer">
 					<ObjectRef language="Java JavaScript">this.pw.getPickupWindowQueue().get(0)</ObjectRef>
-				</FOR-ObjectVariable>			
+				</FOR-ObjectVariable>	
+				<FOR-DataVariable variable="serviceTimePW" dataType="Integer">
+					<ValueExpr language="Java JavaScript">Global.twoDice(10)</ValueExpr>
+				</FOR-DataVariable>
 				<DO>
 					<UPDATE-ENV>
 						<UpdateObject objectVariable="pw">
 							<Slot property="pickupWindowBusy" value="true" />
 						</UpdateObject>
+						<UpdateStatisticsVariable variable="cumulativePickupWindowServiceTime">
+							<ValueExpr language="Java JavaScript">
+								SimStatistics.cumulativePickupWindowServiceTime.getValue() + this.serviceTimePW
+							</ValueExpr>
+						</UpdateStatisticsVariable>
 					</UPDATE-ENV>
 					<SCHEDULE-EVT>
 						<InMessageEventExpr messageType="AskOrderNo">
@@ -871,6 +927,9 @@ this.pw.getPickupWindowQueue().size() > 0 && this.cust.isWaitingForOrderToArrive
 				<FOR-ObjectVariable variable="cust" objectType="Customer">
 					<ObjectRef language="Java JavaScript">null</ObjectRef>
 				</FOR-ObjectVariable>
+				<FOR-DataVariable  variable="serviceTimeMB" dataType="Integer">
+					<ValueExpr language="Java JavaScript">Global.twoDice(10)</ValueExpr>
+				</FOR-DataVariable>
 				<IF language="Java JavaScript"><![CDATA[
 this.mb.getMenuBoardQueue().size() > 0 && this.mb.getMenuBoardQueue().get(0).isWaitingForPWFree()
                  ]]></IF>
@@ -891,6 +950,11 @@ this.mb.getMenuBoardQueue().size() > 0 && this.mb.getMenuBoardQueue().get(0).isW
 						<UpdateObject objectVariable="cust">
 							<Slot property="waitingForOrderToArrive" value="true" />
 						</UpdateObject>
+						<UpdateStatisticsVariable variable="cumulativeMenuBoardServiceTime">
+							<ValueExpr language="Java JavaScript">
+								SimStatistics.cumulativeMenuBoardServiceTime.getValue() + this.serviceTimeMB
+							</ValueExpr>
+						</UpdateStatisticsVariable>
 					</UPDATE-ENV>
 					<SCHEDULE-EVT>
 						<CausedEventExpr eventType="StartMenuBoardService">
@@ -905,7 +969,8 @@ this.mb.getMenuBoardQueue().size() > 0
 			<EnvironmentRule name="EndPickupWindowService_Rule">
 				<!-- ==================================================================== -->
 				<documentation>
-					<description> On EndPickupWindowService, when the queue is not full, the current 
+					<description> 
+						On EndPickupWindowService, when the queue is not full, the current 
 						customer object is removed from the queue and destroyed. Furthermore, if the 
 						queue is empty, the pickup window is no longer busy. Otherwise, a new 
 						StartPickupWindowService is created. 
@@ -918,13 +983,13 @@ this.mb.getMenuBoardQueue().size() > 0
 					<ObjectRef language="Java JavaScript">this.pw.getPickupWindowQueue().get(0)</ObjectRef>
 				</FOR-ObjectVariable>
 				<IF language="Java JavaScript"><![CDATA[
-this.pw.getPickupWindowQueue().size() < this.pw.getMaxPickupQL() - 1
+this.pw.getPickupWindowQueue().size() < this.pw.getMaxPickupWindowLineSize() - 1
                 ]]></IF>
 				<THEN>
 					<UPDATE-ENV>
-						<UpdateStatisticsVariable variable="nrOfDepartures">
+						<UpdateStatisticsVariable variable="numberOfDepartures">
 							<ValueExpr language="Java JavaScript"><![CDATA[
-SimStatistics.nrOfDepartures.getValue() + 1						
+SimStatistics.numberOfDepartures.getValue() + 1						
 							]]></ValueExpr>
 						</UpdateStatisticsVariable>
 						<UpdateStatisticsVariable variable="cumulativeResponseTime">
@@ -956,8 +1021,8 @@ this.pw.getPickupWindowQueue().size() > 0
 				</THEN>
 				<ELSE>
 					<UPDATE-ENV>
-						<UpdateStatisticsVariable variable="nrOfDepartures">
-							<ValueExpr language="Java JavaScript">SimStatistics.nrOfDepartures.getValue() + 1</ValueExpr>
+						<UpdateStatisticsVariable variable="numberOfDepartures">
+							<ValueExpr language="Java JavaScript">SimStatistics.numberOfDepartures.getValue() + 1</ValueExpr>
 						</UpdateStatisticsVariable>
 						<UpdateStatisticsVariable variable="cumulativeResponseTime">
 							<ValueExpr language="Java JavaScript"><![CDATA[
@@ -1009,7 +1074,8 @@ SimStatistics.cumulativeResponseTime.getValue() + this.evt.getOccurrenceTime() -
 			<EnvironmentRule name="OrderPrepared_Rule">
 				<!-- ============================================================================= -->
 				<documentation>
-					<description> When an order is prepared, the Kitchen Service send it to the PW Service.
+					<description> 
+						When an order is prepared, the Kitchen Service send it to the PW Service.
 						The PW Service asks the client which is at the desk what is his orderNo (only if 
 						the client is waiting for his order to arrive).
 					</description>
@@ -1069,14 +1135,13 @@ this.mes.getCustID()
 			</EnvironmentRule>
 		</EnvironmentRules>
 	</SimulationModel>
-
 	<!-- =================================================== -->
 	<InitialState>
 	<!-- =================================================== -->		
 		<Agent type="MenuBoard" name="MenuBoard" id="1">
 		<!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->
 			<Slot property="menuBoardBusy" value="false" />
-			<Slot property="maxMenuBoardQL" value="5" />
+			<Slot property="maxMenuBoardLineSize" value="5" />
 			<Slot property="queueLength" value="0" />
 			<Slot property="menuBoardQueue">
 				<ValueExpr language="Java"><![CDATA[ new ArrayList<Customer>()]]></ValueExpr>
@@ -1087,7 +1152,7 @@ this.mes.getCustID()
 		<Agent type="PickupWindow" name="PickupWindow" id="2">
 		<!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->
 			<Slot property="pickupWindowBusy" value="false" />
-			<Slot property="maxPickupQL" value="5" />
+			<Slot property="maxPickupWindowLineSize" value="5" />
 			<Slot property="queueLength" value="0" />
 			<Slot property="pickupWindowQueue">
 				<ValueExpr language="Java"><![CDATA[ new ArrayList<Customer>()]]></ValueExpr>
@@ -1118,7 +1183,7 @@ this.mes.getCustID()
 					<Text xml:lang="de">Wieviele Kunden haben das Restaurant betreten ?</Text>
 					<Text xml:lang="fr">Combien de clients sont entres dans le restaurant ?</Text>
 					<Text xml:lang="es">Cuantos clientes han entrado en el restaurante ?</Text>
-					<Text xml:lang="ro">Cati clienti are restaurantul?</Text>
+					<Text xml:lang="ro">Cati clienti are restaurantul ?</Text>
 				</Hint>
 			</StatisticsVariableUI>
 			<StatisticsVariableUI variable="numberOfLostCustomers">
