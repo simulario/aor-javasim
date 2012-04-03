@@ -25,12 +25,12 @@
             </Variable>
             <Variable name="BuyOffersFood" dataType="Float">	
                 <Source>
-                    <ObjectProperty property="Demand" objectType="Market" objectIdRef="2"/>
+                    <ObjectProperty property="demand" objectType="Market" objectIdRef="2"/>
                 </Source>
             </Variable>
             <Variable name="SellOffersFood" dataType="Float">	
                 <Source>
-                    <ObjectProperty property="Supply" objectType="Market" objectIdRef="2"/>
+                    <ObjectProperty property="supply" objectType="Market" objectIdRef="2"/>
                 </Source>
             </Variable>
             <Variable name="PriceUtility" dataType="Float">	
@@ -40,12 +40,12 @@
             </Variable>
             <Variable name="BuyOffersUtility" dataType="Float">	
                 <Source>
-                    <ObjectProperty property="Demand" objectType="Market" objectIdRef="4"/>
+                    <ObjectProperty property="demand" objectType="Market" objectIdRef="4"/>
                 </Source>
             </Variable>
             <Variable name="SellOffersUtility" dataType="Float">	
                 <Source>
-                    <ObjectProperty property="Supply" objectType="Market" objectIdRef="4"/>
+                    <ObjectProperty property="supply" objectType="Market" objectIdRef="4"/>
                 </Source>
             </Variable>
             <Variable name="PriceLabor" dataType="Float">	
@@ -55,12 +55,12 @@
             </Variable>
             <Variable name="BuyOffersLabor" dataType="Float">	
                 <Source>
-                    <ObjectProperty property="Demand" objectType="Market" objectIdRef="3" />
+                    <ObjectProperty property="demand" objectType="Market" objectIdRef="3" />
                 </Source>
             </Variable>
             <Variable name="SellOffersLabor" dataType="Float">	
                 <Source>
-                    <ObjectProperty property="Supply" objectType="Market" objectIdRef="3" />
+                    <ObjectProperty property="supply" objectType="Market" objectIdRef="3" />
                 </Source>
             </Variable>
         </Statistics>
@@ -72,6 +72,14 @@
                 <Attribute name="quantity" type="Float"/>
                 <Attribute name="buy" type="Boolean"/>
                 <Attribute name="bidderIdRef" type="Integer" />
+                <Function name="toSting" resultType="String">
+                    <Body language="JavaScript">
+                        <![CDATA[
+                           var res = "pd: " + this.product + "  *  pr" + this.price + "  *  q: " + this.quantity + "  *  buy: " +  this.buy + "  *  bidId: " + this.bidderIdRef + "\n";
+	                       return res;
+                        ]]>
+                    </Body>
+                </Function>
             </ComplexDataType>
         </DataTypes>
         <EntityTypes>
@@ -430,7 +438,7 @@
                     <!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~-->
                     <documentation>Abstract function, specified in BL4Laborer and BL4Owner.</documentation>
                     <Parameter name="bidder" type="long"/>
-                    <Body language="Java JavaScript"><![CDATA[]]></Body>
+                    <Body language="Java JavaScript"><![CDATA[return true;]]></Body>
                 </Function>
                 <!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~-->
                 <Function name="sellFood" resultType="Boolean">
@@ -476,7 +484,7 @@
 								var price = mod * this.getLastFoodPrice();
 								if (price <= 0.0) break;
 								
-								var o = new minecon_laborfoodutility_bl4scenario.model.dataTypes.TradeOffer();
+								var o = new sim.model.dataTypes.TradeOffer();
 								o.setProduct("Food");
 								o.setQuantity(quantum);
 								o.setPrice(price);
@@ -531,7 +539,7 @@
 							var quantity = (this.getIncome() - this.getTARGET_MONEY_STOCK()) / uPrice;
 							if (quantity > 0 && uPrice > 0.0) {
 								for (var d = quantity; d > 0; d--) {
-									var o = new minecon_laborfoodutility_bl4scenario.model.dataTypes.TradeOffer();
+									var o = new sim.model.dataTypes.TradeOffer();
 									o.setProduct("Utility");
 									o.setQuantity(1);
 									o.setPrice(uPrice);
@@ -641,12 +649,12 @@
 					]]></Body>
                     <Body language="JavaScript"><![CDATA[
 						var moneyAmount = this.getAssetByName("Money").getQuantity(); 
+						var x = 0;
 						this.setIncome(moneyAmount);
 						this.getFoodBuyList().clear();
 						var quantum = this.getEAT_AMOUNT() * 1.0;
 						var purse = moneyAmount;
-						alert(moneyAmount + " " + quantum + " " + purse);
-						for (var x = this.getAssetByName("Food").getQuantity(); x <= 1.5 * this.getTARGET_FOOD_STOCK(); x += quantum) {
+						for (x = this.getAssetByName("Food").getQuantity(); x <= 1.5 * this.getTARGET_FOOD_STOCK(); x += quantum) {
 							if (x === 0.0) x = 0.00000000001;
 							var random_value = js.util.Random.uniform(0.0, 1.0);
 							var mod = 0.1 * Math.pow(this.getTARGET_FOOD_STOCK() / x, 0.2) + 0.90 + random_value * this.getRANDOM_FACTOR();
@@ -657,7 +665,7 @@
 							purse = purse - (quantum * price);
 							if (purse < 0.0) break;
 							
-							var o = new minecon_laborfoodutility_bl4scenario.model.dataTypes.TradeOffer();
+							var o = new sim.model.dataTypes.TradeOffer();
 							o.setProduct("Food");
 							o.setQuantity(quantum);
 							o.setPrice(price);
@@ -715,7 +723,7 @@
 							var mod = (Math.max(Math.min(random_value, 2.0), -2) / 2) * (1 - frac) + 1;
 							price *= mod;
 						}
-						var o = new minecon_laborfoodutility_bl4scenario.model.dataTypes.TradeOffer();
+						var o = new sim.model.dataTypes.TradeOffer();
 						o.setProduct("Labor");
 						o.setQuantity(this.getLABOR_ALLOWANCE());
 						o.setPrice(price);
@@ -818,7 +826,7 @@
 							purse = purse - (quantum * price);
 							if (purse < 0.0) break;
 							
-							var o = new minecon_laborfoodutility_bl4scenario.model.dataTypes.TradeOffer();
+							var o = new sim.model.dataTypes.TradeOffer();
 							o.setProduct("Food");
 							o.setQuantity(quantum);
 							o.setPrice(price);
@@ -931,7 +939,7 @@
 								var factor = (Math.max(Math.min(random_value, 2.0), -2.0)  / 2) * 0.1 + 1;
 								var price = this.getLastFoodPrice() * factor;
 								for (var d = quantum; d > 0; d--) {
-									var o = new minecon_laborfoodutility_bl4scenario.model.dataTypes.TradeOffer();
+									var o = new sim.model.dataTypes.TradeOffer();
 									o.setProduct("Food");
 									o.setQuantity(1);
 									o.setPrice(price);
@@ -1022,7 +1030,7 @@
 							purse -= quantum * price;
 							if (purse < 0.0) break;
 							
-							var o = new minecon_laborfoodutility_bl4scenario.model.dataTypes.TradeOffer();
+							var o = new sim.model.dataTypes.TradeOffer();
 							o.setProduct("Labor");
 							o.setQuantity(quantum);
 							o.setPrice(price);
@@ -1045,7 +1053,7 @@
 							// stop when you'd be buying at < 1/2 the price of labor
 							if (price < minPrice) break;
 
-							var o = new minecon_laborfoodutility_bl4scenario.model.dataTypes.TradeOffer();
+							var o = new sim.model.dataTypes.TradeOffer();
 							o.setProduct("Labor");
 							o.setQuantity(this.getLABOR_ALLOWANCE());
 							o.setPrice(price);
@@ -1176,7 +1184,7 @@
 								var factor = ((Math.max(Math.min(random_value, 2.0), -2.0) / 2) * (1 - frac) + 1); 
 								var price = this.getLastUtilityPrice() * factor;
 								
-								var o = new minecon_laborfoodutility_bl4scenario.model.dataTypes.TradeOffer();
+								var o = new sim.model.dataTypes.TradeOffer();
 								o.setProduct("Utility");
 								o.setQuantity(1);
 								o.setPrice(price);
@@ -1237,7 +1245,7 @@
 							// stop when you'd be buying at < 1/2 the price of labor
 							if (price < minPrice) break;
 							
-							var o = new minecon_laborfoodutility_bl4scenario.model.dataTypes.TradeOffer();
+							var o = new sim.model.dataTypes.TradeOffer();
 							o.setProduct("Labor");
 							o.setQuantity(1);
 							o.setPrice(price);
@@ -1355,7 +1363,7 @@
                     </documentation>
                     <WHEN eventType="InMessageEvent" messageType="BL4Offer" messageVariable="msg"/>
                     <IF language="Java"><![CDATA[ this.msg.getOffers().get(0).isBuy() ]]></IF>
-										<IF language="JavaScript"><![CDATA[ this.msg.getOffers().get().isBuy() ]]></IF>
+										<IF language="JavaScript"><![CDATA[ this.msg.getOffers().get(0).isBuy() ]]></IF>
                     <THEN>
                         <UPDATE-AGT>
                             <MultiValuedSlot property="buyOffers">
