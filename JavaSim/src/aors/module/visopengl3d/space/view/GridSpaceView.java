@@ -30,7 +30,7 @@ public class GridSpaceView extends SpaceView {
 
   // Background color
   private Color backgroundColor = Color.BLACK;
-
+  
   // Fill colors
   private Color fill1;
   private Color fill2;
