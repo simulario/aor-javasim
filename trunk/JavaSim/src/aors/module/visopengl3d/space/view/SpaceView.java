@@ -30,7 +30,7 @@ public abstract class SpaceView {
   protected Skybox skybox;
   protected GlobalCamera globalCamera;
   
-  protected static double objectHeight = 10;
+  protected static double objectHeight = 30;
   
 
   public Color getCanvasColor() {
