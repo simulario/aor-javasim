@@ -124,7 +124,6 @@ public class PropertyMap {
    */
   private String equalityCaseWise(Object propertyValue) {
     if (propertyType instanceof String) {
-      System.out.println("instance of String");
       if (propertyValue instanceof String) {
         if (a0 != null) {
           if (((String) propertyValue).equals(a0)) {
@@ -147,7 +146,6 @@ public class PropertyMap {
     }
 
     else if (propertyType instanceof Boolean) {
-      System.out.println("instance of Boolean");
       boolean x = false;
 
       if (propertyValue instanceof String) {
@@ -170,7 +168,6 @@ public class PropertyMap {
     }
 
     else if (propertyType instanceof Long || propertyType instanceof Double) {
-      System.out.println("instance of Double");
       double x = 0;
 
       if (propertyValue instanceof String) {
@@ -202,7 +199,6 @@ public class PropertyMap {
       }
     }
 
-    System.out.println("return null");
     return null;
   }
 

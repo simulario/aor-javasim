@@ -12,6 +12,8 @@ import aors.module.visopengl3d.space.view.SpaceView;
 import aors.module.visopengl3d.utility.Color;
 import aors.module.visopengl3d.utility.Offset;
 
+import com.sun.opengl.util.texture.Texture;
+
 /**
  * Cell of a two dimensional grid.
  * 
@@ -56,6 +58,9 @@ public class Cell implements SpaceComponent {
   private Map<Integer, double[]> positionMap = new HashMap<Integer, double[]>();
   
   private double cellHeight;
+  
+  private Texture texture;
+  private ArrayList<double[]> textureCoords; 
 
   /**
    * Increases the number of objects inside of the cell by one.
@@ -299,6 +304,44 @@ public class Cell implements SpaceComponent {
       }
     }
   }
+  
+  /**
+   * Applies a color to a contour.
+   * 
+   * @param contour
+   * @param color
+   */
+  private void applyContourTexture(ArrayList<double[]> contour, Texture texture, ArrayList<double[]> textureCoordinates, boolean top) {
+    if (contour != null) {
+      for (int i=0; i<contour.size(); i++) {
+        double[] vertex = contour.get(i);
+        
+        vertex[3] = 1;
+        vertex[4] = 1;
+        vertex[5] = 1;
+        vertex[6] = 1;
+        
+        if(top) {
+          // texture
+          vertex[7] = textureCoordinates.get(i)[0];
+          vertex[8] = textureCoordinates.get(i)[1];
+        } else {
+          vertex[7] = textureCoordinates.get(contour.size()-1 - i)[0];
+          vertex[8] = textureCoordinates.get(contour.size()-1 - i)[1];
+        }
+        
+        if(top) {
+          vertex[9] = 0;
+          vertex[10] = 1;
+          vertex[11] = 0;
+        } else {
+          vertex[9] = 0;
+          vertex[10] = -1;
+          vertex[11] = 0;
+        }
+      }
+    }
+  }
 
   @Override
   public void display(GL2 gl, GLU glu) {
@@ -322,16 +365,50 @@ public class Cell implements SpaceComponent {
       cellTop.endPolygon();
     }
     
-    // Apply the cell color
-    applyContourColor(innerContourTop, color, true);
-
-    // Draw the interior
-    cellTop.beginPolygon();
-    cellTop.beginContour();
-    cellTop.renderContour(innerContourTop);
-    cellTop.endContour();
-    cellTop.endPolygon();
-    cellTop.end();
+    if(texture != null && color.getAlpha() == 0) {
+      //cellTop.end();
+      
+      // Apply the cell texture
+      applyContourTexture(innerContourTop, texture, textureCoords, true);
+      
+      //gl.glColor4dv(Color.WHITE.getColor(), 0);
+      
+      texture.bind();
+      texture.enable();
+      
+      // Draw the interior
+      cellTop.beginPolygon();
+      cellTop.beginContour();
+      cellTop.renderContour(innerContourTop);
+      cellTop.endContour();
+      cellTop.endPolygon();
+      cellTop.end();
+      
+      /*gl.glBegin(GL2.GL_QUADS);
+      
+      gl.glNormal3d(innerContourTop.get(0)[9], innerContourTop.get(0)[10], innerContourTop.get(0)[11]);
+      gl.glTexCoord2d(textureCoords.get(0)[0], textureCoords.get(0)[1]); gl.glVertex3d(innerContourTop.get(0)[0], innerContourTop.get(0)[1], innerContourTop.get(0)[2]);
+      gl.glTexCoord2d(textureCoords.get(1)[0], textureCoords.get(1)[1]); gl.glVertex3d(innerContourTop.get(1)[0], innerContourTop.get(1)[1], innerContourTop.get(1)[2]);
+      gl.glTexCoord2d(textureCoords.get(2)[0], textureCoords.get(2)[1]); gl.glVertex3d(innerContourTop.get(2)[0], innerContourTop.get(2)[1], innerContourTop.get(2)[2]);
+      gl.glTexCoord2d(textureCoords.get(3)[0], textureCoords.get(3)[1]); gl.glVertex3d(innerContourTop.get(3)[0], innerContourTop.get(3)[1], innerContourTop.get(3)[2]);
+      
+      gl.glEnd();*/
+      
+      texture.disable();
+    } else {
+      // Apply the cell color
+      applyContourColor(innerContourTop, color, true);
+      
+      // Draw the interior
+      cellTop.beginPolygon();
+      cellTop.beginContour();
+      cellTop.renderContour(innerContourTop);
+      cellTop.endContour();
+      cellTop.endPolygon();
+      cellTop.end();
+    }
+    
+    
     
     
     TessellatedPolygon cellBottom = new TessellatedPolygon();
@@ -354,16 +431,34 @@ public class Cell implements SpaceComponent {
       cellBottom.endPolygon();
     }
 
-    // Apply the cell color
-    applyContourColor(innerContourBottom, color, false);
-
-    // Draw the interior
-    cellBottom.beginPolygon();
-    cellBottom.beginContour();
-    cellBottom.renderContour(innerContourBottom);
-    cellBottom.endContour();
-    cellBottom.endPolygon();
-    cellBottom.end();
+    if(texture != null && color.getAlpha() == 0) {
+      // Apply the cell color
+      applyContourTexture(innerContourBottom, texture, textureCoords, false);
+      
+      texture.bind();
+      texture.enable();
+      
+      // Draw the interior
+      cellBottom.beginPolygon();
+      cellBottom.beginContour();
+      cellBottom.renderContour(innerContourBottom);
+      cellBottom.endContour();
+      cellBottom.endPolygon();
+      cellBottom.end();
+      
+      texture.disable();
+    } else {
+      // Apply the cell color
+      applyContourColor(innerContourBottom, color, false);
+      
+      // Draw the interior
+      cellBottom.beginPolygon();
+      cellBottom.beginContour();
+      cellBottom.renderContour(innerContourBottom);
+      cellBottom.endContour();
+      cellBottom.endPolygon();
+      cellBottom.end();
+    }
     
     
     // draw the side faces of the cell
@@ -373,7 +468,8 @@ public class Cell implements SpaceComponent {
     if(borderWidth != 0) {
       gl.glColor4dv(borderColor.getColor(), 0);
     } else {
-      gl.glColor4dv(color.getColor(), 0);
+      Color sideColor = new Color(color.getRed(), color.getGreen(), color.getBlue(), 1);
+      gl.glColor4dv(sideColor.getColor(), 0);
     }
     
     int lastIndex = outerContourTop.size()-1;
@@ -546,5 +642,21 @@ public class Cell implements SpaceComponent {
 
   public void setCellHeight(double cellHeight) {
     this.cellHeight = cellHeight;
+  }
+  
+  public Texture getTexture() {
+    return texture;
+  }
+
+  public void setTexture(Texture texture) {
+    this.texture = texture;
+  }
+  
+  public ArrayList<double[]> getTextureCoords() {
+    return textureCoords;
+  }
+
+  public void setTextureCoords(ArrayList<double[]> textureCoords) {
+    this.textureCoords = textureCoords;
   }
 }

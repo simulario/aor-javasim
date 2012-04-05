@@ -1,6 +1,7 @@
 package aors.module.visopengl3d.space.model;
 
 import java.lang.reflect.Field;
+import java.util.ArrayList;
 
 import javax.media.opengl.GL2;
 import javax.media.opengl.glu.GLU;
@@ -88,7 +89,7 @@ public class GridSpaceModel extends SpaceModel {
     // Offset of all other cells
     Offset cellOffset = new Offset(firstCellOffset.x1, firstCellOffset.y1,
         firstCellOffset.x2, firstCellOffset.y2);
-
+      
     // Create and set up all cells
     for (int row = 0; row < rows; row++) {
       for (int column = 0; column < columns; column++) {
@@ -119,6 +120,10 @@ public class GridSpaceModel extends SpaceModel {
       cellOffset = new Offset(firstCellOffset.x1, firstCellOffset.y1
           + ((cellDim - strokeWidth) * (row + 1)), firstCellOffset.x2,
           firstCellOffset.y2 + ((cellDim - strokeWidth) * (row + 1)));
+    }
+    
+    if(gridSpaceView.getBackgroundImg() != null) {
+      determineTextureCoords();
     }
   }
 
@@ -177,6 +182,10 @@ public class GridSpaceModel extends SpaceModel {
       cellOffset = new Offset(firstCellOffset.x1, firstCellOffset.y1
           + ((cellDim - strokeWidth) * (row + 1)), firstCellOffset.x2,
           firstCellOffset.y2 + ((cellDim - strokeWidth) * (row + 1)));
+    }
+    
+    if(gridSpaceView.getBackgroundImg() != null) {
+      determineTextureCoords();
     }
   }
 
@@ -313,6 +322,65 @@ public class GridSpaceModel extends SpaceModel {
           return gridSpaceView.getBackgroundColor();
         }
       }
+    }
+  }
+  
+  /**
+   * Determines and sets the texture coordinates for all cells
+   * 
+   */
+  private void determineTextureCoords() {
+    // Get texture coordinates
+    TextureCoords texCoords = gridSpaceView.getBackgroundImg().getImageTexCoords();
+    
+    
+    // Get offsets of the bottom left and top right corner of the grid
+    double x1 = ((Cell) spaceComponents.get(0)).getOuterOffset().x1;
+    double y1 = ((Cell) spaceComponents.get(0)).getOuterOffset().y1;
+    double x2 = ((Cell) spaceComponents.get(spaceComponents.size() - 1))
+        .getOuterOffset().x2;
+    double y2 = ((Cell) spaceComponents.get(spaceComponents.size() - 1))
+        .getOuterOffset().y2;
+    
+    double gridWidth = x2 - x1;
+    double gridHeight = y2 - y1;
+    
+    
+    for(SpaceComponent comp : spaceComponents) {
+      Cell cell = (Cell) comp;
+      Offset innerOffset = cell.getInnerOffset();
+      
+      ArrayList<double[]> cellTextureCoords = new ArrayList<double[]>();
+      
+      double[] cellTextureCoord0 = new double[2];
+      double[] cellTextureCoord1 = new double[2];
+      double[] cellTextureCoord2 = new double[2];
+      double[] cellTextureCoord3 = new double[2];
+      
+      // Bottom Left Corner
+      cellTextureCoord0[0] = texCoords.left() + (Math.abs(innerOffset.x1 - x1))/gridWidth;
+      cellTextureCoord0[1] = texCoords.bottom() - (Math.abs(innerOffset.y1 - y1))/gridHeight;
+      
+      // Bottom Right Corner
+      cellTextureCoord1[0] = texCoords.left() + (Math.abs(innerOffset.x2 - x1))/gridWidth;;
+      cellTextureCoord1[1] = texCoords.bottom() - (Math.abs(innerOffset.y1 - y1))/gridHeight;
+      
+      // Top Right Corner
+      cellTextureCoord2[0] = texCoords.left() + (Math.abs(innerOffset.x2 - x1))/gridWidth;;
+      cellTextureCoord2[1] = texCoords.bottom() - (Math.abs(innerOffset.y2 - y1))/gridHeight;
+      
+      // Top Left Corner
+      cellTextureCoord3[0] = texCoords.left() + (Math.abs(innerOffset.x1 - x1))/gridWidth;;
+      cellTextureCoord3[1] = texCoords.bottom() - (Math.abs(innerOffset.y2 - y1))/gridHeight;;
+      
+      cellTextureCoords.add(cellTextureCoord0);
+      cellTextureCoords.add(cellTextureCoord1);
+      cellTextureCoords.add(cellTextureCoord2);
+      cellTextureCoords.add(cellTextureCoord3);
+      
+      
+      cell.setTexture(gridSpaceView.getBackgroundImg());
+      cell.setTextureCoords(cellTextureCoords);
     }
   }
 
@@ -457,9 +525,9 @@ public class GridSpaceModel extends SpaceModel {
     gl.glPushAttrib(GL2.GL_COLOR_BUFFER_BIT);
 
     // Apply the background texture
-    if (gridSpaceView.getBackgroundImg() != null) {
+    /*if (gridSpaceView.getBackgroundImg() != null) {
       applyBackgroundImg(gridSpaceView.getBackgroundImg(), gl);
-    }
+    }*/
 
     for (SpaceComponent comp : spaceComponents) {
       comp.display(gl, glu);
@@ -486,13 +554,14 @@ public class GridSpaceModel extends SpaceModel {
         .getOuterOffset().x2;
     double y2 = ((Cell) spaceComponents.get(spaceComponents.size() - 1))
         .getOuterOffset().y2;
-
+    
     // Enable the texture
     backgroundImg.enable();
 
     // Save attribute states
     gl.glPushAttrib(GL2.GL_ALL_ATTRIB_BITS);
 
+   
     // White drawing color
     gl.glColor3d(1, 1, 1);
 
@@ -512,7 +581,7 @@ public class GridSpaceModel extends SpaceModel {
     //gl.glVertex2d(x1, y2);
     gl.glVertex3d(x1, 0, -y2);
     gl.glEnd();
-
+    
     // Restore attribute states
     gl.glPopAttrib();
 
