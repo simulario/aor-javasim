@@ -114,6 +114,12 @@ public class Engine implements GLEventListener {
 
     // Display the space model & objects
     if (spaceModel != null) {
+      Skybox skybox = spaceModel.getSpaceView().getSkybox();
+      if(skybox != null) {
+        //skybox.setPosition(camera.getPosition());
+        skybox.display(gl, glu);
+      }
+      
       if (spaceModel.getSpaceType().equals(SpaceType.TwoDGrid)) {
         if (spaceModel.isRecompile()) {
           spaceModel.compileDisplayList(gl, glu);
@@ -121,12 +127,6 @@ public class Engine implements GLEventListener {
         }
       }
       spaceModel.display(gl, glu);
-      
-      Skybox skybox = spaceModel.getSpaceView().getSkybox();
-      if(skybox != null) {
-      	//skybox.setPosition(camera.getPosition());
-      	skybox.display(gl, glu);
-      }
 
       if (objMap != null) {
         if (!objMap.isEmpty()) {
@@ -343,6 +343,12 @@ public class Engine implements GLEventListener {
         skybox.setPosition(position);
       }*/
       glu.gluLookAt(0, 800, 800, 0, 0, 0, 0, 1, -1);
+      
+      double[] position = {0, 800, 800};
+      Skybox skybox = spaceModel.getSpaceView().getSkybox();
+      if(skybox != null) {
+        skybox.setPosition(position);
+      }
     }
     
     // Reset model view matrix stack

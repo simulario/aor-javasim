@@ -45,6 +45,8 @@ public class GridSpaceView extends SpaceView {
   // Background image
   private Texture backgroundImg;
   private String backgroundImgFilename;
+  
+  private double cellHeight = 10;
 
   public Color getBackgroundColor() {
     return backgroundColor;
@@ -108,5 +110,13 @@ public class GridSpaceView extends SpaceView {
 
   public void setBackgroundImgFilename(String backgroundImgFilename) {
     this.backgroundImgFilename = backgroundImgFilename;
+  }
+  
+  public double getCellHeight() {
+    return cellHeight;
+  }
+
+  public void setCellHeight(double cellHeight) {
+    this.cellHeight = cellHeight;
   }
 }

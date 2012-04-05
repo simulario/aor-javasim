@@ -17,6 +17,7 @@ import aors.module.visopengl3d.space.view.PropertyMap;
 import aors.module.visopengl3d.space.view.SpaceView;
 import aors.module.visopengl3d.utility.Color;
 import aors.module.visopengl3d.utility.Offset;
+import aors.module.visopengl3d.utility.TextureLoader;
 import aors.space.AbstractCell;
 import aors.space.Space;
 
@@ -101,6 +102,8 @@ public class GridSpaceModel extends SpaceModel {
         cell.setColor(determineCellColor(column, row));
         cell.setBorderColor(gridSpaceView.getStroke());
 
+        cell.setCellHeight(gridSpaceView.getCellHeight());
+        
         // Create cell contours
         cell.createCellContours();
 
@@ -160,6 +163,8 @@ public class GridSpaceModel extends SpaceModel {
         cell.setOuterOffset(cellOffset);
         cell.setInnerOffset(cellOffset, strokeWidth);
 
+        cell.setCellHeight(gridSpaceView.getCellHeight());
+        
         // Create cell contours
         cell.createCellContours();
 
@@ -215,7 +220,7 @@ public class GridSpaceModel extends SpaceModel {
    * @param cellDim
    */
   private double computeStrokeWidth(double cellDim) {
-    double strokeWidth = 1;
+    double strokeWidth = 0;
 
     if (gridSpaceView.getAbsoluteStrokeWidth() != 0
         && gridSpaceView.getRelativeStrokeWidth() != 0) {
@@ -325,12 +330,12 @@ public class GridSpaceModel extends SpaceModel {
         // Dimensions of the grid
         int columns = (int) xMax;
         int rows = (int) yMax;
-
+        
         // Get initial properties for each cell
         for (int row = 0; row < rows; row++) {
           for (int column = 0; column < columns; column++) {
             AbstractCell abstractCell = grid.getSpaceCells()[column][row];
-
+            
             if (abstractCell != null) {
               for (PropertyMap propertyMap : gridSpaceView.getPropertyMaps()) {
                 try {
@@ -400,6 +405,7 @@ public class GridSpaceModel extends SpaceModel {
    */
   private void updateVisualProperty(String visualPropertyName, String value,
       int column, int row) {
+    
     if (value != null) {
       try {
         // Determine the cells index
@@ -420,6 +426,12 @@ public class GridSpaceModel extends SpaceModel {
               recompile = true;
               break;
             }
+          }
+        } else if(visualPropertyName.equals("texture")) {
+          if(value != gridSpaceView.getBackgroundImgFilename()) {
+            gridSpaceView.setBackgroundImgFilename(value);
+            gridSpaceView.setBackgroundImg(TextureLoader.load(value));
+            recompile = true;
           }
         }
       } catch (Exception e) {
@@ -486,14 +498,19 @@ public class GridSpaceModel extends SpaceModel {
 
     // Display the texture
     gl.glBegin(GL2.GL_QUADS);
+    gl.glNormal3d(0, 1, 0);
     gl.glTexCoord2d(texCoords.left(), texCoords.bottom());
-    gl.glVertex2d(x1, y1);
+    //gl.glVertex2d(x1, y1);
+    gl.glVertex3d(x1, 0, -y1);
     gl.glTexCoord2d(texCoords.right(), texCoords.bottom());
-    gl.glVertex2d(x2, y1);
+    //gl.glVertex2d(x2, y1);
+    gl.glVertex3d(x2, 0, -y1);
     gl.glTexCoord2d(texCoords.right(), texCoords.top());
-    gl.glVertex2d(x2, y2);
+    //gl.glVertex2d(x2, y2);
+    gl.glVertex3d(x2, 0, -y2);
     gl.glTexCoord2d(texCoords.left(), texCoords.top());
-    gl.glVertex2d(x1, y2);
+    //gl.glVertex2d(x1, y2);
+    gl.glVertex3d(x1, 0, -y2);
     gl.glEnd();
 
     // Restore attribute states

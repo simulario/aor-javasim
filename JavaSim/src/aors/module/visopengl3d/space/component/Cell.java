@@ -8,6 +8,7 @@ import javax.media.opengl.GL2;
 import javax.media.opengl.glu.GLU;
 
 import aors.module.visopengl3d.engine.TessellatedPolygon;
+import aors.module.visopengl3d.space.view.SpaceView;
 import aors.module.visopengl3d.utility.Color;
 import aors.module.visopengl3d.utility.Offset;
 
@@ -37,8 +38,10 @@ public class Cell implements SpaceComponent {
   private Offset innerOffset;
 
   // Contours
-  private ArrayList<double[]> outerContour;
-  private ArrayList<double[]> innerContour;
+  private ArrayList<double[]> outerContourTop;
+  private ArrayList<double[]> innerContourTop;
+  private ArrayList<double[]> outerContourBottom;
+  private ArrayList<double[]> innerContourBottom;
 
   // Number of objects inside of the cell
   private int objCount;
@@ -51,6 +54,8 @@ public class Cell implements SpaceComponent {
 
   // Map of object positions
   private Map<Integer, double[]> positionMap = new HashMap<Integer, double[]>();
+  
+  private double cellHeight;
 
   /**
    * Increases the number of objects inside of the cell by one.
@@ -90,11 +95,17 @@ public class Cell implements SpaceComponent {
         // Object position
         double pos[] = new double[3];
 
-        pos[0] = center[0] + Math.cos(halfAngle * (Math.PI / 180))
+        /*pos[0] = center[0] + Math.cos(halfAngle * (Math.PI / 180))
             * (inRadius / 2);
         pos[1] = center[1] + Math.sin(halfAngle * (Math.PI / 180))
             * (inRadius / 2);
-        pos[2] = 0;
+        pos[2] = 0;*/
+        
+        pos[0] = center[0] + Math.cos(halfAngle * (Math.PI / 180))
+            * (inRadius / 2);
+        pos[1] = SpaceView.getObjectHeight() / 2;
+        pos[2] = center[2] - Math.sin(halfAngle * (Math.PI / 180))
+            * (inRadius / 2);
 
         // Move to next segment
         halfAngle += segmentAngle;
@@ -105,7 +116,13 @@ public class Cell implements SpaceComponent {
 
     } else if (objCount == 1) {
       // One object will be positioned at the cell's center
-      positionMap.put(1, center);
+      double pos[] = new double[3];
+      
+      pos[0] = center[0];
+      pos[1] = SpaceView.getObjectHeight() / 2;
+      pos[2] = center[2];
+      
+      positionMap.put(1, pos);
     } else {
       return;
     }
@@ -116,63 +133,132 @@ public class Cell implements SpaceComponent {
    */
   public void createCellContours() {
     if (outerOffset != null && innerOffset != null) {
-      // Set up outer contour (4 points in counterclockwise order)
-      double outerVertex0[] = new double[9];
-      double outerVertex1[] = new double[9];
-      double outerVertex2[] = new double[9];
-      double outerVertex3[] = new double[9];
-
+      // Set up outer contour top (4 points in counterclockwise order)
+      double outerVertexTop0[] = new double[12];
+      double outerVertexTop1[] = new double[12];
+      double outerVertexTop2[] = new double[12];
+      double outerVertexTop3[] = new double[12];
+      
       // Bottom left corner
-      outerVertex0[0] = outerOffset.x1;
-      outerVertex0[1] = outerOffset.y1;
+      outerVertexTop0[0] = outerOffset.x1;
+      outerVertexTop0[2] = -outerOffset.y1;
 
       // Bottom right corner
-      outerVertex1[0] = outerOffset.x2;
-      outerVertex1[1] = outerOffset.y1;
+      outerVertexTop1[0] = outerOffset.x2;
+      outerVertexTop1[2] = -outerOffset.y1;
 
       // Top right corner
-      outerVertex2[0] = outerOffset.x2;
-      outerVertex2[1] = outerOffset.y2;
+      outerVertexTop2[0] = outerOffset.x2;
+      outerVertexTop2[2] = -outerOffset.y2;
 
       // Top left corner
-      outerVertex3[0] = outerOffset.x1;
-      outerVertex3[1] = outerOffset.y2;
+      outerVertexTop3[0] = outerOffset.x1;
+      outerVertexTop3[2] = -outerOffset.y2;
 
-      // Add vertices to outer contour list
-      outerContour = new ArrayList<double[]>();
-      outerContour.add(outerVertex0);
-      outerContour.add(outerVertex1);
-      outerContour.add(outerVertex2);
-      outerContour.add(outerVertex3);
-
-      // Set up inner contour (4 points in counterclockwise order)
-      double innerVertex0[] = new double[9];
-      double innerVertex1[] = new double[9];
-      double innerVertex2[] = new double[9];
-      double innerVertex3[] = new double[9];
-
+      // Add vertices to outer contour top list
+      outerContourTop = new ArrayList<double[]>();
+      outerContourTop.add(outerVertexTop0);
+      outerContourTop.add(outerVertexTop1);
+      outerContourTop.add(outerVertexTop2);
+      outerContourTop.add(outerVertexTop3);
+      
+      
+      // Set up outer contour bottom (4 points in clockwise order)
+      double outerVertexBottom0[] = new double[12];
+      double outerVertexBottom1[] = new double[12];
+      double outerVertexBottom2[] = new double[12];
+      double outerVertexBottom3[] = new double[12];
+      
+      // Top left corner
+      outerVertexBottom0[0] = outerOffset.x1;
+      outerVertexBottom0[1] = -cellHeight;
+      outerVertexBottom0[2] = -outerOffset.y2;
+      
+      // Top right corner
+      outerVertexBottom1[0] = outerOffset.x2;
+      outerVertexBottom1[1] = -cellHeight;
+      outerVertexBottom1[2] = -outerOffset.y2;
+      
+      // Bottom right corner
+      outerVertexBottom2[0] = outerOffset.x2;
+      outerVertexBottom2[1] = -cellHeight;
+      outerVertexBottom2[2] = -outerOffset.y1;
+      
       // Bottom left corner
-      innerVertex0[0] = innerOffset.x1;
-      innerVertex0[1] = innerOffset.y1;
+      outerVertexBottom3[0] = outerOffset.x1;
+      outerVertexBottom3[1] = -cellHeight;
+      outerVertexBottom3[2] = -outerOffset.y1;
+      
+      // Add vertices to outer contour bottom list in clockwise order
+      outerContourBottom = new ArrayList<double[]>();
+      outerContourBottom.add(outerVertexBottom0);
+      outerContourBottom.add(outerVertexBottom1);
+      outerContourBottom.add(outerVertexBottom2);
+      outerContourBottom.add(outerVertexBottom3);
+
+      
+      // Set up inner contour top (4 points in counterclockwise order)
+      double innerVertexTop0[] = new double[12];
+      double innerVertexTop1[] = new double[12];
+      double innerVertexTop2[] = new double[12];
+      double innerVertexTop3[] = new double[12];
+      
+      // Bottom left corner
+      innerVertexTop0[0] = innerOffset.x1;
+      innerVertexTop0[2] = -innerOffset.y1;
 
       // Bottom right corner
-      innerVertex1[0] = innerOffset.x2;
-      innerVertex1[1] = innerOffset.y1;
+      innerVertexTop1[0] = innerOffset.x2;
+      innerVertexTop1[2] = -innerOffset.y1;
 
       // Top right corner
-      innerVertex2[0] = innerOffset.x2;
-      innerVertex2[1] = innerOffset.y2;
+      innerVertexTop2[0] = innerOffset.x2;
+      innerVertexTop2[2] = -innerOffset.y2;
 
       // Top left corner
-      innerVertex3[0] = innerOffset.x1;
-      innerVertex3[1] = innerOffset.y2;
+      innerVertexTop3[0] = innerOffset.x1;
+      innerVertexTop3[2] = -innerOffset.y2;
 
-      // Add vertices to outer contour list
-      innerContour = new ArrayList<double[]>();
-      innerContour.add(innerVertex0);
-      innerContour.add(innerVertex1);
-      innerContour.add(innerVertex2);
-      innerContour.add(innerVertex3);
+      // Add vertices to inner contour top list
+      innerContourTop = new ArrayList<double[]>();
+      innerContourTop.add(innerVertexTop0);
+      innerContourTop.add(innerVertexTop1);
+      innerContourTop.add(innerVertexTop2);
+      innerContourTop.add(innerVertexTop3);
+      
+      
+      // Set up inner contour bottom (4 points in clockwise order)
+      double innerVertexBottom0[] = new double[12];
+      double innerVertexBottom1[] = new double[12];
+      double innerVertexBottom2[] = new double[12];
+      double innerVertexBottom3[] = new double[12];
+      
+      // Top left corner
+      innerVertexBottom0[0] = innerOffset.x1;
+      innerVertexBottom0[1] = -cellHeight;
+      innerVertexBottom0[2] = -innerOffset.y2;
+      
+      // Top right corner
+      innerVertexBottom1[0] = innerOffset.x2;
+      innerVertexBottom1[1] = -cellHeight;
+      innerVertexBottom1[2] = -innerOffset.y2;
+      
+      // Bottom right corner
+      innerVertexBottom2[0] = innerOffset.x2;
+      innerVertexBottom2[1] = -cellHeight;
+      innerVertexBottom2[2] = -innerOffset.y1;
+      
+      // Bottom left corner
+      innerVertexBottom3[0] = innerOffset.x1;
+      innerVertexBottom3[1] = -cellHeight;
+      innerVertexBottom3[2] = -innerOffset.y1;
+
+      // Add vertices to inner contour bottom list
+      innerContourBottom = new ArrayList<double[]>();
+      innerContourBottom.add(innerVertexBottom0);
+      innerContourBottom.add(innerVertexBottom1);
+      innerContourBottom.add(innerVertexBottom2);
+      innerContourBottom.add(innerVertexBottom3);
     }
   }
 
@@ -182,7 +268,7 @@ public class Cell implements SpaceComponent {
    * @param contour
    * @param color
    */
-  private void applyContourColor(ArrayList<double[]> contour, Color color) {
+  private void applyContourColor(ArrayList<double[]> contour, Color color, boolean top) {
     if (contour != null) {
       for (double[] vertex : contour) {
         if (color != null) {
@@ -200,40 +286,154 @@ public class Cell implements SpaceComponent {
         // No texture
         vertex[7] = 0;
         vertex[8] = 0;
+        
+        if(top) {
+          vertex[9] = 0;
+          vertex[10] = 1;
+          vertex[11] = 0;
+        } else {
+          vertex[9] = 0;
+          vertex[10] = -1;
+          vertex[11] = 0;
+        }
       }
     }
   }
 
   @Override
   public void display(GL2 gl, GLU glu) {
-    TessellatedPolygon cell = new TessellatedPolygon();
-    cell.init(gl, glu);
-
-    // Apply the border color
-    applyContourColor(outerContour, borderColor);
-    applyContourColor(innerContour, borderColor);
-
-    // Draw the border
-    cell.beginPolygon();
-    cell.setWindingRule(GLU.GLU_TESS_WINDING_ODD);
-    cell.beginContour();
-    cell.renderContour(outerContour);
-    cell.endContour();
-    cell.beginContour();
-    cell.renderContour(innerContour);
-    cell.endContour();
-    cell.endPolygon();
-
+    TessellatedPolygon cellTop = new TessellatedPolygon();
+    cellTop.init(gl, glu);
+    
+    if(borderWidth != 0) {
+      // Apply the border color
+      applyContourColor(outerContourTop, borderColor, true);
+      applyContourColor(innerContourTop, borderColor, true);
+  
+      // Draw the border
+      cellTop.beginPolygon();
+      cellTop.setWindingRule(GLU.GLU_TESS_WINDING_ODD);
+      cellTop.beginContour();
+      cellTop.renderContour(outerContourTop);
+      cellTop.endContour();
+      cellTop.beginContour();
+      cellTop.renderContour(innerContourTop);
+      cellTop.endContour();
+      cellTop.endPolygon();
+    }
+    
     // Apply the cell color
-    applyContourColor(innerContour, color);
+    applyContourColor(innerContourTop, color, true);
 
     // Draw the interior
-    cell.beginPolygon();
-    cell.beginContour();
-    cell.renderContour(innerContour);
-    cell.endContour();
-    cell.endPolygon();
-    cell.end();
+    cellTop.beginPolygon();
+    cellTop.beginContour();
+    cellTop.renderContour(innerContourTop);
+    cellTop.endContour();
+    cellTop.endPolygon();
+    cellTop.end();
+    
+    
+    TessellatedPolygon cellBottom = new TessellatedPolygon();
+    cellBottom.init(gl, glu);
+
+    if(borderWidth != 0) {
+      // Apply the border color
+      applyContourColor(outerContourBottom, borderColor, false);
+      applyContourColor(innerContourBottom, borderColor, false);
+  
+      // Draw the border
+      cellBottom.beginPolygon();
+      cellBottom.setWindingRule(GLU.GLU_TESS_WINDING_ODD);
+      cellBottom.beginContour();
+      cellBottom.renderContour(outerContourBottom);
+      cellBottom.endContour();
+      cellBottom.beginContour();
+      cellBottom.renderContour(innerContourBottom);
+      cellBottom.endContour();
+      cellBottom.endPolygon();
+    }
+
+    // Apply the cell color
+    applyContourColor(innerContourBottom, color, false);
+
+    // Draw the interior
+    cellBottom.beginPolygon();
+    cellBottom.beginContour();
+    cellBottom.renderContour(innerContourBottom);
+    cellBottom.endContour();
+    cellBottom.endPolygon();
+    cellBottom.end();
+    
+    
+    // draw the side faces of the cell
+    gl.glBegin(GL2.GL_QUADS);
+    
+    // Set the drawing color
+    if(borderWidth != 0) {
+      gl.glColor4dv(borderColor.getColor(), 0);
+    } else {
+      gl.glColor4dv(color.getColor(), 0);
+    }
+    
+    int lastIndex = outerContourTop.size()-1;
+    
+    for(int i = 0; i < lastIndex; i++) {
+      double[] normal = crossProduct(
+                            subtractVectors(outerContourBottom.get(lastIndex-i), outerContourTop.get(i)),
+                            subtractVectors(outerContourTop.get(i+1), outerContourTop.get(i)));
+      
+      normalize(normal);
+      gl.glNormal3dv(normal, 0);
+      gl.glVertex3dv(outerContourBottom.get(lastIndex-i), 0);
+      gl.glVertex3dv(outerContourBottom.get(lastIndex-(i+1)), 0);
+      gl.glVertex3dv(outerContourTop.get(i+1), 0);
+      gl.glVertex3dv(outerContourTop.get(i), 0);
+    }
+    
+    double[] normal = crossProduct(
+                          subtractVectors(outerContourBottom.get(lastIndex-lastIndex), outerContourTop.get(lastIndex)),
+                          subtractVectors(outerContourTop.get(0), outerContourTop.get(lastIndex)));
+
+    normalize(normal);
+    gl.glNormal3dv(normal, 0);
+    gl.glVertex3dv(outerContourBottom.get(lastIndex-lastIndex), 0);
+    gl.glVertex3dv(outerContourBottom.get(lastIndex-0), 0);
+    gl.glVertex3dv(outerContourTop.get(0), 0);
+    gl.glVertex3dv(outerContourTop.get(lastIndex), 0);
+    
+    gl.glEnd();
+  }
+  
+  /**
+   * Normalizes a vector by dividing its components through its length
+   * 
+   * @param v
+   *      vector, which should be normalized, as an array
+   */
+  public void normalize(double[] v) {
+    double length = Math.sqrt(v[0]*v[0] + v[1]*v[1] + v[2]*v[2]);
+    v[0] /= length;
+    v[1] /= length;
+    v[2] /= length;
+  }
+  
+  public double[] subtractVectors(double[] vector1, double[] vector2) {
+    double[] result = {
+      vector1[0] - vector2[0],
+      vector1[1] - vector2[1],
+      vector1[2] - vector2[2],
+    }; 
+    return result;
+  }
+  
+  public double[] crossProduct(double[] vector1, double[] vector2) {
+    double[] crossProduct = {
+      vector1[1]*vector2[2] - vector1[2]*vector2[1],
+      vector1[2]*vector2[0] - vector1[0]*vector2[2],
+      vector1[0]*vector2[1] - vector1[1]*vector2[0]
+    };
+    return crossProduct;
   }
 
   @Override
@@ -286,9 +486,13 @@ public class Cell implements SpaceComponent {
           - borderWidth);
 
       // Calculate the cells center
+      //center[0] = (innerOffset.getWidth() / 2) + innerOffset.x1;
+      //center[1] = (innerOffset.getHeight() / 2) + innerOffset.y1;
+      //center[2] = 0;
+      
       center[0] = (innerOffset.getWidth() / 2) + innerOffset.x1;
-      center[1] = (innerOffset.getHeight() / 2) + innerOffset.y1;
-      center[2] = 0;
+      center[1] = 0;
+      center[2] = -((innerOffset.getHeight() / 2) + innerOffset.y1);
     }
   }
 
@@ -311,9 +515,13 @@ public class Cell implements SpaceComponent {
         - strokeWidth);
 
     // Calculate the cells center
+    //center[0] = (innerOffset.getWidth() / 2) + innerOffset.x1;
+    //center[1] = (innerOffset.getHeight() / 2) + innerOffset.y1;
+    //center[2] = 0;
+    
     center[0] = (innerOffset.getWidth() / 2) + innerOffset.x1;
-    center[1] = (innerOffset.getHeight() / 2) + innerOffset.y1;
-    center[2] = 0;
+    center[1] = 0;
+    center[2] = -((innerOffset.getHeight() / 2) + innerOffset.y1);
   }
 
   public int getObjCount() {
@@ -330,5 +538,13 @@ public class Cell implements SpaceComponent {
 
   public void setScale(double scale) {
     this.scale = scale;
+  }
+  
+  public double getCellHeight() {
+    return cellHeight;
+  }
+
+  public void setCellHeight(double cellHeight) {
+    this.cellHeight = cellHeight;
   }
 }
