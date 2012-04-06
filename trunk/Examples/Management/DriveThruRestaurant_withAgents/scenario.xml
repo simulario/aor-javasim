@@ -7,7 +7,7 @@
 	xmlns:dc="http://purl.org/dc/elements/1.1/" scenarioName="DriveThru"
 	scenarioTitle="A drive thru with a menu board, a kitchen and a pickup window"
 	simulationManagerDirectory="../../..">
-	<SimulationParameters simulationSteps="10000" stepDuration="1" timeUnit="s"/>
+	<SimulationParameters simulationSteps="10000" stepDuration="1" timeUnit="s" createDebuggingOutput="true" />
 	<SimulationModel modelName="DriveThru" 
 		modelTitle="A drive thru with a menu board, a kitchen, a pickup window and customer agents">
 		<documentation>
@@ -277,8 +277,7 @@ var i = messageInfo.indexOf("and");
 					<!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->
 					<documentation>
 					  <description>
-							The MenuBoard receives the Order information from the customer. It replies with the
-							orderId information (i.e. the occurrence time of the event) and also schedules a Reminder
+							The MenuBoard receives the Order information from the customer. It schedules a Reminder
 							event in order to know that the MenuBoard service for that particular customer is over. A
 							ProductionOrder message (containing orderNo and pizzaType) will be also sent to
 							KitchenService, in order to prepare the pizza. 
@@ -334,7 +333,7 @@ parseInt( this.menuBoard.getMessagePart( this.evt.getReminderMsg(),1))
 								<ValueExpr language="Java"><![CDATA[
 Integer.parseInt( getMessagePart( evt.getReminderMsg(),2))
                                  ]]></ValueExpr>
-								<ValueExpr language="JavaScript"><![CDATA[
+								<ValueExpr language="JavaScript" logPeriodicity="1"><![CDATA[
 parseInt( this.menuBoard.getMessagePart( this.evt.getReminderMsg(),2))
 								]]></ValueExpr>
 								</Slot>
@@ -669,7 +668,7 @@ this.cust.getOrderNo()
 					<!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->
 					<documentation>
 						<description> 
-							The customer at the PW serice desk is announced that his order is arrived.
+							The customer at the PW service desk is announced that his order is arrived.
 							While waiting for other preparations at the PW desk the customer is not asked anymore about
 							his orderNo information.
 						</description>
@@ -686,17 +685,16 @@ this.cust.getOrderNo()
 					<!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->
 					<documentation>
 						<description> 
-							The customer at the PW serice desk is announced that his order is arrived.
-							While waiting for other preparations at the PW desk the customer is not asked anymore about
-							his orderNo information.
+							The customer is informed by the MB about the number of his/her order.
 						</description>
 					</documentation>
-					<WHEN eventType="InMessageEvent" messageType="ConfirmOrder" />
+					<WHEN eventType="InMessageEvent" messageType="ConfirmOrder" messageVariable="mes" />
 					<DO>
 						<SCHEDULE-EVT>
 							<OutMessageEventExpr messageType="ConfirmOrder" receiverIdRefs="0">
 								<Slot property="orderNo">
-									<ValueExpr language="Java JavaScript">this.cust.getOrderNo()</ValueExpr>
+									<ValueExpr language="Java">this.mes.getOrderNo()</ValueExpr>
+									<ValueExpr language="JavaScript" logPeriodicity="1">this.mes.getOrderNo()</ValueExpr>
 								</Slot>
 							</OutMessageEventExpr>
 						</SCHEDULE-EVT>
