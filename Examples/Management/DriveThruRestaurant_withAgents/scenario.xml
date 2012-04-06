@@ -470,9 +470,10 @@ parseInt( this.kitchen.getMessagePart( this.evt.getReminderMsg(),3))
 				<Attribute name="queueLength" type="Integer" />
 				<ReferenceProperty name="pickupWindowQueue" type="Customer" upperMultiplicity="unbounded">
 					<documentation>
-						This property represents a first-in-first-out queue. 
+						This property represents a first-in-first-out (FIFO) queue. 
 					</documentation>
 				</ReferenceProperty>
+				<Attribute name="orders" type="Integer" upperMultiplicity="unbounded" />			
 				<!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->
 				<Function name="pizzaPrice" resultType="Float">
 				<!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->
@@ -510,9 +511,11 @@ var resultInfo = messageInfo.substring( 25, messageInfo.length);
    return resultInfo; 
           ]]></Body>
 				</Function>
+				<!--
 				<BeliefEntityType name="Order">
 					<BeliefAttribute name="orderNo" type="Integer" initialValue="0" />
 				</BeliefEntityType>
+				-->
 				<!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->
 				<ReactionRule name="OrderPrepared_Rule">
 					<!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->
@@ -526,12 +529,19 @@ var resultInfo = messageInfo.substring( 25, messageInfo.length);
 					<WHEN eventType="InMessageEvent" messageType="OrderPrepared" messageVariable="mes" />
 					<DO>
 						<UPDATE-AGT>
+							<MultiValuedSlot property="orders">
+								<AddLast>
+									<ItemExpr language="Java JavaScript">this.mes.getOrderNo()</ItemExpr>
+								</AddLast>
+							</MultiValuedSlot>
+							<!--
 							<CreateBeliefEntity beliefEntityType="Order">
 								<BeliefEntityIdRef language="Java JavaScript">this.mes.getOrderNo()</BeliefEntityIdRef>
 								<BeliefSlot property="orderNo">
 									<ValueExpr language="Java JavaScript">this.mes.getOrderNo()</ValueExpr>
 								</BeliefSlot>
 							</CreateBeliefEntity>
+							-->
 						</UPDATE-AGT>
 					</DO>
 				</ReactionRule>
@@ -541,18 +551,21 @@ var resultInfo = messageInfo.substring( 25, messageInfo.length);
 					<documentation>
 						<description> 
 							The PW agent asks the Customer agent about its orderNo SelfBeliefAttr and the
-							Customer replies this information. Then the PW agent verifies if the customer order is
+							Customer replies this information. Then, the PW agent verifies if the customer order is
 							already arrived. If the order is arrived then, it schedules a reminder event type with the
 							delay at the pickup window.
 						</description>
 					</documentation>
 					<WHEN eventType="InMessageEvent" messageType="ReplyOrderNo" messageVariable="mes" eventVariable="evt" />
+					<FOR-ListItemVariable variable="order" listValuedAgentProperty="orders" listItemType="Integer" />
+					<!--
 					<FOR beliefEntityVariable="order" beliefEntityType="Order" />
+					-->
 					<IF language="Java"><![CDATA[
-mes.getOrderNo() == (( Order)order).getOrderNo()                         
+mes.getOrderNo() == order                       
                     ]]></IF>
 					<IF language="JavaScript"><![CDATA[
-this.mes.getOrderNo() == this.order.getOrderNo()                         
+this.mes.getOrderNo() == this.order                        
                      ]]></IF>
 					<THEN>
 						<SCHEDULE-EVT>
@@ -1145,7 +1158,7 @@ this.mes.getCustID()
 			<Slot property="queueLength" value="0" />
 			<Slot property="menuBoardQueue">
 				<ValueExpr language="Java"><![CDATA[ new ArrayList<Customer>()]]></ValueExpr>
-				<ValueExpr language="JavaScript">new js.util.ArrayList()</ValueExpr>
+				<ValueExpr language="JavaScript"><![CDATA[ new js.util.ArrayList()]]></ValueExpr>
 			</Slot>
 		</Agent>
 		<!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->
@@ -1156,7 +1169,11 @@ this.mes.getCustID()
 			<Slot property="queueLength" value="0" />
 			<Slot property="pickupWindowQueue">
 				<ValueExpr language="Java"><![CDATA[ new ArrayList<Customer>()]]></ValueExpr>
-				<ValueExpr language="JavaScript">new js.util.ArrayList()</ValueExpr>
+				<ValueExpr language="JavaScript"><![CDATA[ new js.util.ArrayList()]]></ValueExpr>
+			</Slot>
+			<Slot property="orders">
+				<ValueExpr language="Java"><![CDATA[ new ArryList<Integer>() ]]></ValueExpr>
+				<ValueExpr language="JavaScript"><![CDATA[ new js.util.ArrayList()]]></ValueExpr>
 			</Slot>
 		</Agent>
 		<!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->
