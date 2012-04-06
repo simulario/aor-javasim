@@ -511,19 +511,14 @@ var resultInfo = messageInfo.substring( 25, messageInfo.length);
    return resultInfo; 
           ]]></Body>
 				</Function>
-				<!--
-				<BeliefEntityType name="Order">
-					<BeliefAttribute name="orderNo" type="Integer" initialValue="0" />
-				</BeliefEntityType>
-				-->
 				<!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->
 				<ReactionRule name="OrderPrepared_Rule">
 					<!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->
 					<documentation>
 						<description> 
 							The PW agent receives the prepared order from the Kitchen agent (i.e. the
-							orderNo). He uses this information and he creates for each new Customer agent a new Order
-							BeliefEntityType for which it sets the orderNo attribute. 
+							orderNo). He uses this information and he creates for each new Customer agent a 
+							new order value which captures the orderNo of the customer order.
 						</description>
 					</documentation>
 					<WHEN eventType="InMessageEvent" messageType="OrderPrepared" messageVariable="mes" />
@@ -534,14 +529,6 @@ var resultInfo = messageInfo.substring( 25, messageInfo.length);
 									<ItemExpr language="Java JavaScript">this.mes.getOrderNo()</ItemExpr>
 								</AddLast>
 							</MultiValuedSlot>
-							<!--
-							<CreateBeliefEntity beliefEntityType="Order">
-								<BeliefEntityIdRef language="Java JavaScript">this.mes.getOrderNo()</BeliefEntityIdRef>
-								<BeliefSlot property="orderNo">
-									<ValueExpr language="Java JavaScript">this.mes.getOrderNo()</ValueExpr>
-								</BeliefSlot>
-							</CreateBeliefEntity>
-							-->
 						</UPDATE-AGT>
 					</DO>
 				</ReactionRule>
@@ -558,9 +545,6 @@ var resultInfo = messageInfo.substring( 25, messageInfo.length);
 					</documentation>
 					<WHEN eventType="InMessageEvent" messageType="ReplyOrderNo" messageVariable="mes" eventVariable="evt" />
 					<FOR-ListItemVariable variable="order" listValuedAgentProperty="orders" listItemType="Integer" />
-					<!--
-					<FOR beliefEntityVariable="order" beliefEntityType="Order" />
-					-->
 					<IF language="Java"><![CDATA[
 mes.getOrderNo() == order                       
                     ]]></IF>
@@ -1172,7 +1156,7 @@ this.mes.getCustID()
 				<ValueExpr language="JavaScript"><![CDATA[ new js.util.ArrayList()]]></ValueExpr>
 			</Slot>
 			<Slot property="orders">
-				<ValueExpr language="Java"><![CDATA[ new ArryList<Integer>() ]]></ValueExpr>
+				<ValueExpr language="Java"><![CDATA[ new ArrayList<Long>() ]]></ValueExpr>
 				<ValueExpr language="JavaScript"><![CDATA[ new js.util.ArrayList()]]></ValueExpr>
 			</Slot>
 		</Agent>

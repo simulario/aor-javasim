@@ -311,7 +311,7 @@ String resultInfo= "";
 int i = messageInfo.indexOf("and");
 	if (argumentIndex == 1) {
   	if (i == 1) {
-  		resultInfo = Character.toString(messageInfo.charAt(22));
+  		resultInfo = Character.toString( messageInfo.charAt(22));
   	}
  	 else
     	resultInfo = messageInfo.substring(22,i);                    
@@ -332,13 +332,13 @@ var i = messageInfo.indexOf("and");
         resultInfo = messageInfo.substring( 22,i);                    
      } 
     else	{
-     resultInfo = messageInfo.substring( i+3, messageInfo.length());                       
+     resultInfo = messageInfo.substring( i+3, messageInfo.length);                       
     }
      return resultInfo; 
                  ]]></Body>
 				</Function>
 				<!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->
-				<ReactionRule name="SendOrder_Rule" agentVariable="mb">
+				<ReactionRule name="SendOrder_Rule">
 					<!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->
 					<documentation>
 						<description> The MenuBoard receives the Order information from 
@@ -380,7 +380,7 @@ this.evt.getSenderIdRef() + "and" + this.evt.getOccurrenceTime()
 			  	  </DO>
 				</ReactionRule>
 				<!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->
-				<ReactionRule name="MenuBoardReminder_Rule">
+				<ReactionRule name="MenuBoardReminder_Rule" agentVariable="menuBoard">
 					<!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->
 					<documentation>
 						<description> When the Menu Board receives the reminder rule, it 
@@ -395,15 +395,15 @@ this.evt.getSenderIdRef() + "and" + this.evt.getOccurrenceTime()
 								<ReceiverIdRef language="Java"><![CDATA[
 Integer.parseInt( getMessagePart( evt.getReminderMsg(),1))
                                 ]]></ReceiverIdRef>
-								<ReceiverIdRef language="Java"><![CDATA[
-parseInt( this.getMessagePart( this.evt.getReminderMsg(),1))
+								<ReceiverIdRef language="JavaScript"><![CDATA[
+parseInt( this.menuBoard.getMessagePart( this.evt.getReminderMsg(),1))
 									]]></ReceiverIdRef>
 								<Slot property="orderNo">
 									<ValueExpr language="Java"><![CDATA[
 Integer.parseInt( getMessagePart( evt.getReminderMsg(),2))
                                     ]]></ValueExpr>
-									<ValueExpr language="Java"><![CDATA[
-parseInt( this.getMessagePart( this.evt.getReminderMsg(),2))
+									<ValueExpr language="JavaScript"><![CDATA[
+parseInt( this.menuBoard.getMessagePart( this.evt.getReminderMsg(),2))
 									]]></ValueExpr>
 								</Slot>
 							</OutMessageEventExpr>
@@ -448,7 +448,7 @@ int j= substr.indexOf("and");
 					<Body language="JavaScript"><![CDATA[
 var resultInfo = ""; 
 var i = messageInfo.indexOf("and");
-var substr = messageInfo.substring( i+3, messageInfo.length());
+var substr = messageInfo.substring( i+3, messageInfo.length);
 var j= substr.indexOf("and");
 	if (argumentIndex == 1) {
   	  resultInfo = messageInfo.substring( 20,i); 
@@ -458,13 +458,13 @@ var j= substr.indexOf("and");
       resultInfo = substr.substring(0,j);
     }
     else {
-      resultInfo = substr.substring( j+3, substr.length());
+      resultInfo = substr.substring( j+3, substr.length);
     }    
    return resultInfo; 
           ]]></Body>
 				</Function>
 				<!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->
-				<ReactionRule name="ProductionOrder_Rule" agentVariable="k">
+				<ReactionRule name="ProductionOrder_Rule">
 					<!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->
 					<documentation>
 						<description> The MenuBoard agent sends a ProductionOrder for the 
@@ -488,7 +488,7 @@ var j= substr.indexOf("and");
 					</DO>
 				</ReactionRule>			
 				<!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->
-				<ReactionRule name="KitchenReminder_Rule" agentVariable="k">
+				<ReactionRule name="KitchenReminder_Rule" agentVariable="kitchen">
 					<!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->
 					<documentation>
 						<description> Once the reminder event is triggered, the Kitchen 
@@ -506,7 +506,7 @@ var j= substr.indexOf("and");
 Integer.parseInt( getMessagePart( evt.getReminderMsg(),1))
                                     ]]></ValueExpr>
 									<ValueExpr language="JavaScript"><![CDATA[
-parseInt( this.getMessagePart( this.evt.getReminderMsg(),1))
+parseInt( this.kitchen.getMessagePart( this.evt.getReminderMsg(),1))
                                 ]]></ValueExpr>
 								</Slot>
 								<Slot property="pizzaType">
@@ -514,7 +514,7 @@ parseInt( this.getMessagePart( this.evt.getReminderMsg(),1))
 Integer.parseInt( getMessagePart( evt.getReminderMsg(),2))
                                     ]]></ValueExpr>
 									<ValueExpr language="JavaScript"><![CDATA[
-parseInt( this.getMessagePart( this.evt.getReminderMsg(),2))
+parseInt( this.kitchen.getMessagePart( this.evt.getReminderMsg(),2))
                                ]]></ValueExpr>
 								</Slot>
 								<Slot property="custID">
@@ -522,7 +522,7 @@ parseInt( this.getMessagePart( this.evt.getReminderMsg(),2))
 Integer.parseInt(getMessagePart(evt.getReminderMsg(),3))
                                     ]]></ValueExpr>
 									<ValueExpr language="JavaScript"><![CDATA[
-parseInt( this.getMessagePart( this.evt.getReminderMsg(),3))
+parseInt( this.kitchen.getMessagePart( this.evt.getReminderMsg(),3))
 								]]></ValueExpr>
 								</Slot>
 							</OutMessageEventExpr>
@@ -539,6 +539,7 @@ parseInt( this.getMessagePart( this.evt.getReminderMsg(),3))
 				<ReferenceProperty name="pickupWindowQueue" type="Customer" upperMultiplicity="unbounded">
 					<documentation>This property represents a first-in-first-out queue. </documentation>
 				</ReferenceProperty>
+				<Attribute name="orders" type="Integer" upperMultiplicity="unbounded" />
 				<!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->
 				<Function name="pizzaPrice" resultType="Float">
 					<!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->
@@ -554,37 +555,51 @@ var price = [0.0, 0.0, 2.0, 4.0, 6.0, 8.0, 10.0, 12.0, 14.0, 16.0, 18.0, 20.0, 2
 	return price[pizzaType];
 				   ]]></Body>
 				</Function>
-				<BeliefEntityType name="Order">
-					<BeliefAttribute type="Integer" name="orderNo" initialValue="0" />
-				</BeliefEntityType>
+				<!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->
+				<Function name="getMessagePart" resultType="String">
+					<!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->
+					<documentation>
+						<description> 
+							The function deals with retrieving the needed information from a string 
+							that comprises the customer ID information. The function is needed bc. the 
+							ReminderEvent has only one string field to keep the information. From this 
+							field we need to extract the needed parts. 
+						</description>
+					</documentation>
+					<Parameter name="messageInfo" type="String" />
+					<Parameter name="argumentIndex" type="Integer" />
+					<Body language="Java"><![CDATA[
+String resultInfo = messageInfo.substring( 25, messageInfo.length());     
+   return resultInfo; 
+                   ]]></Body>
+					<Body language="JavaScript"><![CDATA[
+var resultInfo = messageInfo.substring( 25, messageInfo.length);
+   return resultInfo; 
+          ]]></Body>
+				</Function>
 				<!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->
-				<ReactionRule name="OrderPrepared_Rule" agentVariable="pw">
+				<ReactionRule name="OrderPrepared_Rule">
 					<!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->
 					<documentation>
 						<description> The PW agent receives the prepared order from the 
 							Kitchen agent (i.e. the orderNo) He uses this information and 
-							he creates for each new Customer agent a new Order BeliefEntityType 
-							for which it sets the orderNo and arrived attributes. 
+							he creates for each new Customer agent a new order value
+							which captures the orderNo of the customer order.
 						</description>
 					</documentation>
 					<WHEN eventType="InMessageEvent" messageVariable="mes" messageType="OrderPrepared" />
 				<DO>
 					<UPDATE-AGT>
-						<CreateBeliefEntity beliefEntityType="Order">
-							<BeliefEntityIdRef language="Java JavaScript"><![CDATA[
-this.mes.getOrderNo()
-								]]></BeliefEntityIdRef>
-							<BeliefSlot property="orderNo">
-								<ValueExpr language="Java JavaScript"><![CDATA[
-this.mes.getOrderNo()
-									]]></ValueExpr>
-							</BeliefSlot>
-						</CreateBeliefEntity>
+						<MultiValuedSlot property="orders">
+							<AddLast>
+								<ItemExpr language="Java JavaScript">this.mes.getOrderNo()</ItemExpr>
+							</AddLast>
+						</MultiValuedSlot>
 					</UPDATE-AGT>
 				</DO>
 				</ReactionRule>
 				<!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->
-				<ReactionRule name="ReplyOrderNo_Rule" agentVariable="pw">
+				<ReactionRule name="ReplyOrderNo_Rule">
 					<!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->
 					<documentation>
 						<description> The PW agent asks the Customer agent about its 
@@ -595,13 +610,13 @@ this.mes.getOrderNo()
 						</description>
 					</documentation>
 					<WHEN eventType="InMessageEvent" messageType="ReplyOrderNo" messageVariable="mes" eventVariable="evt" />
-					<FOR beliefEntityVariable="order" beliefEntityType="Order" />
+					<FOR-ListItemVariable variable="order" listValuedAgentProperty="orders" listItemType="Integer" />
 					<IF language="Java"><![CDATA[
-mes.getOrderNo() == (( Order)order).getOrderNo()                         
-                  ]]></IF>
+mes.getOrderNo() == order                       
+                    ]]></IF>
 					<IF language="JavaScript"><![CDATA[
-this.mes.getOrderNo() == this.order.getOrderNo()                         
-                   ]]></IF>
+this.mes.getOrderNo() == this.order                        
+                     ]]></IF>
 					<THEN>
 						<SCHEDULE-EVT>
 							<OutMessageEventExpr messageType="OrderArrived">
@@ -624,7 +639,7 @@ Global.twoDice(10)
 					</THEN>
 				</ReactionRule>
 				<!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->
-				<ReactionRule name="PickupWindowReminder_Rule" agentVariable="pw">
+				<ReactionRule name="PickupWindowReminder_Rule" agentVariable="pickupWindow">
 					<!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->
 					<documentation>
 						<description> Once this reminder event is triggered, the PW agent 
@@ -637,11 +652,11 @@ Global.twoDice(10)
 					<SCHEDULE-EVT>
 						<OutMessageEventExpr messageType="HereIsYourPizza">
 							<ReceiverIdRef language="Java"><![CDATA[
-Integer.parseInt( evt.getReminderMsg())
-                            ]]></ReceiverIdRef>
-							<ReceiverIdRef language="Java"><![CDATA[
-parseInt( this.evt.getReminderMsg())
-							]]></ReceiverIdRef>
+Integer.parseInt( getMessagePart( evt.getReminderMsg(),1))
+                                ]]></ReceiverIdRef>
+							<ReceiverIdRef language="JavaScript"><![CDATA[
+parseInt( this.pickupWindow.getMessagePart( this.evt.getReminderMsg(),1))
+								]]></ReceiverIdRef>
 						</OutMessageEventExpr>
 					</SCHEDULE-EVT>
 				</DO>
@@ -1264,6 +1279,10 @@ this.mes.getCustID()
 			<Slot property="pickupWindowQueue">
 				<ValueExpr language="Java"><![CDATA[ new ArrayList<Customer>()]]></ValueExpr>
 				<ValueExpr language="JavaScript">new js.util.ArrayList()</ValueExpr>
+			</Slot>
+			<Slot property="orders">
+				<ValueExpr language="Java"><![CDATA[ new ArrayList<Long>() ]]></ValueExpr>
+				<ValueExpr language="JavaScript"><![CDATA[ new js.util.ArrayList()]]></ValueExpr>
 			</Slot>
 		</Agent>
 		<!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->
