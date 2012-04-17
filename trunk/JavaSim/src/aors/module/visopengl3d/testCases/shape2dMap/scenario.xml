@@ -1,0 +1,97 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<?xml-stylesheet type="text/xsl" href="prettyprint.xsl"?>
+<SimulationScenario
+	xmlns="http://aor-simulation.org"
+    xmlns:aors="http://aor-simulation.org"
+    xmlns:dc="http://purl.org/dc/elements/1.1/"
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xsi:schemaLocation="http://aor-simulation.org ../../../../../ext/aorsl/AORSL_0-9.xsd"
+    version="0.9"
+    simulationManagerDirectory="../../../../../"
+	scenarioName="Shape2DMap"
+	scenarioTitle="Shape2DMap">
+	
+	<SimulationParameters simulationSteps="10000" stepDuration="100" timeUnit="ms" stepTimeDelay="20"/>
+	
+	<SimulationModel modelName="Shape2DMap" modelTitle="Shape2DMap">
+		<documentation>
+            <dc:creator>Susanne Schoelzel</dc:creator>
+            <dc:created>20111109</dc:created>
+            <!--<description>
+                This simulation shows a Shape2DVisualizationMap and the positioning attribute for rectangles/squares.
+            </description>-->
+        </documentation>
+        
+        <SpaceModel geometry="Euclidean" spatialDistanceUnit="m">
+            <TwoDimensional xMax="800" yMax="600"/>
+        </SpaceModel>
+		
+		<EntityTypes>
+            <ObjectType name="Square1"/>
+            <ObjectType name="Square2"/>
+            <AgentType name="Shape2dMap">
+            	<Attribute type="Boolean" name="isRectangle"/>
+            	
+            	<!-- Every 25 steps -->
+                <PeriodicTimeEventType name="SwitchShape" periodicity="25"/>
+                  
+                <ReactionRule name="SwitchShape_Rule" agentVariable="shape2dmap">
+                    <WHEN eventType="SwitchShape"/>
+                    <DO>
+                        <UPDATE-AGT>
+                            <Slot property="isRectangle">
+                                <ValueExpr language="Java">!shape2dmap.isIsRectangle()</ValueExpr>
+                            </Slot>
+                        </UPDATE-AGT>
+                    </DO>
+                </ReactionRule>
+            </AgentType>
+        </EntityTypes>
+		
+	</SimulationModel>
+	<InitialState>
+		<!-- create the square -->
+		<Object type="Square1" id="1" name="Square1"/>
+		<Object type="Square2" id="2" name="Square2"/>
+		<Agent type="Shape2dMap" id="3" name="Shape2dMap">
+			<Slot property="isRectangle" value="true"/>
+			<PeriodicTimeEvent occurrenceTime="25" type="SwitchShape"/>
+		</Agent>
+	</InitialState>
+	<UserInterface supportedLanguages="">
+		<AnimationUI>
+            <Views>
+                <SpaceView canvasColor="grey">
+                    <TwoDimensionalSpaceView3D>
+                    	<!--<GlobalCamera eyePosition="0.0 200.0 200.0" lookAt="0.0 0.0 0.0" upVector="0.0 1.0 -1.0"/>-->	
+                    </TwoDimensionalSpaceView3D>
+                </SpaceView>
+                
+                <ObjectView objectIdRef="1">
+                    <Shape2D x="350" y="450">
+                        <Rectangle fill="blue" width="40" height="80"/>
+                    </Shape2D>
+                </ObjectView>
+                <ObjectView objectIdRef="2">
+                    <Shape2D x="350" y="450">
+                        <Rectangle fill="red" width="40" height="80" positioning="LeftTop"/>
+                    </Shape2D>
+                </ObjectView>
+                <ObjectView objectIdRef="3">
+                	<Shape2dVisualizationMap property="isRectangle">
+                		<Case value="true">
+		                    <Shape2D x="350" y="250">
+		                        <Rectangle fill="red" width="40" height="80"/>
+		                    </Shape2D>
+	                    </Case>
+	                    <Case value="false">
+		                    <Shape2D x="350" y="250">
+		                        <Triangle fill="blue" width="40" height="80"/>
+		                    </Shape2D>
+	                    </Case>
+                    </Shape2dVisualizationMap>
+                </ObjectView>
+            </Views>
+        </AnimationUI>
+	</UserInterface>
+</SimulationScenario>

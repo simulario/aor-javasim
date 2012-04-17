@@ -3,6 +3,7 @@ package aors.module.visopengl3d.engine;
 import java.awt.Point;
 import java.io.File;
 import java.nio.IntBuffer;
+import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Map;
 
@@ -19,6 +20,7 @@ import aors.model.envsim.PhysicalObject;
 import aors.module.visopengl3d.gui.VisualizationPanel;
 import aors.module.visopengl3d.shape.DisplayInfo;
 import aors.module.visopengl3d.shape.Shape2D;
+import aors.module.visopengl3d.shape.ShapeType;
 import aors.module.visopengl3d.shape.Sphere;
 import aors.module.visopengl3d.shape.View;
 import aors.module.visopengl3d.space.component.SpaceComponent;
@@ -319,7 +321,7 @@ public class Engine implements GLEventListener {
     	
       Skybox skybox = spaceModel.getSpaceView().getSkybox();
       if(skybox != null) {
-        skybox.setPosition(globalCamera.getEyePosition());
+        skybox.setPosition(eyePosition);
       }
     } else {
       /*double fovy_rad = Math.PI * fovy / 180;
@@ -342,7 +344,47 @@ public class Engine implements GLEventListener {
       if(skybox != null) {
         skybox.setPosition(position);
       }*/
+      
+      /*double angle = 45;
+      double frustumHeight = height;
+      double zlength = frustumHeight * (Math.cos(angle) + Math.sin(angle) * Math.tan(angle + fovy/2));
+      System.out.println("zlength"+zlength);
+      if(zlength < height) zlength = height;
+      System.out.println("zlength"+zlength);
+      double z1 = zlength / (1 - (Math.tan(angle-fovy/2)/Math.tan(angle+fovy/2)));
+      System.out.println("z1"+z1);
+      double y1 = z1 / Math.tan(angle+fovy/2);
+      System.out.println("y1"+y1);
+      double y2 = y1 + SpaceView.getObjectHeight();
+      System.out.println("y2"+y2);
+      double zstrich = z1 - zlength/2;
+      System.out.println("zstrich"+zstrich);
+      double zstrich2 = y2 * zstrich / y1;
+      System.out.println("zstrich2"+zstrich2);
+      
+      double[] eyePosition = {0, y2, zstrich2};
+      System.out.println("eyePosition[0]"+eyePosition[0]);
+      System.out.println("eyePosition[1]"+eyePosition[1]);
+      System.out.println("eyePosition[2]"+eyePosition[2]);
+      
+      double lookAtZlength = y2 * Math.tan(angle);
+      System.out.println("lookAtZlength"+lookAtZlength);
+      
+      double[] lookAt = {0, 0, zstrich2 - lookAtZlength};
+      System.out.println("lookAt[0]"+lookAt[0]);
+      System.out.println("lookAt[1]"+lookAt[1]);
+      System.out.println("lookAt[2]"+lookAt[2]);
+      
+      double[] xAxis = {1, 0, 0};
+      double[] upVector = normalizedVector(crossProduct(xAxis, subtractVectors(lookAt, eyePosition)));
+      System.out.println("upVector[0]"+upVector[0]);
+      System.out.println("upVector[1]"+upVector[1]);
+      System.out.println("upVector[2]"+upVector[2]);*/
+      
       glu.gluLookAt(0, 800, 800, 0, 0, 0, 0, 1, -1);
+      //glu.gluLookAt(eyePosition[0], eyePosition[1], eyePosition[2], 
+      //              lookAt[0], lookAt[1], lookAt[2], 
+      //              upVector[0], upVector[1], upVector[2]);
       
       double[] position = {0, 800, 800};
       Skybox skybox = spaceModel.getSpaceView().getSkybox();
@@ -649,13 +691,13 @@ public class Engine implements GLEventListener {
         Shape2D shape = view.getShape();
 
         // Parse the point string for polygons or polylines
-/*        if (shape.getType().equals(ShapeType.Polygon)
+        if (shape.getType().equals(ShapeType.Polygon)
             || shape.getType().equals(ShapeType.Polyline)) {
           if (shape.isParsePointString()) {
             shape.setPointList(parsePointString(phy.getPoints()));
           }
         }
-*/
+
         // Get the display info
         DisplayInfo displayInfo = view.getDisplayInfo();
 
@@ -824,8 +866,10 @@ public class Engine implements GLEventListener {
         }
       }
 
+      double[] attachedOffset3d = {attachedOffset[0], 0, -attachedOffset[1]};
+      
       // Display attached shape
-      displayAttachedObject(pos, attachedOffset, rot, attachedShape,
+      displayAttachedObject(pos, attachedOffset3d, rot, attachedShape,
           attachedView.getAttachedLabel(), gl, glu);
 
       return attachedOffset;
@@ -968,18 +1012,20 @@ public class Engine implements GLEventListener {
    * @param gl
    */
   private void mapNonPhysicals(Shape2D shape) {
-//    if (!shape.getType().equals(ShapeType.Polygon)
-//        && !shape.getType().equals(ShapeType.Polyline)) {
+    if (!shape.getType().equals(ShapeType.Polygon)
+        && !shape.getType().equals(ShapeType.Polyline)) {
       if (shape.isHeightRelative()) {
         shape.setHeight((shape.getRelativeHeight() / 100)
             * spaceModel.getDrawingArea().getHeight());
+        shape.setRecompile(true);
       }
 
       if (shape.isWidthRelative()) {
         shape.setWidth((shape.getRelativeWidth() / 100)
             * spaceModel.getDrawingArea().getWidth());
+        shape.setRecompile(true);
       }
-/*
+
     } else if (shape.getType().equals(ShapeType.Polygon)
         || shape.getType().equals(ShapeType.Polyline)) {
       // Determine the width and height of a polygon
@@ -1018,12 +1064,12 @@ public class Engine implements GLEventListener {
       shape.setWidth(maxX - minX);
       shape.setHeight(maxY - minY);
     }
-*/
+
   }
 
   private void mapAttached(Shape2D attachedShape, Shape2D parent) {
-//    if (!attachedShape.getType().equals(ShapeType.Polygon)
-//        && !attachedShape.getType().equals(ShapeType.Polyline)) {
+    if (!attachedShape.getType().equals(ShapeType.Polygon)
+        && !attachedShape.getType().equals(ShapeType.Polyline)) {
       if (attachedShape.isHeightRelative()) {
         attachedShape.setHeight((attachedShape.getRelativeHeight() / 100)
             * parent.getHeight());
@@ -1035,7 +1081,7 @@ public class Engine implements GLEventListener {
             * parent.getWidth());
         attachedShape.setRecompile(true);
       }
-/*
+
     } else if (attachedShape.getType().equals(ShapeType.Polygon)
         || attachedShape.getType().equals(ShapeType.Polyline)) {
       // Determine the width and height of a polygon
@@ -1074,7 +1120,7 @@ public class Engine implements GLEventListener {
       attachedShape.setWidth(maxX - minX);
       attachedShape.setHeight(maxY - minY);
     }
-*/
+
   }
 
   /**
@@ -1144,12 +1190,13 @@ public class Engine implements GLEventListener {
      * Update the shape's dimensions (and those of attached shapes) if they have
      * changed and regenerate the shape's display list if necessary.
      */
-/*    if (shape.getType().equals(ShapeType.Rectangle)
+    if (shape.getType().equals(ShapeType.Rectangle)
         || shape.getType().equals(ShapeType.Square)
         || shape.getType().equals(ShapeType.Triangle)
         || shape.getType().equals(ShapeType.Circle)
         || shape.getType().equals(ShapeType.Ellipse)
-        || shape.getType().equals(ShapeType.RegularPolygon)) {*/
+        || shape.getType().equals(ShapeType.RegularPolygon)
+        || shape.getType().equals(ShapeType.Arc)) {
       /*
        * Map the dimensions of the physical (which are in space coordinate
        * system) into the world coordinate system.
@@ -1172,8 +1219,8 @@ public class Engine implements GLEventListener {
 
         shape.setRecompile(true);
       }
-//    }
-/*
+    }
+
     if (shape.getType().equals(ShapeType.Polygon)
         || shape.getType().equals(ShapeType.Polyline)) {
       if (shape.isParsePointString()) {
@@ -1256,7 +1303,7 @@ public class Engine implements GLEventListener {
         }
       }
     }
-*/
+
   }
 
   /**
@@ -1335,9 +1382,9 @@ public class Engine implements GLEventListener {
     gl.glTranslated(position[0], position[1], position[2]);
 
     // Apply matrix rotation
-    gl.glRotated(rotation, 0.0f, 0.0f, 1.0f);
+    gl.glRotated(rotation, 0.0f, 1.0f, 0.0f);
 
-    gl.glTranslated(offset[0], offset[1], 0);
+    gl.glTranslated(offset[0], offset[1], offset[2]);
 
     // Display the shape
     shape.display(gl, glu);
@@ -1365,7 +1412,7 @@ public class Engine implements GLEventListener {
             - shape.getHeight() - 15);
       }
 */
-      glut.glutBitmapString(GLUT.BITMAP_HELVETICA_12, label);
+//      glut.glutBitmapString(GLUT.BITMAP_HELVETICA_12, label);
 
       gl.glPopMatrix();
     }
@@ -1455,9 +1502,9 @@ public class Engine implements GLEventListener {
    * 
    * @param str
    */
-/*  private ArrayList<double[]> parsePointString(String str) {
+  private ArrayList<double[]> parsePointString(String str) {
     ArrayList<double[]> pointList = new ArrayList<double[]>();
-*/
+
     // Check if the point string is valid
     // NOTE: check the regular expression while does not works fine...
     /*
@@ -1467,7 +1514,7 @@ public class Engine implements GLEventListener {
      * .println("Visualization Error: Point description is not valid! (" + str +
      * ")"); return null; }
      */
-/*
+
     // get the points list
     String[] points = str.split(" ");
 
@@ -1475,7 +1522,7 @@ public class Engine implements GLEventListener {
       System.out.println("Visualization warning: points list is empty!");
     }
 
-    // split split a points in its coordinate components
+    // split a points in its coordinate components
     for (int i = 0; i < points.length; i++) {
       double[] coordinates = new double[3];
 
@@ -1510,7 +1557,33 @@ public class Engine implements GLEventListener {
    
     return pointList;
   }
-*/
+
+  public double[] normalizedVector(double[] v) {
+    double length = Math.sqrt(v[0]*v[0] + v[1]*v[1] + v[2]*v[2]);
+    double[] normalizedVector = {v[0] / length,
+                                 v[1] / length,
+                                 v[2] / length};
+    return normalizedVector;
+  }
+  
+  public double[] crossProduct(double[] vector1, double[] vector2) {
+    double[] crossProduct = {
+      vector1[1]*vector2[2] - vector1[2]*vector2[1],
+      vector1[2]*vector2[0] - vector1[0]*vector2[2],
+      vector1[0]*vector2[1] - vector1[1]*vector2[0]
+    };
+    return crossProduct;
+  }
+  
+  public double[] subtractVectors(double[] vector1, double[] vector2) {
+    double[] result = {
+      vector1[0] - vector2[0],
+      vector1[1] - vector2[1],
+      vector1[2] - vector2[2],
+    }; 
+    return result;
+  }
+  
 
   public KeyboardEventHandler getKeyboardEvtHandler() {
     return keyboardEvtHandler;
