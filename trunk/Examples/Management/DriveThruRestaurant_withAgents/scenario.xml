@@ -14,7 +14,7 @@
 			<dc:creator>Oana Nicolae</dc:creator>
 			<dc:contributor>Gerd Wagner</dc:contributor>
 			<dc:created>20090331</dc:created>
-			<dc:modified>20120402</dc:modified>
+			<dc:modified>20120419</dc:modified>
 			<dc:title>Drive Thru</dc:title>
 			<dc:title xml:lang="de">Auto-Restaurant Agent-based Model</dc:title>
 			<shortDescription>An agent-based model of a drive thru as a system with three order processing units: the order window, 
@@ -322,8 +322,7 @@ var i = messageInfo.indexOf("and");
 					<WHEN eventType="ReminderEvent" eventVariable="evt" />
 					<DO>
 						<SCHEDULE-EVT>
-							<OutMessageEventExpr messageType="ConfirmOrder">
-								<ReceiverIdRef language="Java JavaScript">0</ReceiverIdRef>
+							<OutMessageEventExpr messageType="ConfirmOrder" receiverIdRefs="0">
 								<Slot property="orderNo">
 								<ValueExpr language="Java"><![CDATA[
 Integer.parseInt( getMessagePart( evt.getReminderMsg(),2))
@@ -386,7 +385,7 @@ var j= subs.indexOf("and");
     else {
       resultInfo = subs.substring( j+3, subs.length);
     }    
-   //document.write(resultInfo + " " + messageInfo);
+   alert(resultInfo + " " + messageInfo);
    return resultInfo; 
           ]]></Body>
 				</Function>
@@ -675,25 +674,6 @@ this.cust.getOrderNo()
 						</UPDATE-AGT>
 					</DO>
 				</ReactionRule>
-				<!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->
-				<ReactionRule name="FreePlaceInPWQ_Rule" agentVariable="cust">
-					<!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->
-					<documentation>
-						<description> 
-							The customer is informed by the MB about the number of his/her order.
-						</description>
-					</documentation>
-					<WHEN eventType="InMessageEvent" messageType="ConfirmOrder" messageVariable="mes" />
-					<DO>
-						<SCHEDULE-EVT>
-							<OutMessageEventExpr messageType="ConfirmOrder" receiverIdRefs="0">
-								<Slot property="orderNo">
-									<ValueExpr language="Java JavaScript">this.cust.getOrderNo()</ValueExpr>
-								</Slot>
-							</OutMessageEventExpr>
-						</SCHEDULE-EVT>
-					</DO>
-				</ReactionRule>
 			</AgentType>
 		</EntityTypes>
 		<EnvironmentRules>
@@ -808,7 +788,7 @@ SimStatistics.numberOfCustomers.getValue() + 1
 					<ObjectRef language="Java JavaScript">this.mb.getMenuBoardQueue().get(0)</ObjectRef>
 				</FOR-ObjectVariable>
 				<IF language="Java JavaScript"><![CDATA[
-this.pw.getPickupWindowQueue().size() >= this.pw.getMaxPickupWindowLineSize()       
+this.pw.getPickupWindowQueue().size() >= this.pw.getMaxPickupWindowLineSize()      
                ]]></IF>
 				<THEN>
 					<UPDATE-ENV>
@@ -1037,13 +1017,8 @@ SimStatistics.cumulativeResponseTime.getValue() + this.evt.getOccurrenceTime() -
 ( this.mb.getMenuBoardQueue().size() > 0) && ( this.mb.getMenuBoardQueue().get(0) != null) &&
 ( this.mb.getMenuBoardQueue().get(0)).isWaitingForPWFree()
                              ]]></Condition>
-							<SenderIdRef language="Java JavaScript">this.pw.getId()</SenderIdRef>
-							<ReceiverIdRef language="Java"><![CDATA[
-(( Customer)mb.getMenuBoardQueue().get(0)).getId()
-                           ]]></ReceiverIdRef>
-							<ReceiverIdRef language="JavaScript"><![CDATA[
-( this.mb.getMenuBoardQueue().get(0)).getId()
-							]]></ReceiverIdRef>
+							<SenderIdRef language="Java JavaScript">this.mb.getId()</SenderIdRef>
+							<ReceiverIdRef language="Java JavaScript">0</ReceiverIdRef>
 							<Slot property="orderNo">
 							  <ValueExpr language="Java"><![CDATA[
 (( Customer)mb.getMenuBoardQueue().get(0)).getOrderNo()
