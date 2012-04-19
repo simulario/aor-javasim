@@ -16,7 +16,7 @@
 			<dc:creator>Oana Nicolae</dc:creator>
 			<dc:contributor>Gerd Wagner</dc:contributor>
 			<dc:created>20090331</dc:created>
-			<dc:modified>20120405</dc:modified>
+			<dc:modified>20120419</dc:modified>
 			<dc:title>Drive Thru</dc:title>
 			<dc:title xml:lang="de">Auto-Restaurant Agent-based Model with Activities</dc:title>
 			<shortDescription>An agent-based model of a drive thru as a system with three order processing units: the order window, 
@@ -391,13 +391,7 @@ this.evt.getSenderIdRef() + "and" + this.evt.getOccurrenceTime()
 					<WHEN eventType="ReminderEvent" eventVariable="evt" />
 					<DO>
 						<SCHEDULE-EVT>
-							<OutMessageEventExpr messageType="ConfirmOrder">
-								<ReceiverIdRef language="Java"><![CDATA[
-Integer.parseInt( getMessagePart( evt.getReminderMsg(),1))
-                                ]]></ReceiverIdRef>
-								<ReceiverIdRef language="JavaScript"><![CDATA[
-parseInt( this.menuBoard.getMessagePart( this.evt.getReminderMsg(),1))
-									]]></ReceiverIdRef>
+							<OutMessageEventExpr messageType="ConfirmOrder" receiverIdRefs="0">
 								<Slot property="orderNo">
 									<ValueExpr language="Java"><![CDATA[
 Integer.parseInt( getMessagePart( evt.getReminderMsg(),2))
@@ -567,7 +561,6 @@ var price = [0.0, 0.0, 2.0, 4.0, 6.0, 8.0, 10.0, 12.0, 14.0, 16.0, 18.0, 20.0, 2
 						</description>
 					</documentation>
 					<Parameter name="messageInfo" type="String" />
-					<Parameter name="argumentIndex" type="Integer" />
 					<Body language="Java"><![CDATA[
 String resultInfo = messageInfo.substring( 25, messageInfo.length());     
    return resultInfo; 
@@ -652,10 +645,10 @@ Global.twoDice(10)
 					<SCHEDULE-EVT>
 						<OutMessageEventExpr messageType="HereIsYourPizza">
 							<ReceiverIdRef language="Java"><![CDATA[
-Integer.parseInt( getMessagePart( evt.getReminderMsg(),1))
+Integer.parseInt( getMessagePart( evt.getReminderMsg()))
                                 ]]></ReceiverIdRef>
 							<ReceiverIdRef language="JavaScript"><![CDATA[
-parseInt( this.pickupWindow.getMessagePart( this.evt.getReminderMsg(),1))
+parseInt( this.pickupWindow.getMessagePart( this.evt.getReminderMsg()))
 								]]></ReceiverIdRef>
 						</OutMessageEventExpr>
 					</SCHEDULE-EVT>
@@ -793,6 +786,15 @@ SimStatistics.numberOfCustomers.getValue() + 1
 						</UpdateStatisticsVariable>
 					</UPDATE-ENV>
 					<SCHEDULE-EVT>
+						<ActivityStartEventExpr activityType="PerformMenuBoardService">
+							<Condition language="Java JavaScript"><![CDATA[
+! this.mb.isMenuBoardBusy()
+		                    ]]>
+							</Condition>
+							<CorrelationValue language="Java JavaScript">this.cust.getId()</CorrelationValue>
+							<ActorIdRef language="Java JavaScript">this.mb.getId()</ActorIdRef>
+						</ActivityStartEventExpr>
+						<!--
 						<CausedEventExpr eventType="StartMenuBoardService">
 							<Condition language="Java JavaScript"><![CDATA[
 ! this.mb.isMenuBoardBusy()
@@ -802,6 +804,7 @@ SimStatistics.numberOfCustomers.getValue() + 1
 								<ValueExpr language="Java JavaScript">this.cust.getId()</ValueExpr>
 							</Slot>
 						</CausedEventExpr>
+						-->
 					</SCHEDULE-EVT>
 				</THEN>
 				<ELSE>
@@ -1091,7 +1094,7 @@ this.evt.getReceiverIdRef()
 				<ELSE>
 					<UPDATE-ENV>
 						<UpdateStatisticsVariable variable="numberOfDepartures">
-							<ValueExpr language="Java JavaScript">SimStatistics.nrOfDepartures.getValue() + 1</ValueExpr>
+							<ValueExpr language="Java JavaScript">SimStatistics.numberOfDepartures.getValue() + 1</ValueExpr>
 						</UpdateStatisticsVariable>
 						<UpdateStatisticsVariable variable="cumulativeResponseTime">
 							<ValueExpr language="Java JavaScript"><![CDATA[
@@ -1133,13 +1136,8 @@ Customer)mb.getMenuBoardQueue().get(0)).isWaitingForPWFree()
 ( this.mb.getMenuBoardQueue().size() > 0) && ( this.mb.getMenuBoardQueue().get(0) != null) && (
 this.mb.getMenuBoardQueue().get(0)).isWaitingForPWFree()
                             ]]></Condition>
-							<SenderIdRef language="Java JavaScript">this.pw.getId()</SenderIdRef>
-							<ReceiverIdRef language="Java"><![CDATA[
-(( Customer)mb.getMenuBoardQueue().get(0)).getId()
-                              ]]></ReceiverIdRef>
-							<ReceiverIdRef language="JavaScript"><![CDATA[
-( this.mb.getMenuBoardQueue().get(0)).getId()
-								]]></ReceiverIdRef>
+							<SenderIdRef language="Java JavaScript">this.mb.getId()</SenderIdRef>
+							<ReceiverIdRef language="Java JavaScript">0</ReceiverIdRef>
 							<Slot property="orderNo">
 								<ValueExpr language="Java"><![CDATA[
 (( Customer)mb.getMenuBoardQueue().get(0)).getOrderNo()

@@ -172,14 +172,15 @@ var r2 = js.util.Random.uniformInt(1,6);
 			<!-- =================================================== -->
 			<MessageType name="OrderSolicitation" />
 			<!-- =================================================== -->
-			<MessageType name="SendOrder">
+			<MessageType name="CustomerOrder">
 				<!-- =================================================== -->
 				<Attribute name="pizzaType" type="Integer" />
 			</MessageType>
 			<!-- =================================================== -->
-			<MessageType name="ConfirmOrder">
+			<MessageType name="ConfirmCustomerOrder">
 				<!-- =================================================== -->
 				<Attribute name="orderNo" type="Integer" />
+				<Attribute name="PWQueueFree" type="Boolean" />
 			</MessageType>
 			<!-- =================================================== -->
 			<MessageType name="ProductionOrder">
@@ -273,7 +274,7 @@ var i = messageInfo.indexOf("and");
                  ]]></Body>
 				</Function>
 				<!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->
-				<ReactionRule name="SendOrder_Rule">
+				<ReactionRule name="CustomerOrder_Rule">
 					<!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->
 					<documentation>
 					  <description>
@@ -283,7 +284,7 @@ var i = messageInfo.indexOf("and");
 							KitchenService, in order to prepare the pizza. 
 					  </description>
 					</documentation>
-					<WHEN eventType="InMessageEvent" messageType="SendOrder" messageVariable="mes"
+					<WHEN eventType="InMessageEvent" messageType="CustomerOrder" messageVariable="mes"
 						eventVariable="evt" />
 					<DO>
 						<SCHEDULE-EVT>
@@ -322,7 +323,13 @@ var i = messageInfo.indexOf("and");
 					<WHEN eventType="ReminderEvent" eventVariable="evt" />
 					<DO>
 						<SCHEDULE-EVT>
-							<OutMessageEventExpr messageType="ConfirmOrder" receiverIdRefs="0">
+							<OutMessageEventExpr messageType="ConfirmCustomerOrder">
+								<ReceiverIdRef language="Java"><![CDATA[
+Integer.parseInt( getMessagePart( evt.getReminderMsg(),1))
+                                 ]]></ReceiverIdRef>
+								<ReceiverIdRef language="JavaScript"><![CDATA[
+parseInt( this.menuBoard.getMessagePart( this.evt.getReminderMsg(),1))
+								]]></ReceiverIdRef>
 								<Slot property="orderNo">
 								<ValueExpr language="Java"><![CDATA[
 Integer.parseInt( getMessagePart( evt.getReminderMsg(),2))
@@ -331,6 +338,7 @@ Integer.parseInt( getMessagePart( evt.getReminderMsg(),2))
 parseInt( this.menuBoard.getMessagePart( this.evt.getReminderMsg(),2))
 								]]></ValueExpr>
 								</Slot>
+								<Slot property="PWQueueFree" value="true" />
 							</OutMessageEventExpr>
 						</SCHEDULE-EVT>
 					</DO>
@@ -616,13 +624,13 @@ parseInt( this.pickupWindow.getMessagePart( this.evt.getReminderMsg()))
 					<documentation>
 						<description> 
 							The customer is at the Menu Board. He is asked to place the order. He replies
-							giving the information about the pizza type inside of a SendOrder message. 
+							giving the information about the pizza type inside of a CustomerOrder message. 
 						</description>
 					</documentation>
 					<WHEN eventType="InMessageEvent" messageType="OrderSolicitation" />
 					<DO>
 						<SCHEDULE-EVT>
-							<OutMessageEventExpr messageType="SendOrder" receiverIdRefs="1">
+							<OutMessageEventExpr messageType="CustomerOrder" receiverIdRefs="1">
 								<Slot property="pizzaType">
 									<ValueExpr language="Java JavaScript"><![CDATA[
 this.cust.randomPizzaType()
@@ -672,6 +680,37 @@ this.cust.getOrderNo()
 							<Slot property="waitingForOrderToArrive" value="false" />
 						</UPDATE-AGT>
 					</DO>
+				</ReactionRule>
+				<!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->
+				<ReactionRule name="ConfirmCustomerOrder_Rule" agentVariable="cust">
+					<!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->
+					<documentation>
+						<description> 
+							
+						</description>
+					</documentation>
+					<WHEN eventType="InMessageEvent" messageType="ConfirmCustomerOrder" messageVariable="mes" />
+					<IF language="Java JavaScript">this.mes.getPWQueueFree()</IF>
+					<THEN>
+						<UPDATE-AGT>
+							<Slot property="waitingForOrderToArrive" value="true" />
+							<Slot property="orderNo">
+								<ValueExpr language="Java JavaScript"><![CDATA[
+this.mes.getOrderNo()
+							   ]]></ValueExpr>
+							</Slot>
+						</UPDATE-AGT>
+					</THEN>
+					<ELSE>
+						<UPDATE-AGT>
+							<Slot property="waitingForPWFree" value="true" />
+							<Slot property="orderNo">
+								<ValueExpr language="Java JavaScript"><![CDATA[
+this.mes.getOrderNo()
+						    ]]></ValueExpr>
+							</Slot>
+						</UPDATE-AGT>
+					</ELSE>
 				</ReactionRule>
 			</AgentType>
 		</EntityTypes>
@@ -780,7 +819,7 @@ SimStatistics.numberOfCustomers.getValue() + 1
 						line.
 					</description>
 				</documentation>
-				<WHEN eventType="OutMessageEvent" messageType="ConfirmOrder" messageVariable="mes" />
+				<WHEN eventType="OutMessageEvent" messageType="ConfirmCustomerOrder" messageVariable="mes" />
 				<FOR-ObjectVariable variable="mb" objectType="MenuBoard" objectIdRef="1" />
 				<FOR-ObjectVariable variable="pw" objectType="PickupWindow" objectIdRef="2" />
 				<FOR-ObjectVariable variable="cust" objectType="Customer">
@@ -790,18 +829,19 @@ SimStatistics.numberOfCustomers.getValue() + 1
 this.pw.getPickupWindowQueue().size() >= this.pw.getMaxPickupWindowLineSize()      
                ]]></IF>
 				<THEN>
-					<UPDATE-ENV>
-						<UpdateObject objectVariable="cust">
-							<Slot property="waitingForPWFree" value="true" />
+					<SCHEDULE-EVT>
+						<InMessageEventExpr messageType="ConfirmCustomerOrder" senderIdRef="1">
+							<ReceiverIdRef language="Java JavaScript">this.cust.getId()</ReceiverIdRef>
 							<Slot property="orderNo">
-							<ValueExpr language="Java JavaScript"><![CDATA[
-this.mes.getOrderNo()
-						    ]]></ValueExpr>
+								<ValueExpr language="Java JavaScript"><![CDATA[
+this.mes.getOrderNo()					
+									]]></ValueExpr>
 							</Slot>
-						</UpdateObject>
-					</UPDATE-ENV>
+							<Slot property="PWQueueFree" value="false" />
+						</InMessageEventExpr>
+					</SCHEDULE-EVT>
 				</THEN>
-			    <ELSE>
+				<ELSE>
 			    	<UPDATE-ENV>
 			    		<UpdateObject objectVariable="cust">
 			    			<Slot property="orderNo">
@@ -836,6 +876,15 @@ this.mb.getMenuBoardQueue().size() > 0
 ! this.pw.isPickupWindowBusy() 
 	                   ]]></Condition>
 			    		</CausedEventExpr>
+			    		<InMessageEventExpr messageType="ConfirmCustomerOrder" senderIdRef="1">
+			    			<ReceiverIdRef language="Java JavaScript">this.cust.getId()</ReceiverIdRef>
+			    			<Slot property="orderNo">
+			    				<ValueExpr language="Java JavaScript"><![CDATA[
+this.mes.getOrderNo()					
+									]]></ValueExpr>
+			    			</Slot>
+			    			<Slot property="PWQueueFree" value="true" />
+			    		</InMessageEventExpr>
 			    	</SCHEDULE-EVT>
 			    </ELSE>
 			</EnvironmentRule>
@@ -1007,7 +1056,7 @@ SimStatistics.cumulativeResponseTime.getValue() + this.evt.getOccurrenceTime() -
 					</UPDATE-ENV>
 					<SCHEDULE-EVT>
 						<CausedEventExpr eventType="StartPickupWindowService" />
-						<InMessageEventExpr messageType="ConfirmOrder">
+						<InMessageEventExpr messageType="ConfirmCustomerOrder" senderIdRef="1">
 							<Condition language="Java"><![CDATA[
 ( mb.getMenuBoardQueue().size() > 0) && ( mb.getMenuBoardQueue().get(0) != null) &&
 (( Customer)mb.getMenuBoardQueue().get(0)).isWaitingForPWFree()
@@ -1016,8 +1065,12 @@ SimStatistics.cumulativeResponseTime.getValue() + this.evt.getOccurrenceTime() -
 ( this.mb.getMenuBoardQueue().size() > 0) && ( this.mb.getMenuBoardQueue().get(0) != null) &&
 ( this.mb.getMenuBoardQueue().get(0)).isWaitingForPWFree()
                              ]]></Condition>
-							<SenderIdRef language="Java JavaScript">this.mb.getId()</SenderIdRef>
-							<ReceiverIdRef language="Java JavaScript">0</ReceiverIdRef>
+							<ReceiverIdRef language="Java"><![CDATA[
+( Customer)mb.getMenuBoardQueue().get(0)								
+                                ]]></ReceiverIdRef>
+							<ReceiverIdRef language="JavaScript"><![CDATA[
+ this.mb.getMenuBoardQueue().get(0)
+								]]></ReceiverIdRef>
 							<Slot property="orderNo">
 							  <ValueExpr language="Java"><![CDATA[
 (( Customer)mb.getMenuBoardQueue().get(0)).getOrderNo()
@@ -1026,6 +1079,7 @@ SimStatistics.cumulativeResponseTime.getValue() + this.evt.getOccurrenceTime() -
 ( this.mb.getMenuBoardQueue().get(0)).getOrderNo()
 							  ]]></ValueExpr>		
 							</Slot>
+							<Slot property="PWQueueFree" value="true" />
 						</InMessageEventExpr>
 						<InMessageEventExpr messageType="HereIsYourPizza" senderIdRef="2">
 							<ReceiverIdRef language="Java JavaScript">this.evt.getReceiverIdRef()</ReceiverIdRef>
