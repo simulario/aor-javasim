@@ -1,6 +1,6 @@
 package aors.module.visopengl3d.engine;
 
-import aors.module.visopengl3d.utility.Camera2D;
+import aors.module.visopengl3d.engine.Camera2D;
 
 import java.awt.event.KeyEvent;
 import java.awt.event.KeyListener;
@@ -23,7 +23,7 @@ public class KeyboardEventHandler implements KeyListener {
 
   @Override
   public void keyPressed(KeyEvent e) {
-    if (camera != null) {
+    /*if (camera != null) {
       // Scroll left when the left arrow key was pressed
       if (e.getKeyCode() == KeyEvent.VK_LEFT) {
     	camera.scrollLeft(true);
@@ -77,13 +77,13 @@ public class KeyboardEventHandler implements KeyListener {
         camera.zoomOut();
     	canvas.display();
       }
-    }
+    }*/
   }
 
   @Override
   public void keyReleased(KeyEvent e) {
 	  // Scroll left when the left arrow key was pressed
-      if (e.getKeyCode() == KeyEvent.VK_LEFT) {
+      /*if (e.getKeyCode() == KeyEvent.VK_LEFT) {
     	camera.scrollLeft(false);
         canvas.display();
       }
@@ -116,7 +116,7 @@ public class KeyboardEventHandler implements KeyListener {
       if (e.getKeyCode() == KeyEvent.VK_COMMA) {
         camera.rotateCounterclockwise(false);
     	canvas.display();
-      }
+      }*/
   }
 
   @Override
