@@ -12,30 +12,30 @@ import javax.media.opengl.GL2;
  */
 public class Camera2D {
 	
-  public static final String GLOBAL_CAMERA = "GlobalCamera";
+  /*public static final String GLOBAL_CAMERA = "GlobalCamera";
 	
-  public static final String POSITION = "position";
-  public static final String VIEW_VECTOR = "viewVector";
-  public static final String UP_VECTOR = "upVector";
+  public static final String POSITION = "eyePosition";
+  public static final String VIEW_VECTOR = "lookAt";
+  public static final String UP_VECTOR = "upVector";*/
 
-  private double[] position = new double[3];
-  private double[] viewVector = new double[3];
+  private double[] eyePosition = new double[3];
+  private double[] lookAt = new double[3];
   private double[] upVector = new double[3];
   
   // Camera coordinates
-  private double x, y, z;
+  //private double x, y, z;
 
   // Scroll speed in pixels
-  private final double SCROLL_SPEED = 30;
+  //private final double SCROLL_SPEED = 30;
 
   /**
    * Reset the camera to its default position.
    */
-  public void reset() {
+  /*public void reset() {
 
     // Reset camera coordinates
     x = y = 0;
-  }
+  }*/
 
   /**
    * Scroll the camera either horizontally or vertically.
@@ -43,7 +43,7 @@ public class Camera2D {
    * @param gl
    *          OpenGL pipeline object.
    */
-  public void scroll(GL2 gl) {
+  /*public void scroll(GL2 gl) {
     // Apply the camera translation
     gl.glTranslated(x, y, 0);
   }
@@ -74,22 +74,22 @@ public class Camera2D {
   
   public void setZ(double z) {
 	    this.z = z;
+  }*/
+  
+  public double[] getEyePosition() {
+	  return eyePosition;
   }
   
-  public double[] getPosition() {
-	  return position;
+  public void setEyePosition(double[] eyePosition) {
+	  this.eyePosition = eyePosition;
   }
   
-  public void setPosition(double[] position) {
-	  this.position = position;
+  public double[] getLookAt() {
+	  return lookAt;
   }
   
-  public double[] getViewVector() {
-	  return viewVector;
-  }
-  
-  public void setViewVector(double[] viewVector) {
-	  this.viewVector = viewVector;
+  public void setLookAt(double[] lookAt) {
+	  this.lookAt = lookAt;
   }
   
   public double[] getUpVector() {
