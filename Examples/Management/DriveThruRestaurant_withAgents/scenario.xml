@@ -8,7 +8,7 @@
 	scenarioTitle="A drive thru with a menu board, a kitchen and a pickup window"
 	simulationManagerDirectory="../../..">
 	<SimulationParameters simulationSteps="10000" stepDuration="1" timeUnit="s"
-		createDebuggingOutput="true" randomSeed="1"/>
+		createDebuggingOutput="true" randomSeed="111"/>
 	<SimulationModel modelName="DriveThru" 
 		modelTitle="A drive thru with a menu board, a kitchen, a pickup window and customer agents">
 		<documentation>
@@ -221,8 +221,13 @@ var r2 = js.util.Random.uniformInt(1,6);
 			<!-- =================================================== -->
 			<CausedEventType name="StartPickupWindowService" />
 			<!-- =================================================== -->
+			<CausedEventType name="MoveForward">
+			<!-- =================================================== -->
+				<ReferenceProperty name="cust" type="Customer" />
+			</CausedEventType>
+			<!-- =================================================== -->
 			<AgentType name="MenuBoard">
-				<!-- =================================================== -->
+			<!-- =================================================== -->
 				<Attribute name="menuBoardBusy" type="Boolean" />
 				<Attribute name="maxMenuBoardLineSize" type="Integer" />
 				<Attribute name="queueLength" type="Integer" />
@@ -563,7 +568,9 @@ this.mes.getOrderNo() === this.order
 "EndOfPickupWindowService:" + this.evt.getSenderIdRef()
 								  ]]></ReminderMsg>
 								<Delay>
-									<ValueExpr language="Java JavaScript"><![CDATA[ Global.twoDice(10)]]></ValueExpr>
+									<ValueExpr language="Java JavaScript"><![CDATA[ 
+Global.twoDice(10)
+                                  ]]></ValueExpr>
 								</Delay>
 							</ReminderEventExpr>
 						</SCHEDULE-EVT>
@@ -922,6 +929,63 @@ this.pw.getPickupWindowQueue().size() > 0 && this.cust.isWaitingForOrderToArrive
 					</SCHEDULE-EVT>
 				</DO>
 			</EnvironmentRule>
+			<!-- ====================================================================== -->
+			<EnvironmentRule name="MoveForward_Rule">
+				<!-- ======================================================================-->
+				<documentation>
+					<description> When a customer is waiting for PW Queue to be free, 
+						it should be moved from MB Queue to PW Queue as soon as it is a 
+						free place in the PW Queue. Also we need to shedule a new 
+						StartMenuBoardService event is the MB queue is not empty.
+					</description>
+				</documentation>
+				<WHEN eventType="MoveForward" eventVariable="evt" />
+				<FOR-ObjectVariable variable="mb" objectType="MenuBoard" objectIdRef="1" />
+				<FOR-ObjectVariable variable="pw" objectType="PickupWindow" objectIdRef="2"  />
+				<FOR-ObjectVariable variable="cust" objectType="Customer">
+					<ObjectRef language="Java JavaScript">this.evt.getCust()</ObjectRef>
+				</FOR-ObjectVariable>
+				<DO>
+				  <UPDATE-ENV>
+				  	<UpdateObject objectVariable="mb">
+				  		<Slot property="menuBoardBusy">
+				  			<ValueExpr language="Java JavaScript"><![CDATA[
+this.mb.getMenuBoardQueue().size() == 1 ? false : true			    					
+			    				]]></ValueExpr>
+				  		</Slot>
+				  		<MultiValuedSlot property="menuBoardQueue">
+				  			<RemoveFirst itemVariable="cust" />
+				  		</MultiValuedSlot>
+				  		<Decrement property="queueLength" value="1" />
+				  	</UpdateObject>
+				  	<UpdateObject objectVariable="pw">
+				  		<MultiValuedSlot property="pickupWindowQueue">
+				  			<AddLast itemVariable="cust" />
+				  		</MultiValuedSlot>
+				  		<Increment property="queueLength" value="1" />
+				  	</UpdateObject>
+				  </UPDATE-ENV>
+					<SCHEDULE-EVT>
+						<CausedEventExpr eventType="StartMenuBoardService">
+							<Condition language="Java JavaScript"><![CDATA[
+this.mb.getMenuBoardQueue().size() > 0
+	                     ]]></Condition>
+						</CausedEventExpr>
+						<CausedEventExpr eventType="StartPickupWindowService" delay="2">
+							<Condition language="Java JavaScript"><![CDATA[
+!this.pw.isPickupWindowBusy() && this.pw.getPickupWindowQueue().size() > 0
+	                        ]]></Condition>
+						</CausedEventExpr>
+						<InMessageEventExpr messageType="ConfirmCustomerOrder" senderIdRef="1">
+							<ReceiverIdRef language="Java JavaScript"><![CDATA[ this.cust.getId()]]></ReceiverIdRef>
+							<Slot property="orderNo">
+								<ValueExpr language="Java JavaScript"><![CDATA[ this.cust.getOrderNo()]]></ValueExpr>
+							</Slot>
+							<Slot property="PWQueueFree" value="true" />
+						</InMessageEventExpr>
+					</SCHEDULE-EVT>
+				</DO>	
+			</EnvironmentRule>
 			<!-- ==================================================== -->
 			<EnvironmentRule name="EndPickupWindowService_Rule">
 				<!-- ================================================ -->
@@ -931,8 +995,8 @@ this.pw.getPickupWindowQueue().size() > 0 && this.cust.isWaitingForOrderToArrive
 						service is no longer busy. Otherwise, a new StartPickupWindowService 
 						is created. If there is a customer in the first position of the MB queue 
 						that is waiting to move forward to the PW queue, then this customer is 
-						informed to move forward to the PW queue by a ConfirmCustomerOrder message 
-						sent by the MB service.
+						informed to move forward to the PW queue by scheduling a MoveForward
+						caused event.
 					</description>
 				</documentation>
 				<WHEN eventType="OutMessageEvent" messageType="HereIsYourPizza" eventVariable="evt" />
@@ -963,7 +1027,7 @@ SimStatistics.cumulativeResponseTime.getValue() + this.evt.getOccurrenceTime() -
 						<DestroyObject objectVariable="cust" />
 					</UPDATE-ENV>
 					<SCHEDULE-EVT>
-						<CausedEventExpr eventType="StartPickupWindowService" delay="2">
+						<CausedEventExpr eventType="StartPickupWindowService">
 							<Condition language="Java JavaScript"><![CDATA[
 this.pw.getPickupWindowQueue().size() > 0							
 							]]></Condition>
@@ -975,31 +1039,11 @@ this.mb.getMenuBoardQueue().size() > 0 && this.mb.getMenuBoardQueue().get(0).isW
                 ]]></IF>
 				<THEN>
 					<SCHEDULE-EVT>
-						<InMessageEventExpr messageType="ConfirmCustomerOrder" senderIdRef="1">
-							<Condition language="Java"><![CDATA[
-( mb.getMenuBoardQueue().size() > 0) && ( mb.getMenuBoardQueue().get(0) != null) &&
-(( Customer)mb.getMenuBoardQueue().get(0)).isWaitingForPWFree()
-                            ]]></Condition>
-							<Condition language="JavaScript"><![CDATA[
-( this.mb.getMenuBoardQueue().size() > 0) && ( this.mb.getMenuBoardQueue().get(0) != null) &&
-( this.mb.getMenuBoardQueue().get(0)).isWaitingForPWFree()
-                             ]]></Condition>
-							<ReceiverIdRef language="Java"><![CDATA[
-(( Customer)mb.getMenuBoardQueue().get(0)).getId()							
-                                ]]></ReceiverIdRef>
-							<ReceiverIdRef language="JavaScript"><![CDATA[
-( this.mb.getMenuBoardQueue().get(0)).getId()							
-                                ]]></ReceiverIdRef>
-							<Slot property="orderNo">
-							  <ValueExpr language="Java"><![CDATA[
-(( Customer)mb.getMenuBoardQueue().get(0)).getOrderNo()
-                              ]]></ValueExpr>
-						      <ValueExpr language="JavaScript"><![CDATA[
-( this.mb.getMenuBoardQueue().get(0)).getOrderNo()
-							  ]]></ValueExpr>		
+						<CausedEventExpr eventType="MoveForward">
+							<Slot property="cust">
+								<ValueExpr language="Java JavaScript"><![CDATA[ this.mb.getMenuBoardQueue().get(0)]]></ValueExpr>
 							</Slot>
-							<Slot property="PWQueueFree" value="true" />	
-						</InMessageEventExpr>
+						</CausedEventExpr>
 					</SCHEDULE-EVT>
 				</THEN>
 			</EnvironmentRule>
