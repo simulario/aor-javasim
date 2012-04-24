@@ -56,6 +56,7 @@ public class Margin implements SpaceComponent {
       gl.glColor3d(1, 1, 1);
 
       // Enable texture
+      backgroundImg.bind();
       backgroundImg.enable();
 
       // Draw the background with texture
