@@ -19,6 +19,7 @@ import aors.model.envsim.PhysicalAgentObject;
 import aors.model.envsim.PhysicalObject;
 import aors.module.visopengl3d.gui.VisualizationPanel;
 import aors.module.visopengl3d.shape.DisplayInfo;
+import aors.module.visopengl3d.shape.Positioning;
 import aors.module.visopengl3d.shape.Shape2D;
 import aors.module.visopengl3d.shape.ShapeType;
 import aors.module.visopengl3d.shape.View;
@@ -826,38 +827,40 @@ public class Engine implements GLEventListener {
         // Set the display info's position
         if (displayInfo.isEnabled()) {
           displayInfo.setX(pos[0]);
+          displayInfo.setY(SpaceView.getObjectHeight() + 12);
           displayInfo.setZ(pos[2]);
+          
 
-/*          if (shape.getHeight() > 0) {
+          if (shape.getHeight() > 0) {
             if (shape.getPositioning().equals(Positioning.CenterCenter)
                 || shape.getPositioning().equals(Positioning.LeftCenter)
                 || shape.getPositioning().equals(Positioning.RightCenter)) {
-              displayInfo.setY(pos[1] + (shape.getHeight() / 2) + 3);
+              displayInfo.setZ(pos[2] - (shape.getHeight() / 2) - 3);
             } else if (shape.getPositioning().equals(Positioning.CenterBottom)
                 || shape.getPositioning().equals(Positioning.LeftBottom)
                 || shape.getPositioning().equals(Positioning.RightBottom)) {
-              displayInfo.setY(pos[1] + (shape.getHeight()) + 3);
+              displayInfo.setZ(pos[2] - (shape.getHeight()) - 3);
             } else if (shape.getPositioning().equals(Positioning.CenterTop)
                 || shape.getPositioning().equals(Positioning.LeftTop)
                 || shape.getPositioning().equals(Positioning.RightTop)) {
-              displayInfo.setY(pos[1] + 3);
+              displayInfo.setZ(pos[2] - 3);
             }
           } else {
             if (shape.getPositioning().equals(Positioning.CenterCenter)
                 || shape.getPositioning().equals(Positioning.LeftCenter)
                 || shape.getPositioning().equals(Positioning.RightCenter)) {
-              displayInfo.setY(pos[1] + (shape.getWidth() / 2) + 3);
+              displayInfo.setZ(pos[2] - (shape.getWidth() / 2) - 3);
             } else if (shape.getPositioning().equals(Positioning.CenterBottom)
                 || shape.getPositioning().equals(Positioning.LeftBottom)
                 || shape.getPositioning().equals(Positioning.RightBottom)) {
-              displayInfo.setY(pos[1] + (shape.getWidth()) + 3);
+              displayInfo.setZ(pos[2] - (shape.getWidth()) - 3);
             } else if (shape.getPositioning().equals(Positioning.CenterTop)
                 || shape.getPositioning().equals(Positioning.LeftTop)
                 || shape.getPositioning().equals(Positioning.RightTop)) {
-              displayInfo.setY(pos[1] + 3);
+              displayInfo.setZ(pos[2] - 3);
             }
           }
-*/
+
         }
 
         // Get the physical's rotation
@@ -1026,38 +1029,40 @@ public class Engine implements GLEventListener {
         // Set the display info's position
         if (displayInfo.isEnabled()) {
           displayInfo.setX(pos[0]);
+          displayInfo.setY(SpaceView.getObjectHeight() + 12);
           displayInfo.setZ(pos[2]);
-/*
+          
+
           if (shape.getHeight() > 0) {
             if (shape.getPositioning().equals(Positioning.CenterCenter)
                 || shape.getPositioning().equals(Positioning.LeftCenter)
                 || shape.getPositioning().equals(Positioning.RightCenter)) {
-              displayInfo.setY(pos[1] + (shape.getHeight() / 2) + 3);
+              displayInfo.setZ(pos[2] - (shape.getHeight() / 2) - 3);
             } else if (shape.getPositioning().equals(Positioning.CenterBottom)
                 || shape.getPositioning().equals(Positioning.LeftBottom)
                 || shape.getPositioning().equals(Positioning.RightBottom)) {
-              displayInfo.setY(pos[1] + (shape.getHeight()) + 3);
+              displayInfo.setZ(pos[2] - (shape.getHeight()) - 3);
             } else if (shape.getPositioning().equals(Positioning.CenterTop)
                 || shape.getPositioning().equals(Positioning.LeftTop)
                 || shape.getPositioning().equals(Positioning.RightTop)) {
-              displayInfo.setY(pos[1] + 3);
+              displayInfo.setZ(pos[2] - 3);
             }
           } else {
             if (shape.getPositioning().equals(Positioning.CenterCenter)
                 || shape.getPositioning().equals(Positioning.LeftCenter)
                 || shape.getPositioning().equals(Positioning.RightCenter)) {
-              displayInfo.setY(pos[1] + (shape.getWidth() / 2) + 3);
+              displayInfo.setZ(pos[2] - (shape.getWidth() / 2) - 3);
             } else if (shape.getPositioning().equals(Positioning.CenterBottom)
                 || shape.getPositioning().equals(Positioning.LeftBottom)
                 || shape.getPositioning().equals(Positioning.RightBottom)) {
-              displayInfo.setY(pos[1] + (shape.getWidth()) + 3);
+              displayInfo.setZ(pos[2] - (shape.getWidth()) - 3);
             } else if (shape.getPositioning().equals(Positioning.CenterTop)
                 || shape.getPositioning().equals(Positioning.LeftTop)
                 || shape.getPositioning().equals(Positioning.RightTop)) {
-              displayInfo.setY(pos[1] + 3);
+              displayInfo.setZ(pos[2] - 3);
             }
           }
-*/
+
         }
 
         // Display only if the object is visible
@@ -1485,23 +1490,24 @@ public class Engine implements GLEventListener {
       gl.glPushMatrix();
       gl.glLoadIdentity();
 
-/*      if (shape.getPositioning().equals(Positioning.CenterCenter)
+      if (shape.getPositioning().equals(Positioning.CenterCenter)
           || shape.getPositioning().equals(Positioning.LeftCenter)
           || shape.getPositioning().equals(Positioning.RightCenter)) {
-        gl.glRasterPos2d(position[0] + offset[0], position[1] + offset[1]
-            - shape.getHeight() / 2 - 15);
+        //gl.glRasterPos2d(position[0] + offset[0], position[1] + offset[1] - shape.getHeight() / 2 - 15);
+        gl.glRasterPos3d(position[0] + offset[0], SpaceView.getObjectHeight()+12, position[2] + offset[2]
+            + shape.getHeight() / 2 + 15);
       } else if (shape.getPositioning().equals(Positioning.CenterBottom)
           || shape.getPositioning().equals(Positioning.LeftBottom)
           || shape.getPositioning().equals(Positioning.RightBottom)) {
-        gl.glRasterPos2d(position[0] + offset[0], position[1] + offset[1] - 15);
+        gl.glRasterPos3d(position[0] + offset[0], SpaceView.getObjectHeight()+12, position[2] + offset[2] + 15);
       } else if (shape.getPositioning().equals(Positioning.CenterTop)
           || shape.getPositioning().equals(Positioning.LeftTop)
           || shape.getPositioning().equals(Positioning.RightTop)) {
-        gl.glRasterPos2d(position[0] + offset[0], position[1] + offset[1]
-            - shape.getHeight() - 15);
+        gl.glRasterPos3d(position[0] + offset[0], SpaceView.getObjectHeight()+12, position[2] + offset[2]
+            + shape.getHeight() + 15);
       }
-*/
-//      glut.glutBitmapString(GLUT.BITMAP_HELVETICA_12, label);
+
+      glut.glutBitmapString(GLUT.BITMAP_HELVETICA_12, label);
 
       gl.glPopMatrix();
     }

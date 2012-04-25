@@ -7,7 +7,7 @@ import javax.media.opengl.glu.GLU;
 
 import com.sun.opengl.util.texture.TextureCoords;
 
-import aors.module.visopengl3d.utility.TessellatedPolygon;
+import aors.module.visopengl3d.engine.TessellatedPolygon;
 import aors.module.visopengl3d.utility.Color;
 
 /**
@@ -23,10 +23,20 @@ public class Polygon extends Shape2D {
     type = ShapeType.Polygon;
   }
 
-  protected void calculateTopContour(ArrayList<double[]> outContourTop,
-      ArrayList<double[]> inContourTop) {
-    
-    if(inContourTop == null) {
+  protected void calculateTopContour(ArrayList<double[]> outContourTop, boolean clockwise) {
+    if(clockwise) {
+      for (int i=pointList.size()-1; i>=0; i--) {
+        double[] point = pointList.get(i);
+        
+        double[] vertex = new double[12];
+
+        vertex[0] = point[0];
+        vertex[1] = getObjectHeight()/2;
+        vertex[2] = -point[1];
+
+        outContourTop.add(vertex);
+      }
+    } else {
       for (double[] point : pointList) {
         double[] vertex = new double[12];
 
@@ -40,9 +50,18 @@ public class Polygon extends Shape2D {
   }
   
   protected void calculateBottomContour(ArrayList<double[]> outContourBottom,
-      ArrayList<double[]> inContourBottom) {
-    
-    if(inContourBottom == null) {
+      boolean clockwise) {
+    if(clockwise) {
+      for (double[] point : pointList) {
+        double[] vertex = new double[12];
+
+        vertex[0] = point[0];
+        vertex[1] = -getObjectHeight()/2;
+        vertex[2] = -point[1];
+
+        outContourBottom.add(vertex);
+      }
+    } else {
       for (int i=pointList.size()-1; i>=0; i--) {
         double[] point = pointList.get(i);
         
@@ -84,6 +103,17 @@ public class Polygon extends Shape2D {
     if (pointList != null) {
       // Don't draw if there are not enough points for a polygon
       if (pointList.size() > 2) {
+        
+        double[] point0 = {pointList.get(0)[0], 0, -pointList.get(0)[1]};
+        double[] point1 = {pointList.get(1)[0], 0, -pointList.get(1)[1]};
+        double[] point2 = {pointList.get(2)[0], 0, -pointList.get(2)[1]};
+        
+        double[] directionOfRotation = crossProduct(
+            subtractVectors(point0, point1),
+            subtractVectors(point2, point1));
+        
+        boolean clockwise = directionOfRotation[1] > 0 ? true : false;
+        
         // Check if the polygon will be rendered with a texture applied on it
         if (texture != null) {
 
@@ -163,10 +193,8 @@ public class Polygon extends Shape2D {
           texture.disable();*/
         } else {
           // Calculate the contour of the top and bottom polygons
-          
-          calculateTopContour(outContourTop, null);
-          calculateBottomContour(outContourBottom, null);
-          
+          calculateTopContour(outContourTop, clockwise);
+          calculateBottomContour(outContourBottom, clockwise);
           
           // Apply the fill color to the polygons
           applyColor(outContourTop, fill);
@@ -180,17 +208,10 @@ public class Polygon extends Shape2D {
           applyNormal(outContourTop, normalTop);
           applyNormal(outContourBottom, normalBottom);
 
-          for(double[] point: outContourTop) {
-            System.out.println("("+point[0]+"," + point[1]+"," + point[2]+","+point[3]+","+point[4]+","+point[5]+","+point[6]+","+point[7]+","+point[8]+","+point[9]+","+point[10]+","+point[11]+")");
-          }
-          
-          for(double[] point: outContourBottom) {
-            System.out.println("("+point[0]+"," + point[1]+"," + point[2]+","+point[3]+","+point[4]+","+point[5]+","+point[6]+","+point[7]+","+point[8]+","+point[9]+","+point[10]+","+point[11]+")");
-          }
-
           // Draw the polygons without texture
-          /*TessellatedPolygon poly = new TessellatedPolygon();
+          TessellatedPolygon poly = new TessellatedPolygon();
           poly.init(gl, glu);
+          poly.setWindingRule(GLU.GLU_TESS_WINDING_ODD);
           
           // Draw top polygon
           poly.beginPolygon();
@@ -207,7 +228,7 @@ public class Polygon extends Shape2D {
           poly.endPolygon();
           
           poly.end();
-          poly = null;*/
+          //poly = null;
           
           // Set the drawing color
           gl.glColor4dv(fill.getColor(), 0);
@@ -219,23 +240,23 @@ public class Polygon extends Shape2D {
           
           for(int i=0; i<numPoints-1; i++) {
             double[] normal = crossProduct(
-                subtractVectors(outContourBottom.get(i), outContourTop.get(i)),
+                subtractVectors(outContourBottom.get(numPoints-1-i), outContourTop.get(i)),
                 subtractVectors(outContourTop.get(i+1), outContourTop.get(i)));
             normalize(normal);
             gl.glNormal3dv(normal, 0);
-            gl.glVertex3dv(outContourBottom.get(i), 0);
-            gl.glVertex3dv(outContourBottom.get(i+1), 0);            
+            gl.glVertex3dv(outContourBottom.get(numPoints-1-i), 0);
+            gl.glVertex3dv(outContourBottom.get(numPoints-1-(i+1)), 0);            
             gl.glVertex3dv(outContourTop.get(i+1), 0);
             gl.glVertex3dv(outContourTop.get(i), 0);
           }
           
           double[] normal = crossProduct(
-              subtractVectors(outContourBottom.get(numPoints-1), outContourTop.get(numPoints-1)),
+              subtractVectors(outContourBottom.get(0), outContourTop.get(numPoints-1)), // outContourBottom.get(numPoints-1-(numPoints-1))
               subtractVectors(outContourTop.get(0), outContourTop.get(numPoints-1)));
           normalize(normal);
           gl.glNormal3dv(normal, 0);
-          gl.glVertex3dv(outContourBottom.get(numPoints-1), 0);
-          gl.glVertex3dv(outContourBottom.get(0), 0);            
+          gl.glVertex3dv(outContourBottom.get(0), 0); // outContourBottom.get(numPoints-1-(numPoints-1))
+          gl.glVertex3dv(outContourBottom.get(numPoints-1), 0);   // outContourBottom.get(numPoints-1-0)          
           gl.glVertex3dv(outContourTop.get(0), 0);
           gl.glVertex3dv(outContourTop.get(numPoints-1), 0);
           
