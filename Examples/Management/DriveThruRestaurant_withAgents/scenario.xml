@@ -8,14 +8,14 @@
 	scenarioTitle="A drive thru with a menu board, a kitchen and a pickup window"
 	simulationManagerDirectory="../../..">
 	<SimulationParameters simulationSteps="10000" stepDuration="1" timeUnit="s"
-		createDebuggingOutput="true" randomSeed="111"/>
+		createDebuggingOutput="true"/>
 	<SimulationModel modelName="DriveThru" 
 		modelTitle="A drive thru with a menu board, a kitchen, a pickup window and customer agents">
 		<documentation>
 			<dc:creator>Oana Nicolae</dc:creator>
 			<dc:contributor>Gerd Wagner</dc:contributor>
 			<dc:created>20090331</dc:created>
-			<dc:modified>20120424</dc:modified>
+			<dc:modified>20120425</dc:modified>
 			<dc:title>Drive Thru</dc:title>
 			<dc:title xml:lang="de">Auto-Restaurant Agent-based Model</dc:title>
 			<shortDescription>An agent-based model of a drive thru as a system with three order processing units: the order window, 
@@ -70,10 +70,12 @@
 				<image file="car3.png" license="© DrivingCoach.com" author="DrivingCoach.com" />
 				<image file="car4.png" license="© DrivingCoach.com" author="DrivingCoach.com" />
 				<image file="car5.png" license="© DrivingCoach.com" author="DrivingCoach.com" />
-				<image file="MenuBoard.png" license="CC BY-SA" author="Oana Nicolae" />
-				<image file="PickupPizza.png" license="CC BY-SA" author="Oana Nicolae" />
+				<image file="MenuBoard_Free.png" license="CC BY-SA" author="Oana Nicolae" />
+				<image file="MenuBoard_Busy.png" license="CC BY-SA" author="Oana Nicolae" />
+				<image file="PickupPizza_Free.png" license="CC BY-SA" author="Oana Nicolae" />
+				<image file="PickupPizza_Busy.png" license="CC BY-SA" author="Oana Nicolae" />
 				<image file="AutoRestaurant.jpg" license="CC BY-SA" author="Oana Nicolae" />
-				<image file="DriveThru_ProcessModel.png" author="Oana Nicolae" license="CC BY-SA" />
+				<image file="DriveThru_ProcessModel.png" license="CC BY-SA" author="Oana Nicolae" />
 			</mediaFiles>
 		</documentation>
 		<Statistics>
@@ -546,10 +548,11 @@ var resultInfo = messageInfo.substring( 25, messageInfo.length);
 					<!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->
 					<documentation>
 						<description> 
-							The PW agent asks the Customer agent about its orderNo SelfBeliefAttr and the
-							Customer replies this information. Then, the PW agent verifies if the customer order is
-							already arrived. If the order is arrived then, it schedules a reminder event type with the
-							delay at the pickup window.
+							The PW agent asks the Customer agent about its orderNo and the
+							Customer replies this information. Then, the PW agent verifies 
+							if the customer order is already arrived. If the order is arrived 
+							then, it schedules a reminder event type with the delay at the 
+							pickup window.
 						</description>
 					</documentation>
 					<WHEN eventType="InMessageEvent" messageType="ReplyOrderNo" messageVariable="mes" eventVariable="evt" />
@@ -676,8 +679,8 @@ parseInt( this.pickupWindow.getMessagePart( this.evt.getReminderMsg()))
 					<documentation>
 						<description> 
 							The customer at the PW service desk is announced that his order is arrived.
-							While waiting for other preparations at the PW desk the customer is not asked anymore about
-							his orderNo information.
+							While waiting for other preparations at the PW desk the customer is not 
+							asked anymore about his orderNo information.
 						</description>
 					</documentation>
 					<WHEN eventType="InMessageEvent" messageType="OrderArrived" />
@@ -1328,25 +1331,26 @@ this.custID && ( this.pw.getPickupWindowQueue().get(0)).isWaitingForOrderToArriv
 		<!-- ================================================== -->
 			<Views>
 				<SpaceView>
-					<TwoDimensionalSpaceView2D backgroundColor="white" backgroundImage="AutoRestaurant.jpg"/>
+					<TwoDimensionalSpaceView2D backgroundColor="white" backgroundImage="AutoRestaurant.png"/>
 				</SpaceView>
 				<!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->
 				<ObjectView objectType="MenuBoard" displayName="true" objectIdRef="1">
 					<!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->
 					<Shape2D x="40%" y="35%">
-						<Rectangle width="100" height="70" texture="MenuBoard.png">
-							<ShapePropertyVisualizationMap shapeProperty="fill" property="menuBoardBusy"
-								mapType="equalityCaseWise" v0="green" a0="false" a1="true" v1="red" />
+						<Rectangle width="150" height="70" texture="MenuBoard.png" positioning="RightTop">
+							<ShapePropertyVisualizationMap shapeProperty="texture" property="menuBoardBusy"
+								mapType="equalityCaseWise" v0="MenuBoard_Free.png" a0="false" a1="true"
+								v1="MenuBoard_Busy.png" />
 						</Rectangle>
 					</Shape2D>
-					<DisplayInfo property="queueLength" content=" customer(s)" />
-					<AttachedShape2D offsetX="-40px" offsetY="0px">
+					<DisplayInfo property="queueLength" content=" customer(s)"/>
+					<AttachedShape2D offsetX="-100px" offsetY="0px">
 						<Shape2D>
 							<Rectangle positioning="RightCenter" fill="white" width="1" height="50">
 								<ShapePropertyVisualizationMap shapeProperty="width" property="queueLength"
 									mapType="polynomial" a0="0" a1="60" />
 								<ShapePropertyVisualizationMap shapeProperty="texture" property="queueLength"
-									mapType="equalityCaseWise" a0="0" v0="Queue_Cmon-Fotolia.jpg" a1="1"
+									mapType="equalityCaseWise" a0="0" v0="car.png" a1="1"
 									v1="car1.png" a2="2" v2="car2.png" a3="3"
 									v3="car3.png" a4="4" v4="car4.png" a5="5"
 									v5="car5.png" />
@@ -1358,19 +1362,20 @@ this.custID && ( this.pw.getPickupWindowQueue().get(0)).isWaitingForOrderToArriv
 				<ObjectView objectType="PickupWindow" displayName="true" objectIdRef="2">
 					<!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->
 					<Shape2D x="85%" y="35%">
-						<Rectangle width="100" height="70" texture="PickupPizza.png">
-							<ShapePropertyVisualizationMap shapeProperty="fill" property="pickupWindowBusy"
-								mapType="equalityCaseWise" v0="green" a0="false" a1="true" v1="red" />
+						<Rectangle width="150" height="70" texture="PickupPizza.png" positioning="RightTop">
+							<ShapePropertyVisualizationMap shapeProperty="texture" property="pickupWindowBusy"
+								mapType="equalityCaseWise" v0="PickupPizza_Free.png" a0="false" a1="true"
+								v1="PickupPizza_Busy.png" />
 						</Rectangle>
 					</Shape2D>
 					<DisplayInfo property="queueLength" content=" customer(s)" />
-					<AttachedShape2D offsetX="-40px" offsetY="0px">
+					<AttachedShape2D offsetX="-100px" offsetY="0px">
 						<Shape2D>
 							<Rectangle positioning="RightCenter" fill="white" width="1" height="50">
 								<ShapePropertyVisualizationMap shapeProperty="width" property="queueLength"
 									mapType="polynomial" a0="0" a1="60" />
 								<ShapePropertyVisualizationMap shapeProperty="texture" property="queueLength"
-									mapType="equalityCaseWise" a0="0" v0="Queue_Cmon-Fotolia.jpg" a1="1"
+									mapType="equalityCaseWise" a0="0" v0="car.png" a1="1"
 									v1="car1.png" a2="2" v2="car2.png" a3="3"
 									v3="car3.png" a4="4" v4="car4.png" a5="5"
 									v5="car5.png" />
