@@ -5,6 +5,8 @@ import java.util.ArrayList;
 import javax.media.opengl.GL2;
 import javax.media.opengl.glu.GLU;
 
+import aors.module.visopengl3d.utility.VectorOperations;
+
 public class PolyLine extends Shape2D  {
 
   public PolyLine() {
@@ -49,9 +51,9 @@ public class PolyLine extends Shape2D  {
         double[] downVector = {0, -1, 0};
         
         for(int i=0; i<numPoints-1; i++) {
-          surfaceNormals1[i] = normalizedVector(
-                                 crossProduct(
-                                   subtractVectors(pointList3d.get(i+1), pointList3d.get(i)),
+          surfaceNormals1[i] = VectorOperations.normalizedVector(
+                                 VectorOperations.crossProduct(
+                                   VectorOperations.subtractVectors(pointList3d.get(i+1), pointList3d.get(i)),
                                    downVector
                                  )
                                );
@@ -70,8 +72,8 @@ public class PolyLine extends Shape2D  {
         pointNormals2[numPoints-1] = surfaceNormals2[numPoints-2];
         
         for(int i=1; i<numPoints-1; i++) {
-          pointNormals1[i] = normalizedVector(
-                               addVectors(
+          pointNormals1[i] = VectorOperations.normalizedVector(
+                               VectorOperations.addVectors(
                                  surfaceNormals1[i-1],
                                  surfaceNormals1[i]
                                )
@@ -90,24 +92,24 @@ public class PolyLine extends Shape2D  {
         double[][] bottomVertices1 = new double[numPoints][3];
         double[][] bottomVertices2 = new double[numPoints][3];
         
-        topVertices1[0] = addVectors(pointList3d.get(0), multScalarWithVector(strokeWidth/2, pointNormals1[0]));
-        topVertices2[0] = addVectors(pointList3d.get(0), multScalarWithVector(strokeWidth/2, pointNormals2[0]));
-        topVertices1[numPoints-1] = addVectors(pointList3d.get(numPoints-1), multScalarWithVector(strokeWidth/2, pointNormals1[numPoints-1]));
-        topVertices2[numPoints-1] = addVectors(pointList3d.get(numPoints-1), multScalarWithVector(strokeWidth/2, pointNormals2[numPoints-1]));
+        topVertices1[0] = VectorOperations.addVectors(pointList3d.get(0), VectorOperations.multScalarWithVector(strokeWidth/2, pointNormals1[0]));
+        topVertices2[0] = VectorOperations.addVectors(pointList3d.get(0), VectorOperations.multScalarWithVector(strokeWidth/2, pointNormals2[0]));
+        topVertices1[numPoints-1] = VectorOperations.addVectors(pointList3d.get(numPoints-1), VectorOperations.multScalarWithVector(strokeWidth/2, pointNormals1[numPoints-1]));
+        topVertices2[numPoints-1] = VectorOperations.addVectors(pointList3d.get(numPoints-1), VectorOperations.multScalarWithVector(strokeWidth/2, pointNormals2[numPoints-1]));
         
         for(int i=1; i<numPoints-1; i++) {
-          double cosAlpha = cosAngleBetweenVectors(pointNormals2[i], surfaceNormals2[i]);
+          double cosAlpha = VectorOperations.cosAngleBetweenVectors(pointNormals2[i], surfaceNormals2[i]);
           //System.out.println(Math.acos(cosAlpha) * (180/Math.PI));
           //double pointStrokeWidth = cosAlpha * (strokeWidth/2);
           double pointStrokeWidth = (strokeWidth/2) / cosAlpha;
-          topVertices1[i] = addVectors(
+          topVertices1[i] = VectorOperations.addVectors(
                               pointList3d.get(i),
-                              multScalarWithVector(pointStrokeWidth, pointNormals1[i])
+                              VectorOperations.multScalarWithVector(pointStrokeWidth, pointNormals1[i])
                             );
           
-          topVertices2[i] = addVectors(
+          topVertices2[i] = VectorOperations.addVectors(
                               pointList3d.get(i),
-                              multScalarWithVector(pointStrokeWidth, pointNormals2[i])
+                              VectorOperations.multScalarWithVector(pointStrokeWidth, pointNormals2[i])
                             );
         }
         
@@ -173,8 +175,8 @@ public class PolyLine extends Shape2D  {
         gl.glNormal3d(0, -1, 0);
         
         for (int i=0; i<numPoints; i++) {
-          gl.glVertex3dv(topVertices2[i], 0);
-          gl.glVertex3dv(topVertices1[i], 0);
+          gl.glVertex3dv(bottomVertices2[i], 0);
+          gl.glVertex3dv(bottomVertices1[i], 0);
         }
         
         gl.glEnd();
@@ -200,11 +202,13 @@ public class PolyLine extends Shape2D  {
         }
         
         // Draw the start and end side face
-        double[] normalStart1 = normalizedVector(subtractVectors(pointList3d.get(0), pointList3d.get(1)));
+        double[] normalStart1 = VectorOperations.normalizedVector(VectorOperations.subtractVectors(pointList3d.get(0), pointList3d.get(1)));
         //System.out.println(normalStart1[0] + "," + normalStart1[1] + "," + normalStart1[2]);
         
-        double[] normalStart = normalizedVector(crossProduct(subtractVectors(topVertices1[0], topVertices2[0]),
-                                                        subtractVectors(bottomVertices2[0], topVertices2[0])));
+        double[] normalStart = VectorOperations.normalizedVector(
+                                 VectorOperations.crossProduct(
+                                   VectorOperations.subtractVectors(topVertices1[0], topVertices2[0]),
+                                   VectorOperations.subtractVectors(bottomVertices2[0], topVertices2[0])));
         //System.out.println(normalStart[0] + "," + normalStart[1] + "," + normalStart[2]);
         gl.glNormal3dv(normalStart, 0);
         
@@ -214,8 +218,10 @@ public class PolyLine extends Shape2D  {
         gl.glVertex3dv(topVertices1[0], 0);
         
         //double[] normalEnd = normalizedVector(subtractVectors(pointList3d.get(numPoints-1), pointList3d.get(numPoints-2)));
-        double[] normalEnd = normalizedVector(crossProduct(subtractVectors(topVertices2[numPoints-1], topVertices1[numPoints-1]),
-            subtractVectors(bottomVertices1[numPoints-1], topVertices1[numPoints-1])));
+        double[] normalEnd = VectorOperations.normalizedVector(
+                               VectorOperations.crossProduct(
+                                 VectorOperations.subtractVectors(topVertices2[numPoints-1], topVertices1[numPoints-1]),
+                                 VectorOperations.subtractVectors(bottomVertices1[numPoints-1], topVertices1[numPoints-1])));
         gl.glNormal3dv(normalEnd, 0);
         
         gl.glVertex3dv(bottomVertices2[numPoints-1], 0);

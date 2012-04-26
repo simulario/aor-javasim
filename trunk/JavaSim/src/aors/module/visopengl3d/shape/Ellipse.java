@@ -7,6 +7,7 @@ import com.sun.opengl.util.texture.TextureCoords;
 //import javax.media.opengl.glu.GLUquadric;
 
 import aors.module.visopengl3d.utility.Color;
+import aors.module.visopengl3d.utility.VectorOperations;
 
 /**
  * The 3D Ellipse is represented by an elliptic Cylinder.
@@ -65,8 +66,8 @@ public class Ellipse extends Shape2D {
     double[][] normals = new double[slices+1][3];
     
     for(int i = 0; i < slices+1; i++) {
-      double[] normal = subtractVectors(topVertices[i], centerTop);
-      normalize(normal);
+      double[] normal = VectorOperations.subtractVectors(topVertices[i], centerTop);
+      VectorOperations.normalize(normal);
       normals[i] = normal;
     }
     

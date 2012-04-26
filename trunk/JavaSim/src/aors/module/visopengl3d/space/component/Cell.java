@@ -11,6 +11,7 @@ import aors.module.visopengl3d.engine.TessellatedPolygon;
 import aors.module.visopengl3d.space.view.SpaceView;
 import aors.module.visopengl3d.utility.Color;
 import aors.module.visopengl3d.utility.Offset;
+import aors.module.visopengl3d.utility.VectorOperations;
 
 import com.sun.opengl.util.texture.Texture;
 
@@ -475,11 +476,11 @@ public class Cell implements SpaceComponent {
     int lastIndex = outerContourTop.size()-1;
     
     for(int i = 0; i < lastIndex; i++) {
-      double[] normal = crossProduct(
-                            subtractVectors(outerContourBottom.get(lastIndex-i), outerContourTop.get(i)),
-                            subtractVectors(outerContourTop.get(i+1), outerContourTop.get(i)));
+      double[] normal = VectorOperations.crossProduct(
+                          VectorOperations.subtractVectors(outerContourBottom.get(lastIndex-i), outerContourTop.get(i)),
+                          VectorOperations.subtractVectors(outerContourTop.get(i+1), outerContourTop.get(i)));
       
-      normalize(normal);
+      VectorOperations.normalize(normal);
       gl.glNormal3dv(normal, 0);
       gl.glVertex3dv(outerContourBottom.get(lastIndex-i), 0);
       gl.glVertex3dv(outerContourBottom.get(lastIndex-(i+1)), 0);
@@ -487,11 +488,11 @@ public class Cell implements SpaceComponent {
       gl.glVertex3dv(outerContourTop.get(i), 0);
     }
     
-    double[] normal = crossProduct(
-                          subtractVectors(outerContourBottom.get(lastIndex-lastIndex), outerContourTop.get(lastIndex)),
-                          subtractVectors(outerContourTop.get(0), outerContourTop.get(lastIndex)));
+    double[] normal = VectorOperations.crossProduct(
+                        VectorOperations.subtractVectors(outerContourBottom.get(lastIndex-lastIndex), outerContourTop.get(lastIndex)),
+                        VectorOperations.subtractVectors(outerContourTop.get(0), outerContourTop.get(lastIndex)));
 
-    normalize(normal);
+    VectorOperations.normalize(normal);
     gl.glNormal3dv(normal, 0);
     gl.glVertex3dv(outerContourBottom.get(lastIndex-lastIndex), 0);
     gl.glVertex3dv(outerContourBottom.get(lastIndex-0), 0);
@@ -499,37 +500,6 @@ public class Cell implements SpaceComponent {
     gl.glVertex3dv(outerContourTop.get(lastIndex), 0);
     
     gl.glEnd();
-  }
-  
-  /**
-   * Normalizes a vector by dividing its components through its length
-   * 
-   * @param v
-   *      vector, which should be normalized, as an array
-   */
-  public void normalize(double[] v) {
-    double length = Math.sqrt(v[0]*v[0] + v[1]*v[1] + v[2]*v[2]);
-    v[0] /= length;
-    v[1] /= length;
-    v[2] /= length;
-  }
-  
-  public double[] subtractVectors(double[] vector1, double[] vector2) {
-    double[] result = {
-      vector1[0] - vector2[0],
-      vector1[1] - vector2[1],
-      vector1[2] - vector2[2],
-    }; 
-    return result;
-  }
-  
-  public double[] crossProduct(double[] vector1, double[] vector2) {
-    double[] crossProduct = {
-      vector1[1]*vector2[2] - vector1[2]*vector2[1],
-      vector1[2]*vector2[0] - vector1[0]*vector2[2],
-      vector1[0]*vector2[1] - vector1[1]*vector2[0]
-    };
-    return crossProduct;
   }
 
   @Override

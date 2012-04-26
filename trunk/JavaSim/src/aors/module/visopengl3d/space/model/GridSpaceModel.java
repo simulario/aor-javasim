@@ -22,7 +22,6 @@ import aors.module.visopengl3d.utility.TextureLoader;
 import aors.space.AbstractCell;
 import aors.space.Space;
 
-import com.sun.opengl.util.texture.Texture;
 import com.sun.opengl.util.texture.TextureCoords;
 
 /**
@@ -543,7 +542,7 @@ public class GridSpaceModel extends SpaceModel {
    * 
    * @param backgroundImg
    */
-  private void applyBackgroundImg(Texture backgroundImg, GL2 gl) {
+  /*private void applyBackgroundImg(Texture backgroundImg, GL2 gl) {
     // Get texture coordinates
     TextureCoords texCoords = backgroundImg.getImageTexCoords();
 
@@ -587,7 +586,7 @@ public class GridSpaceModel extends SpaceModel {
 
     // Disable the texture
     backgroundImg.disable();
-  }
+  }*/
 
   /**
    * Increases or decreases a cells object count by one.

@@ -5,6 +5,7 @@ import javax.media.opengl.glu.GLU;
 import javax.media.opengl.glu.GLUquadric;
 
 import aors.module.visopengl3d.utility.Color;
+import aors.module.visopengl3d.utility.VectorOperations;
 
 import com.sun.opengl.util.texture.TextureCoords;
 
@@ -130,50 +131,50 @@ public class Arc extends Shape2D {
         gl.glBegin(GL2.GL_QUADS);
         
         for(int i = 0; i < slices; i++) {
-          double[] normal = subtractVectors(bottomVertices[i], centerBottom);
-          normalize(normal);
+          double[] normal = VectorOperations.subtractVectors(bottomVertices[i], centerBottom);
+          VectorOperations.normalize(normal);
           gl.glNormal3dv(normal, 0);
           gl.glTexCoord2d(tc.left() + (i * sliceAngle) / arcAngle, tc.bottom()); gl.glVertex3dv(bottomVertices[i], 0);
           
-          normal = subtractVectors(bottomVertices[i+1], centerBottom);
-          normalize(normal);
+          normal = VectorOperations.subtractVectors(bottomVertices[i+1], centerBottom);
+          VectorOperations.normalize(normal);
           gl.glNormal3dv(normal, 0);
           gl.glTexCoord2d(tc.left() + ((i+1) * sliceAngle) / arcAngle, tc.bottom()); gl.glVertex3dv(bottomVertices[i+1], 0);
           
-          normal = subtractVectors(topVertices[i+1], centerTop);
-          normalize(normal);
+          normal = VectorOperations.subtractVectors(topVertices[i+1], centerTop);
+          VectorOperations.normalize(normal);
           gl.glNormal3dv(normal, 0);
           gl.glTexCoord2d(tc.left() + ((i+1) * sliceAngle) / arcAngle, tc.top()); gl.glVertex3dv(topVertices[i+1], 0);
           
-          normal = subtractVectors(topVertices[i], centerTop);
-          normalize(normal);
+          normal = VectorOperations.subtractVectors(topVertices[i], centerTop);
+          VectorOperations.normalize(normal);
           gl.glNormal3dv(normal, 0);
           gl.glTexCoord2d(tc.left() + (i * sliceAngle) / arcAngle, tc.top()); gl.glVertex3dv(topVertices[i], 0);
         }
         
         if(arcAngle < 360) {
-          double[] normal = crossProduct(
-            subtractVectors(bottomVertices[slices], topVertices[slices]),
-            subtractVectors(centerTop, topVertices[slices])
+          double[] normal = VectorOperations.crossProduct(
+              VectorOperations.subtractVectors(bottomVertices[slices], topVertices[slices]),
+              VectorOperations.subtractVectors(centerTop, topVertices[slices])
           );
           /*double[] normal1 = {-objectHeight * radius * Math.sin(startAngle+slices*sliceAngle),
                               0,
                               -objectHeight * radius * Math.cos(startAngle)+slices*sliceAngle};*/
-          normalize(normal);
+          VectorOperations.normalize(normal);
           gl.glNormal3dv(normal, 0);
           gl.glTexCoord2d(tc.left(), tc.bottom()); gl.glVertex3dv(bottomVertices[slices], 0);
           gl.glTexCoord2d(tc.right(), tc.bottom()); gl.glVertex3dv(centerBottom, 0);
           gl.glTexCoord2d(tc.right(), tc.top()); gl.glVertex3dv(centerTop, 0);
           gl.glTexCoord2d(tc.left(), tc.top()); gl.glVertex3dv(topVertices[slices], 0);
           
-          normal = crossProduct(
-              subtractVectors(centerBottom, centerTop),
-              subtractVectors(topVertices[0], centerTop)
+          normal = VectorOperations.crossProduct(
+              VectorOperations.subtractVectors(centerBottom, centerTop),
+              VectorOperations.subtractVectors(topVertices[0], centerTop)
           );
           /*double[] normal2 = {objectHeight * radius * Math.sin(startAngle),
                                 0,
                                 objectHeight * radius * Math.cos(startAngle)};*/
-          normalize(normal);
+          VectorOperations.normalize(normal);
           gl.glNormal3dv(normal, 0);
           gl.glTexCoord2d(tc.left(), tc.bottom()); gl.glVertex3dv(centerBottom, 0);
           gl.glTexCoord2d(tc.right(), tc.bottom()); gl.glVertex3dv(bottomVertices[0], 0);
@@ -224,50 +225,50 @@ public class Arc extends Shape2D {
         gl.glBegin(GL2.GL_QUADS);
         
         for(int i = 0; i < slices; i++) {
-          double[] normal = subtractVectors(bottomVertices[i], centerBottom);
-          normalize(normal);
+          double[] normal = VectorOperations.subtractVectors(bottomVertices[i], centerBottom);
+          VectorOperations.normalize(normal);
           gl.glNormal3dv(normal, 0);
           gl.glVertex3dv(bottomVertices[i], 0);
           
-          normal = subtractVectors(bottomVertices[i+1], centerBottom);
-          normalize(normal);
+          normal = VectorOperations.subtractVectors(bottomVertices[i+1], centerBottom);
+          VectorOperations.normalize(normal);
           gl.glNormal3dv(normal, 0);
           gl.glVertex3dv(bottomVertices[i+1], 0);
           
-          normal = subtractVectors(topVertices[i+1], centerTop);
-          normalize(normal);
+          normal = VectorOperations.subtractVectors(topVertices[i+1], centerTop);
+          VectorOperations.normalize(normal);
           gl.glNormal3dv(normal, 0);
           gl.glVertex3dv(topVertices[i+1], 0);
           
-          normal = subtractVectors(topVertices[i], centerTop);
-          normalize(normal);
+          normal = VectorOperations.subtractVectors(topVertices[i], centerTop);
+          VectorOperations.normalize(normal);
           gl.glNormal3dv(normal, 0);
           gl.glVertex3dv(topVertices[i], 0);
         }
         
         if(arcAngle < 360) {
-          double[] normal = crossProduct(
-            subtractVectors(bottomVertices[slices], topVertices[slices]),
-            subtractVectors(centerTop, topVertices[slices])
+          double[] normal = VectorOperations.crossProduct(
+              VectorOperations.subtractVectors(bottomVertices[slices], topVertices[slices]),
+              VectorOperations.subtractVectors(centerTop, topVertices[slices])
           );
           /*double[] normal1 = {-objectHeight * radius * Math.sin(startAngle+slices*sliceAngle),
                                 0,
                                 -objectHeight * radius * Math.cos(startAngle)+slices*sliceAngle};*/
-          normalize(normal);
+          VectorOperations.normalize(normal);
           gl.glNormal3dv(normal, 0);
           gl.glVertex3dv(bottomVertices[slices], 0);
           gl.glVertex3dv(centerBottom, 0);
           gl.glVertex3dv(centerTop, 0);
           gl.glVertex3dv(topVertices[slices], 0);
           
-          normal = crossProduct(
-              subtractVectors(centerBottom, centerTop),
-              subtractVectors(topVertices[0], centerTop)
+          normal = VectorOperations.crossProduct(
+              VectorOperations.subtractVectors(centerBottom, centerTop),
+              VectorOperations.subtractVectors(topVertices[0], centerTop)
           );
           /*double[] normal2 = {objectHeight * radius * Math.sin(startAngle),
                     0,
                     objectHeight * radius * Math.cos(startAngle)};*/
-          normalize(normal);
+          VectorOperations.normalize(normal);
           gl.glNormal3dv(normal, 0);
           gl.glVertex3dv(centerBottom, 0);
           gl.glVertex3dv(bottomVertices[0], 0);
