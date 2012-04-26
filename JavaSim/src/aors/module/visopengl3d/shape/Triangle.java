@@ -6,6 +6,7 @@ import javax.media.opengl.glu.GLU;
 import com.sun.opengl.util.texture.TextureCoords;
 
 import aors.module.visopengl3d.utility.Color;
+import aors.module.visopengl3d.utility.VectorOperations;
 
 
 /**
@@ -103,7 +104,7 @@ public class Triangle extends Shape2D {
         gl.glTexCoord2d(tc.left(), tc.top()); gl.glVertex3dv(vertices[3], 0);
         // Right Back Face
         double[] nRight = {depth*objectHeight, 0, -halfWidth*objectHeight};
-        normalize(nRight);
+        VectorOperations.normalize(nRight);
         gl.glNormal3dv(nRight, 0);
         gl.glTexCoord2d(tc.left(), tc.bottom()); gl.glVertex3dv(vertices[1], 0);
         gl.glTexCoord2d(tc.right(), tc.bottom()); gl.glVertex3dv(vertices[2], 0);
@@ -111,7 +112,7 @@ public class Triangle extends Shape2D {
         gl.glTexCoord2d(tc.left(), tc.top()); gl.glVertex3dv(vertices[4], 0);
         // Left Back Face
         double[] nLeft = {-depth*objectHeight, 0, -halfWidth*objectHeight};
-        normalize(nLeft);
+        VectorOperations.normalize(nLeft);
         gl.glNormal3dv(nLeft, 0);
         gl.glTexCoord2d(tc.left(), tc.bottom()); gl.glVertex3dv(vertices[2], 0);
         gl.glTexCoord2d(tc.right(), tc.bottom()); gl.glVertex3dv(vertices[0], 0);
@@ -160,7 +161,7 @@ public class Triangle extends Shape2D {
         gl.glVertex3dv(vertices[3], 0);
         // Right Back Face
         double[] nRight = {depth*objectHeight, 0, -halfWidth*objectHeight};
-        normalize(nRight);
+        VectorOperations.normalize(nRight);
         gl.glNormal3dv(nRight, 0);
         gl.glVertex3dv(vertices[1], 0);
         gl.glVertex3dv(vertices[2], 0);
@@ -168,7 +169,7 @@ public class Triangle extends Shape2D {
         gl.glVertex3dv(vertices[4], 0);
         // Left Back Face
         double[] nLeft = {-depth*objectHeight, 0, -halfWidth*objectHeight};
-        normalize(nLeft);
+        VectorOperations.normalize(nLeft);
         gl.glNormal3dv(nLeft, 0);
         gl.glVertex3dv(vertices[2], 0);
         gl.glVertex3dv(vertices[0], 0);

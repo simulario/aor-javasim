@@ -4,6 +4,7 @@ import javax.media.opengl.GL2;
 import javax.media.opengl.glu.GLU;
 
 import aors.module.visopengl3d.utility.Color;
+import aors.module.visopengl3d.utility.VectorOperations;
 
 import com.sun.opengl.util.texture.TextureCoords;
 
@@ -126,13 +127,13 @@ public class RegularPolygon extends Shape2D {
         
         //double phi = 2 * Math.PI / numberOfPoints;
         for(int i = 0; i < numberOfPoints; i++) {
-          double[] normal = crossProduct(
-                                subtractVectors(bottomVertices[i], topVertices[i]),
-                                subtractVectors(topVertices[i+1], topVertices[i]));
+          double[] normal = VectorOperations.crossProduct(
+                              VectorOperations.subtractVectors(bottomVertices[i], topVertices[i]),
+                              VectorOperations.subtractVectors(topVertices[i+1], topVertices[i]));
           /*double[] normal =  {objectHeight * radius * (Math.sin(phi * (i+1)) - Math.sin(phi * i)),
                              0, 
                              objectHeight * radius * (Math.cos(phi * (i+1)) - Math.cos(phi * i))};*/
-          normalize(normal);
+          VectorOperations.normalize(normal);
           gl.glNormal3dv(normal, 0);
           gl.glTexCoord2d(tc.left(), tc.bottom()); gl.glVertex3dv(bottomVertices[i], 0);
           gl.glTexCoord2d(tc.right(), tc.bottom()); gl.glVertex3dv(bottomVertices[i+1], 0);
@@ -183,14 +184,14 @@ public class RegularPolygon extends Shape2D {
         
         //double phi = 2 * Math.PI / numberOfPoints;
         for(int i = 0; i < numberOfPoints; i++) {
-          double[] normal = crossProduct(
-              subtractVectors(bottomVertices[i], topVertices[i]),
-              subtractVectors(topVertices[i+1], topVertices[i]));
+          double[] normal = VectorOperations.crossProduct(
+              VectorOperations.subtractVectors(bottomVertices[i], topVertices[i]),
+              VectorOperations.subtractVectors(topVertices[i+1], topVertices[i]));
           
           /*{objectHeight * radius * (Math.sin(phi * (i+1)) - Math.sin(phi * i)),
                              0, 
                              objectHeight * radius * (Math.cos(phi * (i+1)) - Math.cos(phi * i))};*/
-          normalize(normal);
+          VectorOperations.normalize(normal);
           gl.glNormal3dv(normal, 0);
           gl.glVertex3dv(bottomVertices[i], 0);
           gl.glVertex3dv(bottomVertices[i+1], 0);

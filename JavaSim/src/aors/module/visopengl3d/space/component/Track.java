@@ -11,6 +11,7 @@ import aors.module.visopengl3d.space.model.OneDimSpaceModel;
 import aors.module.visopengl3d.space.view.Alignment;
 import aors.module.visopengl3d.space.view.SpaceView;
 import aors.module.visopengl3d.utility.Color;
+import aors.module.visopengl3d.utility.VectorOperations;
 import aors.space.Space;
 
 
@@ -245,30 +246,30 @@ public class Track implements SpaceComponent {
     // Calculate normals for the left half circle
     for(int i=0; i<numPoints/2; i++) {
       double[] outerPointTop = {outContourTop.get(i)[0], outContourTop.get(i)[1], outContourTop.get(i)[2]};
-      double[] outerPointNormal = normalizedVector(
-                                    subtractVectors(
+      double[] outerPointNormal = VectorOperations.normalizedVector(
+                                    VectorOperations.subtractVectors(
                                       outerPointTop,
                                       leftCenterTop
                                     )
                                   );
       outerPointNormals.add(i, outerPointNormal);
       
-      double[] innerPointNormal = multScalarWithVector(-1, outerPointNormal);
+      double[] innerPointNormal = VectorOperations.multScalarWithVector(-1, outerPointNormal);
       innerPointNormals.add(i, innerPointNormal);
     }
     
     // Calculate normals for the right half circle
     for(int i=numPoints/2; i<numPoints; i++) {
       double[] outerPointTop = {outContourTop.get(i)[0], outContourTop.get(i)[1], outContourTop.get(i)[2]};
-      double[] outerPointNormal = normalizedVector(
-                                    subtractVectors(
+      double[] outerPointNormal = VectorOperations.normalizedVector(
+                                    VectorOperations.subtractVectors(
                                       outerPointTop,
                                       rightCenterTop
                                     )
                                   );
       outerPointNormals.add(i, outerPointNormal);
       
-      double[] innerPointNormal = multScalarWithVector(-1, outerPointNormal);
+      double[] innerPointNormal = VectorOperations.multScalarWithVector(-1, outerPointNormal);
       innerPointNormals.add(i, innerPointNormal);
     }
 
@@ -317,32 +318,6 @@ public class Track implements SpaceComponent {
     gl.glEnd();
     
     gl.glEndList();
-  }
-  
-  public double[] normalizedVector(double[] v) {
-    double length = Math.sqrt(v[0]*v[0] + v[1]*v[1] + v[2]*v[2]);
-    double[] normalizedVector = {v[0] / length,
-                                 v[1] / length,
-                                 v[2] / length};
-    return normalizedVector;
-  }
-  
-  public double[] subtractVectors(double[] vector1, double[] vector2) {
-    double[] result = {
-      vector1[0] - vector2[0],
-      vector1[1] - vector2[1],
-      vector1[2] - vector2[2],
-    }; 
-    return result;
-  }
-  
-  public double[] multScalarWithVector(double scalar, double[] vector) {
-    double[] result = {
-      scalar * vector[0],
-      scalar * vector[1],
-      scalar * vector[2],
-    }; 
-    return result;
   }
 
   /**
@@ -550,7 +525,7 @@ public class Track implements SpaceComponent {
   public double[] getWorldCoordinates(double x, double yP) {
     double vertex[] = new double[3];
     
-    double y= yP- Space.ORDINATEBASE;
+    //double y= yP- Space.ORDINATEBASE;
 
     // Map to horizontal alignment
     if (alignment == Alignment.horizontal) {

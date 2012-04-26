@@ -306,12 +306,18 @@ public class Engine implements GLEventListener {
     } else if(type.equals(SpaceType.TwoD) || type.equals(SpaceType.TwoDGrid) || type.equals(SpaceType.TwoDLateralView)) {
       drawingArea = new Offset(-spaceModel.getxMax()/2, -spaceModel.getyMax()/2, spaceModel.getxMax()/2, spaceModel.getyMax()/2);
     }*/
-      
-    // Set the space models drawing area
-    spaceModel.setDrawingArea(drawingArea);
     
-    // Set the camera position
-    GlobalCamera globalCamera = spaceModel.getSpaceView().getGlobalCamera();
+    GlobalCamera globalCamera = null;
+    
+    // Set the space models drawing area
+    if(spaceModel!=null) {
+      spaceModel.setDrawingArea(drawingArea);
+    
+      // Set the camera position
+      globalCamera = spaceModel.getSpaceView().getGlobalCamera();
+    } else {
+      System.out.println("spaceModel ist null");
+    }
     
     if(globalCamera != null) {
     	//double[] eyePosition = globalCamera.getEyePosition();
@@ -324,10 +330,12 @@ public class Engine implements GLEventListener {
     				  lookAt[0], lookAt[1], lookAt[2],
     				  upVector[0], upVector[1], upVector[2]);*/
     	
-      Skybox skybox = spaceModel.getSpaceView().getSkybox();
-      if(skybox != null) {
-        skybox.setPosition(globalCamera.getEyePosition());
-      }
+    	if(spaceModel != null) {
+        Skybox skybox = spaceModel.getSpaceView().getSkybox();
+        if(skybox != null) {
+          skybox.setPosition(globalCamera.getEyePosition());
+        }
+    	}
     } else {
       /*double fovy_rad = Math.PI * fovy / 180;
     	// determine camera height from drawingArea height
@@ -450,9 +458,11 @@ public class Engine implements GLEventListener {
                     upVector[0], upVector[1], upVector[2]);*/
       
       //double[] position = {0, 800, 800};
-      Skybox skybox = spaceModel.getSpaceView().getSkybox();
-      if(skybox != null) {
-        skybox.setPosition(eyePosition);
+      if(spaceModel!=null) {
+        Skybox skybox = spaceModel.getSpaceView().getSkybox();
+        if(skybox != null) {
+          skybox.setPosition(eyePosition);
+        }
       }
     }
     

@@ -9,6 +9,7 @@ import com.sun.opengl.util.texture.TextureCoords;
 
 import aors.module.visopengl3d.engine.TessellatedPolygon;
 import aors.module.visopengl3d.utility.Color;
+import aors.module.visopengl3d.utility.VectorOperations;
 
 /**
  * The Polygon class is representing a complex geometric polygon.
@@ -108,9 +109,9 @@ public class Polygon extends Shape2D {
         double[] point1 = {pointList.get(1)[0], 0, -pointList.get(1)[1]};
         double[] point2 = {pointList.get(2)[0], 0, -pointList.get(2)[1]};
         
-        double[] directionOfRotation = crossProduct(
-            subtractVectors(point0, point1),
-            subtractVectors(point2, point1));
+        double[] directionOfRotation = VectorOperations.crossProduct(
+            VectorOperations.subtractVectors(point0, point1),
+            VectorOperations.subtractVectors(point2, point1));
         
         boolean clockwise = directionOfRotation[1] > 0 ? true : false;
         
@@ -239,10 +240,10 @@ public class Polygon extends Shape2D {
           int numPoints = outContourTop.size();
           
           for(int i=0; i<numPoints-1; i++) {
-            double[] normal = crossProduct(
-                subtractVectors(outContourBottom.get(numPoints-1-i), outContourTop.get(i)),
-                subtractVectors(outContourTop.get(i+1), outContourTop.get(i)));
-            normalize(normal);
+            double[] normal = VectorOperations.crossProduct(
+                VectorOperations.subtractVectors(outContourBottom.get(numPoints-1-i), outContourTop.get(i)),
+                VectorOperations.subtractVectors(outContourTop.get(i+1), outContourTop.get(i)));
+            VectorOperations.normalize(normal);
             gl.glNormal3dv(normal, 0);
             gl.glVertex3dv(outContourBottom.get(numPoints-1-i), 0);
             gl.glVertex3dv(outContourBottom.get(numPoints-1-(i+1)), 0);            
@@ -250,10 +251,10 @@ public class Polygon extends Shape2D {
             gl.glVertex3dv(outContourTop.get(i), 0);
           }
           
-          double[] normal = crossProduct(
-              subtractVectors(outContourBottom.get(0), outContourTop.get(numPoints-1)), // outContourBottom.get(numPoints-1-(numPoints-1))
-              subtractVectors(outContourTop.get(0), outContourTop.get(numPoints-1)));
-          normalize(normal);
+          double[] normal = VectorOperations.crossProduct(
+              VectorOperations.subtractVectors(outContourBottom.get(0), outContourTop.get(numPoints-1)), // outContourBottom.get(numPoints-1-(numPoints-1))
+              VectorOperations.subtractVectors(outContourTop.get(0), outContourTop.get(numPoints-1)));
+          VectorOperations.normalize(normal);
           gl.glNormal3dv(normal, 0);
           gl.glVertex3dv(outContourBottom.get(0), 0); // outContourBottom.get(numPoints-1-(numPoints-1))
           gl.glVertex3dv(outContourBottom.get(numPoints-1), 0);   // outContourBottom.get(numPoints-1-0)          
