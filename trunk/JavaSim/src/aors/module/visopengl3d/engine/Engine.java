@@ -307,17 +307,11 @@ public class Engine implements GLEventListener {
       drawingArea = new Offset(-spaceModel.getxMax()/2, -spaceModel.getyMax()/2, spaceModel.getxMax()/2, spaceModel.getyMax()/2);
     }*/
     
-    GlobalCamera globalCamera = null;
-    
     // Set the space models drawing area
-    if(spaceModel!=null) {
-      spaceModel.setDrawingArea(drawingArea);
-    
-      // Set the camera position
-      globalCamera = spaceModel.getSpaceView().getGlobalCamera();
-    } else {
-      System.out.println("spaceModel ist null");
-    }
+    spaceModel.setDrawingArea(drawingArea);
+  
+    // Set the camera position
+    GlobalCamera globalCamera = spaceModel.getSpaceView().getGlobalCamera();
     
     if(globalCamera != null) {
     	//double[] eyePosition = globalCamera.getEyePosition();
@@ -330,12 +324,10 @@ public class Engine implements GLEventListener {
     				  lookAt[0], lookAt[1], lookAt[2],
     				  upVector[0], upVector[1], upVector[2]);*/
     	
-    	if(spaceModel != null) {
-        Skybox skybox = spaceModel.getSpaceView().getSkybox();
-        if(skybox != null) {
-          skybox.setPosition(globalCamera.getEyePosition());
-        }
-    	}
+      Skybox skybox = spaceModel.getSpaceView().getSkybox();
+      if(skybox != null) {
+        skybox.setPosition(globalCamera.getEyePosition());
+      }
     } else {
       /*double fovy_rad = Math.PI * fovy / 180;
     	// determine camera height from drawingArea height
@@ -458,11 +450,9 @@ public class Engine implements GLEventListener {
                     upVector[0], upVector[1], upVector[2]);*/
       
       //double[] position = {0, 800, 800};
-      if(spaceModel!=null) {
-        Skybox skybox = spaceModel.getSpaceView().getSkybox();
-        if(skybox != null) {
-          skybox.setPosition(eyePosition);
-        }
+      Skybox skybox = spaceModel.getSpaceView().getSkybox();
+      if(skybox != null) {
+        skybox.setPosition(eyePosition);
       }
     }
     
