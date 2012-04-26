@@ -255,7 +255,7 @@ public class Skybox {
 	    gl.glDisable(GL2.GL_LIGHT0);
 	    
 			gl.glPushMatrix();
-		    gl.glLoadIdentity();
+		  //gl.glLoadIdentity();
 			gl.glTranslated(position[0], position[1], position[2]);
 			gl.glCallList(displayList);
 			gl.glPopMatrix();
