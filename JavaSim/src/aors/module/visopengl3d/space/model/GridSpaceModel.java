@@ -494,6 +494,30 @@ public class GridSpaceModel extends SpaceModel {
               break;
             }
           }
+        } else if(visualPropertyName.equals("fillR")) {
+          Color cellColor = cell.getColor();
+          
+          if(cellColor.getRed() != Double.valueOf(value)) {
+            Color tmp = new Color(Double.valueOf(value), cellColor.getGreen(), cellColor.getBlue(), cellColor.getAlpha());
+            cell.setColor(tmp);
+            recompile = true;
+          }
+        } else if(visualPropertyName.equals("fillG")) {
+          Color cellColor = cell.getColor();
+          
+          if(cellColor.getGreen() != Double.valueOf(value)) {
+            Color tmp = new Color(cellColor.getRed(), Double.valueOf(value), cellColor.getBlue(), cellColor.getAlpha());
+            cell.setColor(tmp);
+            recompile = true;
+          }
+        } else if(visualPropertyName.equals("fillB")) {
+          Color cellColor = cell.getColor();
+          
+          if(cellColor.getBlue() != Double.valueOf(value)) {
+            Color tmp = new Color(cellColor.getRed(), cellColor.getGreen(), Double.valueOf(value), cellColor.getAlpha());
+            cell.setColor(tmp);
+            recompile = true;
+          }
         } else if(visualPropertyName.equals("texture")) {
           if(value != gridSpaceView.getBackgroundImgFilename()) {
             gridSpaceView.setBackgroundImgFilename(value);
