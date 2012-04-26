@@ -18,7 +18,7 @@ import com.sun.opengl.util.texture.Texture;
 /**
  * Cell of a two dimensional grid.
  * 
- * @author Sebastian Mucha
+ * @author Sebastian Mucha, Susanne Schölzel
  * @since March 18th, 2010
  * 
  */
