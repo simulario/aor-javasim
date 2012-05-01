@@ -293,8 +293,30 @@
 </Globals>
 
 <EntityTypes>
+	<ActionEventType name="Move">
+		<Attribute name="x" type="Integer"/>
+		<Attribute name="y" type="Integer"/>
+	</ActionEventType>
 	<AgentType name="User">
-		
+		<Attribute name="x" type="Integer"/>
+		<Attribute name="y" type="Integer"/>
+		<ActionRule name="Move_AR">
+			<RuleParameter name="x" type="Integer"/>
+			<RuleParameter name="y" type="Integer"/>
+			<IF language="Java"> Global.isFreeLocation( this.x, this.y) </IF>
+			<THEN>
+				<SCHEDULE-EVT>
+					<ActionEventExpr actionEventType="Move">
+						<Slot property="x">
+							<ValueExpr language="Java JavaScript"> this.x </ValueExpr>
+						</Slot>
+						<Slot property="y">
+							<ValueExpr language="Java JavaScript"> this.y </ValueExpr>
+						</Slot>
+					</ActionEventExpr>
+				</SCHEDULE-EVT>
+			</THEN>
+		</ActionRule>
 	</AgentType>
 </EntityTypes>
 <EnvironmentRules>
@@ -357,6 +379,34 @@
 			</UPDATE-ENV>
 		</DO>
 	</EnvironmentRule>
+	<EnvironmentRule name="Move_InterventionPattern">
+		<WHEN eventType="Move" eventVariable="evt"/>
+		<FOR objectVariable="user" objectType="User">
+			<ObjectRef language="Java"> evt.getActor() </ObjectRef>
+		</FOR>
+		<DO>
+			<UPDATE-ENV>
+				<UpdateGridCell>
+					<XCoordinate language="Java JavaScript"> user.getX() </XCoordinate>
+					<YCoordinate language="Java JavaScript"> user.getY() </YCoordinate>
+					<Slot property="kindOfResident" value="-1"/>
+				</UpdateGridCell>
+				<UpdateObject objectVariable="user">
+					<Slot property="x">
+						<PropertyValueExpr entityVariable="evt" property="x"/>
+					</Slot>
+					<Slot property="y">
+						<PropertyValueExpr entityVariable="evt" property="y"/>
+					</Slot>
+				</UpdateObject>
+				<UpdateGridCell>
+					<XCoordinate language="Java JavaScript"> user.getX() </XCoordinate>
+					<YCoordinate language="Java JavaScript"> user.getY() </YCoordinate>
+					<Slot property="kindOfResident" value="3"></Slot>
+				</UpdateGridCell>
+			</UPDATE-ENV>
+		</DO>
+	</EnvironmentRule>
 </EnvironmentRules>
 </SimulationModel>
 <!-- =================================================================== -->
@@ -413,6 +463,14 @@
 				</TwoDimensionalGridSpaceView2D>
 			</SpaceView>
 		</Views>
+		<AgentControlUI>
+			<AgentControlByAgentType type="User">
+				<UserActionForm actionRule="Move_AR" label="Move" positioning="LeftBottom">
+					<ActionRuleParameterUI parameter="x" label="X coordinate"/>
+					<ActionRuleParameterUI parameter="y" label="Y coordinate"/>					
+				</UserActionForm>				
+			</AgentControlByAgentType>
+		</AgentControlUI>
 	</AnimationUI>
 	
 </UserInterface>
