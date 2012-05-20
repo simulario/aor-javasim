@@ -230,6 +230,16 @@ var r2 = js.util.Random.uniformInt(1,6);
 				<ReferenceProperty name="cust" type="Customer" />
 			</CausedEventType>
 			<!-- =================================================== -->
+			<CausedEventType name="HireNewEmployee">
+				<!-- =================================================== -->
+				<Attribute name="typeOfNewEmployee" type="String" />
+			</CausedEventType>
+			<!-- =================================================== -->
+			<CausedEventType name="FireEmployee">
+				<!-- =================================================== -->
+				<Attribute  name="idOfEmployee" type="Integer" />
+			</CausedEventType>
+			<!-- =================================================== -->
 			<AgentType name="Person">
 				<!-- =================================================== -->
 				<Attribute type="String" name="firstName" />
@@ -683,10 +693,16 @@ parseInt( this.kitchen.getMessagePart( this.evt.getReminderMsg(),3))
 							giving the information about the pizza type inside of a CustomerOrder message. 
 						</description>
 					</documentation>
-					<WHEN eventType="InMessageEvent" messageType="OrderSolicitation" />
+					<WHEN eventType="InMessageEvent" messageType="OrderSolicitation" eventVariable="evt"/>
 					<DO>
 						<SCHEDULE-EVT>
-							<OutMessageEventExpr messageType="CustomerOrder" receiverIdRefs="10">
+							<OutMessageEventExpr messageType="CustomerOrder" >
+								<!-- Modification changed the receiver id -->
+								<ReceiverIdRef language="Java JavaScript">
+									<![CDATA[
+									this.evt.getSenderIdRef()
+									]]>
+								</ReceiverIdRef>
 								<Slot property="pizzaType">
 									<ValueExpr language="Java JavaScript"><![CDATA[ this.cust.randomPizzaType()]]></ValueExpr>
 								</Slot>
@@ -776,7 +792,7 @@ parseInt( this.kitchen.getMessagePart( this.evt.getReminderMsg(),3))
 				<FOR objectVariable="orgUnitPW" objectType="OrganizationUnit" objectIdRef="2"/>
 				<FOR objectVariable="orgUnitK" objectType="OrganizationUnit" objectIdRef="23"/>
 				<FOR objectVariable="man" objectType="Manager" objectIdRef="13"/>
-				<FOR objectVariable="mb" objectType="OrderTaker" objectIdRef="10"/>
+				<FOR objectVariable="mb" objectType="OrderTaker" />
 				<FOR objectVariable="k" objectType="Cook" objectIdRef="12"/>
 				<FOR objectVariable="pw" objectType="Waitress" objectIdRef="11"/>
 				<DO>
@@ -878,7 +894,7 @@ SimStatistics.numberOfCustomers.getValue() + 1
 				</documentation>
 				<WHEN eventType="StartMenuBoardService" />
 				<FOR-ObjectVariable variable="mb" objectType="MenuBoard" objectIdRef="1" />
-				<FOR-ObjectVariable variable="ot" objectType="OrderTaker" objectIdRef="10"/>
+				<FOR-ObjectVariable variable="ot" objectType="OrderTaker" />
 				<FOR-ObjectVariable variable="cust" objectType="Customer">
 					<ObjectRef language="Java JavaScript"><![CDATA[ this.mb.getMenuBoardQueue().get(0)]]></ObjectRef>
 				</FOR-ObjectVariable>
@@ -922,7 +938,7 @@ SimStatistics.cumulativeMenuBoardServiceTime.getValue() + this.serviceTimeMB
 				</documentation>
 				<WHEN eventType="OutMessageEvent" messageType="ConfirmCustomerOrder" messageVariable="mes" />
 				<FOR-ObjectVariable variable="mb" objectType="MenuBoard" objectIdRef="1" />
-				<FOR-ObjectVariable variable="ot" objectType="OrderTaker" objectIdRef="10"/>
+				<FOR-ObjectVariable variable="ot" objectType="OrderTaker" />
 				<FOR-ObjectVariable variable="pw" objectType="PickupWindow" objectIdRef="2" />
 				<FOR-ObjectVariable variable="cust" objectType="Customer">
 					<ObjectRef language="Java JavaScript"><![CDATA[ this.mb.getMenuBoardQueue().get(0)]]></ObjectRef>
@@ -932,7 +948,12 @@ this.pw.getPickupWindowQueue().size() >= this.pw.getMaxPickupWindowLineSize()
                 ]]></IF>
 				<THEN>
 					<SCHEDULE-EVT>
-						<InMessageEventExpr messageType="ConfirmCustomerOrder" senderIdRef="10">
+						<InMessageEventExpr messageType="ConfirmCustomerOrder" >
+							<SenderIdRef language="Java JavaScript">
+								<![CDATA[
+									this.ot.getId()
+								]]>
+							</SenderIdRef>
 							<ReceiverIdRef language="Java JavaScript"><![CDATA[ this.cust.getId()]]></ReceiverIdRef>
 							<Slot property="orderNo">
 								<ValueExpr language="Java JavaScript"><![CDATA[
@@ -974,7 +995,12 @@ this.mb.getMenuBoardQueue().size() > 0
 !this.pw.isPickupWindowBusy() && this.pw.getPickupWindowQueue().size() > 0
 	                        ]]></Condition>
 			    		</CausedEventExpr>
-			    		<InMessageEventExpr messageType="ConfirmCustomerOrder" senderIdRef="10">
+			    		<InMessageEventExpr messageType="ConfirmCustomerOrder" >
+			    			<SenderIdRef language="Java JavaScript">
+			    				<![CDATA[
+			    				this.ot.getId()
+			    				]]>
+			    			</SenderIdRef>
 			    			<ReceiverIdRef language="Java JavaScript"><![CDATA[ this.cust.getId()]]></ReceiverIdRef>
 			    			<Slot property="orderNo">
 			    				<ValueExpr language="Java JavaScript"><![CDATA[ this.mes.getOrderNo()]]></ValueExpr>
@@ -1039,6 +1065,7 @@ this.pw.getPickupWindowQueue().size() > 0 && this.cust.isWaitingForOrderToArrive
 				<WHEN eventType="MoveForward" eventVariable="evt" />
 				<FOR-ObjectVariable variable="mb" objectType="MenuBoard" objectIdRef="1" />
 				<FOR-ObjectVariable variable="pw" objectType="PickupWindow" objectIdRef="2"  />
+				<FOR-ObjectVariable variable="ot" objectType="OrderTaker"/>
 				<FOR-ObjectVariable variable="cust" objectType="Customer">
 					<ObjectRef language="Java JavaScript">this.evt.getCust()</ObjectRef>
 				</FOR-ObjectVariable>
@@ -1073,7 +1100,12 @@ this.mb.getMenuBoardQueue().size() > 0
 !this.pw.isPickupWindowBusy() && this.pw.getPickupWindowQueue().size() > 0
 	                        ]]></Condition>
 						</CausedEventExpr>
-						<InMessageEventExpr messageType="ConfirmCustomerOrder" senderIdRef="10">
+						<InMessageEventExpr messageType="ConfirmCustomerOrder" >
+							<SenderIdRef language="Java JavaScript">
+								<![CDATA[
+									this.ot.getId()
+								]]>
+							</SenderIdRef>
 							<ReceiverIdRef language="Java JavaScript"><![CDATA[ this.cust.getId()]]></ReceiverIdRef>
 							<Slot property="orderNo">
 								<ValueExpr language="Java JavaScript"><![CDATA[ this.cust.getOrderNo()]]></ValueExpr>
