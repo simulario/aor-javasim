@@ -1,0 +1,1701 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<?xml-stylesheet type="text/xsl" href="prettyprint.xsl"?>
+
+<SimulationScenario version="0.9" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xsi:schemaLocation="http://aor-simulation.org ../../../AORSL/AORSL_0-9.xsd"
+	xmlns="http://aor-simulation.org" xmlns:aors="http://aor-simulation.org"
+	xmlns:dc="http://purl.org/dc/elements/1.1/" scenarioName="DriveThru"
+	scenarioTitle="A drive thru with a menu board, a kitchen and a pickup window"
+	simulationManagerDirectory="../../..">
+	<SimulationParameters simulationSteps="10000" stepDuration="1" timeUnit="s"
+		createDebuggingOutput="true" randomSeed="111"/>
+	<SimulationModel modelName="DriveThru" 
+		modelTitle="A drive thru with a menu board, a kitchen, a pickup window and customer agents">
+		<documentation>
+			<dc:creator>Oana Nicolae</dc:creator>
+			<dc:contributor>Gerd Wagner</dc:contributor>
+			<dc:contributor>Bogdan Mihai Duca</dc:contributor>
+			<dc:created>20090331</dc:created>
+			<dc:modified>20120424</dc:modified>
+			<dc:title>Drive Thru</dc:title>
+			<dc:title xml:lang="de">Auto-Restaurant Agent-based Model</dc:title>
+			<shortDescription>An agent-based model of a drive thru as a system with three order processing units: the order window, 
+				the kitchen and the pickup window, and two queues: one for the order window	and one for the pickup window.
+			</shortDescription>
+			<shortDescription xml:lang="de">Ein einfaches Modell eines Auto-Restaurants als System mit drei Auftragsbearbeitungseinheiten:
+				Bestellannahme, Küche und Abholtresen, und zwei Warteschlangen:	eine für die Bestellannahme und eine für den Abholtresen.
+			</shortDescription>
+			<aors:description xmlns="http://www.w3.org/1999/xhtml">
+				<p>As a car enters the drive thru from the street, the driver decides whether or not to get in line. 
+					If he decides to leave the restaurant, he counts as a lost customer. If he decides 
+					to get in line, he waits until the menu board is available.	At that time, he gives the order 
+					to the order taker. After the order is taken, two things occur simultaneously:</p>
+				<ol>
+					<li>the driver moves forward if there is room, otherwise he has to wait at the menu board 
+						until there is room to move forward.</li>
+					<li>The order is sent back to the kitchen where it is prepared with some delay.</li>
+				</ol> 
+				<p>As soon as the driver reaches the pickup window, he pays and picks up his food, if it is ready. 
+					If the food is not yet ready, he has to wait until his order is delivered to the pickup window.</p>
+			</aors:description>
+			<aors:description xmlns="http://www.w3.org/1999/xhtml" xml:lang="de">
+				<p> Wenn ein Autofahrer von der Straße auf den Vorplatz des Autorestaurants einbiegt und die
+					Länge der Warteschlange am Bestellannahmefenster sieht,	entscheidet sich der Fahrer, ob er sich
+					in die Schlange einreiht oder ob er wieder wegfährt. Wenn er sich entscheidet, wieder wegzufahren,
+					geht er in die Statistik der verlorenen Kunden mit ein. Wenn er sich dafür entscheidet, sich
+					in die Schlange einzureihen, wartet er bis er bei der Bestellannahme dran kommt. Dann gibt
+					er seine Bestellung ab. Daraufhin passieren zwei Dinge gleichzeitig:</p>
+				<ol>
+					<li>der Fahrer fährt weiter, sofern vor ihm Platz ist, andernfalls muss er am Bestellannahmefenster
+						solange warten, bis vor ihm Platz entsteht, um weiterzufahren.</li>
+					<li>Der Auftrag wird an die Küche weitergeleitet, wo er nach einer gewissen Zeit berarbeitet wird.</li>
+				</ol> 
+				<p> Sobald der Fahrer das Abholfenster erreicht, zahlt er und nimmt sein Essen entgegen, wenn es fertig ist. 
+					Wenn das Essen noch nicht fertig ist, muss er warten, bis es zubereitet und zum Abholfenster gebracht wird.</p>
+			</aors:description>
+			<aors:source xmlns="http://www.w3.org/1999/xhtml">
+				<span><a href="http://www.informs-sim.org/wsc08papers/005.pdf">Introduction to Simulation</a> by R.G. Ingalls, 
+					in <em>Proceedings of the 2008 Winter Simulation Conference</em>.</span>
+			</aors:source>
+			<aors:source xmlns="http://www.w3.org/1999/xhtml" xml:lang="de">
+				<span><a href="http://www.informs-sim.org/wsc08papers/005.pdf">Introduction to Simulation</a> von R.G. Ingalls, 
+					in <em>Proceedings of the 2008 Winter Simulation Conference</em>.</span>
+			</aors:source>
+			<CcLicense license="CC BY-SA"/>
+			<titleImage file="DriveThru.png"/>
+			<processModelDiagram file="DriveThru_ProcessModel.png"/>
+			<mediaFiles>
+				<image file="DriveThru.png" license="© R.G. Ingalls"/>
+				<image file="car1.png" license="© DrivingCoach.com" author="DrivingCoach.com" />
+				<image file="car2.png" license="© DrivingCoach.com" author="DrivingCoach.com" />
+				<image file="car3.png" license="© DrivingCoach.com" author="DrivingCoach.com" />
+				<image file="car4.png" license="© DrivingCoach.com" author="DrivingCoach.com" />
+				<image file="car5.png" license="© DrivingCoach.com" author="DrivingCoach.com" />
+				<image file="MenuBoard.png" license="CC BY-SA" author="Oana Nicolae" />
+				<image file="PickupPizza.png" license="CC BY-SA" author="Oana Nicolae" />
+				<image file="AutoRestaurant.jpg" license="CC BY-SA" author="Oana Nicolae" />
+				<image file="DriveThru_ProcessModel.png" author="Oana Nicolae" license="CC BY-SA" />
+			</mediaFiles>
+		</documentation>
+		<Statistics>
+			<Variable name="numberOfCustomers" dataType="Integer" />
+			<Variable name="numberOfLostCustomers" dataType="Integer" />
+			<Variable name="numberOfDepartures" dataType="Float" />
+			<Variable name="menuBoardQueueLength" dataType="Integer">
+				<Source>
+					<ObjectProperty property="queueLength" objectType="MenuBoard" objectIdRef="1" />
+				</Source>
+			</Variable>
+			<Variable name="pickupWindowQueueLength" dataType="Integer">
+				<Source>
+					<ObjectProperty property="queueLength" objectType="PickupWindow" objectIdRef="2" />
+				</Source>				
+			</Variable>
+			<Variable name="revenue" dataType="Float" />
+			<Variable name="cumulativeResponseTime" dataType="Float" />
+			<Variable name="meanResponseTime" dataType="Float">
+				<Source computeOnlyAtEnd="true">
+					<ValueExpr language="Java"><![CDATA[
+( double) SimStatistics.cumulativeResponseTime.getValue() / SimStatistics.numberOfDepartures.getValue()						
+						]]></ValueExpr>
+					<ValueExpr language="JavaScript"><![CDATA[
+SimStatistics.cumulativeResponseTime.getValue() / SimStatistics.numberOfDepartures.getValue()						
+					]]></ValueExpr>
+				</Source>
+			</Variable>	
+			<Variable name="cumulativeMenuBoardServiceTime" dataType="Integer" />
+			<Variable name="menuBoardUtilization" dataType="Float">
+				<Source computeOnlyAtEnd="true">
+					<ValueExpr language="Java"><![CDATA[
+( double) SimStatistics.cumulativeMenuBoardServiceTime.getValue() / SimParameter.SIMULATION_STEPS * 100						
+				    ]]></ValueExpr>
+					<ValueExpr language="JavaScript"><![CDATA[
+SimStatistics.cumulativeMenuBoardServiceTime.getValue() / SimParameter.SIMULATION_STEPS * 100						
+				   ]]></ValueExpr>
+				</Source>
+			</Variable>
+			<Variable name="cumulativePickupWindowServiceTime" dataType="Integer" />
+			<Variable name="pickupWindowUtilization" dataType="Float">
+				<Source computeOnlyAtEnd="true">
+					<ValueExpr language="Java"><![CDATA[
+(double) SimStatistics.cumulativePickupWindowServiceTime.getValue() / SimParameter.SIMULATION_STEPS * 100						
+					]]></ValueExpr>
+					<ValueExpr language="JavaScript"><![CDATA[
+SimStatistics.cumulativePickupWindowServiceTime.getValue() / SimParameter.SIMULATION_STEPS * 100						
+					]]></ValueExpr>
+				</Source>
+			</Variable>
+			<Variable name="maxLengthOfMBQ" dataType="Integer">
+				<Source aggregationFunction="max">
+					<ObjectProperty property="queueLength" objectType="MenuBoard" objectIdRef="1" />
+				</Source>
+			</Variable>
+			<Variable name="maxLengthOfPWQ" dataType="Integer">
+				<Source aggregationFunction="max">
+					<ObjectProperty property="queueLength" objectType="PickupWindow" objectIdRef="2" />
+				</Source>
+			</Variable>
+		</Statistics>
+		<Globals>
+			<!-- =========================================== -->
+			<GlobalFunction name="twoDice" resultType="Integer">
+				<!-- =========================================== -->
+				<Parameter name="factor" type="Integer" />
+				<Body language="Java"><![CDATA[
+int r1 = Random.uniformInt(1,6);
+int r2 = Random.uniformInt(1,6);
+	if (r1+r2 <  3)  return (2*factor);      // with probability  0.028
+	if (r1+r2 <  4)  return (3*factor);      // with probability  0.056
+	if (r1+r2 <  5)  return (4*factor);      // with probability  0.083
+	if (r1+r2 <  6)  return (5*factor);      // with probability  0.111
+	if (r1+r2 <  7)  return (6*factor);      // with probability  0.139
+	if (r1+r2 <  8)  return (7*factor);      // with probability  0.166
+	if (r1+r2 <  9)  return (8*factor);      // with probability  0.139
+	if (r1+r2 < 10)  return (9*factor);      // with probability  0.111
+	if (r1+r2 < 11) return (10*factor);      // with probability  0.083
+	if (r1+r2 < 12) return (11*factor);      // with probability  0.056
+                    return (12*factor);      // with probability  0.028
+                  ]]></Body>
+				<Body language="JavaScript"><![CDATA[
+var r1 = js.util.Random.uniformInt(1,6);
+var r2 = js.util.Random.uniformInt(1,6);
+	if (r1+r2 <  3)  return (2*factor);      // with probability  0.028
+	if (r1+r2 <  4)  return (3*factor);      // with probability  0.056
+	if (r1+r2 <  5)  return (4*factor);      // with probability  0.083
+	if (r1+r2 <  6)  return (5*factor);      // with probability  0.111
+	if (r1+r2 <  7)  return (6*factor);      // with probability  0.139
+	if (r1+r2 <  8)  return (7*factor);      // with probability  0.166
+	if (r1+r2 <  9)  return (8*factor);      // with probability  0.139
+	if (r1+r2 < 10)  return (9*factor);      // with probability  0.111
+	if (r1+r2 < 11) return (10*factor);      // with probability  0.083
+	if (r1+r2 < 12) return (11*factor);      // with probability  0.056
+                    return (12*factor);      // with probability  0.028							
+				]]></Body>
+			</GlobalFunction>	
+		</Globals>
+		<EntityTypes>
+			<!-- =================================================== -->
+			<MessageType name="OrderSolicitation" />
+			<!-- =================================================== -->
+			<MessageType name="CustomerOrder">
+				<!-- =================================================== -->
+				<Attribute name="pizzaType" type="Integer" />
+			</MessageType>
+			<!-- =================================================== -->
+			<MessageType name="ConfirmCustomerOrder">
+				<!-- =================================================== -->
+				<Attribute name="orderNo" type="Integer" />
+				<Attribute name="PWQueueFree" type="Boolean" />
+			</MessageType>
+			<!-- =================================================== -->
+			<MessageType name="ProductionOrder">
+				<!-- =================================================== -->
+				<Attribute type="Integer" name="orderNo" />
+				<Attribute type="Integer" name="pizzaType" />
+				<Attribute type="Integer" name="custID" />
+			</MessageType>
+			<!-- =================================================== -->
+			<MessageType name="OrderPrepared">
+				<!-- =================================================== -->
+				<Attribute type="Integer" name="orderNo" />
+				<Attribute type="Integer" name="pizzaType" />
+				<Attribute type="Integer" name="custID" />
+			</MessageType>
+			<!-- =================================================== -->
+			<MessageType name="AskOrderNo" />
+			<!-- =================================================== -->
+			<MessageType name="ReplyOrderNo">
+				<!-- =================================================== -->
+				<Attribute type="Integer" name="orderNo" />
+			</MessageType>
+			<!-- =================================================== -->
+			<MessageType name="OrderArrived" />
+			<!-- =================================================== -->
+			<MessageType name="HereIsYourPizza" />
+			<!-- =================================================== -->
+			<ExogenousEventType name="OpenRestaurant" />
+			<!-- =================================================== -->
+			<ExogenousEventType name="CustomerArrival">
+				<!-- =================================================== -->
+				<Periodicity>
+					<ValueExpr language="Java JavaScript"><![CDATA[ Global.twoDice(10)]]></ValueExpr>
+				</Periodicity>
+			</ExogenousEventType>
+			<!-- =================================================== -->
+			<CausedEventType name="StartMenuBoardService" />
+			<!-- =================================================== -->
+			<CausedEventType name="StartPickupWindowService" />
+			<!-- =================================================== -->
+			<CausedEventType name="MoveForward">
+			<!-- =================================================== -->
+				<ReferenceProperty name="cust" type="Customer" />
+			</CausedEventType>
+			<!-- =================================================== -->
+			<CausedEventType name="HireNewEmployee">
+				<!-- =================================================== -->
+				<Attribute name="typeOfNewEmployee" type="String" />
+			</CausedEventType>
+			<!-- =================================================== -->
+			<CausedEventType name="FireEmployee">
+				<!-- =================================================== -->
+				<Attribute  name="idOfEmployee" type="Integer" />
+			</CausedEventType>
+			<!-- =================================================== -->
+			<AgentType name="Person">
+				<!-- =================================================== -->
+				<Attribute type="String" name="firstName" />
+				<Attribute type="String" name="lastName" />
+				<Attribute name="dateOfBirth" type="String"/>
+				<Attribute name="personalNumber" type="Integer"/>
+			</AgentType>
+			<!-- =================================================== -->
+			<Role name="Manager" organizationUnits="MenuBoard Kitchen PickupWindow " multiplicity="4">
+			<!-- =================================================== -->
+				<Attribute type="String" name="firstName" />
+				<Attribute type="String" name="lastName" />
+				<Attribute name="dateOfBirth" type="String"/>
+				<Attribute name="personalNumber" type="Integer"/>
+			</Role>
+			<!-- =================================================== -->
+			<Role name="OrderTaker" organizationUnits="MenuBoard" conflictedWithRole="Waitress" multiplicity="unbounded">
+				<!-- =================================================== -->
+				<Attribute type="String" name="firstName" />
+				<Attribute type="String" name="lastName" />
+				<Attribute name="dateOfBirth" type="String"/>
+				<Attribute name="personalNumber" type="Integer"/>
+				<!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->
+				<Function name="getMessagePart" resultType="String">
+					<!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->
+					<documentation>
+						<description> 
+							The function deals with retrieving the needed information 
+							from a string that comprises two distinct information (customerId and his orderNo) 
+							separated by the "and" string. It is needed because the ReminderEvent has only one 
+							string field to send the information. From this field we need to extract the needed parts. 
+						</description>
+					</documentation>
+					<Parameter name="messageInfo" type="String" />
+					<Parameter name="argumentIndex" type="Integer" />
+					<Body language="Java"><![CDATA[ 
+String resultInfo= ""; 
+int i = messageInfo.indexOf("and");
+	if (argumentIndex == 1) {
+  	if (i == 1) {
+  		resultInfo = Character.toString( messageInfo.charAt(22));
+  	}
+ 	 else
+    	resultInfo = messageInfo.substring(22,i);                    
+ } 
+ else	{
+   resultInfo = messageInfo.substring( i+3, messageInfo.length());                       
+ }
+  return resultInfo; 
+                ]]></Body>
+					<Body language="JavaScript"><![CDATA[ 
+var resultInfo = ""; 
+var i = messageInfo.indexOf("and");
+	if (argumentIndex === 1) {
+      if (i === 1) {
+  	    resultInfo = messageInfo.charAt(22);
+  	   }
+ 	  else
+        resultInfo = messageInfo.substring( 22,i);                    
+     } 
+    else	{
+     resultInfo = messageInfo.substring( i+3, messageInfo.length);                       
+    }
+     return resultInfo; 
+                 ]]></Body>
+				</Function>
+				<!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->
+				<ReactionRule name="CustomerOrder_Rule">
+					<!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->
+					<documentation>
+						<description>
+							The MenuBoard (MB) service receives the Order information from the customer. 
+							It schedules a Reminder event in order to know that the MB service for that 
+							particular customer is over. A ProductionOrder message (containing orderNo 
+							and pizzaType) will be also sent to Kitchen Service, in order to prepare the pizza. 
+						</description>
+					</documentation>
+					<WHEN eventType="InMessageEvent" messageType="CustomerOrder" messageVariable="mes"
+						eventVariable="evt" />
+					<DO>
+						<SCHEDULE-EVT>
+							<OutMessageEventExpr messageType="ProductionOrder" receiverIdRefs="3">
+								<Slot property="pizzaType">
+									<ValueExpr language="Java JavaScript"><![CDATA[ this.mes.getPizzaType()]]></ValueExpr>
+								</Slot>
+								<Slot property="orderNo">
+									<ValueExpr language="Java JavaScript"><![CDATA[ this.evt.getOccurrenceTime()]]></ValueExpr>
+								</Slot>
+								<Slot property="custID">
+									<ValueExpr language="Java JavaScript"><![CDATA[ this.evt.getSenderIdRef()]]></ValueExpr>
+								</Slot>
+							</OutMessageEventExpr>
+							<ReminderEventExpr>
+								<ReminderMsg language="Java JavaScript"><![CDATA[
+"EndOfMenuBoardService:" + this.evt.getSenderIdRef() + "and" + this.evt.getOccurrenceTime()
+								]]></ReminderMsg>
+								<Delay>
+									<ValueExpr language="Java JavaScript"><![CDATA[ Global.twoDice(10)]]></ValueExpr>
+								</Delay>
+							</ReminderEventExpr>
+						</SCHEDULE-EVT>
+					</DO>
+				</ReactionRule>
+				<!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->
+				<ReactionRule name="MenuBoardReminder_Rule" agentVariable="menuBoard">
+					<!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->
+					<documentation>
+						<description> 
+							When the MB service receives the reminder rule, it triggers an appropriate message to
+							the Customer agent to announce him that the service is over and, if the case, he can move
+							forward. 
+						</description>
+					</documentation>
+					<WHEN eventType="ReminderEvent" eventVariable="evt" />
+					<DO>
+						<SCHEDULE-EVT>
+							<OutMessageEventExpr messageType="ConfirmCustomerOrder">
+								<ReceiverIdRef language="Java"><![CDATA[
+Integer.parseInt( getMessagePart( evt.getReminderMsg(),1))
+                                 ]]></ReceiverIdRef>
+								<ReceiverIdRef language="JavaScript"><![CDATA[
+parseInt( this.menuBoard.getMessagePart( this.evt.getReminderMsg(),1))
+								]]></ReceiverIdRef>
+								<Slot property="orderNo">
+									<ValueExpr language="Java"><![CDATA[
+Integer.parseInt( getMessagePart( evt.getReminderMsg(),2))
+                                 ]]></ValueExpr>
+									<ValueExpr language="JavaScript"><![CDATA[
+parseInt( this.menuBoard.getMessagePart( this.evt.getReminderMsg(),2))
+								]]></ValueExpr>
+								</Slot>
+								<Slot property="PWQueueFree" value="true" />
+							</OutMessageEventExpr>
+						</SCHEDULE-EVT>
+					</DO>
+				</ReactionRule>
+			</Role>
+			<!-- =================================================== -->
+			<Role name="Waitress" organizationUnits="PickupWindow" conflictedWithRole="OrderTaker" multiplicity="unbounded">
+				<!-- =================================================== -->
+				<Attribute type="String" name="firstName" />
+				<Attribute type="String" name="lastName" />
+				<Attribute name="dateOfBirth" type="String"/>
+				<Attribute name="personalNumber" type="Integer"/>
+				<Attribute name="orders" type="Integer" upperMultiplicity="unbounded" />			
+				<!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->
+				<Function name="pizzaPrice" resultType="Float">
+					<!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->
+					<Parameter name="pizzaType" type="Integer" />
+					<Body language="Java"><![CDATA[
+// old calculation for the price of an order: double[] price = {8.90, 9.80, 8.50, 7.20, 7.80, 5.20};
+double[] price = {0.0, 0.0, 2.0, 4.0, 6.0, 8.0, 10.0, 12.0, 14.0, 16.0, 18.0, 20.0, 22.0};
+	return price[(int)pizzaType];
+	               ]]></Body>
+					<Body language="JavaScript"><![CDATA[
+// old calculation for the price of an order: var price = [8.90, 9.80, 8.50, 7.20, 7.80, 5.20];
+var price = [0.0, 0.0, 2.0, 4.0, 6.0, 8.0, 10.0, 12.0, 14.0, 16.0, 18.0, 20.0, 22.0];
+	return price[pizzaType];
+				   ]]></Body>
+				</Function>
+				<!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->
+				<Function name="getMessagePart" resultType="String">
+					<!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->
+					<documentation>
+						<description> 
+							The function deals with retrieving the needed information from a string 
+							that comprises the customer ID information. The function is needed bc. the 
+							ReminderEvent has only one string field to keep the information. From this 
+							field we need to extract the needed parts. 
+						</description>
+					</documentation>
+					<Parameter name="messageInfo" type="String" />
+					<Body language="Java"><![CDATA[
+String resultInfo = messageInfo.substring( 25, messageInfo.length());  
+   return resultInfo; 
+                   ]]></Body>
+					<Body language="JavaScript"><![CDATA[
+var resultInfo = messageInfo.substring( 25, messageInfo.length);
+   return resultInfo; 
+                  ]]></Body>
+				</Function>
+				<!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->
+				<ReactionRule name="OrderPrepared_Rule">
+					<!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->
+					<documentation>
+						<description> 
+							The PW agent receives the prepared order from the Kitchen agent (i.e. the
+							orderNo). He uses this information and he creates for each new Customer agent a 
+							new order value which captures the orderNo of the customer order.
+						</description>
+					</documentation>
+					<WHEN eventType="InMessageEvent" messageType="OrderPrepared" messageVariable="mes" />
+					<DO>
+						<UPDATE-AGT>
+							<MultiValuedSlot property="orders">
+								<AddLast>
+									<ItemExpr language="Java JavaScript"><![CDATA[ this.mes.getOrderNo()]]></ItemExpr>
+								</AddLast>
+							</MultiValuedSlot>
+						</UPDATE-AGT>
+					</DO>
+				</ReactionRule>
+				<!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->
+				<ReactionRule name="ReplyOrderNo_Rule">
+					<!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->
+					<documentation>
+						<description> 
+							The PW agent asks the Customer agent about its orderNo SelfBeliefAttr and the
+							Customer replies this information. Then, the PW agent verifies if the customer order is
+							already arrived. If the order is arrived then, it schedules a reminder event type with the
+							delay at the pickup window.
+						</description>
+					</documentation>
+					<WHEN eventType="InMessageEvent" messageType="ReplyOrderNo" messageVariable="mes" eventVariable="evt" />
+					<FOR-ListItemVariable variable="order" listValuedAgentProperty="orders" listItemType="Integer" />
+					<IF language="Java"><![CDATA[
+mes.getOrderNo() == order                       
+                    ]]></IF>
+					<IF language="JavaScript"><![CDATA[
+this.mes.getOrderNo() === this.order                        
+                     ]]></IF>
+					<THEN>
+						<SCHEDULE-EVT>
+							<OutMessageEventExpr messageType="OrderArrived">
+								<ReceiverIdRef language="Java JavaScript"><![CDATA[ this.evt.getSenderIdRef()]]></ReceiverIdRef>
+							</OutMessageEventExpr>
+							<ReminderEventExpr>
+								<ReminderMsg language="Java JavaScript"><![CDATA[
+"EndOfPickupWindowService:" + this.evt.getSenderIdRef()
+								  ]]></ReminderMsg>
+								<Delay>
+									<ValueExpr language="Java JavaScript"><![CDATA[ 
+Global.twoDice(10)
+                                  ]]></ValueExpr>
+								</Delay>
+							</ReminderEventExpr>
+						</SCHEDULE-EVT>
+					</THEN>
+				</ReactionRule>
+				<!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->
+				<ReactionRule name="PickupWindowReminder_Rule" agentVariable="pickupWindow">
+					<!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->
+					<documentation>
+						<description> 
+							Once this reminder event is triggered, the PW agent notifies the appropriate
+							customer agent about the end of the PW Service by sending it an appropriate 
+							message: "Here is your pizza!" 
+						</description>
+					</documentation>
+					<WHEN eventType="ReminderEvent" eventVariable="evt" />
+					<DO>
+						<SCHEDULE-EVT>
+							<OutMessageEventExpr messageType="HereIsYourPizza">
+								<ReceiverIdRef language="Java"><![CDATA[
+Integer.parseInt( getMessagePart( evt.getReminderMsg()))
+                                ]]></ReceiverIdRef>
+								<ReceiverIdRef language="JavaScript"><![CDATA[
+parseInt( this.pickupWindow.getMessagePart( this.evt.getReminderMsg()))
+								]]></ReceiverIdRef>
+							</OutMessageEventExpr>
+						</SCHEDULE-EVT>
+					</DO>
+				</ReactionRule>
+			</Role>
+			<!-- =================================================== -->
+			<Role name="Cook" organizationUnits="MenuBoard" multiplicity="unbounded">
+				<!-- =================================================== -->
+				<Attribute type="String" name="firstName" />
+				<Attribute type="String" name="lastName" />
+				<Attribute name="dateOfBirth" type="String"/>
+				<Attribute name="personalNumber" type="Integer"/>
+			</Role>
+			<!-- =================================================== -->
+			<AgentType name="Organization">
+				<!-- <ReferenceProperty name="organizationChart" type="OrganizationChart" /> 
+					we'll work on it later -->
+				<ReferenceProperty name="employees" type="Employee" upperMultiplicity="unbounded" />
+				<ReferenceProperty name="manager" type="Manager" upperMultiplicity="unbounded" />
+				<ReferenceProperty name="organizationUnits" type="OrganizationUnit" upperMultiplicity="unbounded" />
+			</AgentType>
+			<!-- =================================================== -->
+			<AgentType name="OrganizationUnit">
+				<ReferenceProperty name="manager" type="Manager" upperMultiplicity="unbounded" />
+				<ReferenceProperty name="employees" type="Employee" upperMultiplicity="unbounded" />
+			</AgentType>
+			<!-- =================================================== -->
+			<ObjectType name="OrganizationChart">
+				<!-- =================================================== -->
+				<Attribute name="termsOfOperation" type="String"/>
+			</ObjectType>
+			<!-- =================================================== -->
+			<AgentType name="MenuBoard" superType="OrganizationUnit">
+			<!-- =================================================== -->
+				<Attribute name="menuBoardBusy" type="Boolean" />
+				<Attribute name="maxMenuBoardLineSize" type="Integer" />
+				<Attribute name="queueLength" type="Integer" />
+				<ReferenceProperty name="menuBoardQueue" type="Customer" upperMultiplicity="unbounded">
+					<documentation>
+						This property represents a first-in-first-out queue.
+					</documentation>
+				</ReferenceProperty>
+			</AgentType>
+			<!-- =================================================== -->
+			<AgentType name="Kitchen" superType="OrganizationUnit">
+				<!-- =================================================== -->
+				<!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->
+				<Function name="getMessagePart" resultType="String">
+					<!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->
+					<documentation>
+						<description> 
+							The function deals with retrieving the needed information from a string 
+							that comprises three distinct information (orderNo, pizzaType and customer ID) 
+							separated by the "and" string. It is needed bc. the ReminderEvent has only one 
+							string field to keep the information. From this field we need to extract the 
+							needed parts. 
+						</description>
+					</documentation>
+					<Parameter name="messageInfo" type="String" />
+					<Parameter name="argumentIndex" type="Integer" />
+					<Body language="Java"><![CDATA[
+String resultInfo = ""; 
+int i = messageInfo.indexOf("and");
+String substr = messageInfo.substring( i+3, messageInfo.length());
+int j= substr.indexOf("and");
+	if (argumentIndex == 1) {
+  	resultInfo = messageInfo.substring(20,i); 
+  } 
+  else
+  if (argumentIndex == 2) {                                     
+    resultInfo = substr.substring(0,j);
+ }
+  else {
+    resultInfo = substr.substring( j+3, substr.length());
+ }    
+   return resultInfo; 
+        ]]></Body>
+	<Body language="JavaScript"><![CDATA[
+var resultInfo = ""; 
+var i = messageInfo.indexOf("and");
+var subs = messageInfo.substring( i+3, messageInfo.length);
+var j= subs.indexOf("and");
+	if (argumentIndex === 1) {
+  	  resultInfo = messageInfo.substring( 20,i); 
+     } 
+    else
+    if (argumentIndex === 2) {                                     
+      resultInfo = subs.substring(0,j);
+    }
+    else {
+      resultInfo = subs.substring( j+3, subs.length);
+    }    
+   return resultInfo; 
+          ]]></Body>
+				</Function>
+				<!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->
+				<ReactionRule name="ProductionOrder_Rule">
+					<!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->
+					<documentation>
+						<description> 
+							The MenuBoard agent sends a ProductionOrder for the Kitchen agent, in which it
+							specifies the orderNo, the pizzaType and the customer id. The Kitchen agent schedules a
+							reminder event with the appropriate delay i.e. the delay at the kitchen. 
+						</description>
+					</documentation>
+					<WHEN eventType="InMessageEvent" messageType="ProductionOrder" messageVariable="mes" />
+					<DO>
+						<SCHEDULE-EVT>
+							<ReminderEventExpr>
+								<ReminderMsg language="Java JavaScript"><![CDATA[
+("EndOfKitchenService:" + this.mes.getOrderNo() + "and" + this.mes.getPizzaType() + "and" + this.mes.getCustID())
+								]]></ReminderMsg>
+								<Delay>
+									<ValueExpr language="Java JavaScript"><![CDATA[ Global.twoDice(8)]]></ValueExpr>
+								</Delay>
+							</ReminderEventExpr>
+						</SCHEDULE-EVT>
+					</DO>
+				</ReactionRule>
+				<!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->
+				<ReactionRule name="KitchenReminder_Rule" agentVariable="kitchen">
+					<!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->
+					<documentation>
+						<description> 
+							Once the reminder event is triggered, the Kitchen service notifies the PW agent
+							by sending an appropriate message OrderPrepared containing the orderNo, pizzaType and custID
+							information.
+						</description>
+					</documentation>
+					<WHEN eventType="ReminderEvent" eventVariable="evt" />
+					<DO>
+						<SCHEDULE-EVT>
+							<OutMessageEventExpr messageType="OrderPrepared" receiverIdRefs="11">
+								<Slot property="orderNo">
+									<ValueExpr language="Java"><![CDATA[
+Integer.parseInt( getMessagePart( evt.getReminderMsg(),1))
+                                    ]]></ValueExpr>
+									<ValueExpr language="JavaScript"><![CDATA[
+parseInt( this.kitchen.getMessagePart( this.evt.getReminderMsg(),1))
+                                    ]]></ValueExpr>
+								</Slot>
+								<Slot property="pizzaType">
+									<ValueExpr language="Java"><![CDATA[
+Integer.parseInt( getMessagePart( evt.getReminderMsg(),2))
+                                    ]]></ValueExpr>
+									<ValueExpr language="JavaScript"><![CDATA[
+parseInt( this.kitchen.getMessagePart( this.evt.getReminderMsg(),2))
+                                   ]]></ValueExpr>
+								</Slot>
+								<Slot property="custID">
+									<ValueExpr language="Java"><![CDATA[
+Integer.parseInt( getMessagePart( evt.getReminderMsg(),3))
+                                     ]]></ValueExpr>
+									<ValueExpr language="JavaScript"><![CDATA[
+parseInt( this.kitchen.getMessagePart( this.evt.getReminderMsg(),3))
+							   	     ]]></ValueExpr>
+								</Slot>
+							</OutMessageEventExpr>
+						</SCHEDULE-EVT>
+					</DO>
+				</ReactionRule>
+			</AgentType>
+			<!-- ============================= -->
+			<AgentType name="PickupWindow" superType="OrganizationUnit">
+				<!-- =========================== -->
+				<Attribute name="pickupWindowBusy" type="Boolean" />
+				<Attribute name="maxPickupWindowLineSize" type="Integer" />
+				<Attribute name="queueLength" type="Integer" />
+				<ReferenceProperty name="pickupWindowQueue" type="Customer" upperMultiplicity="unbounded">
+					<documentation>
+						This property represents a first-in-first-out (FIFO) queue. 
+					</documentation>
+				</ReferenceProperty>
+			</AgentType>
+			<!-- =================================================== -->
+			<Role name="Customer" multiplicity="unbounded">
+				<!-- =================================================== -->
+				<Attribute name="arrivalTime" type="Integer" />
+				<Attribute name="waitingForPWFree" type="Boolean" />
+				<Attribute name="orderNo" type="Integer" />
+				<Attribute name="waitingForOrderToArrive" type="Boolean" />
+				<!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->
+				<SubjectiveFunction name="randomPizzaType" resultType="Integer">
+					<!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->
+					<documentation>
+						The type of the pizza as a number between 2 and 12 : 2 = Pizza Quattro Formaggi, 
+						3 = Pizza Quattro Stagioni, 4 = Pizza Capricciosa, 5 = Pizza Napoletana, 
+						6 = Pizza Marinara, 7 = Pizza Margherita etc.
+					</documentation>
+					<Body language="Java"><![CDATA[
+			int a = Random.uniformInt(1,6);		
+			int b = Random.uniformInt(1,6);
+            return a+b;
+                    ]]></Body>
+					<Body language="JavaScript"><![CDATA[
+			var a = js.util.Random.uniformInt(1,6);		
+			var b = js.util.Random.uniformInt(1,6);
+            return a+b;					
+				     ]]></Body>
+				</SubjectiveFunction>
+				<!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->
+				<ReactionRule name="OrderSolicitation_Rule" agentVariable="cust">
+					<!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->
+					<documentation>
+						<description> 
+							The customer is at the MB service. He is asked to place the order. He replies
+							giving the information about the pizza type inside of a CustomerOrder message. 
+						</description>
+					</documentation>
+					<WHEN eventType="InMessageEvent" messageType="OrderSolicitation" />
+					<DO>
+						<SCHEDULE-EVT>
+							<OutMessageEventExpr messageType="CustomerOrder" receiverIdRefs="10">
+								<Slot property="pizzaType">
+									<ValueExpr language="Java JavaScript"><![CDATA[ this.cust.randomPizzaType()]]></ValueExpr>
+								</Slot>
+							</OutMessageEventExpr>
+						</SCHEDULE-EVT>
+					</DO>
+				</ReactionRule>
+				<!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->
+				<ReactionRule name="AskOrderNo_Rule" agentVariable="cust">
+					<!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->
+					<documentation>
+						<description> 
+							The Customer who is first in line in the PW queue receives an order
+							solicitation from the PW Service. He replies to PW agent with his orderNo
+							information. 
+						</description>
+					</documentation>
+					<WHEN eventType="InMessageEvent" messageType="AskOrderNo" />
+					<DO>
+						<SCHEDULE-EVT>
+							<OutMessageEventExpr messageType="ReplyOrderNo" receiverIdRefs="11">
+								<Slot property="orderNo">
+								  <ValueExpr language="Java JavaScript"><![CDATA[ this.cust.getOrderNo()]]></ValueExpr>
+								</Slot>
+							</OutMessageEventExpr>
+						</SCHEDULE-EVT>
+					</DO>
+				</ReactionRule>
+				<!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->
+				<ReactionRule name="OrderArrived_Rule">
+					<!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->
+					<documentation>
+						<description> 
+							The customer at the PW service desk is announced that his order is arrived.
+							While waiting for other preparations at the PW desk the customer is not asked anymore about
+							his orderNo information.
+						</description>
+					</documentation>
+					<WHEN eventType="InMessageEvent" messageType="OrderArrived" />
+					<DO>
+						<UPDATE-AGT>
+							<Slot property="waitingForOrderToArrive" value="false" />
+						</UPDATE-AGT>
+					</DO>
+				</ReactionRule>
+				<!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->
+				<ReactionRule name="ConfirmCustomerOrder_Rule">
+					<!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->
+					<documentation>
+						<description> 
+						 The MB service sends the orderNo information to the client, and this 
+						 one updates its attributes accordingly.
+						</description>
+					</documentation>
+					<WHEN eventType="InMessageEvent" messageType="ConfirmCustomerOrder" messageVariable="mes" />
+					<IF language="Java JavaScript"><![CDATA[ this.mes.isPWQueueFree()]]></IF>
+					<THEN>
+						<UPDATE-AGT>
+							<Slot property="waitingForOrderToArrive" value="true" />
+							<Slot property="orderNo">
+								<ValueExpr language="Java JavaScript"><![CDATA[ this.mes.getOrderNo() ]]></ValueExpr>
+							</Slot>
+						</UPDATE-AGT>
+					</THEN>
+					<ELSE>
+						<UPDATE-AGT>
+							<Slot property="waitingForPWFree" value="true" />
+							<Slot property="orderNo">
+								<ValueExpr language="Java JavaScript"><![CDATA[ this.mes.getOrderNo() ]]></ValueExpr>
+							</Slot>
+						</UPDATE-AGT>
+					</ELSE>
+				</ReactionRule>
+			</Role>
+		</EntityTypes>
+		<EnvironmentRules>
+			<!-- ======================================================= -->
+			<EnvironmentRule name="OpenRestaurant_Rule">
+				<!-- ======================================================= -->
+				<documentation>
+					<description>Is a preparatory rule to simulate the opening of the restaurant.In this rule will be added to the restaurant employees.</description>
+				</documentation>
+				<WHEN eventType="OpenRestaurant"/>
+				<FOR objectVariable="org" objectType="Organization" objectIdRef="1000"/>
+				<FOR objectVariable="orgChart" objectType="OrganizationChart" objectIdRef="1100"/>
+				<FOR objectVariable="orgUnitMB" objectType="MenuBoard" objectIdRef="1"/>
+				<FOR objectVariable="orgUnitPW" objectType="PickupWindow" objectIdRef="2"/>
+				<FOR objectVariable="orgUnitK" objectType="Kitchen" objectIdRef="3"/>
+				<FOR objectVariable="man" objectType="Person" objectIdRef="13"/>
+				<FOR objectVariable="ot" objectType="Person" objectIdRef="10"/>
+				<FOR objectVariable="k" objectType="Person" objectIdRef="12"/>
+				<FOR objectVariable="pw" objectType="Person" objectIdRef="11"/>
+				<DO>
+					<UPDATE-ENV>
+						<UpdateObject objectVariable="org">
+							<MultiValuedSlot property="manager">
+								<AddLast itemVariable="man"/>
+							</MultiValuedSlot>
+							<MultiValuedSlot property="organizationUnits">
+								<AddLast itemVariable="orgUnitMB"/>
+								<AddLast itemVariable="orgUnitPW"/>
+								<AddLast itemVariable="orgUnitK"/>
+							</MultiValuedSlot>
+						</UpdateObject>
+						<UpdateObject objectVariable="orgUnitMB">
+							<MultiValuedSlot property="employees">
+								<AddLast itemVariable="ot"/>
+							</MultiValuedSlot>
+						</UpdateObject>
+						<UpdateObject objectVariable="orgUnitPW">
+							<MultiValuedSlot property="employees">
+								<AddLast itemVariable="pw"/>
+							</MultiValuedSlot>
+						</UpdateObject>
+						<UpdateObject objectVariable="orgUnitK">
+							<MultiValuedSlot property="employees">
+								<AddLast itemVariable="k"/>
+							</MultiValuedSlot>
+						</UpdateObject>
+					</UPDATE-ENV>
+				</DO>
+			</EnvironmentRule>
+			<!-- ======================================================= -->
+			<EnvironmentRule name="CustomerArrival_Rule">
+				<!-- ======================================================== -->
+				<documentation>
+					<description>
+						When a car arrives at the Fast Food Restaurant, and the MB queue 
+						is full, the customer leaves and he is considered a dissatisfied customer. 
+						If the MB queue is not full then the car gets in the waiting line as a new 
+						customer. Furthermore, if the MB service is not busy, a StartMenuBoardService 
+						event is created and scheduled for execution. 
+					</description>
+				</documentation>
+				<WHEN eventType="CustomerArrival" eventVariable="evt" />
+				<FOR-ObjectVariable variable="mb" objectType="MenuBoard" objectIdRef="1" />
+
+				<IF language="Java JavaScript"><![CDATA[
+this.mb.getMenuBoardQueue().size() >= this.mb.getMaxMenuBoardLineSize()
+                ]]></IF>
+				<THEN>
+					<UPDATE-ENV>
+						<UpdateStatisticsVariable variable="numberOfLostCustomers">
+							<ValueExpr language="Java JavaScript"><![CDATA[
+SimStatistics.numberOfLostCustomers.getValue() + 1
+						   ]]></ValueExpr>
+						</UpdateStatisticsVariable>
+					</UPDATE-ENV>
+					<SCHEDULE-EVT>
+						<CausedEventExpr eventType="HireNewEmployee"/>
+					</SCHEDULE-EVT>
+				</THEN>
+				<ELSE>
+					<UPDATE-ENV>
+						<Create>
+							<Agent type="Customer" objectVariable="customer">
+								<Slot property="arrivalTime">
+									<ValueExpr language="Java JavaScript"><![CDATA[ this.evt.getOccurrenceTime()]]></ValueExpr>
+								</Slot>
+							</Agent>
+						</Create>
+						<UpdateObject objectVariable="mb">
+							<MultiValuedSlot property="menuBoardQueue">
+								<AddLast itemVariable="customer" />
+							</MultiValuedSlot>
+							<Increment property="queueLength" value="1" />
+						</UpdateObject>
+						<UpdateStatisticsVariable variable="numberOfCustomers">
+							<ValueExpr language="Java JavaScript"><![CDATA[
+SimStatistics.numberOfCustomers.getValue() + 1
+						]]></ValueExpr>
+						</UpdateStatisticsVariable>
+					</UPDATE-ENV>
+					<SCHEDULE-EVT>
+						<CausedEventExpr eventType="StartMenuBoardService">
+							<Condition language="Java JavaScript"><![CDATA[
+!this.mb.isMenuBoardBusy()
+		                  ]]></Condition>
+						</CausedEventExpr>
+					</SCHEDULE-EVT>
+				</ELSE>
+			</EnvironmentRule>
+			<!-- ======================================================== -->
+			<EnvironmentRule name="HireNewEmployee_Rule">
+				<!-- ======================================================== -->
+				<WHEN eventType="HireNewEmployee"/>
+				<!-- Updating the person with role OrderTaker, we add him a new role "Cook"-->
+				<FOR-ObjectVariable variable="ot" objectIdRef="10"/>
+				<!-- Updating the person with role Waitress, we add him a new role "Cook"-->
+				<FOR-ObjectVariable variable="wtr" objectIdRef="11"/>
+				
+				<DO>
+					<UPDATE-ENV>
+						<UpdateObject objectVariable="ot">
+							<AddRole name="Cook">
+								<Slot property="startOfContract">
+									<ValueExpr language="Java JavaScript">
+										<![CDATA[
+										evt.getOccurrenceTime()	
+										]]>
+									</ValueExpr>
+								</Slot>
+								<Slot property="endOfContract" value="5"/>
+							</AddRole>
+						</UpdateObject>
+						<UpdateObject objectVariable="wtr">
+							<AddRole name="Cook">
+								<Slot property="startOfContract">
+									<ValueExpr language="Java JavaScript">
+										<![CDATA[
+										evt.getOccurrenceTime()	
+										]]>
+									</ValueExpr>
+								</Slot>
+								<Slot property="endOfContract" value="6"/>
+							</AddRole>
+						</UpdateObject>
+					</UPDATE-ENV>
+					<SCHEDULE-EVT>
+						<CausedEventExpr eventType="FireEmployee" >
+							<Delay>
+								<ValueExpr language="Java JavaScript">
+									<![CDATA[
+									this.ck.getEndOfContract()
+									]]>
+								</ValueExpr>
+							</Delay>
+							<Slot property="idOfEmployee">
+								<ValueExpr language="Java JavaScript">
+									<![CDATA[
+										this.ck.getId()
+									]]>
+								</ValueExpr>
+							</Slot>
+						</CausedEventExpr>
+					</SCHEDULE-EVT>
+				</DO>
+			</EnvironmentRule>
+			<!-- ======================================================== -->
+			<EnvironmentRule name="FireEmployee">
+				<!-- ======================================================== -->
+				<WHEN eventType="FireEmployee" eventVariable="evt"/>
+				<DO>
+					<UPDATE-ENV>
+						<UpdateObject>
+							<ObjectIdRef language="Java JavaScript">
+								<![CDATA[
+									this.evt.getIdOfEmployee()
+								]]>
+							</ObjectIdRef>
+							<RemoveRole name="Cook"/>
+						</UpdateObject>
+					</UPDATE-ENV>
+				</DO>
+			</EnvironmentRule>
+			<!-- ================================================================ -->
+			<EnvironmentRule name="StartMenuBoardService_Rule">
+				<!-- ================================================================ -->
+				<documentation>
+					<description> 
+						When the MB service starts, the menuBoardBusy variable 
+						is set to true. The customer is asked with the help of an InMessageEventExpr 
+						to place the order. 
+					</description>
+				</documentation>
+				<WHEN eventType="StartMenuBoardService" />
+				<FOR-ObjectVariable variable="mb" objectType="MenuBoard" objectIdRef="1" />
+				<FOR-ObjectVariable variable="ot" objectType="Person" >
+					<SelectionCondition language="Java JavaScript">
+						<![CDATA[
+							this.ot.hasRole("OrderTaker");
+						]]>
+					</SelectionCondition>
+				</FOR-ObjectVariable>
+				<FOR-ObjectVariable variable="cust" objectType="Customer">
+					<ObjectRef language="Java JavaScript"><![CDATA[ this.mb.getMenuBoardQueue().get(0)]]></ObjectRef>
+				</FOR-ObjectVariable>
+				<FOR-DataVariable  variable="serviceTimeMB" dataType="Integer">
+					<ValueExpr language="Java JavaScript"><![CDATA[ Global.twoDice(10)]]></ValueExpr>
+				</FOR-DataVariable>
+				<DO>
+					<UPDATE-ENV>
+						<UpdateObject objectVariable="mb">
+							<Slot property="menuBoardBusy" value="true" />
+						</UpdateObject>
+						<UpdateStatisticsVariable variable="cumulativeMenuBoardServiceTime">
+							<ValueExpr language="Java JavaScript"><![CDATA[
+SimStatistics.cumulativeMenuBoardServiceTime.getValue() + this.serviceTimeMB								
+							]]></ValueExpr>
+						</UpdateStatisticsVariable>
+					</UPDATE-ENV>
+					<SCHEDULE-EVT>
+						<InMessageEventExpr messageType="OrderSolicitation">
+							<SenderIdRef language="Java JavaScript"><![CDATA[ this.ot.getId()]]></SenderIdRef>
+							<ReceiverIdRef language="Java JavaScript"><![CDATA[ this.cust.getId()]]></ReceiverIdRef>
+						</InMessageEventExpr>
+					</SCHEDULE-EVT>
+				</DO>
+			</EnvironmentRule>
+			<!-- ================================================================ -->
+			<EnvironmentRule name="EndMenuBoardService_Rule">
+				<!-- ================================================================ -->
+				<documentation>
+					<description> 
+						On EndMenuBoardService, the MB service ends, but if the PW Queue is full, 
+						the customer cannot move forward. The MB service sends a ConfirmCustomerOrder
+						message to update the customer attributes, so that we know that he is waiting 
+						for a free place in the PW waiting line, or he moved forward and is waiting 
+						now for his/her order.
+					    If there are no others customers waiting in the pickup window queue, a new  
+					    StartPickupWindowService event is created. 
+					    If there are more customers in the MB queue, a new StartMenuBoardService event
+					    is created. 
+					</description>
+				</documentation>
+				<WHEN eventType="OutMessageEvent" messageType="ConfirmCustomerOrder" messageVariable="mes" />
+				<FOR-ObjectVariable variable="mb" objectType="MenuBoard" objectIdRef="1" />
+				<FOR-ObjectVariable variable="ot" objectType="Person" >
+					<SelectionCondition language="Java JavaScript">
+						<![CDATA[
+							this.ot.hasRole("OrderTaker")
+						]]>
+					</SelectionCondition>
+				</FOR-ObjectVariable>
+				<FOR-ObjectVariable variable="pw" objectType="PickupWindow" objectIdRef="2" />
+				<FOR-ObjectVariable variable="cust" objectType="Customer">
+					<ObjectRef language="Java JavaScript"><![CDATA[ this.mb.getMenuBoardQueue().get(0)]]></ObjectRef>
+				</FOR-ObjectVariable>
+				<IF language="Java JavaScript"><![CDATA[
+this.pw.getPickupWindowQueue().size() >= this.pw.getMaxPickupWindowLineSize()      
+                ]]></IF>
+				<THEN>
+					<SCHEDULE-EVT>
+						<InMessageEventExpr messageType="ConfirmCustomerOrder" senderIdRef="10">
+							<ReceiverIdRef language="Java JavaScript"><![CDATA[ this.cust.getId()]]></ReceiverIdRef>
+							<Slot property="orderNo">
+								<ValueExpr language="Java JavaScript"><![CDATA[
+this.mes.getOrderNo()					
+								]]></ValueExpr>
+							</Slot>
+							<Slot property="PWQueueFree" value="false" />
+						</InMessageEventExpr>
+					</SCHEDULE-EVT>
+				</THEN>
+				<ELSE>
+			    	<UPDATE-ENV>
+			    		<UpdateObject objectVariable="mb">
+			    			<Slot property="menuBoardBusy">
+			    				<ValueExpr language="Java JavaScript"><![CDATA[
+this.mb.getMenuBoardQueue().size() == 1 ? false : true			    					
+			    				]]></ValueExpr>
+			    			</Slot>
+			    			<MultiValuedSlot property="menuBoardQueue">
+			    				<RemoveFirst itemVariable="cust" />
+			    			</MultiValuedSlot>
+			    			<Decrement property="queueLength" value="1" />
+			    		</UpdateObject>
+			    		<UpdateObject objectVariable="pw">
+			    			<MultiValuedSlot property="pickupWindowQueue">
+			    				<AddLast itemVariable="cust" />
+			    			</MultiValuedSlot>
+			    			<Increment property="queueLength" value="1" />
+			    		</UpdateObject>
+			    	</UPDATE-ENV>
+			    	<SCHEDULE-EVT>
+			    		<CausedEventExpr eventType="StartMenuBoardService">
+			    			<Condition language="Java JavaScript"><![CDATA[
+this.mb.getMenuBoardQueue().size() > 0
+	                     ]]></Condition>
+			    		</CausedEventExpr>
+			    		<CausedEventExpr eventType="StartPickupWindowService" delay="2">
+			    			<Condition language="Java JavaScript"><![CDATA[
+!this.pw.isPickupWindowBusy() && this.pw.getPickupWindowQueue().size() > 0
+	                        ]]></Condition>
+			    		</CausedEventExpr>
+			    		<InMessageEventExpr messageType="ConfirmCustomerOrder" senderIdRef="10">
+			    			<ReceiverIdRef language="Java JavaScript"><![CDATA[ this.cust.getId()]]></ReceiverIdRef>
+			    			<Slot property="orderNo">
+			    				<ValueExpr language="Java JavaScript"><![CDATA[ this.mes.getOrderNo()]]></ValueExpr>
+			    			</Slot>
+			    			<Slot property="PWQueueFree" value="true" />
+			    		</InMessageEventExpr>
+			    	</SCHEDULE-EVT>
+			    </ELSE>
+			</EnvironmentRule>
+			<!-- ====================================================================== -->
+			<EnvironmentRule name="StartPickupWindowService_Rule">
+				<!-- ======================================================================-->
+				<documentation>
+					<description> 
+						On StartPickupWindowService, the pickupWindowBusy variable is set to true, 
+						and the customer is asked using an AskOrderNo message for his/her orderNo.
+						In this way, the PW service is checking if the customer's order is prepared 
+						or not.
+					</description>
+				</documentation>
+				<WHEN eventType="StartPickupWindowService" />
+				<FOR-ObjectVariable variable="wtr" objectType="Person" >
+					<SelectionCondition language="Java JavaScript">
+						<![CDATA[
+							this.hasRole("Waitress")
+						]]>
+					</SelectionCondition>
+				</FOR-ObjectVariable>
+				<FOR-ObjectVariable variable="pw" objectType="PickupWindow" objectIdRef="2" />
+				<FOR-ObjectVariable variable="cust" objectType="Customer">
+					<ObjectRef language="Java JavaScript"><![CDATA[ this.pw.getPickupWindowQueue().get(0)]]></ObjectRef>
+				</FOR-ObjectVariable>	
+				<FOR-DataVariable variable="serviceTimePW" dataType="Integer">
+					<ValueExpr language="Java JavaScript"><![CDATA[ Global.twoDice(10)]]></ValueExpr>
+				</FOR-DataVariable>
+				<DO>
+					<UPDATE-ENV>
+						<UpdateObject objectVariable="pw">
+							<Slot property="pickupWindowBusy" value="true" />
+						</UpdateObject>
+						<UpdateStatisticsVariable variable="cumulativePickupWindowServiceTime">
+							<ValueExpr language="Java JavaScript"><![CDATA[ 
+SimStatistics.cumulativePickupWindowServiceTime.getValue() + this.serviceTimePW
+                            ]]></ValueExpr>
+						</UpdateStatisticsVariable>
+					</UPDATE-ENV>
+					<SCHEDULE-EVT>
+						<InMessageEventExpr messageType="AskOrderNo">
+							<Condition language="Java JavaScript"><![CDATA[
+this.pw.getPickupWindowQueue().size() > 0 && this.cust.isWaitingForOrderToArrive()
+                             ]]></Condition>
+							<SenderIdRef language="Java JavaScript"><![CDATA[ this.wtr.getId()]]></SenderIdRef>
+							<ReceiverIdRef language="Java JavaScript"><![CDATA[ this.cust.getId()]]></ReceiverIdRef>
+						</InMessageEventExpr>
+					</SCHEDULE-EVT>
+				</DO>
+			</EnvironmentRule>
+			<!-- ====================================================================== -->
+			<EnvironmentRule name="MoveForward_Rule">
+				<!-- ======================================================================-->
+				<documentation>
+					<description> When a customer is waiting for PW Queue to be free, 
+						it should be moved from MB Queue to PW Queue as soon as it is a 
+						free place in the PW Queue. Also we need to shedule a new 
+						StartMenuBoardService event is the MB queue is not empty.
+					</description>
+				</documentation>
+				<WHEN eventType="MoveForward" eventVariable="evt" />
+				<FOR-ObjectVariable variable="mb" objectType="MenuBoard" objectIdRef="1" />
+				<FOR-ObjectVariable variable="pw" objectType="PickupWindow" objectIdRef="2"  />
+				<FOR-ObjectVariable variable="cust" objectType="Customer">
+					<ObjectRef language="Java JavaScript">this.evt.getCust()</ObjectRef>
+				</FOR-ObjectVariable>
+				<DO>
+				  <UPDATE-ENV>
+				  	<UpdateObject objectVariable="mb">
+				  		<Slot property="menuBoardBusy">
+				  			<ValueExpr language="Java JavaScript"><![CDATA[
+this.mb.getMenuBoardQueue().size() == 1 ? false : true			    					
+			    				]]></ValueExpr>
+				  		</Slot>
+				  		<MultiValuedSlot property="menuBoardQueue">
+				  			<RemoveFirst itemVariable="cust" />
+				  		</MultiValuedSlot>
+				  		<Decrement property="queueLength" value="1" />
+				  	</UpdateObject>
+				  	<UpdateObject objectVariable="pw">
+				  		<MultiValuedSlot property="pickupWindowQueue">
+				  			<AddLast itemVariable="cust" />
+				  		</MultiValuedSlot>
+				  		<Increment property="queueLength" value="1" />
+				  	</UpdateObject>
+				  </UPDATE-ENV>
+					<SCHEDULE-EVT>
+						<CausedEventExpr eventType="StartMenuBoardService">
+							<Condition language="Java JavaScript"><![CDATA[
+this.mb.getMenuBoardQueue().size() > 0
+	                     ]]></Condition>
+						</CausedEventExpr>
+						<CausedEventExpr eventType="StartPickupWindowService" delay="2">
+							<Condition language="Java JavaScript"><![CDATA[
+!this.pw.isPickupWindowBusy() && this.pw.getPickupWindowQueue().size() > 0
+	                        ]]></Condition>
+						</CausedEventExpr>
+						<InMessageEventExpr messageType="ConfirmCustomerOrder" senderIdRef="10">
+							<ReceiverIdRef language="Java JavaScript"><![CDATA[ this.cust.getId()]]></ReceiverIdRef>
+							<Slot property="orderNo">
+								<ValueExpr language="Java JavaScript"><![CDATA[ this.cust.getOrderNo()]]></ValueExpr>
+							</Slot>
+							<Slot property="PWQueueFree" value="true" />
+						</InMessageEventExpr>
+					</SCHEDULE-EVT>
+				</DO>	
+			</EnvironmentRule>
+			<!-- ==================================================== -->
+			<EnvironmentRule name="EndPickupWindowService_Rule">
+				<!-- ================================================ -->
+				<documentation>
+					<description>On EndPickupWindowService, the current customer departs (it is 
+						removed from the queue and destroyed). If the queue is empty, the PW 
+						service is no longer busy. Otherwise, a new StartPickupWindowService 
+						is created. If there is a customer in the first position of the MB queue 
+						that is waiting to move forward to the PW queue, then this customer is 
+						informed to move forward to the PW queue by scheduling a MoveForward
+						caused event.
+					</description>
+				</documentation>
+				<WHEN eventType="OutMessageEvent" messageType="HereIsYourPizza" eventVariable="evt" />
+				<FOR-ObjectVariable variable="mb" objectType="MenuBoard" objectIdRef="1" />
+				<FOR-ObjectVariable variable="pw" objectType="PickupWindow" objectIdRef="2" />
+				<FOR-ObjectVariable variable="cust" objectType="Customer">
+					<ObjectIdRef language="Java JavaScript"><![CDATA[ this.evt.getReceiverIdRef()]]></ObjectIdRef>
+				</FOR-ObjectVariable>	
+				<DO>
+					<UPDATE-ENV>
+						<UpdateStatisticsVariable variable="numberOfDepartures">
+							<ValueExpr language="Java JavaScript"><![CDATA[
+SimStatistics.numberOfDepartures.getValue() + 1						
+							]]></ValueExpr>
+						</UpdateStatisticsVariable>
+						<UpdateStatisticsVariable variable="cumulativeResponseTime">
+							<ValueExpr language="Java JavaScript"><![CDATA[
+SimStatistics.cumulativeResponseTime.getValue() + this.evt.getOccurrenceTime() - this.cust.getArrivalTime()
+                            ]]></ValueExpr>
+						</UpdateStatisticsVariable>
+						<UpdateObject objectVariable="pw">	
+							<MultiValuedSlot property="pickupWindowQueue">
+								<RemoveFirst itemVariable="cust" />
+							</MultiValuedSlot>
+							<Decrement property="queueLength" value="1" />
+							<Slot property="pickupWindowBusy" value="false" />
+						</UpdateObject>
+						<DestroyObject objectVariable="cust" />
+					</UPDATE-ENV>
+					<SCHEDULE-EVT>
+						<CausedEventExpr eventType="StartPickupWindowService">
+							<Condition language="Java JavaScript"><![CDATA[
+this.pw.getPickupWindowQueue().size() > 0							
+							]]></Condition>
+						</CausedEventExpr>
+					</SCHEDULE-EVT>
+				</DO>
+				<IF language="Java JavaScript"><![CDATA[
+this.mb.getMenuBoardQueue().size() > 0 && this.mb.getMenuBoardQueue().get(0).isWaitingForPWFree() 
+                ]]></IF>
+				<THEN>
+					<SCHEDULE-EVT>
+						<CausedEventExpr eventType="MoveForward">
+							<Slot property="cust">
+								<ValueExpr language="Java JavaScript"><![CDATA[ this.mb.getMenuBoardQueue().get(0)]]></ValueExpr>
+							</Slot>
+						</CausedEventExpr>
+					</SCHEDULE-EVT>
+				</THEN>
+			</EnvironmentRule>
+			<!-- ========================================================== -->
+			<EnvironmentRule name="OrderPrepared_Rule">
+				<!-- ====================================================== -->
+				<documentation>
+					<description> 
+						When an order is prepared, the Kitchen service send it to the PW service.
+						The PW service asks the client which is at the desk what is his orderNo (only if 
+						the client is waiting for his order to arrive).
+					</description>
+				</documentation>
+				<WHEN eventType="OutMessageEvent" messageType="OrderPrepared" messageVariable="mes" />
+				<FOR-ObjectVariable variable="wtr" objectType="Person" >
+					<SelectionCondition language="Java JavaScript">
+						<![CDATA[
+							this.wtr.hasRole("Waitress")
+						]]>
+					</SelectionCondition>
+				</FOR-ObjectVariable>
+				<FOR-ObjectVariable variable="pw" objectType="PickupWindow" objectIdRef="2" />
+				<FOR-DataVariable variable="custID" dataType="Integer">
+					<ValueExpr language="Java JavaScript"><![CDATA[ this.mes.getCustID()
+					]]></ValueExpr>
+				</FOR-DataVariable>
+				<FOR-DataVariable variable="pizzaType" dataType="Integer">
+					<ValueExpr language="Java JavaScript"><![CDATA[ this.mes.getPizzaType()					
+				    ]]></ValueExpr>
+				</FOR-DataVariable> 
+				<DO>
+					<UPDATE-ENV>
+						<UpdateStatisticsVariable variable="revenue">
+							<ValueExpr language="Java JavaScript"><![CDATA[
+SimStatistics.revenue.getValue() + this.wtr.pizzaPrice( this.pizzaType)
+						]]></ValueExpr>
+						</UpdateStatisticsVariable>
+					</UPDATE-ENV>
+					<SCHEDULE-EVT>
+						<InMessageEventExpr messageType="AskOrderNo" senderIdRef="11">
+							<Condition language="Java"><![CDATA[
+pw.getPickupWindowQueue().size() > 0  && (( Customer)pw.getPickupWindowQueue().get(0)).getId() ==
+custID && (( Customer)pw.getPickupWindowQueue().get(0)).isWaitingForOrderToArrive()
+                             ]]></Condition>
+							<Condition language="JavaScript"><![CDATA[
+this.pw.getPickupWindowQueue().size() > 0  && ( this.pw.getPickupWindowQueue().get(0)).getId() ===
+this.custID && ( this.pw.getPickupWindowQueue().get(0)).isWaitingForOrderToArrive()
+                            ]]></Condition>
+							<ReceiverIdRef language="Java JavaScript">this.custID</ReceiverIdRef>
+						</InMessageEventExpr>
+						<InMessageEventExpr messageType="OrderPrepared" receiverIdRefs="11" senderIdRef="3">
+							<Slot property="orderNo">
+								<ValueExpr language="Java JavaScript"><![CDATA[ this.mes.getOrderNo()]]></ValueExpr>
+							</Slot>
+							<Slot property="pizzaType">
+								<ValueExpr language="Java JavaScript"><![CDATA[ this.mes.getPizzaType()]]></ValueExpr>
+							</Slot>
+							<Slot property="custID">
+								<ValueExpr language="Java JavaScript"><![CDATA[ this.mes.getCustID()]]></ValueExpr>
+							</Slot>
+						</InMessageEventExpr>
+					</SCHEDULE-EVT>
+				</DO>
+			</EnvironmentRule>
+		</EnvironmentRules>
+	</SimulationModel>
+	<!-- =================================================== -->
+	<InitialState>
+	<!-- ====================================================== -->
+		<!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->	
+		<Object type="OrganizationChart" id="1100" name="DriveThru_McMikes_Chart">
+			<Slot property="termsOfOperation" value="None_Yet_Implemented"/>
+		</Object>
+		<!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->	
+		<Agent type="Organization" id="1000" name="DriveThru_McMikes">
+			<!-- =================================================== -->
+			<!-- <Slot property="organizationChart">
+				<ValueExpr language="Java"><![CDATA[ 
+				(OrganizationChart)this.getEnvironmentSimulator().getObjectById(12)
+				]]></ValueExpr>
+				</Slot> -->
+			<Slot property="employees">
+				<ValueExpr language="Java"><![CDATA[ new ArrayList<Employee>()]]></ValueExpr>
+			</Slot>
+			<Slot property="organizationUnits">
+				<ValueExpr language="Java"><![CDATA[ new ArrayList<OrganizationUnit>()]]></ValueExpr>
+			</Slot>
+			<Slot property="manager">
+				<ValueExpr language="Java"><![CDATA[ new ArrayList<Manager>()]]></ValueExpr>
+			</Slot>
+		</Agent>
+		<!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->		
+		<Agent type="MenuBoard" name="MenuBoardService" id="1">
+	  <!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->
+			<Slot property="employees">
+				<ValueExpr language="Java"><![CDATA[ new ArrayList<Employee>()]]></ValueExpr>
+			</Slot>
+			<Slot property="manager">
+				<ValueExpr language="Java"><![CDATA[ new ArrayList<Manager>()]]></ValueExpr>
+			</Slot>
+			<Slot property="menuBoardBusy" value="false" />
+			<Slot property="maxMenuBoardLineSize" value="5" />
+			<Slot property="queueLength" value="0" />
+			<Slot property="menuBoardQueue">
+				<ValueExpr language="Java"><![CDATA[ new ArrayList<Customer>()]]></ValueExpr>
+				<ValueExpr language="JavaScript"><![CDATA[ new js.util.ArrayList()]]></ValueExpr>
+			</Slot>
+		</Agent>
+		<!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->
+		<Agent type="PickupWindow" name="PickupWindowService" id="2">
+		<!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->
+			<Slot property="employees">
+				<ValueExpr language="Java"><![CDATA[ new ArrayList<Employee>()]]></ValueExpr>
+			</Slot>
+			<Slot property="manager">
+				<ValueExpr language="Java"><![CDATA[ new ArrayList<Manager>()]]></ValueExpr>
+			</Slot>
+			<!-- =================================================== -->
+			<Slot property="pickupWindowBusy" value="false" />
+			<Slot property="maxPickupWindowLineSize" value="5" />
+			<Slot property="queueLength" value="0" />
+			<Slot property="pickupWindowQueue">
+				<ValueExpr language="Java"><![CDATA[ new ArrayList<Customer>()]]></ValueExpr>
+				<ValueExpr language="JavaScript"><![CDATA[ new js.util.ArrayList()]]></ValueExpr>
+			</Slot>
+		
+		</Agent>
+		<!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->
+		<Agent type="Kitchen" name="KitchenService" id="3" >
+		<!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->
+			<Slot property="employees">
+				<ValueExpr language="Java"><![CDATA[ new ArrayList<Employee>()]]></ValueExpr>
+			</Slot>
+			<Slot property="manager">
+				<ValueExpr language="Java"><![CDATA[ new ArrayList<Manager>()]]></ValueExpr>
+			</Slot>
+			<!-- =================================================== -->
+		</Agent>
+		<!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->
+		<Agent type="Person" id="10">
+			<Slot property="firstName" value="Smith"/>
+			<Slot property="lastName" value="Anne"/>
+			<Slot property="personalNumber" value="21345493567"/>
+			<Role type="OrderTaker">
+				<Slot property="startOfContract" value="1"/>
+				<Slot property="endOfContract" value="0"/>
+				<Slot property="availableCash" value="0"/>
+			</Role>
+		</Agent>
+		<!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->
+		<Agent type="Person" id="11">
+			<Slot property="firstName" value="Doe"/>
+			<Slot property="lastName" value="Joe"/>
+			<Slot property="personalNumber" value="213454085643"/>
+			<Role type="Waitress">
+				<Slot property="startOfContract" value="1"/>
+				<Slot property="endOfContract" value="0"/>
+				<Slot property="availableCash" value="0"/>
+				<Slot property="orders">
+					<ValueExpr language="Java"><![CDATA[ new ArrayList<Long>() ]]></ValueExpr>
+					<ValueExpr language="JavaScript"><![CDATA[ new js.util.ArrayList()]]></ValueExpr>
+				</Slot>
+			</Role>
+		</Agent>
+		<!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->
+		<Agent type="Person" id="12">
+			<Slot property="firstName" value="Steffen"/>
+			<Slot property="lastName" value="Clark"/>
+			<Slot property="personalNumber" value="13745677890"/>
+			<Role type="Cook">
+				<Slot property="startOfContract" value="1"/>
+				<Slot property="endOfContract" value="0"/>
+				<Slot property="availableCash" value="0"/>
+			</Role>
+		</Agent>
+		<!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->
+		<Agent type="Person" id="13">
+			<Slot property="firstName" value="Streit"/>
+			<Slot property="lastName" value="Tom"/>
+			<Slot property="personalNumber" value="125634754879"/>
+			<Role type="Manager">
+				<Slot property="startOfContract" value="1"/>
+				<Slot property="endOfContract" value="0"/>
+				<Slot property="availableCash" value="0"/>
+			</Role>
+		</Agent>
+		<!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->
+		<!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->
+		<!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->
+		<ExogenousEvent type="OpenRestaurant" occurrenceTime="1"/>
+		<!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->
+		<ExogenousEvent type="CustomerArrival" occurrenceTime="1" />
+		<!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->
+		<!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->
+	</InitialState>
+	<!-- =================================================== -->
+	<UserInterface supportedLanguages="en de">
+	<!-- ================================================== -->
+		<StatisticsUI>
+		<!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->
+			<StatisticsVariableUI variable="numberOfCustomers">
+				<Label>
+					<Text xml:lang="en">Number of customers</Text>
+					<Text xml:lang="de">Anzahl Kunden</Text>
+					<Text xml:lang="fr">Nombre de clients</Text>
+					<Text xml:lang="es">Numero de clientes</Text>
+					<Text xml:lang="ro">Numar clienti</Text>
+				</Label>
+				<Hint>
+					<Text xml:lang="en">How many customers have entered the restaurant ?</Text>
+					<Text xml:lang="de">Wieviele Kunden haben das Restaurant betreten ?</Text>
+					<Text xml:lang="fr">Combien de clients sont entres dans le restaurant ?</Text>
+					<Text xml:lang="es">Cuantos clientes han entrado en el restaurante ?</Text>
+					<Text xml:lang="ro">Cati clienti are restaurantul ?</Text>
+				</Hint>
+			</StatisticsVariableUI>
+			<StatisticsVariableUI variable="numberOfLostCustomers">
+				<Label>
+					<Text xml:lang="en">Lost customers</Text>
+					<Text xml:lang="de">Entgangene Kunden</Text>
+					<Text xml:lang="fr">Nombre de clients perdus</Text>
+					<Text xml:lang="es">Numero de clientes que son perdidos</Text>
+					<Text xml:lang="ro">Clienti pierduti</Text>
+				</Label>
+				<Hint>
+					<Text xml:lang="en">How many customers have left because the line was too long?</Text>
+					<Text xml:lang="de">Wieviele Kunden sind weggegangen, weil die Warteschlange zu lang war ?</Text>
+					<Text xml:lang="fr">Combien de clients ont quitte le restaurant parce que la queue ete trop
+						longue ?</Text>
+					<Text xml:lang="es">Cuantos clientes se han ido porque la linea es demasiado largo ?</Text>
+					<Text xml:lang="ro">Cati clienti a pierdut restaurantul ?</Text>
+				</Hint>
+			</StatisticsVariableUI>
+			<StatisticsVariableUI variable="revenue">
+				<Label>
+					<Text xml:lang="en">Revenue</Text>
+					<Text xml:lang="de">Umsatz</Text>
+					<Text xml:lang="fr">Chiffre d'affaires</Text>	
+					<Text xml:lang="es">Volumen de negocios</Text>
+					<Text xml:lang="ro">Cifra de afaceri</Text>
+				</Label>
+				<Hint>
+					<Text xml:lang="en">How much revenue did the restaurant make ?</Text>
+					<Text xml:lang="de">Wieviel Umsatz hat das Restaurant gemacht ?</Text>
+					<Text xml:lang="fr">Quel est le chiffre d'affaires du restaurant ?</Text>
+					<Text xml:lang="es">Cuál es el volumen de negocios del restaurante ?</Text>
+					<Text xml:lang="ro">Care este cifra de afaceri a restaurantului ?</Text>
+				</Hint>
+				<Format decimalPlaces="2">
+					<Currency>EUR(&#8364;)</Currency>
+				</Format>
+			</StatisticsVariableUI>
+			<StatisticsVariableUI variable="menuBoardUtilization">
+				<Label>
+					<Text xml:lang="en">Menu board utilization</Text>
+					<Text xml:lang="de">Auftragsannahme-Nutzung</Text>
+					<Text xml:lang="fr">Utilisation du service pour la demande de nourriture</Text>
+					<Text xml:lang="es">El uso del servicio de recepcion de pedidos comidas</Text>
+					<Text xml:lang="ro">Utilizarea serviciului de preluare comenzi</Text>
+				</Label>
+				<Hint>
+					<Text xml:lang="en">What is the utilization of the restaurant's menu board (order taking
+						service) ?</Text>
+					<Text xml:lang="de">Wie hoch ist der Nutzungsgrad der Auftragsannahme ?</Text>
+					<Text xml:lang="fr">Quel est le temps moyen de l'utilisation du service pour la demande de
+						nourriture ?</Text>
+					<Text xml:lang="es">Cuál es el tiempo medio empleado por el uso del servicio de recepcion de
+						pedidos comidas ?</Text>
+					<Text xml:lang="ro">Care este timpul mediu de utilizare a serviciului de preluare comenzi ?</Text>
+				</Hint>
+				<Format decimalPlaces="2"><Math>%</Math></Format>
+			</StatisticsVariableUI>
+			
+			<StatisticsVariableUI variable="pickupWindowUtilization">
+				<Label>
+					<Text xml:lang="en">Pickup window utilization</Text>
+					<Text xml:lang="de">Ausgabefenster-Nutzung</Text>
+					<Text xml:lang="fr">Utilisation du distributeur de nourriture</Text>
+					<Text xml:lang="es">El uso del servicio de entrega de comidas</Text>
+					<Text xml:lang="ro">Utilizarea serviciului de distributie comenzi</Text>
+				</Label>
+				<Hint>
+					<Text xml:lang="en">What is the utilization of the pickup window ?</Text>
+					<Text xml:lang="de">Wie hoch ist der Nutzungsgrad des Ausgabefensters ?</Text>
+					<Text xml:lang="fr">Quel est le temps moyen de l'utilisation du service pour la distribution de
+						nourriture ?</Text>
+					<Text xml:lang="es">Cuál es el tiempo medio empleado por el uso del servicio para entrega de
+						comidas ?</Text>
+					<Text xml:lang="ro">Care este timpul mediu de utilizare a serviciului de distributie comenzi ?</Text>
+				</Hint>
+				<Format decimalPlaces="2"><Math>%</Math></Format>
+			</StatisticsVariableUI>
+			<StatisticsVariableUI variable="meanResponseTime">
+				<Label>
+					<Text xml:lang="en">Mean response time</Text>
+					<Text xml:lang="de">Durchlaufzeit</Text>
+					<Text xml:lang="fr">Le temps de réponse moyen</Text>
+					<Text xml:lang="es">La media de tiempo de respuesta</Text>
+					<Text xml:lang="ro">Timpul mediu de raspuns</Text>
+				</Label>
+				<Hint>
+					<Text xml:lang="en">What is the average lenght of time the customer spends in the restaurant ?</Text>
+					<Text xml:lang="de">Wie viel Zeit verbringt ein Kunde durchschnittlich im Restaurant ?</Text>
+					<Text xml:lang="fr">Quel est le temps moyen passé par le client dans le restaurant ?</Text>
+					<Text xml:lang="es">Cuál es el tiempo medio empleado por el cliente en el restaurante ?</Text>
+					<Text xml:lang="ro">Care este durata medie de timp petrecuta de client in restaurant ?</Text>
+				</Hint>
+				<Format decimalPlaces="1"><Time>s</Time></Format>
+			</StatisticsVariableUI>
+			<StatisticsVariableUI variable="maxLengthOfMBQ">
+				<Label>
+					<Text xml:lang="en">Maximum length of menu board queue</Text>
+					<Text xml:lang="de">Durchschnittliche Länge der Auftragsannahme-Warteschlange</Text>
+					<Text xml:lang="fr">Dimension maximale de la queue pour la demande de nourriture</Text>
+					<Text xml:lang="es">Maximo longitud de cola para recepcion de pedidos comidas</Text>
+					<Text xml:lang="ro">Dimensiunea maxima a listei de asteptare pentru serviciul de preluare comenzi</Text>
+				</Label>
+				<Hint>
+					<Text xml:lang="en">What is the maximum length of the menu board queue ?</Text>
+					<Text xml:lang="de">Was ist die durchschnittliche Länge der Auftragsannahme-Warteschlange ?</Text>
+					<Text xml:lang="fr">Quelle est la dimension maximale de la queue pour la demande de nourriture ?</Text>
+					<Text xml:lang="es">Cual es el tamaño maximo de la cola para entrega de comidas ?</Text>
+					<Text xml:lang="ro">Care este dimensiunea maxima a listei de asteptare pentru serviciul de
+						preluare comenzi ?</Text>
+				</Hint>
+			</StatisticsVariableUI>
+			<StatisticsVariableUI variable="maxLengthOfPWQ">
+				<Label>
+					<Text xml:lang="en">Maximum length of pickup window queue</Text>
+					<Text xml:lang="de">Durchschnittliche Länge der Ausgabefenster-Warteschlange</Text>
+					<Text xml:lang="fr">Dimension maximale de la queue pour la distribution de nourriture</Text>
+					<Text xml:lang="es">Maximo longitud de cola para entrega de comidas</Text>
+					<Text xml:lang="ro">Dimensiunea maxima a listei de asteptare pentru serviciul de distributie comenzi</Text>
+				</Label>
+				<Hint>
+					<Text xml:lang="en">What is the maximum length of the pickup window queue ?</Text>
+					<Text xml:lang="de">Was ist die durchschnittliche Länge der Ausgabefenster-Warteschlange ?</Text>
+					<Text xml:lang="fr">Quelle est la dimension maximale de la queue pour la distribution de
+						nourriture ?</Text>
+					<Text xml:lang="es">Cual es el tamaño maximo de la cola para entrega de comidas ?</Text>
+					<Text xml:lang="ro">Care este dimensiunea maxima a listei de asteptare pentru serviciul de
+						distributie comenzi ?</Text>
+				</Hint>
+			</StatisticsVariableUI>
+			<StatisticsVariableUI variable="menuBoardQueueLength" comparisonGroup="MenuBoard_PickupWindow" showChart="true">
+				<Label>
+					<Text xml:lang="en">Length of menu board queue</Text>
+					<Text xml:lang="de">Länge der Auftragsannahme-Warteschlange</Text>
+					<Text xml:lang="fr">Dimension de la queue pour la demande de nourriture</Text>
+					<Text xml:lang="es">Longitud de cola para recepcion de pedidos comidas</Text>
+					<Text xml:lang="ro">Dimensiunea listei de asteptare pentru serviciul de preluare comenzi</Text>
+				</Label>
+				<Hint>
+					<Text xml:lang="en">What is the length of the menu board queue ?</Text>
+					<Text xml:lang="de">Was ist die Länge der Auftragsannahme-Warteschlange ?</Text>
+					<Text xml:lang="fr">Quelle est la dimension de la queue pour la demande de nourriture ?</Text>
+					<Text xml:lang="es">Cual es el tamaño de la cola para entrega de comidas ?</Text>
+					<Text xml:lang="ro">Care este dimensiunea listei de asteptare pentru serviciul de preluare
+						comenzi ?</Text>
+				</Hint>
+			</StatisticsVariableUI>
+			<StatisticsVariableUI variable="pickupWindowQueueLength" comparisonGroup="MenuBoard_PickupWindow" showChart="true">
+				<Label>
+					<Text xml:lang="en">Length of pickup window queue</Text>
+					<Text xml:lang="de">Länge der Ausgabefenster-Warteschlange</Text>
+					<Text xml:lang="fr">Dimension de la queue pour la distribution de nourriture</Text>
+					<Text xml:lang="es">Longitud de cola para entrega de comidas</Text>
+					<Text xml:lang="ro">Dimensiunea listei de asteptare pentru serviciul de distributie comenzi</Text>
+				</Label>
+				<Hint>
+					<Text xml:lang="en">What is the length of the pickup window queue ?</Text>
+					<Text xml:lang="de">Was ist die Länge der Ausgabefenster-Warteschlange ?</Text>
+					<Text xml:lang="fr">Quelle est la dimension de la queue pour la distribution de nourriture ?</Text>
+					<Text xml:lang="es">Cual es el tamaño de la cola para entrega de comidas ?</Text>
+					<Text xml:lang="ro">Care este dimensiunea listei de asteptare pentru serviciul de distributie
+						comenzi ?</Text>
+				</Hint>
+			</StatisticsVariableUI>
+		</StatisticsUI>
+		<!-- ================================================== -->
+		<AnimationUI>
+		<!-- ================================================== -->
+			<Views>
+				<SpaceView>
+					<TwoDimensionalSpaceView2D backgroundColor="white" backgroundImage="AutoRestaurant.jpg"/>
+				</SpaceView>
+				<!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->
+				<ObjectView objectType="MenuBoard" displayName="true" objectIdRef="1">
+					<!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->
+					<Shape2D x="40%" y="35%">
+						<Rectangle width="100" height="70" texture="MenuBoard.png">
+							<ShapePropertyVisualizationMap shapeProperty="fill" property="menuBoardBusy"
+								mapType="equalityCaseWise" v0="green" a0="false" a1="true" v1="red" />
+						</Rectangle>
+					</Shape2D>
+					<DisplayInfo property="queueLength" content=" customer(s)" />
+					<AttachedShape2D offsetX="-40px" offsetY="0px">
+						<Shape2D>
+							<Rectangle positioning="RightCenter" fill="white" width="1" height="50">
+								<ShapePropertyVisualizationMap shapeProperty="width" property="queueLength"
+									mapType="polynomial" a0="0" a1="60" />
+								<ShapePropertyVisualizationMap shapeProperty="texture" property="queueLength"
+									mapType="equalityCaseWise" a0="0" v0="Queue_Cmon-Fotolia.jpg" a1="1"
+									v1="car1.png" a2="2" v2="car2.png" a3="3"
+									v3="car3.png" a4="4" v4="car4.png" a5="5"
+									v5="car5.png" />
+							</Rectangle>
+						</Shape2D>
+					</AttachedShape2D>
+				</ObjectView>	
+				<!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->
+				<ObjectView objectType="PickupWindow" displayName="true" objectIdRef="2">
+					<!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->
+					<Shape2D x="85%" y="35%">
+						<Rectangle width="100" height="70" texture="PickupPizza.png">
+							<ShapePropertyVisualizationMap shapeProperty="fill" property="pickupWindowBusy"
+								mapType="equalityCaseWise" v0="green" a0="false" a1="true" v1="red" />
+						</Rectangle>
+					</Shape2D>
+					<DisplayInfo property="queueLength" content=" customer(s)" />
+					<AttachedShape2D offsetX="-40px" offsetY="0px">
+						<Shape2D>
+							<Rectangle positioning="RightCenter" fill="white" width="1" height="50">
+								<ShapePropertyVisualizationMap shapeProperty="width" property="queueLength"
+									mapType="polynomial" a0="0" a1="60" />
+								<ShapePropertyVisualizationMap shapeProperty="texture" property="queueLength"
+									mapType="equalityCaseWise" a0="0" v0="Queue_Cmon-Fotolia.jpg" a1="1"
+									v1="car1.png" a2="2" v2="car2.png" a3="3"
+									v3="car3.png" a4="4" v4="car4.png" a5="5"
+									v5="car5.png" />
+							</Rectangle>
+						</Shape2D>
+					</AttachedShape2D>
+				</ObjectView>	
+			</Views>
+		</AnimationUI>
+	</UserInterface>
+</SimulationScenario>
