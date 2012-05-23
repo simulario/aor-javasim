@@ -249,20 +249,9 @@ var r2 = js.util.Random.uniformInt(1,6);
 				<Attribute name="personalNumber" type="Integer"/>
 			</AgentType>
 			<!-- =================================================== -->
-			<Role name="Manager" organizationUnits="MenuBoard Kitchen PickupWindow " multiplicity="4">
-			<!-- =================================================== -->
-				<Attribute type="String" name="firstName" />
-				<Attribute type="String" name="lastName" />
-				<Attribute name="dateOfBirth" type="String"/>
-				<Attribute name="personalNumber" type="Integer"/>
-			</Role>
+			<Role name="Manager" organizationUnits="MenuBoard Kitchen PickupWindow " multiplicity="4"/>			
 			<!-- =================================================== -->
 			<Role name="OrderTaker" organizationUnits="MenuBoard" conflictedWithRole="Waitress" multiplicity="unbounded">
-				<!-- =================================================== -->
-				<Attribute type="String" name="firstName" />
-				<Attribute type="String" name="lastName" />
-				<Attribute name="dateOfBirth" type="String"/>
-				<Attribute name="personalNumber" type="Integer"/>
 				<!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->
 				<Function name="getMessagePart" resultType="String">
 					<!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->
@@ -322,7 +311,7 @@ var i = messageInfo.indexOf("and");
 						eventVariable="evt" />
 					<DO>
 						<SCHEDULE-EVT>
-							<OutMessageEventExpr messageType="ProductionOrder" receiverIdRefs="3">
+							<OutMessageEventExpr messageType="ProductionOrder" receiverIdRefs="12">
 								<Slot property="pizzaType">
 									<ValueExpr language="Java JavaScript"><![CDATA[ this.mes.getPizzaType()]]></ValueExpr>
 								</Slot>
@@ -380,11 +369,6 @@ parseInt( this.menuBoard.getMessagePart( this.evt.getReminderMsg(),2))
 			</Role>
 			<!-- =================================================== -->
 			<Role name="Waitress" organizationUnits="PickupWindow" conflictedWithRole="OrderTaker" multiplicity="unbounded">
-				<!-- =================================================== -->
-				<Attribute type="String" name="firstName" />
-				<Attribute type="String" name="lastName" />
-				<Attribute name="dateOfBirth" type="String"/>
-				<Attribute name="personalNumber" type="Integer"/>
 				<Attribute name="orders" type="Integer" upperMultiplicity="unbounded" />			
 				<!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->
 				<Function name="pizzaPrice" resultType="Float">
@@ -506,45 +490,7 @@ parseInt( this.pickupWindow.getMessagePart( this.evt.getReminderMsg()))
 				</ReactionRule>
 			</Role>
 			<!-- =================================================== -->
-			<Role name="Cook" organizationUnits="MenuBoard" multiplicity="unbounded">
-				<!-- =================================================== -->
-				<Attribute type="String" name="firstName" />
-				<Attribute type="String" name="lastName" />
-				<Attribute name="dateOfBirth" type="String"/>
-				<Attribute name="personalNumber" type="Integer"/>
-			</Role>
-			<!-- =================================================== -->
-			<AgentType name="Organization">
-				<!-- <ReferenceProperty name="organizationChart" type="OrganizationChart" /> 
-					we'll work on it later -->
-				<ReferenceProperty name="employees" type="Employee" upperMultiplicity="unbounded" />
-				<ReferenceProperty name="manager" type="Manager" upperMultiplicity="unbounded" />
-				<ReferenceProperty name="organizationUnits" type="OrganizationUnit" upperMultiplicity="unbounded" />
-			</AgentType>
-			<!-- =================================================== -->
-			<AgentType name="OrganizationUnit">
-				<ReferenceProperty name="manager" type="Manager" upperMultiplicity="unbounded" />
-				<ReferenceProperty name="employees" type="Employee" upperMultiplicity="unbounded" />
-			</AgentType>
-			<!-- =================================================== -->
-			<ObjectType name="OrganizationChart">
-				<!-- =================================================== -->
-				<Attribute name="termsOfOperation" type="String"/>
-			</ObjectType>
-			<!-- =================================================== -->
-			<AgentType name="MenuBoard" superType="OrganizationUnit">
-			<!-- =================================================== -->
-				<Attribute name="menuBoardBusy" type="Boolean" />
-				<Attribute name="maxMenuBoardLineSize" type="Integer" />
-				<Attribute name="queueLength" type="Integer" />
-				<ReferenceProperty name="menuBoardQueue" type="Customer" upperMultiplicity="unbounded">
-					<documentation>
-						This property represents a first-in-first-out queue.
-					</documentation>
-				</ReferenceProperty>
-			</AgentType>
-			<!-- =================================================== -->
-			<AgentType name="Kitchen" superType="OrganizationUnit">
+			<Role name="Cook" organizationUnits="Kitchen" multiplicity="unbounded">
 				<!-- =================================================== -->
 				<!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->
 				<Function name="getMessagePart" resultType="String">
@@ -577,7 +523,7 @@ int j= substr.indexOf("and");
  }    
    return resultInfo; 
         ]]></Body>
-	<Body language="JavaScript"><![CDATA[
+					<Body language="JavaScript"><![CDATA[
 var resultInfo = ""; 
 var i = messageInfo.indexOf("and");
 var subs = messageInfo.substring( i+3, messageInfo.length);
@@ -661,7 +607,39 @@ parseInt( this.kitchen.getMessagePart( this.evt.getReminderMsg(),3))
 						</SCHEDULE-EVT>
 					</DO>
 				</ReactionRule>
+			</Role>
+			<!-- =================================================== -->
+			<AgentType name="Organization">
+				<!-- <ReferenceProperty name="organizationChart" type="OrganizationChart" /> 
+					we'll work on it later -->
+				<ReferenceProperty name="employees" type="Employee" upperMultiplicity="unbounded" />
+				<ReferenceProperty name="manager" type="Manager" upperMultiplicity="unbounded" />
+				<ReferenceProperty name="organizationUnits" type="OrganizationUnit" upperMultiplicity="unbounded" />
 			</AgentType>
+			<!-- =================================================== -->
+			<AgentType name="OrganizationUnit">
+				<ReferenceProperty name="manager" type="Manager" upperMultiplicity="unbounded" />
+				<ReferenceProperty name="employees" type="Employee" upperMultiplicity="unbounded" />
+			</AgentType>
+			<!-- =================================================== -->
+			<ObjectType name="OrganizationChart">
+				<!-- =================================================== -->
+				<Attribute name="termsOfOperation" type="String"/>
+			</ObjectType>
+			<!-- =================================================== -->
+			<AgentType name="MenuBoard" superType="OrganizationUnit">
+			<!-- =================================================== -->
+				<Attribute name="menuBoardBusy" type="Boolean" />
+				<Attribute name="maxMenuBoardLineSize" type="Integer" />
+				<Attribute name="queueLength" type="Integer" />
+				<ReferenceProperty name="menuBoardQueue" type="Customer" upperMultiplicity="unbounded">
+					<documentation>
+						This property represents a first-in-first-out queue.
+					</documentation>
+				</ReferenceProperty>
+			</AgentType>
+			<!-- =================================================== -->
+			<AgentType name="Kitchen" superType="OrganizationUnit"/>
 			<!-- ============================= -->
 			<AgentType name="PickupWindow" superType="OrganizationUnit">
 				<!-- =========================== -->
@@ -1311,7 +1289,7 @@ this.custID && ( this.pw.getPickupWindowQueue().get(0)).isWaitingForOrderToArriv
                             ]]></Condition>
 							<ReceiverIdRef language="Java JavaScript">this.custID</ReceiverIdRef>
 						</InMessageEventExpr>
-						<InMessageEventExpr messageType="OrderPrepared" receiverIdRefs="11" senderIdRef="3">
+						<InMessageEventExpr messageType="OrderPrepared" receiverIdRefs="11" senderIdRef="12">
 							<Slot property="orderNo">
 								<ValueExpr language="Java JavaScript"><![CDATA[ this.mes.getOrderNo()]]></ValueExpr>
 							</Slot>
