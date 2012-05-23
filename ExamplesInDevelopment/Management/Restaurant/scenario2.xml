@@ -14,6 +14,7 @@
 		<documentation>
 			<dc:creator>Oana Nicolae</dc:creator>
 			<dc:contributor>Gerd Wagner</dc:contributor>
+			<dc:contributor>Bogdan Mihai Duca</dc:contributor>
 			<dc:created>20090331</dc:created>
 			<dc:modified>20120424</dc:modified>
 			<dc:title>Drive Thru</dc:title>
@@ -250,8 +251,8 @@ var r2 = js.util.Random.uniformInt(1,6);
 			<!-- =================================================== -->
 			<AgentType name="Employee" superType="Person">
 				<!-- =================================================== -->
-				<Attribute name="startOfContract" type="String"/>
-				<Attribute name="endOfContract" type="String"/>
+				<Attribute name="startOfContract" type="Integer"/>
+				<Attribute name="endOfContract" type="Integer"/>
 				<Attribute name="availableCash" type="Integer"/>
 			</AgentType>
 			<!-- =================================================== -->
@@ -317,7 +318,7 @@ var i = messageInfo.indexOf("and");
 						eventVariable="evt" />
 					<DO>
 						<SCHEDULE-EVT>
-							<OutMessageEventExpr messageType="ProductionOrder" receiverIdRefs="3">
+							<OutMessageEventExpr messageType="ProductionOrder" receiverIdRefs="12">
 								<Slot property="pizzaType">
 									<ValueExpr language="Java JavaScript"><![CDATA[ this.mes.getPizzaType()]]></ValueExpr>
 								</Slot>
@@ -496,39 +497,7 @@ parseInt( this.pickupWindow.getMessagePart( this.evt.getReminderMsg()))
 				</ReactionRule>
 			</AgentType>
 			<!-- =================================================== -->
-			<AgentType name="Cook" superType="Employee"/>
-			<!-- =================================================== -->
-			<AgentType name="Organization">
-				<!-- <ReferenceProperty name="organizationChart" type="OrganizationChart" /> 
-					we'll work on it later -->
-				<ReferenceProperty name="employees" type="Employee" upperMultiplicity="unbounded" />
-				<ReferenceProperty name="manager" type="Manager" upperMultiplicity="unbounded" />
-				<ReferenceProperty name="organizationUnits" type="OrganizationUnit" upperMultiplicity="unbounded" />
-			</AgentType>
-			<!-- =================================================== -->
-			<AgentType name="OrganizationUnit">
-				<ReferenceProperty name="manager" type="Manager" upperMultiplicity="unbounded" />
-				<ReferenceProperty name="employees" type="Employee" upperMultiplicity="unbounded" />
-			</AgentType>
-			<!-- =================================================== -->
-			<ObjectType name="OrganizationChart">
-				<!-- =================================================== -->
-				<Attribute name="termsOfOperation" type="String"/>
-			</ObjectType>
-			<!-- =================================================== -->
-			<AgentType name="MenuBoard" superType="OrganizationUnit">
-			<!-- =================================================== -->
-				<Attribute name="menuBoardBusy" type="Boolean" />
-				<Attribute name="maxMenuBoardLineSize" type="Integer" />
-				<Attribute name="queueLength" type="Integer" />
-				<ReferenceProperty name="menuBoardQueue" type="Customer" upperMultiplicity="unbounded">
-					<documentation>
-						This property represents a first-in-first-out queue.
-					</documentation>
-				</ReferenceProperty>
-			</AgentType>
-			<!-- =================================================== -->
-			<AgentType name="Kitchen" superType="OrganizationUnit">
+			<AgentType name="Cook" superType="Employee">
 				<!-- =================================================== -->
 				<!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->
 				<Function name="getMessagePart" resultType="String">
@@ -561,7 +530,7 @@ int j= substr.indexOf("and");
  }    
    return resultInfo; 
         ]]></Body>
-	<Body language="JavaScript"><![CDATA[
+					<Body language="JavaScript"><![CDATA[
 var resultInfo = ""; 
 var i = messageInfo.indexOf("and");
 var subs = messageInfo.substring( i+3, messageInfo.length);
@@ -646,6 +615,40 @@ parseInt( this.kitchen.getMessagePart( this.evt.getReminderMsg(),3))
 					</DO>
 				</ReactionRule>
 			</AgentType>
+			<!-- =================================================== -->
+			<AgentType name="Organization">
+				<!-- <ReferenceProperty name="organizationChart" type="OrganizationChart" /> 
+					we'll work on it later -->
+				<ReferenceProperty name="employees" type="Employee" upperMultiplicity="unbounded" />
+				<ReferenceProperty name="manager" type="Manager" upperMultiplicity="unbounded" />
+				<ReferenceProperty name="organizationUnits" type="OrganizationUnit" upperMultiplicity="unbounded" />
+			</AgentType>
+			<!-- =================================================== -->
+			<AgentType name="OrganizationUnit">
+				<ReferenceProperty name="manager" type="Manager" upperMultiplicity="unbounded" />
+				<ReferenceProperty name="employees" type="Employee" upperMultiplicity="unbounded" />
+			</AgentType>
+			<!-- =================================================== -->
+			<ObjectType name="OrganizationChart">
+				<!-- =================================================== -->
+				<Attribute name="termsOfOperation" type="String"/>
+			</ObjectType>
+			<!-- =================================================== -->
+			<AgentType name="MenuBoard" superType="OrganizationUnit">
+			<!-- =================================================== -->
+				<Attribute name="menuBoardBusy" type="Boolean" />
+				<Attribute name="maxMenuBoardLineSize" type="Integer" />
+				<Attribute name="queueLength" type="Integer" />
+				<ReferenceProperty name="menuBoardQueue" type="Customer" upperMultiplicity="unbounded">
+					<documentation>
+						This property represents a first-in-first-out queue.
+					</documentation>
+				</ReferenceProperty>
+			</AgentType>
+			<!-- =================================================== -->
+			<AgentType name="Kitchen" superType="OrganizationUnit"/>
+
+			
 			<!-- ============================= -->
 			<AgentType name="PickupWindow" superType="OrganizationUnit">
 				<!-- =========================== -->
@@ -693,16 +696,10 @@ parseInt( this.kitchen.getMessagePart( this.evt.getReminderMsg(),3))
 							giving the information about the pizza type inside of a CustomerOrder message. 
 						</description>
 					</documentation>
-					<WHEN eventType="InMessageEvent" messageType="OrderSolicitation" eventVariable="evt"/>
+					<WHEN eventType="InMessageEvent" messageType="OrderSolicitation" />
 					<DO>
 						<SCHEDULE-EVT>
-							<OutMessageEventExpr messageType="CustomerOrder" >
-								<!-- Modification changed the receiver id -->
-								<ReceiverIdRef language="Java JavaScript">
-									<![CDATA[
-									this.evt.getSenderIdRef()
-									]]>
-								</ReceiverIdRef>
+							<OutMessageEventExpr messageType="CustomerOrder" receiverIdRefs="10">
 								<Slot property="pizzaType">
 									<ValueExpr language="Java JavaScript"><![CDATA[ this.cust.randomPizzaType()]]></ValueExpr>
 								</Slot>
@@ -788,11 +785,11 @@ parseInt( this.kitchen.getMessagePart( this.evt.getReminderMsg(),3))
 				<WHEN eventType="OpenRestaurant"/>
 				<FOR objectVariable="org" objectType="Organization" objectIdRef="1000"/>
 				<FOR objectVariable="orgChart" objectType="OrganizationChart" objectIdRef="1100"/>
-				<FOR objectVariable="orgUnitMB" objectType="OrganizationUnit" objectIdRef="1"/>
-				<FOR objectVariable="orgUnitPW" objectType="OrganizationUnit" objectIdRef="2"/>
-				<FOR objectVariable="orgUnitK" objectType="OrganizationUnit" objectIdRef="23"/>
+				<FOR objectVariable="orgUnitMB" objectType="MenuBoard" objectIdRef="1"/>
+				<FOR objectVariable="orgUnitPW" objectType="PickupWindow" objectIdRef="2"/>
+				<FOR objectVariable="orgUnitK" objectType="Kitchen" objectIdRef="3"/>
 				<FOR objectVariable="man" objectType="Manager" objectIdRef="13"/>
-				<FOR objectVariable="mb" objectType="OrderTaker" />
+				<FOR objectVariable="ot" objectType="OrderTaker" objectIdRef="10"/>
 				<FOR objectVariable="k" objectType="Cook" objectIdRef="12"/>
 				<FOR objectVariable="pw" objectType="Waitress" objectIdRef="11"/>
 				<DO>
@@ -809,7 +806,7 @@ parseInt( this.kitchen.getMessagePart( this.evt.getReminderMsg(),3))
 						</UpdateObject>
 						<UpdateObject objectVariable="orgUnitMB">
 							<MultiValuedSlot property="employees">
-								<AddLast itemVariable="mb"/>
+								<AddLast itemVariable="ot"/>
 							</MultiValuedSlot>
 						</UpdateObject>
 						<UpdateObject objectVariable="orgUnitPW">
@@ -851,6 +848,9 @@ SimStatistics.numberOfLostCustomers.getValue() + 1
 						   ]]></ValueExpr>
 						</UpdateStatisticsVariable>
 					</UPDATE-ENV>
+					<SCHEDULE-EVT>
+						<CausedEventExpr eventType="HireNewEmployee"/>
+					</SCHEDULE-EVT>
 				</THEN>
 				<ELSE>
 					<UPDATE-ENV>
@@ -882,6 +882,61 @@ SimStatistics.numberOfCustomers.getValue() + 1
 					</SCHEDULE-EVT>
 				</ELSE>
 			</EnvironmentRule>
+			<!-- ======================================================== -->
+			<EnvironmentRule name="HireNewEmployee_Rule">
+				<!-- ======================================================== -->
+				<WHEN eventType="HireNewEmployee" eventVariable="evt"/>
+				<DO>
+					<UPDATE-ENV>
+						<Create>
+							<Agent type="Cook" objectVariable="ck">
+								<Slot property="startOfContract">
+									<ValueExpr language="Java JavaScript">
+										<![CDATA[
+										evt.getOccurrenceTime()	
+										]]>
+									</ValueExpr>
+								</Slot>
+								<Slot property="endOfContract" value="5"/>
+							</Agent>
+						</Create>
+					</UPDATE-ENV>
+					<SCHEDULE-EVT>
+						<CausedEventExpr eventType="FireEmployee" >
+							<Delay>
+								<ValueExpr language="Java JavaScript">
+									<![CDATA[
+									this.ck.getEndOfContract()
+									]]>
+								</ValueExpr>
+							</Delay>
+							<Slot property="idOfEmployee">
+								<ValueExpr language="Java JavaScript">
+									<![CDATA[
+										this.ck.getId()
+									]]>
+								</ValueExpr>
+							</Slot>
+						</CausedEventExpr>
+					</SCHEDULE-EVT>
+				</DO>
+			</EnvironmentRule>
+			<!-- ======================================================== -->
+			<EnvironmentRule name="FireEmployee">
+				<!-- ======================================================== -->
+				<WHEN eventType="FireEmployee" eventVariable="evt"/>
+				<DO>
+					<UPDATE-ENV>
+						<DestroyObject>
+							<ObjectIdRef language="Java JavaScript">
+								<![CDATA[
+									this.evt.getIdOfEmployee()
+								]]>
+							</ObjectIdRef>
+						</DestroyObject>
+					</UPDATE-ENV>
+				</DO>
+			</EnvironmentRule>
 			<!-- ================================================================ -->
 			<EnvironmentRule name="StartMenuBoardService_Rule">
 				<!-- ================================================================ -->
@@ -894,7 +949,7 @@ SimStatistics.numberOfCustomers.getValue() + 1
 				</documentation>
 				<WHEN eventType="StartMenuBoardService" />
 				<FOR-ObjectVariable variable="mb" objectType="MenuBoard" objectIdRef="1" />
-				<FOR-ObjectVariable variable="ot" objectType="OrderTaker" />
+				<FOR-ObjectVariable variable="ot" objectType="OrderTaker" objectIdRef="10"/>
 				<FOR-ObjectVariable variable="cust" objectType="Customer">
 					<ObjectRef language="Java JavaScript"><![CDATA[ this.mb.getMenuBoardQueue().get(0)]]></ObjectRef>
 				</FOR-ObjectVariable>
@@ -938,7 +993,7 @@ SimStatistics.cumulativeMenuBoardServiceTime.getValue() + this.serviceTimeMB
 				</documentation>
 				<WHEN eventType="OutMessageEvent" messageType="ConfirmCustomerOrder" messageVariable="mes" />
 				<FOR-ObjectVariable variable="mb" objectType="MenuBoard" objectIdRef="1" />
-				<FOR-ObjectVariable variable="ot" objectType="OrderTaker" />
+				<FOR-ObjectVariable variable="ot" objectType="OrderTaker" objectIdRef="10"/>
 				<FOR-ObjectVariable variable="pw" objectType="PickupWindow" objectIdRef="2" />
 				<FOR-ObjectVariable variable="cust" objectType="Customer">
 					<ObjectRef language="Java JavaScript"><![CDATA[ this.mb.getMenuBoardQueue().get(0)]]></ObjectRef>
@@ -948,12 +1003,7 @@ this.pw.getPickupWindowQueue().size() >= this.pw.getMaxPickupWindowLineSize()
                 ]]></IF>
 				<THEN>
 					<SCHEDULE-EVT>
-						<InMessageEventExpr messageType="ConfirmCustomerOrder" >
-							<SenderIdRef language="Java JavaScript">
-								<![CDATA[
-									this.ot.getId()
-								]]>
-							</SenderIdRef>
+						<InMessageEventExpr messageType="ConfirmCustomerOrder" senderIdRef="10">
 							<ReceiverIdRef language="Java JavaScript"><![CDATA[ this.cust.getId()]]></ReceiverIdRef>
 							<Slot property="orderNo">
 								<ValueExpr language="Java JavaScript"><![CDATA[
@@ -995,12 +1045,7 @@ this.mb.getMenuBoardQueue().size() > 0
 !this.pw.isPickupWindowBusy() && this.pw.getPickupWindowQueue().size() > 0
 	                        ]]></Condition>
 			    		</CausedEventExpr>
-			    		<InMessageEventExpr messageType="ConfirmCustomerOrder" >
-			    			<SenderIdRef language="Java JavaScript">
-			    				<![CDATA[
-			    				this.ot.getId()
-			    				]]>
-			    			</SenderIdRef>
+			    		<InMessageEventExpr messageType="ConfirmCustomerOrder" senderIdRef="10">
 			    			<ReceiverIdRef language="Java JavaScript"><![CDATA[ this.cust.getId()]]></ReceiverIdRef>
 			    			<Slot property="orderNo">
 			    				<ValueExpr language="Java JavaScript"><![CDATA[ this.mes.getOrderNo()]]></ValueExpr>
@@ -1065,7 +1110,6 @@ this.pw.getPickupWindowQueue().size() > 0 && this.cust.isWaitingForOrderToArrive
 				<WHEN eventType="MoveForward" eventVariable="evt" />
 				<FOR-ObjectVariable variable="mb" objectType="MenuBoard" objectIdRef="1" />
 				<FOR-ObjectVariable variable="pw" objectType="PickupWindow" objectIdRef="2"  />
-				<FOR-ObjectVariable variable="ot" objectType="OrderTaker"/>
 				<FOR-ObjectVariable variable="cust" objectType="Customer">
 					<ObjectRef language="Java JavaScript">this.evt.getCust()</ObjectRef>
 				</FOR-ObjectVariable>
@@ -1100,12 +1144,7 @@ this.mb.getMenuBoardQueue().size() > 0
 !this.pw.isPickupWindowBusy() && this.pw.getPickupWindowQueue().size() > 0
 	                        ]]></Condition>
 						</CausedEventExpr>
-						<InMessageEventExpr messageType="ConfirmCustomerOrder" >
-							<SenderIdRef language="Java JavaScript">
-								<![CDATA[
-									this.ot.getId()
-								]]>
-							</SenderIdRef>
+						<InMessageEventExpr messageType="ConfirmCustomerOrder" senderIdRef="10">
 							<ReceiverIdRef language="Java JavaScript"><![CDATA[ this.cust.getId()]]></ReceiverIdRef>
 							<Slot property="orderNo">
 								<ValueExpr language="Java JavaScript"><![CDATA[ this.cust.getOrderNo()]]></ValueExpr>
@@ -1217,7 +1256,7 @@ this.custID && ( this.pw.getPickupWindowQueue().get(0)).isWaitingForOrderToArriv
                             ]]></Condition>
 							<ReceiverIdRef language="Java JavaScript">this.custID</ReceiverIdRef>
 						</InMessageEventExpr>
-						<InMessageEventExpr messageType="OrderPrepared" receiverIdRefs="11" senderIdRef="3">
+						<InMessageEventExpr messageType="OrderPrepared" receiverIdRefs="11" senderIdRef="12">
 							<Slot property="orderNo">
 								<ValueExpr language="Java JavaScript"><![CDATA[ this.mes.getOrderNo()]]></ValueExpr>
 							</Slot>
@@ -1311,8 +1350,8 @@ this.custID && ( this.pw.getPickupWindowQueue().get(0)).isWaitingForOrderToArriv
 			<Slot property="firstName" value="Smith"/>
 			<Slot property="lastName" value="Anne"/>
 			<Slot property="personalNumber" value="21345493567"/>
-			<Slot property="startOfContract" value="today"/>
-			<Slot property="endOfContract" value="tomorrow"/>
+			<Slot property="startOfContract" value="1"/>
+			<Slot property="endOfContract" value="0"/>
 			<Slot property="availableCash" value="0"/>
 		</Agent>
 		<!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->
@@ -1320,8 +1359,8 @@ this.custID && ( this.pw.getPickupWindowQueue().get(0)).isWaitingForOrderToArriv
 			<Slot property="firstName" value="Doe"/>
 			<Slot property="lastName" value="Joe"/>
 			<Slot property="personalNumber" value="213454085643"/>
-			<Slot property="startOfContract" value="today"/>
-			<Slot property="endOfContract" value="tomorrow"/>
+			<Slot property="startOfContract" value="1"/>
+			<Slot property="endOfContract" value="0"/>
 			<Slot property="availableCash" value="0"/>
 			<Slot property="orders">
 				<ValueExpr language="Java"><![CDATA[ new ArrayList<Long>() ]]></ValueExpr>
@@ -1333,8 +1372,8 @@ this.custID && ( this.pw.getPickupWindowQueue().get(0)).isWaitingForOrderToArriv
 			<Slot property="firstName" value="Steffen"/>
 			<Slot property="lastName" value="Clark"/>
 			<Slot property="personalNumber" value="13745677890"/>
-			<Slot property="startOfContract" value="today"/>
-			<Slot property="endOfContract" value="tomorrow"/>
+			<Slot property="startOfContract" value="1"/>
+			<Slot property="endOfContract" value="0"/>
 			<Slot property="availableCash" value="0"/>
 		</Agent>
 		<!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->
@@ -1342,8 +1381,8 @@ this.custID && ( this.pw.getPickupWindowQueue().get(0)).isWaitingForOrderToArriv
 			<Slot property="firstName" value="Streit"/>
 			<Slot property="lastName" value="Tom"/>
 			<Slot property="personalNumber" value="125634754879"/>
-			<Slot property="startOfContract" value="today"/>
-			<Slot property="endOfContract" value="tomorrow"/>
+			<Slot property="startOfContract" value="1"/>
+			<Slot property="endOfContract" value="0"/>
 			<Slot property="availableCash" value="0"/>
 		</Agent>
 		<!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->
