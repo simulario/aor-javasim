@@ -249,9 +249,9 @@ var r2 = js.util.Random.uniformInt(1,6);
 				<Attribute name="personalNumber" type="Integer"/>
 			</AgentType>
 			<Role name="Employee" organizationUnits="MenuBoard Kitchen PickupWindow" multiplicity="unbounded">
-				<Attribute name="StartOfContract" type="String" />
-				
-				
+				<Attribute name="startOfContract" type="Integer"/>
+				<Attribute name="endOfContract" type="Integer"/>
+				<Attribute name="availableCash" type="Integer"/>				
 			</Role>
 			<!-- =================================================== -->
 			<Role name="Manager" superType="Employee" organizationUnits="MenuBoard Kitchen PickupWindow " multiplicity="unbounded"/>			
@@ -890,7 +890,7 @@ SimStatistics.numberOfCustomers.getValue() + 1
 				<DO>
 					<UPDATE-ENV>
 						<UpdateObject objectVariable="ot">
-							<AddRole name="Cook">
+							<AddRole type="Cook">
 								<Slot property="startOfContract">
 									<ValueExpr language="Java JavaScript">
 										<![CDATA[
@@ -902,7 +902,7 @@ SimStatistics.numberOfCustomers.getValue() + 1
 							</AddRole>
 						</UpdateObject>
 						<UpdateObject objectVariable="wtr">
-							<AddRole name="Cook">
+							<AddRole type="Cook">
 								<Slot property="startOfContract">
 									<ValueExpr language="Java JavaScript">
 										<![CDATA[
@@ -919,14 +919,30 @@ SimStatistics.numberOfCustomers.getValue() + 1
 							<Delay>
 								<ValueExpr language="Java JavaScript">
 									<![CDATA[
-									this.ck.getEndOfContract()
+									this.ot.getEndOfContract()
 									]]>
 								</ValueExpr>
 							</Delay>
 							<Slot property="idOfEmployee">
 								<ValueExpr language="Java JavaScript">
 									<![CDATA[
-										this.ck.getId()
+										this.ot.getId()
+									]]>
+								</ValueExpr>
+							</Slot>
+						</CausedEventExpr>
+						<CausedEventExpr eventType="FireEmployee" >
+							<Delay>
+								<ValueExpr language="Java JavaScript">
+									<![CDATA[
+									this.wtr.getEndOfContract()
+									]]>
+								</ValueExpr>
+							</Delay>
+							<Slot property="idOfEmployee">
+								<ValueExpr language="Java JavaScript">
+									<![CDATA[
+										this.wtr.getId()
 									]]>
 								</ValueExpr>
 							</Slot>
@@ -946,7 +962,7 @@ SimStatistics.numberOfCustomers.getValue() + 1
 									this.evt.getIdOfEmployee()
 								]]>
 							</ObjectIdRef>
-							<RemoveRole name="Cook"/>
+							<RemoveRole type="Cook"/>
 						</UpdateObject>
 					</UPDATE-ENV>
 				</DO>
@@ -1387,21 +1403,24 @@ this.custID && ( this.pw.getPickupWindowQueue().get(0)).isWaitingForOrderToArriv
 			<Slot property="firstName" value="Smith"/>
 			<Slot property="lastName" value="Anne"/>
 			<Slot property="personalNumber" value="21345493567"/>
-			<Role type="OrderTaker">
+			<Role type="Employee">
 				<Slot property="startOfContract" value="1"/>
 				<Slot property="endOfContract" value="0"/>
 				<Slot property="availableCash" value="0"/>
 			</Role>
+			<Role type="OrderTaker"/>			
 		</Agent>
 		<!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->
 		<Agent type="Person" id="11">
 			<Slot property="firstName" value="Doe"/>
 			<Slot property="lastName" value="Joe"/>
 			<Slot property="personalNumber" value="213454085643"/>
-			<Role type="Waitress">
+			<Role type="Employee">
 				<Slot property="startOfContract" value="1"/>
 				<Slot property="endOfContract" value="0"/>
 				<Slot property="availableCash" value="0"/>
+			</Role>
+			<Role type="Waitress">				
 				<Slot property="orders">
 					<ValueExpr language="Java"><![CDATA[ new ArrayList<Long>() ]]></ValueExpr>
 					<ValueExpr language="JavaScript"><![CDATA[ new js.util.ArrayList()]]></ValueExpr>
@@ -1413,22 +1432,24 @@ this.custID && ( this.pw.getPickupWindowQueue().get(0)).isWaitingForOrderToArriv
 			<Slot property="firstName" value="Steffen"/>
 			<Slot property="lastName" value="Clark"/>
 			<Slot property="personalNumber" value="13745677890"/>
-			<Role type="Cook">
+			<Role type="Employee">
 				<Slot property="startOfContract" value="1"/>
 				<Slot property="endOfContract" value="0"/>
 				<Slot property="availableCash" value="0"/>
 			</Role>
+			<Role type="Cook"/>			
 		</Agent>
 		<!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->
 		<Agent type="Person" id="13">
 			<Slot property="firstName" value="Streit"/>
 			<Slot property="lastName" value="Tom"/>
 			<Slot property="personalNumber" value="125634754879"/>
-			<Role type="Manager">
+			<Role type="Employee">
 				<Slot property="startOfContract" value="1"/>
 				<Slot property="endOfContract" value="0"/>
 				<Slot property="availableCash" value="0"/>
 			</Role>
+			<Role type="Manager"/>			
 		</Agent>
 		<!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->
 		<!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->
