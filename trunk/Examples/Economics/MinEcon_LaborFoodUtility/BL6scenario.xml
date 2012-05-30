@@ -119,6 +119,21 @@
 					<ObjectProperty property="supply" objectType="Market" objectIdRef="3" />
 				</Source>
 			</Variable>
+			<Variable name="PriceCapital" dataType="Float">
+				<Source>
+					<ObjectProperty property="lastMarketPrice" objectType="Market" objectIdRef="5"/>
+				</Source>
+			</Variable>
+			<Variable name="BuyOffersCapital" dataType="Float">
+				<Source>
+					<ObjectProperty property="demand" objectType="Market" objectIdRef="5"/>
+				</Source>
+			</Variable>
+			<Variable name="SellOffersCapital" dataType="Float">
+				<Source>
+					<ObjectProperty property="supply" objectType="Market" objectIdRef="5"/>
+				</Source>
+			</Variable>
 		</Statistics>
 		
 		<DataTypes>
@@ -129,6 +144,10 @@
 				<Attribute name="buy" type="Boolean"/>
 				<Attribute name="bidderIdRef" type="Integer" />
 				<Attribute name="min" type="Float" />
+			</ComplexDataType>
+			<ComplexDataType name="CapitalOffer">
+				<ReferenceProperty name="capital" type="Capital" />
+				<ReferenceProperty name="seller" type="BL6CFirm" />
 			</ComplexDataType>
 		</DataTypes>
 		<EntityTypes>
@@ -182,6 +201,25 @@
 						Which tells the Markets to end the trading day and calculate a new market price.
 				</documentation>
 			</ExogenousEventType>
+			<!--=======================================================-->
+			<ObjectType name="Machine">
+				<Attribute type="Float" name="price"/>
+				<Attribute type="Integer" name="life"/>
+				<Attribute type="Integer" name="remainingLife"/>
+				<ReferenceProperty name="producer" type="BL6CFirm" />
+			</ObjectType>
+			<!--=======================================================-->
+			<AgentType name="Capital">
+				<documentation>
+					In BL6, Capital is represented as a list of machines.
+					Each machine has a fixed life time - the maximum number of steps 
+					for which the machine could be used.
+				</documentation>
+				<Attribute type="Integer" name="ownerID"/>
+				<ReferenceProperty name="machines" type="Machine" upperMultiplicity="unbounded" />
+				<ReferenceProperty name="scrappedMachines" type="Machine" upperMultiplicity="unbounded" />
+				
+			</AgentType>
 			<!--=======================================================-->
 			<AgentType name="EconomicAgent">
 			<!-- ============================================ -->
@@ -662,7 +700,7 @@
 					</DO>
 				</ReactionRule>
 			</AgentType>
-			<!-- ============================================ -->
+		    <!-- ============================================ -->
 			<AgentType name="BL6Firm" superType="Firm">
 				<documentation>
 					
@@ -717,6 +755,23 @@
 						</SCHEDULE-EVT>
 					</DO>
 				</ReactionRule>
+			</AgentType>
+			<!-- ============================================ -->
+			<AgentType name="BL6CFirm" superType="BL6Firm">
+				<documentation>A capital firm, which produce Capital good.</documentation>
+				<Attribute type="Integer" name="CAPITAL_LIFE"/>
+				<Attribute type="Float" name="INIT_CAPITAL_PRICE"/>
+				<!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->
+				<Function name="convertToProduct" resultType="Float">
+					<Parameter name="labor" type="Float"/>
+					<Body language="JavaScript">
+						<![CDATA[
+						return this.getA() * Math.pow(labor, this.getBeta());
+						]]>
+					</Body>
+				</Function>
+				<!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->
+				
 			</AgentType>
 			<!-- ============================================ -->
 			<AgentType name="BL6Farm" superType="BL6Firm">
@@ -1282,7 +1337,7 @@
 		        <ReactionRule name="TotalBudget_Rule" agentVariable="agt">
 		            <!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->
 		            <documentation>
-		                Calculates the tradingvolume of the day
+		                Calculates the trading volume of the day
 		            </documentation>
 		            <WHEN eventType="InMessageEvent" messageType="BL6Offer" messageVariable="msg"/>
 		        	<IF language="Java JavaScript"><![CDATA[ this.msg.getOffer().isBuy() ]]></IF>
@@ -1306,10 +1361,14 @@
 				<Function name="clear" resultType="void">
 				<Body language="JavaScript"><![CDATA[
 					this.getTransactions().clear();
-					this.setDemand(0);
-					this.setSupply(0);
+					var mktGoodVol = 0;
 					buyOffers = this.getBuyOffers();
 					buyOffers.sort(function() {return 0.5 - Math.random()});
+					for (var i = 0 ; i < buyOffers.size(); i++){
+					  if (this.getSupply() === 0)
+					                return;
+					 
+					}
 					]]></Body>
 				</Function>
 				
@@ -1626,7 +1685,7 @@
             <Slot property="loan" value="0"></Slot>
             <Slot property="capitalCost" value="0"></Slot>
         </Agents>
-        <ExogenousEvent type="Init" occurrenceTime="1" /><!-- BL6 only -->
+        <ExogenousEvent type="Init" occurrenceTime="1" />
         
         <!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->
         <ExogenousEvent occurrenceTime="1" type="StartOfDay" />
