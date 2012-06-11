@@ -1,0 +1,833 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<?xml-stylesheet type="text/xsl" href="prettyprint.xsl"?>
+<SimulationScenario scenarioName="CustomerCallCenter" scenarioTitle="Customer Call Center"
+    version="0.9" xmlns="http://aor-simulation.org"
+    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+    xsi:schemaLocation="http://aor-simulation.org file:/D:/work/programming/eclipsePrj/AOR-Complete/trunk/AORSL/AORSL_0-9.xsd">
+    <SimulationParameters simulationSteps="5000000" />
+    <SimulationModel modelName="CustomerCallCenter" modelTitle="Customer Call Center">
+        <documentation>
+            <creator xmlns="http://purl.org/dc/elements/1.1/"> Ciucardel Vasile Costinel </creator>
+            <contributor xmlns="http://purl.org/dc/elements/1.1/"> Mircea Diaconescu </contributor>
+            <created xmlns="http://purl.org/dc/elements/1.1/"> 2012.04.15 </created>
+            <modified xmlns="http://purl.org/dc/elements/1.1/"> 2012.06.10 </modified>
+            <title xmlns="http://purl.org/dc/elements/1.1/"> Customer Call Center </title>
+            <shortDescription xml:lang="en"> An agent based model of a customer call center with two
+                branches: Car-Stereo Products branch and Other-Products branch. </shortDescription>
+            <description xml:lang="en">
+                <p xmlns="http://www.w3.org/1999/xhtml">
+                    <ol>
+                        <li>Arriving calls first connect to a telephone switch.</li>
+                        <li>If the number of calls currently on hold is greater than ten, the caller
+                            receives a busy signal and immediately hangs up.</li>
+                        <li>Other-wise, the call is delivered to an automated interactive voice
+                            response (IVR) unit.</li>
+                        <li>The caller is asked to, “Dial one for car-stereo products; Dial two for
+                            all other products” and the call is routed accordingly.</li>
+                        <li>The call then waits in the appropriate queue until the first calls
+                            receptionist becomes available.</li>
+                        <li>Finally the call is processed and the caller hangs up.</li>
+                    </ol>
+                </p>
+            </description>
+            <source>
+                <span xmlns="http://www.w3.org/1999/xhtml">
+                    <a href="http://www.informs-sim.org/wsc09papers/002.pdf">Introduction to
+                        Simulation</a> by R.G. Ingalls, in <em>Proceedings of the 2009 Winter
+                        Simulation Conference</em>. </span>
+            </source>
+            <CcLicense license="CC BY-SA" />
+            <titleImage file="CustomerCallCenter.png" />
+            <processModelDiagram file="CustomerCallCenter_ProcessModel.png" />
+            <mediaFiles>
+                <image author="Ciucardel Vasile Costinel" file="background.png" license="CC BY-SA" />
+                <image author="" file="customer_caller.png" license="" />
+                <image author="" file="customer_caller_waiting.png" license="" />
+                <image author="" file="place_call_unit_0.png" license="" />
+                <image author="" file="place_call_unit_1.png" license="" />
+                <image author="" file="place_call_unit_2.png" license="" />
+                <image author="" file="place_call_unit_3.png" license="" />
+                <image author="" file="place_call_unit_4.png" license="" />
+                <image author="" file="place_call_unit_5.png" license="" />
+                <image author="" file="place_call_unit_6.png" license="" />
+                <image author="" file="place_call_unit_7.png" license="" />
+                <image author="" file="place_call_unit_8.png" license="" />
+                <image author="" file="place_call_unit_9.png" license="" />
+                <image author="" file="place_call_unit_10.png" license="" />
+                <image author="" file="branch_calls_manager.png" license="" />
+                <image author="" file="calls_receptionist_0.png" license="" />
+                <image author="" file="calls_receptionist_1.png" license="" />
+                <image author="Ciucardel Vasile Costinel" file="CustomerCallCenter.png"
+                    license="CC BY-SA" />
+                <image author="Ciucardel Vasile Costinel" file="CustomerCallCenter_ProcessModel.png"
+                    license="CC BY-SA" />
+            </mediaFiles>
+        </documentation>
+        <!--  Statistics -->
+        <Statistics>
+            <!-- Total number of Customer Calls -->
+            <Variable dataType="Integer" name="numberOfCalls" />
+            <!-- Number of losted Customer Calls -->
+            <Variable dataType="Integer" name="numberOfRejectedCalls" />
+            
+            
+            <!-- Number of in waiting Car-Stereo Calls -->
+            <Variable dataType="Integer" name="inCSCalls" />
+            <!-- Number of in waiting Other-Products Calls -->
+            <Variable dataType="Integer" name="inOPCalls" />
+            
+            <!-- Number of processed Car-Stereo Calls -->
+            <Variable dataType="Integer" name="processedCSCalls" />
+            <!-- Number of processed Other-Products Calls -->
+            <Variable dataType="Integer" name="processedOPCalls" />
+            
+            <!-- Number of lost Car-Stereo Calls -->
+            <Variable dataType="Integer" name="lostCSCalls" />
+            <!-- Number of lost Other-Products Calls -->
+            <Variable dataType="Integer" name="lostOPCalls" />
+            
+            <!-- Total waiting time of customer callers in Car-Stereo -->
+            <Variable dataType="Integer" name="waitingTimeInCS" />
+            <!-- Total waiting time of customer callers in Other-Products -->
+            <Variable dataType="Integer" name="waitingTimeInOP" />
+        </Statistics>
+        <!-- Globals -->
+        <Globals>
+            <!-- Random Function -->
+            <GlobalFunction name="twoDice" resultType="Integer">
+                <Parameter name="factor" type="Integer" />
+                <Body language="JavaScript">
+                    <![CDATA[
+                        var r1 = js.util.Random.uniformInt(1,6);
+                        var r2 = js.util.Random.uniformInt(1,6);
+                        if (r1+r2 <  3)  return (2*factor);    // with probability  0.028
+                        if (r1+r2 <  4)  return (3*factor);    // with probability  0.056
+                        if (r1+r2 <  5)  return (4*factor);    // with probability  0.083
+                        if (r1+r2 <  6)  return (5*factor);    // with probability  0.111
+                        if (r1+r2 <  7)  return (6*factor);    // with probability  0.139
+                        if (r1+r2 <  8)  return (7*factor);    // with probability  0.166
+                        if (r1+r2 <  9)  return (8*factor);    // with probability  0.139
+                        if (r1+r2 < 10)  return (9*factor);    // with probability  0.111
+                        if (r1+r2 < 11) return (10*factor);    // with probability  0.083
+                        if (r1+r2 < 12) return (11*factor);    // with probability  0.056
+                        return (12*factor);    // with probability  0.028        
+                    ]]>
+                </Body>
+            </GlobalFunction>
+        </Globals>
+        <!-- Entity Types -->
+        <EntityTypes>
+            <!-- Events -->
+            <MessageType name="NewCustomerCall">
+                <Attribute name="customerId" type="Integer" />
+            </MessageType>
+            
+            <ActionEventType name="RejectCustomerCall">
+                <Attribute name="customerId" type="Integer" />
+            </ActionEventType>
+            
+            <ActionEventType name="DepartmentManagerRequestCustomer"/>
+            
+            <ActionEventType name="ReceptionistRequestCustomer"/>
+            
+            <ExogenousEventType name="CreateNewCustomer">
+                <Periodicity>
+                    <ValueExpr language="Java JavaScript"><![CDATA[Global.twoDice(1)]]></ValueExpr>
+                </Periodicity>
+            </ExogenousEventType>
+            
+            <CausedEventType name="EndCustomerCall">
+                <Attribute name="customerId" type="Integer" />
+            </CausedEventType>
+            
+            <!-- Customer Caller Agent -->
+            <AgentType name="CustomerCaller">
+                <documentation> Customer Caller agents are placing calls at random time intervals to
+                    the Place Call Unit. Their calls can be rejected by the Place Call Unit or
+                    redirected to the specific branch via the IVR Unit, to wait for a receptionist
+                    from that branch to answer. </documentation>
+                <Attribute name="callTime" type="Integer" />
+                <Attribute name="desiredBranch" type="Integer" />
+                <Attribute name="waitingTime" type="Integer" />
+                <Attribute name="conversationTime" type="Integer" />
+            </AgentType>
+            <!-- The Place Call Unit Agent -->
+            <AgentType name="PlaceCallUnit">
+                <documentation> When a call is arriving the Place Call Unit rejects it if is busy or
+                    send it to the IVR Unit if is not busy. The Place Call Unit is busy if the
+                    number of calls from its queue is = 10. </documentation>
+                <Attribute name="pcuMaxQueueLength" type="Integer" />
+                <Attribute name="pcuQueueLength" type="Integer" />
+                <ReferenceProperty name="pcuQueue" type="CustomerCaller" upperMultiplicity="10">
+                    <documentation> This property represents a first-in-first-out queue.
+                    </documentation>
+                </ReferenceProperty>
+                <!-- PlaceCallUnit_Rule -->
+                <ReactionRule agentVariable="placeCallUnit" name="PlaceCallUnit_Rule">
+                    <documentation> When a new Customer Call Arrives to the Place Call Unit, the
+                        call is rejected if the pcuQueue is busy (> 10) and the number of losted
+                        calls is increased by 1, otherwise the call is added to the queue and the
+                        queue length is increased by 1. </documentation>
+                    <WHEN eventType="InMessageEvent" messageType="NewCustomerCall"
+                        messageVariable="evt" />
+                    <IF language="JavaScript">
+                        <![CDATA[this.placeCallUnit.getPcuQueueLength() >= this.placeCallUnit.getPcuMaxQueueLength()]]>    
+                    </IF>
+                    <THEN>
+                        <SCHEDULE-EVT>
+                            <ActionEventExpr actionEventType="RejectCustomerCall">
+                                <Slot property="customerId">
+                                    <ValueExpr language="JavaScript">
+                                        <![CDATA[this.evt.getCustomerId()]]>    
+                                    </ValueExpr>
+                                </Slot>
+                            </ActionEventExpr>
+                        </SCHEDULE-EVT>
+                    </THEN>
+                    <ELSE>
+                        <UPDATE-AGT>
+                            <MultiValuedSlot property="pcuQueue">
+                                <AddLast>
+                                    <ItemExpr language="JavaScript">
+                                        <![CDATA[this.evt.getCustomerId()]]>    
+                                    </ItemExpr>
+                                </AddLast>
+                            </MultiValuedSlot>
+                            <Slot property="pcuQueueLength">
+                                <ValueExpr language="JavaScript">
+                                    <![CDATA[this.placeCallUnit.getPcuQueueLength() + 1]]>
+                                </ValueExpr>
+                            </Slot>
+                        </UPDATE-AGT>
+                    </ELSE>
+                </ReactionRule>
+            </AgentType>
+            
+            <!-- Department Calls Manager Agent -->
+            <AgentType name="DepartmentCallsManager">
+                <documentation> Department Calls Manager agents are managing the queue of customers
+                    who are waiting for a free receptionist of that branch to answer them. We have a
+                    DepartmentCallsManager for the Car-Stereo branch and another for the
+                    Other-Products branch. </documentation>
+                <Attribute name="dcmQueueLength" type="Integer" />
+                <Attribute name="maxDcmQueueLength" type="Integer" />
+                <ReferenceProperty name="dcmCustomerQueue" type="CustomerCaller" upperMultiplicity="unbounded">
+                    <documentation> This property represents a first-in-first-out queue.
+                    </documentation>
+                </ReferenceProperty>
+                <ReferenceProperty name="dcmReceptionistQueue" type="CallsReceptionist">
+                    <documentation> This property represents a first-in-first-out queue.
+                    </documentation>
+                </ReferenceProperty>
+                
+                <ReactionRule name="RequestCustomer_Rule" agentVariable="departmentManager">
+                    <ON-EACH-SIMULATION-STEP/>
+                    <IF language="JavaScript">
+                        <![CDATA[this.departmentManager.getMaxDcmQueueLength() > this.departmentManager.getDcmQueueLength()]]>
+                    </IF>
+                    <THEN>
+                        <SCHEDULE-EVT>
+                            <ActionEventExpr actionEventType="DepartmentManagerRequestCustomer"/>
+                        </SCHEDULE-EVT>
+                    </THEN>
+                </ReactionRule>
+                
+            </AgentType>
+            
+            <!-- Calls Receptionist Agent -->
+            <AgentType name="CallsReceptionist">
+                <documentation> The Calls Receptionist agents are processing the incoming customer
+                    calls for each branch. </documentation>
+                <Attribute name="busy" type="Boolean" />
+                <Attribute name="departmentId" type="Integer" />
+                <Attribute name="customerId" type="Integer" />
+                
+                <ReactionRule name="RequestCustomer_Rule" agentVariable="receptionist">
+                    <ON-EACH-SIMULATION-STEP/>
+                    <IF language="JavaScript">
+                        <![CDATA[!this.receptionist.isBusy()]]>
+                    </IF>
+                    <THEN>
+                        <SCHEDULE-EVT>
+                            <ActionEventExpr actionEventType="ReceptionistRequestCustomer"/>
+                        </SCHEDULE-EVT>
+                    </THEN>
+                </ReactionRule>
+            </AgentType>
+        </EntityTypes>
+        
+        <!-- Environment Rules -->
+        <EnvironmentRules>
+            <!-- CreateNewCustomer_Rule -->
+            <EnvironmentRule name="CreateNewCustomer_Rule">
+                <documentation> A new customer is created at random times by this reaction rule when
+                    a CreateNewCustomer event apears. </documentation>
+                <WHEN eventType="CreateNewCustomer" eventVariable="evt" />
+                <DO>
+                    <UPDATE-ENV>
+                        <Create>
+                            <Agent objectVariable="customerCaller" type="CustomerCaller">
+                                <Slot property="callTime">
+                                    <ValueExpr language="JavaScript">
+                                        <![CDATA[this.evt.getOccurrenceTime()]]>
+                                    </ValueExpr>
+                                </Slot>
+                                <Slot property="desiredBranch">
+                                    <ValueExpr language="JavaScript">
+                                        <![CDATA[js.util.Random.uniformInt(1,2)]]>
+                                    </ValueExpr>
+                                </Slot>
+                                <Slot property="waitingTime">
+                                    <ValueExpr language="JavaScript">
+                                        <![CDATA[js.util.Random.uniformInt(1,60)]]>
+                                    </ValueExpr>
+                                </Slot>
+                                <Slot property="conversationTime">
+                                    <ValueExpr language="JavaScript">
+                                        <![CDATA[js.util.Random.uniformInt(60,120)]]>
+                                    </ValueExpr>
+                                </Slot>
+                            </Agent>
+                        </Create>
+                        <UpdateStatisticsVariable variable="numberOfCalls">
+                            <ValueExpr language="JavaScript">
+                                <![CDATA[
+                                        SimStatistics.numberOfCalls.getValue() + 1
+                                    ]]>
+                            </ValueExpr>
+                        </UpdateStatisticsVariable>
+                    </UPDATE-ENV>
+                    <SCHEDULE-EVT>
+                        <InMessageEventExpr messageType="NewCustomerCall" receiverIdRefs="2">
+                            <SenderIdRef language="JavaScript">
+                                <![CDATA[this.customerCaller.getId()]]>
+                            </SenderIdRef>
+                            <Slot property="customerId">
+                                <ValueExpr language="JavaScript">
+                                    <![CDATA[this.customerCaller.getId()]]>
+                                </ValueExpr>
+                            </Slot>
+                        </InMessageEventExpr>
+                    </SCHEDULE-EVT>
+                </DO>
+            </EnvironmentRule>
+            
+            <EnvironmentRule name="RespondToRequestFromDepartmentManager_Rule">
+                <WHEN eventType="DepartmentManagerRequestCustomer" eventVariable="evt"/>
+                <FOR-ObjectVariable variable="department" objectType="DepartmentCallsManager">
+                    <ObjectIdRef language="JavaScript">
+                        <![CDATA[this.evt.getActorIdRef()]]>
+                    </ObjectIdRef>
+                </FOR-ObjectVariable>
+                <FOR-ObjectVariable variable="placeCallUnit" objectType="PlaceCallUnit" objectIdRef="2"/>
+                <FOR-DataVariable variable="departmentId" dataType="Integer">
+                    <ValueExpr language="JavaScript">
+                        <![CDATA[this.department.getId()]]>
+                    </ValueExpr>
+                </FOR-DataVariable>
+                <FOR-ListItemVariable variable="customerId" listItemType="CustomerCaller">
+                    <ListExpr language="JavaScript">
+                        <![CDATA[this.placeCallUnit.getPcuQueue()]]>
+                    </ListExpr>
+                </FOR-ListItemVariable>
+                <IF language="JavaScript">
+                    <![CDATA[
+                        Simulator.getEnvironmentSimulator().getObjektById(this.customerId).getDesiredBranch() === this.departmentId
+                    ]]>
+                </IF>
+                <THEN>
+                   <UPDATE-ENV>
+                       <UpdateObject objectVariable="department">
+                           <MultiValuedSlot property="dcmCustomerQueue">
+                               <AddLast>
+                                   <ItemExpr language="JavaScript">
+                                       <![CDATA[this.customerId]]>
+                                   </ItemExpr>
+                               </AddLast>
+                           </MultiValuedSlot>
+                           <Slot property="dcmQueueLength">
+                               <ValueExpr language="JavaScript">
+                                   <![CDATA[this.department.getDcmQueueLength() + 1]]>
+                               </ValueExpr>
+                           </Slot>
+                       </UpdateObject>
+                       <UpdateObject objectVariable="placeCallUnit">
+                           <MultiValuedSlot property="pcuQueue">
+                               <Remove>
+                                   <ItemExpr language="JavaScript">
+                                       <![CDATA[this.customerId]]>
+                                   </ItemExpr>
+                               </Remove>
+                           </MultiValuedSlot>
+                           <Slot property="dcmQueueLength">
+                               <ValueExpr language="JavaScript">
+                                   <![CDATA[this.department.getPcuQueueLength() - 1]]>
+                               </ValueExpr>
+                           </Slot>
+                       </UpdateObject>
+                   </UPDATE-ENV>
+                </THEN>
+            </EnvironmentRule>
+            
+            <EnvironmentRule name="RespondToRequestFromReceptionist_Rule">
+                <WHEN eventType="ReceptionistRequestCustomer" eventVariable="evt"/>
+                <FOR-ObjectVariable variable="receptionist" objectType="CallsReceptionist">
+                    <ObjectIdRef language="JavaScript">
+                        <![CDATA[this.evt.getActorIdRef()]]>
+                    </ObjectIdRef>
+                </FOR-ObjectVariable>
+                <FOR-ObjectVariable variable="department" objectType="CallsReceptionist">
+                    <ObjectIdRef language="JavaScript">
+                        <![CDATA[this.receptionist.departmentId()]]>
+                    </ObjectIdRef>
+                </FOR-ObjectVariable>
+                <FOR-ObjectVariable variable="customer" objectType="CustomerCaller">
+                   <SelectionCondition language="JavaScript">
+                       <![CDATA[this.customer.getId() === this.department.getDcmCustomerQueue().getFirst()]]>
+                   </SelectionCondition>
+                </FOR-ObjectVariable>
+                
+            </EnvironmentRule>
+            
+            
+            <!-- EndCustomerCall_Rule -->
+            <EnvironmentRule name="EndCustomerCall_Rule">
+                <WHEN eventType="EndCustomerCall" eventVariable="evt" />
+                <DO>
+                    <UPDATE-ENV>
+                        <DestroyObject objectVariable="customerCaller">
+                            <ObjectIdRef language="JavaScript">
+                                <![CDATA[this.evt.getCustomerId()]]>
+                            </ObjectIdRef>
+                        </DestroyObject>
+                    </UPDATE-ENV>
+                </DO>
+            </EnvironmentRule>
+            
+            <EnvironmentRule name="PlaceCallUnitRejectsCustomerCall_Rule">
+                <WHEN eventType="RejectCustomerCall" eventVariable="evt" />
+                <DO>
+                    <UPDATE-ENV>
+                        <UpdateStatisticsVariable variable="numberOfRejectedCalls">
+                            <ValueExpr language="JavaScript">
+                                <![CDATA[
+                                        SimStatistics.numberOfRejectedCalls.getValue() + 1
+                                    ]]>
+                            </ValueExpr>
+                        </UpdateStatisticsVariable>
+                    </UPDATE-ENV>
+                    <SCHEDULE-EVT>
+                        <CausedEventExpr eventType="EndCustomerCall">
+                            <Slot property="customerId">
+                                <ValueExpr language="JavaScript">
+                                    <![CDATA[this.evt.getId()]]>
+                                </ValueExpr>
+                            </Slot>
+                        </CausedEventExpr>
+                    </SCHEDULE-EVT>
+                </DO>
+            </EnvironmentRule>
+            
+            
+            
+            <!--  ******************************************************  -->
+            <EnvironmentRule name="ProcessNewCustomerByPlaceCallUnit_Rule">
+                <WHEN eventType="PlaceCallUnitProcessNewCustomer" eventVariable="evt"/>
+                <FOR-ObjectVariable objectType="PlaceCallUnit" variable="placeCallUnit">
+                    <ObjectIdRef language="JavaScript">
+                        <![CDATA[this.evt.getActorIdRef()]]>
+                    </ObjectIdRef>
+                </FOR-ObjectVariable>
+                <DO>
+                    <UPDATE-ENV>
+                        <UpdateObject objectVariable="placeCallUnit">
+                            <MultiValuedSlot property="pcuQueue">
+                                <AddLast>
+                                    <ItemExpr language="JavaScript">
+                                        <![CDATA[this.evt.getCustomerId()]]>
+                                    </ItemExpr>
+                                </AddLast>
+                            </MultiValuedSlot>
+                            <Slot property="pcuQueueLength">
+                                <ValueExpr language="JavaScript">
+                                <![CDATA[this.placeCallUnit.getPcuQueueLength() + 1]]>
+                            </ValueExpr>
+                            </Slot>
+                        </UpdateObject>
+                    </UPDATE-ENV>
+                    <SCHEDULE-EVT>
+                        <CausedEventExpr eventType="SendToIVRUnit">
+                            <Slot property="customerId">
+                                <ValueExpr language="JavaScript">
+                                    <![CDATA[this.evt.getCustomerId()]]>
+                                </ValueExpr>
+                            </Slot>
+                        </CausedEventExpr>
+                    </SCHEDULE-EVT>
+                </DO>
+            </EnvironmentRule>
+            <!-- SendToIVRUnit_Rule -->
+            <EnvironmentRule name="SendToIVRUnit_Rule">
+                <WHEN eventType="SendToIVRUnit" eventVariable="evt" />
+                <FOR-ObjectVariable objectType="PlaceCallUnit" variable="placeCallUnit" objectIdRef="2"/>
+                <FOR-ObjectVariable objectType="CustomerCaller" variable="customerCaller">
+                    <ObjectIdRef language="JavaScript">
+                        <![CDATA[this.evt.getCustomerId()]]>
+                    </ObjectIdRef>
+                </FOR-ObjectVariable>
+                <FOR-DataVariable dataType="Integer" variable="departmentId">
+                    <ValueExpr language="JavaScript">
+                        <![CDATA[this.customerCaller.getDesiredBranch() * 3]]>
+                    </ValueExpr>
+                </FOR-DataVariable>
+                <FOR-ObjectVariable objectType="DepartmentCallsManager" variable="departmentCallsManager">
+                    <ObjectIdRef language="JavaScript">
+                        <![CDATA[this.departmentId]]>
+                    </ObjectIdRef>
+                </FOR-ObjectVariable>
+                <IF language="JavaScript">
+                    <![CDATA[ this.departmentCallsManager.getDcmQueueLength() < 10]]>
+                </IF>
+                <THEN>
+                    <UPDATE-ENV>
+                        <UpdateObject objectVariable="departmentCallsManager">
+                            <MultiValuedSlot property="dcmCustomerQueue">
+                                <AddLast>
+                                    <ItemExpr language="JavaScript">
+                                        <![CDATA[
+                                                this.evt.getCustomerId()
+                                            ]]>
+                                    </ItemExpr>
+                                </AddLast>
+                            </MultiValuedSlot>
+                            <Slot property="dcmQueueLength">
+                                <ValueExpr language="JavaScript">
+                                    <![CDATA[
+                                        this.departmentCallsManager.getDcmQueueLength() + 1
+                                    ]]>
+                                </ValueExpr>
+                            </Slot>
+                        </UpdateObject>
+                        <UpdateObject objectVariable="placeCallUnit">
+                            <MultiValuedSlot property="pcuQueue">
+                                <RemoveFirst/>
+                            </MultiValuedSlot>
+                            <Slot property="pcuQueueLength">
+                                <ValueExpr language="JavaScript">
+                                    <![CDATA[this.placeCallUnit.getPcuQueueLength() - 1]]>
+                                </ValueExpr>
+                            </Slot>
+                        </UpdateObject>
+                    </UPDATE-ENV>
+                </THEN>
+            </EnvironmentRule>
+            
+            <EnvironmentRule name="ReceptionistGetNewCustomerCall">
+                <ON-EACH-SIMULATION-STEP/>
+                <FOR-ObjectVariable variable="receptionist" objectType="CallsReceptionist">
+                    <SelectionCondition language="JavaScript">
+                        <![CDATA[!this.receptionist.isBusy()]]>
+                    </SelectionCondition>
+                </FOR-ObjectVariable>
+                <FOR-ObjectVariable variable="department" objectType="DepartmentCallsManager">
+                    <SelectionCondition language="JavaScript">
+                        <![CDATA[this.receptionist.getDepartmentId() === this.department.getId()]]>
+                    </SelectionCondition>
+                </FOR-ObjectVariable>
+                <IF language="JavaScript">
+                    <![CDATA[this.department.getDcmQueueLength() > 0]]>
+                </IF>
+                <THEN>
+                    <UPDATE-ENV>
+                        <UpdateObject objectVariable="receptionist">
+                            <Slot property="busy" value="true"/>
+                            <Slot property="customerId">
+                                <ValueExpr language="JavaScript">
+                                    <![CDATA[this.department.getDcmCustomerQueue().getFirst()]]>
+                                </ValueExpr>
+                            </Slot>
+                        </UpdateObject>
+                        <UpdateObject objectVariable="department">
+                            <MultiValuedSlot property="dcmCustomerQueue">
+                                <RemoveFirst/>
+                            </MultiValuedSlot>
+                            <Slot property="dcmQueueLength">
+                                <ValueExpr language="JavaScript">
+                                    <![CDATA[this.department.getDcmQueueLength() - 1]]>
+                                </ValueExpr>
+                            </Slot>
+                        </UpdateObject>
+                    </UPDATE-ENV>
+                </THEN>
+            </EnvironmentRule>
+            
+            <EnvironmentRule name="ReceptionistEndCustomerCall">
+                <ON-EACH-SIMULATION-STEP/>
+                <FOR-ObjectVariable variable="receptionist" objectType="CallsReceptionist">
+                    <SelectionCondition language="JavaScript">
+                        <![CDATA[this.receptionist.isBusy()]]>
+                    </SelectionCondition>
+                </FOR-ObjectVariable>
+                <FOR-ObjectVariable variable="customer" objectType="CustomerCaller">
+                    <SelectionCondition language="JavaScript">
+                        <![CDATA[this.receptionist.getCustomerId() === this.customer.getId()]]>
+                    </SelectionCondition>
+                </FOR-ObjectVariable>
+                <IF language="JavaScript">
+                    <![CDATA[this.customer.getConversationTime() === Simulator.getCurrentSimulationStep() - this.customer.getCallTime()]]>
+                </IF>
+                <THEN>
+                    <UPDATE-ENV>
+                        <UpdateObject objectVariable="receptionist">
+                            <Slot property="busy" value="false"/>
+                            <Slot property="customerId" value="0"/>
+                        </UpdateObject>
+                    </UPDATE-ENV>
+                    <SCHEDULE-EVT>
+                        <CausedEventExpr eventType="EndCustomerCall">
+                            <Slot property="customerId">
+                                <ValueExpr language="JavaScript">
+                                    <![CDATA[this.customer.getId()]]>
+                                </ValueExpr>
+                            </Slot>
+                        </CausedEventExpr>
+                    </SCHEDULE-EVT>
+                </THEN>
+            </EnvironmentRule>
+            
+            <EnvironmentRule name="CustomerGiveUpToActualCall">
+                <ON-EACH-SIMULATION-STEP/>
+                <FOR-ObjectVariable variable="department" objectType="DepartmentCallsManager">
+                    <SelectionCondition language="JavaScript">
+                        <![CDATA[this.department.getDcmQueueLength() > 0]]>
+                    </SelectionCondition>
+                </FOR-ObjectVariable>
+                <FOR-ListItemVariable variable="customerId" listItemType="Integer">
+                    <ListExpr language="JavaScript">
+                        <![CDATA[this.department.getDcmCustomerQueue()]]>
+                    </ListExpr>
+                </FOR-ListItemVariable>
+                <FOR-ObjectVariable variable="customer" objectType="CustomerCaller">
+                    <SelectionCondition language="JavaScript">
+                        <![CDATA[this.customer.getId() === this.customerId]]>
+                    </SelectionCondition>
+                </FOR-ObjectVariable>
+                <IF language="JavaScript">
+                    <![CDATA[this.customer.getWaitingTime() === Simulator.getCurrentSimulationStep() - this.customer.getCallTime()]]>
+                </IF>
+                <THEN>
+                    <UPDATE-ENV>
+                        <UpdateObject objectVariable="department">
+                            <MultiValuedSlot property="dcmCustomerQueue">
+                                <Remove>
+                                    <ItemExpr language="JavaScript">
+                                        <![CDATA[this.customer.getId()]]>
+                                    </ItemExpr>
+                                </Remove>
+                            </MultiValuedSlot>
+                            <Slot property="dcmQueueLength">
+                                <ValueExpr language="JavaScript">
+                                    <![CDATA[this.department.getDcmQueueLength() - 1]]>
+                                </ValueExpr>
+                            </Slot>
+                        </UpdateObject>
+                    </UPDATE-ENV>
+                    <SCHEDULE-EVT>
+                        <CausedEventExpr eventType="EndCustomerCall">
+                            <Slot property="customerId">
+                                <ValueExpr language="JavaScript">
+                                    <![CDATA[this.customer.getId()]]>
+                                </ValueExpr>
+                            </Slot>
+                        </CausedEventExpr>
+                    </SCHEDULE-EVT>
+                </THEN>
+            </EnvironmentRule>
+            
+           
+            
+         
+        </EnvironmentRules>
+    </SimulationModel>
+    <!-- Initial State -->
+    <InitialState>
+        <!-- PlaceCallUnit_IS ID=2 -->
+        <Agent id="2" name="PlaceCallUnit" objectVariable="placeCallUnit" type="PlaceCallUnit">
+            <Slot property="pcuMaxQueueLength" value="10" />
+            <Slot property="pcuQueueLength" value="0" />
+            <Slot property="pcuQueue">
+                <ValueExpr language="Java"><![CDATA[ new ArrayList<CustomerCaller>()]]></ValueExpr>
+                <ValueExpr language="JavaScript"><![CDATA[ new js.util.ArrayList()]]></ValueExpr>
+            </Slot>
+        </Agent>
+        <!-- Car-Stereo DepartmentCallsManager_IS ID=3 -->
+        <Agent id="3" name="Car-Stereo-Department" type="DepartmentCallsManager">
+            <Slot property="dcmQueueLength" value="0" />
+            <Slot property="maxDcmQueueLength" value="10" />
+            
+            <Slot property="dcmCustomerQueue">
+                <ValueExpr language="Java"><![CDATA[ new ArrayList<CustomerCaller>()]]></ValueExpr>
+                <ValueExpr language="JavaScript"><![CDATA[ new js.util.ArrayList()]]></ValueExpr>
+            </Slot>
+            <Slot property="dcmReceptionistQueue">
+                <ValueExpr language="Java"><![CDATA[ new ArrayList<CallsReceptionist>()]]></ValueExpr>
+                <ValueExpr language="JavaScript"><![CDATA[ new js.util.ArrayList()]]></ValueExpr>
+            </Slot>
+        </Agent>
+        <!-- Car-Stereo CallsReceptionist_IS ID=5 -->
+        <Agent id="300" name="CallsReceptionist" type="CallsReceptionist">
+            <Slot property="busy" value="false" />
+            <Slot property="departmentId" value="3" />
+        </Agent>
+        <Agent id="301" name="CallsReceptionist" type="CallsReceptionist">
+            <Slot property="busy" value="false" />
+            <Slot property="departmentId" value="3" />
+        </Agent>
+        <!-- Other-Products DepartmentCallsManager_IS ID=6 -->
+        <Agent id="6" name="Other-Products-Department" type="DepartmentCallsManager">
+            <Slot property="dcmQueueLength" value="0" />
+            <Slot property="maxDcmQueueLength" value="10" />
+            
+            <Slot property="dcmCustomerQueue">
+                <ValueExpr language="Java"><![CDATA[ new ArrayList<CustomerCaller>()]]></ValueExpr>
+                <ValueExpr language="JavaScript"><![CDATA[ new js.util.ArrayList()]]></ValueExpr>
+            </Slot>
+            <Slot property="dcmReceptionistQueue">
+                <ValueExpr language="Java"><![CDATA[ new ArrayList<CallsReceptionist>()]]></ValueExpr>
+                <ValueExpr language="JavaScript"><![CDATA[ new js.util.ArrayList()]]></ValueExpr>
+            </Slot>
+        </Agent>
+        <!-- Other-Products CallsReceptionist_IS ID=6xx -->
+        <Agent id="600" name="CallsReceptionist" type="CallsReceptionist">
+            <Slot property="busy" value="false" />
+            <Slot property="departmentId" value="6" />
+        </Agent>
+        <Agent id="601" name="CallsReceptionist" type="CallsReceptionist">
+            <Slot property="busy" value="false" />
+            <Slot property="departmentId" value="6" />
+        </Agent>
+        <Agent id="602" name="CallsReceptionist" type="CallsReceptionist">
+            <Slot property="busy" value="false" />
+            <Slot property="departmentId" value="6" />
+        </Agent>
+        <ExogenousEvent occurrenceTime="1" type="CreateNewCustomer" />
+    </InitialState>
+    <UserInterface supportedLanguages="en">
+        <!-- Statistics User Interface -->
+        <StatisticsUI>
+            <StatisticsVariableUI showChart="true" variable="numberOfRejectedCalls">
+                <Label>
+                    <Text xml:lang="en">Lost customers</Text>
+                </Label>
+                <Hint>
+                    <Text xml:lang="en">The number of lost customers.</Text>
+                </Hint>
+            </StatisticsVariableUI>
+            <StatisticsVariableUI showChart="true" variable="numberOfCalls">
+                <Label>
+                    <Text xml:lang="en">Number of calls</Text>
+                </Label>
+                <Hint>
+                    <Text xml:lang="en">Total number of customer calls</Text>
+                </Hint>
+            </StatisticsVariableUI>
+        </StatisticsUI>
+        <!-- Animation User Interface -->
+        <AnimationUI>
+            <Views>
+                <!-- Space View -->
+                <SpaceView>
+                    <TwoDimensionalSpaceView2D backgroundImage="background.png" />
+                </SpaceView>
+                <!-- CustomerCaller_View ID=1 -->
+                <ObjectView objectType="CustomerCaller">
+                    <Shape2D x="55" y="460">
+                        <Rectangle height="99%" texture="customer_caller.png" width="99%" />
+                    </Shape2D>
+                </ObjectView>
+                <!-- PlaceCallUnit_View ID=2 -->
+                <ObjectView objectIdRef="2" objectType="PlaceCallUnit">
+                    <Shape2D x="25%" y="50%">
+                        <Rectangle height="10%" width="6%">
+                            <ShapePropertyVisualizationMap a0="0" a1="1" a2="2" a3="3" a4="4"
+                                mapType="equalityCaseWise" property="pcuQueueLength"
+                                shapeProperty="texture" v0="place_call_unit_0.png"
+                                v1="place_call_unit_1.png" v2="place_call_unit_2.png"
+                                v3="place_call_unit_3.png" v4="place_call_unit_4.png" />
+                            <ShapePropertyVisualizationMap a0="5" a1="6" a2="7" a3="8" a4="9"
+                                a5="10" mapType="equalityCaseWise" property="pcuQueueLength"
+                                shapeProperty="texture" v0="place_call_unit_5.png"
+                                v1="place_call_unit_6.png" v2="place_call_unit_7.png"
+                                v3="place_call_unit_8.png" v4="place_call_unit_9.png"
+                                v5="place_call_unit_10.png" />
+                        </Rectangle>
+                    </Shape2D>
+                    <!-- <DisplayInfo property="pcuQueueLength" content=" customer callers" positioning="Bottom" /> -->
+                </ObjectView>
+                <!-- Car-Stereo DepartmentCallsmanager_View ID=3 -->
+                <ObjectView displayName="true" objectIdRef="3" objectType="DepartmentCallsManager">
+                    <Shape2D x="40%" y="70%">
+                        <Rectangle height="14%" texture="branch_calls_manager.png" width="4%" />
+                    </Shape2D>
+                    <DisplayInfo content=" Waiting customers" positioning="Top"
+                        property="dcmQueueLength" />
+                </ObjectView>
+                <!-- Car-Stereo CallsReceptionist_Views ID=3xx -->
+                <ObjectView displayName="false" objectIdRef="300" objectType="CallsReceptionist">
+                    <Shape2D x="55%" y="70%">
+                        <Rectangle height="14%" texture="calls_receptionist_0.png" width="4%">
+                            <ShapePropertyVisualizationMap a0="false" a1="true"
+                                mapType="equalityCaseWise" property="busy" shapeProperty="texture"
+                                v0="calls_receptionist_0.png" v1="calls_receptionist_1.png" />
+                        </Rectangle>
+                    </Shape2D>
+                </ObjectView>
+                <ObjectView displayName="false" objectIdRef="301" objectType="CallsReceptionist">
+                    <Shape2D x="60%" y="70%">
+                        <Rectangle height="14%" texture="calls_receptionist_0.png" width="4%">
+                            <ShapePropertyVisualizationMap a0="false" a1="true"
+                                mapType="equalityCaseWise" property="busy" shapeProperty="texture"
+                                v0="calls_receptionist_0.png" v1="calls_receptionist_1.png" />
+                        </Rectangle>
+                    </Shape2D>
+                </ObjectView>
+                <!-- Other-Products DepartmentCallsmanager_View ID=6 -->
+                <ObjectView displayName="true" objectIdRef="6" objectType="DepartmentCallsManager">
+                    <Shape2D x="40%" y="30%">
+                        <Rectangle height="14%" texture="branch_calls_manager.png" width="4%" />
+                    </Shape2D>
+                    <DisplayInfo content=" Waiting customers" positioning="Bottom"
+                        property="dcmQueueLength" />
+                </ObjectView>
+                <!-- Other-Products CallsReceptionist_Views  -->
+                <ObjectView displayName="false" objectIdRef="600" objectType="CallsReceptionist">
+                    <Shape2D x="55%" y="29%">
+                        <Rectangle height="14%" texture="calls_receptionist_0.png" width="4%">
+                            <ShapePropertyVisualizationMap a0="false" a1="true"
+                                mapType="equalityCaseWise" property="busy" shapeProperty="texture"
+                                v0="calls_receptionist_0.png" v1="calls_receptionist_1.png" />
+                        </Rectangle>
+                    </Shape2D>
+                </ObjectView>
+                <ObjectView displayName="false" objectIdRef="601" objectType="CallsReceptionist">
+                    <Shape2D x="60%" y="29%">
+                        <Rectangle height="14%" texture="calls_receptionist_0.png" width="4%">
+                            <ShapePropertyVisualizationMap a0="false" a1="true"
+                                mapType="equalityCaseWise" property="busy" shapeProperty="texture"
+                                v0="calls_receptionist_0.png" v1="calls_receptionist_1.png" />
+                        </Rectangle>
+                    </Shape2D>
+                </ObjectView>
+                <ObjectView displayName="false" objectIdRef="602" objectType="CallsReceptionist">
+                    <Shape2D x="65%" y="29%">
+                        <Rectangle height="14%" texture="calls_receptionist_0.png" width="4%">
+                            <ShapePropertyVisualizationMap a0="false" a1="true"
+                                mapType="equalityCaseWise" property="busy" shapeProperty="texture"
+                                v0="calls_receptionist_0.png" v1="calls_receptionist_1.png" />
+                        </Rectangle>
+                    </Shape2D>
+                </ObjectView>
+            </Views>
+        </AnimationUI>
+    </UserInterface>
+</SimulationScenario>
