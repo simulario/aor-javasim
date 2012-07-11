@@ -1,13 +1,13 @@
 <?xml version="1.0"?>
 <?xml-stylesheet type="text/xsl" href="prettyprint.xsl"?>
 <SimulationScenario xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-    xsi:schemaLocation="http://aor-simulation.org ../../../AORSL/AORSL_0-9.xsd"
-    xmlns="http://aor-simulation.org"
-    xmlns:dc="http://purl.org/dc/elements/1.1/"
-    xmlns:aors="http://aor-simulation.org"
-    version="0.9"
-    scenarioName="MinEcon_LaborFoodUtility_BL6scenario"
-    simulationManagerDirectory="../../..">
+ xsi:schemaLocation="http://aor-simulation.org ../../../AORSL/AORSL_0-9.xsd"
+ xmlns:dc="http://purl.org/dc/elements/1.1/"
+ xmlns="http://aor-simulation.org"
+ xmlns:aors="http://aor-simulation.org"
+ version="0.9"
+ scenarioName="MinEcon_LaborFoodUtility_BL6scenario"
+ simulationManagerDirectory="../../..">
     <SimulationParameters simulationSteps="3000" timeUnit="h"  stepTimeDelay="0"/>
     <SimulationModel modelName="MinEcon_LaborFoodUtility_BL6" modelTitle="A Minimal Economy with a Labor, Food and Utility Market">
       <documentation>
@@ -15,7 +15,6 @@
           <dc:subject>Agent-based computational economics</dc:subject>
           <dc:creator>Lars Langjahr</dc:creator>
           <dc:created>20101031</dc:created>
-          <dc:contributor>Gerd Wagner</dc:contributor>
           <dc:contributor>Gabriel Diaconita</dc:contributor>
       	  <dc:contributor>Cosmin Paun</dc:contributor>
           <dc:modified>20120403</dc:modified>
@@ -145,12 +144,28 @@
 				<Attribute name="bidderIdRef" type="Integer" />
 				<Attribute name="min" type="Float" />
 			</ComplexDataType>
+			
+			<ComplexDataType name="Machine">
+				<Attribute type="Float" name="price"/>
+				<Attribute type="Integer" name="life"/>
+				<Attribute type="Integer" name="remainingLife"/>
+			</ComplexDataType>			
+			
 			<ComplexDataType name="CapitalOffer">
-				<ReferenceProperty name="capital" type="Capital" />
-				<ReferenceProperty name="seller" type="BL6CFirm" />
+				<Attribute type="Integer" name="quantity"/>
+				<Attribute type="Float" name="price"/>
+				<Attribute type="Boolean" name="buy"/>
+				<ComplexDataProperty name="machines" type="Machine" upperMultiplicity="unbounded" />
+				<Attribute type="Integer" name="bidderIdRef"/>
 			</ComplexDataType>
 		</DataTypes>
+    	
+    	<Globals>
+    		<GlobalVariable name="CAPITAL_LIFE" initialValue="30" dataType="Integer" />
+    		<GlobalVariable name="INIT_CAPITAL_PRICE" initialValue="1.2" dataType="Float"/>
+    	</Globals>
 		<EntityTypes>
+			
 			<!--====================================-->
 			<MessageType name="StartOfDay_Notification">
 				<documentation>A message of the market to announce the trading price of the last day </documentation>
@@ -170,10 +185,20 @@
 				<documentation>A offer to the market, made by a BL6Agent.</documentation>
 				<ComplexDataProperty name="offer" type="TradeOffer" />
 			</MessageType>
-			<!--====================================-->
+			<!-- ================================== -->
+			<MessageType name="BL6CapitalOffer">
+				<documentation>A capital offer to the market, made by a BL6Agent.</documentation>
+				<ComplexDataProperty name="capitalOffer" type="CapitalOffer" />
+			</MessageType>
+			<!-- ================================== -->
 			<MessageType name="MatchingOffer" >
-				<documentation>A succesful trade returned from the market</documentation>
+				<documentation>A succesfull trade returned from the market</documentation>
 				<ComplexDataProperty name="offer" type="TradeOffer"/>
+			</MessageType>
+			<!-- =================================== -->
+			<MessageType name="MatchingCapitalOffer">
+				<documentation>A successful capital trade returned from the market</documentation>
+				<ComplexDataProperty name="capitalOffer" type="CapitalOffer" />
 			</MessageType>
 			<!-- =================================== -->
 			<ExogenousEventType name="Init" >
@@ -188,7 +213,7 @@
 						and send the marketprices of the last day is announced to all EconomicAgents.
 				</documentation>
 			</ExogenousEventType>
-			<!--=======================================================-->
+			<!-- ===================================================== -->
 			<ExogenousEventType name="StartWork" periodicity="9">
 				<documentation>
 						Triggers the StartWork_ER-EnvironmentRule, which tells the EconomicAgents to start with their work.
@@ -202,25 +227,6 @@
 				</documentation>
 			</ExogenousEventType>
 			<!--=======================================================-->
-			<ObjectType name="Machine">
-				<Attribute type="Float" name="price"/>
-				<Attribute type="Integer" name="life"/>
-				<Attribute type="Integer" name="remainingLife"/>
-				<ReferenceProperty name="producer" type="BL6CFirm" />
-			</ObjectType>
-			<!--=======================================================-->
-			<AgentType name="Capital">
-				<documentation>
-					In BL6, Capital is represented as a list of machines.
-					Each machine has a fixed life time - the maximum number of steps 
-					for which the machine could be used.
-				</documentation>
-				<Attribute type="Integer" name="ownerID"/>
-				<ReferenceProperty name="machines" type="Machine" upperMultiplicity="unbounded" />
-				<ReferenceProperty name="scrappedMachines" type="Machine" upperMultiplicity="unbounded" />
-				
-			</AgentType>
-			<!--=======================================================-->
 			<AgentType name="EconomicAgent">
 			<!-- ============================================ -->
 				<documentation>
@@ -233,9 +239,10 @@
 				<ComplexDataProperty name="assets" type="aors.util.economics.Quantity" upperMultiplicity="unbounded"/>
 				<Attribute name="LABOR_ALLOWANCE" type="Float" initialValue="1.0"/>
 				<Attribute name="RANDOM_FACTOR" type="Float" initialValue="0.01"/>
-				<Attribute name="lastFoodPrice" type="Float"  initialValue="0"/>
-				<Attribute name="lastLaborPrice" type="Float"  initialValue="0"/>
-				<Attribute name="lastUtilityPrice" type="Float"  initialValue="0"/>
+				<Attribute name="lastFoodPrice" type="Float"/>
+				<Attribute name="lastLaborPrice" type="Float"/>
+				<Attribute name="lastUtilityPrice" type="Float"/>
+				<Attribute name="lastCapitalPrice" type="Float"/>
 				<!--====================================-->
 				<Function name="getAssetByName" resultType="aors.util.economics.Quantity">
 					<documentation>
@@ -276,7 +283,7 @@
 					<Parameter name="quantity" type="Float"/>
 					<Parameter name="buy" type="Boolean"/>
 					<Parameter name="min" type="Float"/>
-				  <Parameter name="id" type="Integer"/>
+				    <Parameter name="id" type="Integer"/>
 					<Body language="JavaScript">
 						<![CDATA[
 							var offer = new sim.model.dataTypes.TradeOffer();
@@ -288,8 +295,36 @@
 							return offer;
 						]]>
 					</Body>
-				</Function>			
-				<!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~-->
+				</Function>
+				<!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->
+				<Function name="createCapitalOffer" resultType="BL6CapitalOffer">
+					<documentation>
+						Needed to create a BL6CapitalOffer in JavaScript
+					</documentation>
+					<Parameter name="quantity" type="Integer" />
+					<Parameter name="buy" type="Boolean" />
+					<Parameter name="machines" type="js.util.ArrayList"/>
+					<Parameter name="id" type="Integer"/>
+					<Body language="JavaScript">
+						<![CDATA[
+						var capitalOffer = new sim.model.dataTypes.CapitalOffer();
+						capitalOffer.setQuantity(quantity);
+						capitalOffer.setPrice(price);
+						capitalOffer.setBuy(buy);
+						if(buy === true){
+						  for(var i = 0 ; i < quantity ; i++){
+						    var machine = new Machine();
+						        machine.setPrice(Global.getINIT_CAPITAL_PRICE());
+						        machine.setLife(Global.getCAPITAL_LIFE());
+						        machine.setRemainingLife(Global.getCAPITAL_LIFE());
+						        capitalOffer.machines.add(machine);
+						  }
+						}
+						capitalOffer.setBidderIdRef(this.getId());
+						return capitalOffer;
+						]]></Body>
+				</Function>				
+				<!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->
 				<ReactionRule name="StartOfDay_Food_Rule">
 					<!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~-->
 					<documentation> The price of the food market is updated. </documentation>
@@ -329,6 +364,20 @@
 					<THEN>
 						<UPDATE-AGT>
 							<Slot property="lastUtilityPrice">
+								<PropertyValueExpr entityVariable="msg" property="price"/>
+							</Slot>
+						</UPDATE-AGT>
+					</THEN>
+				</ReactionRule>
+				<!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->
+				<ReactionRule name="StartOfDay_Capital_Rule">
+					<!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~-->
+					<documentation>The price of the capital market is updated. </documentation>
+					<WHEN eventType="InMessageEvent" messageType="StartOfDay_Notification" messageVariable="msg"/>
+					<IF language="JavaScript"><![CDATA[ this.msg.getMarketType() === "Capital" ]]></IF>
+					<THEN>
+						<UPDATE-AGT>
+							<Slot property="lastCapitalPrice">
 								<PropertyValueExpr entityVariable="msg" property="price"/>
 							</Slot>
 						</UPDATE-AGT>
@@ -478,7 +527,7 @@
 									<ValueExpr language="Java JavaScript"><![CDATA[ this.msg.getOffer().getQuantity() ]]></ValueExpr>
 								</Argument>	
 							</Call>
-						</UPDATE-AGT>
+						</UPDATE-AGT> 
 					</THEN>
 				</ReactionRule>
 				<!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->
@@ -499,6 +548,27 @@
 									<ValueExpr language="Java JavaScript"><![CDATA[ this.msg.getOffer().getQuantity() ]]></ValueExpr>
 								</Argument>	
 							</Call>
+						</UPDATE-AGT>
+					</THEN>
+				</ReactionRule>
+				<!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->
+				<ReactionRule name="Deposit_Capital_Rule" agentVariable="agt">
+					<documentation>
+						When a buycapital transaction was successful, the capital amount is increased with the quantity of the offer.
+					</documentation>
+					<WHEN eventType="InMessageEvent" messageType="MatchingCapitalOffer" messageVariable="msg"/>
+					<FOR-ListItemVariable variable="asset" listItemType="Quantity">
+						<ListExpr language="Java JavaScript"><![CDATA[ this.agt.getAssets() ]]></ListExpr>
+					</FOR-ListItemVariable>
+					<IF language="JavaScript"><![CDATA[ this.msg.getCapitalOffer().isBuy() && this.asset.getType() === "Capital" ]]></IF>
+					<THEN>
+						<UPDATE-AGT>
+							<Call procedure="deposit" contextObjectVariable="asset">
+								<Argument parameter="q">
+									<ValueExpr language="Java JavaScript"><![CDATA[ this.msg.getCapitalOffer().getQuantity() ]]></ValueExpr>
+								</Argument>
+							</Call>
+							
 						</UPDATE-AGT>
 					</THEN>
 				</ReactionRule>
@@ -530,7 +600,7 @@
 			<AgentType name="BL6Laborer" superType="BL6Person">
 				<documentation>
 					<description>
-						Every day a BL6Laorer has to consume EAT_AMOUNT units of food or he dies.
+						Every day a BL6Laborer has to consume EAT_AMOUNT units of food or he dies.
 						To earn money he sells his labor to the market.
 						Depending on his TARGET_FOOD_STOCK, he deceides how much of his money, he spends on food and utility. 
 					</description>
@@ -559,7 +629,9 @@
 					<IF language="JavaScript"><![CDATA[ !this.msg.getOffer().isBuy() && this.msg.getOffer().getProduct() === "Labor" ]]></IF>
 					<THEN>
 						<UPDATE-AGT>
-							<Slot property="income"><ValueExpr language="Java JavaScript"><![CDATA[ this.msg.getOffer().getQuantity() * this.msg.getOffer().getPrice() ]]></ValueExpr></Slot>
+							<Slot property="income">
+								<ValueExpr language="Java JavaScript"><![CDATA[ this.msg.getOffer().getQuantity() * this.msg.getOffer().getPrice() ]]></ValueExpr>
+							</Slot>
 						</UPDATE-AGT>
 					</THEN>
 				</ReactionRule>
@@ -570,8 +642,7 @@
 							Every other day he deceides how much he wants to save, the rest is his new targetConsumption.
 							The new consumption is calculated by the consumption of the last day and the new targetConsumption. 
 					</documentation>
-					<WHEN eventType="InMessageEvent" messageType="Act_msg"/>
-					
+					<WHEN eventType="InMessageEvent" messageType="Act_msg"/>					
 					<DO>
 						<UPDATE-AGT>
 							<Slot property="targetSavings">
@@ -651,7 +722,7 @@
 					<DO>
 						<UPDATE-AGT>
 							<Slot property="eConsumption">
-								<ValueExpr language="Java JavaScript"><![CDATA[ this.agt.getConsumption() - this.agt.getNConsumption() ]]></ValueExpr>
+								<ValueExpr language="Java JavaScript"><![CDATA[ this.agt.getEConsumption() - this.agt.getNConsumption() ]]></ValueExpr>
 							</Slot>
 						</UPDATE-AGT>
 						<SCHEDULE-EVT>
@@ -666,7 +737,7 @@
 										}
 										}</ValueExpr>
 									<ValueExpr language="JavaScript"><![CDATA[
-										this.agt.createOffer( "Utility", this.agt.getEConsumption(), true, 0 )
+										this.agt.createOffer( "Utility", this.agt.getConsumption(), true, 0 )
 									]]></ValueExpr>
 								</Slot>
 							</OutMessageEventExpr>
@@ -702,11 +773,9 @@
 			</AgentType>
 		    <!-- ============================================ -->
 			<AgentType name="BL6Firm" superType="Firm">
-				<documentation>
-					
+				<documentation>					
 						A BL6Firm is either a farm or a factory.
-						A Firm buys labor from the market , converts this labor into a product and sells the product on the market.
-					
+						A Firm buys labor from the market , converts this labor into a product and sells the product on the market.					
 				</documentation>
 				<Attribute type="String" name="product"/>
 				<Attribute type="Float" name="capacity"/>
@@ -729,6 +798,47 @@
 				<Attribute type="Float" name="capitalVal"/>
 				<Attribute type="Float" name="MC"/>
 				<Attribute type="Boolean" name="first" initialValue="true"/>
+				<!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->
+				<Function name="convertToProduct" resultType="Float">
+					<Parameter name="labor" type="Float"/>
+					<Body language="JavaScript">
+						<![CDATA[
+						return this.getA() * Math.pow(labor, this.getBeta());
+						]]>
+					</Body>
+				</Function>
+				<!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->
+				<Function name="useCapital" resultType="void">
+					<Body language="JavaScript"><![CDATA[
+						var  machines = this.getAssetByName("Capital").getObjects(),
+						     iterator = machines.iterator(), 
+						     machine;
+						     while (iterator.hasNext()){
+						       machine = iterator.next();
+						       machine.setRemainingLife(machine.getRemainingLife() -1 );
+						       if (machine.getRemainingLife() === 0){
+						         iterator.remove();
+						       }
+						     }						     
+						]]></Body>
+				</Function>
+				<!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->
+				<Function name="addCapital" resultType="void">
+					<Body language="JavaScript"><![CDATA[
+						var q = this.getAssetByName("Capital").getQuantity(),
+						    machines = new js.util.ArrayList();
+						  for (var i = 0; i < q ; i++)
+					    	{
+						      var machine = new Machine();
+						      machine.setPrice(Global.getINIT_CAPITAL_PRICE());
+						      machine.setLife(Global.getCAPITAL_LIFE());
+						      machine.setRemainingLife(Global.getCAPITAL_LIFE());
+						      machines.add(machine);						     
+					    	}
+					      this.getAssetByName("Capital").getObjects().addAll(machines);
+					     // window.alert(this.getAssetByName("Capital").getObjects().get(3).getPrice());
+						]]></Body>
+				</Function>
 				<!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->
 				<ReactionRule name="buyLabor_Rule" agentVariable="agt">
 					<documentation>
@@ -758,27 +868,51 @@
 			</AgentType>
 			<!-- ============================================ -->
 			<AgentType name="BL6CFirm" superType="BL6Firm">
-				<documentation>A capital firm, which produce Capital good.</documentation>
-				<Attribute type="Integer" name="CAPITAL_LIFE"/>
-				<Attribute type="Float" name="INIT_CAPITAL_PRICE"/>
+				<documentation>A capital firm, is a firm which produces Capital good.</documentation>
 				<!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->
-				<Function name="convertToProduct" resultType="Float">
-					<Parameter name="labor" type="Float"/>
-					<Body language="JavaScript">
-						<![CDATA[
-						return this.getA() * Math.pow(labor, this.getBeta());
-						]]>
-					</Body>
-				</Function>
+				<ReactionRule name="revenue_Rule">
+					<documentation>Calculates the revenue of the day</documentation>
+					<WHEN eventType="InMessageEvent" messageType="MatchingCapitalOffer" messageVariable="msg"/>
+					<IF language="JavaScript"><![CDATA[ !this.msg.getCapitalOffer().isBuy() && this.msg.getCapitalOffer().getQuantity() > 0]]></IF>
+					<THEN>
+						<UPDATE-AGT>
+							<Slot property="revenue">
+								<ValueExpr language="Java JavaScript"><![CDATA[
+									this.msg.getCapitalOffer().getQuantity() * this.msg.getCapitalOffer().getPrice()
+									]]></ValueExpr>
+							</Slot>
+							<Slot property="output">
+								<ValueExpr language="Java JavaScript">
+									<![CDATA[
+									this.agt.getRevenue() / Global.getINIT_CAPITAL_PRICE()
+									]]>
+								</ValueExpr>
+							</Slot>
+							<Slot property="wageBudget">
+								<ValueExpr language="Java JavaScript"><![CDATA[ this.agt.getRevenue() ]]></ValueExpr>
+								<!-- loan as constant -->
+							</Slot>
+						</UPDATE-AGT>
+					</THEN>
+				</ReactionRule>
 				<!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->
-				
+				<ReactionRule name="sellCapital_Rule" agentVariable="agt">
+					<documentation>Tries to sell capital to the market</documentation>
+					<WHEN eventType="InMessageEvent" messageType="Act_msg"/>
+					<IF language="Java JavaScript"><![CDATA[ this.agt.getAssetByName("Capital").getQuantity > 0 ]]></IF>
+					<THEN>
+						<SCHEDULE-EVT>
+							<OutMessageEventExpr messageType="BL6CapitalOffer" receiverIdRefs="5">
+								
+							</OutMessageEventExpr>
+						</SCHEDULE-EVT>
+					</THEN>
+				</ReactionRule>
 			</AgentType>
 			<!-- ============================================ -->
 			<AgentType name="BL6Farm" superType="BL6Firm">
-				<documentation>
-					
-						A farm is a firm which produces food.
-					
+				<documentation>					
+						A farm is a firm which produces food.					
 				</documentation>
 				<!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->
 				<Function name="updateProduct" resultType="void">
@@ -802,7 +936,9 @@
 					<IF language="JavaScript"><![CDATA[ !this.msg.getOffer().isBuy() && this.msg.getOffer().getProduct() === "Food" ]]></IF>
 					<THEN>
 						<UPDATE-AGT>
-							<Slot property="revenue"><ValueExpr language="Java JavaScript"><![CDATA[ this.msg.getOffer().getQuantity() * this.msg.getOffer().getPrice() ]]></ValueExpr></Slot>
+							<Slot property="revenue">
+								<ValueExpr language="Java JavaScript"><![CDATA[ this.msg.getOffer().getQuantity() * this.msg.getOffer().getPrice() ]]></ValueExpr>
+							</Slot>
 						</UPDATE-AGT>
 					</THEN>
 				</ReactionRule>
@@ -814,7 +950,11 @@
 					<WHEN eventType="InMessageEvent" messageType="Act_msg"/>
 					<DO>
 						<UPDATE-AGT>
-							<Slot property="totalCost"><PropertyValueExpr entityVariable="agt" property="wageBudget"/></Slot>
+							<Slot property="totalCost">
+								<ValueExpr language="Java JavaScript"><![CDATA[
+									this.agt.getWageBudget() + this.agt.getCapitalCost()
+									]]></ValueExpr>
+							</Slot>
 							<!-- Capitalcost -->
 							<Slot property="profit">
 								<ValueExpr language="Java JavaScript"><![CDATA[
@@ -823,9 +963,8 @@
 							</Slot>
 							<Slot property="capacity">
 								<ValueExpr language="Java JavaScript"><![CDATA[
-									this.agt.getA() * Math.pow(this.agt.getAssetByName("Labor").getQuantity(), this.agt.getBeta()) * Math.pow(30, 1 - this.agt.getBeta())
+									this.agt.getA() * Math.pow(this.agt.getAssetByName("Labor").getQuantity(), this.agt.getBeta()) * Math.pow(this.agt.getAssetByName("Capital").getQuantity(), 1 - this.agt.getBeta())
 								]]></ValueExpr>
-								<!-- Capital als Konstante -->
 							</Slot>
 							<Slot property="wage">
 								<ValueExpr language="Java JavaScript"><![CDATA[
@@ -847,9 +986,8 @@
 									this.agt.getWage() / this.agt.getBeta() 
 									* Math.pow( this.agt.getA(), -1/this.agt.getBeta() )
 									* Math.pow( this.agt.getOutput(), 1 / this.agt.getBeta() - 1 )
-									* Math.pow( 30, 1 - 1 / this.agt.getBeta() )
+									* Math.pow( this.agt.getAssetByName("Capital").getQuantity(), 1 - 1 / this.agt.getBeta() )
 								]]></ValueExpr>
-								<!-- Capital als Konstante -->
 							</Slot>
 							<Slot property="marginalProfit">
 								<ValueExpr language="Java JavaScript"><![CDATA[
@@ -872,7 +1010,7 @@
 								]]></ValueExpr>
 							</Slot>
 							<Slot property="first" value="false" />
-							<Call procedure="updateProduct" contextObjectVariable="agt"></Call>
+							<Call procedure="updateProduct" contextObjectVariable="agt" /> 
 						</UPDATE-AGT>
 					</THEN>
 				</ReactionRule>
@@ -933,7 +1071,9 @@
 					<IF language="JavaScript"><![CDATA[ !this.msg.getOffer().isBuy() && this.msg.getOffer().getProduct() === "Utility" ]]></IF>
 					<THEN>
 						<UPDATE-AGT>
-							<Slot property="revenue"><ValueExpr language="Java JavaScript"><![CDATA[ this.msg.getOffer().getQuantity() * this.msg.getOffer().getPrice() ]]></ValueExpr></Slot>
+							<Slot property="revenue">
+								<ValueExpr language="Java JavaScript"><![CDATA[ this.msg.getOffer().getQuantity() * this.msg.getOffer().getPrice() ]]></ValueExpr>
+							</Slot>
 						</UPDATE-AGT>
 					</THEN>
 				</ReactionRule>
@@ -945,7 +1085,11 @@
 					<WHEN eventType="InMessageEvent" messageType="Act_msg"/>
 					<DO>
 						<UPDATE-AGT>
-							<Slot property="totalCost"><PropertyValueExpr entityVariable="agt" property="wageBudget"/></Slot>
+							<Slot property="totalCost">
+								<ValueExpr language="Java JavaScript"><![CDATA[
+									this.agt.getWageBudget() + this.agt.getCapitalCost()
+									]]></ValueExpr>
+							</Slot>
 							<!-- Capitalcost -->
 							<Slot property="profit">
 								<ValueExpr language="Java JavaScript"><![CDATA[
@@ -954,9 +1098,8 @@
 							</Slot>
 							<Slot property="capacity">
 								<ValueExpr language="Java JavaScript"><![CDATA[
-									this.agt.getA() * Math.pow(this.agt.getAssetByName("Labor").getQuantity(), this.agt.getBeta()) * Math.pow(30, 1 - this.agt.getBeta())
+									this.agt.getA() * Math.pow(this.agt.getAssetByName("Labor").getQuantity(), this.agt.getBeta()) * Math.pow(this.agt.getAssetByName("Capital").getQuantity(), 1 - this.agt.getBeta())
 								]]></ValueExpr>
-								<!-- Capital als Konstante -->
 							</Slot>
 							<Slot property="wage">
 								<ValueExpr language="Java JavaScript"><![CDATA[
@@ -1003,7 +1146,7 @@
 								]]></ValueExpr>
 							</Slot>
 							<Slot property="first" value="false" />
-							<Call procedure="updateProduct" contextObjectVariable="agt"></Call>
+							<Call procedure="updateProduct" contextObjectVariable="agt" />
 						</UPDATE-AGT>
 					</THEN>
 				</ReactionRule>
@@ -1049,6 +1192,7 @@
 				<ComplexDataProperty name="buyOffers" type="TradeOffer" upperMultiplicity="unbounded"/>
 				<ComplexDataProperty name="sellOffers" type="TradeOffer" upperMultiplicity="unbounded"/>
 				<ComplexDataProperty name="transactions" type="TradeOffer" upperMultiplicity="unbounded"/>
+				
 				<!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->
 				<Function name="clear" resultType="void">
 					<documentation>
@@ -1083,7 +1227,7 @@
 						</UPDATE-AGT>
 					</ELSE>
 				</ReactionRule>
-				<!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->
+				<!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->
 			    <ReactionRule name="Clear" agentVariable="m">
 			        <documentation>
 			            The market gets cleared
@@ -1091,8 +1235,7 @@
 			        <WHEN eventType="InMessageEvent" messageType="ClearMarket"/>
 			        <DO>
 			            <UPDATE-AGT>
-			                <Call procedure="clear" contextObjectVariable="m">
-			                </Call>
+			                <Call procedure="clear" contextObjectVariable="m" />			                
 			            </UPDATE-AGT>
 			            <SCHEDULE-EVT>
 			                <ReminderEventExpr>
@@ -1357,24 +1500,17 @@
 				</documentation>
 				<Attribute type="Float" name="totalMetric"/>
 				<Attribute type="Float" name="totalPrice"/>
-				<Attribute type="Float" name="supply"/>
 				<Function name="clear" resultType="void">
-				<Body language="JavaScript"><![CDATA[
-					this.getTransactions().clear();
-					var mktGoodVol = 0;
-					buyOffers = this.getBuyOffers();
-					buyOffers.sort(function() {return 0.5 - Math.random()});
-					for (var i = 0 ; i < buyOffers.size(); i++){
-					  if (this.getSupply() === 0)
-					                return;
-					 
-					}
+					<Body language="JavaScript"><![CDATA[
+					
 					]]></Body>
 				</Function>
 				
 			</AgentType>
 		</EntityTypes>
         <EnvironmentRules>
+        
+        	<!-- ================================================ -->
             <EnvironmentRule name="Create_InitialBuyOffers_ER">
                 <documentation>
                     Creates initial buyoffers for labor(BL6 only)
@@ -1419,16 +1555,20 @@
                     <UPDATE-ENV>
                         <UpdateObject objectVariable="m">
                             <MultiValuedSlot property="sellOffers">
-                                <AddLast><ItemExpr language="Java">new TradeOffer(){
+                                <AddLast>
+                                	<ItemExpr language="Java">new TradeOffer(){
                                     {
                                     setProduct("Labor");
                                     setQuantity(1);
                                     setBuy(false);
                                     setBidderIdRef(p.getId());
                                     }
-                                    }</ItemExpr><ItemExpr language="JavaScript"><![CDATA[
+                                    }</ItemExpr>
+                                	<ItemExpr language="JavaScript"><![CDATA[
                                         this.p.createOffer("Labor", 1, false, 0)
-                                    ]]></ItemExpr></AddLast>
+                                        ]]>
+                                	</ItemExpr>
+                                </AddLast>
                             </MultiValuedSlot>
                         </UpdateObject>
                     </UPDATE-ENV>
@@ -1448,12 +1588,29 @@
                 </DO>
             </EnvironmentRule>
             <!-- ===================================== -->
+        	<EnvironmentRule name="Add_Initial_CapitalToList_ER">
+        		<documentation>
+        			This rule is used to add the initial amount of machines to the capital list.
+        			Triggered just 1 time (at the beginning of the simulation).
+        			Used for BL6Factory and BL6Farm
+        		</documentation>
+        		<WHEN eventType="Init"/>
+        		<FOR-ObjectVariable variable="farm" objectType="BL6Farm" />
+        		<FOR-ObjectVariable variable="factory" objectType="BL6Factory" />
+        		<DO>
+        			<UPDATE-ENV>
+        				<Call procedure="addCapital" contextObjectVariable="farm" />
+        				<Call procedure="addCapital" contextObjectVariable="factory" />
+        			</UPDATE-ENV>
+        		</DO>
+        	</EnvironmentRule>
+        	<!-- ===================================== -->
             <EnvironmentRule name="Initial_Send_MatchingOffers_ER">
                 <documentation>
                     Done trades are returned to the persons and firms(BL6 only)
                 </documentation>
                 <WHEN eventType="Init"/>
-                <FOR-ObjectVariable variable="m" objectType="BL6LaborMarket"></FOR-ObjectVariable>
+                <FOR-ObjectVariable variable="m" objectType="BL6LaborMarket" />
                 <FOR-ListItemVariable variable="o" listItemType="TradeOffer">
                 	<ListExpr language="Java JavaScript"><![CDATA[ this.m.getTransactions() ]]></ListExpr>
                 </FOR-ListItemVariable>
@@ -1480,11 +1637,26 @@
                 <IF language="Java JavaScript"><![CDATA[ this.p.getAssetByName("Food").withdraw(this.p.getEAT_AMOUNT()) < this.p.getEAT_AMOUNT() ]]></IF>
                 <THEN>
                     <UPDATE-ENV>
-                    	<DestroyObject><ObjectIdRef language="Java JavaScript"><![CDATA[ this.p.getId() ]]></ObjectIdRef></DestroyObject>
+                    	<DestroyObject>
+                    		<ObjectIdRef language="Java JavaScript"><![CDATA[ this.p.getId() ]]></ObjectIdRef>
+                    	</DestroyObject>
                     </UPDATE-ENV>
                 </THEN>
             </EnvironmentRule>
             <!-- ====================================== -->
+        	<EnvironmentRule name="AtStartOfDayUseCapital_ER">
+        		<documentation>At start of day, attribute RemainingLife from each machine is decreased</documentation>
+        		<WHEN eventType="StartOfDay"/>
+        		<FOR-ObjectVariable variable="farm" objectType="BL6Farm" />
+        		<FOR-ObjectVariable variable="factory" objectType="BL6Factory" />
+        		<DO>
+        			<UPDATE-ENV>
+        				<Call procedure="useCapital" contextObjectVariable="farm" />
+        				<Call procedure="useCapital" contextObjectVariable="factory" />
+        			</UPDATE-ENV>
+        		</DO>
+        	</EnvironmentRule>
+        	<!-- ====================================== -->
             <EnvironmentRule name="StartOfDay_Rule_ER">
                 <!-- ====================================== -->
                 <documentation>
@@ -1510,7 +1682,23 @@
                     </SCHEDULE-EVT>
                 </DO>
             </EnvironmentRule>
-            <!-- ============================= -->
+           <!-- ======================================= -->
+        	<EnvironmentRule name="SartOfDay_CapitalRule_ER">
+        		<documentation>
+        			At the beginning of the day, the remainingLife of the machine is decresead with 1 unit
+        			If the remaining life is 0, then the machine is removed from the list.
+        		</documentation>
+        		<WHEN eventType="StartOfDay"/>
+        		<FOR-ObjectVariable variable="farm" objectType="BL6Farm" />
+        		<FOR-ObjectVariable variable="factory" objectType="BL6Factory" />
+        		<DO>
+        			<UPDATE-ENV>
+        				<Call procedure="useCapital" contextObjectVariable="farm" />
+        				<Call procedure="useCapital" contextObjectVariable="factory" />
+        			</UPDATE-ENV>
+        		</DO>
+        	</EnvironmentRule>
+        	<!-- ====================================== -->
             <EnvironmentRule name="StartWork_ER">
                 <!-- ============================= -->
                 <documentation>
@@ -1542,6 +1730,7 @@
                         </InMessageEventExpr>
                     </SCHEDULE-EVT>
                 </DO>
+            	
             </EnvironmentRule>
         </EnvironmentRules>	
         
@@ -1603,6 +1792,23 @@
             </Slot>
             <Slot property="lastMarketPrice" value="0.4" />
         </Agent>
+    	<Agent type="BL6CapitalMarket" id="5">
+    		<Slot property="lastMarketPrice" value="1.2" />
+    		<Slot property="commodity" value="Capital" />
+    		<Slot property="currency" value="Money" />
+    		<Slot property="buyOffers">
+    			<ValueExpr language="Java"><![CDATA[ new ArrayList<CapitalOffer>() ]]></ValueExpr>
+    			<ValueExpr language="JavaScript"><![CDATA[ new js.util.ArrayList() ]]></ValueExpr>
+    		</Slot>
+    		<Slot property="sellOffers">
+    			<ValueExpr language="Java"><![CDATA[ new ArrayList<CapitalOffer>() ]]></ValueExpr>
+    			<ValueExpr language="JavaScript"><![CDATA[ new js.util.ArrayList() ]]></ValueExpr>
+    		</Slot>
+    		<Slot property="transactions">
+    			<ValueExpr language="Java"><![CDATA[ new ArrayList<CapitalOffer>() ]]></ValueExpr>
+    			<ValueExpr language="JavaScript"><![CDATA[ new js.util.ArrayList() ]]></ValueExpr>
+    		</Slot>
+    	</Agent>
         <Agents type="BL6Laborer" rangeStartID="5000" rangeEndID="5449">
             <Slot property="assets">
                 <ValueExpr language="Java">
@@ -1637,25 +1843,27 @@
 					            add(new aors.util.economics.ContinuousQuantity(0.0, new aors.util.economics.ContinuousQuantityType("Food", "Stk")));
 								add(new aors.util.economics.ContinuousQuantity(100.0, new aors.util.economics.ContinuousQuantityType("Money", "Stk")));
 								add(new aors.util.economics.ContinuousQuantity(0.0, new aors.util.economics.ContinuousQuantityType("Labor", "Stk")));
+								add(new aors.util.economics.DiscreteQuantity("Capital", 30, new ArrayList<Machine>());
 					        }
 					    } ]]>
                 </ValueExpr>
                 <ValueExpr language="JavaScript"><![CDATA[ 
 					new js.util.ArrayList(new aors.util.economics.ContinuousQuantity(0.0, new aors.util.economics.ContinuousQuantityType("Food", "Stk")), 
 					new aors.util.economics.ContinuousQuantity(100.0, new aors.util.economics.ContinuousQuantityType("Money", "Stk")), 
-					new aors.util.economics.ContinuousQuantity(0.0, new aors.util.economics.ContinuousQuantityType("Labor", "Stk")))
+					new aors.util.economics.ContinuousQuantity(0.0, new aors.util.economics.ContinuousQuantityType("Labor", "Stk")),
+					new aors.util.economics.DiscreteQuantity("Capital", 30, new js.util.ArrayList()))
 				]]></ValueExpr>
             </Slot>
-            <Slot property="A" value="2"></Slot>
-            <Slot property="beta" value="0.5"></Slot>
-            <Slot property="phi" value="0.5"></Slot>
-            <Slot property="lambda" value="0.2"></Slot>
-            <Slot property="eUrilThreshold" value="0.9"></Slot>
-            <Slot property="rUtilThreshold" value="0.75"></Slot>
-            <Slot property="output" value="60"></Slot>
-            <Slot property="wageBudget" value="100"></Slot>
-            <Slot property="loan" value="1000"></Slot>
-            <Slot property="capitalCost" value="0"></Slot>
+            <Slot property="A" value="2" />
+            <Slot property="beta" value="0.5" />
+            <Slot property="phi" value="0.5" />
+            <Slot property="lambda" value="0.2" />
+            <Slot property="eUrilThreshold" value="0.9" />
+            <Slot property="rUtilThreshold" value="0.75" />
+            <Slot property="output" value="60" />
+            <Slot property="wageBudget" value="100" />
+            <Slot property="loan" value="1000" />
+            <Slot property="capitalCost" value="0" />
         </Agents>
         <Agents type="BL6Factory" rangeStartID="7000" rangeEndID="7009">
             <Slot property="assets">
@@ -1665,28 +1873,59 @@
 								add(new aors.util.economics.ContinuousQuantity(100.0, new aors.util.economics.ContinuousQuantityType("Money", "Stk")));
 								add(new aors.util.economics.ContinuousQuantity(0.0, new aors.util.economics.ContinuousQuantityType("Labor", "Stk")));
 								add(new aors.util.economics.ContinuousQuantity(0.0, new aors.util.economics.ContinuousQuantityType("Utility", "Stk")));
+								add(new aors.util.economics.DiscreteQuantity("Capital", 30, new ArrayList<Machine>());
 					        }
 					    } ]]>
                 </ValueExpr>
                 <ValueExpr language="JavaScript"><![CDATA[ 
 					new js.util.ArrayList(new aors.util.economics.ContinuousQuantity(100.0, new aors.util.economics.ContinuousQuantityType("Money", "Stk")), 
 					new aors.util.economics.ContinuousQuantity(0.0, new aors.util.economics.ContinuousQuantityType("Labor", "Stk")),
-					new aors.util.economics.ContinuousQuantity(0.0, new aors.util.economics.ContinuousQuantityType("Utility", "Stk")))
+					new aors.util.economics.ContinuousQuantity(0.0, new aors.util.economics.ContinuousQuantityType("Utility", "Stk")), 
+					new aors.util.economics.DiscreteQuantity("Capital", 30, new js.util.ArrayList()))
 				]]></ValueExpr>
             </Slot>
             <Slot property="A" value="2"/>
-            <Slot property="beta" value="0.5"></Slot>
-            <Slot property="phi" value="0.5"></Slot>
-            <Slot property="lambda" value="0.2"></Slot>
-            <Slot property="eUrilThreshold" value="0.9"></Slot>
-            <Slot property="rUtilThreshold" value="0.75"></Slot>
-            <Slot property="output" value="40"></Slot>
-            <Slot property="wageBudget" value="100"></Slot>
-            <Slot property="loan" value="0"></Slot>
-            <Slot property="capitalCost" value="0"></Slot>
+            <Slot property="beta" value="0.5" />
+            <Slot property="phi" value="0.5" />
+            <Slot property="lambda" value="0.2" />
+            <Slot property="eUrilThreshold" value="0.9" />
+            <Slot property="rUtilThreshold" value="0.75" />
+            <Slot property="output" value="40" />
+            <Slot property="wageBudget" value="100" />
+            <Slot property="loan" value="0" />
+            <Slot property="capitalCost" value="0" />
         </Agents>
-        <ExogenousEvent type="Init" occurrenceTime="1" />
-        
+    	<Agents type="BL6CFirm" rangeStartID="8000" rangeEndID="8009">
+    		<Slot property="assets">
+    			<ValueExpr language="Java">
+    				<![CDATA[ new ArrayList<aors.util.economics.Quantity>(){
+					        {
+								add(new aors.util.economics.ContinuousQuantity(500.0, new aors.util.economics.ContinuousQuantityType("Money", "Stk")));
+								add(new aors.util.economics.ContinuousQuantity(0.0, new aors.util.economics.ContinuousQuantityType("Labor", "Stk")));
+								add(new aors.util.economics.ContinuousQuantity(0.0, new aors.util.economics.ContinuousQuantityType("Utility", "Stk")));
+								add(new aors.util.economics.DiscreteQuantity("Capital", 0, new ArrayList<Machine>());
+					        }
+					    } ]]>
+    			</ValueExpr>
+    			<ValueExpr language="JavaScript">
+    				<![CDATA[ 
+					new js.util.ArrayList(new aors.util.economics.ContinuousQuantity(500.0, new aors.util.economics.ContinuousQuantityType("Money", "Stk")), 
+					new aors.util.economics.ContinuousQuantity(0.0, new aors.util.economics.ContinuousQuantityType("Labor", "Stk")),
+					new aors.util.economics.ContinuousQuantity(0.0, new aors.util.economics.ContinuousQuantityType("Utility", "Stk")), 
+					new aors.util.economics.DiscreteQuantity("Capital", 0, new js.util.ArrayList()))
+				]]>
+    			</ValueExpr>    			
+    		</Slot>
+    		<Slot property="A" value="2"/>
+    		<Slot property="beta" value="0.5" />
+    		<Slot property="phi" value="0.5" />
+    		<Slot property="lambda" value="0.2" />
+    		<Slot property="eUrilThreshold" value="0.9" />
+    		<Slot property="rUtilThreshold" value="0.75" />
+    		<Slot property="wageBudget" value="500" />
+    	</Agents>
+    	
+        <ExogenousEvent type="Init" occurrenceTime="1" />        
         <!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->
         <ExogenousEvent occurrenceTime="1" type="StartOfDay" />
         <!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->
@@ -1779,6 +2018,17 @@
                     <Text xml:lang="en">number of selloffers for labor</Text>
                 </Hint>
             </StatisticsVariableUI>
+        	<StatisticsVariableUI variable="PriceCapital" comparisonGroup="pricevscapital">
+        		<Label>
+        			<Text xml:lang="en">Capital Price</Text>
+        		</Label>
+        		<Hint>
+        			<Text xml:lang="en">Average price of the capitalmarket</Text>
+        		</Hint>
+        		<Format decimalPlaces="2">
+        			<Currency>EUR(&#8364;)</Currency>
+        		</Format>
+        	</StatisticsVariableUI>
         </StatisticsUI>
         <AnimationUI>
             <StartPageText>
