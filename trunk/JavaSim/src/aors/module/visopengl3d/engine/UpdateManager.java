@@ -858,7 +858,7 @@ public class UpdateManager {
     // Get the physical agent that has to be updated
     PhysicalAgentObject obj = (PhysicalAgentObject) objMap.get(phyAgt.getId());
 
-    //boolean parsePointString = false;
+    boolean parsePointString = false;
 
     if (obj != null) {
       if (phyAgt.getX() != null) {
@@ -974,7 +974,7 @@ public class UpdateManager {
       if (phyAgt.getPoints() != null) {
         String points = phyAgt.getPoints();
         obj.setPoints(points);
-        //parsePointString = true;
+        parsePointString = true;
       }
 
       // Get the objects view
@@ -986,11 +986,9 @@ public class UpdateManager {
     	}
 
     	if (view.getShape() != null) {
-    	  /*
           if (parsePointString) {
             view.getShape().setParsePointString(true);
           }
-		  */
     	  view.getShape().applyPropertyMaps((Physical) obj);
     	}
       }
@@ -1006,7 +1004,7 @@ public class UpdateManager {
     // Get the physical object that has to be updated
     PhysicalObject obj = (PhysicalObject) objMap.get(phyObj.getId());
 
-    //boolean parsePointString = false;
+    boolean parsePointString = false;
 
     if (obj != null) {
       if (phyObj.getX() != null) {
@@ -1122,7 +1120,7 @@ public class UpdateManager {
       if (phyObj.getPoints() != null) {
         String points = phyObj.getPoints();
         obj.setPoints(points);
-        //parsePointString = true;
+        parsePointString = true;
       }
 
       // Get the objects view
@@ -1134,11 +1132,9 @@ public class UpdateManager {
         }
 
         if (view.getShape() != null) {
-          /*
           if (parsePointString) {
             view.getShape().setParsePointString(true);
           }
-		  */
           view.getShape().applyPropertyMaps((Physical) obj);
         }
       }

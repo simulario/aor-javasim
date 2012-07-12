@@ -9,10 +9,10 @@ import aors.module.visopengl3d.utility.Color;
 
 
 /**
- * The 3D Circle is represented by a Cylinder.
+ * This Circle class represents a three dimensional object with an Circle as bottom and top face
  * 
  * @author Susanne Schölzel
- * @since December 22th, 2011
+ * @since January 4th, 2012
  * 
  */
 public class Circle extends Shape2D{
@@ -58,15 +58,11 @@ public class Circle extends Shape2D{
         
         // Set the drawing color to white (because of texture)
         gl.glColor4dv(Color.WHITE.getColor(), 0);
-          
-        // Set the material to a white material (because of texture)
-        //setMaterial(gl, Color.WHITE.getColorFloat());
-            
+         
         // Enable texture support
         texture.bind();
         texture.enable();
-          
-          
+        
         // draw the side face of the cylinder with texture coordinates
         gl.glMatrixMode(GL2.GL_TEXTURE);
         gl.glPushMatrix();
@@ -103,7 +99,6 @@ public class Circle extends Shape2D{
         gl.glPopMatrix();
         
         // draw the bottom face of the cylinder with texture coordinates
-        
         gl.glMatrixMode(GL2.GL_TEXTURE);
         gl.glPushMatrix();
         gl.glTranslated(0.5, 0.5, 0);
@@ -126,9 +121,6 @@ public class Circle extends Shape2D{
     
         // Set the drawing color
         gl.glColor4dv(fill.getColor(), 0);
-          
-        // Set the material according to the fill color
-        //setMaterial(gl, fill.getColorFloat());
         
         // draw the side face of the cylinder
         glu.gluQuadricNormals(side, GLU.GLU_SMOOTH);

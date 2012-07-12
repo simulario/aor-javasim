@@ -35,6 +35,7 @@ import aors.module.visopengl3d.space.view.TwoDimSpaceView;
 import aors.module.visopengl3d.engine.Camera2D;
 import aors.module.visopengl3d.utility.Offset;
 import aors.module.visopengl3d.utility.TextureLoader;
+import aors.module.visopengl3d.utility.VectorOperations;
 import aors.space.Space;
 
 import com.sun.opengl.util.BufferUtil;
@@ -107,18 +108,18 @@ public class Engine implements GLEventListener {
         camera.getUpVector()[0], camera.getUpVector()[1], camera.getUpVector()[2]);
     
     // determine elapsed time
-    //camera.getElapsedTime();
+    camera.getElapsedTime();
     // Apply camera transformations
-    //camera.zoom(gl);
     
-    //camera.scroll(gl);
-    //camera.rotate(gl);
-
+    camera.zoom(gl);
+    camera.rotate(gl);
+    camera.scroll(gl);
+    
     // Display the space model & objects
     if (spaceModel != null) {
       Skybox skybox = spaceModel.getSpaceView().getSkybox();
+      
       if(skybox != null) {
-        //skybox.setPosition(camera.getPosition());
         skybox.display(gl, glu);
       }
       
@@ -212,12 +213,6 @@ public class Engine implements GLEventListener {
     
     // Enable texture support
     gl.glEnable(GL2.GL_TEXTURE);
-
-    /*
-    // Prepare the space model
-    if (spaceModel != null && drawingArea != null) {
-      prepareSpaceModel(gl);
-    }*/
     
     // Prepare objects that are present in the initial state
     if (objMap != null) {
@@ -250,9 +245,6 @@ public class Engine implements GLEventListener {
     gl.glMatrixMode(GL2.GL_PROJECTION);
     gl.glLoadIdentity();
 
-    // Establish an orthogonal clipping volume
-    //gl.glOrtho(-width / 2, width / 2, -height / 2, height / 2, -100, 1);
-
     // ratio of width to height
     double aspect = ((double)width)/((double)height);
     
@@ -264,196 +256,65 @@ public class Engine implements GLEventListener {
     drawingArea = new Offset((-width / 2) + BORDER, (-height / 2) + BORDER,
         (width / 2) - BORDER, (height / 2) - BORDER);
     
-    /*if (spaceModel.getGeneralSpaceModel() == null) {
+    if (spaceModel.getGeneralSpaceModel() == null) {
       spaceModel.setxMax(drawingArea.getWidth());
       spaceModel.setyMax(drawingArea.getHeight());
     }
     
-    // Get the space type
-    SpaceType type = spaceModel.getSpaceType();
-    
-    if(type.equals(SpaceType.OneD)) {
-      OneDimSpaceView spaceView = (OneDimSpaceView)spaceModel.getSpaceView();
-      if(spaceView.getAlignment() == Alignment.horizontal) {
-        double drawingAreaHeight = 0;
-        if(spaceView.getAbsoluteTrackWidth() != 0) {
-          // absolute trackWidth
-          drawingAreaHeight = spaceModel.getMultiplicity() * spaceView.getAbsoluteTrackWidth()
-            + (spaceModel.getMultiplicity()-1) * spaceView.getTrackDistance();
-        } else {
-          //relative trackWidth
-          drawingAreaHeight = spaceModel.getxMax() * height / width;
-          // trackDistance muss berechnet werden
-        }
-        drawingArea = new Offset(-spaceModel.getxMax()/2, -drawingAreaHeight/2, spaceModel.getxMax()/2, drawingAreaHeight/2);
-      } else if(spaceView.getAlignment() == Alignment.vertical) {
-        
-        double drawingAreaWidth = 0;
-        if(spaceView.getAbsoluteTrackWidth() != 0) {
-          // absolute trackWidth
-          drawingAreaWidth = spaceModel.getMultiplicity() * spaceView.getAbsoluteTrackWidth()
-            + (spaceModel.getMultiplicity()-1) * spaceView.getTrackDistance();
-        } else {
-          //relative trackWidth
-          drawingAreaWidth = spaceModel.getxMax() * width / height;
-          // trackDistance muss berechnet werden
-        }
-        drawingArea = new Offset(-drawingAreaWidth/2, -spaceModel.getxMax()/2, drawingAreaWidth/2, spaceModel.getxMax()/2);
-        
-      } else if(spaceView.getAlignment() == Alignment.circular) {
-        //drawingArea = new Offset();
-      }
-    } else if(type.equals(SpaceType.TwoD) || type.equals(SpaceType.TwoDGrid) || type.equals(SpaceType.TwoDLateralView)) {
-      drawingArea = new Offset(-spaceModel.getxMax()/2, -spaceModel.getyMax()/2, spaceModel.getxMax()/2, spaceModel.getyMax()/2);
-    }*/
-    
     // Set the space models drawing area
     spaceModel.setDrawingArea(drawingArea);
+    
+    // Prepare the space model
+    if (spaceModel != null && drawingArea != null) {
+      prepareSpaceModel(gl);
+    }
+    
+    Offset offset = drawingArea;
+    Offset usedDrawingArea = spaceModel.getUsedDrawingArea();
+    
+    if(usedDrawingArea.getWidth() > drawingArea.getWidth() || usedDrawingArea.getHeight() > drawingArea.getHeight()) {
+      offset = usedDrawingArea;
+    }
+    
+    if(!spaceModel.getSpaceType().equals(SpaceType.TwoDGrid)) {
+      offset = new Offset(offset.x1-BORDER, offset.y1-BORDER, offset.x2+BORDER, offset.y2+BORDER);
+    }
   
     // Set the camera position
     GlobalCamera globalCamera = spaceModel.getSpaceView().getGlobalCamera();
     
     if(globalCamera != null) {
-    	//double[] eyePosition = globalCamera.getEyePosition();
-    	//double[] lookAt = globalCamera.getLookAt();
-    	//double[] upVector = globalCamera.getUpVector();
     	camera.setEyePosition(globalCamera.getEyePosition());
     	camera.setLookAt(globalCamera.getLookAt());
     	camera.setUpVector(globalCamera.getUpVector());
-    	/*glu.gluLookAt(eyePosition[0], eyePosition[1], eyePosition[2],
-    				  lookAt[0], lookAt[1], lookAt[2],
-    				  upVector[0], upVector[1], upVector[2]);*/
     	
-      Skybox skybox = spaceModel.getSpaceView().getSkybox();
-      if(skybox != null) {
-        skybox.setPosition(globalCamera.getEyePosition());
-      }
     } else {
-      /*double fovy_rad = Math.PI * fovy / 180;
-    	// determine camera height from drawingArea height
-      double cameraHeightFromDrawingAreaHeight = (drawingArea.getHeight() + BORDER) / (2 * Math.tan(fovy_rad/2));
-      
-      // determine height from xmax
-      double drawingAreaHeightFromDrawingAreaWidth = (drawingArea.getWidth() + BORDER) * height / width;
-      double cameraHeightFromDrawingAreaWidth = drawingAreaHeightFromDrawingAreaWidth / (2 * Math.tan(fovy_rad/2));
-      
-      // take the maximum height
-      double cameraHeight = Math.max(cameraHeightFromDrawingAreaHeight, cameraHeightFromDrawingAreaWidth);
-      
-      if(cameraHeight < 1 + SpaceView.getObjectHeight()) cameraHeight = 1 + SpaceView.getObjectHeight();
-      //if(cameraHeight > 999) glu.gluPerspective(fovy, aspect, 1, cameraHeight+1);
-      
-    	glu.gluLookAt(0, cameraHeight, 0, 0, 0, 0, 0, 0, -1);
-    	double[] position = {0, cameraHeight, 0};
-    	Skybox skybox = spaceModel.getSpaceView().getSkybox();
-      if(skybox != null) {
-        skybox.setPosition(position);
-      }*/
-      
-      /*System.out.println("width: " + width);
-      System.out.println("height: " + height);
-      System.out.println("fovy: " + fovy);*/
       
       double angle = 45;
       double angle_rad = angle * Math.PI/180;
       double fovy_rad = fovy * Math.PI/180;
-      double frustumHeight = height;
       
-      /*double zlength = frustumHeight * (Math.cos(angle_rad) + Math.sin(angle_rad) * Math.tan(angle_rad + fovy_rad/2));
-      System.out.println("zlength: "+zlength);
-      if(zlength < height) zlength = height;
-      System.out.println("zlength: "+zlength);
-      double z1 = zlength / (1 - (Math.tan(angle_rad-fovy_rad/2)/Math.tan(angle_rad+fovy_rad/2)));
-      System.out.println("z1: "+z1);
-      double y1 = z1 / Math.tan(angle_rad+fovy_rad/2);
-      System.out.println("y1: "+y1);
-      double y2 = y1 + SpaceView.getObjectHeight();
-      System.out.println("y2: "+y2);
-      double zstrich = z1 - zlength/2;
-      System.out.println("zstrich: "+zstrich);
-      double zstrich2 = y2 * zstrich / y1;
-      System.out.println("zstrich2: "+zstrich2);
-      
-      double[] eyePosition = {0, y2, zstrich2};
-      System.out.println("eyePosition[0]: "+eyePosition[0]);
-      System.out.println("eyePosition[1]: "+eyePosition[1]);
-      System.out.println("eyePosition[2]: "+eyePosition[2]);
-      
-      double lookAtZlength = y2 * Math.tan(angle_rad);
-      System.out.println("lookAtZlength: "+lookAtZlength);
-      
-      double[] lookAt = {0, 0, zstrich2 - lookAtZlength};
-      System.out.println("lookAt[0]: "+lookAt[0]);
-      System.out.println("lookAt[1]: "+lookAt[1]);
-      System.out.println("lookAt[2]: "+lookAt[2]);
-      
-      double[] xAxis = {1, 0, 0};
-      double[] upVector = normalizedVector(crossProduct(xAxis, subtractVectors(lookAt, eyePosition)));
-      System.out.println("upVector[0]: "+upVector[0]);
-      System.out.println("upVector[1]: "+upVector[1]);
-      System.out.println("upVector[2]: "+upVector[2]);*/
-      
+      double frustumHeight = offset.getWidth() * (1/aspect);
       
       double z0 = frustumHeight / (2*Math.cos(angle_rad));
-      //System.out.println("zstrich: "+z0);
-      if(z0 < height/2) z0 = height/2;
-      //System.out.println("zstrich: "+z0);
-      
-      z0 = height/2;
+      if(z0 < offset.getHeight()/2) z0 = offset.getHeight()/2;
       
       double y1 = z0 / (Math.tan(angle_rad) - Math.tan(angle_rad - fovy_rad/2));
-      //double z1 = y1 * Math.tan(angle_rad);
-      //System.out.println("y1: "+y1);
-      //System.out.println("z1: "+z1);
       
       double y2 = y1 + SpaceView.getObjectHeight();
       double z2 = y2 * Math.tan(angle_rad);
-      //System.out.println("y2: "+y2);
-      //System.out.println("z2: "+z2);
       
       double[] eyePosition = {0, y2, z2};
-      /*System.out.println("eyePosition[0]: "+eyePosition[0]);
-      System.out.println("eyePosition[1]: "+eyePosition[1]);
-      System.out.println("eyePosition[2]: "+eyePosition[2]);*/
       
       double[] lookAt = {0, 0, 0};
-      /*System.out.println("lookAt[0]: "+lookAt[0]);
-      System.out.println("lookAt[1]: "+lookAt[1]);
-      System.out.println("lookAt[2]: "+lookAt[2]);*/
       
       double[] xAxis = {1, 0, 0};
-      double[] upVector = normalizedVector(crossProduct(xAxis, subtractVectors(lookAt, eyePosition)));
-      /*System.out.println("upVector[0]: "+upVector[0]);
-      System.out.println("upVector[1]: "+upVector[1]);
-      System.out.println("upVector[2]: "+upVector[2]);*/
+      double[] upVector = VectorOperations.normalizedVector(VectorOperations.crossProduct(xAxis, VectorOperations.subtractVectors(lookAt, eyePosition)));
       
       camera.setEyePosition(eyePosition);
       camera.setLookAt(lookAt);
       camera.setUpVector(upVector);
       
-      //double length1 = y2/Math.cos(angle_rad);
-      //System.out.println("length1: "+length1);
-      //double length2 = (height/2) * Math.sin(angle_rad);
-      //System.out.println("length2: "+length2);
-      //double far = length1 + length2;
-      //System.out.println("far: "+far);
-      
-      /*if(far>FAR_MIN) { 
-        // Define a perspective viewing volume
-        glu.gluPerspective(fovy, aspect, 1, far);
-      }*/
-      
-      
-      //glu.gluLookAt(0, 800, 800, 0, 0, 0, 0, 1, -1);
-      /*glu.gluLookAt(eyePosition[0], eyePosition[1], eyePosition[2], 
-                    lookAt[0], lookAt[1], lookAt[2], 
-                    upVector[0], upVector[1], upVector[2]);*/
-      
-      //double[] position = {0, 800, 800};
-      Skybox skybox = spaceModel.getSpaceView().getSkybox();
-      if(skybox != null) {
-        skybox.setPosition(eyePosition);
-      }
     }
     
     // Reset model view matrix stack
@@ -464,13 +325,16 @@ public class Engine implements GLEventListener {
         camera.getLookAt()[0], camera.getLookAt()[1], camera.getLookAt()[2], 
         camera.getUpVector()[0], camera.getUpVector()[1], camera.getUpVector()[2]);
     
-    // Reinitialize
-    //init(drawable);
-    
-    // Prepare the space model
-    if (spaceModel != null && drawingArea != null) {
-      prepareSpaceModel(gl);
+    Skybox skybox = spaceModel.getSpaceView().getSkybox();
+    if(skybox != null) {
+      skybox.setWidth(offset.getWidth());
+      skybox.setHeight(camera.getEyePosition()[1]);
+      skybox.setDepth(offset.getHeight());
+      double[] position = {0, skybox.getHeight()/2, 0};
+      skybox.setPosition(position);
+      skybox.generateDisplayList(gl, glu);
     }
+    
   }
 
   /**
@@ -479,28 +343,12 @@ public class Engine implements GLEventListener {
    * @param gl
    */
   private void prepareSpaceModel(GL2 gl) {
-	  
-	  // Get the space type
-    //SpaceType type = spaceModel.getSpaceType();
-	  
+
     // Adjust drawing area (find correct pixel values)
     double w_tmp = 0;
     double h_tmp = 0;
     double w_px = 0;
     double h_px = 0;
-    
-    /*if(type.equals(SpaceType.OneD) || type.equals(SpaceType.OneDGrid)) {
-      OneDimSpaceView spaceView = (OneDimSpaceView)spaceModel.getSpaceView();
-      if(spaceView.getAlignment().equals(Alignment.horizontal)) {
-        double proportion = drawingArea.getWidth() / spaceModel.getxMax();
-        w_px = proportion * spaceModel.getxMax();
-        drawingArea = new Offset(-w_px / 2.0, drawingArea.y1, w_px / 2.0, drawingArea.y2);
-      } else {
-        double proportion = drawingArea.getHeight() / spaceModel.getxMax();
-        h_px = proportion * spaceModel.getxMax();
-        drawingArea = new Offset(drawingArea.x1, -h_px / 2.0, drawingArea.x2, h_px / 2.0);
-      }
-    } else {*/
     
     w_tmp = drawingArea.getWidth() / spaceModel.getxMax();
     h_tmp = drawingArea.getHeight() / spaceModel.getyMax();
@@ -512,12 +360,11 @@ public class Engine implements GLEventListener {
 
     drawingArea = new Offset(-w_px / 2.0, -h_px / 2.0, w_px / 2.0, h_px / 2.0);
     
-    //}
-    
 	  // Set the space models drawing area
     spaceModel.setDrawingArea(drawingArea);
 
     Skybox skybox = spaceModel.getSpaceView().getSkybox();
+    
     if(skybox != null) {
       Class<?> faceClass = Face.class;
       for (Face face : (Face[])faceClass.getEnumConstants())  {
@@ -527,13 +374,10 @@ public class Engine implements GLEventListener {
           skybox.setTexture(face, loadTexture(textureFilename)); 
         }
       }
-      
-      skybox.generateDisplayList(gl, glu);
     }
     
     // Get the space type
-    SpaceType type = spaceModel.getSpaceType();
-    
+    SpaceType type = spaceModel.getSpaceType();  
 
     if (type.equals(SpaceType.TwoD)) {
       // Get the space view
@@ -582,9 +426,7 @@ public class Engine implements GLEventListener {
     // Create display list
     spaceModel.compileDisplayList(gl, glu);
     spaceModel.setInitialized(true);
-    
-    
-    
+
   }
 
   /**
@@ -687,6 +529,11 @@ public class Engine implements GLEventListener {
         camera.getLookAt()[0], camera.getLookAt()[1], camera.getLookAt()[2], 
         camera.getUpVector()[0], camera.getUpVector()[1], camera.getUpVector()[2]);
     
+    // Apply camera transformations
+    camera.zoom(gl);
+    camera.scroll(gl);
+    camera.rotate(gl);
+    
     // Get all objects as a collection (to be able to iterate over it)
     Collection<Objekt> objCollection = objMap.values();
 
@@ -719,10 +566,8 @@ public class Engine implements GLEventListener {
       for (Objekt obj : objCollection) {
         if (obj instanceof PhysicalAgentObject || obj instanceof PhysicalObject) {
           // Display physical agents and physical objects
-          //gl.glPushName((int) obj.getId());
           gl.glLoadName((int) obj.getId());
           displayPhysical((Physical) obj, gl, glu);
-          //gl.glPopName();
 
           /*
            * If the space model is a gird, decrease the object count of the
@@ -734,10 +579,8 @@ public class Engine implements GLEventListener {
           }
         } else {
           // Display non-physical agents or objects
-          //gl.glPushName((int) obj.getId());
           gl.glLoadName((int) obj.getId());
           displayNonPhysical(obj, gl, glu);
-          //gl.glPopName();
         }
       }
 
@@ -818,7 +661,7 @@ public class Engine implements GLEventListener {
 
         // Get the physical's position in world coordinate space
         double[] pos = getPhysicalObjectPosition(index, phy);
-
+        
         // Don't display if the position is somehow undefined
         if (pos == null) {
           return;
@@ -953,8 +796,6 @@ public class Engine implements GLEventListener {
         
         attachedOffset[1] = 0;
       }
-
-      //double[] attachedOffset3d = {attachedOffset[0], 0, -attachedOffset[1]};
       
       // Display attached shape
       displayAttachedObject(pos, attachedOffset, rot, attachedShape,
@@ -1408,11 +1249,6 @@ public class Engine implements GLEventListener {
 
     // Get the mapped position
     double[] pos = comp.getWorldCoordinates(phy.getX(), phy.getY());
-
-    //if (pos != null) {
-      // Add the z index
-    //  pos[2] = phy.getZ();
-    //}
     
     return pos;
   }
@@ -1493,7 +1329,6 @@ public class Engine implements GLEventListener {
       if (shape.getPositioning().equals(Positioning.CenterCenter)
           || shape.getPositioning().equals(Positioning.LeftCenter)
           || shape.getPositioning().equals(Positioning.RightCenter)) {
-        //gl.glRasterPos2d(position[0] + offset[0], position[1] + offset[1] - shape.getHeight() / 2 - 15);
         gl.glRasterPos3d(position[0] + offset[0], SpaceView.getObjectHeight()+12, position[2] + offset[2]
             + shape.getHeight() / 2 + 15);
       } else if (shape.getPositioning().equals(Positioning.CenterBottom)
@@ -1540,7 +1375,6 @@ public class Engine implements GLEventListener {
 
     // Initialize the name stack
     gl.glInitNames();
-    //gl.glPushName(-1);
     gl.glPushName(-1);
 
     gl.glMatrixMode(GL2.GL_PROJECTION);
@@ -1550,14 +1384,11 @@ public class Engine implements GLEventListener {
     // Create a small 1x1 pixel picking region around the cursor
     glu.gluPickMatrix(pickPoint.x, viewport[3] - pickPoint.y - 1, 1, 1,
         viewport, 0);
-
-    // Set up the projection matrix
-    /*gl.glOrtho(-viewport[2] / 2, viewport[2] / 2, -viewport[3] / 2,
-        viewport[3] / 2, 1, -100);*/
     
     // ratio of width to height
     double aspect = (double)viewport[2]/(double)viewport[3];
     double fovy = 45;
+    
     // Define a perspective viewing volume
     glu.gluPerspective(fovy, aspect, 1, 10000);
     
@@ -1583,22 +1414,14 @@ public class Engine implements GLEventListener {
   }
 
   /**
-   * Returns the ID of the topmost element inside of the selection buffer.
+   * Returns the ID of the closest element inside of the selection buffer.
    * 
    * @param hits
    * @param selectionBuffer
    */
   private int processHits(int hits, int selectionBuffer[]) {
     if (hits > 0) {
-      /*
-       * Have a look at the content of the selection buffer to understand this
-       * formula.
-       */
-      //int pos = (hits * 4) + ((hits * (hits + 1)) / 2);
 
-      //return selectionBuffer[pos - 1];
-      
-      
       int selectedId = selectionBuffer[3];              // make our selection the first object
       int depth = selectionBuffer[1];                   // store how far away it is (zmin)
       
@@ -1679,33 +1502,6 @@ public class Engine implements GLEventListener {
    
     return pointList;
   }
-
-  public double[] normalizedVector(double[] v) {
-    double length = Math.sqrt(v[0]*v[0] + v[1]*v[1] + v[2]*v[2]);
-    double[] normalizedVector = {v[0] / length,
-                                 v[1] / length,
-                                 v[2] / length};
-    return normalizedVector;
-  }
-  
-  public double[] crossProduct(double[] vector1, double[] vector2) {
-    double[] crossProduct = {
-      vector1[1]*vector2[2] - vector1[2]*vector2[1],
-      vector1[2]*vector2[0] - vector1[0]*vector2[2],
-      vector1[0]*vector2[1] - vector1[1]*vector2[0]
-    };
-    return crossProduct;
-  }
-  
-  public double[] subtractVectors(double[] vector1, double[] vector2) {
-    double[] result = {
-      vector1[0] - vector2[0],
-      vector1[1] - vector2[1],
-      vector1[2] - vector2[2],
-    }; 
-    return result;
-  }
-  
 
   public KeyboardEventHandler getKeyboardEvtHandler() {
     return keyboardEvtHandler;

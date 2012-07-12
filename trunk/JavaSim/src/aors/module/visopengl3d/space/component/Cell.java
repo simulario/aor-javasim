@@ -11,7 +11,6 @@ import aors.module.visopengl3d.engine.TessellatedPolygon;
 import aors.module.visopengl3d.space.view.SpaceView;
 import aors.module.visopengl3d.utility.Color;
 import aors.module.visopengl3d.utility.Offset;
-import aors.module.visopengl3d.utility.VectorOperations;
 
 import com.sun.opengl.util.texture.Texture;
 
@@ -100,12 +99,6 @@ public class Cell implements SpaceComponent {
       for (int i = 1; i <= objCount; i++) {
         // Object position
         double pos[] = new double[3];
-
-        /*pos[0] = center[0] + Math.cos(halfAngle * (Math.PI / 180))
-            * (inRadius / 2);
-        pos[1] = center[1] + Math.sin(halfAngle * (Math.PI / 180))
-            * (inRadius / 2);
-        pos[2] = 0;*/
         
         pos[0] = center[0] + Math.cos(halfAngle * (Math.PI / 180))
             * (inRadius / 2);
@@ -409,9 +402,6 @@ public class Cell implements SpaceComponent {
       cellTop.end();
     }
     
-    
-    
-    
     TessellatedPolygon cellBottom = new TessellatedPolygon();
     cellBottom.init(gl, glu);
 
@@ -463,7 +453,7 @@ public class Cell implements SpaceComponent {
     
     
     // draw the side faces of the cell
-    gl.glBegin(GL2.GL_QUADS);
+    /*gl.glBegin(GL2.GL_QUADS);
     
     // Set the drawing color
     if(borderWidth != 0) {
@@ -499,7 +489,7 @@ public class Cell implements SpaceComponent {
     gl.glVertex3dv(outerContourTop.get(0), 0);
     gl.glVertex3dv(outerContourTop.get(lastIndex), 0);
     
-    gl.glEnd();
+    gl.glEnd();*/
   }
 
   @Override
@@ -550,11 +540,6 @@ public class Cell implements SpaceComponent {
       innerOffset = new Offset(outerOffset.x1 + borderWidth, outerOffset.y1
           + borderWidth, outerOffset.x2 - borderWidth, outerOffset.y2
           - borderWidth);
-
-      // Calculate the cells center
-      //center[0] = (innerOffset.getWidth() / 2) + innerOffset.x1;
-      //center[1] = (innerOffset.getHeight() / 2) + innerOffset.y1;
-      //center[2] = 0;
       
       center[0] = (innerOffset.getWidth() / 2) + innerOffset.x1;
       center[1] = 0;
@@ -579,11 +564,6 @@ public class Cell implements SpaceComponent {
     this.innerOffset = new Offset(outerOffset.x1 + strokeWidth, outerOffset.y1
         + strokeWidth, outerOffset.x2 - strokeWidth, outerOffset.y2
         - strokeWidth);
-
-    // Calculate the cells center
-    //center[0] = (innerOffset.getWidth() / 2) + innerOffset.x1;
-    //center[1] = (innerOffset.getHeight() / 2) + innerOffset.y1;
-    //center[2] = 0;
     
     center[0] = (innerOffset.getWidth() / 2) + innerOffset.x1;
     center[1] = 0;

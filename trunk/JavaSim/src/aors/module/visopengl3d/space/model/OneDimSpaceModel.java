@@ -8,12 +8,13 @@ import aors.module.visopengl3d.space.component.Track;
 import aors.module.visopengl3d.space.view.Alignment;
 import aors.module.visopengl3d.space.view.OneDimSpaceView;
 import aors.module.visopengl3d.space.view.SpaceView;
+import aors.module.visopengl3d.utility.Offset;
 
 /**
  * The OneDimensional class is a specialization of the general space model
  * class, describing a one dimensional space model and its attributes.
  * 
- * @author Sebastian Mucha
+ * @author Sebastian Mucha, Susanne Schölzel
  * @since February 15th, 2010
  * 
  */
@@ -121,6 +122,21 @@ public class OneDimSpaceModel extends SpaceModel {
       
       ((Track) spaceComponents.get(i)).generateDisplayList(gl, glu);
     }
+    
+    // Get the bottom left and top right corner of the used drawing area for the tracks
+    if(oneDimSpaceView.getAlignment().equals(Alignment.horizontal)) {
+      double x1 = ((Track) spaceComponents.get(0)).getOffset().x1;
+      double y1 = ((Track) spaceComponents.get(0)).getOffset().y1;
+      double x2 = ((Track) spaceComponents.get(multiplicity-1)).getOffset().x2;
+      double y2 = ((Track) spaceComponents.get(multiplicity-1)).getOffset().y2;
+      usedDrawingArea = new Offset(x1, y1, x2, y2);
+    } else {
+      double x1 = ((Track) spaceComponents.get(multiplicity-1)).getOffset().x1;
+      double y1 = ((Track) spaceComponents.get(multiplicity-1)).getOffset().y1;
+      double x2 = ((Track) spaceComponents.get(0)).getOffset().x2;
+      double y2 = ((Track) spaceComponents.get(0)).getOffset().y2;
+      usedDrawingArea = new Offset(x1, y1, x2, y2);
+    }
   }
 
   /**
@@ -163,6 +179,9 @@ public class OneDimSpaceModel extends SpaceModel {
     // Horizontal position of the the circle centers
     leftCenter[0] = -displacement / 2;
     rightCenter[0] = displacement / 2;
+    
+    usedDrawingArea = new Offset(leftCenter[0]-radius-trackWidth/2, leftCenter[1]-radius-trackWidth/2, 
+                                 rightCenter[0]+radius+trackWidth/2, rightCenter[1]+radius+trackWidth/2);
 
     double worldLength = rightCenter[0] - leftCenter[0];
     double worldCircumference = (Math.PI / 2) * 2 * radius;

@@ -5,17 +5,14 @@ import java.util.ArrayList;
 import javax.media.opengl.GL2;
 import javax.media.opengl.glu.GLU;
 
-import com.sun.opengl.util.texture.TextureCoords;
-
 import aors.module.visopengl3d.engine.TessellatedPolygon;
-import aors.module.visopengl3d.utility.Color;
 import aors.module.visopengl3d.utility.VectorOperations;
 
 /**
- * The Polygon class is representing a complex geometric polygon.
+ * This Polygon class represents a three dimensional object with a polygon as bottom and top face
  * 
- * @author Sebastian Mucha
- * @since January 19th, 2010
+ * @author Susanne Schölzel
+ * @since January 4th, 2012
  * 
  */
 public class Polygon extends Shape2D {
@@ -229,7 +226,6 @@ public class Polygon extends Shape2D {
           poly.endPolygon();
           
           poly.end();
-          //poly = null;
           
           // Set the drawing color
           gl.glColor4dv(fill.getColor(), 0);

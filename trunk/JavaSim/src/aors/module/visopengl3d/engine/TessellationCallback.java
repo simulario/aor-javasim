@@ -8,7 +8,7 @@ import javax.media.opengl.glu.GLUtessellatorCallback;
  * The TesselationCallback class is implementing all methods needed to perform
  * polygon tessellation.
  * 
- * @author Sebastian Mucha
+ * @author Sebastian Mucha, Susanne Schölzel
  * @since February 17th, 2010
  * 
  */

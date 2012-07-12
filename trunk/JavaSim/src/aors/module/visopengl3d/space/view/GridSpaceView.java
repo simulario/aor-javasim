@@ -7,7 +7,7 @@ import com.sun.opengl.util.texture.Texture;
 /**
  * Two dimensional, discrete space view.
  * 
- * @author Sebastian Mucha
+ * @author Sebastian Mucha, Susanne Schölzel
  * @since March 17th, 2010
  * 
  */
@@ -46,7 +46,7 @@ public class GridSpaceView extends SpaceView {
   private Texture backgroundImg;
   private String backgroundImgFilename;
   
-  private double cellHeight = 10;
+  private double cellHeight = 0;
 
   public Color getBackgroundColor() {
     return backgroundColor;

@@ -9,12 +9,11 @@ import aors.module.visopengl3d.utility.Color;
 import aors.module.visopengl3d.utility.Offset;
 
 import com.sun.opengl.util.texture.Texture;
-import com.sun.opengl.util.texture.TextureCoords;
 
 /**
  * Margin of a two dimensional continuous space model.
  * 
- * @author Sebastian Mucha
+ * @author Sebastian Mucha, Susanne Schölzel
  * @since March 25th, 2010
  * 
  */
@@ -51,7 +50,7 @@ public class Margin implements SpaceComponent {
   
   @Override
   public void display(GL2 gl, GLU glu) {
-    if (backgroundImg != null) {
+    /*if (backgroundImg != null) {
       // Get texture coordinates
       TextureCoords tc = backgroundImg.getImageTexCoords();
 
@@ -102,7 +101,7 @@ public class Margin implements SpaceComponent {
     gl.glVertex3d(offset.x2, 0, -offset.y1);
     gl.glVertex3d(offset.x2, 0, -offset.y2);
     gl.glVertex3d(offset.x1, 0, -offset.y2);
-    gl.glEnd();
+    gl.glEnd();*/
   }
 
   @Override

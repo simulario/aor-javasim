@@ -60,122 +60,116 @@ public class RegularTriangularPrism extends Shape3D {
 		  	{-halfWidth, halfHeight, radius-depth}		// Top back left
 		  };
 	    	
-	      // Check if the regular triangular prism will be rendered with a texture applied to it
-	      if (texture != null) {
+      // Check if the regular triangular prism will be rendered with a texture applied to it
+      if (texture != null) {
 	    	  
 	    	// Set the drawing color to white (because of texture)
-	  	    gl.glColor4dv(Color.WHITE.getColor(), 0);
-	    	
-	    	// Set the material to a white material (because of texture)
-			//setMaterial(gl, Color.WHITE.getColorFloat());
+	  	  gl.glColor4dv(Color.WHITE.getColor(), 0);
 		  	
-            TextureCoords tc = texture.getImageTexCoords();
+        TextureCoords tc = texture.getImageTexCoords();
             
-            // Enable texture support
-	        texture.bind();
-	        texture.enable();
+        // Enable texture support
+        texture.bind();
+        texture.enable();
             
-	        // draw the bottom and top of the regular triangular prism as triangles with texture coordinates
-	        gl.glBegin(GL2.GL_TRIANGLES);
+        // draw the bottom and top of the regular triangular prism as triangles with texture coordinates
+        gl.glBegin(GL2.GL_TRIANGLES);
 	        
-			// Bottom Face
-	        gl.glNormal3d(0, -1, 0);
-	        gl.glTexCoord2d(tc.left() + 0.5, tc.bottom()); gl.glVertex3dv(vertices[0], 0);
-			gl.glTexCoord2d(tc.right(), tc.top()); gl.glVertex3dv(vertices[2], 0);
-			gl.glTexCoord2d(tc.left(), tc.top()); gl.glVertex3dv(vertices[1], 0);
-			// Top Face
-			gl.glNormal3d(0, 1, 0);
-			gl.glTexCoord2d(tc.left(), tc.bottom()); gl.glVertex3dv(vertices[4], 0);
-			gl.glTexCoord2d(tc.right(), tc.bottom()); gl.glVertex3dv(vertices[5], 0);
-			gl.glTexCoord2d(tc.left() + 0.5, tc.top()); gl.glVertex3dv(vertices[3], 0);
-			
-			gl.glEnd();
+        // Bottom Face
+        gl.glNormal3d(0, -1, 0);
+        gl.glTexCoord2d(tc.left() + 0.5, tc.bottom()); gl.glVertex3dv(vertices[0], 0);
+    		gl.glTexCoord2d(tc.right(), tc.top()); gl.glVertex3dv(vertices[2], 0);
+    		gl.glTexCoord2d(tc.left(), tc.top()); gl.glVertex3dv(vertices[1], 0);
+    		// Top Face
+    		gl.glNormal3d(0, 1, 0);
+    		gl.glTexCoord2d(tc.left(), tc.bottom()); gl.glVertex3dv(vertices[4], 0);
+    		gl.glTexCoord2d(tc.right(), tc.bottom()); gl.glVertex3dv(vertices[5], 0);
+    		gl.glTexCoord2d(tc.left() + 0.5, tc.top()); gl.glVertex3dv(vertices[3], 0);
+    		
+    		gl.glEnd();
+            
+    		// draw the three faces of the regular triangular prism as rectangles with texture coordinates
+        gl.glBegin(GL2.GL_QUADS);
 	        
-			// draw the three faces of the regular triangular prism as rectangles with texture coordinates
-	        gl.glBegin(GL2.GL_QUADS);
-	        
-			// Left Face
-	        double[] nLeft = {-depth*height, 0, halfWidth*height};
-			normalize(nLeft);
-			gl.glNormal3dv(nLeft, 0);
-			gl.glTexCoord2d(tc.left(), tc.bottom()); gl.glVertex3dv(vertices[2], 0);
-			gl.glTexCoord2d(tc.right(), tc.bottom()); gl.glVertex3dv(vertices[0], 0);
-			gl.glTexCoord2d(tc.right(), tc.top()); gl.glVertex3dv(vertices[3], 0);
-			gl.glTexCoord2d(tc.left(), tc.top()); gl.glVertex3dv(vertices[5], 0);
-			// Right Face
-			double[] nRight = {depth*height, 0, halfWidth*height};
-			normalize(nRight);
-			gl.glNormal3dv(nRight, 0);
-			gl.glTexCoord2d(tc.left(), tc.bottom()); gl.glVertex3dv(vertices[0], 0);
-			gl.glTexCoord2d(tc.right(), tc.bottom()); gl.glVertex3dv(vertices[1], 0);
-			gl.glTexCoord2d(tc.right(), tc.top()); gl.glVertex3dv(vertices[4], 0);
-			gl.glTexCoord2d(tc.left(), tc.top()); gl.glVertex3dv(vertices[3], 0);
-			// Back Face
-			gl.glNormal3d(0, 0, -1);
-			gl.glTexCoord2d(tc.left(), tc.bottom()); gl.glVertex3dv(vertices[1], 0);
-			gl.glTexCoord2d(tc.right(), tc.bottom()); gl.glVertex3dv(vertices[2], 0);
-			gl.glTexCoord2d(tc.right(), tc.top()); gl.glVertex3dv(vertices[5], 0);
-			gl.glTexCoord2d(tc.left(), tc.top()); gl.glVertex3dv(vertices[4], 0);
-			
-			gl.glEnd();
+        // Left Face
+        double[] nLeft = {-depth*height, 0, halfWidth*height};
+  			normalize(nLeft);
+  			gl.glNormal3dv(nLeft, 0);
+  			gl.glTexCoord2d(tc.left(), tc.bottom()); gl.glVertex3dv(vertices[2], 0);
+  			gl.glTexCoord2d(tc.right(), tc.bottom()); gl.glVertex3dv(vertices[0], 0);
+  			gl.glTexCoord2d(tc.right(), tc.top()); gl.glVertex3dv(vertices[3], 0);
+  			gl.glTexCoord2d(tc.left(), tc.top()); gl.glVertex3dv(vertices[5], 0);
+  			// Right Face
+  			double[] nRight = {depth*height, 0, halfWidth*height};
+  			normalize(nRight);
+  			gl.glNormal3dv(nRight, 0);
+  			gl.glTexCoord2d(tc.left(), tc.bottom()); gl.glVertex3dv(vertices[0], 0);
+  			gl.glTexCoord2d(tc.right(), tc.bottom()); gl.glVertex3dv(vertices[1], 0);
+  			gl.glTexCoord2d(tc.right(), tc.top()); gl.glVertex3dv(vertices[4], 0);
+  			gl.glTexCoord2d(tc.left(), tc.top()); gl.glVertex3dv(vertices[3], 0);
+  			// Back Face
+  			gl.glNormal3d(0, 0, -1);
+  			gl.glTexCoord2d(tc.left(), tc.bottom()); gl.glVertex3dv(vertices[1], 0);
+  			gl.glTexCoord2d(tc.right(), tc.bottom()); gl.glVertex3dv(vertices[2], 0);
+  			gl.glTexCoord2d(tc.right(), tc.top()); gl.glVertex3dv(vertices[5], 0);
+  			gl.glTexCoord2d(tc.left(), tc.top()); gl.glVertex3dv(vertices[4], 0);
+  			
+  			gl.glEnd();
 	        
 		  	// Disable texture support
-	        texture.disable();
+        texture.disable();
 		  	
-	      } else {
+      } else {
 			
 	    	// Set the drawing color
-	  	    gl.glColor4dv(fill.getColor(), 0);
-	    	
-	    	// Set the material according to the fill color
-		  	//setMaterial(gl, fill.getColorFloat());
+  	    gl.glColor4dv(fill.getColor(), 0);
 	    	  
-	        // draw the bottom and top of the regular triangular prism as triangles
-	        gl.glBegin(GL2.GL_TRIANGLES);
+        // draw the bottom and top of the regular triangular prism as triangles
+        gl.glBegin(GL2.GL_TRIANGLES);
 	        
-			// Bottom Face
-	        gl.glNormal3d(0, -1, 0);
-			gl.glVertex3dv(vertices[0], 0);
-			gl.glVertex3dv(vertices[2], 0);
-			gl.glVertex3dv(vertices[1], 0);
-			// Top Face
-			gl.glNormal3d(0, 1, 0);
-			gl.glVertex3dv(vertices[4], 0);
-			gl.glVertex3dv(vertices[5], 0);
-			gl.glVertex3dv(vertices[3], 0);
-			
-			gl.glEnd();
+        // Bottom Face
+        gl.glNormal3d(0, -1, 0);
+  			gl.glVertex3dv(vertices[0], 0);
+  			gl.glVertex3dv(vertices[2], 0);
+  			gl.glVertex3dv(vertices[1], 0);
+  			// Top Face
+  			gl.glNormal3d(0, 1, 0);
+  			gl.glVertex3dv(vertices[4], 0);
+  			gl.glVertex3dv(vertices[5], 0);
+  			gl.glVertex3dv(vertices[3], 0);
+  			
+  			gl.glEnd();
 	        
-			// draw the three faces of the regular triangular prism as rectangles
-	        gl.glBegin(GL2.GL_QUADS);
+  			// draw the three faces of the regular triangular prism as rectangles
+        gl.glBegin(GL2.GL_QUADS);
 	        
-			// Left Face
-	        double[] nLeft = {-depth*height, 0, halfWidth*height};
-			normalize(nLeft);
-			gl.glNormal3dv(nLeft, 0);
-			gl.glVertex3dv(vertices[2], 0);
-			gl.glVertex3dv(vertices[0], 0);
-			gl.glVertex3dv(vertices[3], 0);
-			gl.glVertex3dv(vertices[5], 0);
-			// Right Face
-			double[] nRight = {depth*height, 0, halfWidth*height};
-			normalize(nRight);
-			gl.glNormal3dv(nRight, 0);
-			gl.glVertex3dv(vertices[0], 0);
-			gl.glVertex3dv(vertices[1], 0);
-			gl.glVertex3dv(vertices[4], 0);
-			gl.glVertex3dv(vertices[3], 0);
-			// Back Face
-			gl.glNormal3d(0, 0, -1);
-			gl.glVertex3dv(vertices[1], 0);
-			gl.glVertex3dv(vertices[2], 0);
-			gl.glVertex3dv(vertices[5], 0);
-			gl.glVertex3dv(vertices[4], 0);
-			
-			gl.glEnd();
+        // Left Face
+        double[] nLeft = {-depth*height, 0, halfWidth*height};
+    		normalize(nLeft);
+    		gl.glNormal3dv(nLeft, 0);
+    		gl.glVertex3dv(vertices[2], 0);
+    		gl.glVertex3dv(vertices[0], 0);
+    		gl.glVertex3dv(vertices[3], 0);
+    		gl.glVertex3dv(vertices[5], 0);
+    		// Right Face
+    		double[] nRight = {depth*height, 0, halfWidth*height};
+    		normalize(nRight);
+    		gl.glNormal3dv(nRight, 0);
+    		gl.glVertex3dv(vertices[0], 0);
+    		gl.glVertex3dv(vertices[1], 0);
+    		gl.glVertex3dv(vertices[4], 0);
+    		gl.glVertex3dv(vertices[3], 0);
+    		// Back Face
+    		gl.glNormal3d(0, 0, -1);
+    		gl.glVertex3dv(vertices[1], 0);
+    		gl.glVertex3dv(vertices[2], 0);
+    		gl.glVertex3dv(vertices[5], 0);
+    		gl.glVertex3dv(vertices[4], 0);
+    		
+    		gl.glEnd();
 	    	  
-	      }
-	    }
+      }
+    }
 		
 		gl.glEndList();
 		

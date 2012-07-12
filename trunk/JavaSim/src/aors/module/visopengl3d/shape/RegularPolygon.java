@@ -8,8 +8,15 @@ import aors.module.visopengl3d.utility.VectorOperations;
 
 import com.sun.opengl.util.texture.TextureCoords;
 
+/**
+ * This RegularPolygon class represents a three dimensional object with a regular polygon as bottom and top face
+ * 
+ * @author Susanne Schölzel
+ * @since January 4th, 2012
+ * 
+ */
 public class RegularPolygon extends Shape2D {
-
+  
   public RegularPolygon() {
     type = ShapeType.RegularPolygon;
   }
@@ -18,9 +25,15 @@ public class RegularPolygon extends Shape2D {
   public void generateDisplayList(GL2 gl, GLU glu) {
     
     double objectHeight = getObjectHeight();
-    double sideLength = width;
-    // radius of the circumcircle of the regular polygon
-    double radius = sideLength / (2 * Math.sin(Math.PI / numberOfPoints));    
+    
+    // calculate radius of the circumcircle of the regular polygon
+    double radius;
+    
+    if(useSideLength) {
+      radius = sideLength/(2*Math.sin(Math.PI/numberOfPoints));
+    } else {
+      radius = width/2;
+    } 
     
     // Set the alpha value of the fill color to the fill opacity
     fill.setAlpha(fillOpacity);
@@ -83,9 +96,6 @@ public class RegularPolygon extends Shape2D {
         // Set the drawing color to white (because of texture)
         gl.glColor4dv(Color.WHITE.getColor(), 0);
         
-        // Set the material to a white material (because of texture)
-        //setMaterial(gl, Color.WHITE.getColorFloat());
-        
         TextureCoords tc = texture.getImageTexCoords();
             
         // Enable texture support
@@ -125,14 +135,10 @@ public class RegularPolygon extends Shape2D {
         // draw the n side faces of the 3D regular polygon as rectangles with texture coordinates
         gl.glBegin(GL2.GL_QUADS);
         
-        //double phi = 2 * Math.PI / numberOfPoints;
         for(int i = 0; i < numberOfPoints; i++) {
           double[] normal = VectorOperations.crossProduct(
                               VectorOperations.subtractVectors(bottomVertices[i], topVertices[i]),
                               VectorOperations.subtractVectors(topVertices[i+1], topVertices[i]));
-          /*double[] normal =  {objectHeight * radius * (Math.sin(phi * (i+1)) - Math.sin(phi * i)),
-                             0, 
-                             objectHeight * radius * (Math.cos(phi * (i+1)) - Math.cos(phi * i))};*/
           VectorOperations.normalize(normal);
           gl.glNormal3dv(normal, 0);
           gl.glTexCoord2d(tc.left(), tc.bottom()); gl.glVertex3dv(bottomVertices[i], 0);
@@ -150,11 +156,8 @@ public class RegularPolygon extends Shape2D {
       
         // Set the drawing color
         gl.glColor4dv(fill.getColor(), 0);
-        
-        // Set the material according to the fill color
-        //setMaterial(gl, fill.getColorFloat());
           
-        // draw the top face of the 3D regular polygon as trianglefan
+        // draw the top face of the 3D regular polygon as triangle fan
         gl.glBegin(GL2.GL_TRIANGLE_FAN);
         
         gl.glNormal3d(0, 1, 0);
@@ -167,7 +170,7 @@ public class RegularPolygon extends Shape2D {
         gl.glEnd();
         
         
-        // draw the bottom face of the 3D regular polygon as trianglefan
+        // draw the bottom face of the 3D regular polygon as triangle fan
         gl.glBegin(GL2.GL_TRIANGLE_FAN);
         
         gl.glNormal3d(0, -1, 0);
@@ -182,15 +185,10 @@ public class RegularPolygon extends Shape2D {
         // draw the n faces of the 3D regular polygon as rectangles
         gl.glBegin(GL2.GL_QUADS);
         
-        //double phi = 2 * Math.PI / numberOfPoints;
         for(int i = 0; i < numberOfPoints; i++) {
           double[] normal = VectorOperations.crossProduct(
               VectorOperations.subtractVectors(bottomVertices[i], topVertices[i]),
               VectorOperations.subtractVectors(topVertices[i+1], topVertices[i]));
-          
-          /*{objectHeight * radius * (Math.sin(phi * (i+1)) - Math.sin(phi * i)),
-                             0, 
-                             objectHeight * radius * (Math.cos(phi * (i+1)) - Math.cos(phi * i))};*/
           VectorOperations.normalize(normal);
           gl.glNormal3dv(normal, 0);
           gl.glVertex3dv(bottomVertices[i], 0);

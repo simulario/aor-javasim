@@ -9,7 +9,7 @@ import aors.module.visopengl3d.utility.Color;
 
 
 /**
- * The 3D Square is represented by a Cuboid.
+ * This Square class represents a three dimensional object with a square as bottom and top face
  * 
  * @author Susanne Schölzel
  * @since January 4th, 2012
@@ -96,9 +96,6 @@ public class Square extends Shape2D {
           
         // Set the drawing color to white (because of texture)
         gl.glColor4dv(Color.WHITE.getColor(), 0);
-          
-        // Set the material to a white material (because of texture)
-        //setMaterial(gl, Color.WHITE.getColorFloat());
         
         TextureCoords tc = texture.getImageTexCoords();
             
@@ -128,12 +125,6 @@ public class Square extends Shape2D {
         gl.glTexCoord2d(tc.right(), tc.top()); gl.glVertex3dv(vertices[6], 0);
         gl.glTexCoord2d(tc.left(), tc.top()); gl.glVertex3dv(vertices[7], 0);
         // Bottom Face
-        /*gl.glNormal3d(0, -1, 0);
-        gl.glTexCoord2d(tc.left(), tc.bottom()); gl.glVertex3dv(vertices[1], 0);
-        gl.glTexCoord2d(tc.right(), tc.bottom()); gl.glVertex3dv(vertices[0], 0);
-        gl.glTexCoord2d(tc.right(), tc.top()); gl.glVertex3dv(vertices[3], 0);
-        gl.glTexCoord2d(tc.left(), tc.top()); gl.glVertex3dv(vertices[2], 0);*/
-        
         gl.glNormal3d(0, -1, 0);
         gl.glTexCoord2d(tc.left(), tc.bottom()); gl.glVertex3dv(vertices[3], 0);
         gl.glTexCoord2d(tc.right(), tc.bottom()); gl.glVertex3dv(vertices[2], 0);
@@ -162,9 +153,6 @@ public class Square extends Shape2D {
         // Set the drawing color
         gl.glColor4dv(fill.getColor(), 0);
         
-        // Set the material according to the fill color
-        //setMaterial(gl, fill.getColorFloat());
-          
         // draw the six faces of the cuboid as rectangles
         gl.glBegin(GL2.GL_QUADS);
           

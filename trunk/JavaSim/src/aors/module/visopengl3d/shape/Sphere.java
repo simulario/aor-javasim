@@ -29,73 +29,67 @@ public class Sphere extends Shape3D {
 		fill.setAlpha(fillOpacity);
 		
 		// Get a denominator for the display list
-	    displayList = gl.glGenLists(1);
+    displayList = gl.glGenLists(1);
 
-	    // Create the display list
-	    gl.glNewList(displayList, GL2.GL_COMPILE);
-	    
-	    gl.glPushMatrix();
-	    
-	    // rotate the sphere, so that the top points in direction of the positive y-axis
-	    gl.glRotated(-90, 1, 0, 0);
-	    
-	    // radius of the sphere
-	    double radius = width / 2;
-	    
-	    // Don't draw anything if the dimensions are too small
-	    if (radius > 0) {
+    // Create the display list
+    gl.glNewList(displayList, GL2.GL_COMPILE);
+    
+    gl.glPushMatrix();
+    
+    // rotate the sphere, so that the top points in direction of the positive y-axis
+    gl.glRotated(-90, 1, 0, 0);
+    
+    // radius of the sphere
+    double radius = width / 2;
+    
+    // Don't draw anything if the dimensions are too small
+    if (radius > 0) {
 	      
-	      // GLUquadric object for the sphere
-	      GLUquadric sphere = glu.gluNewQuadric();
-	    	
-	      // Check if the sphere will be rendered with a texture applied to it
-	      if (texture != null) {
+      // GLUquadric object for the sphere
+      GLUquadric sphere = glu.gluNewQuadric();
+    	
+      // Check if the sphere will be rendered with a texture applied to it
+      if (texture != null) {
 	    	  
 	    	// Set the drawing color to white (because of texture)
-	  	    gl.glColor4dv(Color.WHITE.getColor(), 0);
-	  	    
-	  	    // Set the material to a white material (because of texture)
-		  	//setMaterial(gl, Color.WHITE.getColorFloat());
+	  	  gl.glColor4dv(Color.WHITE.getColor(), 0);
             
-            // Enable texture support
-	        texture.bind();
-	        texture.enable();
-            
-	        gl.glMatrixMode(GL2.GL_TEXTURE);
-	        gl.glPushMatrix();
-	        gl.glTranslated(0.5, 0.5, 0);
-	        gl.glScaled(1, -1, 1);
-	        gl.glTranslated(-0.5, -0.5, 0);
-	        
-	        // draw the sphere with texture coordinates
-	        glu.gluQuadricTexture(sphere, true);
-	        glu.gluQuadricNormals(sphere, GLU.GLU_SMOOTH);
-	        glu.gluSphere(sphere, radius, 36, 36);
-	        glu.gluDeleteQuadric(sphere);
-	        
-	        gl.glPopMatrix();
-	        gl.glMatrixMode(GL2.GL_MODELVIEW);
+        // Enable texture support
+        texture.bind();
+        texture.enable();
+          
+        gl.glMatrixMode(GL2.GL_TEXTURE);
+        gl.glPushMatrix();
+        gl.glTranslated(0.5, 0.5, 0);
+        gl.glScaled(1, -1, 1);
+        gl.glTranslated(-0.5, -0.5, 0);
+        
+        // draw the sphere with texture coordinates
+        glu.gluQuadricTexture(sphere, true);
+        glu.gluQuadricNormals(sphere, GLU.GLU_SMOOTH);
+        glu.gluSphere(sphere, radius, 36, 36);
+        glu.gluDeleteQuadric(sphere);
+        
+        gl.glPopMatrix();
+        gl.glMatrixMode(GL2.GL_MODELVIEW);
 	        
 		  	// Disable texture support
-	        texture.disable();
+	      texture.disable();
 		  	
-	      } else {
+	    } else {
 			
 	    	// Set the drawing color
-	  	    gl.glColor4dv(fill.getColor(), 0);
-	  	    
-	    	// Set the material according to the fill color
-		  	//setMaterial(gl, fill.getColorFloat());
+	  	  gl.glColor4dv(fill.getColor(), 0);
 	    	  
-	  	    // draw the sphere
-	  	    glu.gluQuadricNormals(sphere, GLU.GLU_SMOOTH);
-	        glu.gluSphere(sphere, radius, 36, 36);
-	        glu.gluDeleteQuadric(sphere);
-	    	  
-	      }
-	    }
+  	    // draw the sphere
+  	    glu.gluQuadricNormals(sphere, GLU.GLU_SMOOTH);
+        glu.gluSphere(sphere, radius, 36, 36);
+        glu.gluDeleteQuadric(sphere);
+    	  
+      }
+    }
 	    
-	    gl.glPopMatrix();
+	  gl.glPopMatrix();
 		
 		gl.glEndList();
 		
