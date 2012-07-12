@@ -23,29 +23,29 @@ public class KeyboardEventHandler implements KeyListener {
 
   @Override
   public void keyPressed(KeyEvent e) {
-    /*if (camera != null) {
+    if (camera != null) {
       // Scroll left when the left arrow key was pressed
       if (e.getKeyCode() == KeyEvent.VK_LEFT) {
-    	camera.scrollLeft(true);
+        camera.scrollLeft(true);
         canvas.display();
       }
 
       // Scroll right when the right arrow key was pressed
       if (e.getKeyCode() == KeyEvent.VK_RIGHT) {
-    	camera.scrollRight(true);
+        camera.scrollRight(true);
         canvas.display();
       }
 
       // Scroll up when the up arrow key was pressed
       if (e.getKeyCode() == KeyEvent.VK_UP) {
         camera.scrollUp(true);
-    	canvas.display();
+        canvas.display();
       }
 
       // Scroll down when the down arrow key was pressed
       if (e.getKeyCode() == KeyEvent.VK_DOWN) {
         camera.scrollDown(true);
-    	canvas.display();
+        canvas.display();
       }
 
       // Reset the camera if the space key is pressed
@@ -54,69 +54,71 @@ public class KeyboardEventHandler implements KeyListener {
         canvas.display();
       }
       
-      // Rotate clockwise when the colon key was pressed
-      if (e.getKeyCode() == KeyEvent.VK_PERIOD) {
-        camera.rotateClockwise(true);
-    	canvas.display();
+      // Rotate counterclockwise when the colon key was pressed
+      /*if (e.getKeyCode() == KeyEvent.VK_PERIOD) {
+        camera.rotateCounterclockwise(true);
+        canvas.display();
       }
       
-      // Rotate counterclockwise when the comma key was pressed
+      // Rotate clockwise when the comma key was pressed
       if (e.getKeyCode() == KeyEvent.VK_COMMA) {
-        camera.rotateCounterclockwise(true);
-    	canvas.display();
+        camera.rotateClockwise(true);
+        canvas.display();
       }
       
       // Zoom in when the plus key was pressed
       if (e.getKeyCode() == KeyEvent.VK_PLUS) {
         camera.zoomIn();
-    	canvas.display();
+        canvas.display();
       }
       
       // Zoom out when the minus key was pressed
       if (e.getKeyCode() == KeyEvent.VK_MINUS) {
         camera.zoomOut();
-    	canvas.display();
-      }
-    }*/
+        canvas.display();
+      }*/
+    }
   }
 
   @Override
   public void keyReleased(KeyEvent e) {
-	  // Scroll left when the left arrow key was pressed
-      /*if (e.getKeyCode() == KeyEvent.VK_LEFT) {
-    	camera.scrollLeft(false);
+    if(camera != null) {
+	    // Stop scrolling left when the left arrow key was released
+      if (e.getKeyCode() == KeyEvent.VK_LEFT) {
+        camera.scrollLeft(false);
         canvas.display();
       }
 
-      // Scroll right when the right arrow key was pressed
+      // Stop scrolling right when the right arrow key was released
       if (e.getKeyCode() == KeyEvent.VK_RIGHT) {
-    	camera.scrollRight(false);
+        camera.scrollRight(false);
         canvas.display();
       }
 
-      // Scroll up when the up arrow key was pressed
+      // Stop scrolling up when the up arrow key was released
       if (e.getKeyCode() == KeyEvent.VK_UP) {
         camera.scrollUp(false);
-    	canvas.display();
+        canvas.display();
       }
 
-      // Scroll down when the down arrow key was pressed
+      // Stop scrolling down when the down arrow key was released
       if (e.getKeyCode() == KeyEvent.VK_DOWN) {
         camera.scrollDown(false);
-    	canvas.display();
+        canvas.display();
       }
       
-      // Rotate clockwise when the colon key was pressed
-      if (e.getKeyCode() == KeyEvent.VK_PERIOD) {
-        camera.rotateClockwise(false);
-    	canvas.display();
-      }
-      
-      // Rotate counterclockwise when the comma key was pressed
-      if (e.getKeyCode() == KeyEvent.VK_COMMA) {
+      // Stop rotating counterclockwise when the colon key was released
+      /*if (e.getKeyCode() == KeyEvent.VK_PERIOD) {
         camera.rotateCounterclockwise(false);
-    	canvas.display();
+        canvas.display();
+      }
+      
+      // Stop rotating clockwise when the comma key was released
+      if (e.getKeyCode() == KeyEvent.VK_COMMA) {
+        camera.rotateClockwise(false);
+        canvas.display();
       }*/
+    }
   }
 
   @Override

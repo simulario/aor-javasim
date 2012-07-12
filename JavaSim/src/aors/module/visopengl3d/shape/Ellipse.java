@@ -10,7 +10,7 @@ import aors.module.visopengl3d.utility.Color;
 import aors.module.visopengl3d.utility.VectorOperations;
 
 /**
- * The 3D Ellipse is represented by an elliptic Cylinder.
+ * This Ellipse class represents a three dimensional object with an Ellipse as bottom and top face
  * 
  * @author Susanne Schölzel
  * @since January 4th, 2012
@@ -34,8 +34,6 @@ public class Ellipse extends Shape2D {
 
     // Create the display list
     gl.glNewList(displayList, GL2.GL_COMPILE);
-    
-    //gl.glPushMatrix();
     
     double radiusX = width/2;
     double radiusY = height/2;
@@ -109,7 +107,6 @@ public class Ellipse extends Shape2D {
         texture.bind();
         texture.enable();
         
-        
         // draw the top face of the 3D ellipse with texture coordinates
         gl.glBegin(GL2.GL_TRIANGLE_FAN);
         
@@ -137,7 +134,6 @@ public class Ellipse extends Shape2D {
         }
         
         gl.glEnd();
-        
         
         // draw the side face of the 3D ellipse with texture coordinates
         gl.glBegin(GL2.GL_QUADS);
@@ -181,7 +177,6 @@ public class Ellipse extends Shape2D {
         
         gl.glEnd();
         
-        
         // draw the bottom face of the 3D ellipse
         gl.glBegin(GL2.GL_TRIANGLE_FAN);
         
@@ -193,7 +188,6 @@ public class Ellipse extends Shape2D {
         }
         
         gl.glEnd();
-        
         
         // draw the side face of the 3D ellipse
         gl.glBegin(GL2.GL_QUADS);
@@ -212,8 +206,6 @@ public class Ellipse extends Shape2D {
           
       }
     }
-      
-    //gl.glPopMatrix();
     
     gl.glEndList();
     

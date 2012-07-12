@@ -57,11 +57,8 @@ public class Cone extends Shape3D {
 	    	  
 	    	// Set the drawing color to white (because of texture)
 	  	    gl.glColor4dv(Color.WHITE.getColor(), 0);
-	  	    
-	  	    // Set the material to a white material (because of texture)
-		  	//setMaterial(gl, Color.WHITE.getColorFloat());
             
-            // Enable texture support
+          // Enable texture support
 	        texture.bind();
 	        texture.enable();
             
@@ -94,16 +91,13 @@ public class Cone extends Shape3D {
 	        gl.glPopMatrix();
 	        gl.glMatrixMode(GL2.GL_MODELVIEW);
 	        
-		  	// Disable texture support
+		  	  // Disable texture support
 	        texture.disable();
 		  	
 	      } else {
 			
-	    	// Set the drawing color
+	    	  // Set the drawing color
 	  	    gl.glColor4dv(fill.getColor(), 0);
-	  	    
-	  	    // Set the material according to the fill color
-	  	    //setMaterial(gl, fill.getColorFloat());
 	  	    
 	  	    // draw the side face of the cone
 	  	    glu.gluQuadricNormals(side, GLU.GLU_SMOOTH);

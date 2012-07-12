@@ -6,13 +6,11 @@ import javax.media.opengl.GL2;
 import javax.media.opengl.glu.GLU;
 
 import aors.module.visopengl3d.engine.TessellatedPolygon;
-import aors.module.visopengl3d.shape.Cuboid;
 import aors.module.visopengl3d.space.model.OneDimSpaceModel;
 import aors.module.visopengl3d.space.view.Alignment;
 import aors.module.visopengl3d.space.view.SpaceView;
 import aors.module.visopengl3d.utility.Color;
-import aors.module.visopengl3d.utility.VectorOperations;
-import aors.space.Space;
+import aors.module.visopengl3d.utility.Offset;
 
 
 /**
@@ -135,10 +133,10 @@ public class Track implements SpaceComponent {
       worldLength = x2 - x1;
       worldCircumference = (Math.PI / 2) * 2 * radius;
 
-      //spaceLength = (globalRatio / 2) * (length / 2);
-      //spaceCircumference = (1 - (globalRatio / 2)) * (length / 2);
-      spaceCircumference = length / (2* (1+globalRatio));
-      spaceLength = (globalRatio * length) / (2* (1+globalRatio));
+      spaceLength = (globalRatio / 2) * (length / 2);
+      spaceCircumference = (1 - (globalRatio / 2)) * (length / 2);
+      //spaceCircumference = length / (2* (1+globalRatio));
+      //spaceLength = (globalRatio * length) / (2* (1+globalRatio));
     }
   }
 
@@ -166,7 +164,7 @@ public class Track implements SpaceComponent {
    */
   private void drawTrack(GL2 gl, GLU glu) {
     //Create and initialize new cuboid which should represent the track
-    Cuboid cuboid = new Cuboid();
+    /*Cuboid cuboid = new Cuboid();
           
     cuboid.setFill(trackColor);
     cuboid.setHeight(trackHeight);
@@ -203,6 +201,53 @@ public class Track implements SpaceComponent {
     
     gl.glPopMatrix();
     
+    gl.glEndList();*/
+    
+    // Get a denominator for the display list
+    displayList = gl.glGenLists(1);
+
+    // Create the display list
+    gl.glNewList(displayList, GL2.GL_COMPILE);
+    
+    double[] trackPosition = {0, 0, 0};
+    double width = 0;
+    double depth = 0;
+    
+    if (alignment.equals(Alignment.horizontal)) {
+      width = x2-x1;
+      depth = trackWidth;
+      trackPosition[2] = -y1;
+    } else {
+      width = trackWidth;
+      depth = y2-y1;
+      trackPosition[0] = x1;
+    }
+    
+    double[][] vertices = {
+      {-width/2, 0, depth/2},
+      {width/2, 0, depth/2},
+      {width/2, 0, -depth/2},
+      {-width/2, 0, -depth/2}
+    };
+    
+    gl.glColor3dv(trackColor.getColor(), 0);
+    
+    gl.glPushMatrix();
+    
+    gl.glTranslated(trackPosition[0], trackPosition[1], trackPosition[2]);
+    
+    gl.glBegin(GL2.GL_QUADS);
+    
+    gl.glNormal3d(0, 1, 0);
+    gl.glVertex3dv(vertices[0], 0);
+    gl.glVertex3dv(vertices[1], 0);
+    gl.glVertex3dv(vertices[2], 0);
+    gl.glVertex3dv(vertices[3], 0);
+    
+    gl.glEnd();
+    
+    gl.glPopMatrix();
+    
     gl.glEndList();
   }
 
@@ -217,26 +262,26 @@ public class Track implements SpaceComponent {
     ArrayList<double[]> outContourTop = new ArrayList<double[]>();
     
     // List storing the vertices of the tracks contour (outside bottom)
-    ArrayList<double[]> outContourBottom = new ArrayList<double[]>();
+    //ArrayList<double[]> outContourBottom = new ArrayList<double[]>();
 
     // List storing the vertices of the tracks contour (inside top)
     ArrayList<double[]> inContourTop = new ArrayList<double[]>();
     
     // List storing the vertices of the tracks contour (inside bottom)
-    ArrayList<double[]> inContourBottom = new ArrayList<double[]>();
+    //ArrayList<double[]> inContourBottom = new ArrayList<double[]>();
     
     // Create contour lists
     createTrackContour(outContourTop, radius + (trackWidth / 2), true);
-    createTrackContour(outContourBottom, radius + (trackWidth / 2), false);
+    //createTrackContour(outContourBottom, radius + (trackWidth / 2), false);
 
     if (radius - (trackWidth / 2) > 0) {
       createTrackContour(inContourTop, radius - (trackWidth / 2), true);
-      createTrackContour(inContourBottom, radius - (trackWidth / 2), false);
+      //createTrackContour(inContourBottom, radius - (trackWidth / 2), false);
     } else {
       return;
     }
     
-    int numPoints = outContourTop.size();
+    /*int numPoints = outContourTop.size();
     
     ArrayList<double[]> outerPointNormals = new ArrayList<double[]>();
     ArrayList<double[]> innerPointNormals = new ArrayList<double[]>();
@@ -271,7 +316,7 @@ public class Track implements SpaceComponent {
       
       double[] innerPointNormal = VectorOperations.multScalarWithVector(-1, outerPointNormal);
       innerPointNormals.add(i, innerPointNormal);
-    }
+    }*/
 
     // Get a denominator for the display list
     displayList = gl.glGenLists(1);
@@ -279,13 +324,17 @@ public class Track implements SpaceComponent {
     // Create the display list
     gl.glNewList(displayList, GL2.GL_COMPILE);
     
+    // Disable back face culling
+    gl.glDisable(GL2.GL_CULL_FACE);
     // Draw the track as a tessellated polygon
     drawTessellatedCircularTrack(outContourTop, inContourTop, gl, glu);
+    // Enable back face culling
+    gl.glEnable(GL2.GL_CULL_FACE);
     
     // Draw the track as a tessellated polygon
-    drawTessellatedCircularTrack(outContourBottom, inContourBottom, gl, glu);
+    //drawTessellatedCircularTrack(outContourBottom, inContourBottom, gl, glu);
     
-    gl.glColor4dv(trackColor.getColor(), 0);
+    /*gl.glColor4dv(trackColor.getColor(), 0);
     
     // draw the outer side face
     gl.glBegin(GL2.GL_TRIANGLE_STRIP);
@@ -315,7 +364,7 @@ public class Track implements SpaceComponent {
       gl.glVertex3d(inContourBottom.get(i)[0], inContourBottom.get(i)[1], inContourBottom.get(i)[2]);
     }
     
-    gl.glEnd();
+    gl.glEnd();*/
     
     gl.glEndList();
   }
@@ -455,17 +504,11 @@ public class Track implements SpaceComponent {
 
   @Override
   public double getObjectHeight(double height) {
-    /*System.out.println("worldLength: " + worldLength);
-    System.out.println("largestSpaceLength: " + largestSpaceLength);
-    System.out.println("height:" + height);
-    System.out.println("new height: " + (worldLength * height) / largestSpaceLength);*/
     return (worldLength * height) / largestSpaceLength;
   }
 
   @Override
   public double getObjectWidth(double width) {
-    /*System.out.println("width: " + width);
-    System.out.println("new width: " + (worldLength * width) / largestSpaceLength);*/
     return (worldLength * width) / largestSpaceLength;
   }
 
@@ -619,12 +662,6 @@ public class Track implements SpaceComponent {
 
       // Left half circle
       else {
-        /*System.out.println("spaceLength: " + spaceLength);
-        System.out.println("spaceCircumference:" + spaceCircumference);
-        System.out.println("worldLength: " + worldLength);
-        System.out.println("worldCircumference:" + worldCircumference); 
-        System.out.println("radius: " + radius);
-        System.out.println("distancePercentage: " + distancePercentage);*/
         
         // Length of the arc (from the beginning of the half circle too x)
         //double arcLength = x - (2 * spaceLength - spaceCircumference);
@@ -636,23 +673,16 @@ public class Track implements SpaceComponent {
 
         // Length of the arc in world coordinates
         double arcWorldLength = ratio * worldCircumference;
-        //System.out.println("arcWorldLength: " + arcWorldLength);
 
         // Angle of the arc in degrees
         double alpha = (arcWorldLength * 360) / (2 * Math.PI * radius);
-        //System.out.println("alpha: " + alpha);
 
         // Angle of the arc in radiant
         double alphaRadiant = (alpha + 90) / (180 / Math.PI);
-        //System.out.println("alphaRadiant: " + alphaRadiant);
 
         // Calculate the u and v position on the arc
         double u = x1 + (Math.cos(alphaRadiant) * radius);
         double v = y1 + (Math.sin(alphaRadiant) * radius);
-        /*System.out.println("x1: " + x1);
-        System.out.println("y1: " + y1);
-        System.out.println("u: " + u);
-        System.out.println("v: " + v);*/
 
         // Scale the coordinates (important only for inner tracks)
         /*if (y == 0) {
@@ -663,9 +693,6 @@ public class Track implements SpaceComponent {
           vertex[1] = v * (1 - ((y - 1) * distancePercentage));
         }*/
         
-        /*System.out.println("x: " + x);
-        System.out.println("y: " + y);
-        System.out.println("yP: " + yP);*/
         /*if (y == 0) {
           vertex[0] = u * (1 - (y * distancePercentage));
           vertex[1] = SpaceView.getObjectHeight()/2;
@@ -680,9 +707,6 @@ public class Track implements SpaceComponent {
         vertex[1] = SpaceView.getObjectHeight()/2;
         vertex[2] = -v;
         
-        /*System.out.println("vertex[0]: " + vertex[0]);
-        System.out.println("vertex[1]: " + vertex[1]);
-        System.out.println("vertex[2]: " + vertex[2]);*/
       }
     }
 
@@ -751,5 +775,9 @@ public class Track implements SpaceComponent {
 
   public void setSpaceModel(OneDimSpaceModel spaceModel) {
     this.spaceModel = spaceModel;
+  }
+  
+  public Offset getOffset() {
+    return new Offset(x1, y1, x2, y2);
   }
 }

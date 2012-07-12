@@ -17,7 +17,7 @@ import com.sun.opengl.util.gl2.GLUT;
 /**
  * Class that handles the display of information about objects.
  * 
- * @author Sebastian Mucha
+ * @author Sebastian Mucha; sUSANNE sCHÖLZEL
  * @since March 28th, 2010
  * 
  */

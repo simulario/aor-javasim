@@ -5,7 +5,7 @@ import aors.module.visopengl3d.utility.Color;
 /**
  * One dimensional space view.
  * 
- * @author Sebastian Mucha
+ * @author Sebastian Mucha, Susanne Schölzel
  * @since March 17th, 2010
  * 
  */
@@ -30,7 +30,7 @@ public class OneDimSpaceView extends SpaceView {
   private double absoluteTrackWidth;
   private double relativeTrackWidth;
   
-  private double trackHeight = 30;
+  private double trackHeight = 0;
 
   public Color getTrackColor() {
     return trackColor;

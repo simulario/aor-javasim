@@ -1602,37 +1602,14 @@ public class XMLReader {
         }
       }
       
-      /*else if (name.equals(Shape2D.DIAMETER)) {
-        // Check if the value is relative or absolute
-        if (value.contains("%")) {
-          shape
-              .setWidth(Double.valueOf(value.substring(0, value.length() - 1)));
-          shape.setRelativeWidth(Double.valueOf(value.substring(0, value
-              .length() - 1)));
-          shape.setWidthRelative(true);
-        } else if (value.contains("px")) {
-          shape
-              .setWidth(Double.valueOf(value.substring(0, value.length() - 2)));
-        } else {
-          double sideLength = 2 * (Double.valueOf(value) / 2) * Math.sin(Math.PI / numberOfPoints);
-          shape.setWidth(Double.valueOf(value));
-        }
-      }*/
+      else if (name.equals(Shape2D.DIAMETER)) {
+        shape.setWidth(Double.valueOf(value));
+        shape.setUseSideLength(false);
+      }
       
       else if (name.equals(Shape2D.SIDE_LENGTH)) {
-        // Check if the value is relative or absolute
-        if (value.contains("%")) {
-          shape
-              .setWidth(Double.valueOf(value.substring(0, value.length() - 1)));
-          shape.setRelativeWidth(Double.valueOf(value.substring(0, value
-              .length() - 1)));
-          shape.setWidthRelative(true);
-        } else if (value.contains("px")) {
-          shape
-              .setWidth(Double.valueOf(value.substring(0, value.length() - 2)));
-        } else {
-          shape.setWidth(Double.valueOf(value));
-        }
+        shape.setSideLength(Double.valueOf(value));
+        shape.setUseSideLength(true);
       }
 
       else if (name.equals(Shape2D.NUMBER_OF_POINTS)) {

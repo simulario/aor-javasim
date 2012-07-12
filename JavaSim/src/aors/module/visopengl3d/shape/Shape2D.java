@@ -24,7 +24,7 @@ import com.sun.opengl.util.texture.TextureCoords;
 /**
  * The Shape2D class is the base class for all two dimensional shapes.
  * 
- * @author Sebastian Mucha
+ * @author Sebastian Mucha, Susanne chölzel
  * @since February 3rd, 2010
  * 
  */
@@ -106,6 +106,8 @@ public abstract class Shape2D implements Cloneable {
 
 	// Number of points for regular polygons
 	protected double numberOfPoints = 3;
+	protected double sideLength;
+	protected boolean useSideLength = false;
 	
 	protected double angle = 360;
 	protected double startAngle = 0;
@@ -661,7 +663,7 @@ public abstract class Shape2D implements Cloneable {
 			}
 			
 			else if (shapeProperty.equals(TEXTURE)) {
-			  if(value != textureFilename) {
+			  if(textureFilename != value) {
           textureFilename = value;
           texture = TextureLoader.load(value);
           recompile = true;
@@ -669,7 +671,7 @@ public abstract class Shape2D implements Cloneable {
       }
 			
 			else if (shapeProperty.equals(NUMBER_OF_POINTS)) {
-			  if(Double.valueOf(value) != numberOfPoints) {
+			  if(numberOfPoints != Double.valueOf(value)) {
 			    numberOfPoints = Double.valueOf(value);
 			    recompile = true;
 			  }
@@ -694,24 +696,25 @@ public abstract class Shape2D implements Cloneable {
           endAngle = Double.valueOf(value);
           recompile = true;
         }
-      }
+      }*/
 			
 			else if (shapeProperty.equals(DIAMETER)) {
-			  double sideLength = 2 * (Double.valueOf(value) / 2) * Math.sin(Math.PI / numberOfPoints);
-        if(sideLength != width) {
-          width = sideLength;
+        if(width != Double.valueOf(value) || useSideLength == true) {
+          width = Double.valueOf(value);
+          useSideLength = false;
           recompile = true;
         }
       }
 			
 			else if (shapeProperty.equals(SIDE_LENGTH)) {
-        if(Double.valueOf(value) != width) {
-          width = Double.valueOf(value);
+        if(sideLength != Double.valueOf(value) || useSideLength != true) {
+          sideLength = Double.valueOf(value);
+          useSideLength = true;
           recompile = true;
         }
       }
       
-      else if (shapeProperty.equals(HORIZONTAL_FLIP)) {
+      /*else if (shapeProperty.equals(HORIZONTAL_FLIP)) {
         if(Boolean.valueOf(value) != horizontalFlip) {
           horizontalFlip = Boolean.valueOf(value);
           recompile = true;
@@ -942,6 +945,22 @@ public abstract class Shape2D implements Cloneable {
 	public void setNumberOfPoints(double numberOfPoints) {
 		this.numberOfPoints = numberOfPoints;
 	}
+	
+  public double getSideLength() {
+    return sideLength;
+  }
+  
+  public void setSideLength(double sideLength) {
+    this.sideLength = sideLength;
+  }
+	
+  public boolean isUseSideLength() {
+    return useSideLength;
+  }
+  
+  public void setUseSideLength(boolean useSideLength) {
+    this.useSideLength = useSideLength;
+  }
 
 	public boolean isParsePointString() {
 		return parsePointString;

@@ -4,9 +4,17 @@ import java.util.ArrayList;
 
 import javax.media.opengl.GL2;
 import javax.media.opengl.glu.GLU;
+import javax.media.opengl.glu.GLUquadric;
 
 import aors.module.visopengl3d.utility.VectorOperations;
 
+/**
+ * This PolyLine class represents a three dimensional object with a polyline as bottom and top face
+ * 
+ * @author Susanne Schölzel
+ * @since January 4th, 2012
+ * 
+ */
 public class PolyLine extends Shape2D  {
 
   public PolyLine() {
@@ -16,7 +24,6 @@ public class PolyLine extends Shape2D  {
   @Override
   public void generateDisplayList(GL2 gl, GLU glu) {
     //System.out.println(pointList);
-    //System.out.println(stroke);
     if (pointList != null) {
       // Don't draw if there are not enough points for a polyline
       if (pointList.size() > 1) {
@@ -63,173 +70,134 @@ public class PolyLine extends Shape2D  {
           surfaceNormals2[i][2] = -surfaceNormals1[i][2];
         }
         
-        double[][] pointNormals1 = new double[numPoints][3];
-        double[][] pointNormals2 = new double[numPoints][3];
-        
-        pointNormals1[0] = surfaceNormals1[0];
-        pointNormals2[0] = surfaceNormals2[0];
-        pointNormals1[numPoints-1] = surfaceNormals1[numPoints-2];
-        pointNormals2[numPoints-1] = surfaceNormals2[numPoints-2];
-        
-        for(int i=1; i<numPoints-1; i++) {
-          pointNormals1[i] = VectorOperations.normalizedVector(
-                               VectorOperations.addVectors(
-                                 surfaceNormals1[i-1],
-                                 surfaceNormals1[i]
-                               )
-                             );
-          
-          pointNormals2[i][0] = -pointNormals1[i][0];
-          pointNormals2[i][1] = -pointNormals1[i][1];
-          pointNormals2[i][2] = -pointNormals1[i][2];
-        }
-        
-        // array containing the vertices of the top face of the 3D polyline
-        double[][] topVertices1 = new double[numPoints][3];
-        double[][] topVertices2 = new double[numPoints][3];
-        
-        // array containing the vertices of the bottom face of the 3D polyline
-        double[][] bottomVertices1 = new double[numPoints][3];
-        double[][] bottomVertices2 = new double[numPoints][3];
-        
-        topVertices1[0] = VectorOperations.addVectors(pointList3d.get(0), VectorOperations.multScalarWithVector(strokeWidth/2, pointNormals1[0]));
-        topVertices2[0] = VectorOperations.addVectors(pointList3d.get(0), VectorOperations.multScalarWithVector(strokeWidth/2, pointNormals2[0]));
-        topVertices1[numPoints-1] = VectorOperations.addVectors(pointList3d.get(numPoints-1), VectorOperations.multScalarWithVector(strokeWidth/2, pointNormals1[numPoints-1]));
-        topVertices2[numPoints-1] = VectorOperations.addVectors(pointList3d.get(numPoints-1), VectorOperations.multScalarWithVector(strokeWidth/2, pointNormals2[numPoints-1]));
-        
-        for(int i=1; i<numPoints-1; i++) {
-          double cosAlpha = VectorOperations.cosAngleBetweenVectors(pointNormals2[i], surfaceNormals2[i]);
-          //System.out.println(Math.acos(cosAlpha) * (180/Math.PI));
-          //double pointStrokeWidth = cosAlpha * (strokeWidth/2);
-          double pointStrokeWidth = (strokeWidth/2) / cosAlpha;
-          topVertices1[i] = VectorOperations.addVectors(
-                              pointList3d.get(i),
-                              VectorOperations.multScalarWithVector(pointStrokeWidth, pointNormals1[i])
-                            );
-          
-          topVertices2[i] = VectorOperations.addVectors(
-                              pointList3d.get(i),
-                              VectorOperations.multScalarWithVector(pointStrokeWidth, pointNormals2[i])
-                            );
-        }
-        
-        for(int i = 0; i < numPoints; i++) {
-          bottomVertices1[i][0] = topVertices1[i][0];
-          bottomVertices1[i][1] = -topVertices1[i][1];
-          bottomVertices1[i][2] = topVertices1[i][2];
-          
-          bottomVertices2[i][0] = topVertices2[i][0];
-          bottomVertices2[i][1] = -topVertices2[i][1];
-          bottomVertices2[i][2] = topVertices2[i][2];
-        }
-        
-        /*System.out.println("topVertices1");
-        for(int i=0; i<numPoints; i++) {
-          System.out.println("i = " + i);
-          System.out.println(topVertices1[i][0]);
-          System.out.println(topVertices1[i][1]);
-          System.out.println(topVertices1[i][2]);
-        }
-        
-        System.out.println("topVertices2");
-        for(int i=0; i<numPoints; i++) {
-          System.out.println("i = " + i);
-          System.out.println(topVertices2[i][0]);
-          System.out.println(topVertices2[i][1]);
-          System.out.println(topVertices2[i][2]);
-        }
-        
-        System.out.println("bottomVertices1");
-        for(int i=0; i<numPoints; i++) {
-          System.out.println("i = " + i);
-          System.out.println(bottomVertices1[i][0]);
-          System.out.println(bottomVertices1[i][1]);
-          System.out.println(bottomVertices1[i][2]);
-        }
-        
-        System.out.println("bottomVertices2");
-        for(int i=0; i<numPoints; i++) {
-          System.out.println("i = " + i);
-          System.out.println(bottomVertices2[i][0]);
-          System.out.println(bottomVertices2[i][1]);
-          System.out.println(bottomVertices2[i][2]);
-        }*/
-        
-
-        
-        // Draw top face of the 3D polyline
-        gl.glBegin(GL2.GL_TRIANGLE_STRIP);
-        
-        gl.glNormal3d(0, 1, 0);
-        
-        for (int i=0; i<numPoints; i++) {
-          gl.glVertex3dv(topVertices1[i], 0);
-          gl.glVertex3dv(topVertices2[i], 0);
-        }
-        
-        gl.glEnd();
-        
-        // Draw bottom face of the 3D polyline
-        gl.glBegin(GL2.GL_TRIANGLE_STRIP);
-        
-        gl.glNormal3d(0, -1, 0);
-        
-        for (int i=0; i<numPoints; i++) {
-          gl.glVertex3dv(bottomVertices2[i], 0);
-          gl.glVertex3dv(bottomVertices1[i], 0);
-        }
-        
-        gl.glEnd();
-        
-        
+        // draw a cuboid for each connection line between two consecutive points of the polyline
         gl.glBegin(GL2.GL_QUADS);
         
-        // Draw side faces of the 3D polyline
         for(int i=0; i<numPoints-1; i++) {
-          gl.glNormal3dv(surfaceNormals1[i], 0);
           
-          gl.glVertex3dv(bottomVertices1[i+1], 0);
-          gl.glVertex3dv(bottomVertices1[i], 0);
-          gl.glVertex3dv(topVertices1[i], 0);
-          gl.glVertex3dv(topVertices1[i+1], 0);
+          double[][] topVertices = new double[4][3];
+          topVertices[0] = VectorOperations.addVectors(pointList3d.get(i), VectorOperations.multScalarWithVector(strokeWidth/2, surfaceNormals1[i]));
+          topVertices[1] = VectorOperations.addVectors(pointList3d.get(i), VectorOperations.multScalarWithVector(strokeWidth/2, surfaceNormals2[i]));
+          topVertices[2] = VectorOperations.addVectors(pointList3d.get(i+1), VectorOperations.multScalarWithVector(strokeWidth/2, surfaceNormals2[i]));
+          topVertices[3] = VectorOperations.addVectors(pointList3d.get(i+1), VectorOperations.multScalarWithVector(strokeWidth/2, surfaceNormals1[i]));
           
-          gl.glNormal3dv(surfaceNormals2[i], 0);
+          double[][] bottomVertices = new double[4][3];
+          for(int j=0; j<4; j++) {
+            bottomVertices[j][0] = topVertices[j][0];
+            bottomVertices[j][1] = -topVertices[j][1];
+            bottomVertices[j][2] = topVertices[j][2];
+          }
           
-          gl.glVertex3dv(bottomVertices2[i], 0);
-          gl.glVertex3dv(bottomVertices2[i+1], 0);
-          gl.glVertex3dv(topVertices2[i+1], 0);
-          gl.glVertex3dv(topVertices2[i], 0);
+          // top face
+          double[] normal = VectorOperations.crossProduct(VectorOperations.subtractVectors(topVertices[2], topVertices[1]), 
+              VectorOperations.subtractVectors(topVertices[0], topVertices[1]));
+          VectorOperations.normalize(normal);
+          gl.glNormal3dv(normal, 0);
+          gl.glVertex3dv(topVertices[0], 0);
+          gl.glVertex3dv(topVertices[1], 0);
+          gl.glVertex3dv(topVertices[2], 0);
+          gl.glVertex3dv(topVertices[3], 0);
+          
+          normal = VectorOperations.crossProduct(VectorOperations.subtractVectors(bottomVertices[1], bottomVertices[2]), 
+              VectorOperations.subtractVectors(bottomVertices[3], bottomVertices[2]));
+          VectorOperations.normalize(normal);
+          gl.glNormal3dv(normal, 0);
+          // bottom face
+          gl.glVertex3dv(bottomVertices[3], 0);
+          gl.glVertex3dv(bottomVertices[2], 0);
+          gl.glVertex3dv(bottomVertices[1], 0);
+          gl.glVertex3dv(bottomVertices[0], 0);
+          
+          // front face
+          normal = VectorOperations.crossProduct(VectorOperations.subtractVectors(topVertices[1], bottomVertices[1]), 
+              VectorOperations.subtractVectors(bottomVertices[0], bottomVertices[1]));
+          VectorOperations.normalize(normal);
+          gl.glNormal3dv(normal, 0);
+          gl.glVertex3dv(bottomVertices[0], 0);
+          gl.glVertex3dv(bottomVertices[1], 0);
+          gl.glVertex3dv(topVertices[1], 0);
+          gl.glVertex3dv(topVertices[0], 0);
+          
+          // back face
+          normal = VectorOperations.crossProduct(VectorOperations.subtractVectors(topVertices[3], bottomVertices[3]), 
+              VectorOperations.subtractVectors(bottomVertices[2], bottomVertices[3]));
+          VectorOperations.normalize(normal);
+          gl.glNormal3dv(normal, 0);
+          gl.glVertex3dv(bottomVertices[2], 0);
+          gl.glVertex3dv(bottomVertices[3], 0);
+          gl.glVertex3dv(topVertices[3], 0);
+          gl.glVertex3dv(topVertices[2], 0);
+          
+          // left face
+          normal = VectorOperations.crossProduct(VectorOperations.subtractVectors(topVertices[0], bottomVertices[0]), 
+              VectorOperations.subtractVectors(bottomVertices[3], bottomVertices[0]));
+          VectorOperations.normalize(normal);
+          gl.glNormal3dv(normal, 0);
+          gl.glVertex3dv(bottomVertices[3], 0);
+          gl.glVertex3dv(bottomVertices[0], 0);
+          gl.glVertex3dv(topVertices[0], 0);
+          gl.glVertex3dv(topVertices[3], 0);
+          
+          // right face
+          normal = VectorOperations.crossProduct(VectorOperations.subtractVectors(topVertices[2], bottomVertices[2]), 
+              VectorOperations.subtractVectors(bottomVertices[1], bottomVertices[2]));
+          VectorOperations.normalize(normal);
+          gl.glNormal3dv(normal, 0);
+          gl.glVertex3dv(bottomVertices[1], 0);
+          gl.glVertex3dv(bottomVertices[2], 0);
+          gl.glVertex3dv(topVertices[2], 0);
+          gl.glVertex3dv(topVertices[1], 0);
         }
         
-        // Draw the start and end side face
-        double[] normalStart1 = VectorOperations.normalizedVector(VectorOperations.subtractVectors(pointList3d.get(0), pointList3d.get(1)));
-        //System.out.println(normalStart1[0] + "," + normalStart1[1] + "," + normalStart1[2]);
-        
-        double[] normalStart = VectorOperations.normalizedVector(
-                                 VectorOperations.crossProduct(
-                                   VectorOperations.subtractVectors(topVertices1[0], topVertices2[0]),
-                                   VectorOperations.subtractVectors(bottomVertices2[0], topVertices2[0])));
-        //System.out.println(normalStart[0] + "," + normalStart[1] + "," + normalStart[2]);
-        gl.glNormal3dv(normalStart, 0);
-        
-        gl.glVertex3dv(bottomVertices1[0], 0);
-        gl.glVertex3dv(bottomVertices2[0], 0);
-        gl.glVertex3dv(topVertices2[0], 0);
-        gl.glVertex3dv(topVertices1[0], 0);
-        
-        //double[] normalEnd = normalizedVector(subtractVectors(pointList3d.get(numPoints-1), pointList3d.get(numPoints-2)));
-        double[] normalEnd = VectorOperations.normalizedVector(
-                               VectorOperations.crossProduct(
-                                 VectorOperations.subtractVectors(topVertices2[numPoints-1], topVertices1[numPoints-1]),
-                                 VectorOperations.subtractVectors(bottomVertices1[numPoints-1], topVertices1[numPoints-1])));
-        gl.glNormal3dv(normalEnd, 0);
-        
-        gl.glVertex3dv(bottomVertices2[numPoints-1], 0);
-        gl.glVertex3dv(bottomVertices1[numPoints-1], 0);
-        gl.glVertex3dv(topVertices1[numPoints-1], 0);
-        gl.glVertex3dv(topVertices2[numPoints-1], 0);
-        
         gl.glEnd();
+        
+        // draw a cylinder with radius strokeWidth/2 at each point of the polyline to connect the ends of the single segments
+        for(int i=0; i<numPoints; i++) {
+          double[] point = pointList3d.get(i);
+          
+          gl.glPushMatrix();
+          
+          // rotate and translate the cylinder, so that the top points in direction of the positive y-axis
+          // and one half of the cylinder is on the positive y-axis and the other half is on the negative y-axis
+          gl.glTranslated(point[0], -objectHeight/2, point[2]);
+          gl.glRotated(-90, 1, 0, 0);
+          
+          // radius of the cylinder
+          double radius = strokeWidth / 2;
+          
+          // Don't draw anything if the dimensions are too small
+          if (objectHeight > 0 && radius > 0) {
+            
+            // GLUquadric objects for the side face, top face and bottom face of the cylinder
+            GLUquadric side = glu.gluNewQuadric();
+            GLUquadric top = glu.gluNewQuadric();
+            GLUquadric bottom = glu.gluNewQuadric();
+            
+            // draw the side face of the cylinder
+            glu.gluQuadricNormals(side, GLU.GLU_SMOOTH);
+            glu.gluCylinder(side, radius, radius, objectHeight, 36, 6);
+            glu.gluDeleteQuadric(side);
+
+            // draw the top face of the cylinder
+            gl.glPushMatrix();
+            
+            gl.glTranslated(0, 0, objectHeight);
+            
+            glu.gluQuadricNormals(top, GLU.GLU_SMOOTH);
+            glu.gluDisk(top, 0, radius, 36, 6);
+            glu.gluDeleteQuadric(top);
+            
+            gl.glPopMatrix();
+            
+            // draw the bottom face of the cylinder
+            glu.gluQuadricOrientation(bottom, GLU.GLU_INSIDE);
+            glu.gluQuadricNormals(bottom, GLU.GLU_SMOOTH);
+            glu.gluDisk(bottom, 0, radius, 36, 6);
+            glu.gluDeleteQuadric(bottom);
+          }
+          
+          gl.glPopMatrix();
+        }
 
         gl.glEndList();
       }

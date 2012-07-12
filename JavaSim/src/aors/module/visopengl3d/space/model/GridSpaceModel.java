@@ -27,7 +27,7 @@ import com.sun.opengl.util.texture.TextureCoords;
 /**
  * Two dimensional, discrete space model.
  * 
- * @author Sebastian Mucha
+ * @author Sebastian Mucha, Susanne Schölzel
  * @since March 18th, 2010
  * 
  */
@@ -124,6 +124,16 @@ public class GridSpaceModel extends SpaceModel {
     if(gridSpaceView.getBackgroundImg() != null) {
       determineTextureCoords();
     }
+    
+    // Get offsets of the bottom left and top right corner of the grid
+    double x1 = ((Cell) spaceComponents.get(0)).getOuterOffset().x1;
+    double y1 = ((Cell) spaceComponents.get(0)).getOuterOffset().y1;
+    double x2 = ((Cell) spaceComponents.get(spaceComponents.size() - 1))
+        .getOuterOffset().x2;
+    double y2 = ((Cell) spaceComponents.get(spaceComponents.size() - 1))
+        .getOuterOffset().y2;
+    
+    usedDrawingArea = new Offset(x1, y1, x2, y2);
   }
 
   /**
@@ -186,6 +196,16 @@ public class GridSpaceModel extends SpaceModel {
     if(gridSpaceView.getBackgroundImg() != null) {
       determineTextureCoords();
     }
+    
+    // Get offsets of the bottom left and top right corner of the grid
+    double x1 = ((Cell) spaceComponents.get(0)).getOuterOffset().x1;
+    double y1 = ((Cell) spaceComponents.get(0)).getOuterOffset().y1;
+    double x2 = ((Cell) spaceComponents.get(spaceComponents.size() - 1))
+        .getOuterOffset().x2;
+    double y2 = ((Cell) spaceComponents.get(spaceComponents.size() - 1))
+        .getOuterOffset().y2;
+    
+    usedDrawingArea = new Offset(x1, y1, x2, y2);
   }
 
   /**

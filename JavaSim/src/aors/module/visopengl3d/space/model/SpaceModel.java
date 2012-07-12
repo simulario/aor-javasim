@@ -15,7 +15,7 @@ import aors.module.visopengl3d.xml.XMLReader;
 /**
  * Base class of a space model.
  * 
- * @author Sebastian Mucha
+ * @author Sebastian Mucha, Susanne Schölzel
  * @since March 17th, 2010
  * 
  */
@@ -44,6 +44,8 @@ public abstract class SpaceModel {
 
   // Drawing area
   protected Offset drawingArea;
+  
+  protected Offset usedDrawingArea;
 
   // Display list
   protected int displayList = -1;
@@ -89,7 +91,7 @@ public abstract class SpaceModel {
       if (spaceModel.getSpaceType().equals(SpaceType.OneD)) {
         spaceModel.setyMax(spaceModel.getxMax());
       }
-
+      
       // Get the space view
       spaceModel.setSpaceView(reader.getSpaceView(spaceModel.getSpaceType()));
     }
@@ -116,10 +118,6 @@ public abstract class SpaceModel {
    * @param glu
    */
   public void compileDisplayList(GL2 gl, GLU glu) {
-	  //for (SpaceComponent comp : spaceComponents) {
-		//  if(comp instanceof Track)
-	  //    ((Track)comp).generateDisplayList(gl, glu);
-	  //  }
 	  
     // Get a denominator for the display list
     displayList = gl.glGenLists(1);
@@ -195,6 +193,14 @@ public abstract class SpaceModel {
 
   public void setDrawingArea(Offset drawingArea) {
     this.drawingArea = drawingArea;
+  }
+  
+  public Offset getUsedDrawingArea() {
+    return usedDrawingArea;
+  }
+
+  public void setUsedDrawingArea(Offset usedDrawingArea) {
+    this.usedDrawingArea = usedDrawingArea;
   }
 
   public int getDisplayList() {

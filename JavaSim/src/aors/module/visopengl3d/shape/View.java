@@ -8,7 +8,7 @@ import java.util.ArrayList;
  * object. This means it contains a description of how an object will be
  * displayed on screen.
  * 
- * @author Sebstian Mucha
+ * @author Sebstian Mucha, Susanne Schölzel
  * @since January 19th, 2010
  * 
  */
@@ -23,13 +23,13 @@ public class View {
   // Display info
   private DisplayInfo displayInfo;
 
-  // EmbeddedView
+  // AttachedViews
   private ArrayList<View> attachedList;
   
   // Flag indicating if the object associated to this view will be displayed
   private boolean visible;
   
-  // Label for embedded views
+  // Label for attached views
   private String attachedLabel;
 
   // String constant for the "PhysicalObjectView" and "ObjectView" node

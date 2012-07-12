@@ -7,11 +7,12 @@ import aors.GeneralSpaceModel.SpaceType;
 import aors.module.visopengl3d.space.component.Margin;
 import aors.module.visopengl3d.space.view.SpaceView;
 import aors.module.visopengl3d.space.view.TwoDimSpaceView;
+import aors.module.visopengl3d.utility.Offset;
 
 /**
  * Two dimensional, continuous space model.
  * 
- * @author Sebastian Mucha
+ * @author Sebastian Mucha, Susanne Schölzel
  * @since March 25th, 2010
  * 
  */
@@ -44,6 +45,8 @@ public class TwoDimSpaceModel extends SpaceModel {
 
     // Add the margin into the space components list
     spaceComponents.add(margin);
+    
+    usedDrawingArea = new Offset(drawingArea.x1, drawingArea.y1, drawingArea.x2, drawingArea.y2);
   }
 
   @Override

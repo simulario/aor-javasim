@@ -10,13 +10,6 @@ import aors.logger.model.SlotType;
 import aors.model.envsim.Objekt;
 import aors.model.envsim.Physical;
 
-/**
- * 
- * 
- * @author Sebstian Mucha, Susanne Schölzel
- * @since 
- * 
- */
 public class Shape2DMap {
 
   // String constants describing nodes of a shape map

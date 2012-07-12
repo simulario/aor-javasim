@@ -1,0 +1,740 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<?xml-stylesheet type="text/xsl" href="prettyprint.xsl"?>
+<SimulationScenario
+	xmlns="http://aor-simulation.org"
+    xmlns:aors="http://aor-simulation.org"
+    xmlns:dc="http://purl.org/dc/elements/1.1/"
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xsi:schemaLocation="http://aor-simulation.org ../../../../../ext/aorsl/AORSL-0-9.xsd"
+    version="0.9"
+    simulationManagerDirectory="../../../../../"
+	scenarioName="Crossroads"
+	scenarioTitle="Crossroads">
+	
+	<SimulationParameters simulationSteps="10000" stepDuration="100" timeUnit="ms" stepTimeDelay="25"/>
+	
+	<SimulationModel modelName="Crossroads" modelTitle="Crossroads">
+		<documentation>
+            <dc:creator>Susanne Schoelzel</dc:creator>
+            <dc:created>20120624</dc:created>
+        </documentation>
+
+        <SpaceModel geometry="Euclidean" spatialDistanceUnit="m">
+            <TwoDimensional xMax="1000" yMax="1000" autoKinematics="true" autoCollisionDetection="true" autoCollisionHandling="true" />
+        </SpaceModel>
+		
+		<DataTypes>
+			<Enumeration name="trafficLightStatus">
+				<EnumerationLiteral>RED</EnumerationLiteral>
+				<EnumerationLiteral>YELLOW</EnumerationLiteral>
+				<EnumerationLiteral>GREEN</EnumerationLiteral>
+				<EnumerationLiteral>REDYELLOW</EnumerationLiteral>
+			</Enumeration>
+		</DataTypes>
+		
+		<EntityTypes>
+			<ExogenousEventType name="CarArrivalLane1">
+				<Periodicity>
+					<ValueExpr language="Java">Random.uniformInt(200,300)</ValueExpr>
+				</Periodicity>
+			</ExogenousEventType>
+			
+			<ExogenousEventType name="CarArrivalLane2">
+				<Periodicity>
+					<ValueExpr language="Java">Random.uniformInt(200,300)</ValueExpr>
+				</Periodicity>
+			</ExogenousEventType>
+			
+			<ExogenousEventType name="CarArrivalLane3">
+				<Periodicity>
+					<ValueExpr language="Java">Random.uniformInt(200,300)</ValueExpr>
+				</Periodicity>
+			</ExogenousEventType>
+			
+			<ExogenousEventType name="CarArrivalLane4">
+				<Periodicity>
+					<ValueExpr language="Java">Random.uniformInt(200,300)</ValueExpr>
+				</Periodicity>
+			</ExogenousEventType>
+		
+			<ActionEventType name="SwitchStatusTo">
+				<EnumerationProperty name="newStatus" type="trafficLightStatus"/>
+			</ActionEventType>
+			
+			<ActionEventType name="CarRemoval">
+				<Attribute name="removalCheckpointId" type="Integer" />
+			</ActionEventType>
+			
+			<ActionEventType name="CheckTrafficLight">
+				<Attribute name="stopCheckpointId" type="Integer" />
+				<Attribute name="trafficLightId" type="Integer" />
+			</ActionEventType>
+			
+			<ActionEventType name="CarPerceived">
+				<Attribute name="perceivedCarId" type="Integer" />
+			</ActionEventType>
+			
+			<ActionEventType name="ChangeVelocity">
+				<Attribute name="newVelocity" type="Float" />
+				<Attribute name="newVx" type="Float" />
+				<Attribute name="newVy" type="Float" />
+			</ActionEventType>
+		
+			<PhysicalObjectType name="RemovalCheckpoint" idPerceivable="true" physicsType="IMMATERIAL">
+				<Attribute name="lane" type="Integer" minValue="1" maxValue="4" />
+			</PhysicalObjectType>
+			
+			<PhysicalObjectType name="StopCheckpoint" idPerceivable="true" physicsType="IMMATERIAL">
+				<Attribute name="lane" type="Integer" minValue="1" maxValue="4" />
+			</PhysicalObjectType>
+		
+            <PhysicalAgentType name="TrafficLight" physicsType="IMMATERIAL">
+            	<EnumerationProperty type="trafficLightStatus" name="status"/>
+				<Attribute name="lane" type="Integer" minValue="1" maxValue="4" />
+				
+				<PeriodicTimeEventType name="SwitchTrafficLightFirstTime" periodicity="1400" />
+				<PeriodicTimeEventType name="SwitchTrafficLightSecondTime" periodicity="1400" />
+				
+				<ReactionRule name="SwitchTrafficLightFirstTime_Rule" agentVariable="trafficLight">
+                    <WHEN eventType="SwitchTrafficLightFirstTime"/>
+                    <IF language="Java">
+						<![CDATA[
+							trafficLight.getStatus() == trafficLightStatus.RED
+						]]>
+					</IF>
+					<THEN>
+                        <UPDATE-AGT>
+                            <Slot property="status" value="trafficLightStatus.REDYELLOW"/>
+                        </UPDATE-AGT>
+						<SCHEDULE-EVT>
+							<ActionEventExpr actionEventType="SwitchStatusTo" delay="15">
+								<Slot property="newStatus" value="trafficLightStatus.GREEN"/>
+							</ActionEventExpr>
+						</SCHEDULE-EVT>
+                    </THEN>
+					<ELSE>
+                        <UPDATE-AGT>
+                            <Slot property="status" value="trafficLightStatus.YELLOW"/>
+                        </UPDATE-AGT>
+						<SCHEDULE-EVT>
+							<ActionEventExpr actionEventType="SwitchStatusTo" delay="15">
+								<Slot property="newStatus" value="trafficLightStatus.RED"/>
+							</ActionEventExpr>
+						</SCHEDULE-EVT>
+                    </ELSE>
+                </ReactionRule>
+				
+				<ReactionRule name="SwitchTrafficLightSecondTime_Rule" agentVariable="trafficLight">
+                    <WHEN eventType="SwitchTrafficLightSecondTime"/>
+                    <IF language="Java">
+						<![CDATA[
+							trafficLight.getStatus() == trafficLightStatus.RED
+						]]>
+					</IF>
+					<THEN>
+                        <UPDATE-AGT>
+                            <Slot property="status" value="trafficLightStatus.REDYELLOW"/>
+                        </UPDATE-AGT>
+						<SCHEDULE-EVT>
+							<ActionEventExpr actionEventType="SwitchStatusTo" delay="15">
+								<Slot property="newStatus" value="trafficLightStatus.GREEN"/>
+							</ActionEventExpr>
+						</SCHEDULE-EVT>
+                    </THEN>
+					<ELSE>
+                        <UPDATE-AGT>
+                            <Slot property="status" value="trafficLightStatus.YELLOW"/>
+                        </UPDATE-AGT>
+						<SCHEDULE-EVT>
+							<ActionEventExpr actionEventType="SwitchStatusTo" delay="15">
+								<Slot property="newStatus" value="trafficLightStatus.RED"/>
+							</ActionEventExpr>
+						</SCHEDULE-EVT>
+                    </ELSE>
+                </ReactionRule>
+				
+            </PhysicalAgentType>
+			
+			<PhysicalAgentType name="Car" autoPerception="true" idPerceivable="true" physicsType="IMMATERIAL">
+				<Attribute name="lane" type="Integer" minValue="1" maxValue="4" />
+				<Attribute name="velocity" type="Float" />
+				<Attribute name="maxVelocity" type="Float" />
+				<Attribute name="hasPerceivedRedTrafficLight" type="Boolean" />
+				<Attribute name="hasPerceivedCarAhead" type="Boolean" />
+				
+				<ReferenceProperty name="perceivedRedTrafficLight" type="TrafficLight" />
+				<ReferenceProperty name="perceivedCarAhead" type="Car" />
+				
+				<PeriodicTimeEventType name="SimulationStep" periodicity="1"/>
+			
+				<ReactionRule name="SpeedUp_Rule" agentVariable="car">
+					<WHEN eventType="SimulationStep" />
+					<IF language="Java">
+						<![CDATA[
+							(car.getVelocity() < car.getMaxVelocity() ||
+							(car.getLane()==1 && car.getVy() < car.getMaxVelocity()) ||
+							(car.getLane()==2 && car.getVy() > -car.getMaxVelocity()) ||
+							(car.getLane()==3 && car.getVx() < car.getMaxVelocity()) ||
+							(car.getLane()==4 && car.getVx() > -car.getMaxVelocity())) &&
+							car.isHasPerceivedRedTrafficLight() == false &&
+							car.isHasPerceivedCarAhead() == false
+						]]>
+					</IF>
+					<THEN>
+						<SCHEDULE-EVT>
+							<ActionEventExpr actionEventType="ChangeVelocity">
+								<Slot property="newVelocity">
+									<ValueExpr language="Java">car.getMaxVelocity()</ValueExpr>
+								</Slot>
+								<Slot property="newVx">
+									<ValueExpr language="Java">
+									<![CDATA[
+										car.getLane()==3? car.getMaxVelocity() : car.getLane()==4? -car.getMaxVelocity() : 0
+									]]>
+									</ValueExpr>
+								</Slot>
+								<Slot property="newVy">
+									<ValueExpr language="Java">
+									<![CDATA[
+										car.getLane()==1? car.getMaxVelocity() : car.getLane()==2? -car.getMaxVelocity() : 0
+									]]>
+									</ValueExpr>
+								</Slot>
+							</ActionEventExpr>
+						</SCHEDULE-EVT>
+					</THEN>
+				</ReactionRule>
+				
+				<ReactionRule name="CheckTrafficLight_Rule" agentVariable="car">
+					<WHEN eventType="SimulationStep" />
+					<IF language="Java">
+						<![CDATA[
+							car.isHasPerceivedRedTrafficLight() &&
+							car.getPerceivedRedTrafficLight().getStatus() == trafficLightStatus.GREEN
+						]]>
+					</IF>
+					<THEN>
+						<UPDATE-AGT>
+							<Slot property="hasPerceivedRedTrafficLight" value="false" />
+						</UPDATE-AGT>
+					</THEN>
+				</ReactionRule>
+				
+				<ReactionRule name="CheckCarAhead_Rule" agentVariable="car">
+					<WHEN eventType="SimulationStep" />
+					<IF language="Java">
+						<![CDATA[
+							car.isHasPerceivedCarAhead() &&
+							((car.getLane()==1 && car.getPerceivedCarAhead().getY()-car.getY() > 80) ||
+							(car.getLane()==2 && car.getPerceivedCarAhead().getY()-car.getY() < -80) ||
+							(car.getLane()==3 && car.getPerceivedCarAhead().getX()-car.getX() > 80) ||
+							(car.getLane()==4 && car.getPerceivedCarAhead().getX()-car.getX() < -80))
+						]]>
+					</IF>
+					<THEN>
+						<UPDATE-AGT>
+							<Slot property="hasPerceivedCarAhead" value="false" />
+						</UPDATE-AGT>
+					</THEN>
+				</ReactionRule>
+			
+				<ReactionRule name="StopCheckpointPerceived_Rule" agentVariable="car">
+					<WHEN eventType="PhysicalObjectPerceptionEvent" physicalObjectType="StopCheckpoint" eventVariable="e" />
+					<IF language="Java">
+					<![CDATA[
+						e.getPerceivedPhysicalObject() instanceof StopCheckpoint
+					]]>					
+					</IF>
+					<THEN>
+                        <SCHEDULE-EVT>
+							<ActionEventExpr actionEventType="CheckTrafficLight">
+								<Slot property="stopCheckpointId">
+									<ValueExpr language="Java">e.getPerceivedPhysicalObjectIdRef()</ValueExpr>
+								</Slot>
+								<Slot property="trafficLightId">
+									<ValueExpr language="Java">
+									<![CDATA[
+									e.getPerceivedPhysicalObjectIdRef()==11 ? 10 : e.getPerceivedPhysicalObjectIdRef()==21? 20 : e.getPerceivedPhysicalObjectIdRef()==31? 30 : 40
+									]]>
+									</ValueExpr>
+								</Slot>
+							</ActionEventExpr>
+						</SCHEDULE-EVT>
+                    </THEN>
+				</ReactionRule>
+				
+				<ReactionRule name="RemovalCheckpointPerceived_Rule" agentVariable="car">
+					<WHEN eventType="PhysicalObjectPerceptionEvent" physicalObjectType="RemovalCheckpoint" eventVariable="e" />
+					<IF language="Java">
+					<![CDATA[
+						e.getPerceivedPhysicalObject() instanceof RemovalCheckpoint
+					]]>					
+					</IF>
+					<THEN>
+                        <SCHEDULE-EVT>
+							<ActionEventExpr actionEventType="CarRemoval">
+								<Slot property="removalCheckpointId">
+									<ValueExpr language="Java">e.getPerceivedPhysicalObjectIdRef()</ValueExpr>
+								</Slot>
+							</ActionEventExpr>
+						</SCHEDULE-EVT>
+                    </THEN>
+				</ReactionRule>
+				
+				<ReactionRule name="CarPerceived_Rule" agentVariable="car">
+					<WHEN eventType="PhysicalObjectPerceptionEvent" physicalObjectType="Car" eventVariable="e" />
+                    <DO>
+						<SCHEDULE-EVT>
+							<ActionEventExpr actionEventType="CarPerceived">
+								<Slot property="perceivedCarId">
+									<ValueExpr language="Java">e.getPerceivedPhysicalObjectIdRef()</ValueExpr>
+								</Slot>
+							</ActionEventExpr>
+						</SCHEDULE-EVT>
+                    </DO>
+				</ReactionRule>
+				
+			</PhysicalAgentType>
+        </EntityTypes>
+		
+		<EnvironmentRules>
+			<EnvironmentRule name="ChangeVelocity_EnvRule">
+				<WHEN eventType="ChangeVelocity" eventVariable="e"/>
+				<FOR objectType="Car" objectVariable="car">
+					<ObjectRef language="Java">e.getActor()</ObjectRef>
+				</FOR>
+				<DO>
+					<UPDATE-ENV>
+						<UpdateObject objectVariable="car">
+							<Slot property="velocity">
+								<ValueExpr language="Java">e.getNewVelocity()</ValueExpr>
+							</Slot>
+							<Slot property="vx">
+								<ValueExpr language="Java">e.getNewVx()</ValueExpr>
+							</Slot>
+							<Slot property="vy">
+								<ValueExpr language="Java">e.getNewVy()</ValueExpr>
+							</Slot>
+						</UpdateObject>
+					</UPDATE-ENV>
+				</DO>
+			</EnvironmentRule>
+		
+			<EnvironmentRule name="SwitchStatusTo_EnvRule">
+				<WHEN eventType="SwitchStatusTo" eventVariable="e"/>
+				<FOR objectType="TrafficLight" objectVariable="trafficLight">
+					<ObjectRef language="Java">e.getActor()</ObjectRef>
+				</FOR>
+				<DO>
+					<UPDATE-ENV>
+						<UpdateObject objectVariable="trafficLight">
+							<Slot property="status">
+								<ValueExpr language="Java">e.getNewStatus()</ValueExpr>
+							</Slot>
+						</UpdateObject>
+					</UPDATE-ENV>
+				</DO>
+			</EnvironmentRule>
+			
+			<EnvironmentRule name="CarArrivalLane1_EnvRule">
+				<WHEN eventType="CarArrivalLane1" eventVariable="e"/>
+				<!--<FOR dataVariable="randomVelocity" dataType="Float">
+					<ValueExpr language="Java">
+						Random.uniformInt(5000,10000)
+					</ValueExpr>
+				</FOR>-->
+				<DO>
+					<UPDATE-ENV>
+						<Create>
+							<PhysicalAgent type="Car" shape2D="rectangle" perceptionRadius="70" m="1000" >
+								<Slot property="x" value="550" />
+								<Slot property="y" value="50" />
+								<Slot property="width" value="20" />
+								<Slot property="height" value="25" />
+								<Slot property="vx" value="0" />
+								<Slot property="vy">
+									<ValueExpr language="Java">20</ValueExpr>
+								</Slot>
+								<Slot property="lane" value="1" />
+								<Slot property="velocity">
+									<ValueExpr language="Java">20</ValueExpr>
+								</Slot>
+								<Slot property="maxVelocity">
+									<ValueExpr language="Java">20</ValueExpr>
+								</Slot>
+								<Slot property="hasPerceivedRedTrafficLight" value="false" />
+								<Slot property="hasPerceivedCarAhead" value="false" />
+								
+								<PeriodicTimeEvent occurrenceTime="1" type="SimulationStep"/>
+							</PhysicalAgent>
+						</Create>
+					</UPDATE-ENV>
+				</DO>
+			</EnvironmentRule>
+			
+			<EnvironmentRule name="CarArrivalLane2_EnvRule">
+				<WHEN eventType="CarArrivalLane2" eventVariable="e"/>
+				<!--<FOR dataVariable="randomVelocity" dataType="Float">
+					<ValueExpr language="Java">
+						Random.uniformInt(5000,10000)
+					</ValueExpr>
+				</FOR>-->
+				<DO>
+					<UPDATE-ENV>
+						<Create>
+							<PhysicalAgent type="Car" shape2D="rectangle" perceptionRadius="70" m="1000" >
+								<Slot property="x" value="450" />
+								<Slot property="y" value="950" />
+								<Slot property="width" value="20" />
+								<Slot property="height" value="25" />
+								<Slot property="vx" value="0" />
+								<Slot property="vy">
+									<ValueExpr language="Java">-20</ValueExpr>
+								</Slot>
+								<Slot property="lane" value="2" />
+								<Slot property="velocity">
+									<ValueExpr language="Java">20</ValueExpr>
+								</Slot>
+								<Slot property="maxVelocity">
+									<ValueExpr language="Java">20</ValueExpr>
+								</Slot>
+								<Slot property="hasPerceivedRedTrafficLight" value="false" />
+								<Slot property="hasPerceivedCarAhead" value="false" />
+								
+								<PeriodicTimeEvent occurrenceTime="1" type="SimulationStep"/>
+							</PhysicalAgent>
+						</Create>
+					</UPDATE-ENV>
+				</DO>
+			</EnvironmentRule>
+			
+			<EnvironmentRule name="CarArrivalLane3_EnvRule">
+				<WHEN eventType="CarArrivalLane3" eventVariable="e"/>
+				<!--<FOR dataVariable="randomVelocity" dataType="Float">
+					<ValueExpr language="Java">
+						Random.uniformInt(5000,10000)
+					</ValueExpr>
+				</FOR>-->
+				<DO>
+					<UPDATE-ENV>
+						<Create>
+							<PhysicalAgent type="Car" shape2D="rectangle" perceptionRadius="70" m="1000" >
+								<Slot property="x" value="50" />
+								<Slot property="y" value="450" />
+								<Slot property="width" value="20" />
+								<Slot property="height" value="25" />
+								<Slot property="rotZ" value="-90" />
+								<Slot property="vy" value="0" />
+								<Slot property="vx">
+									<ValueExpr language="Java">20</ValueExpr>
+								</Slot>
+								<Slot property="lane" value="3" />
+								<Slot property="velocity">
+									<ValueExpr language="Java">20</ValueExpr>
+								</Slot>
+								<Slot property="maxVelocity">
+									<ValueExpr language="Java">20</ValueExpr>
+								</Slot>
+								<Slot property="hasPerceivedRedTrafficLight" value="false" />
+								<Slot property="hasPerceivedCarAhead" value="false" />
+								
+								<PeriodicTimeEvent occurrenceTime="1" type="SimulationStep"/>
+							</PhysicalAgent>
+						</Create>
+					</UPDATE-ENV>
+				</DO>
+			</EnvironmentRule>
+			
+			<EnvironmentRule name="CarArrivalLane4_EnvRule">
+				<WHEN eventType="CarArrivalLane4" eventVariable="e"/>
+				<!--<FOR dataVariable="randomVelocity" dataType="Float">
+					<ValueExpr language="Java">
+						Random.uniformInt(5000,10000)
+					</ValueExpr>
+				</FOR>-->
+				<DO>
+					<UPDATE-ENV>
+						<Create>
+							<PhysicalAgent type="Car" shape2D="rectangle" perceptionRadius="70" m="1000" >
+								<Slot property="x" value="950" />
+								<Slot property="y" value="550" />
+								<Slot property="width" value="20" />
+								<Slot property="height" value="25" />
+								<Slot property="rotZ" value="90" />
+								<Slot property="vy" value="0" />
+								<Slot property="vx">
+									<ValueExpr language="Java">-20</ValueExpr>
+								</Slot>
+								<Slot property="lane" value="4" />
+								<Slot property="velocity">
+									<ValueExpr language="Java">20</ValueExpr>
+								</Slot>
+								<Slot property="maxVelocity">
+									<ValueExpr language="Java">20</ValueExpr>
+								</Slot>
+								<Slot property="hasPerceivedRedTrafficLight" value="false" />
+								<Slot property="hasPerceivedCarAhead" value="false" />
+								
+								<PeriodicTimeEvent occurrenceTime="1" type="SimulationStep"/>
+							</PhysicalAgent>
+						</Create>
+					</UPDATE-ENV>
+				</DO>
+			</EnvironmentRule>
+			
+			<EnvironmentRule name="CarRemoval_EnvRule">
+				<WHEN eventType="CarRemoval" eventVariable="e"/>
+				<FOR objectType="Car" objectVariable="car">
+					<ObjectRef language="Java">e.getActor()</ObjectRef>
+				</FOR>
+				<FOR objectType="RemovalCheckpoint" objectVariable="removalCheckpoint">
+					<ObjectIdRef language="Java">e.getRemovalCheckpointId()</ObjectIdRef>
+				</FOR>
+				<IF language="Java">
+						<![CDATA[
+							car.getLane() == removalCheckpoint.getLane()
+						]]>
+				</IF>
+				<THEN>
+					<UPDATE-ENV>
+						<DestroyObject objectVariable="car" />
+					</UPDATE-ENV>
+				</THEN>
+			</EnvironmentRule>
+			
+			<EnvironmentRule name="CheckTrafficLight_EnvRule">
+				<WHEN eventType="CheckTrafficLight" eventVariable="e"/>
+				<FOR objectType="Car" objectVariable="car">
+					<ObjectRef language="Java">e.getActor()</ObjectRef>
+				</FOR>
+				<FOR objectType="StopCheckpoint" objectVariable="stopCheckpoint">
+					<ObjectIdRef language="Java">e.getStopCheckpointId()</ObjectIdRef>
+				</FOR>
+				<FOR objectType="TrafficLight" objectVariable="trafficLight">
+					<ObjectIdRef language="Java">e.getTrafficLightId()</ObjectIdRef>
+				</FOR>
+				<IF language="Java">
+						<![CDATA[
+							car.getLane() == stopCheckpoint.getLane() &&
+							trafficLight.getStatus() == trafficLightStatus.RED &&
+							((car.getLane()==1 && stopCheckpoint.getY() > car.getY()) ||
+							(car.getLane()==2 && stopCheckpoint.getY() < car.getY()) ||
+							(car.getLane()==3 && stopCheckpoint.getX() > car.getX()) ||
+							(car.getLane()==4 && stopCheckpoint.getX() < car.getX()))
+						]]>
+				</IF>
+				<THEN>
+					<UPDATE-ENV>
+						<UpdateObject objectVariable="car">
+							<Slot property="vx" value="0" />
+							<Slot property="vy" value="0" />
+							<Slot property="velocity" value="0" />
+							<Slot property="hasPerceivedRedTrafficLight" value="true" />
+							<Slot property="perceivedRedTrafficLight">
+								<ObjectValueExpr objectVariable="trafficLight" />
+							</Slot>
+						</UpdateObject>
+					</UPDATE-ENV>
+				</THEN>
+			</EnvironmentRule>
+			
+			<EnvironmentRule name="CarPerceived_EnvRule">
+				<WHEN eventType="CarPerceived" eventVariable="e" />
+				<FOR objectType="Car" objectVariable="car">
+					<ObjectRef language="Java">e.getActor()</ObjectRef>
+				</FOR>
+				<FOR objectType="Car" objectVariable="perceivedCar">
+					<ObjectIdRef language="Java">e.getPerceivedCarId()</ObjectIdRef>
+				</FOR>
+				<IF language="Java">
+					<![CDATA[
+						car.getLane() == perceivedCar.getLane() &&
+						((car.getLane() == 1 && perceivedCar.getY() > car.getY()) ||
+						(car.getLane() == 2 && perceivedCar.getY() < car.getY()) ||
+						(car.getLane() == 3 && perceivedCar.getX() > car.getX()) ||
+						(car.getLane() == 4 && perceivedCar.getX() < car.getX()))
+					]]>
+				</IF>
+				<THEN>
+					<UPDATE-ENV>
+						<UpdateObject objectVariable="car">
+							<Slot property="velocity">
+								<ValueExpr language="Java">perceivedCar.getVelocity()</ValueExpr>
+							</Slot>
+							<Slot property="vx">
+								<ValueExpr language="Java">perceivedCar.getVx()</ValueExpr>
+							</Slot>
+							<Slot property="vy">
+								<ValueExpr language="Java">perceivedCar.getVy()</ValueExpr>
+							</Slot>
+							<Slot property="hasPerceivedCarAhead" value="true" />
+							<Slot property="perceivedCarAhead">
+								<ObjectValueExpr objectVariable="perceivedCar" />
+							</Slot>
+						</UpdateObject>
+					</UPDATE-ENV>
+				</THEN>
+			</EnvironmentRule>
+
+		</EnvironmentRules>
+		
+	</SimulationModel>
+	<InitialState>
+		<PhysicalAgent type="TrafficLight" id="10" name="trafficLight1" shape2D="rectangle">
+			<Slot property="x" value="660"/>
+			<Slot property="y" value="330"/>
+			<Slot property="width" value="30"/>
+			<Slot property="height" value="75"/>
+			<Slot property="status" value="trafficLightStatus.RED"/>
+			<Slot property="lane" value="1"/>
+			<PeriodicTimeEvent occurrenceTime="1" type="SwitchTrafficLightFirstTime"/>
+			<PeriodicTimeEvent occurrenceTime="601" type="SwitchTrafficLightSecondTime"/>
+		</PhysicalAgent>
+	
+		<PhysicalObject type="StopCheckpoint" id="11" x="550" y="400" width="100" height="20" shape2D="rectangle">
+			<Slot property="lane" value="1" />
+		</PhysicalObject>
+	
+		<PhysicalObject type="RemovalCheckpoint" id="12" x="550" y="1000" width="100" height="20" shape2D="rectangle">
+			<Slot property="lane" value="1" />
+		</PhysicalObject>
+		
+		
+		<PhysicalAgent type="TrafficLight" id="20" name="trafficLight2" shape2D="rectangle">
+			<Slot property="x" value="340"/>
+			<Slot property="y" value="670"/>
+			<Slot property="width" value="30"/>
+			<Slot property="height" value="75"/>
+			<Slot property="rotZ" value="180" />
+			<Slot property="status" value="trafficLightStatus.RED"/>
+			<Slot property="lane" value="2"/>
+			<PeriodicTimeEvent occurrenceTime="1" type="SwitchTrafficLightFirstTime"/>
+			<PeriodicTimeEvent occurrenceTime="601" type="SwitchTrafficLightSecondTime"/>
+		</PhysicalAgent>
+	
+		<PhysicalObject type="StopCheckpoint" id="21" x="450" y="600" width="100" height="20" shape2D="rectangle">
+			<Slot property="lane" value="2" />
+		</PhysicalObject>
+	
+		<PhysicalObject type="RemovalCheckpoint" id="22" x="450" y="0" width="100" height="20" shape2D="rectangle">
+			<Slot property="lane" value="2" />
+		</PhysicalObject>
+		
+		
+		<PhysicalAgent type="TrafficLight" id="30" name="trafficLight3" shape2D="rectangle">
+			<Slot property="x" value="330"/>
+			<Slot property="y" value="340"/>
+			<Slot property="width" value="30"/>
+			<Slot property="height" value="75"/>
+			<Slot property="rotZ" value="-90" />
+			<Slot property="status" value="trafficLightStatus.RED"/>
+			<Slot property="lane" value="3"/>
+			<PeriodicTimeEvent occurrenceTime="701" type="SwitchTrafficLightFirstTime"/>
+			<PeriodicTimeEvent occurrenceTime="1301" type="SwitchTrafficLightSecondTime"/>
+		</PhysicalAgent>
+	
+		<PhysicalObject type="StopCheckpoint" id="31" x="400" y="450" width="100" height="20" shape2D="rectangle">
+			<Slot property="lane" value="3" />
+			<Slot property="rotZ" value="-90" />
+		</PhysicalObject>
+	
+		<PhysicalObject type="RemovalCheckpoint" id="32" x="1000" y="450" width="100" height="20" shape2D="rectangle">
+			<Slot property="lane" value="3" />
+			<Slot property="rotZ" value="-90" />
+		</PhysicalObject>
+		
+		<PhysicalAgent type="TrafficLight" id="40" name="trafficLight4" shape2D="rectangle">
+			<Slot property="x" value="670"/>
+			<Slot property="y" value="660"/>
+			<Slot property="width" value="30"/>
+			<Slot property="height" value="75"/>
+			<Slot property="rotZ" value="90" />
+			<Slot property="status" value="trafficLightStatus.RED"/>
+			<Slot property="lane" value="4"/>
+			<PeriodicTimeEvent occurrenceTime="701" type="SwitchTrafficLightFirstTime"/>
+			<PeriodicTimeEvent occurrenceTime="1301" type="SwitchTrafficLightSecondTime"/>
+		</PhysicalAgent>
+	
+		<PhysicalObject type="StopCheckpoint" id="41" x="600" y="550" width="100" height="20" shape2D="rectangle">
+			<Slot property="lane" value="4" />
+			<Slot property="rotZ" value="90" />
+		</PhysicalObject>
+	
+		<PhysicalObject type="RemovalCheckpoint" id="42" x="0" y="550" width="100" height="20" shape2D="rectangle">
+			<Slot property="lane" value="4" />
+			<Slot property="rotZ" value="90" />
+		</PhysicalObject>
+		
+		<ExogenousEvent type="CarArrivalLane1" occurrenceTime="1" />
+		
+		<ExogenousEvent type="CarArrivalLane2" occurrenceTime="50" />
+		
+		<ExogenousEvent type="CarArrivalLane3" occurrenceTime="100" />
+		
+		<ExogenousEvent type="CarArrivalLane4" occurrenceTime="150" />
+	</InitialState>
+	<UserInterface supportedLanguages="">
+		<AnimationUI>
+            <Views>
+				<SpaceView canvasColor="grey" canvasWidth="1000" canvasHeight="1000">
+					<TwoDimensionalSpaceView2D backgroundImage="backgrounds\\Crossroads.jpg" />
+				
+					<TwoDimensionalSpaceView3D>
+						<Skybox bottom="backgrounds\\Crossroads.jpg" />
+					</TwoDimensionalSpaceView3D>
+				</SpaceView>
+                
+				<!--<PhysicalObjectView physicalObjectType="RemovalCheckpoint" displayID="true">
+                    <PhysicalShape2D>
+                        <Rectangle fill="green"/>
+                    </PhysicalShape2D>
+				</PhysicalObjectView>
+				
+				<PhysicalObjectView physicalObjectType="StopCheckpoint" displayID="true">
+                    <PhysicalShape2D>
+                        <Rectangle fill="green"/>
+                    </PhysicalShape2D>
+				</PhysicalObjectView>-->
+				
+                <PhysicalObjectView physicalObjectType="TrafficLight">
+                    <PhysicalShape2D>
+                        <Rectangle fill="orange"/>
+                    </PhysicalShape2D>
+					
+                    
+                    <AttachedShape2D offsetX="0%" offsetY="30%">
+                    	<Shape2D>
+                    		<Circle r="7">
+								<ShapePropertyVisualizationMap  property="status" shapeProperty="fill" mapType="enumerationMap" a0="trafficLightStatus.RED" v0="red" a1="trafficLightStatus.YELLOW" v1="50 0 0" a2="trafficLightStatus.GREEN" v2="50 0 0" a3="trafficLightStatus.REDYELLOW" v3="red"/>
+							</Circle>
+                    	</Shape2D>
+                    </AttachedShape2D>
+                    
+                    <AttachedShape2D offsetX="0%" offsetY="0%">
+                    	<Shape2D>
+                    		<Circle r="7">
+                    			<ShapePropertyVisualizationMap  property="status" shapeProperty="fill" mapType="enumerationMap" a0="trafficLightStatus.RED" v0="50 50 0" a1="trafficLightStatus.YELLOW" v1="yellow" a2="trafficLightStatus.GREEN" v2="50 50 0" a3="trafficLightStatus.REDYELLOW" v3="yellow"/>
+                    		</Circle>
+                    	</Shape2D>
+                    </AttachedShape2D>
+                    
+                    <AttachedShape2D offsetX="0%" offsetY="-30%">
+                    	<Shape2D>
+                    		<Circle r="7">
+								<ShapePropertyVisualizationMap  property="status" shapeProperty="fill" mapType="enumerationMap" a0="trafficLightStatus.RED" v0="0 50 0" a1="trafficLightStatus.YELLOW" v1="0 50 0" a2="trafficLightStatus.GREEN" v2="green" a3="trafficLightStatus.REDYELLOW" v3="0 50 0"/>
+							</Circle>
+                    	</Shape2D>
+                    </AttachedShape2D>
+                </PhysicalObjectView>
+				
+				<PhysicalObjectView physicalObjectType="Car"> <!--displayID="true">-->
+                    <PhysicalShape2D>
+						<Rectangle fill="blue"/>
+					</PhysicalShape2D>
+					<!--<DisplayInfo property="hasPerceivedCarAhead">
+					</DisplayInfo>-->
+				</PhysicalObjectView>
+            </Views>
+        </AnimationUI>
+	</UserInterface>
+</SimulationScenario>

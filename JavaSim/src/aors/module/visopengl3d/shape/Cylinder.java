@@ -57,9 +57,6 @@ public class Cylinder extends Shape3D {
     	  
         // Set the drawing color to white (because of texture)
   	    gl.glColor4dv(Color.WHITE.getColor(), 0);
-  	    
-  	    // Set the material to a white material (because of texture)
-  	    //setMaterial(gl, Color.WHITE.getColorFloat());
           
         // Enable texture support
         texture.bind();
@@ -123,9 +120,6 @@ public class Cylinder extends Shape3D {
 		
         // Set the drawing color
   	    gl.glColor4dv(fill.getColor(), 0);
-  	    
-  	    // Set the material according to the fill color
-  	    //setMaterial(gl, fill.getColorFloat());
   	    
   	    // draw the side face of the cylinder
   	    glu.gluQuadricNormals(side, GLU.GLU_SMOOTH);
