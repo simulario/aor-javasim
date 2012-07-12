@@ -1,0 +1,256 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<?xml-stylesheet type="text/xsl" href="prettyprint.xsl"?>
+<SimulationScenario 
+    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+    xsi:schemaLocation="http://aor-simulation.org ../../../../../ext/aorsl/AORSL-0-9.xsd"
+    xmlns="http://aor-simulation.org"
+    xmlns:aors="http://aor-simulation.org"
+    xmlns:dc="http://purl.org/dc/elements/1.1/"
+    version="0.9"
+    scenarioName="Airport"
+    simulationManagerDirectory="../../../../../../../">
+    <SimulationParameters simulationSteps="10000" stepDuration="100" timeUnit="ms" stepTimeDelay="25"/>
+    
+    <SimulationModel modelName="Airport">
+        <documentation>
+            <dc:creator>Sebastian Mucha</dc:creator>
+            <dc:created>April 15th, 2010</dc:created>
+            <!--<dc:description>
+                This simulation models a plane starting and landing at an airport.
+            </dc:description>-->
+        </documentation>
+        
+        <SpaceModel geometry="Euclidean" spatialDistanceUnit="m">
+            <TwoDimensional xMax="2000" yMax="1000"/>
+        </SpaceModel>
+        
+        <EntityTypes>
+            <PhysicalAgentType name="Plane"/>
+
+            <PhysicalAgentType name="Runway">
+                <Attribute type="Boolean" name="lightsOn"/>
+                
+                <!-- Every 25 steps -->
+                <PeriodicTimeEventType name="SwitchLights" periodicity="25"/>
+                  
+                <ReactionRule name="SwitchLights_Rule" agentVariable="runway">
+                    <WHEN eventType="SwitchLights"/>
+                    <DO>
+                        <UPDATE-AGT>
+                            <Slot property="lightsOn">
+                                <ValueExpr language="Java">!runway.isLightsOn()</ValueExpr>
+                            </Slot>
+                        </UPDATE-AGT>
+                    </DO>
+                </ReactionRule>
+            </PhysicalAgentType>
+        </EntityTypes>
+    </SimulationModel>
+    
+    <InitialState>
+        <PhysicalAgent type="Plane" id="1" x="350" y="500" width="180" height="185" shape2D="circle"/>
+        
+        <PhysicalAgent type="Runway" id="10" x="1000" y="500" width="1500" height="250" shape2D="rectangle">
+            <Slot property="lightsOn" value="false"/>
+            <PeriodicTimeEvent occurrenceTime="1" type="SwitchLights"/>
+        </PhysicalAgent>
+    </InitialState>
+    
+    <UserInterface supportedLanguages="">
+        <AnimationUI>
+            <Views>
+                <SpaceView canvasColor="lightgrey">
+                    <TwoDimensionalSpaceView2D/>
+                </SpaceView>
+                
+                <PhysicalObjectView physicalObjectType="Plane">
+                    <PhysicalShape2D>
+                        <Rectangle texture="boeing.png"/>
+                    </PhysicalShape2D>
+                </PhysicalObjectView>
+                
+                <PhysicalObjectView physicalObjectType="Runway">
+                    <PhysicalShape2D>
+                        <Rectangle fill="darkgrey"/>
+                    </PhysicalShape2D>
+                    
+                    <!-- Top line of position lights -->
+                    
+                    <AttachedShape2D offsetX="-49%" offsetY="46%">
+                        <Shape2D>
+                            <Circle r="4" fill="black">
+                                <ShapePropertyVisualizationMap shapeProperty="fill" property="lightsOn" mapType="equalityCaseWise" a0="true" v0="white" a1="false" v1="yellow"/>
+                            </Circle>
+                        </Shape2D>
+                    </AttachedShape2D>
+                    
+                    <AttachedShape2D offsetX="-35%" offsetY="46%">
+                        <Shape2D>
+                            <Circle r="4" fill="black">
+                                <ShapePropertyVisualizationMap shapeProperty="fill" property="lightsOn" mapType="equalityCaseWise" a0="true" v0="yellow" a1="false" v1="white"/>
+                            </Circle>
+                        </Shape2D>
+                    </AttachedShape2D>
+                    
+                    <AttachedShape2D offsetX="-21%" offsetY="46%">
+                        <Shape2D>
+                            <Circle r="4" fill="black">
+                                <ShapePropertyVisualizationMap shapeProperty="fill" property="lightsOn" mapType="equalityCaseWise" a0="true" v0="white" a1="false" v1="yellow"/>
+                            </Circle>
+                        </Shape2D>
+                    </AttachedShape2D>
+                    
+                    <AttachedShape2D offsetX="-7%" offsetY="46%">
+                        <Shape2D>
+                            <Circle r="4" fill="black">
+                                <ShapePropertyVisualizationMap shapeProperty="fill" property="lightsOn" mapType="equalityCaseWise" a0="true" v0="yellow" a1="false" v1="white"/>
+                            </Circle>
+                        </Shape2D>
+                    </AttachedShape2D>
+                    
+                    <AttachedShape2D offsetX="7%" offsetY="46%">
+                        <Shape2D>
+                            <Circle r="4" fill="black">
+                                <ShapePropertyVisualizationMap shapeProperty="fill" property="lightsOn" mapType="equalityCaseWise" a0="true" v0="white" a1="false" v1="yellow"/>
+                            </Circle>
+                        </Shape2D>
+                    </AttachedShape2D>
+                    
+                    <AttachedShape2D offsetX="21%" offsetY="46%">
+                        <Shape2D>
+                            <Circle r="4" fill="black">
+                                <ShapePropertyVisualizationMap shapeProperty="fill" property="lightsOn" mapType="equalityCaseWise" a0="true" v0="yellow" a1="false" v1="white"/>
+                            </Circle>
+                        </Shape2D>
+                    </AttachedShape2D>
+                    
+                    <AttachedShape2D offsetX="35%" offsetY="46%">
+                        <Shape2D>
+                            <Circle r="4" fill="black">
+                                <ShapePropertyVisualizationMap shapeProperty="fill" property="lightsOn" mapType="equalityCaseWise" a0="true" v0="white" a1="false" v1="yellow"/>
+                            </Circle>
+                        </Shape2D>
+                    </AttachedShape2D>
+                    
+                    <AttachedShape2D offsetX="49%" offsetY="46%">
+                        <Shape2D>
+                            <Circle r="4" fill="black">
+                                <ShapePropertyVisualizationMap shapeProperty="fill" property="lightsOn" mapType="equalityCaseWise" a0="true" v0="yellow" a1="false" v1="white"/>
+                            </Circle>
+                        </Shape2D>
+                    </AttachedShape2D>
+                    
+                    <!-- Bottom line of position lights -->
+                    
+                    <AttachedShape2D offsetX="-49%" offsetY="-46%">
+                        <Shape2D>
+                            <Circle r="4" fill="black">
+                                <ShapePropertyVisualizationMap shapeProperty="fill" property="lightsOn" mapType="equalityCaseWise" a0="true" v0="white" a1="false" v1="yellow"/>
+                            </Circle>
+                        </Shape2D>
+                    </AttachedShape2D>
+                    
+                    <AttachedShape2D offsetX="-35%" offsetY="-46%">
+                        <Shape2D>
+                            <Circle r="4" fill="black">
+                                <ShapePropertyVisualizationMap shapeProperty="fill" property="lightsOn" mapType="equalityCaseWise" a0="true" v0="yellow" a1="false" v1="white"/>
+                            </Circle>
+                        </Shape2D>
+                    </AttachedShape2D>
+                    
+                    <AttachedShape2D offsetX="-21%" offsetY="-46%">
+                        <Shape2D>
+                            <Circle r="4" fill="black">
+                                <ShapePropertyVisualizationMap shapeProperty="fill" property="lightsOn" mapType="equalityCaseWise" a0="true" v0="white" a1="false" v1="yellow"/>
+                            </Circle>
+                        </Shape2D>
+                    </AttachedShape2D>
+                    
+                    <AttachedShape2D offsetX="-7%" offsetY="-46%">
+                        <Shape2D>
+                            <Circle r="4" fill="black">
+                                <ShapePropertyVisualizationMap shapeProperty="fill" property="lightsOn" mapType="equalityCaseWise" a0="true" v0="yellow" a1="false" v1="white"/>
+                            </Circle>
+                        </Shape2D>
+                    </AttachedShape2D>
+                    
+                    <AttachedShape2D offsetX="7%" offsetY="-46%">
+                        <Shape2D>
+                            <Circle r="4" fill="black">
+                                <ShapePropertyVisualizationMap shapeProperty="fill" property="lightsOn" mapType="equalityCaseWise" a0="true" v0="white" a1="false" v1="yellow"/>
+                            </Circle>
+                        </Shape2D>
+                    </AttachedShape2D>
+                    
+                    <AttachedShape2D offsetX="21%" offsetY="-46%">
+                        <Shape2D>
+                            <Circle r="4" fill="black">
+                                <ShapePropertyVisualizationMap shapeProperty="fill" property="lightsOn" mapType="equalityCaseWise" a0="true" v0="yellow" a1="false" v1="white"/>
+                            </Circle>
+                        </Shape2D>
+                    </AttachedShape2D>
+                    
+                    <AttachedShape2D offsetX="35%" offsetY="-46%">
+                        <Shape2D>
+                            <Circle r="4" fill="black">
+                                <ShapePropertyVisualizationMap shapeProperty="fill" property="lightsOn" mapType="equalityCaseWise" a0="true" v0="white" a1="false" v1="yellow"/>
+                            </Circle>
+                        </Shape2D>
+                    </AttachedShape2D>
+                    
+                    <AttachedShape2D offsetX="49%" offsetY="-46%">
+                        <Shape2D>
+                            <Circle r="4" fill="black">
+                                <ShapePropertyVisualizationMap shapeProperty="fill" property="lightsOn" mapType="equalityCaseWise" a0="true" v0="yellow" a1="false" v1="white"/>
+                            </Circle>
+                        </Shape2D>
+                    </AttachedShape2D>
+                    
+                    <!-- Runway markers -->
+                    
+                    <AttachedShape2D offsetX="-46%" offsetY="0%">
+                        <Shape2D>
+                            <Rectangle width="50px" height="2px" fill="white" positioning="LeftCenter"/>
+                        </Shape2D>
+                    </AttachedShape2D>
+                    
+                    <AttachedShape2D offsetX="-32%" offsetY="0%">
+                        <Shape2D>
+                            <Rectangle width="50px" height="2px" fill="white" positioning="LeftCenter"/>
+                        </Shape2D>
+                    </AttachedShape2D>
+                    
+                    <AttachedShape2D offsetX="-18%" offsetY="0%">
+                        <Shape2D>
+                            <Rectangle width="50px" height="2px" fill="white" positioning="LeftCenter"/>
+                        </Shape2D>
+                    </AttachedShape2D>
+                    
+                    <AttachedShape2D offsetX="-4%" offsetY="0%">
+                        <Shape2D>
+                            <Rectangle width="50px" height="2px" fill="white" positioning="LeftCenter"/>
+                        </Shape2D>
+                    </AttachedShape2D>
+                    
+                    <AttachedShape2D offsetX="10%" offsetY="0%">
+                        <Shape2D>
+                            <Rectangle width="50px" height="2px" fill="white" positioning="LeftCenter"/>
+                        </Shape2D>
+                    </AttachedShape2D>
+                    
+                    <AttachedShape2D offsetX="24%" offsetY="0%">
+                        <Shape2D>
+                            <Rectangle width="50px" height="2px" fill="white" positioning="LeftCenter"/>
+                        </Shape2D>
+                    </AttachedShape2D>
+                    
+                    <AttachedShape2D offsetX="38%" offsetY="0%">
+                        <Shape2D>
+                            <Rectangle width="50px" height="2px" fill="white" positioning="LeftCenter"/>
+                        </Shape2D>
+                    </AttachedShape2D>
+                </PhysicalObjectView>
+            </Views>
+        </AnimationUI>       
+    </UserInterface>
+</SimulationScenario>
