@@ -22,22 +22,43 @@
             </description>-->
         </documentation>
         
-        <SpaceModel geometry="Euclidean" spatialDistanceUnit="m">
-            <OneDimensional xMax="1000" multiplicity="4"/>
+        <SpaceModel geometry="Toroidal" spatialDistanceUnit="m">
+            <OneDimensional xMax="1000" multiplicity="4" autoKinematics="true"/>
         </SpaceModel>
 		
 		<EntityTypes>
-            <PhysicalObjectType name="Square"/>
+            <PhysicalAgentType name="Shape2DMap">
+            	<Attribute type="Boolean" name="isRectangle"/>
+            	
+            	<!-- Every 25 steps -->
+                <PeriodicTimeEventType name="SwitchShape" periodicity="25"/>
+                  
+                <ReactionRule name="SwitchShape_Rule" agentVariable="shape2dmap">
+                    <WHEN eventType="SwitchShape"/>
+                    <DO>
+                        <UPDATE-AGT>
+                            <Slot property="isRectangle">
+                                <ValueExpr language="Java">!shape2dmap.isIsRectangle()</ValueExpr>
+                            </Slot>
+                        </UPDATE-AGT>
+                    </DO>
+                </ReactionRule>
+        	</PhysicalAgentType>
+            
         </EntityTypes>
 		
 	</SimulationModel>
 	<InitialState>
-		<PhysicalObject type="Square" id="1" name="Square">
+		<PhysicalAgent type="Shape2DMap" id="1" name="Shape2DMap">
 			<Slot property="x" value="210"/>
-			<Slot property="y" value="4"/>
+			<Slot property="y" value="1"/>
+			<Slot property="vx" value="80"/>
+			<Slot property="rotZ" value="-90"/>
 			<Slot property="width" value="20"/>
 			<Slot property="height" value="20"/>
-		</PhysicalObject>
+			<Slot property="isRectangle" value="true"/>
+			<PeriodicTimeEvent occurrenceTime="25" type="SwitchShape"/>
+		</PhysicalAgent>
 	</InitialState>
 	<UserInterface supportedLanguages="">
 		<AnimationUI>
@@ -51,14 +72,18 @@
                 </SpaceView>
                 
                 <PhysicalObjectView physicalObjectIdRef="1">
-                    <PhysicalShape2D>
-                        <Triangle fill="yellow"/>
-                    </PhysicalShape2D>
-                    <AttachedShape2D offsetX="20%" offsetY="20%">
-                    	<Shape2D>
-                    		<Square fill="red" width="50%"/>
-                    	</Shape2D>
-                    </AttachedShape2D>
+                    <PhysicalShape2dVisualizationMap property="isRectangle">
+                		<Case value="true">
+		                    <PhysicalShape2D>
+		                        <Triangle fill="yellow"/>
+		                    </PhysicalShape2D>
+	                    </Case>
+	                    <Case value="false">
+		                    <PhysicalShape2D>
+		                    	<Rectangle fill="lightblue"/>
+		                    </PhysicalShape2D>
+	                    </Case>
+                    </PhysicalShape2dVisualizationMap>
                 </PhysicalObjectView>
             </Views>
         </AnimationUI>

@@ -63,53 +63,53 @@ public class DisplayInfo {
     if ((displayName && name != null) &&
     		(displayID && id != null) &&
     		(content != null || propertyValue != null)) {
-    	y += 24;
+    	y += 32;
     }
     
     else if ((displayName && name != null) &&
     		(displayID && id != null)) {
-    	y += 12;
+    	y += 16;
     }
     
     else if ((displayName && name != null) &&
     		(content != null || propertyValue != null)) {
-    	y += 12;
+    	y += 16;
     }
     
     else if ((displayID && id != null) &&
     		(content != null || propertyValue != null)) {
-    	y += 12;
+    	y += 16;
     }
 
     if (displayName && name != null) {
       gl.glRasterPos3d(x, y, z);
       glut.glutBitmapString(GLUT.BITMAP_HELVETICA_12, name);
-      y -= 12;
+      y -= 16;
     }
     
     if (displayID && id != null) {
       gl.glRasterPos3d(x, y, z);
       glut.glutBitmapString(GLUT.BITMAP_HELVETICA_12, "ID: " + id);
-      y -= 12;
+      y -= 16;
     }
 
     if (content != null && propertyValue != null) {
       gl.glRasterPos3d(x, y, z);
       glut.glutBitmapString(GLUT.BITMAP_HELVETICA_12, propertyValue + " "
           + content);
-      y -= 12;
+      y -= 16;
     }
 
     else if (content != null && propertyValue == null) {
       gl.glRasterPos3d(x, y, z);
       glut.glutBitmapString(GLUT.BITMAP_HELVETICA_12, content);
-      y -= 12;
+      y -= 16;
     }
 
     else if (content == null && propertyValue != null) {
       gl.glRasterPos3d(x, y, z);
       glut.glutBitmapString(GLUT.BITMAP_HELVETICA_12, propertyValue);
-      y -= 12;
+      y -= 16;
     }
 
     gl.glPopMatrix();
