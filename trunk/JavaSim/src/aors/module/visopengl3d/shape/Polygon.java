@@ -5,7 +5,10 @@ import java.util.ArrayList;
 import javax.media.opengl.GL2;
 import javax.media.opengl.glu.GLU;
 
+import com.sun.opengl.util.texture.TextureCoords;
+
 import aors.module.visopengl3d.engine.TessellatedPolygon;
+import aors.module.visopengl3d.utility.Color;
 import aors.module.visopengl3d.utility.VectorOperations;
 
 /**
@@ -115,11 +118,11 @@ public class Polygon extends Shape2D {
         // Check if the polygon will be rendered with a texture applied on it
         if (texture != null) {
 
-          /*TextureCoords tc = texture.getImageTexCoords();
+          TextureCoords tc = texture.getImageTexCoords();
           
           // Calculate the contour of the top and bottom polygon
-          calculateTopContour(outContourTop, null);
-          calculateBottomContour(outContourBottom, null);
+          calculateTopContour(outContourTop, clockwise);
+          calculateBottomContour(outContourBottom, clockwise);
 
           // Set the polygons color to white (because of texture)
           applyColor(outContourTop, Color.WHITE);
@@ -139,6 +142,7 @@ public class Polygon extends Shape2D {
           // Draw the textured polygons
           TessellatedPolygon poly = new TessellatedPolygon();
           poly.init(gl, glu);
+          poly.setWindingRule(GLU.GLU_TESS_WINDING_ODD);
           
           // Draw top face of the polygon
           poly.beginPolygon();
@@ -164,31 +168,31 @@ public class Polygon extends Shape2D {
           int numPoints = outContourTop.size();
           
           for(int i=0; i<numPoints-1; i++) {
-            double[] normal = crossProduct(
-                subtractVectors(outContourBottom.get(i), outContourTop.get(i)),
-                subtractVectors(outContourTop.get(i+1), outContourTop.get(i)));
-            normalize(normal);
+            double[] normal = VectorOperations.crossProduct(
+                VectorOperations.subtractVectors(outContourBottom.get(numPoints-1-i), outContourTop.get(i)),
+                VectorOperations.subtractVectors(outContourTop.get(i+1), outContourTop.get(i)));
+            VectorOperations.normalize(normal);
             gl.glNormal3dv(normal, 0);
-            gl.glTexCoord2d(tc.left(), tc.bottom()); gl.glVertex3dv(outContourBottom.get(i), 0);
-            gl.glTexCoord2d(tc.right(), tc.bottom()); gl.glVertex3dv(outContourBottom.get(i+1), 0);            
+            gl.glTexCoord2d(tc.left(), tc.bottom()); gl.glVertex3dv(outContourBottom.get(numPoints-1-i), 0);
+            gl.glTexCoord2d(tc.right(), tc.bottom()); gl.glVertex3dv(outContourBottom.get(numPoints-1-(i+1)), 0);            
             gl.glTexCoord2d(tc.right(), tc.top()); gl.glVertex3dv(outContourTop.get(i+1), 0);
             gl.glTexCoord2d(tc.left(), tc.top()); gl.glVertex3dv(outContourTop.get(i), 0);
           }
           
-          double[] normal = crossProduct(
-              subtractVectors(outContourBottom.get(numPoints-1), outContourTop.get(numPoints-1)),
-              subtractVectors(outContourTop.get(0), outContourTop.get(numPoints-1)));
-          normalize(normal);
+          double[] normal = VectorOperations.crossProduct(
+              VectorOperations.subtractVectors(outContourBottom.get(0), outContourTop.get(numPoints-1)), // outContourBottom.get(numPoints-1-(numPoints-1))
+              VectorOperations.subtractVectors(outContourTop.get(0), outContourTop.get(numPoints-1)));
+          VectorOperations.normalize(normal);
           gl.glNormal3dv(normal, 0);
-          gl.glTexCoord2d(tc.left(), tc.bottom()); gl.glVertex3dv(outContourBottom.get(numPoints-1), 0);
-          gl.glTexCoord2d(tc.right(), tc.bottom()); gl.glVertex3dv(outContourBottom.get(0), 0);            
+          gl.glTexCoord2d(tc.left(), tc.bottom()); gl.glVertex3dv(outContourBottom.get(0), 0); // outContourBottom.get(numPoints-1-(numPoints-1))
+          gl.glTexCoord2d(tc.right(), tc.bottom()); gl.glVertex3dv(outContourBottom.get(numPoints-1), 0);   // outContourBottom.get(numPoints-1-0)          
           gl.glTexCoord2d(tc.right(), tc.top()); gl.glVertex3dv(outContourTop.get(0), 0);
           gl.glTexCoord2d(tc.left(), tc.top()); gl.glVertex3dv(outContourTop.get(numPoints-1), 0);
           
           gl.glEnd();
 
           // Disable texture support
-          texture.disable();*/
+          texture.disable();
         } else {
           // Calculate the contour of the top and bottom polygons
           calculateTopContour(outContourTop, clockwise);

@@ -112,8 +112,9 @@ public class Engine implements GLEventListener {
     // Apply camera transformations
     
     camera.zoom(gl);
-    camera.rotate(gl);
     camera.scroll(gl);
+    camera.rotate(gl);
+    
     
     // Display the space model & objects
     if (spaceModel != null) {

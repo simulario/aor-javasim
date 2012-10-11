@@ -55,7 +55,7 @@ public class KeyboardEventHandler implements KeyListener {
       }
       
       // Rotate counterclockwise when the colon key was pressed
-      /*if (e.getKeyCode() == KeyEvent.VK_PERIOD) {
+      if (e.getKeyCode() == KeyEvent.VK_PERIOD) {
         camera.rotateCounterclockwise(true);
         canvas.display();
       }
@@ -76,7 +76,7 @@ public class KeyboardEventHandler implements KeyListener {
       if (e.getKeyCode() == KeyEvent.VK_MINUS) {
         camera.zoomOut();
         canvas.display();
-      }*/
+      }
     }
   }
 
@@ -108,7 +108,7 @@ public class KeyboardEventHandler implements KeyListener {
       }
       
       // Stop rotating counterclockwise when the colon key was released
-      /*if (e.getKeyCode() == KeyEvent.VK_PERIOD) {
+      if (e.getKeyCode() == KeyEvent.VK_PERIOD) {
         camera.rotateCounterclockwise(false);
         canvas.display();
       }
@@ -117,7 +117,7 @@ public class KeyboardEventHandler implements KeyListener {
       if (e.getKeyCode() == KeyEvent.VK_COMMA) {
         camera.rotateClockwise(false);
         canvas.display();
-      }*/
+      }
     }
   }
 
