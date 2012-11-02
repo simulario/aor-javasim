@@ -2,7 +2,7 @@
 <?xml-stylesheet type="text/xsl" href="prettyprint.xsl"?>
 
 <SimulationScenario xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-	xsi:schemaLocation="http://aor-simulation.org ../../../AORSL/AORSL_0-9.xsd"
+  xsi:schemaLocation="http://aor-simulation.org ../../../AORSL/AORSL_0-9.xsd"
  xmlns:dc="http://purl.org/dc/elements/1.1/"
  xmlns="http://aor-simulation.org"
  xmlns:aors="http://aor-simulation.org"
@@ -15,22 +15,22 @@
   <SimulationModel modelName="SingleServiceQueue_withMeanResponseTimeStatistics"
     modelTitle="A single service queue with customer objects creation and destruction">
 
-  	<documentation xmlns:h="http://www.w3.org/1999/xhtml">
+    <documentation xmlns:h="http://www.w3.org/1999/xhtml">
       <dc:creator>Gerd Wagner</dc:creator>
       <dc:created>20081001</dc:created>
       <dc:contributor>Jens Werner</dc:contributor>
       <dc:contributor>Oana Nicolae</dc:contributor>
       <dc:modified>20111201</dc:modified>
       <description><h:p>Customers arrive at random times at a service desk where they have to wait in a queue when the service desk is busy. 
-      	The time between two customer arrivals is uniformly distributed between 1 and 8 minutes. The times for completing a service 
-      	vary from 1 to 6 minutes, with probabilities 0.1, 0.2, 0.3, 0.25, 0.1, 0.05, respectively. Two statistics are to be collected: 
-      	the "mean response time" (the length of time a customer spends in the system) and the mean proportion of customers 
-      	who spend 5 or more minutes in the system (the latter is not yet implemented). An arriving customer is represented by 
-      	a newly generated object, which is destroyed again, when this customer leaves the system. The customer in service 
-      	is represented by the first/topmost item in the First-In-First-Out queue, while the remaining items of the queue 
-      	represent the waiting line.</h:p></description>
-  		<informationModelDiagram file="InformationModel.png"/>
-  		<processModelDiagram file="BPMN-Diagram.png"/>
+        The time between two customer arrivals is uniformly distributed between 1 and 8 minutes. The times for completing a service 
+        vary from 1 to 6 minutes, with probabilities 0.1, 0.2, 0.3, 0.25, 0.1, 0.05, respectively. Two statistics are to be collected: 
+        the "mean response time" (the length of time a customer spends in the system) and the mean proportion of customers 
+        who spend 5 or more minutes in the system (the latter is not yet implemented). An arriving customer is represented by 
+        a newly generated object, which is destroyed again, when this customer leaves the system. The customer in service 
+        is represented by the first/topmost item in the First-In-First-Out queue, while the remaining items of the queue 
+        represent the waiting line.</h:p></description>
+      <informationModelDiagram file="InformationModel.png"/>
+      <processModelDiagram file="BPMN-Diagram.png"/>
     </documentation>
 
     <Statistics>
@@ -49,7 +49,7 @@
       <!-- =================================================== -->
         <Periodicity>
           <DiscreteRandomVariable>
-          	<UniformInt lowerBound="1" upperBound="8" />
+            <UniformInt lowerBound="1" upperBound="8" />
           </DiscreteRandomVariable>
         </Periodicity>
       </ExogenousEventType>
@@ -60,25 +60,25 @@
       <!-- =================================================== -->
         <Attribute name="arrivalTime" type="Integer"/>
       </ObjectType>
-    	<!-- =================================================== -->
-    	<ObjectType name="ServiceDesk">
-   		<!-- =================================================== -->
-    		<Attribute name="busy" type="Boolean"/>
-    		<ReferenceProperty name="waitingCustomers" type="Customer" upperMultiplicity="unbounded">
-    			<documentation>This property represents a first-in-first-out queue. </documentation>
-    		</ReferenceProperty>
-    		<Function name="randomServiceTime" resultType="Integer">
-    			<Body language="Java"><![CDATA[
-		int r = Random.uniformInt(0,99);
-		if (r<10) return 1; 		// with probability 0.10
-		else if (r<30) return 2;	// with probability 0.20
-		else if (r<60) return 3;	// with probability 0.30
-		else if (r<85) return 4;	// with probability 0.25
-		else if (r<95) return 5;	// with probability 0.10
-		else return 6;				// with probability 0.05
+      <!-- =================================================== -->
+      <ObjectType name="ServiceDesk">
+       <!-- =================================================== -->
+        <Attribute name="busy" type="Boolean"/>
+        <ReferenceProperty name="waitingCustomers" type="Customer" upperMultiplicity="unbounded">
+          <documentation>This property represents a first-in-first-out queue. </documentation>
+        </ReferenceProperty>
+        <Function name="randomServiceTime" resultType="Integer">
+          <Body language="Java"><![CDATA[
+    int r = Random.uniformInt(0,99);
+    if (r<10) return 1;     // with probability 0.10
+    else if (r<30) return 2;  // with probability 0.20
+    else if (r<60) return 3;  // with probability 0.30
+    else if (r<85) return 4;  // with probability 0.25
+    else if (r<95) return 5;  // with probability 0.10
+    else return 6;        // with probability 0.05
         ]]></Body>
-    		</Function>    		
-    	</ObjectType>
+        </Function>        
+      </ObjectType>
     </EntityTypes>
 
     <EnvironmentRules>
@@ -87,37 +87,37 @@
       <!-- =================================================== -->
         <documentation>
           When a new customer arrives, a new customer object is created and added to the customer queue. 
-          	Then, if the service desk is not busy, the customer is going to be serviced and hence the service desk gets busy, 
-          	and for ending the service, a departure event (with a delay being set to a random service time) is scheduled.
+            Then, if the service desk is not busy, the customer is going to be serviced and hence the service desk gets busy, 
+            and for ending the service, a departure event (with a delay being set to a random service time) is scheduled.
         </documentation>
         <WHEN eventType="CustomerArrival" eventVariable="e"/>
-      	<FOR-ObjectVariable variable="sd" objectType="ServiceDesk" objectIdRef="1"/>
+        <FOR-ObjectVariable variable="sd" objectType="ServiceDesk" objectIdRef="1"/>
         <DO>
           <UPDATE-ENV>
             <Create>
-            		<Object type="Customer" objectVariable="c">
-              		<Slot property="arrivalTime">
-              			<PropertyValueExpr entityVariable="e" property="occurrenceTime"/>
-              		</Slot>
-              </Object>
+             <Object type="Customer" objectVariable="c">
+              <Slot property="arrivalTime">
+                <PropertyValueExpr entityVariable="e" property="occurrenceTime"/>
+              </Slot>
+             </Object>
             </Create>
-          	<UpdateObject objectVariable="sd">
-          		<MultiValuedSlot property="waitingCustomers">
-          			<AddLast itemVariable="c"/>
-          		</MultiValuedSlot>
-          	</UpdateObject>
+          <UpdateObject objectVariable="sd">
+              <MultiValuedSlot property="waitingCustomers">
+                <AddLast itemVariable="c"/>
+              </MultiValuedSlot>
+            </UpdateObject>
           </UPDATE-ENV>
         </DO>
         <IF language="Java"> ! sd.isBusy() </IF>
         <THEN>
           <UPDATE-ENV>
-          	<UpdateObject objectVariable="sd">
-          		<Slot property="busy" value="true"/>
-          	</UpdateObject>
+            <UpdateObject objectVariable="sd">
+              <Slot property="busy" value="true"/>
+            </UpdateObject>
           </UPDATE-ENV>
           <SCHEDULE-EVT>
             <CausedEventExpr eventType="CustomerDeparture">
-            	<Delay><ValueExpr language="Java">sd.randomServiceTime()</ValueExpr></Delay>
+              <Delay><ValueExpr language="Java">sd.randomServiceTime()</ValueExpr></Delay>
             </CausedEventExpr>
           </SCHEDULE-EVT>
         </THEN>
@@ -127,19 +127,19 @@
       <!-- =================================================== -->
         <documentation>
           When a customer departs, she is removed rom the queue and the statistics isnupdated. 
-          	If the waiting line then is empty (the queue size is equal to 0), 
-          	the service desk is no longer busy. Otherwise, the next customer will be serviced, 
-          	so a new future departure event is created (with a delay given by the random service time). 
+            If the waiting line then is empty (the queue size is equal to 0), 
+            the service desk is no longer busy. Otherwise, the next customer will be serviced, 
+            so a new future departure event is created (with a delay given by the random service time). 
         </documentation>
         <WHEN eventType="CustomerDeparture" eventVariable="e"/>
-      	<FOR-ObjectVariable variable="sd" objectType="ServiceDesk" objectIdRef="1"/>
-      	<DO>
+        <FOR-ObjectVariable variable="sd" objectType="ServiceDesk" objectIdRef="1"/>
+        <DO>
           <UPDATE-ENV>
-          	<UpdateObject objectVariable="sd">
-          		<MultiValuedSlot property="waitingCustomers">
-          			<RemoveFirst itemVariable="c"/>
-          		</MultiValuedSlot>
-          	</UpdateObject>          	
+            <UpdateObject objectVariable="sd">
+              <MultiValuedSlot property="waitingCustomers">
+                <RemoveFirst itemVariable="c"/>
+              </MultiValuedSlot>
+            </UpdateObject>            
             <UpdateStatisticsVariable variable="nmrOfDepartures">
               <ValueExpr language="Java">
 SimStatistics.nmrOfDepartures.getValue() + 1
@@ -147,8 +147,8 @@ SimStatistics.nmrOfDepartures.getValue() + 1
             </UpdateStatisticsVariable>
             <UpdateStatisticsVariable variable="cumulativeResponseTime">
               <ValueExpr language="Java">
-SimStatistics.cumulativeResponseTime.getValue() + e.getOccurrenceTime() - c.getArrivalTime()              	
-              	</ValueExpr>
+SimStatistics.cumulativeResponseTime.getValue() + e.getOccurrenceTime() - c.getArrivalTime()                
+                </ValueExpr>
             </UpdateStatisticsVariable>
             <DestroyObject objectType="Customer" objectVariable="c"/>
           </UPDATE-ENV>
@@ -156,15 +156,15 @@ SimStatistics.cumulativeResponseTime.getValue() + e.getOccurrenceTime() - c.getA
         <IF language="Java"> sd.getAllWaitingCustomers().size() == 0 </IF>
         <THEN>
           <UPDATE-ENV>
-          	<UpdateObject objectVariable="sd">
-          		<Slot property="busy" value="false"/>
-          	</UpdateObject>
+            <UpdateObject objectVariable="sd">
+              <Slot property="busy" value="false"/>
+            </UpdateObject>
           </UPDATE-ENV>
         </THEN>
         <ELSE>
           <SCHEDULE-EVT>
             <CausedEventExpr eventType="CustomerDeparture">
-            	<Delay><ValueExpr language="Java">sd.randomServiceTime()</ValueExpr></Delay>
+              <Delay><ValueExpr language="Java">sd.randomServiceTime()</ValueExpr></Delay>
             </CausedEventExpr>
           </SCHEDULE-EVT>
         </ELSE>
@@ -175,13 +175,13 @@ SimStatistics.cumulativeResponseTime.getValue() + e.getOccurrenceTime() - c.getA
   <!-- =================================================== -->
   <InitialState>
   <!-- =================================================== -->
-  	<Object type="ServiceDesk" id="1" name="ServiceDesk">
-  		<Slot property="busy" value="false"/>
-  		<Slot property="waitingCustomers">
-  			<ValueExpr language="Java"><![CDATA[ new ArrayList<Customer>() ]]></ValueExpr>
-  			<ValueExpr language="JavaScript"> new js.util.ArrayList() </ValueExpr>
-  		</Slot>
-  	</Object>
+    <Object type="ServiceDesk" id="1" name="ServiceDesk">
+      <Slot property="busy" value="false"/>
+      <Slot property="waitingCustomers">
+        <ValueExpr language="Java"><![CDATA[ new ArrayList<Customer>() ]]></ValueExpr>
+        <ValueExpr language="JavaScript"> new js.util.ArrayList() </ValueExpr>
+      </Slot>
+    </Object>
     <ExogenousEvent type="CustomerArrival" occurrenceTime="1"/>
   </InitialState>
   
