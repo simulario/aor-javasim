@@ -29,7 +29,7 @@
 				respectively. Two statistics are to be collected: service utilization (total service time divided by total time) 
 				and maximum queue length.</p>
 				<p>The information about the service desk is modeled with the help of an object type <code>ServiceDesk</code> with two attributes: 
-					<code>queueLength</code> and <code>busy</code>. The model also includes two event types: <code>CustomerArrival</code> 
+					<code>queueLength</code> and <code>isBusy</code>. The model also includes two event types: <code>CustomerArrival</code> 
 					and <code>CustomerDeparture</code>.</p>
 			</ers:description>
 			<ers:description xmlns="http://www.w3.org/1999/xhtml" xml:lang="de">
@@ -39,7 +39,7 @@
 				0.1 beziehunsgweise 0.05. Es sollen zwei Statistiken erhoben werden: der Service-Nutzungsgrad (gesamte Servicezeit geteilt 
 				durch die Gesamtzeit) und die maximale Länge der Warteschlange.</p>
 				<p>Die Informationen über den Service-Schalter werden mit Hilfe eines Objekttyps <code>ServiceDesk</code> mit zwei 
-					Attributen modelliert: <code>queueLength</code> und <code>busy</code>. Das Modell beinhaltet außerdem zwei Ereignistypen: 
+					Attributen modelliert: <code>queueLength</code> und <code>isBusy</code>. Das Modell beinhaltet außerdem zwei Ereignistypen: 
 					<code>CustomerArrival</code> und <code>CustomerDeparture</code>.</p>
 			</ers:description>
 			<CcLicense license="CC BY-SA"/>
@@ -98,13 +98,15 @@
 			<!-- =================================================== -->
 			<CausedEventType name="CustomerDeparture">
 			<!-- =================================================== -->
+<!-- OLD 
 				<Attribute name="serviceTime" type="Integer"/>
-			</CausedEventType>
+old -->
+      </CausedEventType>
 			<!-- =================================================== -->
 			<ObjectType name="ServiceDesk">
 			<!-- =================================================== -->
 				<Attribute name="queueLength" type="Integer" />
-				<Attribute name="busy" type="Boolean"/>
+				<Attribute name="isBusy" type="Boolean"/>
 				<Function name="randomServiceTime" resultType="Integer">
 					<Body language="Java"><![CDATA[
 		int r = Random.uniformInt(0,99);
@@ -139,32 +141,41 @@
 					to a random service time) is created .
 				</documentation>
 				<WHEN eventType="CustomerArrival"/>
-				<FOR-ObjectVariable variable="srvDesk" objectType="ServiceDesk" objectIdRef="1"/>
+				<FOR-ObjectVariable variable="sD" objectType="ServiceDesk" objectIdRef="1"/>
 				<FOR-DataVariable variable="srvTm" dataType="Integer">
-					<ValueExpr language="Java JavaScript"> this.srvDesk.randomServiceTime() </ValueExpr>
+					<ValueExpr language="Java JavaScript"> this.sD.randomServiceTime() </ValueExpr>
 				</FOR-DataVariable>
-				<IF language="Java JavaScript"> this.srvDesk.isBusy() </IF>
+				<IF language="Java JavaScript"> this.sD.isBusy() </IF>
 				<THEN>
 					<UPDATE-ENV>
-						<UpdateObject objectVariable="srvDesk">
+						<UpdateObject objectVariable="sD">
 							<Increment property="queueLength" value="1"/>
 						</UpdateObject>
 					</UPDATE-ENV>
 				</THEN>
 				<ELSE>
 					<UPDATE-ENV>
-						<UpdateObject objectVariable="srvDesk">
-							<Slot property="busy" value="true"/>
+						<UpdateObject objectVariable="sD">
+							<Slot property="isBusy" value="true"/>
 						</UpdateObject>
+<!-- NEW  -->
+						<UpdateStatisticsVariable variable="totalServiceTime">
+							<ValueExpr language="Java JavaScript">
+								SimStatistics.totalServiceTime.getValue() + this.srvTm
+							</ValueExpr>
+						</UpdateStatisticsVariable>
+<!-- new  -->
 					</UPDATE-ENV>
 					<SCHEDULE-EVT>
 						<CausedEventExpr eventType="CustomerDeparture">
 							<Delay>
 								<ValueExpr language="Java JavaScript"> this.srvTm </ValueExpr>
 							</Delay>
+<!-- OLD 
 							<Slot property="serviceTime">
 								<ValueExpr language="Java JavaScript"> this.srvTm </ValueExpr>
 							</Slot>
+old -->
 						</CausedEventExpr>
 					</SCHEDULE-EVT>
 				</ELSE>
@@ -178,41 +189,52 @@
 					(with a delay given by the random service time), and the queue size is decreased by 1.
 				</documentation>
 				<WHEN eventType="CustomerDeparture" eventVariable="depEvt"/>
-				<FOR-ObjectVariable variable="srvDesk" objectType="ServiceDesk" objectIdRef="1"/>
+				<FOR-ObjectVariable variable="sD" objectType="ServiceDesk" objectIdRef="1"/>
 				<FOR-DataVariable variable="srvTm" dataType="Integer">
-					<ValueExpr language="Java JavaScript"> this.srvDesk.randomServiceTime() </ValueExpr>
+					<ValueExpr language="Java JavaScript"> this.sD.randomServiceTime() </ValueExpr>
 				</FOR-DataVariable>
 				<DO>
 					<UPDATE-ENV>
+<!-- OLD 
 						<UpdateStatisticsVariable variable="totalServiceTime">
 							<ValueExpr language="Java JavaScript">
 								SimStatistics.totalServiceTime.getValue() + this.depEvt.getServiceTime()
 							</ValueExpr>
 						</UpdateStatisticsVariable>
+old -->
 					</UPDATE-ENV>
 				</DO>
-				<IF language="Java JavaScript"> this.srvDesk.getQueueLength() == 0 </IF>
+				<IF language="Java JavaScript"> this.sD.getQueueLength() == 0 </IF>
 				<THEN>
 					<UPDATE-ENV>
-						<UpdateObject objectVariable="srvDesk">
-							<Slot property="busy" value="false"/>
+						<UpdateObject objectVariable="sD">
+							<Slot property="isBusy" value="false"/>
 						</UpdateObject>
 					</UPDATE-ENV>
 				</THEN>
 				<ELSE>
 					<UPDATE-ENV>
-						<UpdateObject objectVariable="srvDesk">
+						<UpdateObject objectVariable="sD">
 							<Decrement property="queueLength" value="1"/>
 						</UpdateObject>
+<!-- NEW  -->
+						<UpdateStatisticsVariable variable="totalServiceTime">
+							<ValueExpr language="Java JavaScript">
+								SimStatistics.totalServiceTime.getValue() + this.srvTm
+							</ValueExpr>
+						</UpdateStatisticsVariable>
+<!-- new  -->
 					</UPDATE-ENV>
 					<SCHEDULE-EVT>
 						<CausedEventExpr eventType="CustomerDeparture">
 							<Delay>
 								<ValueExpr language="Java JavaScript"> this.srvTm </ValueExpr>
 							</Delay>
+<!-- OLD 
 							<Slot property="serviceTime">
 								<ValueExpr language="Java JavaScript"> this.srvTm </ValueExpr>
 							</Slot>
+old -->
 						</CausedEventExpr>
 					</SCHEDULE-EVT>
 				</ELSE>
@@ -224,7 +246,7 @@
 	<!-- =================================================== -->
 		<Object type="ServiceDesk" id="1" name="ServiceDesk">
 			<Slot property="queueLength" value="0"/>
-			<Slot property="busy" value="false"/>
+			<Slot property="isBusy" value="false"/>
 		</Object>
 		<ExogenousEvent type="CustomerArrival" occurrenceTime="1" />
 	</InitialState>
