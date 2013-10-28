@@ -17,7 +17,7 @@
 			<dc:creator>Gerd Wagner</dc:creator>
 			<dc:contributor>Oana Nicolae</dc:contributor>
 			<dc:created>20081001</dc:created>
-			<dc:modified>20120127</dc:modified>
+			<dc:modified>20131028</dc:modified>
 			<dc:title>Single Queue</dc:title>
 			<dc:title xml:lang="de">Warteschlange</dc:title>
 			<shortDescription>A simple model of a service queue system.</shortDescription>
@@ -106,7 +106,7 @@ old -->
 			<ObjectType name="ServiceDesk">
 			<!-- =================================================== -->
 				<Attribute name="queueLength" type="Integer" />
-				<Attribute name="isBusy" type="Boolean"/>
+				<Attribute name="busy" type="Boolean"/>
 				<Function name="randomServiceTime" resultType="Integer">
 					<Body language="Java"><![CDATA[
 		int r = Random.uniformInt(0,99);
@@ -145,7 +145,7 @@ old -->
 				<FOR-DataVariable variable="srvTm" dataType="Integer">
 					<ValueExpr language="Java JavaScript"> this.sD.randomServiceTime() </ValueExpr>
 				</FOR-DataVariable>
-				<IF language="Java JavaScript"> this.sD.isBusy() </IF>
+				<IF language="Java JavaScript"> this.sD.isBusy()</IF>
 				<THEN>
 					<UPDATE-ENV>
 						<UpdateObject objectVariable="sD">
@@ -156,7 +156,7 @@ old -->
 				<ELSE>
 					<UPDATE-ENV>
 						<UpdateObject objectVariable="sD">
-							<Slot property="isBusy" value="true"/>
+							<Slot property="busy" value="true"/>
 						</UpdateObject>
 <!-- NEW  -->
 						<UpdateStatisticsVariable variable="totalServiceTime">
@@ -208,7 +208,7 @@ old -->
 				<THEN>
 					<UPDATE-ENV>
 						<UpdateObject objectVariable="sD">
-							<Slot property="isBusy" value="false"/>
+							<Slot property="busy" value="false"/>
 						</UpdateObject>
 					</UPDATE-ENV>
 				</THEN>
@@ -246,7 +246,7 @@ old -->
 	<!-- =================================================== -->
 		<Object type="ServiceDesk" id="1" name="ServiceDesk">
 			<Slot property="queueLength" value="0"/>
-			<Slot property="isBusy" value="false"/>
+			<Slot property="busy" value="false"/>
 		</Object>
 		<ExogenousEvent type="CustomerArrival" occurrenceTime="1" />
 	</InitialState>
