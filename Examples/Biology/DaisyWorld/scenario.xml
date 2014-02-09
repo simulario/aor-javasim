@@ -1,0 +1,473 @@
+<?xml version="1.0"?>
+<?xml-stylesheet type="text/xsl" href="prettyprint.xsl"?>
+
+<SimulationScenario xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+  xsi:schemaLocation="http://aor-simulation.org ../../../AORSL/AORSL_0-9.xsd"
+  xmlns="http://aor-simulation.org" xmlns:dc="http://purl.org/dc/elements/1.1/"
+  xmlns:aors="http://aor-simulation.org" xmlns:h="http://www.w3.org/1999/xhtml" version="0.9"
+  scenarioName="DaisyWorld" scenarioTitle="" simulationManagerDirectory="../../..">
+  <SimulationParameters simulationSteps="100" stepDuration="100" timeUnit="D" stepTimeDelay="150"/>
+
+  <SimulationModel modelName="DaisyWorld" modelTitle="Daisy World">
+
+    <documentation>
+      <dc:creator>Oana Nicolae</dc:creator>
+      <dc:created>20140128</dc:created>
+      <source>Watson, A.J., and J.E. Lovelock, 1983, “Biological homoeostasis of the global
+        environment: the parable of Daisyworld”, Tellus 35B, 286-289. (The original paper by Watson
+        and Lovelock introducing the Daisyworld model.)</source>
+        
+      <description><h:p>Daisyworld is a world filled with two different types of daisies: black daisies and white daisies. 
+        They differ in albedo, which is how much energy they absorb as heat from sunlight. White daisies have 
+        a high surface albedo and thus reflect light and heat, thus cooling the area around them. 
+        Black daisies have a low surface albedo and thus absorb light and heat, thus heating the area around them. 
+        However, there is only a certain temperature range in which daisies can reproduce; if the temperature 
+        around a daisy is outside of this range, the daisy will produce no offspring and eventually die of old age.</h:p>
+        <h:p>When the climate is too cold it is necessary for the black daisies to propagate in order to raise the 
+        temperature, and vice versa – when the climate is too warm, it is necessary for more white daisies to be 
+        produced in order to cool the temperature. For a wide range of parameter settings, the temperature and the 
+        population of daisies will eventually stabilize. However, it is possible for Daisyworld to get either too 
+        hot or too cold, in which case the daisies are not able to bring the temperature back under control and all 
+        of the daisies will eventually die.</h:p>  
+      </description>
+      	<CcLicense license="CC BY-SA"/>
+		     <titleImage file="daisies.png"/>
+       <mediaFiles>
+			      <image file="whiteDaisy.png" license="© LS IT"/>
+			      <image file="blackDaisy.png" license="© LS IT"/>
+       </mediaFiles> 
+    </documentation>
+
+    <SpaceModel geometry="Toroidal" spatialDistanceUnit="cm">
+      <TwoDimensionalGrid xMax="20" yMax="20" gridCellMaxOccupancy="1">
+        <GridCellProperty name="surface_albedo" type="Float"/>
+        <GridCellProperty name="free" type="Boolean"/>
+        <!--local temperature at this grid cell location -->
+        <GridCellProperty name="temperature" type="Float"/>
+
+        <GridCellFunction name="diffuseTemperature" resultType="Float">
+          <documentation>
+            <description>Each grid-cell shares a certain value (e.g. half if value="0.5") from its
+              temperature to its eight neighbour cells: the Moore neighbourhood.</description>
+          </documentation>
+          <Parameter name="value" type="Float"/>
+          <Parameter name="temp" type="Float"/>
+          <Body language="Java"><![CDATA[                    
+int posX = (int) this.getPosX();
+int posY = (int) this.getPosY();
+double temp = Simulator.spaceModel.getGridCell( posX, posY).getTemperature();
+int xMax = (int) Simulator.spaceModel.getXMax();
+int yMax = (int) Simulator.spaceModel.getYMax();
+for (int x = posX-1; x <= posX+1; x++)
+	for (int y = posY-1; y <= posY+1; y++)
+		if (x >= 1 && x <= xMax && y >= 1 && y <= yMax && !(x == posX && y == posY)) {
+    double _temp = Simulator.spaceModel.getGridCell(x,y).getTemperature() + temp/16.0;
+			 Simulator.spaceModel.getGridCell( x,y).setTemperature( _temp);
+   _temp = 0.0;
+		}
+return temp; 
+          ]]></Body>
+          <Body language="JavaScript"><![CDATA[                    
+var posX = this.getPosX();
+var posY = this.getPosY();
+var distributed_temp = temp * value;
+var xMax = sim.controller.Simulator.spaceModel.getXMax();
+var yMax = sim.controller.Simulator.spaceModel.getYMax();
+for (var x = posX-1; x <= posX+1; x++) {
+	for (var y = posY-1; y <= posY+1; y++) {
+		if (x >= 1 && x <= xMax && y >= 1 && y <= yMax 
+				&& !(x == posX && y == posY)) {
+		  var _temp = sim.controller.Simulator.spaceModel.getGridCell(x,y).getTemperature();
+			 sim.controller.Simulator.spaceModel.getGridCell( x,y).setTemperature( _temp + distributed_temp/8.0);
+   _temp = 0.0;
+		}
+ }
+} 
+return temp;
+					]]></Body>
+        </GridCellFunction>
+      </TwoDimensionalGrid>
+    </SpaceModel>
+
+    <Statistics>
+      <Variable name="global_temperature" dataType="Float" />
+      <Variable name="white_population" dataType="Integer" />
+      <Variable name="black_population" dataType="Integer" />
+    </Statistics>
+
+    <Globals>
+      <!--max_age: maximum age that all daisies live to -->
+      <GlobalVariable name="max_age" dataType="Integer"/>
+      
+      <GlobalVariable name="solar_luminosity" dataType="Float"/>
+
+      <GlobalFunction name="isWithinSeedThreshold" resultType="Boolean">
+        <documentation>This equation may look complex, but it is just a parabola.
+     This parabola has a peak value of 1 -- the maximum growth factor possible at an optimum
+     temperature of 22.5 degrees C
+      -- and drops to zero at local temperatures of 5 degrees C and 40 degrees C. [the x-intercepts]
+     Thus, growth of new daisies can only occur within this temperature range,
+     with decreasing probability of growth new daisies closer to the x-intercepts of the parabolas
+     remember, however, that this probability calculation is based on the local temperature.<description>
+          </description>
+        </documentation>
+        <Parameter name="temperature" type="Float"/>
+        <Body language="Java"><![CDATA[
+double value = ((0.1457 * temperature) - (0.0032 * temperature * temperature) - 0.6443);
+if ( Math.random() < value) return true;
+   else return false;
+  				]]></Body>
+        <Body language="JavaScript"><![CDATA[
+var value = ((0.1457 * temperature) - (0.0032 * temperature * temperature) - 0.6443);
+if ( Math.random() < value) return true;
+   else return false;
+  				]]></Body>
+      </GlobalFunction>
+      <GlobalFunction name="computeSurfaceTemperature" resultType="Float">
+        <documentation>
+          <description>The percentage of absorbed energy is calculated (1 - surface_albedo) 
+           and then multiplied by the solar-luminosity to give a scaled absorbed_luminosity. 
+           Local heating is calculated as logarithmic function of  global variable of solar_luminosity
+           where an absorbed_luminosity of 1 yields a local_heating of 80 degrees C
+           and an absorbed_luminosity of .5 yields a local_heating of approximately 30 C
+          and a absorbed_luminosity of 0.01 yields a local_heating of approximately -273 C.</description>
+        </documentation>
+        <Parameter name="surface_albedo" type="Float"/>
+        <Parameter name="temperature" type="Float"/>
+        <Body language="Java"><![CDATA[
+double local_heating = 0.0;
+double absorbed_luminosity = ( (1 - surface_albedo) * Global.getSolar_luminosity() );
+if (absorbed_luminosity > 0.0 ) {
+  local_heating = 72 * Math.log( absorbed_luminosity) + 80.0;
+ }
+ else {
+   local_heating = 80.0;
+ }
+ return (( temperature + local_heating)/2.0); //  set the temperature at this patch to be the average of the current temperature and the local-heating effect
+  				]]></Body>
+        <Body language="JavaScript"><![CDATA[
+var local_heating = 0.0;
+var absorbed_luminosity = (( 1 - surface_albedo) * Global.getSolar_luminosity() );
+if ( absorbed_luminosity > 0.0 ) {
+  local_heating = 72 * Math.log( absorbed_luminosity) + 80.0;
+ }
+ else {
+   local_heating = 80.0;
+ }
+ return (( temperature + local_heating)/2.0); //  set the temperature at this patch to be the average of the current temperature and the local-heating effect
+  				]]></Body>
+      </GlobalFunction>
+      <GlobalFunction name="findNextFreeGridCell" resultType="GridCell">
+        <documentation>
+          <description>The function looks among one grid cell's Moore neighbourhood in order to find a free grid cell where to produce an offspring.</description>
+        </documentation>
+        <Parameter name="posX" type="Integer"/>
+        <Parameter name="posY" type="Integer"/>
+        <Body language="Java"><![CDATA[                    
+int xMax = (int) Simulator.spaceModel.getXMax();
+int yMax = (int) Simulator.spaceModel.getYMax();
+int x = 0, y = 0;
+for (x = posX-1; x <= posX+1; x++)
+	for (y = posY-1; y <= posY+1; y++)
+		if (x >= 1 && x <= xMax && y >= 1 && y <= yMax && !( x == posX && y == posY) && ( Simulator.spaceModel.getGridCell(x,y).isFree())) {
+			 break;   
+		} else { return null;}
+    return (GridCell)Simulator.spaceModel.getGridCell(x,y); 
+          ]]></Body>
+        <Body language="JavaScript"><![CDATA[                    
+var xMax = sim.controller.Simulator.spaceModel.getXMax();
+var yMax = sim.controller.Simulator.spaceModel.getYMax();
+var x=0, y=0, gc = null;
+
+for ( x = posX-1; x <= posX+1; x++) 
+	for ( y = posY-1; y <= posY+1; y++) 
+		if ( x >= 1 && x <= xMax && y >= 1 && y <= yMax 
+				&& !( x === posX && y === posY) && ( sim.controller.Simulator.spaceModel.getGridCell( x,y).isFree() )) {
+     gc = sim.controller.Simulator.spaceModel.getGridCell( x,y); 
+			  break;   
+		}  
+    return gc; 
+					]]></Body>
+      </GlobalFunction>
+    </Globals>
+
+    <EntityTypes>
+      <ExogenousEventType name="MarkGridCellsBusy"/> 
+      <ActionEventType name="SproutDaisy"/>
+      <ActionEventType name="DaisyDies"/>
+      <!-- ======================================================================-->
+      <PhysicalAgentType name="Daisy" autoPerception="true" idPerceivable="true">
+        <!-- ====================================================================-->
+        <!-- color of the daisy: white or black-->
+        <Attribute name="color" type="String"/>
+        <!-- fraction (0-1) of energy absorbed as heat from sunlight-->
+        <Attribute name="albedo" type="Integer"/>
+        <!-- age of the daisy-->
+        <Attribute name="age" type="Integer"/>
+     
+        <!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->
+        <ReactionRule name="UpdateDaisyAge_Rule" agentVariable="daisy"> 
+          <!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->
+         <ON-EACH-SIMULATION-STEP/>
+          <DO>
+            <UPDATE-AGT>
+              <Slot property="age">
+                <ValueExpr language="Java JavaScript"><![CDATA[
+ this.daisy.getAge() + 1    						  
+      						]]></ValueExpr>
+              </Slot>
+            </UPDATE-AGT>
+          </DO>
+          <IF language="Java JavaScript"><![CDATA[ 
+ this.daisy.getAge() >= Global.getMax_age()
+           ]]></IF>
+          <THEN>
+            <SCHEDULE-EVT>
+              <ActionEventExpr actionEventType="DaisyDies" />
+            </SCHEDULE-EVT>
+          </THEN>
+          <ELSE>
+            <SCHEDULE-EVT>
+              <ActionEventExpr actionEventType="SproutDaisy" />
+            </SCHEDULE-EVT>
+          </ELSE>
+        </ReactionRule> 
+      </PhysicalAgentType>
+    </EntityTypes>
+
+    <EnvironmentRules>
+      <!-- ============================================= -->
+      <EnvironmentRule name="MarkGridCellsBusy_Rule">
+        <!-- ============================================= -->
+        <WHEN eventType="MarkGridCellsBusy"/>
+        <FOR-ObjectVariable variable="daisy" objectType="Daisy"/>
+        <FOR-ObjectVariable variable="gc" objectType="GridCell"/>
+         <IF language="Java JavaScript"><![CDATA[ 
+this.daisy.getX() === this.gc.getPosX() && this.daisy.getY() === this.gc.getPosY()
+          ]]></IF>
+        <THEN>
+          <UPDATE-ENV>
+            <UpdateGridCell gridCellVariable="gc">
+              <XCoordinate language="Java JavaScript">this.daisy.getX()</XCoordinate>
+              <YCoordinate language="Java JavaScript">this.daisy.getY()</YCoordinate>
+              <Slot property="surface_albedo">
+                <ValueExpr language="Java JavaScript"><![CDATA[
+ this.daisy.getAlbedo()          
+                ]]></ValueExpr>
+              </Slot>
+              <Slot property="free" value="false" />
+            </UpdateGridCell>
+          </UPDATE-ENV>  
+          </THEN>
+      </EnvironmentRule>
+      <!-- ============================================= -->
+      <EnvironmentRule name="DiffuseTemperature_Rule">
+        <!-- ============================================ -->
+        <ON-EACH-SIMULATION-STEP/>
+        <DO>
+          <UPDATE-ENV>
+            <ForEachGridCell gridCellVariable="gc">
+              <Slot property="temperature">
+                <ValueExpr language="Java JavaScript"><![CDATA[ 
+  gc.diffuseTemperature( 0.5, Global.computeSurfaceTemperature( gc.getSurface_albedo(), gc.getTemperature()) ) 
+                ]]></ValueExpr>
+              </Slot>
+            </ForEachGridCell>
+          </UPDATE-ENV>
+        </DO>
+      </EnvironmentRule>   
+      <!-- ============================================= -->
+      <EnvironmentRule name="SproutDaisy_Rule">
+        <!--============================================ -->
+        <documentation>
+          <description/>
+        </documentation>
+        <WHEN eventType="SproutDaisy" eventVariable="e"/>
+        <FOR-ObjectVariable variable="daisy" objectType="Daisy">
+          <ObjectRef language="Java JavaScript">this.e.getActor()</ObjectRef>
+        </FOR-ObjectVariable>
+        <FOR-ObjectVariable variable="gc" objectType="GridCell">
+          <ObjectRef language="Java JavaScript">sim.controller.Simulator.spaceModel.getGridCell(this.daisy.getX(), this.daisy.getY())</ObjectRef>
+        </FOR-ObjectVariable>
+          <IF language="Java JavaScript"><![CDATA[
+ Global.isWithinSeedThreshold( this.gc.getTemperature()) && Global.findNextFreeGridCell( this.daisy.getX(), this.daisy.getY()) !== null
+          ]]></IF>
+        <THEN>
+          <UPDATE-ENV>
+            <Create>
+              <PhysicalAgent type="Daisy" hasRandomPosition="false" m="1">
+                <Slot property="age" value="0"/>
+                <Slot property="color">
+                  <ValueExpr language="Java JavaScript"><![CDATA[
+ this.daisy.getColor()								
+    								      ]]></ValueExpr>
+                </Slot>
+                <Slot property="albedo">
+                  <ValueExpr language="Java JavaScript"><![CDATA[
+ this.daisy.getAlbedo()								
+    								      ]]></ValueExpr>
+                </Slot>
+                <Slot property="x">
+                  <ValueExpr language="Java JavaScript"><![CDATA[
+ Global.findNextFreeGridCell( this.daisy.getX(), this.daisy.getY()).getPosX()  							
+    							]]></ValueExpr>
+                </Slot>
+                <Slot property="y">
+                  <ValueExpr language="Java JavaScript"><![CDATA[
+ Global.findNextFreeGridCell( this.daisy.getX(), this.daisy.getY()).getPosY()		
+    								      ]]></ValueExpr>
+                </Slot>
+              </PhysicalAgent>
+            </Create>
+            <UpdateGridCell gridCellVariable="gridCell">
+              <XCoordinate language="Java JavaScript"><![CDATA[Global.findNextFreeGridCell( this.daisy.getX(), this.daisy.getY()).getPosX()]]></XCoordinate>
+              <YCoordinate language="Java JavaScript"><![CDATA[Global.findNextFreeGridCell( this.daisy.getX(), this.daisy.getY()).getPosY()]]></YCoordinate>
+              <Slot property="surface_albedo">
+                <ValueExpr language="Java JavaScript"><![CDATA[
+ this.daisy.getAlbedo() === 0.75 ? 0.75 : 0.25               
+                ]]></ValueExpr>
+              </Slot>
+              <Slot property="free" value="false" />
+            </UpdateGridCell>
+          </UPDATE-ENV>
+        </THEN>
+      </EnvironmentRule>
+      <!-- ============================================= -->
+      <EnvironmentRule name="DaisyDies_Rule">
+        <!-- =========================================== -->
+        <WHEN eventType="DaisyDies" eventVariable="e"/>
+        <FOR-ObjectVariable variable="daisy" objectType="Daisy">
+          <ObjectRef language="Java JavaScript">this.e.getActor()</ObjectRef>
+        </FOR-ObjectVariable>
+       <FOR-ObjectVariable variable="gc" objectType="GridCell">
+          <ObjectRef language="Java JavaScript">sim.controller.Simulator.spaceModel.getGridCell(this.daisy.getX(), this.daisy.getY())</ObjectRef>
+        </FOR-ObjectVariable>
+        <DO>
+          <UPDATE-ENV>
+            <UpdateGridCell gridCellVariable="gc">
+              <XCoordinate language="Java JavaScript">this.daisy.getX()</XCoordinate>
+              <YCoordinate language="Java JavaScript">this.daisy.getY()</YCoordinate>
+              <Slot property="free" value="true"/>
+              <Slot property="surface_albedo" value="0.40" />
+            </UpdateGridCell>
+          </UPDATE-ENV>
+        </DO>
+        <IF language="Java JavaScript"><![CDATA[ 
+ this.daisy.getColor() === "white"
+          ]]></IF>
+        <THEN>
+          <UPDATE-ENV>
+            <UpdateStatisticsVariable variable="white_population">
+              <ValueExpr language="Java JavaScript"><![CDATA[
+SimStatistics.white_population.getValue() - 1
+					          	]]></ValueExpr>
+            </UpdateStatisticsVariable>
+            <DestroyObject objectVariable="daisy"/>
+          </UPDATE-ENV>
+        </THEN>
+        <ELSE>
+          <UPDATE-ENV>
+            <UpdateStatisticsVariable variable="black_population">
+              <ValueExpr language="Java JavaScript"><![CDATA[
+SimStatistics.black_population.getValue() - 1
+					          	]]></ValueExpr>
+            </UpdateStatisticsVariable>
+            <DestroyObject objectVariable="daisy"/>
+          </UPDATE-ENV>
+        </ELSE>
+      </EnvironmentRule>
+    </EnvironmentRules>
+  </SimulationModel>
+  <!-- =============================================== -->
+  <InitialState>
+    <!-- ============================================= -->
+    <PhysicalAgents type="Daisy" rangeStartID="1" rangeEndID="40" hasRandomPosition="true">
+      <Slot property="m" value="1"/>
+      <Slot property="age" value="0"/>
+      <Slot property="albedo" value="0.75"/>
+      <Slot property="color" value="white"/>
+    </PhysicalAgents>
+
+    <PhysicalAgents type="Daisy" rangeStartID="41" rangeEndID="80" hasRandomPosition="true">
+      <Slot property="m" value="1"/>
+      <Slot property="age" value="0"/>
+      <Slot property="albedo" value="0.25"/>
+      <Slot property="color" value="black"/>
+    </PhysicalAgents>
+
+    <GlobalVariable name="max_age" value="25"/>
+    <GlobalVariable name="solar_luminosity" value="0.80"/>
+    
+    <GridCells>
+      <Slot property="surface_albedo" value="0.40"/>
+      <Slot property="free" value="true"/>
+      <Slot property="temperature" value="0.00"/>
+    </GridCells>
+    <ExogenousEvent type="MarkGridCellsBusy" occurrenceTime="1" />
+  </InitialState>
+  <!-- =================================== -->
+  <UserInterface supportedLanguages="en">
+    <!-- ================================= -->
+    <StatisticsUI>
+    <StatisticsVariableUI variable="white_population" comparisonGroup="blackwhite" showChart="true">
+				<Label>
+					<Text xml:lang="en">White Daisies</Text>
+				</Label>
+				<Hint>
+					<Text xml:lang="en">How many white daisies are on the grid?</Text>
+				</Hint>
+			</StatisticsVariableUI>
+     <StatisticsVariableUI variable="black_population" comparisonGroup="blackwhite" showChart="true">
+				<Label>
+					<Text xml:lang="en">Black Daisies</Text>
+				</Label>
+				<Hint>
+					<Text xml:lang="en">How many black daisies are on the grid?</Text>
+				</Hint>
+			</StatisticsVariableUI>
+    </StatisticsUI>
+    <AnimationUI>
+     <aors:StartPageText xmlns="http://www.w3.org/1999/xhtml">
+    	  <aors:HtmlText>
+    	    <h:p>In DaisyWorld simulation scenario, the white daisies thrive in warm conditions. They reflect heat which has
+          the effect of cooling the environment. In cold conditions, there are more of the black
+          daisies which absorb heat and warm the environment. The result is a robust feedback
+          mechanism which, within limits, keeps global temperature within a range that is conducive
+          for life.</h:p>
+          <h:p>White daisies, black daisies, and grid cells each have an albedo or percentage of energy they absorb as heat from sunlight. 
+          Sunlight energy is represented by the global variable solar_energy with the constant value of 0.8 ( where a value of 1.0 simulates the average solar luminosity of our sun).<h:p>
+         <h:p>Each time step, every grid cell will calculate the temperature at that spot based on: 
+         <h:ol>
+    	      <li>the energy absorbed by the daisy at that patch </li>
+    	      <li>the diffusion of 50% of the temperature value at that patch between its neighbours</li>
+    	    </h:ol></h:p>
+    	    <h:p>Grid cells that are adjacent to a daisy have a probability of sprouting a daisy that is the 
+         same colour as the neighbouring daisy, based on a parabolic probability function that depends 
+         on the local cell temperature (where an optimum temperature of 22.5 yields a maximum probability 
+         of 100% of sprouting a new daisy).</h:p>
+         <h:p>Daisies age each step of the simulation until they reach a maximum age, at which point they 
+         die and the patch they were in becomes free.</h:p>
+    	  </aors:HtmlText>
+    	</aors:StartPageText>
+      <Views>
+        <SpaceView>
+          <TwoDimensionalGridSpaceView2D stroke="black">
+            <GridCellPropertyVisualizationMap cellViewProperty="fill" property="temperature"
+              mapType="caseWise" v0="white" a0="0.0" v1="233 163 144" a1="10.0" v2="231 108 86"
+              a2="22.5" v3="207 46 49" a3="40.0" v4="231 47 39"/>
+          </TwoDimensionalGridSpaceView2D>
+        </SpaceView>
+        <!-- ============================================= -->
+        <PhysicalObjectView physicalObjectType="Daisy">
+          <!-- ============================================= -->
+          <PhysicalShape2D>
+            <Circle fill="red" strokeWidth="1" stroke="red" texture="whiteDaisy.png">
+              <ShapePropertyVisualizationMap shapeProperty="texture" property="color"
+                mapType="equalityCaseWise" v0="whiteDaisy.png" a0="white" v1="blackDaisy.png" a1="black"/>
+            </Circle>
+          </PhysicalShape2D>  
+        </PhysicalObjectView>
+      </Views>
+    </AnimationUI>
+  </UserInterface>
+</SimulationScenario>
