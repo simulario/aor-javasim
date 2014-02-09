@@ -30,12 +30,6 @@
         hot or too cold, in which case the daisies are not able to bring the temperature back under control and all 
         of the daisies will eventually die.</h:p>  
       </description>
-      	<CcLicense license="CC BY-SA"/>
-		     <titleImage file="daisies.png"/>
-       <mediaFiles>
-			      <image file="whiteDaisy.png" license="© LS IT"/>
-			      <image file="blackDaisy.png" license="© LS IT"/>
-       </mediaFiles> 
     </documentation>
 
     <SpaceModel geometry="Toroidal" spatialDistanceUnit="cm">
@@ -90,7 +84,11 @@ return temp;
     </SpaceModel>
 
     <Statistics>
-      <Variable name="global_temperature" dataType="Float" />
+      <Variable name="global_temperature" dataType="Float">
+        <Source aggregationFunction="avg">
+					     <ObjectProperty property="temperature" objectType="GridCell"/>
+				     </Source>
+      </Variable>
       <Variable name="white_population" dataType="Integer" />
       <Variable name="black_population" dataType="Integer" />
     </Statistics>
@@ -273,6 +271,11 @@ this.daisy.getX() === this.gc.getPosX() && this.daisy.getY() === this.gc.getPosY
                 ]]></ValueExpr>
               </Slot>
             </ForEachGridCell>
+            <UpdateStatisticsVariable variable="global_temperature">
+              <ValueExpr language="Java JavaScript"><![CDATA[
+SimStatistics.global_temperature.getValue() + gc.getTemperature()
+					          	]]></ValueExpr>
+            </UpdateStatisticsVariable>
           </UPDATE-ENV>
         </DO>
       </EnvironmentRule>   
@@ -329,6 +332,16 @@ this.daisy.getX() === this.gc.getPosX() && this.daisy.getY() === this.gc.getPosY
               </Slot>
               <Slot property="free" value="false" />
             </UpdateGridCell>
+            <UpdateStatisticsVariable variable="white_population">
+              <ValueExpr language="Java JavaScript"><![CDATA[
+this.daisy.getColor() === "white" ? SimStatistics.white_population.getValue() + 1 : SimStatistics.white_population.getValue()
+					          	]]></ValueExpr>
+            </UpdateStatisticsVariable>
+            <UpdateStatisticsVariable variable="black_population">
+              <ValueExpr language="Java JavaScript"><![CDATA[
+this.daisy.getColor() === "black" ? SimStatistics.black_population.getValue() + 1 : SimStatistics.black_population.getValue()
+					          	]]></ValueExpr>
+            </UpdateStatisticsVariable>
           </UPDATE-ENV>
         </THEN>
       </EnvironmentRule>
@@ -409,6 +422,14 @@ SimStatistics.black_population.getValue() - 1
   <UserInterface supportedLanguages="en">
     <!-- ================================= -->
     <StatisticsUI>
+     <StatisticsVariableUI variable="global_temperature" showChart="true">
+				<Label>
+					<Text xml:lang="en">Average global temperature</Text>
+				</Label>
+				<Hint>
+					<Text xml:lang="en">What is the average global temperature?</Text>
+				</Hint>
+			</StatisticsVariableUI>
     <StatisticsVariableUI variable="white_population" comparisonGroup="blackwhite" showChart="true">
 				<Label>
 					<Text xml:lang="en">White Daisies</Text>
@@ -427,28 +448,60 @@ SimStatistics.black_population.getValue() - 1
 			</StatisticsVariableUI>
     </StatisticsUI>
     <AnimationUI>
-     <aors:StartPageText xmlns="http://www.w3.org/1999/xhtml">
-    	  <aors:HtmlText>
-    	    <h:p>In DaisyWorld simulation scenario, the white daisies thrive in warm conditions. They reflect heat which has
+       <aors:StartPageText xmlns="http://www.w3.org/1999/xhtml">
+        <aors:HtmlText xml:lang="en">
+        <div style="float:left; width: 40%; padding: 7px 50px; text-align: center;">
+          <img src="daisies.png" style="width: 50%; height: 50%; border: 1px solid black;" alt="Daisy smiling at the sun!" />
+        </div>
+        <div style="float:left; width: 40%; padding: 7px 0px">
+    	    <p xml:lang="en">In DaisyWorld simulation scenario, the white daisies thrive in warm conditions. They reflect heat which has
           the effect of cooling the environment. In cold conditions, there are more of the black
           daisies which absorb heat and warm the environment. The result is a robust feedback
           mechanism which, within limits, keeps global temperature within a range that is conducive
-          for life.</h:p>
-          <h:p>White daisies, black daisies, and grid cells each have an albedo or percentage of energy they absorb as heat from sunlight. 
-          Sunlight energy is represented by the global variable solar_energy with the constant value of 0.8 ( where a value of 1.0 simulates the average solar luminosity of our sun).<h:p>
-         <h:p>Each time step, every grid cell will calculate the temperature at that spot based on: 
-         <h:ol>
-    	      <li>the energy absorbed by the daisy at that patch </li>
-    	      <li>the diffusion of 50% of the temperature value at that patch between its neighbours</li>
-    	    </h:ol></h:p>
-    	    <h:p>Grid cells that are adjacent to a daisy have a probability of sprouting a daisy that is the 
+          for life.</p>
+          <p xml:lang="en">White daisies, black daisies, and grid cells each have an albedo or percentage of energy they absorb as heat from sunlight. 
+          Sunlight energy is represented by the global variable solar_energy with the constant value of 0.8 ( where a value of 1.0 simulates the average solar luminosity of our sun).<p>
+         <p>Each time step, every grid cell will calculate the temperature at that spot based on: 
+         <ol>
+    	      <li xml:lang="en">the energy absorbed by the daisy at that patch </li>
+    	      <li xml:lang="en">the diffusion of 50% of the temperature value at that patch between its neighbours</li>
+    	    </ol></p>
+    	    <p xml:lang="en">Grid cells that are adjacent to a daisy have a probability of sprouting a daisy that is the 
          same colour as the neighbouring daisy, based on a parabolic probability function that depends 
          on the local cell temperature (where an optimum temperature of 22.5 yields a maximum probability 
-         of 100% of sprouting a new daisy).</h:p>
-         <h:p>Daisies age each step of the simulation until they reach a maximum age, at which point they 
-         die and the patch they were in becomes free.</h:p>
+         of 100% of sprouting a new daisy).</p>
+         <p xml:lang="en">Daisies age each step of the simulation until they reach a maximum age, at which point they 
+         die and the patch they were in becomes free.</p>
+         </div>
     	  </aors:HtmlText>
     	</aors:StartPageText>
+     <aors:HelpText xmlns="http://www.w3.org/1999/xhtml">
+       <aors:HtmlText>
+        <div style="float:left; width: 40%; padding: 7px 50px; text-align: center;">
+          <img src="daisies.png" style="width: 50%; height: 50%; border: 1px solid black;" alt="Daisy smiling at the sun!" />
+        </div>
+        <div style="float:left; width: 40%; padding: 7px 0px">
+    	    <p>In DaisyWorld simulation scenario, the white daisies thrive in warm conditions. They reflect heat which has
+          the effect of cooling the environment. In cold conditions, there are more of the black
+          daisies which absorb heat and warm the environment. The result is a robust feedback
+          mechanism which, within limits, keeps global temperature within a range that is conducive
+          for life.</p>
+          <p>White daisies, black daisies, and grid cells each have an albedo or percentage of energy they absorb as heat from sunlight. 
+          Sunlight energy is represented by the global variable solar_energy with the constant value of 0.8 ( where a value of 1.0 simulates the average solar luminosity of our sun).<p>
+         <p>Each time step, every grid cell will calculate the temperature at that spot based on: 
+         <ol>
+    	      <li>the energy absorbed by the daisy at that patch </li>
+    	      <li>the diffusion of 50% of the temperature value at that patch between its neighbours</li>
+    	    </ol></p>
+    	    <p>Grid cells that are adjacent to a daisy have a probability of sprouting a daisy that is the 
+         same colour as the neighbouring daisy, based on a parabolic probability function that depends 
+         on the local cell temperature (where an optimum temperature of 22.5 yields a maximum probability 
+         of 100% of sprouting a new daisy).</p>
+         <p>Daisies age each step of the simulation until they reach a maximum age, at which point they 
+         die and the patch they were in becomes free.</p>
+         </div>
+    	  </aors:HtmlText>
+     </aors:HelpText>
       <Views>
         <SpaceView>
           <TwoDimensionalGridSpaceView2D stroke="black">
